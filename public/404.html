@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Quiz Space</title>
+  <script>
+    // GitHub Pages SPA redirect: preserves /quiz-space/ base path and routes correctly
+    var l = window.location;
+    var repoName = '/quiz-space/';
+    
+    if (l.hostname.includes('github.io') && !l.pathname.startsWith('/quiz-space')) {
+      // Redirect root domain koomn1.github.io/#/... to koomn1.github.io/quiz-space/#/...
+      l.replace(l.protocol + '//' + l.hostname + repoName + '#' + l.pathname + l.search + l.hash);
+    } else {
+      var pathSegmentsToKeep = 1; // keep /quiz-space/ prefix
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    }
+  </script>
+</head>
+<body>
+</body>
+</html>

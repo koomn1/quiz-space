@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+generate_keys.ps1
+.env.local
+.env.*.local
+*.log
+
+src/lib/keys.generated.ts
+.vscode
+.idea
