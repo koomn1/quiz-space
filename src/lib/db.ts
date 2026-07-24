@@ -636,24 +636,12 @@ export async function saveUserProfile(
 ): Promise<void> {
   if (!userId) return;
 
-  const finalPlanId = planId || localStorage.getItem(`quiz_planId_${userId}`) || undefined;
-  const finalIsPremium = isPremium ?? (localStorage.getItem(`quiz_isPremium_${userId}`) === 'true' ? true : false);
-  const finalPlanName = planName || localStorage.getItem(`quiz_planName_${userId}`) || 'Free';
-  const finalIsLifetime = isLifetime ?? false;
-  const finalIsFounder = isFounder ?? false;
-  const finalIsSuspended = isSuspended ?? false;
-  const finalCategoryId = categoryId || undefined;
-  const finalRenewalDate = renewalDate || undefined;
-
   localStorage.setItem('quiz_userName', name);
   if (photoURL) localStorage.setItem('quiz_userPhoto', photoURL);
-  if (finalPlanName) localStorage.setItem(`quiz_planName_${userId}`, finalPlanName);
-  if (finalIsPremium !== undefined) localStorage.setItem(`quiz_isPremium_${userId}`, String(finalIsPremium));
-  if (finalPlanId) localStorage.setItem(`quiz_planId_${userId}`, finalPlanId);
 
   const localUsers = getLocalUsers();
   const existingIdx = localUsers.findIndex(u => u.uid === userId || u.id === userId);
-  const updatedUser = {
+  const updatedUser: any = {
     uid: userId,
     id: userId,
     name,
@@ -665,15 +653,25 @@ export async function saveUserProfile(
     badge_color: badgeColor || '',
     custom_id: customId || '',
     updated_at: new Date().toISOString(),
-    is_premium: finalIsPremium,
-    plan_name: finalPlanName,
-    plan_id: finalPlanId,
-    is_lifetime: finalIsLifetime,
-    is_founder: finalIsFounder,
-    is_suspended: finalIsSuspended,
-    category_id: finalCategoryId,
-    renewal_date: finalRenewalDate,
   };
+
+  if (planId !== undefined) {
+    updatedUser.plan_id = planId;
+    localStorage.setItem(`quiz_planId_${userId}`, planId);
+  }
+  if (isPremium !== undefined) {
+    updatedUser.is_premium = isPremium;
+    localStorage.setItem(`quiz_isPremium_${userId}`, String(isPremium));
+  }
+  if (planName !== undefined) {
+    updatedUser.plan_name = planName;
+    localStorage.setItem(`quiz_planName_${userId}`, planName);
+  }
+  if (isLifetime !== undefined) updatedUser.is_lifetime = isLifetime;
+  if (isFounder !== undefined) updatedUser.is_founder = isFounder;
+  if (isSuspended !== undefined) updatedUser.is_suspended = isSuspended;
+  if (categoryId !== undefined) updatedUser.category_id = categoryId;
+  if (renewalDate !== undefined) updatedUser.renewal_date = renewalDate;
 
   if (existingIdx >= 0) {
     localUsers[existingIdx] = { ...localUsers[existingIdx], ...updatedUser };
@@ -684,27 +682,7 @@ export async function saveUserProfile(
 
   if (isSupabaseConfigured) {
     try {
-      const { error } = await supabase.from('users').upsert({
-        uid: userId,
-        name,
-        photo_url: photoURL,
-        email,
-        bio,
-        location,
-        badge_symbol: badgeSymbol,
-        badge_color: badgeColor,
-        custom_id: customId,
-        updated_at: new Date().toISOString(),
-        is_premium: finalIsPremium,
-        plan_name: finalPlanName,
-        plan_id: finalPlanId,
-        is_lifetime: finalIsLifetime,
-        is_founder: finalIsFounder,
-        is_suspended: finalIsSuspended,
-        category_id: finalCategoryId,
-        renewal_date: finalRenewalDate,
-      }, { onConflict: 'uid' });
-
+      const { error } = await supabase.from('users').upsert(updatedUser, { onConflict: 'uid' });
       if (error) console.error(`Error upserting user profile for ${userId}:`, error.message);
     } catch (e) {
       console.warn('Upsert profile error:', e);
