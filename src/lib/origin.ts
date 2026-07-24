@@ -136,16 +136,16 @@ export async function initAppOrigin(): Promise<string> {
  * via VITE_API_BASE_URL, otherwise defaults to local host.
  */
 export function getApiUrl(path: string): string {
-  let baseUrl =
-    (import.meta as any).env?.VITE_API_BASE_URL ||
+  const workerBase =
     (import.meta as any).env?.VITE_AI_WORKER_URL ||
+    (import.meta as any).env?.VITE_API_BASE_URL ||
     '';
-  if (!baseUrl) {
-    // Return absolute path using detected app origin to prevent iframe sandboxed 'null' origin / about:blank resolution failures
-    const detectedOrigin = getAppOrigin();
-    const formattedPath = path.startsWith('/') ? path : `/${path}`;
-    return detectedOrigin ? `${detectedOrigin}${formattedPath}` : formattedPath;
+  if (workerBase && !path.startsWith('http')) {
+    const base = workerBase.replace(/\/$/, '');
+    const formatted = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${formatted}`;
   }
+  const detectedOrigin = getAppOrigin();
   const formattedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${baseUrl.replace(/\/$/, '')}${formattedPath}`;
+  return detectedOrigin ? `${detectedOrigin}${formattedPath}` : formattedPath;
 }

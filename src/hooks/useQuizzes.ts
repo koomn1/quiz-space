@@ -75,58 +75,26 @@ export async function generateQuizWithFallback(
   amount: number,
   alreadyGeneratedQuestions?: string[]
 ): Promise<GeneratedQuiz> {
+  const providers = [
+    { key: 'gemini', run: () => generateWithGemini(topic, amount, alreadyGeneratedQuestions) },
+    { key: 'groq', run: () => generateWithGroq(topic, amount, alreadyGeneratedQuestions) },
+    { key: 'deepseek', run: () => generateWithDeepSeek(topic, amount, alreadyGeneratedQuestions) },
+    { key: 'openai', run: () => generateWithOpenAI(topic, amount, alreadyGeneratedQuestions) },
+  ];
+
   const errors: string[] = [];
-
-  // Attempt 1: Gemini
-  try {
-    console.log('Attempting Quiz generation with Gemini...');
-    const result = await generateWithGemini(topic, amount, alreadyGeneratedQuestions);
-    const cleaned = validateAndCleanQuiz(result);
-    console.log('Gemini Quiz Generation succeeded and passed schema validation!');
-    return cleaned;
-  } catch (err: any) {
-    const errMsg = err.message || err;
-    console.warn('Gemini Generation failed:', errMsg);
-    errors.push(`Gemini: ${errMsg}`);
-  }
-
-  // Attempt 2: Groq
-  try {
-    console.log('Attempting Quiz generation with Groq...');
-    const result = await generateWithGroq(topic, amount, alreadyGeneratedQuestions);
-    const cleaned = validateAndCleanQuiz(result);
-    console.log('Groq Quiz Generation succeeded and passed schema validation!');
-    return cleaned;
-  } catch (err: any) {
-    const errMsg = err.message || err;
-    console.warn('Groq Generation failed:', errMsg);
-    errors.push(`Groq: ${errMsg}`);
-  }
-
-  // Attempt 3: DeepSeek
-  try {
-    console.log('Attempting Quiz generation with DeepSeek...');
-    const result = await generateWithDeepSeek(topic, amount, alreadyGeneratedQuestions);
-    const cleaned = validateAndCleanQuiz(result);
-    console.log('DeepSeek Quiz Generation succeeded and passed schema validation!');
-    return cleaned;
-  } catch (err: any) {
-    const errMsg = err.message || err;
-    console.warn('DeepSeek Generation failed:', errMsg);
-    errors.push(`DeepSeek: ${errMsg}`);
-  }
-
-  // Attempt 4: OpenAI
-  try {
-    console.log('Attempting Quiz generation with OpenAI...');
-    const result = await generateWithOpenAI(topic, amount, alreadyGeneratedQuestions);
-    const cleaned = validateAndCleanQuiz(result);
-    console.log('OpenAI Quiz Generation succeeded and passed schema validation!');
-    return cleaned;
-  } catch (err: any) {
-    const errMsg = err.message || err;
-    console.warn('OpenAI Generation failed:', errMsg);
-    errors.push(`OpenAI: ${errMsg}`);
+  for (const provider of providers) {
+    try {
+      console.log(`Attempting Quiz generation with ${provider.key}...`);
+      const result = await provider.run();
+      const cleaned = validateAndCleanQuiz(result);
+      console.log(`${provider.key} Quiz Generation succeeded and passed schema validation!`);
+      return cleaned;
+    } catch (err: any) {
+      const errMsg = err.message || err;
+      console.warn(`${provider.key} Generation failed:`, errMsg);
+      errors.push(`${provider.key}: ${errMsg}`);
+    }
   }
 
   throw new Error(`Failed to generate quiz with any AI service. Detail logs:\n${errors.join('\n')}`);
