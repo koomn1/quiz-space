@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getApiUrl } from '../lib/origin';
+import { askGemini } from '../services/aiWorkerClient';
 import { 
   Zap, 
   Sparkles, 
@@ -119,33 +119,11 @@ export default function GeminiReview({ lang }: { lang: 'ar' | 'en' }) {
     setSandboxResult(null);
 
     try {
-      // Direct Gemini API call (serverless)
-      const geminiApiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('gemini_api_key') : null;
-      if (!geminiApiKey) {
-        throw new Error('No Gemini API key found.');
-      }
-
       const startTime = Date.now();
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${geminiApiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptToSend }] }]
-          })
-        }
-      );
+      const response = await askGemini(promptToSend, { model: selectedModel });
       const latency = Date.now() - startTime;
-
-      if (!response.ok) {
-        throw new Error('Endpoint error');
-      }
-
-      const data = await response.json();
-      const replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       setSandboxResult({
-        reply: replyText,
+        reply: response.text,
         latency: latency,
         modelUsed: selectedModel
       });

@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { getApiUrl } from '../lib/origin';
-import { fetchWithAuth } from '../lib/authFetch';
+import { askGemini } from '../services/aiWorkerClient';
 import { Image, Send, Trash2, Sparkles, Brain, Compass, Camera, AlertCircle, X, Info, HelpCircle, XCircle } from 'lucide-react';
 import ThreeDIcon from '../components/ThreeDIcon';
 
@@ -226,14 +225,6 @@ export default function CosmoChatbot({ lang, isPremium, planName, onUpgradeClick
         .slice(-5)
         .map(m => ({ role: m.role, text: m.text }));
 
-      // Use Gemini API directly (serverless)
-      const geminiApiKey = typeof localStorage !== 'undefined' ? (localStorage.getItem('gemini_api_key') || '') : '';
-      if (!geminiApiKey) {
-        throw new Error(isAr
-          ? '🔑 يرجى إضافة مفتاح Gemini API في الإعدادات لاستخدام كوزمو بوت.'
-          : '🔑 Please add your Gemini API key in settings to use Cosmo Bot.');
-      }
-
       const systemPrompt = isAr
         ? `أنت كوزمو (Cosmo AI)، مساعد ذكاء اصطناعي أكاديمي متعدد الوسائط للطلاب والمعلمين. تتكلم العربية بطلاقة وبشكل ودي واحترافي. يمكنك تحليل الصور والمسائل وشرح المفاهيم العلمية والرياضية.`
         : `You are Cosmo (Cosmo AI), a multimodal AI academic assistant for students and teachers. You speak fluent English in a friendly and professional manner. You can analyze images, solve problems, and explain scientific and mathematical concepts.`;
@@ -243,39 +234,18 @@ export default function CosmoChatbot({ lang, isPremium, planName, onUpgradeClick
         parts: [{ text: m.text }]
       }));
 
-      const userParts: any[] = [];
-      if (currentText) userParts.push({ text: currentText });
+      let image: { data: string; mimeType: string } | undefined;
       if (currentImg) {
         const base64Data = currentImg.split(',')[1];
         const mimeMatch = currentImg.match(/data:([^;]+);/);
-        const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-        userParts.push({ inline_data: { mime_type: mimeType, data: base64Data } });
+        image = { data: base64Data, mimeType: mimeMatch ? mimeMatch[1] : 'image/jpeg' };
       }
 
-      const geminiPayload = {
-        system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: [
-          ...historyParts,
-          { role: 'user', parts: userParts }
-        ]
-      };
-
-      const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(geminiPayload)
-        }
-      );
-
-      if (!geminiRes.ok) {
-        const errData = await geminiRes.json().catch(() => ({}));
-        throw new Error(errData?.error?.message || 'Gemini API error');
-      }
-
-      const geminiData = await geminiRes.json();
-      const replyText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || (isAr ? 'لم أتمكن من الرد، يرجى المحاولة مجدداً.' : 'Could not generate a reply, please try again.');
+      const { text: replyText } = await askGemini(currentText || (isAr ? 'حلل الصورة المرفقة.' : 'Analyze the attached image.'), {
+        systemInstruction: systemPrompt,
+        history: historyParts.map(item => ({ role: item.role as 'user' | 'model', text: item.parts[0].text })),
+        image,
+      });
       
       const cosmoMessage: Message = {
         id: 'msg-' + (Date.now() + 1),

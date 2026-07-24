@@ -19,6 +19,7 @@ import {
 import { UserBadge } from "./UserBadge";
 import { UserStats, SubscriptionPlan, PaymentProof } from "../types";
 import { supabase } from "../lib/supabaseClient";
+import { askGemini } from "../services/aiWorkerClient";
 import {
   getAllProfiles,
   getPremiumRequests,
@@ -226,29 +227,9 @@ export default function AdminSubscriptions({
   ) => {
     setIsGeneratingAi(true);
     try {
-      // Generate AI promo message using Gemini directly
-      const geminiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('gemini_api_key') : null;
       const prompt = `أنت خبير تسويق. اكتب رسالة ترويجية قصيرة وجذابة بالعربية لكود خصم (${code}) بقيمة ${percent}%. الرسالة يجب أن تكون احترافية وتشجع على الاشتراك.`;
-      
-      if (!geminiKey) {
-        setAiPromoMsg(`🎉 استخدم كود ${code} واحصل على خصم ${percent}% على باقات Quiz Space! سارع قبل انتهاء العرض.`);
-      } else {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-          }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          const msg = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          setAiPromoMsg(msg);
-        } else {
-          setAiPromoMsg(`🎉 استخدم كود ${code} واحصل على خصم ${percent}% على باقات Quiz Space!`);
-        }
-      }
+      const { text } = await askGemini(prompt);
+      setAiPromoMsg(text || `🎉 استخدم كود ${code} واحصل على خصم ${percent}% على باقات Quiz Space!`);
     } catch (err) {
       console.error(err);
     } finally {

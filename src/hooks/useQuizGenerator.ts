@@ -1,10 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
-import { fetchWithAuth } from '../lib/authFetch';
-import { getApiUrl } from '../lib/origin';
 import { createQuiz } from '../lib/db';
 import { Question } from '../types';
 import { generateQuizWithFallback } from './useQuizzes';
+import { generateQuizFromFile } from '../services/aiWorkerClient';
 
 
 export interface ProgressState {
@@ -111,12 +110,6 @@ export function useQuizGenerator() {
           }
         }
       } else if (type === 'file_direct') {
-        // Pure Client-Side Gemini Vision / Document extraction fallback
-        const apiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('gemini_api_key') : null;
-        if (!apiKey) {
-          throw new Error('لم يتم العثور على Gemini API Key. يرجى توفيره للتمكن من فحص المستندات.');
-        }
-
         setProgress({
           current: 0,
           total: totalQuestions,
@@ -124,37 +117,8 @@ export function useQuizGenerator() {
           message: 'جاري مسح المستند وتحليله بالذكاء الاصطناعي متعدد الوسائط...',
         });
 
-        const prompt = `قم بصياغة ${totalQuestions} أسئلة اختيار من متعدد من المستند المرفق بالاعتماد على محتواه.
-${customInstruction ? 'تعليمات إضافية: ' + customInstruction : ''}
-يرجى إرجاع JSON فقط بالصيغة التالية (صيغة صارمة بدون أي نصوص أخرى):
-{
-  "title": "عنوان الاختبار",
-  "description": "وصف الاختبار",
-  "questions": [
-    { "text": "السؤال", "type": "mcq", "options": ["أ","ب","ج","د"], "correctIndex": 0, "correctAnswer": "أ", "explanation": "شرح" }
-  ]
-}`;
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: prompt },
-                { inline_data: { mime_type: mimeType || 'application/pdf', data: fileUri } }
-              ]
-            }]
-          })
-        });
-
-        if (!res.ok) throw new Error('فشل معالجة المستند عبر Gemini API.');
-
-        const dataRes = await res.json();
-        const candidateText = dataRes.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        const cleanedText = candidateText.replace(/```json|```/gi, '').trim();
-        const data = JSON.parse(cleanedText);
+        if (!fileUri) throw new Error('لم يتم العثور على محتوى المستند.');
+        const data = await generateQuizFromFile(fileUri, mimeType || 'application/pdf', totalQuestions, customInstruction);
 
         if (data.questions && Array.isArray(data.questions)) {
           if (!finalTitle && data.title) finalTitle = data.title;
