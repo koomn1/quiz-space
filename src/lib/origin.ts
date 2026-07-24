@@ -111,6 +111,13 @@ export function getAppOrigin(): string {
   return sanitizeAndSecureOrigin(matchedOrigin);
 }
 
+export function getAppBaseUrl(): string {
+  const origin = getAppOrigin();
+  const base = typeof import.meta !== 'undefined' ? (import.meta as any).env?.BASE_URL : '/';
+  if (!base || base === '/') return origin || '';
+  return `${origin}${base.replace(/\/$/, '')}`;
+}
+
 /**
  * Initializes the app origin - serverless version uses window.location directly.
  */

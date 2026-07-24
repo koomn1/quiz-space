@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { X, Copy, Check, Twitter, Facebook, Linkedin, MessageCircle, Send, ExternalLink, Share2 } from 'lucide-react';
-import { getAppOrigin } from '../lib/origin';
+import { getAppBaseUrl } from '../lib/origin';
 import { LiquidGlassSwitch } from './LiquidGlassSwitch';
 
 interface ShareModalProps {
@@ -51,9 +51,9 @@ export default function ShareModal({
     closeTooltip: isAr ? 'إغلاق التبويب' : 'Close'
   };
 
-  const shareUrl = isChallengeMode 
-    ? `${getAppOrigin()}/#/quiz/${quizId}?challenge=true` 
-    : `${getAppOrigin()}/#/quiz/${quizId}`;
+  const shareUrl = isChallengeMode
+    ? `${getAppBaseUrl()}/#/quiz/${quizId}?challenge=true`
+    : `${getAppBaseUrl()}/#/quiz/${quizId}`;
 
   const shareText = isChallengeMode
     ? (isAr 
