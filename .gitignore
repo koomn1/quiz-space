@@ -6,6 +6,10 @@ generate_keys.ps1
 .env.*.local
 *.log
 
+.vscode
+.idea
+
+
 src/lib/keys.generated.ts
 .vscode
 .idea

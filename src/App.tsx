@@ -667,7 +667,16 @@ export default function App() {
 
         const onboarded = localStorage.getItem(`quiz_profile_onboarded_${user.id}`);
         if (!onboarded) {
-          setShowPostRegisterModal(true);
+          try {
+            const { data: userRow } = await supabase.from('users').select('onboarded').eq('uid', user.id).single();
+            if (!userRow?.onboarded) {
+              setShowPostRegisterModal(true);
+            } else {
+              localStorage.setItem(`quiz_profile_onboarded_${user.id}`, 'true');
+            }
+          } catch (e) {
+            setShowPostRegisterModal(true);
+          }
         }
 
         // Success logged in chime sound
@@ -776,6 +785,25 @@ export default function App() {
 
     return () => authListener.subscription.unsubscribe();
   }, []);  // Initialize Account and check URL routes on start
+
+  React.useEffect(() => {
+    if (!userId || userId.startsWith('user-guest')) return;
+    const handleFocus = async () => {
+      try {
+        const stats = await getUserProfileStats(userId);
+        if (stats) {
+          setIsUserPremium(!!stats.isPremium);
+          setUserPlanName(stats.planName || '');
+          setUserStats(stats);
+          if (stats.photoURL) {
+            setUserPhoto(stats.photoURL);
+          }
+        }
+      } catch (_) {}
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [userId]);
   React.useEffect(() => {
     // 0. Fetch real external public URL origin for sharing purposes
     initAppOrigin();
@@ -943,7 +971,8 @@ export default function App() {
       playNotificationSound('delete');
       // Delay slightly for the sound to finish playing, then hard redirect / reload back to home/dashboard
       setTimeout(() => {
-        window.location.href = '/';
+        const basePath = getAppBasePath();
+        window.location.href = `${basePath}/#/dashboard/landing`;
       }, 400);
     } catch (e: any) {
       console.error('Google Sign Out Error:', e);
@@ -1856,8 +1885,12 @@ export default function App() {
             localStorage.setItem('quiz_userName', newName);
           }}
           lang={lang}
-          onSelectPlan={() => {
-            handleSetTab('profile');
+          onSelectPlan={(plan) => {
+            if (plan === 'free') {
+              handleSetTab('profile');
+            } else {
+              handleSetTab('billing');
+            }
           }}
         />
         </>

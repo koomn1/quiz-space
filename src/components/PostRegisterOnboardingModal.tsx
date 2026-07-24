@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Calendar, Sparkles, Check, Crown, Zap, X, ShieldCheck } from 'lucide-react';
 import { saveUserProfile } from '../lib/db';
+import { supabase } from '../lib/supabaseClient';
 
 interface PostRegisterOnboardingModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
       const finalName = name.trim() || initialName || 'طالب متميز';
       if (userId) {
         await saveUserProfile(userId, finalName, undefined, undefined, `النوع: ${gender || 'غير محدد'} | الميلاد: ${birthdate || 'غير محدد'}`);
+        await supabase.from('users').update({ onboarded: true }).eq('uid', userId);
       }
       onSaveName(finalName);
       localStorage.setItem(`quiz_profile_onboarded_${userId}`, 'true');
