@@ -667,15 +667,17 @@ export default function App() {
 
         const onboarded = localStorage.getItem(`quiz_profile_onboarded_${user.id}`);
         if (!onboarded) {
+          let dbOnboarded = false;
           try {
-            const { data: userRow } = await supabase.from('users').select('onboarded').eq('uid', user.id).single();
-            if (!userRow?.onboarded) {
-              setShowPostRegisterModal(true);
-            } else {
-              localStorage.setItem(`quiz_profile_onboarded_${user.id}`, 'true');
-            }
+            const { data: userRow } = await supabase.from('users').select('onboarded').eq('uid', user.id).maybeSingle();
+            dbOnboarded = !!userRow?.onboarded;
           } catch (e) {
+            dbOnboarded = true;
+          }
+          if (!dbOnboarded) {
             setShowPostRegisterModal(true);
+          } else {
+            localStorage.setItem(`quiz_profile_onboarded_${user.id}`, 'true');
           }
         }
 

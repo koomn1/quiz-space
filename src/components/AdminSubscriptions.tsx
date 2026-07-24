@@ -234,7 +234,7 @@ export default function AdminSubscriptions({
         setAiPromoMsg(`🎉 استخدم كود ${code} واحصل على خصم ${percent}% على باقات Quiz Space! سارع قبل انتهاء العرض.`);
       } else {
         const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
