@@ -670,6 +670,7 @@ export default function QuizCreator({
   // Call Direct Document Upload & AI Processing (Fast & Powerful Files API with Sequential Batch extraction)
   const handleProcessDocument = async () => {
     if (!uploadedFile) return;
+    if (isGenerating) return;
     if (userPlan !== 'Gold' && userPlan !== 'Diamond' && fileUses <= 0) {
       setShowPaywallOcr(true);
       return;
@@ -702,8 +703,9 @@ export default function QuizCreator({
       const initData = { fileUri: base64Clean, fileUploadName: uploadedFile.name, totalPages: 1 };
       const { fileUri, fileUploadName, totalPages } = initData;
 
-      // Step 2: Trigger the batch generation / auto-detect scan via our hook mutation!
-      const result = await generateAndSaveQuiz({
+  // Step 2: Trigger the batch generation / auto-detect scan via our hook mutation!
+  if (isGenerating) return;
+  const result = await generateAndSaveQuiz({
         type: 'file_direct',
         fileUri,
         fileUploadName,
@@ -751,6 +753,7 @@ export default function QuizCreator({
       setAiError('يرجى تحديد موضوع الاختبار لتوليد الأسئلة.');
       return;
     }
+    if (isGenerating) return;
     if (userPlan !== 'Gold' && userPlan !== 'Diamond' && sentenceUses <= 0) {
       setShowPaywallSentence(true);
       return;
@@ -799,6 +802,7 @@ export default function QuizCreator({
       setPasteError('يرجى لصق نصوص دراسية أو فقرات من الملف أولاً.');
       return;
     }
+    if (isGenerating) return;
     if (userPlan !== 'Gold' && userPlan !== 'Diamond' && bookUses <= 0) {
       setShowPaywallBook(true);
       return;
@@ -1258,7 +1262,7 @@ export default function QuizCreator({
                 }
                 handleGenerateAiQuiz();
               }}
-              disabled={isGeneratingAi}
+               disabled={isGeneratingAi || isGenerating}
               className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-white font-bold transition-all disabled:opacity-50 cursor-pointer ${
                 (userPlan !== 'Gold' && userPlan !== 'Diamond' && sentenceUses <= 0)
                   ? 'bg-slate-400 dark:bg-slate-700 hover:bg-slate-500'
@@ -1395,7 +1399,7 @@ A computer is a digital electronic machine...
                     }
                     handleGenerateFromPastedText();
                   }}
-                  disabled={isGeneratingPaste || (!pastedText.trim() && (userPlan === 'Gold' || userPlan === 'Diamond' || bookUses > 0))}
+                  disabled={isGeneratingPaste || isGenerating || (!pastedText.trim() && (userPlan === 'Gold' || userPlan === 'Diamond' || bookUses > 0))}
                   className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-white font-bold transition-all disabled:opacity-50 cursor-pointer ${
                     (userPlan !== 'Gold' && userPlan !== 'Diamond' && bookUses <= 0)
                       ? 'bg-slate-400 dark:bg-slate-700 hover:bg-slate-500'
@@ -1869,7 +1873,7 @@ A computer is a digital electronic machine...
                   }
                   handleProcessDocument();
                 }}
-                disabled={isProcessingOcr}
+                disabled={isProcessingOcr || isGenerating}
                 className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-white font-bold transition-all disabled:opacity-50 cursor-pointer shadow-md select-none active:scale-[0.99] ${
                   (userPlan !== 'Gold' && userPlan !== 'Diamond' && fileUses <= 0)
                     ? 'bg-slate-400 dark:bg-slate-700 hover:bg-slate-500 shadow-none'
