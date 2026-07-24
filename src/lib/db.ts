@@ -762,11 +762,16 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
   }
 }
 
-export async function getPremiumRequests(): Promise<any[]> {
+export async function getPremiumRequests(userId?: string): Promise<any[]> {
   const locals = getLocalPremiumRequests();
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase.from('premium_requests').select('*').order('created_at', { ascending: false });
+      let query = supabase.from('premium_requests').select('*');
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+      query = query.order('created_at', { ascending: false });
+      const { data, error } = await query;
       if (!error && data) {
         const map = new Map();
         locals.forEach(r => map.set(r.id, r));
@@ -776,6 +781,9 @@ export async function getPremiumRequests(): Promise<any[]> {
     } catch (e) {
       console.warn('Error getting premium requests:', e);
     }
+  }
+  if (userId) {
+    return locals.filter((r: any) => r.user_id === userId);
   }
   return locals;
 }

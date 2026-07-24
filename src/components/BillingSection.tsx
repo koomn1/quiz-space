@@ -203,9 +203,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
   const fetchMyRequests = async () => {
     try {
       setLoadingRequests(true);
-      const all = await getPremiumRequests();
-      // Filter requests belonging to this user
-      const filtered = all.filter((r: any) => r.userId === userId);
+      const filtered = await getPremiumRequests(userId);
       setUserRequests(filtered);
     } catch (err) {
       console.error('Error fetching user requests:', err);
