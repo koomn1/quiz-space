@@ -556,16 +556,28 @@ export default function Classrooms({
       const { data: classData } = await supabase.from('classrooms').select('*').ilike('code', targetCode).single();
       if (!classData) throw new Error(isAr ? 'عذراً، هذا الرمز غير صحيح.' : 'Sorry, invalid classroom code.');
       
-      const { error } = await supabase.from('classroom_students').insert({
+      const membership = {
         class_code: targetCode,
         class_id: classData.id,
         student_id: currentUserId,
         student_name: currentUserName,
         student_photo: currentUserPhoto,
         joined_at: new Date().toISOString()
-      });
+      };
 
-      if (error) throw new Error(error.message);
+      let joinedViaSupabase = false;
+      try {
+        const { error } = await supabase.from('classroom_students').insert(membership);
+        if (!error) joinedViaSupabase = true;
+      } catch (_) {}
+
+      if (!joinedViaSupabase) {
+        const localList = JSON.parse(localStorage.getItem('classroom_students_list') || '[]');
+        if (!localList.some((item: any) => item.class_id === classData.id && item.student_id === currentUserId)) {
+          localList.push(membership);
+          localStorage.setItem('classroom_students_list', JSON.stringify(localList));
+        }
+      }
 
       const { data: freshClassrooms } = await supabase.from('classrooms').select('*');
       if (freshClassrooms) {

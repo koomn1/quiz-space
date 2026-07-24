@@ -1059,7 +1059,7 @@ export default function App() {
       }
     } catch (_) {}
 
-    if (isSuperAdmin || isTeacher || isGroupOwner) {
+    if (isSuperAdmin || isTeacher || isGroupOwner || !!userId) {
       setSharingQuiz({ id, title, description: desc });
     } else {
       alert(lang === 'ar' 
