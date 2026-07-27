@@ -29,7 +29,8 @@ import {
   Settings,
   User as UserIcon,
 } from "lucide-react";
-import { getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar } from "../lib/db";
+import { getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, updateBadgeAndNameColor } from "../lib/db";
+import { PremiumNameTag, availableBadgeTiers, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BadgeTier, NameColorKey } from "../components/PremiumNameTag";
 import { getApiUrl } from "../lib/origin";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
@@ -106,8 +107,10 @@ export default function UserProfile({
   const [isRedeemingPromo, setIsRedeemingPromo] = React.useState(false);
 
   // Custom Badge & Social States
-  const [badgeSymbol, setBadgeSymbol] = React.useState("🛡️");
-  const [badgeColor, setBadgeColor] = React.useState("#3b82f6");
+  const [badgeTier, setBadgeTier] = React.useState<BadgeTier>("none");
+  const [nameColor, setNameColor] = React.useState<NameColorKey>("default");
+  const [isSavingBadge, setIsSavingBadge] = React.useState(false);
+  const [badgeSaveError, setBadgeSaveError] = React.useState("");
   const [githubUrl, setGithubUrl] = React.useState("");
   const [instagramUrl, setInstagramUrl] = React.useState("");
   const [linkedinUrl, setLinkedinUrl] = React.useState("");
@@ -125,39 +128,6 @@ export default function UserProfile({
     blur: 5,
   });
   const [coverText, setCoverText] = React.useState("");
-
-  // Verified Badge (the customizable checkmark)
-  const [verifiedIcon, setVerifiedIcon] = React.useState("BadgeCheck");
-  const [verifiedColor, setVerifiedColor] = React.useState("#3b82f6");
-  const [verifiedShow, setVerifiedShow] = React.useState(true);
-
-  const renderVerifiedIcon = (
-    iconName: string,
-    color: string,
-    sizeClass: string = "w-6 h-6",
-  ) => {
-    const props = {
-      className: `${sizeClass} drop-shadow-sm transition-transform hover:scale-110 duration-200 shrink-0`,
-      style: { color },
-    };
-    switch (iconName) {
-      case "CheckCircle2":
-        return <CheckCircle2 {...props} />;
-      case "ShieldCheck":
-        return <ShieldCheck {...props} />;
-      case "Award":
-        return <Award {...props} />;
-      case "Crown":
-        return <Crown {...props} />;
-      case "Gem":
-        return <Gem {...props} />;
-      case "Star":
-        return <Star {...props} />;
-      case "BadgeCheck":
-      default:
-        return <BadgeCheck {...props} />;
-    }
-  };
 
   const [activeTab, setActiveTab] = React.useState<
     "overview" | "quizzes" | "achievements"
@@ -252,8 +222,8 @@ export default function UserProfile({
           if (stats.photoURL) setEditPhotoURL(stats.photoURL);
           if (stats.customId) setEditCustomId(stats.customId);
 
-          if (stats.badgeSymbol) setBadgeSymbol(stats.badgeSymbol);
-          if (stats.badgeColor) setBadgeColor(stats.badgeColor);
+          if (stats.badgeTier) setBadgeTier(stats.badgeTier);
+          if (stats.nameColor) setNameColor(stats.nameColor);
 
           // Parse serialized location info column for custom backdrops, slogs & social urls
           const locStr = stats.location || "";
@@ -265,30 +235,6 @@ export default function UserProfile({
           let parsedFacebook = "";
           let parsedRole = "";
           let parsedCountry = "";
-
-          let parsedVerifiedIcon = "BadgeCheck";
-          let parsedVerifiedColor = "#3b82f6";
-          let parsedVerifiedShow = stats.isPremium || false;
-
-          if (locStr.includes("||verifiedIcon:")) {
-            const iconPart = locStr.split("||verifiedIcon:")[1] || "";
-            parsedVerifiedIcon = iconPart.split("||")[0] || "BadgeCheck";
-          }
-          if (locStr.includes("||verifiedColor:")) {
-            const colorPart = locStr.split("||verifiedColor:")[1] || "";
-            const rawCol = colorPart.split("||")[0] || "#3b82f6";
-            try {
-              parsedVerifiedColor = decodeURIComponent(rawCol);
-            } catch (e) {
-              parsedVerifiedColor = rawCol;
-            }
-          }
-          if (locStr.includes("||verifiedShow:")) {
-            const showPart = locStr.split("||verifiedShow:")[1] || "";
-            parsedVerifiedShow = showPart.split("||")[0] === "true";
-          } else if (stats.isPremium) {
-            parsedVerifiedShow = true;
-          }
 
           if (locStr.includes("||bg:")) {
             const afterBg = locStr.split("||bg:")[1] || "";
@@ -376,9 +322,6 @@ export default function UserProfile({
           setFacebookUrl(parsedFacebook);
           setEditRole(parsedRole);
           setEditCountry(parsedCountry);
-          setVerifiedIcon(parsedVerifiedIcon);
-          setVerifiedColor(parsedVerifiedColor);
-          setVerifiedShow(parsedVerifiedShow);
         }
       } catch (err) {
         console.error("Error fetching profile", err);
@@ -449,7 +392,7 @@ export default function UserProfile({
       }
 
       // Serialize background, custom cover slogan, custom social urls and verification badge customization back into location field
-      const serializedLocation = `||bg:${chosenBg}||coverText:${coverText.trim()}||github:${githubUrl.trim()}||instagram:${instagramUrl.trim()}||linkedin:${linkedinUrl.trim()}||facebook:${facebookUrl.trim()}||role:${editRole.trim()}||country:${editCountry.trim()}||verifiedIcon:${verifiedIcon}||verifiedColor:${encodeURIComponent(verifiedColor)}||verifiedShow:${verifiedShow}||bgSpeed:${bgSettings.speed}||bgBrightness:${bgSettings.brightness}||bgGlow:${bgSettings.glow}||bgDensity:${bgSettings.density}||bgWaveHeight:${bgSettings.waveHeight}||bgTheme:${bgSettings.theme}||bgBlur:${bgSettings.blur}`;
+      const serializedLocation = `||bg:${chosenBg}||coverText:${coverText.trim()}||github:${githubUrl.trim()}||instagram:${instagramUrl.trim()}||linkedin:${linkedinUrl.trim()}||facebook:${facebookUrl.trim()}||role:${editRole.trim()}||country:${editCountry.trim()}||bgSpeed:${bgSettings.speed}||bgBrightness:${bgSettings.brightness}||bgGlow:${bgSettings.glow}||bgDensity:${bgSettings.density}||bgWaveHeight:${bgSettings.waveHeight}||bgTheme:${bgSettings.theme}||bgBlur:${bgSettings.blur}`;
 
       await saveUserProfile(
         profileId,
@@ -458,10 +401,20 @@ export default function UserProfile({
         currentUserEmail || undefined,
         editBio || undefined,
         serializedLocation,
-        badgeSymbol,
-        badgeColor,
+        undefined, // badgeSymbol (deprecated - use updateBadgeAndNameColor)
+        undefined, // badgeColor (deprecated - use updateBadgeAndNameColor)
         editCustomId || undefined,
       );
+
+      if (isPremium) {
+        try {
+          await updateBadgeAndNameColor(profileId, badgeTier, nameColor);
+          setBadgeSaveError("");
+        } catch (badgeErr: any) {
+          console.error("Error saving badge/name color:", badgeErr);
+          setBadgeSaveError(badgeErr?.message || (isAr ? "فشل حفظ شارة التوثيق." : "Failed to save verified badge."));
+        }
+      }
 
       onUpdateName(editName);
       if (onUpdatePhoto) {
@@ -479,8 +432,8 @@ export default function UserProfile({
               name: editName,
               bio: editBio,
               photoURL: editPhotoURL,
-              badgeSymbol,
-              badgeColor,
+              badgeTier: isPremium ? badgeTier : "none",
+              nameColor: isPremium ? nameColor : "default",
               customId: editCustomId,
               location: serializedLocation,
             } as any)
@@ -776,66 +729,6 @@ export default function UserProfile({
     },
   ];
 
-  const availableBadges = [
-    { icon: "🛡️", label: isAr ? "حامي المعرفة" : "Knowledge Shield" },
-    { icon: "🚀", label: isAr ? "مستكشف الفضاء" : "Cosmo Rocket" },
-    { icon: "🎓", label: isAr ? "باحث أكاديمي" : "Scholar" },
-    { icon: "🔥", label: isAr ? "صاحب الشغف" : "Passion Fire" },
-    { icon: "🏆", label: isAr ? "البطل الكوني" : "Champion" },
-    { icon: "💎", label: isAr ? "العضو النادر" : "Rare Gem" },
-    { icon: "👑", label: isAr ? "الملك الكوني" : "Cosmo King" },
-    { icon: "✅", label: isAr ? "توثيق قياسي" : "Standard Verified" },
-    { icon: "☑️", label: isAr ? "توثيق احترافي" : "Pro Verified" },
-    { icon: "✔️", label: isAr ? "توثيق أساسي" : "Basic Verified" },
-    { icon: "🌟", label: isAr ? "نجم التوثيق" : "Star Verified" },
-    {
-      icon: "🏅",
-      label: isAr ? "شارة التوثيق الماسية" : "Diamond VerifiedBadge",
-    },
-    { icon: "🥇", label: isAr ? "توثيق ذهبي" : "Gold Verified" },
-    { icon: "⭐", label: isAr ? "توثيق مميز" : "Featured Verified" },
-    { icon: "❇️", label: isAr ? "توثيق أخضر" : "Green Verified" },
-  ];
-
-  const badgeColors = [
-    { value: "#3b82f6", label: isAr ? "أزرق فضائي" : "Space Blue" },
-    { value: "#8b5cf6", label: isAr ? "بنفسجي السديم" : "Nebula Purple" },
-    { value: "#10b981", label: isAr ? "أخضر زمردي" : "Emerald Green" },
-    { value: "#f59e0b", label: isAr ? "ذهبي ناصع" : "Solar Gold" },
-    { value: "#ef4444", label: isAr ? "قرمزي كوني" : "Cosmo Crimson" },
-    { value: "#ec4899", label: isAr ? "وردي فضائي" : "Space Pink" },
-  ];
-
-  const displayLocation = profileData?.location || "";
-  let displayVerifiedIcon = "BadgeCheck";
-  let displayVerifiedColor = "#3b82f6";
-  let displayVerifiedShow = profileData?.isPremium || false;
-
-  if (displayLocation.includes("||verifiedIcon:")) {
-    const iconPart = displayLocation.split("||verifiedIcon:")[1] || "";
-    displayVerifiedIcon = iconPart.split("||")[0] || "BadgeCheck";
-  }
-  if (displayLocation.includes("||verifiedColor:")) {
-    const colorPart = displayLocation.split("||verifiedColor:")[1] || "";
-    const rawCol = colorPart.split("||")[0] || "#3b82f6";
-    try {
-      displayVerifiedColor = decodeURIComponent(rawCol);
-    } catch (e) {
-      displayVerifiedColor = rawCol;
-    }
-  }
-  if (displayLocation.includes("||verifiedShow:")) {
-    const showPart = displayLocation.split("||verifiedShow:")[1] || "";
-    displayVerifiedShow = showPart.split("||")[0] === "true";
-  } else if (profileData?.isPremium) {
-    displayVerifiedShow = true;
-  } else {
-    // If customized icon or customized color is present, let's show it by default
-    if (displayLocation.includes("||verifiedIcon:")) {
-      displayVerifiedShow = true;
-    }
-  }
-
   return (
     <div
       className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-12 text-slate-800 dark:text-slate-100"
@@ -890,51 +783,16 @@ export default function UserProfile({
                 style={{ textAlign: isAr ? "right" : "left" }}
               >
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-                  <h1 className="text-2xl md:text-3xl font-black font-display text-slate-900 dark:text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] flex items-center gap-1.5">
-                    {profileData?.name || currentUserName}
-                    {/* Render customized/customizable verification badge */}
-                    {displayVerifiedShow && (
-                      <div className="flex items-center gap-0.5 shrink-0 bg-white/55 dark:bg-slate-900/55 rounded-full px-1.5 py-1 backdrop-blur-sm border border-slate-200/40 dark:border-slate-800/40">
-                        <span
-                          title={isAr ? "توثيق الحساب" : "Account Verified"}
-                        >
-                          {renderVerifiedIcon(
-                            displayVerifiedIcon,
-                            displayVerifiedColor,
-                            "w-6 h-6",
-                          )}
-                        </span>
-
-                        {/* Additional premium verification badges based on plan */}
-                        {isPremium &&
-                          (planName.toLowerCase().includes("pro") ||
-                            planName.toLowerCase().includes("premium") ||
-                            planName.toLowerCase().includes("diamond") ||
-                            planName.toLowerCase().includes("founder")) && (
-                            <span
-                              title={isAr ? "توثيق المبدعين" : "Pro Verified"}
-                            >
-                              <BadgeCheck className="w-6 h-6 text-emerald-500 drop-shadow-sm" />
-                            </span>
-                          )}
-                      </div>
-                    )}
+                  <h1 className="text-2xl md:text-3xl font-black font-display drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] flex items-center">
+                    <PremiumNameTag
+                      name={profileData?.name || currentUserName}
+                      isPremium={!!profileData?.isPremium}
+                      badgeTier={(profileData as any)?.badgeTier}
+                      nameColor={(profileData as any)?.nameColor}
+                      badgeSize="lg"
+                      className="text-slate-900 dark:text-white"
+                    />
                   </h1>
-
-                  {/* Render Custom Configured Badge */}
-                  {isPremium && (
-                    <span
-                      className="px-2.5 py-1 text-[10px] font-black rounded-lg text-white flex items-center gap-1 hover:scale-105 transition-transform"
-                      style={{
-                        backgroundColor: profileData?.badgeColor || badgeColor,
-                      }}
-                    >
-                      <span>{profileData?.badgeSymbol || badgeSymbol}</span>
-                      <span>
-                        {isAr ? "شارة توثيق مخصصة" : "Custom Verified"}
-                      </span>
-                    </span>
-                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 mt-1.5 justify-center sm:justify-start">
@@ -1339,6 +1197,53 @@ export default function UserProfile({
                         </button>
                       ))}
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Verified Badge & Name Color - premium subscribers only */}
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                <label className="text-xs font-black text-slate-500 block mb-2">
+                  {isAr ? "شارة التوثيق ولون الاسم:" : "Verified Badge & Name Color:"}
+                </label>
+                {!isPremium ? (
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-600 dark:text-amber-300 font-bold">
+                    {isAr ? "🔒 متاح للمشتركين فقط." : "🔒 Premium subscribers only."}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <select
+                      value={badgeTier}
+                      onChange={(e) => setBadgeTier(e.target.value as BadgeTier)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      {availableBadgeTiers(planName as any).map((tier) => (
+                        <option key={tier} value={tier}>
+                          {isAr ? BADGE_LABELS[tier].labelAr : BADGE_LABELS[tier].labelEn}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex flex-wrap gap-1.5">
+                      {availableNameColors(planName as any).map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setNameColor(color)}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${nameColor === color ? "border-primary ring-1 ring-primary" : "border-slate-200 dark:border-slate-700"} bg-white dark:bg-slate-950`}
+                          style={NAME_COLOR_PRESETS[color].style}
+                        >
+                          {isAr ? NAME_COLOR_PRESETS[color].labelAr : NAME_COLOR_PRESETS[color].labelEn}
+                        </button>
+                      ))}
+                    </div>
+                    {badgeTier !== "none" && (
+                      <div className="pt-1">
+                        <PremiumNameTag name={editName || currentUserName} isPremium={true} badgeTier={badgeTier} nameColor={nameColor} badgeSize="md" />
+                      </div>
+                    )}
+                    {badgeSaveError && (
+                      <p className="text-[10px] text-red-500 font-bold">{badgeSaveError}</p>
+                    )}
                   </div>
                 )}
               </div>

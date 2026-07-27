@@ -514,24 +514,25 @@ export default function QuizResolver({
     try {
       const finalName = takerName.trim() || userName.trim() || 'طالب متميز';
       
-      // Save rating attempt safely to Supabase/LocalStorage
-      try {
-        if (savedCompletionId) {
-          try { await supabase.from('completions').update({
-            rating: selectedRating,
-            feedback: feedbackText.trim()
-          }).eq('id', savedCompletionId); } catch {}
-        } else {
-          try { await submitQuizAttempt(quizId, {
+      // Save rating attempt to Supabase
+      if (savedCompletionId) {
+        const { error } = await supabase.from('completions').update({
+          rating: selectedRating,
+          feedback: feedbackText.trim()
+        }).eq('id', savedCompletionId);
+        if (error) console.error('Failed to save quiz rating:', error);
+      } else {
+        try {
+          await submitQuizAttempt(quizId, {
             takerId: userId || 'anonymous',
             takerName: finalName,
             score,
             rating: selectedRating,
             feedback: feedbackText.trim()
-          }); } catch {}
+          });
+        } catch (e) {
+          console.error('Failed to submit quiz attempt with rating:', e);
         }
-      } catch (e) {
-        console.warn('Rating save fallback:', e);
       }
 
       try {

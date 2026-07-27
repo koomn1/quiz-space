@@ -50,9 +50,20 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
       is_premium: false,
       joined_date: new Date().toISOString()
     };
-    try { await supabase.from('users').insert(newUser); } catch {}
+    // Upsert (not insert) so a race between concurrent tabs/calls creating the
+    // same row doesn't throw a duplicate-key error that gets silently dropped.
+    const { error: insertError } = await supabase.from('users').upsert(newUser, { onConflict: 'uid' });
+    if (insertError) {
+      // This used to be a bare `catch {}` - if this fails, the person is
+      // authenticated but has no users row at all, so every premium/profile
+      // check downstream silently falls back to defaults. Surface it loudly.
+      console.error('Failed to create users row after sign-up for', authUser.id, insertError);
+    }
   } else if ((!data.name || data.name === 'طالب متميز') && metaName && metaName !== 'طالب متميز') {
-    try { await supabase.from('users').update({ name: metaName, photo_url: data.photo_url || metaPhoto }).eq('uid', authUser.id); } catch {}
+    const { error: updateError } = await supabase.from('users').update({ name: metaName, photo_url: data.photo_url || metaPhoto }).eq('uid', authUser.id);
+    if (updateError) {
+      console.error('Failed to sync name/photo from auth metadata for', authUser.id, updateError);
+    }
   }
 
   return {

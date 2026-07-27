@@ -254,6 +254,8 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
       );
     } catch (e) {
       console.error('Failed to dispatch direct message:', e);
+      setInputText(msgText); // restore what they typed so it isn't silently lost
+      alert(isAr ? 'تعذر إرسال الرسالة، حاول مرة أخرى.' : 'Failed to send message, please try again.');
     }
   };
 

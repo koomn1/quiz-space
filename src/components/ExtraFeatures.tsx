@@ -23,8 +23,13 @@ import {
   createNotification, 
   getRecentCompletions,
   getUserProfileStats,
-  saveUserProfile
+  saveUserProfile,
+  getBookmarkedQuizIds,
+  addBookmark,
+  removeBookmark,
+  updateBadgeAndNameColor
 } from '../lib/db';
+import { PremiumNameTag, NAME_COLOR_PRESETS, availableBadgeTiers, availableNameColors, BADGE_LABELS, BadgeTier, NameColorKey } from './PremiumNameTag';
 import { TelegramBadge } from './ProfileStatsView';
 import ThreeDIcon from './ThreeDIcon';
 import ParallaxTiltCard from './ParallaxTiltCard';
@@ -53,6 +58,8 @@ interface CommunityPost {
   likedBy: string[];
   authorBadgeSymbol?: string;
   authorBadgeColor?: string;
+  authorBadgeTier?: BadgeTier;
+  authorNameColor?: NameColorKey;
   viewsCount?: number;
   viewers?: any[];
 }
@@ -393,17 +400,13 @@ function CommunityPostCard({
           </div>
           <div>
             <div className="flex items-center gap-1.5 flex-row-reverse justify-end">
-              <h4 className="text-xs font-black text-slate-800 dark:text-white">{post.authorName}</h4>
-              <UserBadge 
-                tier={
-                  post.authorBadgeSymbol === '👑' ? 'enterprise' :
-                  post.authorBadgeSymbol === '✔' ? 'pro' :
-                  post.authorBadgeSymbol === 'bot' ? 'premium' :
-                  post.authorId?.startsWith('sys') ? 'team' : 'free'
-                } 
-                size="sm" 
-                showTooltip={true} 
-                className="ml-1"
+              <PremiumNameTag
+                name={post.authorName}
+                isPremium={true}
+                nameColor={post.authorNameColor}
+                badgeTier={post.authorBadgeTier}
+                badgeSize="sm"
+                className="text-xs font-black text-slate-800 dark:text-white"
               />
             </div>
             <p className="text-[9px] text-slate-500 font-bold mt-0.5">
@@ -454,18 +457,18 @@ function CommunityPostCard({
   );
 }
 
-export function CommunitySection({ lang, userId, userName, userEmail, userRole }: { lang: 'ar' | 'en', userId: string, userName: string, userEmail?: string, userRole?: string }) {
+export function CommunitySection({ lang, userId, userName, userEmail, userRole, isGuest = false, isAdmin: isAdminProp }: { lang: 'ar' | 'en', userId: string, userName: string, userEmail?: string, userRole?: string, isGuest?: boolean, isAdmin?: boolean }) {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [inputText, setInputText] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
-  const [currentUserProfile, setCurrentUserProfile] = useState<{ badgeSymbol?: string; badgeColor?: string } | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<{ badgeTier?: BadgeTier; nameColor?: NameColorKey } | null>(null);
   const isAr = lang === 'ar';
 
   const [selectedPostForInsights, setSelectedPostForInsights] = useState<CommunityPost | null>(null);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
 
   const handleOpenInsights = (post: CommunityPost) => {
-    const isAdmin = userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com' || userRole === 'admin';
+    const isAdmin = isAdminProp !== undefined ? isAdminProp : (userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com' || userRole === 'admin');
     if (!isAdmin) {
       alert(isAr ? 'عذراً، هذه الإحصائيات التفصيلية للمشاهدات متاحة فقط للمشرف الإداري.' : 'Sorry, detailed viewer insights are only available to admins.');
       return;
@@ -482,8 +485,8 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole }
         const stats = await getUserProfileStats(userId);
         if (stats) {
           setCurrentUserProfile({
-            badgeSymbol: stats.badgeSymbol || '',
-            badgeColor: stats.badgeColor || ''
+            badgeTier: stats.badgeTier || 'none',
+            nameColor: stats.nameColor || 'default'
           });
         }
       } catch (e) {
@@ -498,22 +501,10 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole }
     async function loadPosts() {
       try {
         const fetched = await getCommunityPosts();
-        if (fetched && fetched.length > 0) {
-          setPosts(fetched);
-          localStorage.setItem('quiz_community_posts_cache', JSON.stringify(fetched));
-        } else {
-          setPosts([]);
-          localStorage.setItem('quiz_community_posts_cache', JSON.stringify([]));
-        }
+        setPosts(fetched || []);
       } catch (error) {
-        console.warn('Community load fallback to local cache:', error);
-        const cache = localStorage.getItem('quiz_community_posts_cache');
-        if (cache) {
-          setPosts(JSON.parse(cache));
-        } else {
-          setPosts([]);
-          localStorage.setItem('quiz_community_posts_cache', JSON.stringify([]));
-        }
+        console.error('Failed to load community posts:', error);
+        setPosts([]);
       }
     }
     loadPosts();
@@ -525,19 +516,25 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole }
 
   const handlePublish = async () => {
     if (!inputText.trim() || isPublishing) return;
+    if (isGuest) {
+      alert(isAr ? 'سجل الدخول للاستمرار.' : 'Sign in to continue.');
+      return;
+    }
     setIsPublishing(true);
     playChimeSound('click');
 
     const authName = userName || (isAr ? 'طالب متميز' : 'Star Scholar');
-    const bSymbol = currentUserProfile?.badgeSymbol || '';
-    const bColor = currentUserProfile?.badgeColor || '';
+    const bTier = currentUserProfile?.badgeTier || 'none';
+    const bColor = currentUserProfile?.nameColor || 'default';
 
     try {
       const created = await createCommunityPost(
         inputText.trim(),
         userId || 'guest',
         authName,
-        bSymbol,
+        undefined,
+        undefined,
+        bTier,
         bColor
       );
 
@@ -563,6 +560,10 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole }
 
   const handleLike = async (postId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isGuest) {
+      alert(isAr ? 'سجل الدخول للاستمرار.' : 'Sign in to continue.');
+      return;
+    }
     playChimeSound('click');
     
     const targetPost = posts.find(p => p.id === postId);
@@ -652,7 +653,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole }
         ) : (
           posts.map(post => {
             const userLiked = post.likedBy?.includes(userId || 'anonymous');
-            const isAdmin = userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com' || userRole === 'admin';
+            const isAdmin = isAdminProp !== undefined ? isAdminProp : (userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com' || userRole === 'admin');
             return (
               <CommunityPostCard
                 key={post.id}
@@ -667,7 +668,6 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole }
                 onDelete={async (postId) => {
                   if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا المنشور؟' : 'Are you sure you want to delete this post?')) {
                     setPosts(prev => prev.filter(p => p.id !== postId));
-                    localStorage.setItem('quiz_community_posts_cache', JSON.stringify(posts.filter(p => p.id !== postId)));
                     try {
                       await deleteCommunityPost(postId);
                     } catch (err) {
@@ -766,27 +766,32 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole }
 // ----------------------------------------------------
 // BOOKMARKS SECTION
 // ----------------------------------------------------
-export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile }: { quizzes: Quiz[], onStartQuiz: (id: string) => void, lang: 'ar' | 'en', onViewProfile?: (creatorId: string) => void }) {
+export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile, userId }: { quizzes: Quiz[], onStartQuiz: (id: string) => void, lang: 'ar' | 'en', onViewProfile?: (creatorId: string) => void, userId: string }) {
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const isAr = lang === 'ar';
 
   useEffect(() => {
-    const ids = JSON.parse(localStorage.getItem('quiz_bookmarks_list') || '[]');
-    setBookmarkedIds(ids);
-  }, []);
+    if (!userId) { setBookmarkedIds([]); return; }
+    getBookmarkedQuizIds(userId).then(setBookmarkedIds).catch(() => setBookmarkedIds([]));
+  }, [userId]);
 
-  const toggleBookmark = (id: string, e: React.MouseEvent) => {
+  const toggleBookmark = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     playChimeSound('click');
-    const ids = JSON.parse(localStorage.getItem('quiz_bookmarks_list') || '[]');
-    let updated: string[];
-    if (ids.includes(id)) {
-      updated = ids.filter((bId: string) => bId !== id);
-    } else {
-      updated = [...ids, id];
+    if (!userId) return;
+    const isBookmarked = bookmarkedIds.includes(id);
+    const updated = isBookmarked ? bookmarkedIds.filter(bId => bId !== id) : [...bookmarkedIds, id];
+    setBookmarkedIds(updated); // optimistic
+    try {
+      if (isBookmarked) {
+        await removeBookmark(userId, id);
+      } else {
+        await addBookmark(userId, id);
+      }
+    } catch (err) {
+      console.error('Failed to sync bookmark:', err);
+      setBookmarkedIds(bookmarkedIds); // revert on failure
     }
-    setBookmarkedIds(updated);
-    localStorage.setItem('quiz_bookmarks_list', JSON.stringify(updated));
   };
 
   const savedQuizzes = quizzes.filter(q => bookmarkedIds.includes(q.id));
@@ -856,9 +861,9 @@ export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile }: 
 // ----------------------------------------------------
 // ACHIEVEMENTS / REWARDS SECTION
 // ----------------------------------------------------
-export function AchievementsSection({ lang, completions, quizzes, userId }: { lang: 'ar' | 'en', completions: QuizCompletion[], quizzes: Quiz[], userId: string }) {
+export function AchievementsSection({ lang, completions, quizzes, userId, isPremium }: { lang: 'ar' | 'en', completions: QuizCompletion[], quizzes: Quiz[], userId: string, isPremium: boolean }) {
   const isAr = lang === 'ar';
-  const hasPrem = localStorage.getItem('quiz_is_premium') === 'true';
+  const hasPrem = isPremium;
 
   // Compute Achievements stats
   const totalSolved = completions.length;
@@ -1139,7 +1144,8 @@ export function SettingsSection({
   setDarkMode,
   isPremium,
   currentUserId,
-  currentUserEmail
+  currentUserEmail,
+  userPlanName = 'Free'
 }: {
   lang: 'ar' | 'en';
   userName: string;
@@ -1151,6 +1157,7 @@ export function SettingsSection({
   isPremium: boolean;
   currentUserId?: string;
   currentUserEmail?: string | null;
+  userPlanName?: 'Free' | 'Silver' | 'Gold' | 'Diamond';
 }) {
   const isAr = lang === 'ar';
   
@@ -1161,12 +1168,7 @@ export function SettingsSection({
   const [nameInput, setNameInput] = useState(userName);
   const [usernameInput, setUsernameInput] = useState('');
   const [bioInput, setBioInput] = useState('');
-  const [phoneInput, setPhoneInput] = useState(() => {
-    if (!currentUserId) return '';
-    try {
-      return localStorage.getItem(`quiz_user_phone_${currentUserId}`) || '';
-    } catch (_) { return ''; }
-  });
+  const [phoneInput, setPhoneInput] = useState('');
 
   // Sound effects toggle
   const [soundMuted, setSoundMuted] = useState(() => localStorage.getItem('quiz_sound_effects_muted') === 'true');
@@ -1186,8 +1188,10 @@ export function SettingsSection({
   });
 
   // Specialized custom branding elements (Premium badge)
-  const [badgeSymbol, setBadgeSymbol] = useState('🛡️');
-  const [badgeColor, setBadgeColor] = useState('#3b82f6');
+  const [badgeTier, setBadgeTier] = useState<BadgeTier>('none');
+  const [nameColor, setNameColor] = useState<NameColorKey>('default');
+  const [isSavingBadge, setIsSavingBadge] = useState(false);
+  const [badgeSaveError, setBadgeSaveError] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   useGSAP(() => {
     gsap.fromTo(containerRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" });
@@ -1205,8 +1209,9 @@ export function SettingsSection({
         if (stats) {
           if (stats.customId) setUsernameInput(stats.customId);
           if (stats.bio) setBioInput(stats.bio);
-          if (stats.badgeSymbol) setBadgeSymbol(stats.badgeSymbol);
-          if (stats.badgeColor) setBadgeColor(stats.badgeColor);
+          if (stats.badgeTier) setBadgeTier(stats.badgeTier);
+          if (stats.nameColor) setNameColor(stats.nameColor);
+          if (stats.phone) setPhoneInput(stats.phone);
         }
       });
     }
@@ -1298,9 +1303,6 @@ export function SettingsSection({
     setSaveBasicFeedback(null);
     try {
       if (currentUserId) {
-        // Save phone to localStorage
-        localStorage.setItem(`quiz_user_phone_${currentUserId}`, phoneInput.trim());
-        
         // Save via DB helper
         await saveUserProfile(
           currentUserId,
@@ -1309,9 +1311,18 @@ export function SettingsSection({
           currentUserEmail || undefined,
           bioInput.trim(),
           undefined, // location
-          badgeSymbol,
-          badgeColor,
-          usernameInput.trim()
+          undefined, // badgeSymbol (deprecated - use updateBadgeAndNameColor)
+          undefined, // badgeColor (deprecated - use updateBadgeAndNameColor)
+          usernameInput.trim(),
+          undefined, // planId
+          undefined, // isPremium
+          undefined, // planName
+          undefined, // isLifetime
+          undefined, // isFounder
+          undefined, // isSuspended
+          undefined, // categoryId
+          undefined, // renewalDate
+          phoneInput.trim()
         );
       }
       onUpdateName(nameInput.trim());
@@ -1327,23 +1338,21 @@ export function SettingsSection({
   };
 
   const handleSaveSpecializedBranding = async () => {
+    if (!currentUserId) return;
+    if (!isPremium) {
+      setBadgeSaveError(isAr ? 'هذه الميزة متاحة للمشتركين فقط.' : 'This feature is only available to premium subscribers.');
+      return;
+    }
+    setIsSavingBadge(true);
+    setBadgeSaveError('');
     try {
-      if (currentUserId) {
-        await saveUserProfile(
-          currentUserId,
-          nameInput.trim(),
-          undefined,
-          currentUserEmail || undefined,
-          bioInput.trim(),
-          undefined,
-          badgeSymbol,
-          badgeColor,
-          usernameInput.trim()
-        );
-        alert(isAr ? 'تم حفظ تفضيلات الشعار والتخصيص بنجاح!' : 'Branding customization saved successfully!');
-      }
-    } catch (err) {
+      await updateBadgeAndNameColor(currentUserId, badgeTier, nameColor);
+      alert(isAr ? 'تم حفظ تفضيلات الشعار والتخصيص بنجاح!' : 'Branding customization saved successfully!');
+    } catch (err: any) {
       console.error(err);
+      setBadgeSaveError(err?.message || (isAr ? 'فشل حفظ التخصيص.' : 'Failed to save customization.'));
+    } finally {
+      setIsSavingBadge(false);
     }
   };
 
@@ -1606,54 +1615,68 @@ export function SettingsSection({
                   {isAr ? 'خصائص الشعار والوسام المخصص' : 'Specialized Branding Options'}
                 </h4>
                 <p className="text-[10px] text-slate-400 mt-1">
-                  {isAr ? 'حدد وساماً مخصصاً ليظهر بجوار اسمك في لوحة الصدارة وتفاصيل الملف' : 'Personalize your profile display symbol and avatar ring color'}
+                  {isAr ? 'شارة توثيق واسم ملون - متاحة للمشتركين فقط. الأشكال المتاحة تعتمد على باقتك.' : 'Verified badge and colored name - premium subscribers only. Available options depend on your plan.'}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300 block">{isAr ? 'رمز وسام التميز:' : 'Custom Distinction Badge Symbol:'}</label>
-                  <select
-                    value={badgeSymbol}
-                    onChange={(e) => setBadgeSymbol(e.target.value)}
-                    className="w-full bg-slate-950 border border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-2 text-xs text-white outline-none"
-                  >
-                    <option value="🛡️">🛡️ Shield Guard</option>
-                    <option value="⭐">⭐ Golden Star</option>
-                    <option value="🏆">🏆 Champ Trophy</option>
-                    <option value="☄️">☄️ Space Comet</option>
-                    <option value="🚀">🚀 Space Rocket</option>
-                    <option value="💎">💎 Elite Diamond</option>
-                  </select>
+              {!isPremium ? (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300 font-bold">
+                  {isAr ? '🔒 اشترك في إحدى الباقات المدفوعة عشان تقدر تفعّل شارة التوثيق واسم ملون.' : '🔒 Subscribe to a paid plan to unlock a verified badge and colored name.'}
                 </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300 block">{isAr ? 'شكل شارة التوثيق:' : 'Verified Badge Style:'}</label>
+                      <select
+                        value={badgeTier}
+                        onChange={(e) => setBadgeTier(e.target.value as BadgeTier)}
+                        className="w-full bg-slate-950 border border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-2 text-xs text-white outline-none"
+                      >
+                        {availableBadgeTiers(userPlanName).map(tier => (
+                          <option key={tier} value={tier}>{isAr ? BADGE_LABELS[tier].labelAr : BADGE_LABELS[tier].labelEn}</option>
+                        ))}
+                      </select>
+                      {badgeTier !== 'none' && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <PremiumNameTag name={nameInput || userName} isPremium={true} badgeTier={badgeTier} nameColor={nameColor} badgeSize="md" />
+                        </div>
+                      )}
+                    </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300 block">{isAr ? 'لون حلقة الوسام المحيطية:' : 'Distinction Ring Glow Color:'}</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={badgeColor}
-                      onChange={(e) => setBadgeColor(e.target.value)}
-                      className="w-12 h-9 rounded-xl bg-slate-950 border border-[#3d1d6d]/30 cursor-pointer p-0.5"
-                    />
-                    <input
-                      type="text"
-                      value={badgeColor}
-                      onChange={(e) => setBadgeColor(e.target.value)}
-                      className="flex-1 bg-slate-950 border border-[#3d1d6d]/30 focus:border-primary rounded-xl px-3 py-1 text-xs text-white font-mono outline-none"
-                    />
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300 block">{isAr ? 'لون الاسم:' : 'Name Color:'}</label>
+                      <div className="flex flex-wrap gap-2">
+                        {availableNameColors(userPlanName).map(color => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => setNameColor(color)}
+                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition ${nameColor === color ? 'border-primary ring-1 ring-primary' : 'border-slate-700'} bg-slate-950`}
+                            style={NAME_COLOR_PRESETS[color].style}
+                          >
+                            {isAr ? NAME_COLOR_PRESETS[color].labelAr : NAME_COLOR_PRESETS[color].labelEn}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="flex justify-end pt-2">
-                <button
-                  onClick={handleSaveSpecializedBranding}
-                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black rounded-xl cursor-pointer shadow"
-                >
-                  {isAr ? 'حفظ خصائص الشعار' : 'Save Distinction Branding'}
-                </button>
-              </div>
+                  {badgeSaveError && (
+                    <p className="text-[11px] text-red-400 font-bold">{badgeSaveError}</p>
+                  )}
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      onClick={handleSaveSpecializedBranding}
+                      disabled={isSavingBadge}
+                      className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black rounded-xl cursor-pointer shadow disabled:opacity-50"
+                    >
+                      {isSavingBadge ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ خصائص الشعار' : 'Save Distinction Branding')}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Google Drive connected accounts connection */}

@@ -170,6 +170,8 @@ interface ClassroomsProps {
   userPlan?: 'Free' | 'Silver' | 'Gold' | 'Diamond';
   currentUserEmail?: string | null;
   onStartQuiz?: (quizId: string) => void;
+  isGuest?: boolean;
+  isAdmin?: boolean;
 }
 
 export default function Classrooms({
@@ -180,200 +182,24 @@ export default function Classrooms({
   userRole,
   userPlan = 'Free',
   currentUserEmail,
-  onStartQuiz
+  onStartQuiz,
+  isGuest = false,
+  isAdmin: isAdminProp
 }: ClassroomsProps) {
   const isAr = lang === 'ar';
-  const isAdmin = currentUserEmail === 'adman777888999@gmail.com' || currentUserId === 'adman777888999';
+  // Prefer the server-verified flag passed down from App.tsx (userStats.isAdmin);
+  // fall back to the legacy email check only if the caller didn't provide one.
+  const isAdmin = isAdminProp !== undefined ? isAdminProp : (currentUserEmail === 'adman777888999@gmail.com' || currentUserId === 'adman777888999');
+  const guestBlockMessage = isAr ? 'سجل الدخول للاستمرار.' : 'Sign in to continue.';
 
-  // Seed default classrooms
-  const [classrooms, setClassrooms] = useState<Classroom[]>(() => {
-    try {
-      const stored = localStorage.getItem('classroom_list');
-      if (stored) return JSON.parse(stored);
-    } catch (_) {}
-    const defaults: Classroom[] = [
-      {
-        id: 'default-1',
-        name: isAr ? 'الفيزياء المتقدمة - الصف الثالث' : 'Advanced Physics - Grade 12',
-        code: 'PHYS12',
-        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        createdBy: 'teacher-default',
-        creatorName: isAr ? 'أ. أحمد خالد' : 'Prof. Ahmed Khaled'
-      },
-      {
-        id: 'default-2',
-        name: isAr ? 'تحدي كود بايثون البرمجي' : 'Python Coding Challenge',
-        code: 'PYTH01',
-        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-        createdBy: 'teacher-default-2',
-        creatorName: isAr ? 'أ. سارة المنصوري' : 'Prof. Sarah Al-Mansouri'
-      }
-    ];
-    localStorage.setItem('classroom_list', JSON.stringify(defaults));
-    return defaults;
-  });
-
-  const [classroomStudents, setClassroomStudents] = useState<ClassroomStudent[]>(() => {
-    try {
-      const stored = localStorage.getItem('classroom_students_list');
-      if (stored) return JSON.parse(stored);
-    } catch (_) {}
-    const defaults: ClassroomStudent[] = [
-      {
-        id: 'student-seed-1',
-        classCode: 'PHYS12',
-        studentId: 'student-1',
-        studentName: isAr ? 'يوسف الحربي' : 'Yousef Al-Harbi',
-        joinedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        completedQuizzes: 12,
-        avgScore: 94.5,
-        lastActive: new Date(Date.now() - 2 * 3600 * 1000).toISOString()
-      },
-      {
-        id: 'student-seed-2',
-        classCode: 'PHYS12',
-        studentId: 'student-2',
-        studentName: isAr ? 'فاطمة العتيبي' : 'Fatima Al-Otaibi',
-        joinedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-        completedQuizzes: 9,
-        avgScore: 88.2,
-        lastActive: new Date(Date.now() - 18 * 3600 * 1000).toISOString()
-      },
-      {
-        id: 'student-seed-3',
-        classCode: 'PHYS12',
-        studentId: 'student-3',
-        studentName: isAr ? 'خالد الشمري' : 'Khaled Al-Shammari',
-        joinedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        completedQuizzes: 15,
-        avgScore: 97.1,
-        lastActive: new Date(Date.now() - 5 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'student-seed-4',
-        classCode: 'PYTH01',
-        studentId: 'student-3',
-        studentName: isAr ? 'خالد الشمري' : 'Khaled Al-Shammari',
-        joinedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        completedQuizzes: 6,
-        avgScore: 91.0,
-        lastActive: new Date(Date.now() - 5 * 60 * 1000).toISOString()
-      }
-    ];
-    localStorage.setItem('classroom_students_list', JSON.stringify(defaults));
-    return defaults;
-  });
-
-  const [sharedFiles, setSharedFiles] = useState<SharedFile[]>(() => {
-    try {
-      const stored = localStorage.getItem('classroom_files_list');
-      if (stored) return JSON.parse(stored);
-    } catch (_) {}
-    const defaults: SharedFile[] = [
-      {
-        id: 'file-1',
-        classId: 'default-1',
-        name: isAr ? 'ملخص قوانين الميكانيكا - الباب الأول.pdf' : 'Mechanics Laws Summary - Chapter 1.pdf',
-        sharedByName: isAr ? 'أ. أحمد خالد' : 'Prof. Ahmed Khaled',
-        sharedAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
-        size: '2.4 MB',
-        type: 'pdf'
-      },
-      {
-        id: 'file-2',
-        classId: 'default-1',
-        name: isAr ? 'رسوم توضيحية لظاهرة الحيود والتداخل.png' : 'Diffraction & Interference Diagrams.png',
-        sharedByName: isAr ? 'أ. أحمد خالد' : 'Prof. Ahmed Khaled',
-        sharedAt: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
-        size: '1.5 MB',
-        type: 'image'
-      },
-      {
-        id: 'file-3',
-        classId: 'default-2',
-        name: isAr ? 'أساسيات لغة بايثون من الصفر.pdf' : 'Python Basics From Scratch.pdf',
-        sharedByName: isAr ? 'أ. سارة المنصوري' : 'Prof. Sarah Al-Mansouri',
-        sharedAt: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
-        size: '3.1 MB',
-        type: 'pdf'
-      }
-    ];
-    localStorage.setItem('classroom_files_list', JSON.stringify(defaults));
-    return defaults;
-  });
-
-  // Unique SaaS Educational Features: Assignments, Announcements, Submissions
-  const [assignments, setAssignments] = useState<Assignment[]>(() => {
-    try {
-      const stored = localStorage.getItem('classroom_assignments_list');
-      if (stored) return JSON.parse(stored);
-    } catch (_) {}
-    return [
-      {
-        id: 'assign-1',
-        classId: 'default-1',
-        title: isAr ? 'بحث قانون نيوتن الثالث للجاذبية الكونية' : 'Newton Third Law of Gravitation Report',
-        description: isAr 
-          ? 'اكتب تقريراً مفصلاً مدعوماً بالمعادلات الرياضية حول تطبيقات قانون نيوتن الثالث في الدفع النفاث للمكوك الفضائي.' 
-          : 'Write a comprehensive report supported by mathematics on Newtonian third-law applications in aerospace rocket jet propulsion.',
-        dueDate: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString().split('T')[0],
-        maxPoints: 100,
-        sharedByName: isAr ? 'أ. أحمد خالد' : 'Prof. Ahmed Khaled',
-        sharedAt: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString()
-      },
-      {
-        id: 'assign-2',
-        classId: 'default-2',
-        title: isAr ? 'بناء دالة التكرار الحسابي العودية' : 'Recursive Factorial Function Builder',
-        description: isAr 
-          ? 'قم بكتابة خوارزمية بلغة بايثون لحساب مضروب الأرقام بطريقة العودية واستدعاء الذات مع معالجة الأخطاء.' 
-          : 'Write a clean recursive Python algorithm to compute number factorials, complete with edge error exception handling.',
-        dueDate: new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString().split('T')[0],
-        maxPoints: 50,
-        sharedByName: isAr ? 'أ. سارة المنصوري' : 'Prof. Sarah Al-Mansouri',
-        sharedAt: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString()
-      }
-    ];
-  });
-
-  const [submissions, setSubmissions] = useState<Submission[]>(() => {
-    try {
-      const stored = localStorage.getItem('classroom_submissions_list');
-      if (stored) return JSON.parse(stored);
-    } catch (_) {}
-    return [
-      {
-        id: 'sub-1',
-        assignmentId: 'assign-1',
-        studentId: 'student-1',
-        studentName: 'Yousef Al-Harbi',
-        submittedAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
-        content: 'Newton Third Law states that for every action there is an equal and opposite reaction. In rockets, the high-speed exhaust gas pushed backward creates an forward thrust pushing the rocket into space...',
-        grade: 95,
-        feedback: 'Excellent integration of propulsion formulas!'
-      }
-    ];
-  });
-
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
-    try {
-      const stored = localStorage.getItem('classroom_announcements_list');
-      if (stored) return JSON.parse(stored);
-    } catch (_) {}
-    return [
-      {
-        id: 'ann-1',
-        classId: 'default-1',
-        content: isAr 
-          ? '🚨 تذكير هام لجميع الطلاب: غداً هو الموعد النهائي لحل كويز الفيزياء الفلكية التجريبي الحصري. يرجى التركيز!' 
-          : '🚨 Important Reminder: Tomorrow is the absolute deadline for resolving the AstroPhysics Practice quiz. Focus up!',
-        priority: 'urgent',
-        postedByName: isAr ? 'أ. أحمد خالد' : 'Prof. Ahmed Khaled',
-        postedAt: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
-        reactions: { '🚀': 8, '❤️': 12, '👍': 15 }
-      }
-    ];
-  });
+  // Classrooms & students are loaded exclusively from Supabase (see fetchClassroomsData effect below).
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [classroomStudents, setClassroomStudents] = useState<ClassroomStudent[]>([]);
+  const [sharedFiles, setSharedFiles] = useState<SharedFile[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [isLoadingClassroomWorkspace, setIsLoadingClassroomWorkspace] = useState(false);
 
   // Local state managers
   const [classCodeInput, setClassCodeInput] = useState('');
@@ -424,13 +250,9 @@ export default function Classrooms({
   const [aiQuizTopic, setAiQuizTopic] = useState('');
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
-  // Sync helpers
-  useEffect(() => { localStorage.setItem('classroom_list', JSON.stringify(classrooms)); }, [classrooms]);
-  useEffect(() => { localStorage.setItem('classroom_students_list', JSON.stringify(classroomStudents)); }, [classroomStudents]);
-  useEffect(() => { localStorage.setItem('classroom_files_list', JSON.stringify(sharedFiles)); }, [sharedFiles]);
-  useEffect(() => { localStorage.setItem('classroom_assignments_list', JSON.stringify(assignments)); }, [assignments]);
-  useEffect(() => { localStorage.setItem('classroom_submissions_list', JSON.stringify(submissions)); }, [submissions]);
-  useEffect(() => { localStorage.setItem('classroom_announcements_list', JSON.stringify(announcements)); }, [announcements]);
+  // Data now lives exclusively in Supabase; classrooms/students are loaded via
+  // fetchClassroomsData below, and per-classroom data (assignments, submissions,
+  // announcements, files) is loaded by loadClassroomWorkspace when a classroom opens.
 
   // Toast notifier
   const triggerToast = (title: string, body: string, type: 'message' | 'quiz' | 'info') => {
@@ -513,6 +335,74 @@ export default function Classrooms({
     };
   }, [activeClassroomView, currentUserId, isAr]);
 
+  // Load assignments, submissions, announcements & shared files from Supabase
+  // whenever a classroom is opened. Nothing here touches localStorage.
+  useEffect(() => {
+    if (!activeClassroomView) {
+      setAssignments([]);
+      setSubmissions([]);
+      setAnnouncements([]);
+      setSharedFiles([]);
+      return;
+    }
+    let isMounted = true;
+    const loadClassroomWorkspace = async () => {
+      setIsLoadingClassroomWorkspace(true);
+      try {
+        const [assignRes, annRes, fileRes] = await Promise.all([
+          supabase.from('classroom_assignments').select('*').eq('class_id', activeClassroomView.id).order('created_at', { ascending: false }),
+          supabase.from('classroom_announcements').select('*').eq('class_id', activeClassroomView.id).order('posted_at', { ascending: false }),
+          supabase.from('classroom_shared_files').select('*').eq('class_id', activeClassroomView.id).order('shared_at', { ascending: false })
+        ]);
+        if (!isMounted) return;
+
+        const mappedAssignments: Assignment[] = (assignRes.data || []).map((a: any) => ({
+          id: a.id, classId: a.class_id, title: a.title, description: a.description,
+          dueDate: a.due_date, maxPoints: a.max_points, sharedByName: a.creator_name, sharedAt: a.created_at
+        }));
+        setAssignments(mappedAssignments);
+
+        setAnnouncements((annRes.data || []).map((a: any) => ({
+          id: a.id, classId: a.class_id, content: a.content, priority: a.priority,
+          postedByName: a.posted_by_name, postedAt: a.posted_at, reactions: a.reactions || {}
+        })));
+
+        setSharedFiles((fileRes.data || []).map((f: any) => ({
+          id: f.id, classId: f.class_id, name: f.name, sharedByName: f.shared_by_name,
+          sharedAt: f.shared_at, size: f.size_bytes ? (f.size_bytes / (1024 * 1024)).toFixed(1) + ' MB' : '',
+          type: f.file_type, url: f.url
+        })));
+
+        // Submissions are scoped per-assignment; pull them for every assignment in this classroom.
+        const assignmentIds = mappedAssignments.map(a => a.id);
+        if (assignmentIds.length > 0) {
+          const { data: subData, error: subError } = await supabase
+            .from('classroom_submissions')
+            .select('*')
+            .in('assignment_id', assignmentIds)
+            .order('submitted_at', { ascending: false });
+          if (!isMounted) return;
+          if (subError) {
+            console.error('Error loading submissions:', subError);
+          } else {
+            setSubmissions((subData || []).map((s: any) => ({
+              id: s.id, assignmentId: s.assignment_id, studentId: s.student_id, studentName: s.student_name,
+              submittedAt: s.submitted_at, content: s.content, grade: s.grade ?? undefined, feedback: s.feedback ?? undefined
+            })));
+          }
+        } else {
+          setSubmissions([]);
+        }
+      } catch (err) {
+        console.error('Error loading classroom workspace:', err);
+      } finally {
+        if (isMounted) setIsLoadingClassroomWorkspace(false);
+      }
+    };
+    loadClassroomWorkspace();
+    return () => { isMounted = false; };
+  }, [activeClassroomView]);
+
   // Deep linking join classroom
   useEffect(() => {
     const hash = window.location.hash;
@@ -533,6 +423,7 @@ export default function Classrooms({
   const handleJoinByCode = async (codeToJoin?: string) => {
     const targetCode = (codeToJoin || classCodeInput).trim().toUpperCase();
     if (!targetCode) return;
+    if (isGuest) { setErrorText(guestBlockMessage); playChimeSound('wrong'); return; }
 
     if (isAdmin) {
       const targetClass = classrooms.find(c => c.code.toUpperCase() === targetCode);
@@ -565,19 +456,8 @@ export default function Classrooms({
         joined_at: new Date().toISOString()
       };
 
-      let joinedViaSupabase = false;
-      try {
-        const { error } = await supabase.from('classroom_students').insert(membership);
-        if (!error) joinedViaSupabase = true;
-      } catch (_) {}
-
-      if (!joinedViaSupabase) {
-        const localList = JSON.parse(localStorage.getItem('classroom_students_list') || '[]');
-        if (!localList.some((item: any) => item.class_id === classData.id && item.student_id === currentUserId)) {
-          localList.push(membership);
-          localStorage.setItem('classroom_students_list', JSON.stringify(localList));
-        }
-      }
+      const { error: joinError } = await supabase.from('classroom_students').insert(membership);
+      if (joinError) throw new Error(joinError.message);
 
       const { data: freshClassrooms } = await supabase.from('classrooms').select('*');
       if (freshClassrooms) {
@@ -606,6 +486,7 @@ export default function Classrooms({
   const handleCreateClassroom = async () => {
     const name = newClassName.trim();
     if (!name) return;
+    if (isGuest) { setErrorText(guestBlockMessage); playChimeSound('wrong'); return; }
 
     try {
       const { data: newClass, error } = await supabase.from('classrooms').insert({
@@ -698,8 +579,9 @@ export default function Classrooms({
     }
   };
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = async (file: File) => {
     if (!activeClassroomView) return;
+    if (isGuest) { setErrorText(guestBlockMessage); playChimeSound('wrong'); return; }
     const isCreator = activeClassroomView.createdBy === currentUserId;
     const myStudent = classroomStudents.find(s => s.classCode === activeClassroomView.code && s.studentId === currentUserId);
     const isCoMod = myStudent?.role === 'co-moderator';
@@ -711,148 +593,196 @@ export default function Classrooms({
       return;
     }
 
-    const fileSizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
     const ext = file.name.split('.').pop()?.toLowerCase();
     const typeMapped = ext === 'pdf' ? 'pdf' : (['png', 'jpg', 'jpeg', 'gif'].includes(ext || '') ? 'image' : 'docx');
 
-    const newFile: SharedFile = {
-      id: 'file-' + Math.random().toString(36).substring(2, 9),
-      classId: activeClassroomView.id,
-      name: file.name,
-      sharedByName: currentUserName,
-      sharedAt: new Date().toISOString(),
-      size: fileSizeStr,
-      type: typeMapped as any
-    };
+    try {
+      const { data, error } = await supabase.from('classroom_shared_files').insert({
+        class_id: activeClassroomView.id,
+        name: file.name,
+        shared_by: currentUserId,
+        shared_by_name: currentUserName,
+        size_bytes: file.size,
+        file_type: typeMapped
+      }).select().single();
+      if (error) throw new Error(error.message);
 
-    setSharedFiles(prev => [newFile, ...prev]);
-    playChimeSound('correct');
-    triggerToast(
-      isAr ? '📁 تم رفع الملف بنجاح!' : '📁 File Shared Successfully!',
-      file.name,
-      'info'
-    );
+      const newFile: SharedFile = {
+        id: data.id, classId: data.class_id, name: data.name, sharedByName: data.shared_by_name,
+        sharedAt: data.shared_at, size: (data.size_bytes / (1024 * 1024)).toFixed(1) + ' MB', type: data.file_type
+      };
+      setSharedFiles(prev => [newFile, ...prev]);
+      playChimeSound('correct');
+      triggerToast(
+        isAr ? '📁 تم رفع الملف بنجاح!' : '📁 File Shared Successfully!',
+        file.name,
+        'info'
+      );
+    } catch (err: any) {
+      console.error('Error sharing file:', err);
+      setErrorText(err.message || (isAr ? 'تعذر رفع الملف.' : 'Failed to share file.'));
+      playChimeSound('wrong');
+    }
   };
 
   // Assignment Creator Operation
-  const handleCreateAssignment = () => {
+  const handleCreateAssignment = async () => {
     if (!newAssignTitle.trim() || !activeClassroomView) return;
+    if (isGuest) { setErrorText(guestBlockMessage); playChimeSound('wrong'); return; }
 
-    const newAssign: Assignment = {
-      id: 'assign-' + Math.random().toString(36).substring(2, 9),
-      classId: activeClassroomView.id,
-      title: newAssignTitle,
-      description: newAssignDesc,
-      dueDate: newAssignDueDate || new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString().split('T')[0],
-      maxPoints: Number(newAssignPoints) || 100,
-      sharedByName: currentUserName,
-      sharedAt: new Date().toISOString()
-    };
+    try {
+      const { data, error } = await supabase.from('classroom_assignments').insert({
+        class_id: activeClassroomView.id,
+        title: newAssignTitle,
+        description: newAssignDesc,
+        due_date: newAssignDueDate || new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString().split('T')[0],
+        max_points: Number(newAssignPoints) || 100,
+        created_by: currentUserId,
+        creator_name: currentUserName
+      }).select().single();
+      if (error) throw new Error(error.message);
 
-    setAssignments(prev => [newAssign, ...prev]);
-    setIsCreatingAssign(false);
-    setNewAssignTitle('');
-    setNewAssignDesc('');
-    setNewAssignDueDate('');
-    setNewAssignPoints(100);
-    playChimeSound('correct');
-    triggerToast(
-      isAr ? '📝 تم نشر تكليف دراسي!' : '📝 Assignment Published!',
-      newAssign.title,
-      'info'
-    );
+      const newAssign: Assignment = {
+        id: data.id, classId: data.class_id, title: data.title, description: data.description,
+        dueDate: data.due_date, maxPoints: data.max_points, sharedByName: data.creator_name, sharedAt: data.created_at
+      };
+      setAssignments(prev => [newAssign, ...prev]);
+      setIsCreatingAssign(false);
+      setNewAssignTitle('');
+      setNewAssignDesc('');
+      setNewAssignDueDate('');
+      setNewAssignPoints(100);
+      playChimeSound('correct');
+      triggerToast(
+        isAr ? '📝 تم نشر تكليف دراسي!' : '📝 Assignment Published!',
+        newAssign.title,
+        'info'
+      );
+    } catch (err: any) {
+      console.error('Error creating assignment:', err);
+      setErrorText(err.message || (isAr ? 'تعذر نشر التكليف.' : 'Failed to publish assignment.'));
+      playChimeSound('wrong');
+    }
   };
 
   // Student Submit Assignment
-  const handleSubmitAssignment = () => {
+  const handleSubmitAssignment = async () => {
     if (!submitContentText.trim() || !submittingAssignId) return;
+    if (isGuest) { setErrorText(guestBlockMessage); playChimeSound('wrong'); return; }
 
-    const newSub: Submission = {
-      id: 'sub-' + Math.random().toString(36).substring(2, 9),
-      assignmentId: submittingAssignId,
-      studentId: currentUserId,
-      studentName: currentUserName,
-      submittedAt: new Date().toISOString(),
-      content: submitContentText
-    };
+    try {
+      const { data, error } = await supabase.from('classroom_submissions').upsert({
+        assignment_id: submittingAssignId,
+        student_id: currentUserId,
+        student_name: currentUserName,
+        content: submitContentText,
+        submitted_at: new Date().toISOString()
+      }, { onConflict: 'assignment_id,student_id' }).select().single();
+      if (error) throw new Error(error.message);
 
-    setSubmissions(prev => [newSub, ...prev]);
-    setSubmittingAssignId(null);
-    setSubmitContentText('');
-    playChimeSound('correct');
-    triggerToast(
-      isAr ? '🚀 تم تسليم الواجب بنجاح!' : '🚀 Work Submitted Successfully!',
-      isAr ? 'تم حفظ إجابتك وتسليمها للمراجعة والتقييم.' : 'Your solution has been submitted for grading.',
-      'info'
-    );
+      const newSub: Submission = {
+        id: data.id, assignmentId: data.assignment_id, studentId: data.student_id, studentName: data.student_name,
+        submittedAt: data.submitted_at, content: data.content, grade: data.grade ?? undefined, feedback: data.feedback ?? undefined
+      };
+      setSubmissions(prev => [newSub, ...prev.filter(s => s.id !== newSub.id)]);
+      setSubmittingAssignId(null);
+      setSubmitContentText('');
+      playChimeSound('correct');
+      triggerToast(
+        isAr ? '🚀 تم تسليم الواجب بنجاح!' : '🚀 Work Submitted Successfully!',
+        isAr ? 'تم حفظ إجابتك وتسليمها للمراجعة والتقييم.' : 'Your solution has been submitted for grading.',
+        'info'
+      );
+    } catch (err: any) {
+      console.error('Error submitting assignment:', err);
+      setErrorText(err.message || (isAr ? 'تعذر تسليم الواجب.' : 'Failed to submit assignment.'));
+      playChimeSound('wrong');
+    }
   };
 
   // Grade Submission Operation
-  const handleGradeSubmission = () => {
+  const handleGradeSubmission = async () => {
     if (!gradingSubmission) return;
 
-    setSubmissions(prev => prev.map(sub => {
-      if (sub.id === gradingSubmission.id) {
-        return {
-          ...sub,
-          grade: Number(gradePoints),
-          feedback: gradeFeedback
-        };
-      }
-      return sub;
-    }));
+    try {
+      const { error } = await supabase.from('classroom_submissions').update({
+        grade: Number(gradePoints),
+        feedback: gradeFeedback,
+        graded_at: new Date().toISOString()
+      }).eq('id', gradingSubmission.id);
+      if (error) throw new Error(error.message);
 
-    setGradingSubmission(null);
-    setGradePoints(100);
-    setGradeFeedback('');
-    playChimeSound('correct');
-    triggerToast(
-      isAr ? '🌟 تم تقييم وتصحيح التكليف' : '🌟 Solutions Graded!',
-      isAr ? 'تم رصد الدرجة للارتجاع المدرسي والطلاب.' : 'The grades were logged successfully.',
-      'info'
-    );
+      setSubmissions(prev => prev.map(sub => sub.id === gradingSubmission.id
+        ? { ...sub, grade: Number(gradePoints), feedback: gradeFeedback }
+        : sub));
+
+      setGradingSubmission(null);
+      setGradePoints(100);
+      setGradeFeedback('');
+      playChimeSound('correct');
+      triggerToast(
+        isAr ? '🌟 تم تقييم وتصحيح التكليف' : '🌟 Solutions Graded!',
+        isAr ? 'تم رصد الدرجة للارتجاع المدرسي والطلاب.' : 'The grades were logged successfully.',
+        'info'
+      );
+    } catch (err: any) {
+      console.error('Error grading submission:', err);
+      setErrorText(err.message || (isAr ? 'تعذر حفظ التقييم.' : 'Failed to save grade.'));
+      playChimeSound('wrong');
+    }
   };
 
   // Announcement Creator Operation
-  const handleCreateAnnouncement = () => {
+  const handleCreateAnnouncement = async () => {
     if (!annContent.trim() || !activeClassroomView) return;
+    if (isGuest) { setErrorText(guestBlockMessage); playChimeSound('wrong'); return; }
 
-    const newAnn: Announcement = {
-      id: 'ann-' + Math.random().toString(36).substring(2, 9),
-      classId: activeClassroomView.id,
-      content: annContent,
-      priority: annPriority,
-      postedByName: currentUserName,
-      postedAt: new Date().toISOString(),
-      reactions: { '🚀': 0, '❤️': 0, '👍': 0 }
-    };
+    try {
+      const { data, error } = await supabase.from('classroom_announcements').insert({
+        class_id: activeClassroomView.id,
+        content: annContent,
+        priority: annPriority,
+        posted_by: currentUserId,
+        posted_by_name: currentUserName,
+        reactions: { '🚀': 0, '❤️': 0, '👍': 0 }
+      }).select().single();
+      if (error) throw new Error(error.message);
 
-    setAnnouncements(prev => [newAnn, ...prev]);
-    setIsCreatingAnn(false);
-    setAnnContent('');
-    setAnnPriority('general');
-    playChimeSound('correct');
-    triggerToast(
-      isAr ? '📢 تم نشر إعلان دراسي عام' : '📢 Broadcast Released!',
-      isAr ? 'تم تعليق الإعلان في لوحة النشرات.' : 'Classboard update has been pinned.',
-      'info'
-    );
+      const newAnn: Announcement = {
+        id: data.id, classId: data.class_id, content: data.content, priority: data.priority,
+        postedByName: data.posted_by_name, postedAt: data.posted_at, reactions: data.reactions || {}
+      };
+      setAnnouncements(prev => [newAnn, ...prev]);
+      setIsCreatingAnn(false);
+      setAnnContent('');
+      setAnnPriority('general');
+      playChimeSound('correct');
+      triggerToast(
+        isAr ? '📢 تم نشر إعلان دراسي عام' : '📢 Broadcast Released!',
+        isAr ? 'تم تعليق الإعلان في لوحة النشرات.' : 'Classboard update has been pinned.',
+        'info'
+      );
+    } catch (err: any) {
+      console.error('Error creating announcement:', err);
+      setErrorText(err.message || (isAr ? 'تعذر نشر الإعلان.' : 'Failed to publish announcement.'));
+      playChimeSound('wrong');
+    }
   };
 
-  const handleAddReaction = (annId: string, emoji: string) => {
-    setAnnouncements(prev => prev.map(ann => {
-      if (ann.id === annId) {
-        return {
-          ...ann,
-          reactions: {
-            ...ann.reactions,
-            [emoji]: (ann.reactions[emoji] || 0) + 1
-          }
-        };
-      }
-      return ann;
-    }));
+  const handleAddReaction = async (annId: string, emoji: string) => {
+    // Optimistic update, then reconcile with the atomic add_announcement_reaction RPC
+    // (defined in the 20260725 migration) so concurrent reactors don't clobber each other.
+    setAnnouncements(prev => prev.map(ann => ann.id === annId
+      ? { ...ann, reactions: { ...ann.reactions, [emoji]: (ann.reactions[emoji] || 0) + 1 } }
+      : ann));
     playChimeSound('click');
+    try {
+      const { data, error } = await supabase.rpc('add_announcement_reaction', { p_announcement_id: annId, p_emoji: emoji });
+      if (error) throw new Error(error.message);
+      setAnnouncements(prev => prev.map(ann => ann.id === annId ? { ...ann, reactions: data || ann.reactions } : ann));
+    } catch (err) {
+      console.error('Error adding reaction:', err);
+    }
   };
 
   // AI Quiz Generator Integration

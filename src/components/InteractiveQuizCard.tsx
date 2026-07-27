@@ -18,6 +18,7 @@ interface InteractiveQuizCardProps {
   creatorTier?: 'free' | 'premium' | 'enterprise';
   onDeleteClick?: (quizId: string) => void;
   view?: 'grid' | 'list';
+  isAdmin?: boolean;
 }
 
 export function InteractiveQuizCard({
@@ -33,10 +34,12 @@ export function InteractiveQuizCard({
   onViewProfile,
   creatorTier = 'free',
   onDeleteClick,
-  view = 'grid'
+  view = 'grid',
+  isAdmin: isAdminProp = false
 }: InteractiveQuizCardProps) {
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
   const canEdit = !isGuest && (
+    isAdminProp ||
     currentUserEmail === 'yo01009950871@gmail.com' || 
     currentUserEmail === 'adman777888999@gmail.com' || 
     quiz.creatorId === currentUserId

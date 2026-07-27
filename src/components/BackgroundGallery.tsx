@@ -154,7 +154,7 @@ export function BackgroundGallery({
     if (savedFavs) {
       try {
         setFavorites(JSON.parse(savedFavs));
-      } catch (e) {}
+      } catch (e) { console.error('Failed to parse saved background favorites:', e); }
     }
   }, []);
 

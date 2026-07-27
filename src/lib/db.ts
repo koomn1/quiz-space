@@ -5,6 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember } from '../types';
+import { availableBadgeTiers, availableNameColors, BadgeTier, NameColorKey } from '../components/PremiumNameTag';
 
 // ---------------- SUPABASE STORAGE UPLOAD HELPERS ----------------
 
@@ -30,263 +31,90 @@ export async function uploadAvatar(userId: string, file: File): Promise<string |
 }
 
 // ---------------- LOCAL STORAGE FALLBACK HELPERS ----------------
+// NOTE: the previous local user mock (MOCK_PROFILES / getLocalUsers / saveLocalUsers)
+// was removed. It seeded is_premium:true into localStorage for an "admin" profile and
+// checkUserPremiumStatus() read it before ever touching Supabase, which meant premium
+// status could be spoofed entirely client-side via devtools. Users are now sourced from
+// Supabase exclusively; see checkUserPremiumStatus, getUserProfileStats, getAllProfiles.
 
-const MOCK_PROFILES = [
-  {
-    uid: 'adman777888999',
-    id: 'adman777888999',
-    email: 'adman777888999@gmail.com',
-    name: 'المسؤول الفائق (Super Admin)',
-    photo_url: '',
-    plan_name: 'الباقة الماسية لمعلمي المستقبل (مفعّلة)',
-    is_premium: true,
-    joined_date: new Date().toISOString()
-  },
-  {
-    uid: 'admin-quizspace',
-    id: 'admin-quizspace',
-    email: 'admin@quizspace.com',
-    name: 'فريق QuizSpace',
-    photo_url: '',
-    plan_name: 'Free',
-    is_premium: false,
-    joined_date: new Date().toISOString()
-  },
-  {
-    uid: 'user-guest',
-    id: 'user-guest',
-    email: 'guest@quizspace.com',
-    name: 'طالب زائر',
-    photo_url: '',
-    plan_name: 'Free',
-    is_premium: false,
-    joined_date: new Date().toISOString()
+// NOTE: seed rows (welcome community post, welcome notification, demo coupons)
+// now live in Supabase migrations instead of client-side localStorage fallbacks.
+// See 20260725_seed_welcome_community_post.sql and 20260727_seed_welcome_notification.sql.
+
+// ---------------- VERIFIED BADGE / NAME COLOR (SUPABASE DIRECT) ----------------
+// Deliberately separate from saveUserProfile: the allowed badge_tier/name_color
+// values depend on the user's *current, server-verified* plan, not on anything
+// the client claims. We re-read is_premium/plan_name from the DB here rather
+// than trusting a prop passed in, so a client can't request a Diamond badge
+// while actually on a Free plan.
+function planNameToTier(planName: string | null | undefined): 'Free' | 'Silver' | 'Gold' | 'Diamond' {
+  const p = (planName || '').toLowerCase();
+  if (p.includes('diamond') || p.includes('ماس')) return 'Diamond';
+  if (p.includes('gold') || p.includes('ذهب')) return 'Gold';
+  if (p.includes('silver') || p.includes('فض')) return 'Silver';
+  return 'Free';
+}
+
+export async function updateBadgeAndNameColor(
+  userId: string,
+  badgeTier: BadgeTier,
+  nameColor: NameColorKey
+): Promise<void> {
+  if (!userId) return;
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot update badge/name color.');
+
+  const { data: userRow, error: fetchError } = await supabase.from('users').select('is_premium, plan_name').eq('uid', userId).single();
+  if (fetchError) {
+    console.error('Error verifying plan before badge update:', fetchError);
+    throw fetchError;
   }
-];
+  if (!userRow?.is_premium) {
+    throw new Error('This feature requires an active premium subscription.');
+  }
 
-export function getLocalUsers(): any[] {
-  try {
-    const raw = localStorage.getItem('quiz_local_users');
-    if (!raw) {
-      localStorage.setItem('quiz_local_users', JSON.stringify(MOCK_PROFILES));
-      return MOCK_PROFILES;
-    }
-    return JSON.parse(raw);
-  } catch (e) {
-    return MOCK_PROFILES;
+  const plan = planNameToTier(userRow.plan_name);
+  if (!availableBadgeTiers(plan).includes(badgeTier)) {
+    throw new Error(`Badge tier "${badgeTier}" is not available on the ${plan} plan.`);
+  }
+  if (!availableNameColors(plan).includes(nameColor)) {
+    throw new Error(`Name color "${nameColor}" is not available on the ${plan} plan.`);
+  }
+
+  const { error } = await supabase.from('users').update({ badge_tier: badgeTier, name_color: nameColor }).eq('uid', userId);
+  if (error) {
+    console.error('Error updating badge/name color:', error);
+    throw error;
   }
 }
 
-export function saveLocalUsers(users: any[]): void {
-  try {
-    localStorage.setItem('quiz_local_users', JSON.stringify(users));
-  } catch (e) {
-    console.error('Failed to save local users:', e);
-  }
-}
 
-const DEFAULT_SEASONS: Season[] = [];
+// Replaces the old global (non-user-scoped!) 'quiz_bookmarks_list' localStorage key.
 
-export function getLocalSeasons(): Season[] {
-  try {
-    const raw = localStorage.getItem('quiz_local_seasons');
-    return raw ? JSON.parse(raw) : DEFAULT_SEASONS;
-  } catch (e) {
-    return DEFAULT_SEASONS;
-  }
-}
-
-export function saveLocalSeasons(seasons: Season[]): void {
-  try {
-    localStorage.setItem('quiz_local_seasons', JSON.stringify(seasons));
-  } catch (e) {
-    console.error('Failed to save local seasons:', e);
-  }
-}
-
-const DEFAULT_ACCOUNT_CATEGORIES: AccountCategory[] = [];
-
-export function getLocalAccountCategories(): AccountCategory[] {
-  try {
-    const raw = localStorage.getItem('quiz_local_account_categories');
-    return raw ? JSON.parse(raw) : DEFAULT_ACCOUNT_CATEGORIES;
-  } catch (e) {
-    return DEFAULT_ACCOUNT_CATEGORIES;
-  }
-}
-
-export function saveLocalAccountCategories(categories: AccountCategory[]): void {
-  try {
-    localStorage.setItem('quiz_local_account_categories', JSON.stringify(categories));
-  } catch (e) {
-    console.error('Failed to save local account categories:', e);
-  }
-}
-
-export function getLocalSeasonMembers(seasonId?: string): (SeasonMember & { season?: Season })[] {
-  try {
-    const raw = localStorage.getItem('quiz_local_season_members');
-    if (!raw) return [];
-    const all: (SeasonMember & { season?: Season })[] = JSON.parse(raw);
-    if (seasonId) return all.filter(m => m.seasonId === seasonId);
-    return all;
-  } catch (e) {
+export async function getBookmarkedQuizIds(userId: string): Promise<string[]> {
+  if (!userId || !isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('bookmarks').select('quiz_id').eq('user_id', userId);
+  if (error) {
+    console.error('Error loading bookmarks:', error);
     return [];
   }
+  return (data || []).map((r: any) => r.quiz_id);
 }
 
-export function saveLocalSeasonMembers(members: (SeasonMember & { season?: Season })[]): void {
-  try {
-    localStorage.setItem('quiz_local_season_members', JSON.stringify(members));
-  } catch (e) {
-    console.error('Failed to save local season members:', e);
-  }
-}
-
-export function getLocalSubscriptionPlans(): SubscriptionPlan[] {
-  try {
-    const raw = localStorage.getItem('quiz_local_subscription_plans');
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
+export async function addBookmark(userId: string, quizId: string): Promise<void> {
+  if (!userId || !isSupabaseConfigured) throw new Error('Supabase is not configured; cannot bookmark.');
+  const { error } = await supabase.from('bookmarks').insert({ user_id: userId, quiz_id: quizId });
+  if (error && error.code !== '23505') { // ignore unique-violation (already bookmarked)
+    console.error('Error adding bookmark:', error.message);
+    throw error;
   }
 }
 
-export function saveLocalSubscriptionPlans(plans: SubscriptionPlan[]): void {
-  try {
-    localStorage.setItem('quiz_local_subscription_plans', JSON.stringify(plans));
-  } catch (e) {
-    console.error('Failed to save local subscription plans:', e);
-  }
-}
-
-const DEFAULT_COUPONS: Coupon[] = [
-  {
-    id: 'QUIZ50',
-    code: 'QUIZ50',
-    discountPercent: 50,
-    maxUses: 100,
-    usedCount: 0,
-    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    applicablePlans: 'silver,gold,diamond'
-  },
-  {
-    id: 'FREE100',
-    code: 'FREE100',
-    discountPercent: 100,
-    maxUses: 100,
-    usedCount: 0,
-    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    applicablePlans: 'silver,gold,diamond'
-  }
-];
-
-export function getLocalCoupons(): Coupon[] {
-  try {
-    const raw = localStorage.getItem('quiz_local_coupons');
-    if (!raw) {
-      localStorage.setItem('quiz_local_coupons', JSON.stringify(DEFAULT_COUPONS));
-      return DEFAULT_COUPONS;
-    }
-    return JSON.parse(raw);
-  } catch (e) {
-    return DEFAULT_COUPONS;
-  }
-}
-
-export function saveLocalCoupons(coupons: Coupon[]): void {
-  try {
-    localStorage.setItem('quiz_local_coupons', JSON.stringify(coupons));
-  } catch (e) {
-    console.error('Failed to save local coupons:', e);
-  }
-}
-
-const DEFAULT_COMMUNITY_POSTS = [
-  {
-    id: 'cp-welcome',
-    text: 'مرحباً بكم في مجتمع QuizSpace التعليمي! شاركونا اختباراتكم وآرائكم هنا 🚀',
-    author_id: 'admin-quizspace',
-    author_name: 'فريق QuizSpace',
-    author_badge_symbol: '👑',
-    author_badge_color: '#f59e0b',
-    likes: 0,
-    liked_by: [],
-    created_at: new Date().toISOString()
-  }
-];
-
-export function getLocalCommunityPosts(): any[] {
-  try {
-    const raw = localStorage.getItem('quiz_local_community_posts');
-    if (!raw) {
-      localStorage.setItem('quiz_local_community_posts', JSON.stringify(DEFAULT_COMMUNITY_POSTS));
-      return DEFAULT_COMMUNITY_POSTS;
-    }
-    return JSON.parse(raw);
-  } catch (e) {
-    return DEFAULT_COMMUNITY_POSTS;
-  }
-}
-
-export function saveLocalCommunityPosts(posts: any[]): void {
-  try {
-    localStorage.setItem('quiz_local_community_posts', JSON.stringify(posts));
-  } catch (e) {
-    console.error('Failed to save local community posts:', e);
-  }
-}
-
-const DEFAULT_NOTIFICATIONS = [
-  {
-    id: 'notif-welcome',
-    title: 'مرحباً بك في منصة Quiz Space! 🎉',
-    body: 'ابدأ الآن بحل أو إنشاء أول اختبار تفاعلي وصعد لوحة المتصدرين!',
-    sender_name: 'System',
-    type: 'info',
-    created_at: new Date().toISOString()
-  }
-];
-
-export function getLocalNotifications(): any[] {
-  try {
-    const raw = localStorage.getItem('quiz_local_notifications');
-    if (!raw) {
-      localStorage.setItem('quiz_local_notifications', JSON.stringify(DEFAULT_NOTIFICATIONS));
-      return DEFAULT_NOTIFICATIONS;
-    }
-    return JSON.parse(raw);
-  } catch (e) {
-    return DEFAULT_NOTIFICATIONS;
-  }
-}
-
-export function saveLocalNotifications(notifs: any[]): void {
-  try {
-    localStorage.setItem('quiz_local_notifications', JSON.stringify(notifs));
-  } catch (e) {
-    console.error('Failed to save local notifications:', e);
-  }
-}
-
-export function getLocalPremiumRequests(): any[] {
-  try {
-    const raw = localStorage.getItem('quiz_local_premium_requests');
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-export function saveLocalPremiumRequests(requests: any[]): void {
-  try {
-    localStorage.setItem('quiz_local_premium_requests', JSON.stringify(requests));
-  } catch (e) {
-    console.error('Failed to save local premium requests:', e);
+export async function removeBookmark(userId: string, quizId: string): Promise<void> {
+  if (!userId || !isSupabaseConfigured) throw new Error('Supabase is not configured; cannot remove bookmark.');
+  const { error } = await supabase.from('bookmarks').delete().eq('user_id', userId).eq('quiz_id', quizId);
+  if (error) {
+    console.error('Error removing bookmark:', error.message);
+    throw error;
   }
 }
 
@@ -385,123 +213,73 @@ export const SAMPLE_QUIZZES: Quiz[] = [
   }
 ];
 
-// Helper to read/write local custom quizzes
-export function getLocalQuizzes(): Quiz[] {
-  try {
-    const raw = localStorage.getItem('quiz_custom_quizzes');
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-export function saveQuizToLocalStorage(quiz: Quiz): void {
-  try {
-    const list = getLocalQuizzes();
-    const existingIndex = list.findIndex(q => q.id === quiz.id);
-    if (existingIndex >= 0) {
-      list[existingIndex] = quiz;
-    } else {
-      list.unshift(quiz);
-    }
-    localStorage.setItem('quiz_custom_quizzes', JSON.stringify(list));
-  } catch (e) {
-    console.error('Failed to save quiz to localStorage:', e);
-  }
-}
-
 export async function getQuizzes(): Promise<Quiz[]> {
-  const localQuizzes = getLocalQuizzes();
   let dbQuizzes: Quiz[] = [];
 
-  try {
+  if (isSupabaseConfigured) {
     const { data, error } = await supabase.from('quizzes').select('*').order('created_at', { ascending: false });
-    if (!error && data) {
-      dbQuizzes = data.map(mapQuizRow);
+    if (error) {
+      console.error('Error fetching quizzes:', error);
+    } else {
+      dbQuizzes = (data || []).map(mapQuizRow);
     }
-  } catch (e) {
-    console.warn('Error fetching Supabase quizzes:', e);
   }
 
-  // Merge sample quizzes, DB quizzes, and local custom quizzes by ID
+  // Sample quizzes are static demo content, not user data, so they still merge in.
   const map = new Map<string, Quiz>();
   SAMPLE_QUIZZES.forEach(q => map.set(q.id, q));
   dbQuizzes.forEach(q => map.set(q.id, q));
-  localQuizzes.forEach(q => map.set(q.id, q));
 
   return Array.from(map.values());
 }
 
 export async function getQuizById(id: string): Promise<Quiz | null> {
   if (!id) return null;
-  const localQuizzes = getLocalQuizzes();
-  const foundLocal = localQuizzes.find(q => q.id === id);
-  if (foundLocal) return foundLocal;
 
-  try {
+  if (isSupabaseConfigured) {
     const { data, error } = await supabase.from('quizzes').select('*').eq('id', id).single();
     if (!error && data) return mapQuizRow(data);
-  } catch (e) {}
+    if (error && error.code !== 'PGRST116') {
+      console.error(`Error fetching quiz ${id}:`, error);
+    }
+  }
 
   const sample = SAMPLE_QUIZZES.find(q => q.id === id);
   return sample || null;
 }
 
 export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPlays' | 'avgRating' | 'ratingsCount'> & { id?: string; timeLimit?: number }): Promise<Quiz> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot create a quiz.');
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
   const finalId = quiz.id || 'quiz-' + Math.random().toString(36).substring(2, 11);
   const creatorId = user?.id || quiz.creatorId || 'user-guest';
-  const creatorName = quiz.creatorName || user?.user_metadata?.name || localStorage.getItem('quiz_userName') || 'صانع متميز';
+  const creatorName = quiz.creatorName || user?.user_metadata?.name || 'صانع متميز';
 
-  const newQuiz: Quiz = {
+  const { data, error } = await supabase.from('quizzes').insert({
     id: finalId,
     title: quiz.title,
     description: quiz.description,
     questions: quiz.questions,
-    creatorId,
-    creatorName,
-    totalPlays: 0,
-    avgRating: 5.0,
-    ratingsCount: 1,
-    timeLimit: quiz.timeLimit || 0,
-    createdAt: new Date().toISOString(),
+    creator_id: creatorId,
+    creator_name: creatorName,
+    time_limit: quiz.timeLimit || 0,
     category: quiz.category || 'عام',
-  };
+  }).select().single();
 
-  // 1. Always save to LocalStorage immediately for zero-friction user experience
-  saveQuizToLocalStorage(newQuiz);
-
-  // 2. Also try inserting into Supabase Postgres
-  try {
-    const { data, error } = await supabase.from('quizzes').insert({
-      id: finalId,
-      title: quiz.title,
-      description: quiz.description,
-      questions: quiz.questions,
-      creator_id: creatorId,
-      creator_name: creatorName,
-      time_limit: quiz.timeLimit || 0,
-      category: quiz.category || 'عام',
-    }).select().single();
-
-    if (!error && data) {
-      return mapQuizRow(data);
-    }
-  } catch (e) {
-    console.warn('Supabase insert skipped or failed, quiz stored in local state:', e);
+  if (error) {
+    console.error('Error creating quiz:', error);
+    throw error;
   }
-
-  return newQuiz;
+  return mapQuizRow(data);
 }
 
 export async function updateQuiz(quizId: string, updatedQuiz: Partial<Quiz>): Promise<void> {
   if (!quizId) return;
-  // Update local storage
-  const localList = getLocalQuizzes();
-  const idx = localList.findIndex(q => q.id === quizId);
-  if (idx >= 0) {
-    localList[idx] = { ...localList[idx], ...updatedQuiz };
-    localStorage.setItem('quiz_custom_quizzes', JSON.stringify(localList));
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot update quiz.');
   }
 
   const { error } = await supabase.from('quizzes').update({
@@ -511,17 +289,23 @@ export async function updateQuiz(quizId: string, updatedQuiz: Partial<Quiz>): Pr
     time_limit: updatedQuiz.timeLimit,
     category: updatedQuiz.category,
   }).eq('id', quizId);
-  if (error) console.error('Error updating quiz:', error.message);
+  if (error) {
+    console.error('Error updating quiz:', error.message);
+    throw error;
+  }
 }
 
 export async function deleteQuiz(quizId: string): Promise<void> {
   if (!quizId) return;
-  // Remove from local storage
-  const localList = getLocalQuizzes().filter(q => q.id !== quizId);
-  localStorage.setItem('quiz_custom_quizzes', JSON.stringify(localList));
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot delete quiz.');
+  }
 
   const { error } = await supabase.from('quizzes').delete().eq('id', quizId);
-  if (error) console.error('Error deleting quiz:', error.message);
+  if (error) {
+    console.error('Error deleting quiz:', error.message);
+    throw error;
+  }
 }
 
 export async function submitQuizAttempt(
@@ -544,7 +328,7 @@ export async function submitQuizAttempt(
       p_feedback: data.feedback || '',
     });
     if (!error) return result;
-  } catch (e) {}
+  } catch (e) { console.error('Unhandled Supabase error:', e); }
 
   return { success: true, local: true };
 }
@@ -552,65 +336,58 @@ export async function submitQuizAttempt(
 // ---------------- PROFILE STATS & MANAGEMENT HANDLERS ----------------
 
 export async function getUserProfileStats(userId: string): Promise<UserStats> {
-  const localName = localStorage.getItem('quiz_userName') || 'طالب متميز';
-  const localPhoto = localStorage.getItem('quiz_userPhoto') || '';
-  const localQuizzes = getLocalQuizzes().filter(q => q.creatorId === userId);
-
-  const localUsers = getLocalUsers();
-  const matchedLocalUser = localUsers.find(u => u.uid === userId || u.id === userId);
-
-  const empty: UserStats = { 
-    userId: userId || '', 
-    name: matchedLocalUser?.name || localName, 
-    email: matchedLocalUser?.email || localPhoto,
-    photoURL: matchedLocalUser?.photo_url || localPhoto, 
-    isPremium: matchedLocalUser?.is_premium || false, 
-    planName: matchedLocalUser?.plan_name || 'Free',
-    planId: matchedLocalUser?.plan_id,
-    renewalDate: matchedLocalUser?.renewal_date,
-    isLifetime: matchedLocalUser?.is_lifetime || false,
-    isFounder: matchedLocalUser?.is_founder || false,
-    isSuspended: matchedLocalUser?.is_suspended || false,
-    categoryId: matchedLocalUser?.category_id,
-    bio: matchedLocalUser?.bio || '',
-    location: matchedLocalUser?.location || '',
-    createdQuizzes: localQuizzes, 
+  const empty: UserStats = {
+    userId: userId || '',
+    name: '',
+    email: '',
+    photoURL: '',
+    isPremium: false,
+    planName: 'Free',
+    planId: undefined,
+    renewalDate: undefined,
+    isLifetime: false,
+    isFounder: false,
+    isSuspended: false,
+    categoryId: undefined,
+    bio: '',
+    location: '',
+    createdQuizzes: [],
     completions: []
   } as UserStats;
-  if (!userId) return empty;
+  if (!userId || !isSupabaseConfigured) return empty;
 
-  if (isSupabaseConfigured) {
-    try {
-      const { data: userRow } = await supabase.from('users').select('*').eq('uid', userId).single();
-      const { data: createdQuizzes } = await supabase.from('quizzes').select('*').eq('creator_id', userId).order('created_at', { ascending: false });
-      const { data: completions } = await supabase.from('completions').select('*').eq('taker_id', userId).order('created_at', { ascending: false });
+  try {
+    const { data: userRow, error: userError } = await supabase.from('users').select('*').eq('uid', userId).single();
+    if (userError) console.error(`Error loading profile for ${userId}:`, userError.message);
+    const { data: createdQuizzes } = await supabase.from('quizzes').select('*').eq('creator_id', userId).order('created_at', { ascending: false });
+    const { data: completions } = await supabase.from('completions').select('*').eq('taker_id', userId).order('created_at', { ascending: false });
 
-      const mergedQuizzes = new Map<string, Quiz>();
-      localQuizzes.forEach(q => mergedQuizzes.set(q.id, q));
-      (createdQuizzes || []).map(mapQuizRow).forEach(q => mergedQuizzes.set(q.id, q));
-
-      return {
-        userId,
-        name: userRow?.name || localName,
-        email: userRow?.email || '',
-        photoURL: userRow?.photo_url || localPhoto,
-        isPremium: userRow?.is_premium || false,
-        planName: userRow?.plan_name || 'Free',
-        planId: userRow?.plan_id || undefined,
-        renewalDate: userRow?.renewal_date || undefined,
-        isLifetime: userRow?.is_lifetime || false,
-        isFounder: userRow?.is_founder || false,
-        isSuspended: userRow?.is_suspended || false,
-        categoryId: userRow?.category_id || undefined,
-        bio: userRow?.bio || '',
-        location: userRow?.location || '',
-        createdQuizzes: Array.from(mergedQuizzes.values()),
-        completions: completions || [],
-      } as UserStats;
-    } catch (e) {
-      return empty;
-    }
-  } else {
+    return {
+      userId,
+      name: userRow?.name || '',
+      email: userRow?.email || '',
+      photoURL: userRow?.photo_url || '',
+      isPremium: userRow?.is_premium || false,
+      planName: userRow?.plan_name || 'Free',
+      planId: userRow?.plan_id || undefined,
+      renewalDate: userRow?.renewal_date || undefined,
+      isLifetime: userRow?.is_lifetime || false,
+      isFounder: userRow?.is_founder || false,
+      isSuspended: userRow?.is_suspended || false,
+      categoryId: userRow?.category_id || undefined,
+      bio: userRow?.bio || '',
+      location: userRow?.location || '',
+      phone: userRow?.phone || '',
+      isAdmin: userRow?.is_admin || false,
+      // Never surface a badge/color for a non-premium user, even if the row
+      // still has a stale value from a lapsed subscription.
+      badgeTier: userRow?.is_premium ? (userRow?.badge_tier || 'none') : 'none',
+      nameColor: userRow?.is_premium ? (userRow?.name_color || 'default') : 'default',
+      createdQuizzes: (createdQuizzes || []).map(mapQuizRow),
+      completions: completions || [],
+    } as UserStats;
+  } catch (e) {
+    console.error('Error loading user profile stats:', e);
     return empty;
   }
 }
@@ -633,14 +410,13 @@ export async function saveUserProfile(
   isSuspended?: boolean,
   categoryId?: string,
   renewalDate?: string,
+  phone?: string,
 ): Promise<void> {
   if (!userId) return;
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot save user profile.');
+  }
 
-  localStorage.setItem('quiz_userName', name);
-  if (photoURL) localStorage.setItem('quiz_userPhoto', photoURL);
-
-  const localUsers = getLocalUsers();
-  const existingIdx = localUsers.findIndex(u => u.uid === userId || u.id === userId);
   const updatedUser: any = {
     uid: userId,
     id: userId,
@@ -655,61 +431,45 @@ export async function saveUserProfile(
     updated_at: new Date().toISOString(),
   };
 
-  if (planId !== undefined) {
-    updatedUser.plan_id = planId;
-    localStorage.setItem(`quiz_planId_${userId}`, planId);
-  }
-  if (isPremium !== undefined) {
-    updatedUser.is_premium = isPremium;
-    localStorage.setItem(`quiz_isPremium_${userId}`, String(isPremium));
-  }
-  if (planName !== undefined) {
-    updatedUser.plan_name = planName;
-    localStorage.setItem(`quiz_planName_${userId}`, planName);
-  }
+  if (planId !== undefined) updatedUser.plan_id = planId;
+  if (isPremium !== undefined) updatedUser.is_premium = isPremium;
+  if (planName !== undefined) updatedUser.plan_name = planName;
   if (isLifetime !== undefined) updatedUser.is_lifetime = isLifetime;
   if (isFounder !== undefined) updatedUser.is_founder = isFounder;
   if (isSuspended !== undefined) updatedUser.is_suspended = isSuspended;
   if (categoryId !== undefined) updatedUser.category_id = categoryId;
   if (renewalDate !== undefined) updatedUser.renewal_date = renewalDate;
+  if (phone !== undefined) updatedUser.phone = phone;
 
-  if (existingIdx >= 0) {
-    localUsers[existingIdx] = { ...localUsers[existingIdx], ...updatedUser };
-  } else {
-    localUsers.unshift(updatedUser);
-  }
-  saveLocalUsers(localUsers);
-
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('users').upsert(updatedUser, { onConflict: 'uid' });
-      if (error) console.error(`Error upserting user profile for ${userId}:`, error.message);
-    } catch (e) {
-      console.warn('Upsert profile error:', e);
-    }
+  const { error } = await supabase.from('users').upsert(updatedUser, { onConflict: 'uid' });
+  if (error) {
+    console.error(`Error upserting user profile for ${userId}:`, error.message);
+    throw error;
   }
 }
 
 export async function checkUserPremiumStatus(userId: string): Promise<boolean> {
   if (!userId) return false;
-  
-  const localUsers = getLocalUsers();
-  const matched = localUsers.find(u => u.uid === userId || u.id === userId);
-  if (matched) return !!matched.is_premium;
+  if (!isSupabaseConfigured) return false;
 
-  if (isSupabaseConfigured) {
-    try {
-      const { data } = await supabase.from('users').select('is_premium').eq('uid', userId).single();
-      return !!data?.is_premium;
-    } catch (e) {}
+  try {
+    const { data, error } = await supabase.from('users').select('is_premium').eq('uid', userId).single();
+    if (error) {
+      console.error('Error checking premium status:', error);
+      return false;
+    }
+    return !!data?.is_premium;
+  } catch (e) {
+    console.error('Error checking premium status:', e);
+    return false;
   }
-  return false;
 }
 
 // ---------------- PREMIUM TRIAL ACTIVATION REQUEST HANDLERS (SUPABASE DIRECT) ----------------
 
 export async function createPremiumRequest(requestId: string, reqData: any): Promise<void> {
-  const newRequest = {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot submit premium request.');
+  const { error } = await supabase.from('premium_requests').insert({
     id: requestId,
     user_id: reqData.userId,
     name: reqData.name,
@@ -717,53 +477,26 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
     plan_name: reqData.planName,
     payment_screenshot: reqData.paymentScreenshot,
     status: 'pending',
-    created_at: new Date().toISOString()
-  };
-
-  const locals = getLocalPremiumRequests();
-  locals.unshift(newRequest);
-  saveLocalPremiumRequests(locals);
-
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('premium_requests').insert({
-        id: requestId,
-        user_id: reqData.userId,
-        name: reqData.name,
-        email: reqData.email,
-        plan_name: reqData.planName,
-        payment_screenshot: reqData.paymentScreenshot,
-        status: 'pending',
-      });
-      if (error) console.error('Error creating premium request:', error.message);
-    } catch (e) {}
+  });
+  if (error) {
+    console.error('Error creating premium request:', error.message);
+    throw error;
   }
 }
 
 export async function getPremiumRequests(userId?: string): Promise<any[]> {
-  const locals = getLocalPremiumRequests();
-  if (isSupabaseConfigured) {
-    try {
-      let query = supabase.from('premium_requests').select('*');
-      if (userId) {
-        query = query.eq('user_id', userId);
-      }
-      query = query.order('created_at', { ascending: false });
-      const { data, error } = await query;
-      if (!error && data) {
-        const map = new Map();
-        locals.forEach(r => map.set(r.id, r));
-        data.forEach(r => map.set(r.id, r));
-        return Array.from(map.values()).sort((a: any, b: any) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime());
-      }
-    } catch (e) {
-      console.warn('Error getting premium requests:', e);
-    }
-  }
+  if (!isSupabaseConfigured) return [];
+  let query = supabase.from('premium_requests').select('*');
   if (userId) {
-    return locals.filter((r: any) => r.user_id === userId);
+    query = query.eq('user_id', userId);
   }
-  return locals;
+  query = query.order('created_at', { ascending: false });
+  const { data, error } = await query;
+  if (error) {
+    console.error('Error getting premium requests:', error);
+    throw error;
+  }
+  return data || [];
 }
 
 export async function updatePremiumRequest(
@@ -774,56 +507,40 @@ export async function updatePremiumRequest(
   planName?: string,
   planId?: string
 ): Promise<void> {
-  const locals = getLocalPremiumRequests();
-  const idx = locals.findIndex(r => r.id === requestId);
-  if (idx >= 0) {
-    locals[idx].status = status;
-    locals[idx].reject_reason = rejectReason;
-    locals[idx].updated_at = new Date().toISOString();
-    saveLocalPremiumRequests(locals);
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot update premium request.');
   }
 
-  const localUsers = getLocalUsers();
-  const uIdx = localUsers.findIndex(u => u.uid === userId || u.id === userId);
-  if (uIdx >= 0) {
-    localUsers[uIdx].is_premium = (status === 'approved');
-    localUsers[uIdx].plan_name = status === 'approved' ? (planName || 'الباقة الذهبية لمعلمي المستقبل (مفعّلة)') : 'Free';
-    localUsers[uIdx].plan_id = status === 'approved' ? (planId || undefined) : undefined;
-    localUsers[uIdx].is_lifetime = status === 'approved' ? (planId === 'lifetime') : false;
-    localUsers[uIdx].is_founder = status === 'approved' ? (planId === 'diamond') : false;
-    localUsers[uIdx].renewal_date = status === 'approved' ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null;
-    saveLocalUsers(localUsers);
+  const { error: reqError } = await supabase.from('premium_requests').update({
+    status, reject_reason: rejectReason, updated_at: new Date().toISOString(),
+  }).eq('id', requestId);
+  if (reqError) {
+    console.error('Error updating premium activation status:', reqError.message);
+    throw reqError;
   }
 
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('premium_requests').update({
-        status, reject_reason: rejectReason, updated_at: new Date().toISOString(),
-      }).eq('id', requestId);
-      if (error) {
-        console.error('Error updating premium activation status:', error.message);
-        return;
+  const userUpdate = status === 'approved'
+    ? {
+        is_premium: true,
+        plan_name: planName || 'الباقة الذهبية لمعلمي المستقبل (مفعّلة)',
+        plan_id: planId || null,
+        is_lifetime: planId === 'lifetime',
+        is_founder: planId === 'diamond',
+        renewal_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       }
-      if (status === 'approved') {
-        await supabase.from('users').update({
-          is_premium: true,
-          plan_name: planName || 'الباقة الذهبية لمعلمي المستقبل (مفعّلة)',
-          plan_id: planId || null,
-          is_lifetime: planId === 'lifetime',
-          is_founder: planId === 'diamond',
-          renewal_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        }).eq('uid', userId);
-      } else {
-        await supabase.from('users').update({
-          is_premium: false,
-          plan_name: 'Free',
-          plan_id: null,
-          is_lifetime: false,
-          is_founder: false,
-          renewal_date: null,
-        }).eq('uid', userId);
-      }
-    } catch (e) {}
+    : {
+        is_premium: false,
+        plan_name: 'Free',
+        plan_id: null,
+        is_lifetime: false,
+        is_founder: false,
+        renewal_date: null,
+      };
+
+  const { error: userError } = await supabase.from('users').update(userUpdate).eq('uid', userId);
+  if (userError) {
+    console.error('Error updating user premium status:', userError.message);
+    throw userError;
   }
 }
 
@@ -845,7 +562,7 @@ export async function rateQuestion(
         question_id: questionId, question_text: questionText, rating_value: ratingValue,
       });
       if (error) console.error('Error in rateQuestion:', error.message);
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
 }
 
@@ -855,7 +572,7 @@ export async function getUserRatedQuestions(userId: string): Promise<QuestionRat
     try {
       const { data, error } = await supabase.from('question_ratings').select('*').eq('user_id', userId);
       if (!error && data) return data;
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
@@ -867,7 +584,7 @@ export async function getPromotions(): Promise<Promotion[]> {
     try {
       const { data, error } = await supabase.from('promotions').select('*').eq('is_active', true);
       if (!error && data) return data;
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
@@ -877,7 +594,7 @@ export async function savePromotion(promo: Promotion): Promise<void> {
     try {
       const { error } = await supabase.from('promotions').upsert(promo as any);
       if (error) console.error('Error saving promotion:', error.message);
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
 }
 
@@ -886,72 +603,48 @@ export async function deletePromotion(promoId: string): Promise<void> {
     try {
       const { error } = await supabase.from('promotions').delete().eq('id', promoId);
       if (error) console.error('Error deleting promotion:', error.message);
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
 }
 
-// ---------------- COUPONS CODES REDUCTIONS (SUPABASE DIRECT / LOCAL FALLBACK) ----------------
+// ---------------- COUPONS CODES REDUCTIONS (SUPABASE DIRECT) ----------------
 
 export async function getCoupons(): Promise<Coupon[]> {
-  const locals = getLocalCoupons();
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.from('coupon_codes').select('*');
-      if (!error && data) {
-        const map = new Map<string, Coupon>();
-        locals.forEach(c => map.set(c.id, c));
-        data.forEach(c => map.set(c.id, c));
-        return Array.from(map.values());
-      }
-    } catch (e) {
-      console.warn('Error loading coupons:', e);
-    }
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('coupon_codes').select('*');
+  if (error) {
+    console.error('Error loading coupons:', error);
+    throw error;
   }
-  return locals;
+  return data || [];
 }
 
 export async function getCouponByCode(code: string): Promise<Coupon | null> {
-  if (!code) return null;
-  const locals = getLocalCoupons();
+  if (!code || !isSupabaseConfigured) return null;
   const cleanedCode = code.trim().toUpperCase();
-  const matchedLocal = locals.find(c => c.code.toUpperCase() === cleanedCode || c.id.toUpperCase() === cleanedCode);
-  
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.rpc('get_coupon_by_code', { p_code: cleanedCode });
-      if (!error && data) return data;
-    } catch (e) {}
+  const { data, error } = await supabase.rpc('get_coupon_by_code', { p_code: cleanedCode });
+  if (error) {
+    console.error('Error looking up coupon:', error);
+    return null;
   }
-  return matchedLocal || null;
+  return data || null;
 }
 
 export async function saveCoupon(coupon: Coupon): Promise<void> {
-  const locals = getLocalCoupons();
-  const idx = locals.findIndex(c => c.id === coupon.id || c.code === coupon.code);
-  if (idx >= 0) {
-    locals[idx] = coupon;
-  } else {
-    locals.push(coupon);
-  }
-  saveLocalCoupons(locals);
-
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('coupon_codes').upsert(coupon as any);
-      if (error) console.error('Error saving coupon:', error.message);
-    } catch (e) {}
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot save coupon.');
+  const { error } = await supabase.from('coupon_codes').upsert(coupon as any);
+  if (error) {
+    console.error('Error saving coupon:', error.message);
+    throw error;
   }
 }
 
 export async function deleteCoupon(couponId: string): Promise<void> {
-  const locals = getLocalCoupons().filter(c => c.id !== couponId);
-  saveLocalCoupons(locals);
-
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('coupon_codes').delete().eq('id', couponId);
-      if (error) console.error('Error deleting coupon:', error.message);
-    } catch (e) {}
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot delete coupon.');
+  const { error } = await supabase.from('coupon_codes').delete().eq('id', couponId);
+  if (error) {
+    console.error('Error deleting coupon:', error.message);
+    throw error;
   }
 }
 
@@ -962,7 +655,7 @@ export async function getBestScoreByQuizId(quizId: string): Promise<number> {
     try {
       const { data } = await supabase.from('completions').select('score').eq('quiz_id', quizId).order('score', { ascending: false }).limit(1).single();
       return data?.score ?? 0;
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return 0;
 }
@@ -972,7 +665,7 @@ export async function getCompletionsByQuizId(quizId: string): Promise<QuizComple
     try {
       const { data, error } = await supabase.from('completions').select('*').eq('quiz_id', quizId).order('created_at', { ascending: false });
       if (!error && data) return data;
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
@@ -982,29 +675,49 @@ export async function getRecentCompletions(limitCount = 10): Promise<QuizComplet
     try {
       const { data, error } = await supabase.from('completions').select('*').order('created_at', { ascending: false }).limit(limitCount);
       if (!error && data) return data;
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
 
 // ---------------- SOCIAL: MOODS & COMMUNITY NETWORK POSTS (SUPABASE DIRECT / LOCAL FALLBACK) ----------------
 
+function mapCommunityPostRow(row: any): any {
+  return {
+    id: row.id,
+    text: row.text,
+    authorId: row.author_id,
+    authorName: row.author_name,
+    createdAt: row.created_at,
+    likes: row.likes || 0,
+    likedBy: row.liked_by || [],
+    authorBadgeSymbol: row.author_badge_symbol || '',
+    authorBadgeColor: row.author_badge_color || '',
+    authorBadgeTier: row.author_badge_tier || 'none',
+    authorNameColor: row.author_name_color || 'default',
+    viewsCount: row.views_count || 0,
+    viewers: row.viewers || [],
+  };
+}
+
 export async function getCommunityPosts(): Promise<any[]> {
-  const locals = getLocalCommunityPosts();
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.from('community_posts').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
-        const map = new Map();
-        locals.forEach(p => map.set(p.id, p));
-        data.forEach(p => map.set(p.id, p));
-        return Array.from(map.values()).sort((a: any, b: any) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime());
-      }
-    } catch (e) {
-      console.warn('Error loading community posts:', e);
-    }
+  if (!isSupabaseConfigured) {
+    console.error('Supabase is not configured; community posts require a database connection.');
+    return [];
   }
-  return locals;
+  const { data, error } = await supabase
+    .from('community_posts')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.error('Failed to load community posts:', error);
+    throw error;
+  }
+  // NOTE: previously this returned raw snake_case Supabase rows directly, but
+  // the rendering code reads camelCase fields (post.authorName, post.likedBy,
+  // etc.) - meaning author name/badge/likes were silently never displaying
+  // correctly for real (non-cached) posts. Mapping fixes that.
+  return (data || []).map(mapCommunityPostRow);
 }
 
 export async function createCommunityPost(
@@ -1012,8 +725,13 @@ export async function createCommunityPost(
   authorId: string,
   authorName: string,
   authorBadgeSymbol?: string,
-  authorBadgeColor?: string
+  authorBadgeColor?: string,
+  authorBadgeTier?: BadgeTier,
+  authorNameColor?: NameColorKey
 ): Promise<any> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot create a community post.');
+  }
   const newPost = {
     id: 'cp-' + Math.random().toString(36).substring(2, 11),
     text,
@@ -1021,59 +739,45 @@ export async function createCommunityPost(
     author_name: authorName,
     author_badge_symbol: authorBadgeSymbol || '',
     author_badge_color: authorBadgeColor || '',
+    author_badge_tier: authorBadgeTier || 'none',
+    author_name_color: authorNameColor || 'default',
     likes: 0,
     liked_by: [],
     created_at: new Date().toISOString()
   };
 
-  const locals = getLocalCommunityPosts();
-  locals.unshift(newPost);
-  saveLocalCommunityPosts(locals);
-
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.from('community_posts').insert(newPost).select().single();
-      if (!error && data) return data;
-    } catch (e) {}
+  const { data, error } = await supabase.from('community_posts').insert(newPost).select().single();
+  if (error) {
+    console.error('Failed to create community post:', error);
+    throw error;
   }
-  return newPost;
+  return mapCommunityPostRow(data);
 }
 
 export async function likeCommunityPost(postId: string, userId: string): Promise<any> {
-  const locals = getLocalCommunityPosts();
-  const post = locals.find(p => p.id === postId);
-  if (post) {
-    const likedBy = Array.isArray(post.liked_by) ? post.liked_by : [];
-    const idx = likedBy.indexOf(userId);
-    if (idx >= 0) {
-      likedBy.splice(idx, 1);
-      post.likes = Math.max(0, post.likes - 1);
-    } else {
-      likedBy.push(userId);
-      post.likes = (post.likes || 0) + 1;
-    }
-    post.liked_by = likedBy;
-    saveLocalCommunityPosts(locals);
+  if (!isSupabaseConfigured) {
   }
-
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.rpc('toggle_post_like', { p_post_id: postId, p_user_id: userId });
-      if (!error && data) return data;
-    } catch (e) {}
+  // Uses the toggle_post_like RPC defined in the 20260723 migration so the
+  // like/unlike toggle happens atomically in Postgres instead of a local mirror.
+  const { data, error } = await supabase.rpc('toggle_post_like', {
+    p_post_id: postId,
+    p_user_id: userId
+  });
+  if (error) {
+    console.error('Failed to toggle post like:', error);
+    throw error;
   }
-  return post;
+  return data;
 }
 
 export async function deleteCommunityPost(postId: string): Promise<boolean> {
-  const locals = getLocalCommunityPosts().filter(p => p.id !== postId);
-  saveLocalCommunityPosts(locals);
-
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('community_posts').delete().eq('id', postId);
-      return !error;
-    } catch (e) {}
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot delete a community post.');
+  }
+  const { error } = await supabase.from('community_posts').delete().eq('id', postId);
+  if (error) {
+    console.error('Failed to delete community post:', error);
+    throw error;
   }
   return true;
 }
@@ -1089,7 +793,7 @@ export async function getDirectMessages(userId: string): Promise<any[]> {
         .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
         .order('created_at', { ascending: false });
       if (!error && data) return data;
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
@@ -1112,17 +816,21 @@ export async function sendDirectMessage(
     created_at: new Date().toISOString()
   };
 
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.from('direct_messages').insert({
-        id: newMsg.id,
-        sender_id: senderId, sender_name: senderName,
-        receiver_id: receiverId, receiver_name: receiverName, text,
-      }).select().single();
-      if (!error && data) return data;
-    } catch (e) {}
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot send message.');
   }
-  return newMsg;
+  const { data, error } = await supabase.from('direct_messages').insert({
+    id: newMsg.id,
+    sender_id: senderId, sender_name: senderName,
+    receiver_id: receiverId, receiver_name: receiverName, text,
+  }).select().single();
+  if (error) {
+    // This used to swallow the error and return a fabricated "sent" message,
+    // so the sender's UI showed success while the receiver never got anything.
+    console.error('Failed to send direct message:', error);
+    throw error;
+  }
+  return data;
 }
 
 export async function markMessagesAsRead(userId: string, contactId: string): Promise<void> {
@@ -1133,28 +841,20 @@ export async function markMessagesAsRead(userId: string, contactId: string): Pro
         .update({ is_read: true })
         .eq('receiver_id', userId)
         .eq('sender_id', contactId);
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
 }
 
-// ---------------- ALERTS & GENERAL NOTIFICATIONS (SUPABASE DIRECT / LOCAL FALLBACK) ----------------
+// ---------------- ALERTS & GENERAL NOTIFICATIONS (SUPABASE DIRECT) ----------------
 
 export async function getNotifications(): Promise<any[]> {
-  const locals = getLocalNotifications();
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(30);
-      if (!error && data) {
-        const map = new Map();
-        locals.forEach(n => map.set(n.id, n));
-        data.forEach(n => map.set(n.id, n));
-        return Array.from(map.values()).sort((a: any, b: any) => new Date(b.created_at || b.createdAt).getTime() - new Date(a.created_at || a.createdAt).getTime());
-      }
-    } catch (e) {
-      console.warn('Error reading notification alerts:', e);
-    }
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(30);
+  if (error) {
+    console.error('Error reading notification alerts:', error);
+    throw error;
   }
-  return locals;
+  return data || [];
 }
 
 export async function createNotification(
@@ -1163,6 +863,7 @@ export async function createNotification(
   senderName?: string,
   type?: string
 ): Promise<any> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot create notification.');
   const newNotif = {
     id: 'notif-' + Math.random().toString(36).substring(2, 11),
     title,
@@ -1172,66 +873,38 @@ export async function createNotification(
     created_at: new Date().toISOString()
   };
 
-  const locals = getLocalNotifications();
-  locals.unshift(newNotif);
-  saveLocalNotifications(locals);
-
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.from('notifications').insert(newNotif).select().single();
-      if (!error && data) return data;
-    } catch (e) {}
+  const { data, error } = await supabase.from('notifications').insert(newNotif).select().single();
+  if (error) {
+    console.error('Error creating notification:', error);
+    throw error;
   }
-  return newNotif;
+  return data;
 }
 
 export async function getAllProfiles(): Promise<any[]> {
-  const localUsers = getLocalUsers();
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
-        const map = new Map();
-        localUsers.forEach(u => map.set(u.uid, u));
-        data.forEach(u => map.set(u.uid, u));
-        return Array.from(map.values());
-      }
-    } catch (e) {
-      console.warn('Error fetching all profiles:', e);
-    }
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+  if (error) {
+    console.error('Error fetching all profiles:', error);
+    throw error;
   }
-  return localUsers;
+  return data || [];
 }
 
 export async function updateUserSubscription(userId: string, isPremium: boolean, planName: string, planId?: string, isLifetime?: boolean, isFounder?: boolean, renewalDate?: string): Promise<any> {
-  const localUsers = getLocalUsers();
-  const uIdx = localUsers.findIndex(u => u.uid === userId || u.id === userId);
-  if (uIdx >= 0) {
-    localUsers[uIdx].is_premium = isPremium;
-    localUsers[uIdx].plan_name = planName;
-    localUsers[uIdx].plan_id = planId;
-    localUsers[uIdx].is_lifetime = isLifetime || false;
-    localUsers[uIdx].is_founder = isFounder || false;
-    localUsers[uIdx].renewal_date = renewalDate || (isPremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null);
-    saveLocalUsers(localUsers);
+  if (!isSupabaseConfigured) {
+    return { error: new Error('Supabase is not configured; cannot update subscription.') };
   }
-
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('users').update({
-        is_premium: isPremium,
-        plan_name: planName,
-        plan_id: planId || null,
-        is_lifetime: isLifetime || false,
-        is_founder: isFounder || false,
-        renewal_date: renewalDate || (isPremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null),
-      }).eq('uid', userId);
-      return { error };
-    } catch (e) {
-      return { error: e };
-    }
-  }
-  return { error: null };
+  const { error } = await supabase.from('users').update({
+    is_premium: isPremium,
+    plan_name: planName,
+    plan_id: planId || null,
+    is_lifetime: isLifetime || false,
+    is_founder: isFounder || false,
+    renewal_date: renewalDate || (isPremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null),
+  }).eq('uid', userId);
+  if (error) console.error('Error updating user subscription:', error);
+  return { error };
 }
 
 // ---------------- SUBSCRIPTION PLANS (SUPABASE DIRECT) ----------------
@@ -1241,7 +914,7 @@ export async function getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     try {
       const { data, error } = await supabase.from('subscription_plans').select('*').order('priority_level', { ascending: true });
       if (!error && data) return data as SubscriptionPlan[];
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
@@ -1251,7 +924,7 @@ export async function getActiveSubscriptionPlans(): Promise<SubscriptionPlan[]> 
     try {
       const { data, error } = await supabase.from('subscription_plans').select('*').eq('is_active', true).order('priority_level', { ascending: true });
       if (!error && data) return data as SubscriptionPlan[];
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
@@ -1263,7 +936,7 @@ export async function getAccountCategories(): Promise<AccountCategory[]> {
     try {
       const { data, error } = await supabase.from('account_categories').select('*').order('sort_order', { ascending: true });
       if (!error && data) return data as AccountCategory[];
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
@@ -1275,7 +948,7 @@ export async function getCouponUsageByUser(couponId: string, userId: string): Pr
     try {
       const { data, error } = await supabase.from('coupon_usages').select('*').eq('coupon_id', couponId).eq('user_id', userId).maybeSingle();
       if (!error && data) return data as CouponUsage;
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return null;
 }
@@ -1287,31 +960,19 @@ export async function recordCouponUsage(
   planId?: string,
   orderId?: string
 ): Promise<string | null> {
-  const localCoupons = getLocalCoupons();
-  const localIdx = localCoupons.findIndex(c => c.id === couponId);
-  if (localIdx >= 0) {
-    if (localCoupons[localIdx].usedCount >= localCoupons[localIdx].maxUses) {
-      return null;
-    }
-    localCoupons[localIdx].usedCount = (localCoupons[localIdx].usedCount || 0) + 1;
-    saveLocalCoupons(localCoupons);
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase.rpc('record_coupon_usage', {
+    p_coupon_id: couponId,
+    p_user_id: userId,
+    p_discount_percent: discountPercent,
+    p_plan_id: planId || null,
+    p_order_id: orderId || null,
+  });
+  if (error) {
+    console.error('Error recording coupon usage:', error);
+    return null;
   }
-
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.rpc('record_coupon_usage', {
-        p_coupon_id: couponId,
-        p_user_id: userId,
-        p_discount_percent: discountPercent,
-        p_plan_id: planId || null,
-        p_order_id: orderId || null,
-      });
-      if (!error && data) return data;
-    } catch (e) {
-      console.warn('Error recording coupon usage:', e);
-    }
-  }
-  return 'local-' + Date.now();
+  return data || null;
 }
 
 // ---------------- SEASONS (SUPABASE DIRECT) ----------------
@@ -1321,7 +982,7 @@ export async function getActiveSeason(): Promise<Season | null> {
     try {
       const { data, error } = await supabase.rpc('get_active_season');
       if (!error && data && data.length > 0) return data[0] as Season;
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return null;
 }
@@ -1335,7 +996,7 @@ export async function getSeasons(includeArchived: boolean = false): Promise<Seas
       }
       const { data, error } = await query;
       if (!error && data) return data as Season[];
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
@@ -1346,56 +1007,36 @@ export async function getSeasonById(seasonId: string): Promise<Season | null> {
     try {
       const { data, error } = await supabase.from('seasons').select('*').eq('id', seasonId).single();
       if (!error && data) return data as Season;
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return null;
 }
 
 export async function createSeason(season: Season): Promise<Season | null> {
-  const localSeasons = getLocalSeasons();
-  localSeasons.unshift(season);
-  saveLocalSeasons(localSeasons);
-
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.from('seasons').insert(season as any).select().single();
-      if (!error && data) return data as Season;
-    } catch (e) {
-      console.warn('Error creating season:', e);
-    }
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot create season.');
+  const { data, error } = await supabase.from('seasons').insert(season as any).select().single();
+  if (error) {
+    console.error('Error creating season:', error);
+    throw error;
   }
-  return season;
+  return data as Season;
 }
 
 export async function updateSeason(seasonId: string, updates: Partial<Season>): Promise<void> {
-  const localSeasons = getLocalSeasons();
-  const idx = localSeasons.findIndex(s => s.id === seasonId);
-  if (idx >= 0) {
-    localSeasons[idx] = { ...localSeasons[idx], ...updates };
-    saveLocalSeasons(localSeasons);
-  }
-
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('seasons').update(updates as any).eq('id', seasonId);
-      if (error) console.error('Error updating season:', error.message);
-    } catch (e) {
-      console.warn('Error updating season:', e);
-    }
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot update season.');
+  const { error } = await supabase.from('seasons').update(updates as any).eq('id', seasonId);
+  if (error) {
+    console.error('Error updating season:', error.message);
+    throw error;
   }
 }
 
 export async function deleteSeason(seasonId: string): Promise<void> {
-  const localSeasons = getLocalSeasons().filter(s => s.id !== seasonId);
-  saveLocalSeasons(localSeasons);
-
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('seasons').delete().eq('id', seasonId);
-      if (error) console.error('Error deleting season:', error.message);
-    } catch (e) {
-      console.warn('Error deleting season:', e);
-    }
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot delete season.');
+  const { error } = await supabase.from('seasons').delete().eq('id', seasonId);
+  if (error) {
+    console.error('Error deleting season:', error.message);
+    throw error;
   }
 }
 
@@ -1424,7 +1065,7 @@ export async function getSeasonMembers(seasonId: string, limit: number = 50): Pr
         p_limit: limit,
       });
       if (!error && data) return data as SeasonMember[];
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }
@@ -1439,7 +1080,7 @@ export async function getMySeasonMemberships(userId: string): Promise<(SeasonMem
         .eq('user_id', userId)
         .order('joined_at', { ascending: false });
       if (!error && data) return data as any[];
-    } catch (e) {}
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
 }

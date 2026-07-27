@@ -181,6 +181,10 @@ export interface UserStats {
   followersCount?: number;
   followingCount?: number;
   isFollowing?: boolean;
+  phone?: string;
+  isAdmin?: boolean;
+  badgeTier?: 'none' | 'pro' | 'premium' | 'team' | 'enterprise' | 'lifetime' | 'founder';
+  nameColor?: 'default' | 'gold' | 'neon_green' | 'neon_pink' | 'neon_blue' | 'silver' | 'diamond';
 }
 
 export interface QuestionRating {

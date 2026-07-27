@@ -19,6 +19,7 @@ interface SidebarProps {
   userEmail?: string | null;
   photoUrl?: string | null;
   avatar_url?: string | null;
+  isAdmin?: boolean;
 }
 
 export default function Sidebar({ 
@@ -32,7 +33,8 @@ export default function Sidebar({
   planName = '',
   userEmail = null,
   photoUrl = null,
-  avatar_url = null
+  avatar_url = null,
+  isAdmin = false
 }: SidebarProps) {
   const t = translations[lang] as any;
   const isAr = lang === 'ar';
@@ -64,7 +66,7 @@ export default function Sidebar({
     { id: 'settings', label: isAr ? 'الإعدادات' : 'Settings' }
   ];
 
-  if (userEmail === 'adman777888999@gmail.com') {
+  if (isAdmin || userEmail === 'adman777888999@gmail.com') {
     menuItems.push({ id: 'admin', label: isAr ? 'لوحة الإدارة' : 'Admin Panel' });
   }
 

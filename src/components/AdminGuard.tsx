@@ -19,19 +19,17 @@ export default function AdminGuard({ userId, userEmail, lang, children }: AdminG
 
     const checkAdminPrivileges = async () => {
       try {
-        const { data } = await supabase.from('users').select('is_founder, is_premium').eq('uid', userId).single();
-        const isFounder = data?.is_founder === true;
-        const isPremium = data?.is_premium === true;
-        const isAdminEmail = userEmail === 'adman777888999@gmail.com';
-
-        if (isFounder || isPremium || isAdminEmail) {
-          setIsAuthorized(true);
-        } else {
-          setIsAuthorized(false);
+        const { data, error } = await supabase.from('users').select('is_admin').eq('uid', userId).single();
+        if (error) {
+          console.error('Admin authorization check failed:', error);
+          setIsAuthorized(false); // fail closed, not open
+          return;
         }
+        const isAdminEmail = userEmail === 'adman777888999@gmail.com';
+        setIsAuthorized(!!data?.is_admin || isAdminEmail);
       } catch (err) {
         console.error('Admin authorization verification failed:', err);
-        setIsAuthorized(true);
+        setIsAuthorized(false); // fail closed: any error/exception denies access, never grants it
       }
     };
 

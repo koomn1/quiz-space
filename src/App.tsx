@@ -69,10 +69,22 @@ export default function App() {
   const [userPhoto, setUserPhoto] = React.useState<string | null>(null);
   const [userCustomId, setUserCustomId] = React.useState<string | null>(null);
   const [isUserPremium, setIsUserPremium] = React.useState(false);
+  // True only for the unauthenticated local trial mode (activateLocalSandboxMode).
+  // Never true for a real Supabase Auth session. Used to block writes that require
+  // a verified account: creating classrooms, posting to community, uploading files,
+  // premium activation, leaderboard entries.
+  const [isGuestSandbox, setIsGuestSandbox] = React.useState(false);
   const [userPlanName, setUserPlanName] = React.useState('');
   const [quizToEdit, setQuizToEdit] = React.useState<any | null>(null);
   const [isStatsLoaded, setIsStatsLoaded] = React.useState(false);
   const [userStats, setUserStats] = React.useState<UserStats | null>(null);
+  // Single source of truth for admin UI checks. Prefers the server-verified,
+  // non-self-editable is_admin column (see 20260726_lock_privileged_user_columns.sql);
+  // falls back to the legacy hardcoded email/uid check only until that migration
+  // has been run and userStats has loaded. This is a UI-visibility convenience only -
+  // actual admin-only writes are enforced by RLS + the privileged-columns trigger
+  // regardless of what this value says.
+  const isAdminUser = userStats?.isAdmin || userId === 'adman777888999' || userEmail === 'adman777888999@gmail.com';
 
   React.useEffect(() => {
     if (!authContext.user) return;
@@ -598,6 +610,7 @@ export default function App() {
 
     if (localUserId && (isLocalSandbox || localAuthToken)) {
       // Restore local sandbox or custom email/password session
+      setIsGuestSandbox(isLocalSandbox && !localAuthToken);
       const savedName = localStorage.getItem('quiz_userName') || generateCoolStudentName(lang);
       const savedEmail = localStorage.getItem('quiz_userEmail') || 'local.student@spacequiz.local';
       setUserId(localUserId);
@@ -636,6 +649,7 @@ export default function App() {
       const user = session?.user as any;
       if (user) {
         // Authenticated user
+        setIsGuestSandbox(false);
         let finalName = user.user_metadata?.name || user.user_metadata?.full_name;
         if (!finalName) {
           const emailPrefix = user.email?.split('@')[0] || '';
@@ -875,7 +889,10 @@ export default function App() {
     }
   };
 
-  // Activate Local Sandbox Simulation Mode to handle network blocks / iframe sandboxing
+  // Activate Local Sandbox Simulation Mode to handle network blocks / iframe sandboxing.
+  // This is a guest/trial mode only: it must never carry real privileges (premium,
+  // class creation, community posting, etc.) since it isn't backed by a Supabase
+  // Auth session or a verified database row. Those actions must prompt sign-in.
   const activateLocalSandboxMode = () => {
     const id = 'local-user-' + Math.random().toString(36).substring(2, 9);
     const generatedName = generateCoolStudentName(lang);
@@ -883,8 +900,9 @@ export default function App() {
     setUserName(generatedName);
     setUserEmail('local.student@spacequiz.local');
     setUserPhoto(null);
-    setIsUserPremium(true);
-    setUserPlanName(lang === 'ar' ? 'العضوية الذهبية (محلي)' : 'Golden Membership (Local)');
+    setIsUserPremium(false);
+    setUserPlanName(lang === 'ar' ? 'وضع تجربة (زائر)' : 'Guest Trial Mode');
+    setIsGuestSandbox(true);
     localStorage.setItem('quiz_userId', id);
     localStorage.setItem('quiz_userName', generatedName);
     localStorage.setItem('quiz_isLocalSandbox', 'true');
@@ -958,6 +976,7 @@ export default function App() {
   const handleGoogleLogout = async () => {
     try {
       await supabase.auth.signOut();
+      setIsGuestSandbox(false);
       localStorage.removeItem('quiz_userId');
       localStorage.removeItem('quiz_userName');
       localStorage.removeItem('quiz_isLocalSandbox');
@@ -1046,7 +1065,7 @@ export default function App() {
   };
 
   const handleShareQuiz = (id: string, title: string, desc?: string) => {
-    const isSuperAdmin = userId === 'adman777888999' || userEmail === 'adman777888999@gmail.com';
+    const isSuperAdmin = isAdminUser;
     const roleAndPlan = getUserRoleAndPlan(userStats);
     const isTeacher = roleAndPlan.role === 'teacher' || userPlanName === 'Gold' || userPlanName === 'Diamond';
     
@@ -1504,7 +1523,7 @@ export default function App() {
               )}
 
               {activeTab === 'community' && (
-                <CommunitySection lang={lang} userId={userId} userName={userName} userEmail={userEmail} userRole={getUserRoleAndPlan(userStats).role} />
+                <CommunitySection lang={lang} userId={userId} userName={userName} userEmail={userEmail} userRole={getUserRoleAndPlan(userStats).role} isGuest={isGuestSandbox} isAdmin={isAdminUser} />
               )}
 
               {activeTab === 'messages' && (
@@ -1521,6 +1540,8 @@ export default function App() {
                   userPlan={getUserRoleAndPlan(userStats).plan}
                   currentUserEmail={userEmail}
                   onStartQuiz={handleStartQuiz}
+                  isGuest={isGuestSandbox}
+                  isAdmin={isAdminUser}
                 />
               )}
 
@@ -1530,11 +1551,12 @@ export default function App() {
                   onStartQuiz={handleStartQuiz} 
                   lang={lang} 
                   onViewProfile={(creatorId) => { handleSetTab('profile', false, creatorId); }}
+                  userId={userId}
                 />
               )}
 
               {activeTab === 'achievements' && (
-                <AchievementsSection lang={lang} completions={completions} quizzes={quizzes} userId={userId} />
+                <AchievementsSection lang={lang} completions={completions} quizzes={quizzes} userId={userId} isPremium={isUserPremium} />
               )}
 
               {activeTab === 'leaderboard' && (
@@ -1556,6 +1578,7 @@ export default function App() {
                   isPremium={isUserPremium} 
                   currentUserId={userId}
                   currentUserEmail={userEmail}
+                  userPlanName={getUserRoleAndPlan(userStats).plan}
                 />
               )}
 
@@ -1750,6 +1773,7 @@ export default function App() {
                 planName={userPlanName}
                 userEmail={userEmail}
                 photoUrl={userPhoto}
+                isAdmin={isAdminUser}
               />                
             </div>
           </>
