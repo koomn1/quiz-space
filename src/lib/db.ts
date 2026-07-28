@@ -336,6 +336,8 @@ export async function submitQuizAttempt(
 // ---------------- PROFILE STATS & MANAGEMENT HANDLERS ----------------
 
 export async function getUserProfileStats(userId: string): Promise<UserStats> {
+  console.log('[getUserProfileStats] Called for userId:', userId);
+  
   const empty: UserStats = {
     userId: userId || '',
     name: '',
@@ -354,15 +356,29 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
     createdQuizzes: [],
     completions: []
   } as UserStats;
-  if (!userId || !isSupabaseConfigured) return empty;
+  
+  if (!userId || !isSupabaseConfigured) {
+    console.log('[getUserProfileStats] Missing userId or Supabase not configured');
+    return empty;
+  }
 
   try {
+    console.log('[getUserProfileStats] Querying users table for uid:', userId);
     const { data: userRow, error: userError } = await supabase.from('users').select('*').eq('uid', userId).single();
-    if (userError) console.error(`Error loading profile for ${userId}:`, userError.message);
+    console.log('[getUserProfileStats] User row:', userRow);
+    console.log('[getUserProfileStats] User error:', userError);
+    
+    if (userError) {
+      console.error(`[getUserProfileStats] Error loading profile for ${userId}:`, userError.message);
+      console.error('[getUserProfileStats] Error code:', userError.code);
+    }
+    
     const { data: createdQuizzes } = await supabase.from('quizzes').select('*').eq('creator_id', userId).order('created_at', { ascending: false });
     const { data: completions } = await supabase.from('completions').select('*').eq('taker_id', userId).order('created_at', { ascending: false });
 
-    return {
+    console.log('[getUserProfileStats] is_admin value:', userRow?.is_admin);
+    
+    const stats = {
       userId,
       name: userRow?.name || '',
       email: userRow?.email || '',
@@ -386,8 +402,11 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       createdQuizzes: (createdQuizzes || []).map(mapQuizRow),
       completions: completions || [],
     } as UserStats;
+    
+    console.log('[getUserProfileStats] Returning stats:', stats);
+    return stats;
   } catch (e) {
-    console.error('Error loading user profile stats:', e);
+    console.error('[getUserProfileStats] Error loading user profile stats:', e);
     return empty;
   }
 }
@@ -412,14 +431,22 @@ export async function saveUserProfile(
   renewalDate?: string,
   phone?: string,
 ): Promise<void> {
-  if (!userId) return;
+  console.log('[saveUserProfile] Called with userId:', userId);
+  console.log('[saveUserProfile] Name:', name);
+  console.log('[saveUserProfile] Email:', email);
+  
+  if (!userId) {
+    console.error('[saveUserProfile] No userId provided');
+    return;
+  }
+  
   if (!isSupabaseConfigured) {
+    console.error('[saveUserProfile] Supabase is not configured');
     throw new Error('Supabase is not configured; cannot save user profile.');
   }
 
   const updatedUser: any = {
     uid: userId,
-    id: userId,
     name,
     photo_url: photoURL || '',
     email: email || '',
@@ -441,11 +468,19 @@ export async function saveUserProfile(
   if (renewalDate !== undefined) updatedUser.renewal_date = renewalDate;
   if (phone !== undefined) updatedUser.phone = phone;
 
+  console.log('[saveUserProfile] Upserting user data:', updatedUser);
+  console.log('[saveUserProfile] Using onConflict: uid');
+
   const { error } = await supabase.from('users').upsert(updatedUser, { onConflict: 'uid' });
   if (error) {
-    console.error(`Error upserting user profile for ${userId}:`, error.message);
+    console.error('[saveUserProfile] Error upserting user profile for', userId, ':', error);
+    console.error('[saveUserProfile] Error code:', error.code);
+    console.error('[saveUserProfile] Error message:', error.message);
+    console.error('[saveUserProfile] Error details:', error.details);
     throw error;
   }
+  
+  console.log('[saveUserProfile] Successfully saved profile for:', userId);
 }
 
 export async function checkUserPremiumStatus(userId: string): Promise<boolean> {
