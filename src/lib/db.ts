@@ -399,6 +399,7 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       // still has a stale value from a lapsed subscription.
       badgeTier: userRow?.is_premium ? (userRow?.badge_tier || 'none') : 'none',
       nameColor: userRow?.is_premium ? (userRow?.name_color || 'default') : 'default',
+      joinedDate: userRow?.created_at || undefined,
       createdQuizzes: (createdQuizzes || []).map(mapQuizRow),
       completions: completions || [],
     } as UserStats;
