@@ -2,6 +2,21 @@
 -- This migration creates all tables, indexes, RLS policies, and functions
 
 -- ============================================
+-- SAFE DROP POLICY HELPER
+-- DROP POLICY IF EXISTS fails with 42P01 when the TABLE itself doesn't exist
+-- (the IF EXISTS only guards the policy, not the table). This helper swallows
+-- that error so the migration is safe to run on any database state.
+-- ============================================
+CREATE OR REPLACE FUNCTION _safe_drop_policy(p_policy TEXT, p_table TEXT)
+RETURNS VOID AS $$
+BEGIN
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I', p_policy, p_table);
+EXCEPTION WHEN undefined_table THEN
+    NULL; -- table doesn't exist yet, nothing to drop
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
 -- 1. USERS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS users (
@@ -43,14 +58,14 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS users_read_own ON users;
-DROP POLICY IF EXISTS users_read_policy ON users;
-DROP POLICY IF EXISTS users_insert_own ON users;
-DROP POLICY IF EXISTS users_insert_policy ON users;
-DROP POLICY IF EXISTS users_update_own ON users;
-DROP POLICY IF EXISTS users_admin_update_all ON users;
-DROP POLICY IF EXISTS users_admin_update_own_team ON users;
-DROP POLICY IF EXISTS users_admin_all ON users;
+SELECT _safe_drop_policy('users_read_own', 'users');
+SELECT _safe_drop_policy('users_read_policy', 'users');
+SELECT _safe_drop_policy('users_insert_own', 'users');
+SELECT _safe_drop_policy('users_insert_policy', 'users');
+SELECT _safe_drop_policy('users_update_own', 'users');
+SELECT _safe_drop_policy('users_admin_update_all', 'users');
+SELECT _safe_drop_policy('users_admin_update_own_team', 'users');
+SELECT _safe_drop_policy('users_admin_all', 'users');
 
 CREATE POLICY users_read_own ON users FOR SELECT USING (true);
 -- NOTE: intentionally public read, not "own row only". The app reads other
@@ -92,11 +107,11 @@ CREATE INDEX IF NOT EXISTS idx_quizzes_classroom_id ON quizzes(classroom_id);
 
 ALTER TABLE quizzes ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS quizzes_read ON quizzes;
-DROP POLICY IF EXISTS quizzes_insert_auth ON quizzes;
-DROP POLICY IF EXISTS quizzes_insert_own ON quizzes;
-DROP POLICY IF EXISTS quizzes_update_own ON quizzes;
-DROP POLICY IF EXISTS quizzes_delete_own ON quizzes;
+SELECT _safe_drop_policy('quizzes_read', 'quizzes');
+SELECT _safe_drop_policy('quizzes_insert_auth', 'quizzes');
+SELECT _safe_drop_policy('quizzes_insert_own', 'quizzes');
+SELECT _safe_drop_policy('quizzes_update_own', 'quizzes');
+SELECT _safe_drop_policy('quizzes_delete_own', 'quizzes');
 
 CREATE POLICY quizzes_read ON quizzes FOR SELECT USING (true);
 CREATE POLICY quizzes_insert_own ON quizzes FOR INSERT WITH CHECK (auth.uid()::text = creator_id);
@@ -124,9 +139,9 @@ CREATE INDEX IF NOT EXISTS idx_completions_taker_id ON completions(taker_id);
 
 ALTER TABLE completions ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS completions_read_own ON completions;
-DROP POLICY IF EXISTS completions_read_public ON completions;
-DROP POLICY IF EXISTS completions_insert_own ON completions;
+SELECT _safe_drop_policy('completions_read_own', 'completions');
+SELECT _safe_drop_policy('completions_read_public', 'completions');
+SELECT _safe_drop_policy('completions_insert_own', 'completions');
 
 CREATE POLICY completions_read_own ON completions FOR SELECT USING (true);
 -- Public read, not "own row only": getBestScoreByQuizId, getCompletionsByQuizId,
@@ -153,10 +168,10 @@ CREATE INDEX IF NOT EXISTS idx_question_ratings_quiz_id ON question_ratings(quiz
 
 ALTER TABLE question_ratings ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS question_ratings_read ON question_ratings;
-DROP POLICY IF EXISTS question_ratings_read_own ON question_ratings;
-DROP POLICY IF EXISTS question_ratings_insert_own ON question_ratings;
-DROP POLICY IF EXISTS question_ratings_update_own ON question_ratings;
+SELECT _safe_drop_policy('question_ratings_read', 'question_ratings');
+SELECT _safe_drop_policy('question_ratings_read_own', 'question_ratings');
+SELECT _safe_drop_policy('question_ratings_insert_own', 'question_ratings');
+SELECT _safe_drop_policy('question_ratings_update_own', 'question_ratings');
 
 CREATE POLICY question_ratings_read_own ON question_ratings FOR SELECT USING (auth.uid()::text = user_id);
 CREATE POLICY question_ratings_insert_own ON question_ratings FOR INSERT WITH CHECK (auth.uid()::text = user_id);
@@ -186,9 +201,9 @@ CREATE INDEX IF NOT EXISTS idx_community_posts_author_id ON community_posts(auth
 
 ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS community_posts_read ON community_posts;
-DROP POLICY IF EXISTS community_posts_insert_auth ON community_posts;
-DROP POLICY IF EXISTS community_posts_delete_own ON community_posts;
+SELECT _safe_drop_policy('community_posts_read', 'community_posts');
+SELECT _safe_drop_policy('community_posts_insert_auth', 'community_posts');
+SELECT _safe_drop_policy('community_posts_delete_own', 'community_posts');
 
 CREATE POLICY community_posts_read ON community_posts FOR SELECT USING (true);
 CREATE POLICY community_posts_insert_auth ON community_posts FOR INSERT WITH CHECK (auth.uid()::text IS NOT NULL AND length(author_id) > 0);
@@ -217,7 +232,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS notifications_read_own ON notifications;
+SELECT _safe_drop_policy('notifications_read_own', 'notifications');
 
 CREATE POLICY notifications_read_own ON notifications FOR SELECT USING (true);
 
@@ -240,8 +255,8 @@ CREATE INDEX IF NOT EXISTS idx_direct_messages_receiver_id ON direct_messages(re
 
 ALTER TABLE direct_messages ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS direct_messages_read_own ON direct_messages;
-DROP POLICY IF EXISTS direct_messages_insert_auth ON direct_messages;
+SELECT _safe_drop_policy('direct_messages_read_own', 'direct_messages');
+SELECT _safe_drop_policy('direct_messages_insert_auth', 'direct_messages');
 
 CREATE POLICY direct_messages_read_own ON direct_messages FOR SELECT USING (auth.uid()::text = sender_id OR auth.uid()::text = receiver_id);
 CREATE POLICY direct_messages_insert_auth ON direct_messages FOR INSERT WITH CHECK (auth.uid()::text = sender_id);
@@ -261,9 +276,9 @@ CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id);
 
 ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS follows_read ON follows;
-DROP POLICY IF EXISTS follows_insert_own ON follows;
-DROP POLICY IF EXISTS follows_delete_own ON follows;
+SELECT _safe_drop_policy('follows_read', 'follows');
+SELECT _safe_drop_policy('follows_insert_own', 'follows');
+SELECT _safe_drop_policy('follows_delete_own', 'follows');
 
 CREATE POLICY follows_read ON follows FOR SELECT USING (true);
 CREATE POLICY follows_insert_own ON follows FOR INSERT WITH CHECK (auth.uid()::text = follower_id);
@@ -284,9 +299,9 @@ CREATE INDEX IF NOT EXISTS idx_bookmarks_user_id ON bookmarks(user_id);
 
 ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS bookmarks_read_own ON bookmarks;
-DROP POLICY IF EXISTS bookmarks_insert_own ON bookmarks;
-DROP POLICY IF EXISTS bookmarks_delete_own ON bookmarks;
+SELECT _safe_drop_policy('bookmarks_read_own', 'bookmarks');
+SELECT _safe_drop_policy('bookmarks_insert_own', 'bookmarks');
+SELECT _safe_drop_policy('bookmarks_delete_own', 'bookmarks');
 
 CREATE POLICY bookmarks_read_own ON bookmarks FOR SELECT USING (user_id = auth.uid()::text);
 CREATE POLICY bookmarks_insert_own ON bookmarks FOR INSERT WITH CHECK (user_id = auth.uid()::text);
@@ -311,8 +326,8 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
 );
 
 ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS subscription_plans_read ON subscription_plans;
-DROP POLICY IF EXISTS subscription_plans_admin_write ON subscription_plans;
+SELECT _safe_drop_policy('subscription_plans_read', 'subscription_plans');
+SELECT _safe_drop_policy('subscription_plans_admin_write', 'subscription_plans');
 CREATE POLICY subscription_plans_read ON subscription_plans FOR SELECT USING (true);
 CREATE POLICY subscription_plans_admin_write ON subscription_plans FOR ALL USING (
     EXISTS (SELECT 1 FROM users WHERE uid = auth.uid()::text AND is_admin = true)
@@ -336,8 +351,8 @@ CREATE TABLE IF NOT EXISTS account_categories (
 );
 
 ALTER TABLE account_categories ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS account_categories_read ON account_categories;
-DROP POLICY IF EXISTS account_categories_admin_write ON account_categories;
+SELECT _safe_drop_policy('account_categories_read', 'account_categories');
+SELECT _safe_drop_policy('account_categories_admin_write', 'account_categories');
 CREATE POLICY account_categories_read ON account_categories FOR SELECT USING (true);
 CREATE POLICY account_categories_admin_write ON account_categories FOR ALL USING (
     EXISTS (SELECT 1 FROM users WHERE uid = auth.uid()::text AND is_admin = true)
@@ -359,10 +374,10 @@ CREATE TABLE IF NOT EXISTS coupon_codes (
 );
 
 ALTER TABLE coupon_codes ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS coupon_codes_read ON coupon_codes;
-DROP POLICY IF EXISTS coupon_codes_admin_write ON coupon_codes;
-DROP POLICY IF EXISTS coupon_codes_admin_update ON coupon_codes;
-DROP POLICY IF EXISTS coupon_codes_admin_delete ON coupon_codes;
+SELECT _safe_drop_policy('coupon_codes_read', 'coupon_codes');
+SELECT _safe_drop_policy('coupon_codes_admin_write', 'coupon_codes');
+SELECT _safe_drop_policy('coupon_codes_admin_update', 'coupon_codes');
+SELECT _safe_drop_policy('coupon_codes_admin_delete', 'coupon_codes');
 CREATE POLICY coupon_codes_read ON coupon_codes FOR SELECT USING (true);
 CREATE POLICY coupon_codes_admin_write ON coupon_codes FOR INSERT WITH CHECK (
     EXISTS (SELECT 1 FROM users WHERE uid = auth.uid()::text AND is_admin = true)
@@ -391,8 +406,8 @@ CREATE INDEX IF NOT EXISTS idx_coupon_usages_coupon_id ON coupon_usages(coupon_i
 CREATE INDEX IF NOT EXISTS idx_coupon_usages_user_id ON coupon_usages(user_id);
 
 ALTER TABLE coupon_usages ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS coupon_usages_read_own ON coupon_usages;
-DROP POLICY IF EXISTS coupon_usages_admin_read ON coupon_usages;
+SELECT _safe_drop_policy('coupon_usages_read_own', 'coupon_usages');
+SELECT _safe_drop_policy('coupon_usages_admin_read', 'coupon_usages');
 CREATE POLICY coupon_usages_read_own ON coupon_usages FOR SELECT USING (auth.uid()::text = user_id);
 CREATE POLICY coupon_usages_admin_read ON coupon_usages FOR SELECT USING (
     EXISTS (SELECT 1 FROM users WHERE uid = auth.uid()::text AND is_admin = true)
@@ -424,8 +439,8 @@ CREATE TABLE IF NOT EXISTS seasons (
 );
 
 ALTER TABLE seasons ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS seasons_read ON seasons;
-DROP POLICY IF EXISTS seasons_admin_write ON seasons;
+SELECT _safe_drop_policy('seasons_read', 'seasons');
+SELECT _safe_drop_policy('seasons_admin_write', 'seasons');
 CREATE POLICY seasons_read ON seasons FOR SELECT USING (true);
 CREATE POLICY seasons_admin_write ON seasons FOR ALL USING (
     EXISTS (SELECT 1 FROM users WHERE uid = auth.uid()::text AND is_admin = true)
@@ -453,10 +468,10 @@ CREATE INDEX IF NOT EXISTS idx_season_members_total_score ON season_members(tota
 CREATE INDEX IF NOT EXISTS idx_season_members_rank ON season_members(rank_position);
 
 ALTER TABLE season_members ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS season_members_read ON season_members;
-DROP POLICY IF EXISTS season_members_insert_own ON season_members;
-DROP POLICY IF EXISTS season_members_update_own ON season_members;
-DROP POLICY IF EXISTS season_members_delete_own ON season_members;
+SELECT _safe_drop_policy('season_members_read', 'season_members');
+SELECT _safe_drop_policy('season_members_insert_own', 'season_members');
+SELECT _safe_drop_policy('season_members_update_own', 'season_members');
+SELECT _safe_drop_policy('season_members_delete_own', 'season_members');
 CREATE POLICY season_members_read ON season_members FOR SELECT USING (true);
 -- No direct INSERT/UPDATE policy on purpose: without this, a user could set
 -- their own total_score/rank_position directly and top the leaderboard
@@ -483,10 +498,10 @@ CREATE INDEX IF NOT EXISTS idx_premium_requests_user_id ON premium_requests(user
 
 ALTER TABLE premium_requests ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS premium_requests_read_own ON premium_requests;
-DROP POLICY IF EXISTS premium_requests_admin_read ON premium_requests;
-DROP POLICY IF EXISTS premium_requests_insert_own ON premium_requests;
-DROP POLICY IF EXISTS premium_requests_admin_update ON premium_requests;
+SELECT _safe_drop_policy('premium_requests_read_own', 'premium_requests');
+SELECT _safe_drop_policy('premium_requests_admin_read', 'premium_requests');
+SELECT _safe_drop_policy('premium_requests_insert_own', 'premium_requests');
+SELECT _safe_drop_policy('premium_requests_admin_update', 'premium_requests');
 
 CREATE POLICY premium_requests_read_own ON premium_requests FOR SELECT USING (auth.uid()::text = user_id);
 CREATE POLICY premium_requests_admin_read ON premium_requests FOR SELECT USING (EXISTS (SELECT 1 FROM users WHERE uid = auth.uid()::text AND is_admin = true));
@@ -506,8 +521,8 @@ CREATE TABLE IF NOT EXISTS promotions (
 );
 
 ALTER TABLE promotions ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS promotions_read ON promotions;
-DROP POLICY IF EXISTS promotions_admin_all ON promotions;
+SELECT _safe_drop_policy('promotions_read', 'promotions');
+SELECT _safe_drop_policy('promotions_admin_all', 'promotions');
 CREATE POLICY promotions_read ON promotions FOR SELECT USING (true);
 CREATE POLICY promotions_admin_all ON promotions FOR ALL USING (
     EXISTS (SELECT 1 FROM users WHERE uid = auth.uid()::text AND is_admin = true)
@@ -533,10 +548,10 @@ CREATE INDEX IF NOT EXISTS idx_classrooms_created_by ON classrooms(created_by);
 
 ALTER TABLE classrooms ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS classrooms_read ON classrooms;
-DROP POLICY IF EXISTS classrooms_insert_auth ON classrooms;
-DROP POLICY IF EXISTS classrooms_update_own ON classrooms;
-DROP POLICY IF EXISTS classrooms_delete_own ON classrooms;
+SELECT _safe_drop_policy('classrooms_read', 'classrooms');
+SELECT _safe_drop_policy('classrooms_insert_auth', 'classrooms');
+SELECT _safe_drop_policy('classrooms_update_own', 'classrooms');
+SELECT _safe_drop_policy('classrooms_delete_own', 'classrooms');
 
 CREATE POLICY classrooms_read ON classrooms FOR SELECT USING (true);
 CREATE POLICY classrooms_insert_auth ON classrooms FOR INSERT WITH CHECK (auth.uid()::text = created_by);
@@ -565,9 +580,9 @@ CREATE INDEX IF NOT EXISTS idx_classroom_students_student_id ON classroom_studen
 
 ALTER TABLE classroom_students ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS classroom_students_read ON classroom_students;
-DROP POLICY IF EXISTS classroom_students_insert_own ON classroom_students;
-DROP POLICY IF EXISTS classroom_students_admin_write ON classroom_students;
+SELECT _safe_drop_policy('classroom_students_read', 'classroom_students');
+SELECT _safe_drop_policy('classroom_students_insert_own', 'classroom_students');
+SELECT _safe_drop_policy('classroom_students_admin_write', 'classroom_students');
 
 CREATE POLICY classroom_students_read ON classroom_students FOR SELECT USING (true);
 CREATE POLICY classroom_students_insert_own ON classroom_students FOR INSERT WITH CHECK (auth.uid()::text = student_id);
@@ -589,8 +604,8 @@ CREATE INDEX IF NOT EXISTS idx_classroom_messages_classroom_id ON classroom_mess
 
 ALTER TABLE classroom_messages ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS classroom_messages_read ON classroom_messages;
-DROP POLICY IF EXISTS classroom_messages_insert_own ON classroom_messages;
+SELECT _safe_drop_policy('classroom_messages_read', 'classroom_messages');
+SELECT _safe_drop_policy('classroom_messages_insert_own', 'classroom_messages');
 
 CREATE POLICY classroom_messages_read ON classroom_messages FOR SELECT USING (true);
 CREATE POLICY classroom_messages_insert_own ON classroom_messages FOR INSERT WITH CHECK (auth.uid()::text = sender_id);
@@ -615,10 +630,10 @@ CREATE INDEX IF NOT EXISTS idx_classroom_assignments_class_id ON classroom_assig
 
 ALTER TABLE classroom_assignments ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS classroom_assignments_read ON classroom_assignments;
-DROP POLICY IF EXISTS classroom_assignments_insert ON classroom_assignments;
-DROP POLICY IF EXISTS classroom_assignments_update_own ON classroom_assignments;
-DROP POLICY IF EXISTS classroom_assignments_delete_own ON classroom_assignments;
+SELECT _safe_drop_policy('classroom_assignments_read', 'classroom_assignments');
+SELECT _safe_drop_policy('classroom_assignments_insert', 'classroom_assignments');
+SELECT _safe_drop_policy('classroom_assignments_update_own', 'classroom_assignments');
+SELECT _safe_drop_policy('classroom_assignments_delete_own', 'classroom_assignments');
 
 CREATE POLICY classroom_assignments_read ON classroom_assignments FOR SELECT USING (
     EXISTS (SELECT 1 FROM classrooms c WHERE c.id = classroom_assignments.class_id AND c.created_by = auth.uid()::text)
@@ -652,9 +667,9 @@ CREATE INDEX IF NOT EXISTS idx_classroom_submissions_student_id ON classroom_sub
 
 ALTER TABLE classroom_submissions ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS classroom_submissions_read ON classroom_submissions;
-DROP POLICY IF EXISTS classroom_submissions_insert_own ON classroom_submissions;
-DROP POLICY IF EXISTS classroom_submissions_update ON classroom_submissions;
+SELECT _safe_drop_policy('classroom_submissions_read', 'classroom_submissions');
+SELECT _safe_drop_policy('classroom_submissions_insert_own', 'classroom_submissions');
+SELECT _safe_drop_policy('classroom_submissions_update', 'classroom_submissions');
 
 CREATE POLICY classroom_submissions_read ON classroom_submissions FOR SELECT USING (
     student_id = auth.uid()::text
@@ -692,10 +707,10 @@ CREATE INDEX IF NOT EXISTS idx_classroom_announcements_class_id ON classroom_ann
 
 ALTER TABLE classroom_announcements ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS classroom_announcements_read ON classroom_announcements;
-DROP POLICY IF EXISTS classroom_announcements_insert ON classroom_announcements;
-DROP POLICY IF EXISTS classroom_announcements_update ON classroom_announcements;
-DROP POLICY IF EXISTS classroom_announcements_delete_own ON classroom_announcements;
+SELECT _safe_drop_policy('classroom_announcements_read', 'classroom_announcements');
+SELECT _safe_drop_policy('classroom_announcements_insert', 'classroom_announcements');
+SELECT _safe_drop_policy('classroom_announcements_update', 'classroom_announcements');
+SELECT _safe_drop_policy('classroom_announcements_delete_own', 'classroom_announcements');
 
 CREATE POLICY classroom_announcements_read ON classroom_announcements FOR SELECT USING (
     EXISTS (SELECT 1 FROM classrooms c WHERE c.id = classroom_announcements.class_id AND c.created_by = auth.uid()::text)
@@ -731,9 +746,9 @@ CREATE INDEX IF NOT EXISTS idx_classroom_shared_files_class_id ON classroom_shar
 
 ALTER TABLE classroom_shared_files ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS classroom_shared_files_read ON classroom_shared_files;
-DROP POLICY IF EXISTS classroom_shared_files_insert ON classroom_shared_files;
-DROP POLICY IF EXISTS classroom_shared_files_delete_own ON classroom_shared_files;
+SELECT _safe_drop_policy('classroom_shared_files_read', 'classroom_shared_files');
+SELECT _safe_drop_policy('classroom_shared_files_insert', 'classroom_shared_files');
+SELECT _safe_drop_policy('classroom_shared_files_delete_own', 'classroom_shared_files');
 
 CREATE POLICY classroom_shared_files_read ON classroom_shared_files FOR SELECT USING (
     EXISTS (SELECT 1 FROM classrooms c WHERE c.id = classroom_shared_files.class_id AND c.created_by = auth.uid()::text)
@@ -1068,3 +1083,9 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated;
 --
 -- Without this, nobody can access the admin dashboard, approve premium
 -- requests, or manage coupons/seasons/categories - by design.
+
+-- ============================================
+-- CLEANUP: remove the migration-only helper
+-- ============================================
+DROP FUNCTION IF EXISTS _safe_drop_policy(TEXT, TEXT);
+

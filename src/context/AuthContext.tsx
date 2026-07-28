@@ -30,14 +30,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 async function fetchAppUser(authUser: User): Promise<AppUser> {
-  console.log('[AuthContext] fetchAppUser called for:', authUser.id);
   const metaName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.user_metadata?.preferred_username || (authUser.email ? authUser.email.split('@')[0] : '') || 'طالب متميز';
   const metaPhoto = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '';
 
-  console.log('[AuthContext] Querying public.users for uid:', authUser.id);
-  let { data, error } = await supabase.from('users').select('*').eq('uid', authUser.id).single();
-  console.log('[AuthContext] Query result:', data);
-  console.log('[AuthContext] Query error:', error);
+  let { data } = await supabase.from('users').select('*').eq('uid', authUser.id).single();
 
   let resolvedName = data?.name;
   if (!resolvedName || resolvedName === 'طالب متميز') {
@@ -45,7 +41,6 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
   }
 
   if (!data) {
-    console.log('[AuthContext] User not found in public.users, creating new row...');
     const newUser = {
       uid: authUser.id,
       email: authUser.email || '',
@@ -61,19 +56,28 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
       // This used to be a bare `catch {}` - if this fails, the person is
       // authenticated but has no users row at all, so every premium/profile
       // check downstream silently falls back to defaults. Surface it loudly.
-      console.error('[AuthContext] Failed to create users row after sign-up for', authUser.id, insertError);
+      console.error('Failed to create users row after sign-up for', authUser.id, insertError);
     } else {
-      console.log('[AuthContext] Successfully created user row for:', authUser.id);
+      // Re-fetch so we get the actual DB row (e.g. auto-generated custom_id)
+      // instead of returning stale defaults built from metadata only.
+      const { data: freshData } = await supabase.from('users').select('*').eq('uid', authUser.id).single();
+      if (freshData) data = freshData;
     }
   } else if ((!data.name || data.name === 'طالب متميز') && metaName && metaName !== 'طالب متميز') {
-    console.log('[AuthContext] Updating user name/photo from auth metadata...');
     const { error: updateError } = await supabase.from('users').update({ name: metaName, photo_url: data.photo_url || metaPhoto }).eq('uid', authUser.id);
     if (updateError) {
-      console.error('[AuthContext] Failed to sync name/photo from auth metadata for', authUser.id, updateError);
+      console.error('Failed to sync name/photo from auth metadata for', authUser.id, updateError);
+    } else {
+      // Re-fetch to reflect the updated name/photo in the returned object.
+      const { data: freshData } = await supabase.from('users').select('*').eq('uid', authUser.id).single();
+      if (freshData) {
+        data = freshData;
+        resolvedName = freshData.name || resolvedName;
+      }
     }
   }
 
-  const appUser = {
+  return {
     uid: authUser.id,
     email: authUser.email || '',
     name: resolvedName,
@@ -82,8 +86,6 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
     isPremium: data?.is_premium || false,
     planName: data?.plan_name || 'Free',
   };
-  console.log('[AuthContext] Returning app user:', appUser);
-  return appUser;
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -116,8 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw new Error(error.message);
     if (data.user) {
       // Create the matching row in public.users (RLS policy allows insert where auth.uid() = uid).
-      // Note: no joined_date - the schema uses created_at (DEFAULT now()) for this.
-      await supabase.from('users').insert({ uid: data.user.id, email, name, plan_name: 'Free', is_premium: false });
+      await supabase.from('users').insert({ uid: data.user.id, email, name, plan_name: 'Free', is_premium: false});
     }
   };
 
