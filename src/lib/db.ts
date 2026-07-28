@@ -1,0 +1,1102 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember } from '../types';
+import { availableBadgeTiers, availableNameColors, BadgeTier, NameColorKey } from '../components/PremiumNameTag';
+
+// ---------------- SUPABASE STORAGE UPLOAD HELPERS ----------------
+
+export async function uploadAvatar(userId: string, file: File): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `avatars/${userId}_${Date.now()}.${ext}`;
+    const { data, error } = await supabase.storage.from('avatars').upload(path, file, {
+      cacheControl: '3600',
+      upsert: true,
+    });
+    if (error) {
+      console.error('Avatar upload error:', error.message);
+      return null;
+    }
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    return publicUrl;
+  } catch (e) {
+    console.error('Avatar upload exception:', e);
+    return null;
+  }
+}
+
+// ---------------- LOCAL STORAGE FALLBACK HELPERS ----------------
+// NOTE: the previous local user mock (MOCK_PROFILES / getLocalUsers / saveLocalUsers)
+// was removed. It seeded is_premium:true into localStorage for an "admin" profile and
+// checkUserPremiumStatus() read it before ever touching Supabase, which meant premium
+// status could be spoofed entirely client-side via devtools. Users are now sourced from
+// Supabase exclusively; see checkUserPremiumStatus, getUserProfileStats, getAllProfiles.
+
+// NOTE: seed rows (welcome community post, welcome notification, demo coupons)
+// now live in Supabase migrations instead of client-side localStorage fallbacks.
+// See 20260725_seed_welcome_community_post.sql and 20260727_seed_welcome_notification.sql.
+
+// ---------------- VERIFIED BADGE / NAME COLOR (SUPABASE DIRECT) ----------------
+// Deliberately separate from saveUserProfile: the allowed badge_tier/name_color
+// values depend on the user's *current, server-verified* plan, not on anything
+// the client claims. We re-read is_premium/plan_name from the DB here rather
+// than trusting a prop passed in, so a client can't request a Diamond badge
+// while actually on a Free plan.
+function planNameToTier(planName: string | null | undefined): 'Free' | 'Silver' | 'Gold' | 'Diamond' {
+  const p = (planName || '').toLowerCase();
+  if (p.includes('diamond') || p.includes('ماس')) return 'Diamond';
+  if (p.includes('gold') || p.includes('ذهب')) return 'Gold';
+  if (p.includes('silver') || p.includes('فض')) return 'Silver';
+  return 'Free';
+}
+
+export async function updateBadgeAndNameColor(
+  userId: string,
+  badgeTier: BadgeTier,
+  nameColor: NameColorKey
+): Promise<void> {
+  if (!userId) return;
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot update badge/name color.');
+
+  const { data: userRow, error: fetchError } = await supabase.from('users').select('is_premium, plan_name').eq('uid', userId).single();
+  if (fetchError) {
+    console.error('Error verifying plan before badge update:', fetchError);
+    throw fetchError;
+  }
+  if (!userRow?.is_premium) {
+    throw new Error('This feature requires an active premium subscription.');
+  }
+
+  const plan = planNameToTier(userRow.plan_name);
+  if (!availableBadgeTiers(plan).includes(badgeTier)) {
+    throw new Error(`Badge tier "${badgeTier}" is not available on the ${plan} plan.`);
+  }
+  if (!availableNameColors(plan).includes(nameColor)) {
+    throw new Error(`Name color "${nameColor}" is not available on the ${plan} plan.`);
+  }
+
+  const { error } = await supabase.from('users').update({ badge_tier: badgeTier, name_color: nameColor }).eq('uid', userId);
+  if (error) {
+    console.error('Error updating badge/name color:', error);
+    throw error;
+  }
+}
+
+
+// Replaces the old global (non-user-scoped!) 'quiz_bookmarks_list' localStorage key.
+
+export async function getBookmarkedQuizIds(userId: string): Promise<string[]> {
+  if (!userId || !isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('bookmarks').select('quiz_id').eq('user_id', userId);
+  if (error) {
+    console.error('Error loading bookmarks:', error);
+    return [];
+  }
+  return (data || []).map((r: any) => r.quiz_id);
+}
+
+export async function addBookmark(userId: string, quizId: string): Promise<void> {
+  if (!userId || !isSupabaseConfigured) throw new Error('Supabase is not configured; cannot bookmark.');
+  const { error } = await supabase.from('bookmarks').insert({ user_id: userId, quiz_id: quizId });
+  if (error && error.code !== '23505') { // ignore unique-violation (already bookmarked)
+    console.error('Error adding bookmark:', error.message);
+    throw error;
+  }
+}
+
+export async function removeBookmark(userId: string, quizId: string): Promise<void> {
+  if (!userId || !isSupabaseConfigured) throw new Error('Supabase is not configured; cannot remove bookmark.');
+  const { error } = await supabase.from('bookmarks').delete().eq('user_id', userId).eq('quiz_id', quizId);
+  if (error) {
+    console.error('Error removing bookmark:', error.message);
+    throw error;
+  }
+}
+
+// ---------------- QUIZ HANDLERS (SUPABASE DIRECT - replaces the old Express REST calls) ----------------
+// Reads/writes go straight to Postgres via the Supabase client. Authorization is enforced by
+// the RLS policies in supabase/migrations/0001_init.sql (e.g. "only owner or admin can update"),
+// not by a manual getAuthenticatedUser() check like the Express version had.
+
+function mapQuizRow(row: any): Quiz {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    creatorId: row.creator_id,
+    creatorName: row.creator_name,
+    questions: row.questions,
+    totalPlays: row.total_plays,
+    avgRating: row.avg_rating,
+    ratingsCount: row.ratings_count,
+    timeLimit: row.time_limit,
+    createdAt: row.created_at,
+    category: row.category,
+  } as Quiz;
+}
+
+export const SAMPLE_QUIZZES: Quiz[] = [
+  {
+    id: 'quiz-ai-intro',
+    title: 'اختبار تاريخ الذكاء الاصطناعي والابتكار 🤖',
+    description: 'اختبار رائع وممتع لتقييم معرفتك بنشأة الذكاء الاصطناعي وتطوره عبر التاريخ الحديث.',
+    creatorId: 'admin-quizspace',
+    creatorName: 'فريق QuizSpace',
+    totalPlays: 142,
+    avgRating: 4.9,
+    ratingsCount: 38,
+    timeLimit: 60,
+    createdAt: new Date().toISOString(),
+    category: 'ذكاء اصطناعي',
+    questions: [
+      {
+        id: 'q1',
+        text: 'من هو العالم الذي صاغ اختبار التورينج (Turing Test) الشهير للذكاء الاصطناعي؟',
+        type: 'mcq',
+        options: ['آلان تورينج (Alan Turing)', 'جون ماكارتي', 'إيلون ماسك', 'ستيف جوبز'],
+        correctIndex: 0,
+        explanation: 'قدم آلان تورينج عام 1950 فكرة اختبار التورينج لقياس قدرة الآلة على التفكير والتفكير البشري.'
+      },
+      {
+        id: 'q2',
+        text: 'ما معنى مصطلح LLM في مجالات الذكاء الاصطناعي الحالية؟',
+        type: 'mcq',
+        options: ['Large Language Model (نموذج لغوي ضخم)', 'Light Logic Machine', 'Linear Learning Method', 'Long Memory Matrix'],
+        correctIndex: 0,
+        explanation: 'LLM تشير إلى Large Language Model وهي نماذج مدربة على كميات ضخمة من البيانات اللغوية.'
+      },
+      {
+        id: 'q3',
+        text: 'أي عام تم فيه إطلاق نموذج ChatGPT لأول مرة للعامة؟',
+        type: 'mcq',
+        options: ['أواخر عام 2022', 'عام 2020', 'عام 2018', 'عام 2024'],
+        correctIndex: 0,
+        explanation: 'تم إطلاق ChatGPT بواسطة OpenAI في نوفمبر 2022 وحقق انتشاراً هائلاً على مستوى العالم.'
+      }
+    ]
+  },
+  {
+    id: 'quiz-web-tech',
+    title: 'تحدي البرمجة وتقنيات الويب الحديثة 💻',
+    description: 'اختبار شامل حول أحدث تقنيات React, TypeScript و HTML5 للبرمجيات.',
+    creatorId: 'admin-quizspace',
+    creatorName: 'أكاديمية المطورين',
+    totalPlays: 98,
+    avgRating: 4.8,
+    ratingsCount: 24,
+    timeLimit: 90,
+    createdAt: new Date().toISOString(),
+    category: 'برمجة وتقنية',
+    questions: [
+      {
+        id: 'qw1',
+        text: 'ما هي الفائدة الرئيسية لاستخدام TypeScript بدلاً من JavaScript العادية؟',
+        type: 'mcq',
+        options: ['إضافة الأنواع (Static Typing) واكتشاف الأخطاء مبكراً', 'تسريع تشغيل الكود في المتصفح 10 مرات', 'استبدال ملفات HTML', 'إلغاء الحاجة للسيرفر'],
+        correctIndex: 0,
+        explanation: 'يوفر TypeScript نظام أنواع ثابت يشخص الأخطاء البرمجية قبل تشغيل الكود.'
+      },
+      {
+        id: 'qw2',
+        text: 'في مكتبة React، ما المفهوم المستخدم لإدارة التأثيرات الجانبية (Side Effects)؟',
+        type: 'mcq',
+        options: ['Hook (useEffect)', 'useState', 'useContext', 'useRef'],
+        correctIndex: 0,
+        explanation: 'يُستخدم Hook الإيعاز useEffect للتعامل مع العمليات الجانبية مثل جلب البيانات والتنصت على الأحداث.'
+      }
+    ]
+  }
+];
+
+export async function getQuizzes(): Promise<Quiz[]> {
+  let dbQuizzes: Quiz[] = [];
+
+  if (isSupabaseConfigured) {
+    const { data, error } = await supabase.from('quizzes').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching quizzes:', error);
+    } else {
+      dbQuizzes = (data || []).map(mapQuizRow);
+    }
+  }
+
+  // Sample quizzes are static demo content, not user data, so they still merge in.
+  const map = new Map<string, Quiz>();
+  SAMPLE_QUIZZES.forEach(q => map.set(q.id, q));
+  dbQuizzes.forEach(q => map.set(q.id, q));
+
+  return Array.from(map.values());
+}
+
+export async function getQuizById(id: string): Promise<Quiz | null> {
+  if (!id) return null;
+
+  if (isSupabaseConfigured) {
+    const { data, error } = await supabase.from('quizzes').select('*').eq('id', id).single();
+    if (!error && data) return mapQuizRow(data);
+    if (error && error.code !== 'PGRST116') {
+      console.error(`Error fetching quiz ${id}:`, error);
+    }
+  }
+
+  const sample = SAMPLE_QUIZZES.find(q => q.id === id);
+  return sample || null;
+}
+
+export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPlays' | 'avgRating' | 'ratingsCount'> & { id?: string; timeLimit?: number }): Promise<Quiz> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot create a quiz.');
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const finalId = quiz.id || 'quiz-' + Math.random().toString(36).substring(2, 11);
+  const creatorId = user?.id || quiz.creatorId || 'user-guest';
+  const creatorName = quiz.creatorName || user?.user_metadata?.name || 'صانع متميز';
+
+  const { data, error } = await supabase.from('quizzes').insert({
+    id: finalId,
+    title: quiz.title,
+    description: quiz.description,
+    questions: quiz.questions,
+    creator_id: creatorId,
+    creator_name: creatorName,
+    time_limit: quiz.timeLimit || 0,
+    category: quiz.category || 'عام',
+  }).select().single();
+
+  if (error) {
+    console.error('Error creating quiz:', error);
+    throw error;
+  }
+  return mapQuizRow(data);
+}
+
+export async function updateQuiz(quizId: string, updatedQuiz: Partial<Quiz>): Promise<void> {
+  if (!quizId) return;
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot update quiz.');
+  }
+
+  const { error } = await supabase.from('quizzes').update({
+    title: updatedQuiz.title,
+    description: updatedQuiz.description,
+    questions: updatedQuiz.questions,
+    time_limit: updatedQuiz.timeLimit,
+    category: updatedQuiz.category,
+  }).eq('id', quizId);
+  if (error) {
+    console.error('Error updating quiz:', error.message);
+    throw error;
+  }
+}
+
+export async function deleteQuiz(quizId: string): Promise<void> {
+  if (!quizId) return;
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot delete quiz.');
+  }
+
+  const { error } = await supabase.from('quizzes').delete().eq('id', quizId);
+  if (error) {
+    console.error('Error deleting quiz:', error.message);
+    throw error;
+  }
+}
+
+export async function submitQuizAttempt(
+  quizId: string,
+  data: {
+    takerId: string;
+    takerName: string;
+    score: number;
+    rating?: number;
+    feedback?: string;
+  }
+): Promise<any> {
+  try {
+    const { data: result, error } = await supabase.rpc('submit_quiz_attempt', {
+      p_quiz_id: quizId,
+      p_taker_id: data.takerId,
+      p_taker_name: data.takerName,
+      p_score: data.score,
+      p_rating: data.rating ?? null,
+      p_feedback: data.feedback || '',
+    });
+    if (!error) return result;
+  } catch (e) { console.error('Unhandled Supabase error:', e); }
+
+  return { success: true, local: true };
+}
+
+// ---------------- PROFILE STATS & MANAGEMENT HANDLERS ----------------
+
+export async function getUserProfileStats(userId: string): Promise<UserStats> {
+  const empty: UserStats = {
+    userId: userId || '',
+    name: '',
+    email: '',
+    photoURL: '',
+    isPremium: false,
+    planName: 'Free',
+    planId: undefined,
+    renewalDate: undefined,
+    isLifetime: false,
+    isFounder: false,
+    isSuspended: false,
+    categoryId: undefined,
+    bio: '',
+    location: '',
+    createdQuizzes: [],
+    completions: []
+  } as UserStats;
+  if (!userId || !isSupabaseConfigured) return empty;
+
+  try {
+    const { data: userRow, error: userError } = await supabase.from('users').select('*').eq('uid', userId).single();
+    if (userError) console.error(`Error loading profile for ${userId}:`, userError.message);
+    const { data: createdQuizzes } = await supabase.from('quizzes').select('*').eq('creator_id', userId).order('created_at', { ascending: false });
+    const { data: completions } = await supabase.from('completions').select('*').eq('taker_id', userId).order('created_at', { ascending: false });
+
+    return {
+      userId,
+      name: userRow?.name || '',
+      email: userRow?.email || '',
+      photoURL: userRow?.photo_url || '',
+      isPremium: userRow?.is_premium || false,
+      planName: userRow?.plan_name || 'Free',
+      planId: userRow?.plan_id || undefined,
+      renewalDate: userRow?.renewal_date || undefined,
+      isLifetime: userRow?.is_lifetime || false,
+      isFounder: userRow?.is_founder || false,
+      isSuspended: userRow?.is_suspended || false,
+      categoryId: userRow?.category_id || undefined,
+      bio: userRow?.bio || '',
+      location: userRow?.location || '',
+      phone: userRow?.phone || '',
+      isAdmin: userRow?.is_admin || false,
+      // Never surface a badge/color for a non-premium user, even if the row
+      // still has a stale value from a lapsed subscription.
+      badgeTier: userRow?.is_premium ? (userRow?.badge_tier || 'none') : 'none',
+      nameColor: userRow?.is_premium ? (userRow?.name_color || 'default') : 'default',
+      createdQuizzes: (createdQuizzes || []).map(mapQuizRow),
+      completions: completions || [],
+    } as UserStats;
+  } catch (e) {
+    console.error('Error loading user profile stats:', e);
+    return empty;
+  }
+}
+
+export async function saveUserProfile(
+  userId: string,
+  name: string,
+  photoURL?: string,
+  email?: string,
+  bio?: string,
+  location?: string,
+  badgeSymbol?: string,
+  badgeColor?: string,
+  customId?: string,
+  planId?: string,
+  isPremium?: boolean,
+  planName?: string,
+  isLifetime?: boolean,
+  isFounder?: boolean,
+  isSuspended?: boolean,
+  categoryId?: string,
+  renewalDate?: string,
+  phone?: string,
+): Promise<void> {
+  if (!userId) return;
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot save user profile.');
+  }
+
+  const updatedUser: any = {
+    uid: userId,
+    id: userId,
+    name,
+    photo_url: photoURL || '',
+    email: email || '',
+    bio: bio || '',
+    location: location || '',
+    badge_symbol: badgeSymbol || '',
+    badge_color: badgeColor || '',
+    custom_id: customId || '',
+    updated_at: new Date().toISOString(),
+  };
+
+  if (planId !== undefined) updatedUser.plan_id = planId;
+  if (isPremium !== undefined) updatedUser.is_premium = isPremium;
+  if (planName !== undefined) updatedUser.plan_name = planName;
+  if (isLifetime !== undefined) updatedUser.is_lifetime = isLifetime;
+  if (isFounder !== undefined) updatedUser.is_founder = isFounder;
+  if (isSuspended !== undefined) updatedUser.is_suspended = isSuspended;
+  if (categoryId !== undefined) updatedUser.category_id = categoryId;
+  if (renewalDate !== undefined) updatedUser.renewal_date = renewalDate;
+  if (phone !== undefined) updatedUser.phone = phone;
+
+  const { error } = await supabase.from('users').upsert(updatedUser, { onConflict: 'uid' });
+  if (error) {
+    console.error(`Error upserting user profile for ${userId}:`, error.message);
+    throw error;
+  }
+}
+
+export async function checkUserPremiumStatus(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  if (!isSupabaseConfigured) return false;
+
+  try {
+    const { data, error } = await supabase.from('users').select('is_premium').eq('uid', userId).single();
+    if (error) {
+      console.error('Error checking premium status:', error);
+      return false;
+    }
+    return !!data?.is_premium;
+  } catch (e) {
+    console.error('Error checking premium status:', e);
+    return false;
+  }
+}
+
+// ---------------- PREMIUM TRIAL ACTIVATION REQUEST HANDLERS (SUPABASE DIRECT) ----------------
+
+export async function createPremiumRequest(requestId: string, reqData: any): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot submit premium request.');
+  const { error } = await supabase.from('premium_requests').insert({
+    id: requestId,
+    user_id: reqData.userId,
+    name: reqData.name,
+    email: reqData.email,
+    plan_name: reqData.planName,
+    payment_screenshot: reqData.paymentScreenshot,
+    status: 'pending',
+  });
+  if (error) {
+    console.error('Error creating premium request:', error.message);
+    throw error;
+  }
+}
+
+export async function getPremiumRequests(userId?: string): Promise<any[]> {
+  if (!isSupabaseConfigured) return [];
+  let query = supabase.from('premium_requests').select('*');
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+  query = query.order('created_at', { ascending: false });
+  const { data, error } = await query;
+  if (error) {
+    console.error('Error getting premium requests:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+export async function updatePremiumRequest(
+  requestId: string,
+  status: 'approved' | 'rejected',
+  userId: string,
+  rejectReason?: string,
+  planName?: string,
+  planId?: string
+): Promise<void> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot update premium request.');
+  }
+
+  const { error: reqError } = await supabase.from('premium_requests').update({
+    status, reject_reason: rejectReason, updated_at: new Date().toISOString(),
+  }).eq('id', requestId);
+  if (reqError) {
+    console.error('Error updating premium activation status:', reqError.message);
+    throw reqError;
+  }
+
+  const userUpdate = status === 'approved'
+    ? {
+        is_premium: true,
+        plan_name: planName || 'الباقة الذهبية لمعلمي المستقبل (مفعّلة)',
+        plan_id: planId || null,
+        is_lifetime: planId === 'lifetime',
+        is_founder: planId === 'diamond',
+        renewal_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }
+    : {
+        is_premium: false,
+        plan_name: 'Free',
+        plan_id: null,
+        is_lifetime: false,
+        is_founder: false,
+        renewal_date: null,
+      };
+
+  const { error: userError } = await supabase.from('users').update(userUpdate).eq('uid', userId);
+  if (userError) {
+    console.error('Error updating user premium status:', userError.message);
+    throw userError;
+  }
+}
+
+// ---------------- CLASSIFIED QUESTION RATINGS HANDLERS (SUPABASE DIRECT) ----------------
+
+export async function rateQuestion(
+  userId: string,
+  quizId: string,
+  quizTitle: string,
+  questionId: string,
+  questionText: string,
+  ratingValue: 'like' | 'dislike'
+): Promise<void> {
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase.from('question_ratings').upsert({
+        id: `${userId}_${questionId}`,
+        user_id: userId, quiz_id: quizId, quiz_title: quizTitle,
+        question_id: questionId, question_text: questionText, rating_value: ratingValue,
+      });
+      if (error) console.error('Error in rateQuestion:', error.message);
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+}
+
+export async function getUserRatedQuestions(userId: string): Promise<QuestionRating[]> {
+  if (!userId) return [];
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('question_ratings').select('*').eq('user_id', userId);
+      if (!error && data) return data;
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+// ---------------- MARKETING PROMOTIONS SYSTEMS (SUPABASE DIRECT) ----------------
+
+export async function getPromotions(): Promise<Promotion[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('promotions').select('*').eq('is_active', true);
+      if (!error && data) return data;
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+export async function savePromotion(promo: Promotion): Promise<void> {
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase.from('promotions').upsert(promo as any);
+      if (error) console.error('Error saving promotion:', error.message);
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+}
+
+export async function deletePromotion(promoId: string): Promise<void> {
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase.from('promotions').delete().eq('id', promoId);
+      if (error) console.error('Error deleting promotion:', error.message);
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+}
+
+// ---------------- COUPONS CODES REDUCTIONS (SUPABASE DIRECT) ----------------
+
+export async function getCoupons(): Promise<Coupon[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('coupon_codes').select('*');
+  if (error) {
+    console.error('Error loading coupons:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+export async function getCouponByCode(code: string): Promise<Coupon | null> {
+  if (!code || !isSupabaseConfigured) return null;
+  const cleanedCode = code.trim().toUpperCase();
+  const { data, error } = await supabase.rpc('get_coupon_by_code', { p_code: cleanedCode });
+  if (error) {
+    console.error('Error looking up coupon:', error);
+    return null;
+  }
+  return data || null;
+}
+
+export async function saveCoupon(coupon: Coupon): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot save coupon.');
+  const { error } = await supabase.from('coupon_codes').upsert(coupon as any);
+  if (error) {
+    console.error('Error saving coupon:', error.message);
+    throw error;
+  }
+}
+
+export async function deleteCoupon(couponId: string): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot delete coupon.');
+  const { error } = await supabase.from('coupon_codes').delete().eq('id', couponId);
+  if (error) {
+    console.error('Error deleting coupon:', error.message);
+    throw error;
+  }
+}
+
+// ---------------- SCORE METRICS INTEGRATION (SUPABASE DIRECT) ----------------
+
+export async function getBestScoreByQuizId(quizId: string): Promise<number> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data } = await supabase.from('completions').select('score').eq('quiz_id', quizId).order('score', { ascending: false }).limit(1).single();
+      return data?.score ?? 0;
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return 0;
+}
+
+export async function getCompletionsByQuizId(quizId: string): Promise<QuizCompletion[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('completions').select('*').eq('quiz_id', quizId).order('created_at', { ascending: false });
+      if (!error && data) return data;
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+export async function getRecentCompletions(limitCount = 10): Promise<QuizCompletion[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('completions').select('*').order('created_at', { ascending: false }).limit(limitCount);
+      if (!error && data) return data;
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+// ---------------- SOCIAL: MOODS & COMMUNITY NETWORK POSTS (SUPABASE DIRECT / LOCAL FALLBACK) ----------------
+
+function mapCommunityPostRow(row: any): any {
+  return {
+    id: row.id,
+    text: row.text,
+    authorId: row.author_id,
+    authorName: row.author_name,
+    createdAt: row.created_at,
+    likes: row.likes || 0,
+    likedBy: row.liked_by || [],
+    authorBadgeSymbol: row.author_badge_symbol || '',
+    authorBadgeColor: row.author_badge_color || '',
+    authorBadgeTier: row.author_badge_tier || 'none',
+    authorNameColor: row.author_name_color || 'default',
+    viewsCount: row.views_count || 0,
+    viewers: row.viewers || [],
+  };
+}
+
+export async function getCommunityPosts(): Promise<any[]> {
+  if (!isSupabaseConfigured) {
+    console.error('Supabase is not configured; community posts require a database connection.');
+    return [];
+  }
+  const { data, error } = await supabase
+    .from('community_posts')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.error('Failed to load community posts:', error);
+    throw error;
+  }
+  // NOTE: previously this returned raw snake_case Supabase rows directly, but
+  // the rendering code reads camelCase fields (post.authorName, post.likedBy,
+  // etc.) - meaning author name/badge/likes were silently never displaying
+  // correctly for real (non-cached) posts. Mapping fixes that.
+  return (data || []).map(mapCommunityPostRow);
+}
+
+export async function createCommunityPost(
+  text: string,
+  authorId: string,
+  authorName: string,
+  authorBadgeSymbol?: string,
+  authorBadgeColor?: string,
+  authorBadgeTier?: BadgeTier,
+  authorNameColor?: NameColorKey
+): Promise<any> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot create a community post.');
+  }
+  const newPost = {
+    id: 'cp-' + Math.random().toString(36).substring(2, 11),
+    text,
+    author_id: authorId,
+    author_name: authorName,
+    author_badge_symbol: authorBadgeSymbol || '',
+    author_badge_color: authorBadgeColor || '',
+    author_badge_tier: authorBadgeTier || 'none',
+    author_name_color: authorNameColor || 'default',
+    likes: 0,
+    liked_by: [],
+    created_at: new Date().toISOString()
+  };
+
+  const { data, error } = await supabase.from('community_posts').insert(newPost).select().single();
+  if (error) {
+    console.error('Failed to create community post:', error);
+    throw error;
+  }
+  return mapCommunityPostRow(data);
+}
+
+export async function likeCommunityPost(postId: string, userId: string): Promise<any> {
+  if (!isSupabaseConfigured) {
+  }
+  // Uses the toggle_post_like RPC defined in the 20260723 migration so the
+  // like/unlike toggle happens atomically in Postgres instead of a local mirror.
+  const { data, error } = await supabase.rpc('toggle_post_like', {
+    p_post_id: postId,
+    p_user_id: userId
+  });
+  if (error) {
+    console.error('Failed to toggle post like:', error);
+    throw error;
+  }
+  return data;
+}
+
+export async function deleteCommunityPost(postId: string): Promise<boolean> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot delete a community post.');
+  }
+  const { error } = await supabase.from('community_posts').delete().eq('id', postId);
+  if (error) {
+    console.error('Failed to delete community post:', error);
+    throw error;
+  }
+  return true;
+}
+
+// ---------------- COMMUNICATION: CHATS & DIRECT MESSAGES (SUPABASE DIRECT) ----------------
+
+export async function getDirectMessages(userId: string): Promise<any[]> {
+  if (!userId) return [];
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('direct_messages')
+        .select('*')
+        .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+        .order('created_at', { ascending: false });
+      if (!error && data) return data;
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+export async function sendDirectMessage(
+  senderId: string,
+  senderName: string,
+  receiverId: string,
+  receiverName: string,
+  text: string
+): Promise<any> {
+  const newMsg = {
+    id: 'msg-' + Math.random().toString(36).substring(2, 11),
+    sender_id: senderId,
+    sender_name: senderName,
+    receiver_id: receiverId,
+    receiver_name: receiverName,
+    text,
+    is_read: false,
+    created_at: new Date().toISOString()
+  };
+
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot send message.');
+  }
+  const { data, error } = await supabase.from('direct_messages').insert({
+    id: newMsg.id,
+    sender_id: senderId, sender_name: senderName,
+    receiver_id: receiverId, receiver_name: receiverName, text,
+  }).select().single();
+  if (error) {
+    // This used to swallow the error and return a fabricated "sent" message,
+    // so the sender's UI showed success while the receiver never got anything.
+    console.error('Failed to send direct message:', error);
+    throw error;
+  }
+  return data;
+}
+
+export async function markMessagesAsRead(userId: string, contactId: string): Promise<void> {
+  if (!userId || !contactId) return;
+  if (isSupabaseConfigured) {
+    try {
+      await supabase.from('direct_messages')
+        .update({ is_read: true })
+        .eq('receiver_id', userId)
+        .eq('sender_id', contactId);
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+}
+
+// ---------------- ALERTS & GENERAL NOTIFICATIONS (SUPABASE DIRECT) ----------------
+
+export async function getNotifications(): Promise<any[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(30);
+  if (error) {
+    console.error('Error reading notification alerts:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+export async function createNotification(
+  title: string,
+  body: string,
+  senderName?: string,
+  type?: string
+): Promise<any> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot create notification.');
+  const newNotif = {
+    id: 'notif-' + Math.random().toString(36).substring(2, 11),
+    title,
+    body,
+    sender_name: senderName || 'System',
+    type: type || 'info',
+    created_at: new Date().toISOString()
+  };
+
+  const { data, error } = await supabase.from('notifications').insert(newNotif).select().single();
+  if (error) {
+    console.error('Error creating notification:', error);
+    throw error;
+  }
+  return data;
+}
+
+export async function getAllProfiles(): Promise<any[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+  if (error) {
+    console.error('Error fetching all profiles:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+export async function updateUserSubscription(userId: string, isPremium: boolean, planName: string, planId?: string, isLifetime?: boolean, isFounder?: boolean, renewalDate?: string): Promise<any> {
+  if (!isSupabaseConfigured) {
+    return { error: new Error('Supabase is not configured; cannot update subscription.') };
+  }
+  const { error } = await supabase.from('users').update({
+    is_premium: isPremium,
+    plan_name: planName,
+    plan_id: planId || null,
+    is_lifetime: isLifetime || false,
+    is_founder: isFounder || false,
+    renewal_date: renewalDate || (isPremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null),
+  }).eq('uid', userId);
+  if (error) console.error('Error updating user subscription:', error);
+  return { error };
+}
+
+// ---------------- SUBSCRIPTION PLANS (SUPABASE DIRECT) ----------------
+
+export async function getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('subscription_plans').select('*').order('priority_level', { ascending: true });
+      if (!error && data) return data as SubscriptionPlan[];
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+export async function getActiveSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('subscription_plans').select('*').eq('is_active', true).order('priority_level', { ascending: true });
+      if (!error && data) return data as SubscriptionPlan[];
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+// ---------------- ACCOUNT CATEGORIES (SUPABASE DIRECT) ----------------
+
+export async function getAccountCategories(): Promise<AccountCategory[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('account_categories').select('*').order('sort_order', { ascending: true });
+      if (!error && data) return data as AccountCategory[];
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+// ---------------- COUPON USAGES (SUPABASE DIRECT) ----------------
+
+export async function getCouponUsageByUser(couponId: string, userId: string): Promise<CouponUsage | null> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('coupon_usages').select('*').eq('coupon_id', couponId).eq('user_id', userId).maybeSingle();
+      if (!error && data) return data as CouponUsage;
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return null;
+}
+
+export async function recordCouponUsage(
+  couponId: string,
+  userId: string,
+  discountPercent: number,
+  planId?: string,
+  orderId?: string
+): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase.rpc('record_coupon_usage', {
+    p_coupon_id: couponId,
+    p_user_id: userId,
+    p_discount_percent: discountPercent,
+    p_plan_id: planId || null,
+    p_order_id: orderId || null,
+  });
+  if (error) {
+    console.error('Error recording coupon usage:', error);
+    return null;
+  }
+  return data || null;
+}
+
+// ---------------- SEASONS (SUPABASE DIRECT) ----------------
+
+export async function getActiveSeason(): Promise<Season | null> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.rpc('get_active_season');
+      if (!error && data && data.length > 0) return data[0] as Season;
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return null;
+}
+
+export async function getSeasons(includeArchived: boolean = false): Promise<Season[]> {
+  if (isSupabaseConfigured) {
+    try {
+      let query = supabase.from('seasons').select('*').order('created_at', { ascending: false });
+      if (!includeArchived) {
+        query = query.or('is_archived.is.false,is_archived.is.null');
+      }
+      const { data, error } = await query;
+      if (!error && data) return data as Season[];
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+export async function getSeasonById(seasonId: string): Promise<Season | null> {
+  if (!seasonId) return null;
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('seasons').select('*').eq('id', seasonId).single();
+      if (!error && data) return data as Season;
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return null;
+}
+
+export async function createSeason(season: Season): Promise<Season | null> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot create season.');
+  const { data, error } = await supabase.from('seasons').insert(season as any).select().single();
+  if (error) {
+    console.error('Error creating season:', error);
+    throw error;
+  }
+  return data as Season;
+}
+
+export async function updateSeason(seasonId: string, updates: Partial<Season>): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot update season.');
+  const { error } = await supabase.from('seasons').update(updates as any).eq('id', seasonId);
+  if (error) {
+    console.error('Error updating season:', error.message);
+    throw error;
+  }
+}
+
+export async function deleteSeason(seasonId: string): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot delete season.');
+  const { error } = await supabase.from('seasons').delete().eq('id', seasonId);
+  if (error) {
+    console.error('Error deleting season:', error.message);
+    throw error;
+  }
+}
+
+// ---------------- SEASON MEMBERS (SUPABASE DIRECT) ----------------
+
+export async function enrollInSeason(seasonId: string, userId: string): Promise<string | null> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.rpc('enroll_in_season', {
+        p_season_id: seasonId,
+        p_user_id: userId,
+      });
+      if (!error && data) return data;
+    } catch (e) {
+      console.warn('Error enrolling in season:', e);
+    }
+  }
+  return null;
+}
+
+export async function getSeasonMembers(seasonId: string, limit: number = 50): Promise<SeasonMember[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.rpc('get_season_leaderboard', {
+        p_season_id: seasonId,
+        p_limit: limit,
+      });
+      if (!error && data) return data as SeasonMember[];
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+export async function getMySeasonMemberships(userId: string): Promise<(SeasonMember & { season: Season })[]> {
+  if (!userId) return [];
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('season_members')
+        .select('*, seasons(*)')
+        .eq('user_id', userId)
+        .order('joined_at', { ascending: false });
+      if (!error && data) return data as any[];
+    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  }
+  return [];
+}
+
+export async function updateSeasonMemberScore(seasonId: string, userId: string, quizScore: number): Promise<void> {
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase.rpc('update_season_member_score', {
+        p_season_id: seasonId,
+        p_user_id: userId,
+        p_score_delta: quizScore,
+      });
+      if (error) console.error('Error updating season member score:', error.message);
+    } catch (e) {
+      console.warn('Error updating season member score:', e);
+    }
+  }
+}
+

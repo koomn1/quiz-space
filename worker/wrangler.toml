@@ -1,0 +1,7 @@
+name = "quiz-space-ai"
+main = "src/index.ts"
+compatibility_date = "2026-07-24"
+
+# Set secrets with `npx wrangler secret put <NAME>`; never add them here.
+# Required: GEMINI_API_KEY, OPENAI_API_KEY, GROQ_API_KEY, DEEPSEEK_API_KEY,
+# SUPABASE_URL, SUPABASE_ANON_KEY, ALLOWED_ORIGIN
