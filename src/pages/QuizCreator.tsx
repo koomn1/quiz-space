@@ -356,6 +356,7 @@ export default function QuizCreator({
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [category, setCategory] = React.useState('عام');
+  const [timeLimit, setTimeLimit] = React.useState<number>(0);
   const [distributionRouting, setDistributionRouting] = React.useState<'public' | 'classroom' | 'community'>('public');
   const [classrooms, setClassrooms] = React.useState<any[]>([]);
   const [selectedClassroomId, setSelectedClassroomId] = React.useState<string>('');
