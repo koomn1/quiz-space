@@ -1061,6 +1061,17 @@ export default function App() {
     fetchQuizzesList(); // Refresh dashboards ratings
   };
 
+  // Direct links can bypass handleSetTab(), so protect the create route during initial render.
+  // Rendering QuizCreator without an authenticated user previously left the app blank in this case.
+  const isGuestCreateRoute = activeTab === 'create' && !authContext.loading && !authContext.isAuthenticated && !userId;
+
+  React.useEffect(() => {
+    if (!isGuestCreateRoute) return;
+    setLoginRedirectTab('create');
+    setAuthModalMode('register');
+    setIsAuthModalOpen(true);
+  }, [isGuestCreateRoute]);
+
   const handleShareQuiz = (id: string, title: string, desc?: string) => {
     const isSuperAdmin = isAdminUser;
     const roleAndPlan = getUserRoleAndPlan(userStats);
@@ -1447,27 +1458,51 @@ export default function App() {
               )}
 
               {activeTab === 'create' && (
-                <QuizCreator
-                  userId={userId}
-                  userName={userName}
-                  userEmail={userEmail || ''}
-                  quizToEdit={quizToEdit}
-                  onQuizCreated={() => {
-                    setQuizToEdit(null);
-                    handleSetTab('my-quizzes');
-                    fetchQuizzesList();
-                  }}
-                  onCancelEdit={() => {
-                    setQuizToEdit(null);
-                    handleSetTab('my-quizzes');
-                  }}
-                  lang={lang}
-                  onOpenAuthModal={(mode) => {
-                    setAuthModalMode(mode);
-                    setIsAuthModalOpen(true);
-                  }}
-                  userPlan={getUserRoleAndPlan(userStats).plan}
-                />
+                isGuestCreateRoute ? (
+                  <section className="min-h-[60vh] flex items-center justify-center py-12" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                    <div className="w-full max-w-xl rounded-[28px] border border-slate-200/70 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-8 sm:p-10 text-center shadow-xl backdrop-blur-xl">
+                      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 text-3xl">🔐</div>
+                      <h2 className="text-xl font-black text-slate-900 dark:text-white">
+                        {lang === 'ar' ? 'سجّل الدخول لإنشاء اختبار' : 'Sign in to create a quiz'}
+                      </h2>
+                      <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-slate-400">
+                        {lang === 'ar' ? 'يمكنك تصفح الاختبارات كزائر، لكن إنشاء اختبار جديد يتطلب حساباً.' : 'You can browse quizzes as a guest, but creating a quiz requires an account.'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAuthModalMode('register');
+                          setIsAuthModalOpen(true);
+                        }}
+                        className="mt-7 rounded-2xl bg-violet-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
+                      >
+                        {lang === 'ar' ? 'التسجيل أو تسجيل الدخول' : 'Sign up or sign in'}
+                      </button>
+                    </div>
+                  </section>
+                ) : (
+                  <QuizCreator
+                    userId={userId}
+                    userName={userName}
+                    userEmail={userEmail || ''}
+                    quizToEdit={quizToEdit}
+                    onQuizCreated={() => {
+                      setQuizToEdit(null);
+                      handleSetTab('my-quizzes');
+                      fetchQuizzesList();
+                    }}
+                    onCancelEdit={() => {
+                      setQuizToEdit(null);
+                      handleSetTab('my-quizzes');
+                    }}
+                    lang={lang}
+                    onOpenAuthModal={(mode) => {
+                      setAuthModalMode(mode);
+                      setIsAuthModalOpen(true);
+                    }}
+                    userPlan={getUserRoleAndPlan(userStats).plan}
+                  />
+                )
               )}
 
               {activeTab === 'profile' && (
