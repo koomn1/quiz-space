@@ -360,7 +360,18 @@ export default function QuizCreator({
   const [classrooms, setClassrooms] = React.useState<any[]>([]);
   const [selectedClassroomId, setSelectedClassroomId] = React.useState<string>('');
   const [loadingClassrooms, setLoadingClassrooms] = React.useState(false);
-
+  const [creatorName, setCreatorName] = React.useState(userName || 'صانع غامض');
+  const [timeLimit, setTimeLimit] = React.useState<number>(0);
+  const [questions, setQuestions] = React.useState<Question[]>([
+    {
+      id: 'q-initial-0',
+      type: 'mcq',
+      text: '',
+      options: ['', '', '', ''],
+      correctIndex: 0,
+      explanation: ''
+    }
+  ]);
   React.useEffect(() => {
     const fetchClassrooms = async () => {
       setLoadingClassrooms(true);
@@ -458,19 +469,6 @@ export default function QuizCreator({
       }
     } catch (_) {}
   }, [title, description, category, timeLimit, questions, userId, quizToEdit]);
-
-  const [creatorName, setCreatorName] = React.useState(userName || 'صانع غامض');
-  const [timeLimit, setTimeLimit] = React.useState<number>(0);
-  const [questions, setQuestions] = React.useState<Question[]>([
-    {
-      id: 'q-initial-0',
-      type: 'mcq',
-      text: '',
-      options: ['', '', '', ''],
-      correctIndex: 0,
-      explanation: ''
-    }
-  ]);
 
   // Pasted Text States
   const [pastedText, setPastedText] = React.useState('');
