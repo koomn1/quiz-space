@@ -1,0 +1,49 @@
+export async function registerPushNotifications(userId: string): Promise<'granted' | 'denied' | 'default'> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('Notification' in window)) {
+    return 'default';
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+
+    const pushEnabled = localStorage.getItem('pref_pushEnabled') !== 'false';
+    const dismissed = localStorage.getItem('quiz_push_banner_dismissed') === 'true';
+
+    let permission = Notification.permission;
+
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+
+    if (permission === 'granted' && pushEnabled && !dismissed) {
+      try {
+        const vapidKey = localStorage.getItem('quiz_vapid_public_key') || '';
+        const keyArray = vapidKey ? urlBase64ToUint8Array(vapidKey) : undefined;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: keyArray as any,
+        });
+
+        const subJson = subscription.toJSON();
+        if (subJson) {
+          localStorage.setItem(`push_sub_${userId}`, JSON.stringify(subJson));
+        }
+      } catch (subError) {
+        console.warn('Push subscription failed:', subError);
+      }
+    }
+
+    localStorage.setItem('push_permission', permission);
+    return permission;
+  } catch (err) {
+    console.warn('Push registration failed:', err);
+    return 'default';
+  }
+}
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from(raw, (char) => char.charCodeAt(0));
+}

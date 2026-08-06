@@ -1,0 +1,169 @@
+import { fetchWithAuth } from '../lib/authFetch';
+import { getApiUrl } from '../lib/origin';
+import { GeneratedQuiz } from '../types';
+
+export type AiProvider = 'openrouter' | 'groq' | 'deepseek' | 'openai';
+
+interface WorkerError {
+  error?: string;
+}
+
+async function workerRequest<T>(path: string, body: unknown): Promise<T> {
+  try {
+    const response = await fetchWithAuth(getApiUrl(path), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (response.ok) {
+      return response.json() as Promise<T>;
+    }
+    const payload = await response.json().catch(() => ({})) as WorkerError;
+    throw new Error(payload.error || `AI service failed (${response.status}).`);
+  } catch (err: any) {
+    console.error("AI Worker request failed:", err);
+
+    // لا تستخدم OpenRouter من المتصفح إطلاقًا
+    throw new Error(
+      "Unable to reach the AI Worker. Please check VITE_AI_WORKER_URL, Cloudflare deployment, or CORS configuration."
+    );
+  }
+}
+
+export async function generateQuizWithProvider(
+  provider: AiProvider,
+  topic: string,
+  amount: number,
+  alreadyGeneratedQuestions: string[] = [],
+): Promise<GeneratedQuiz> {
+  try {
+    return await workerRequest<GeneratedQuiz>('/api/ai/generate', {
+      provider,
+      topic,
+      amount,
+      alreadyGeneratedQuestions,
+    });
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function explainWithAI(
+  questionText: string,
+  options: string[],
+  correctAnswer: string,
+): Promise<{ explanation: string }> {
+  try {
+    return await workerRequest<{ explanation: string }>('/api/ai/explain', {
+      questionText,
+      options,
+      correctAnswer,
+    });
+  } catch (err) {
+    throw err;
+  }
+}
+
+export async function generateQuizFromFile(
+  fileBase64: string,
+  mimeType: string,
+  amount: number,
+  customInstruction?: string,
+  extractionMode?: 'literal' | 'generate',
+): Promise<GeneratedQuiz> {
+  try {
+    return await workerRequest<GeneratedQuiz>('/api/ai/generate-file', {
+      fileBase64,
+      mimeType,
+      amount,
+      customInstruction,
+      extractionMode,
+    });
+  } catch (err) {
+    throw err;
+  }
+}
+
+export interface AiChatMessage {
+  role: 'user' | 'model';
+  text: string;
+}
+
+export async function askAI(
+  prompt: string,
+  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string } } = {},
+): Promise<{ text: string }> {
+  try {
+    return await workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
+  } catch (err) {
+    throw err;
+  }
+}
+
+// Streaming counterpart to askAI. Calls onChunk(deltaText) as tokens arrive
+// for a live-typing effect, and resolves with the full final text once the
+// stream ends. Falls back to a clear error if the connection itself fails
+// before any token arrives (model-level fallback already happened
+// server-side by then).
+export async function askAIStream(
+  prompt: string,
+  options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string } },
+  onChunk: (deltaText: string, fullTextSoFar: string) => void,
+): Promise<{ text: string }> {
+  const response = await fetchWithAuth(getApiUrl('/api/ai/openrouter/stream'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, ...options }),
+  });
+
+  if (!response.ok || !response.body) {
+    const payload = await response.json().catch(() => ({})) as WorkerError;
+    throw new Error(payload.error || `AI streaming failed (${response.status}).`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullText = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || ''; // keep the last (possibly incomplete) line for next chunk
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) continue;
+      const dataStr = trimmed.slice(5).trim();
+      if (dataStr === '[DONE]') continue;
+      try {
+        const parsed = JSON.parse(dataStr);
+        const delta: string = parsed.choices?.[0]?.delta?.content || '';
+        if (delta) {
+          fullText += delta;
+          onChunk(delta, fullText);
+        }
+      } catch {
+        // Ignore malformed/partial SSE lines
+      }
+    }
+  }
+
+  return { text: fullText };
+}
+
+// Groq counterpart to askAI, used to power Cosmo's chat as an alternative provider.
+export async function askGroq(
+  prompt: string,
+  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[] } = {},
+): Promise<{ text: string }> {
+  try {
+    return await workerRequest<{ text: string }>('/api/ai/groq', { prompt, ...options });
+  } catch (err) {
+    throw err;
+  }
+}
