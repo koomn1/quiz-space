@@ -56,14 +56,55 @@ jobs:
       contents: read
       pages: write
       id-token: write
+      deployments: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      - name: Cancel stuck deployments
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="${{ github.repository }}"
+          # Get all in-progress deployments for the github-pages environment
+          DEPLOYMENTS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/deployments?environment=github-pages&per_page=10")
+          echo "$DEPLOYMENTS" | python3 -c "
+          import json,sys,urllib.request,os
+          token = os.environ['GITHUB_TOKEN']
+          repo = os.environ.get('REPO','$REPO')
+          deps = json.load(sys.stdin)
+          for d in deps:
+            dep_id = d['id']
+            # Get status of this deployment
+            req = urllib.request.Request(
+              f'https://api.github.com/repos/$REPO/deployments/{dep_id}/statuses',
+              headers={'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json'}
+            )
+            try:
+              statuses = json.loads(urllib.request.urlopen(req).read())
+              latest = statuses[0]['state'] if statuses else 'unknown'
+              if latest in ('in_progress', 'queued', 'pending'):
+                print(f'Cancelling stuck deployment {dep_id} (state: {latest})')
+                data = json.dumps({'state':'inactive'}).encode()
+                cancel_req = urllib.request.Request(
+                  f'https://api.github.com/repos/$REPO/deployments/{dep_id}/statuses',
+                  data=data, method='POST',
+                  headers={'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json'}
+                )
+                urllib.request.urlopen(cancel_req)
+                print(f'Marked {dep_id} as inactive')
+            except Exception as e:
+              print(f'Skipping {dep_id}: {e}')
+          " 2>/dev/null || true
+          sleep 3
+
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
 
   deploy-worker:
     name: Deploy AI Worker
