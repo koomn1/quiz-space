@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck } from 'lucide-react';
 import { Quiz } from '../types';
-import { getAllProfiles, sendDirectMessage, createNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID } from '../lib/db';
+import { getAllProfiles, sendDirectMessage, createNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
 import { getApiUrl } from '../lib/origin';
 import { decryptMessage } from '../lib/encryption';
@@ -45,7 +45,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const isAr = lang === 'ar';
   const containerRef = React.useRef<HTMLDivElement>(null);
   
-  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms'>('overview');
+  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring'>('overview');
   useGSAP(() => {
     // Initial load animation for header and stats
     gsap.fromTo(
@@ -88,6 +88,19 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const [activeAdminClassroom, setActiveAdminClassroom] = useState<any | null>(null);
   const [adminMessages, setAdminMessages] = useState<any[]>([]);
   const [newAdminMsgText, setNewAdminMsgText] = useState('');
+  const [aiLogs, setAiLogs] = useState<any[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+
+  useEffect(() => {
+    if (activeAdminTab === 'ai_monitoring') {
+      (async () => {
+        setIsLoadingLogs(true);
+        const logs = await getAiPerformanceLogs();
+        setAiLogs(logs);
+        setIsLoadingLogs(false);
+      })();
+    }
+  }, [activeAdminTab]);
 
   useEffect(() => {
     (async () => {
@@ -150,6 +163,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
     { id: 'quizzes', name: isAr ? 'الاختبارات' : 'Quizzes', icon: Database },
     { id: 'subscriptions', name: isAr ? 'الاشتراكات' : 'Subscriptions', icon: Crown },
     { id: 'coupons', name: isAr ? 'الكوبونات' : 'Coupons', icon: Ticket },
+    { id: 'ai_monitoring', name: isAr ? 'مراقبة الذكاء الاصطناعي' : 'AI Monitoring', icon: Activity },
     { id: 'settings', name: isAr ? 'الإعدادات' : 'Settings', icon: Settings },
   ];
 
@@ -551,6 +565,80 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                         <p className="text-sm font-bold">{isAr ? 'لا توجد فصول دراسية منشأة حالياً.' : 'No classrooms created yet on the platform.'}</p>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {activeAdminTab === 'ai_monitoring' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-white">
+                      {isAr ? 'مراقبة أداء محرك الذكاء الاصطناعي' : 'AI Engine Performance Monitoring'}
+                    </h3>
+                    <button 
+                      onClick={async () => {
+                        setIsLoadingLogs(true);
+                        setAiLogs(await getAiPerformanceLogs());
+                        setIsLoadingLogs(false);
+                      }}
+                      className="text-xs font-bold text-primary hover:underline"
+                    >
+                      {isAr ? 'تحديث البيانات' : 'Refresh Data'}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="glass-panel p-4 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase">{isAr ? 'إجمالي الطلبات (آخر 100)' : 'Total Requests (Last 100)'}</p>
+                      <h4 className="text-2xl font-black text-slate-800 dark:text-white mt-1">{aiLogs.length}</h4>
+                    </div>
+                    <div className="glass-panel p-4 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase">{isAr ? 'متوسط زمن الاستجابة' : 'Avg Latency'}</p>
+                      <h4 className="text-2xl font-black text-emerald-500 mt-1">
+                        {aiLogs.length > 0 ? Math.round(aiLogs.reduce((acc, log) => acc + (log.latency_ms || 0), 0) / aiLogs.length) : 0} ms
+                      </h4>
+                    </div>
+                    <div className="glass-panel p-4 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase">{isAr ? 'معدل النجاح' : 'Success Rate'}</p>
+                      <h4 className="text-2xl font-black text-blue-500 mt-1">
+                        {aiLogs.length > 0 ? Math.round((aiLogs.filter(l => l.status === 'success').length / aiLogs.length) * 100) : 0}%
+                      </h4>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel rounded-3xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50 overflow-x-auto">
+                    <table className="w-full text-sm text-left" dir={isAr ? 'rtl' : 'ltr'}>
+                      <thead className="text-xs text-slate-500 uppercase bg-slate-50/50 dark:bg-slate-800/50">
+                        <tr>
+                          <th className="px-4 py-3">{isAr ? 'العملية' : 'Operation'}</th>
+                          <th className="px-4 py-3">{isAr ? 'المزود' : 'Provider'}</th>
+                          <th className="px-4 py-3">{isAr ? 'الـ Chunks' : 'Chunks'}</th>
+                          <th className="px-4 py-3">{isAr ? 'الصفحات' : 'Pages'}</th>
+                          <th className="px-4 py-3">{isAr ? 'الزمن' : 'Latency'}</th>
+                          <th className="px-4 py-3">{isAr ? 'التاريخ' : 'Date'}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {isLoadingLogs ? (
+                          <tr><td colSpan={6} className="text-center py-10 text-slate-400">{isAr ? 'جاري التحميل...' : 'Loading...'}</td></tr>
+                        ) : aiLogs.length === 0 ? (
+                          <tr><td colSpan={6} className="text-center py-10 text-slate-400">{isAr ? 'لا توجد سجلات حالياً' : 'No logs found'}</td></tr>
+                        ) : aiLogs.map((log, i) => (
+                          <tr key={log.id || i} className="border-b border-slate-200/50 dark:border-slate-700/50 hover:bg-slate-50/30 dark:hover:bg-slate-800/30">
+                            <td className="px-4 py-3 font-bold text-slate-700 dark:text-slate-200">
+                              <span className={`px-2 py-0.5 rounded text-[10px] ${log.operation === 'extraction' ? 'bg-purple-500/10 text-purple-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                                {log.operation}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-slate-500">{log.provider}</td>
+                            <td className="px-4 py-3 text-slate-500">{log.chunk_count || 1}</td>
+                            <td className="px-4 py-3 text-slate-500">{log.total_pages || 1}</td>
+                            <td className="px-4 py-3 font-mono text-xs">{log.latency_ms}ms</td>
+                            <td className="px-4 py-3 text-slate-400 text-[10px]">{new Date(log.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-US')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}

@@ -1379,19 +1379,34 @@ export async function recordCouponUsage(
   discountPercent: number,
   planId?: string,
   orderId?: string
-): Promise<string | null> {
-  if (!isSupabaseConfigured) return null;
+): Promise<void> {
+  if (!isSupabaseConfigured) return;
   const { data, error } = await supabase.rpc('record_coupon_usage', {
     p_coupon_id: couponId,
     p_user_id: userId,
     p_discount_percent: discountPercent,
-    p_plan_id: planId || null,
-    p_order_id: orderId || null,
+    p_plan_id: planId,
+    p_order_id: orderId
   });
   if (error) {
     console.error('Error recording coupon usage:', error);
-    return null;
   }
+}
+
+export async function getAiPerformanceLogs(): Promise<any[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('ai_performance_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  
+  if (error) {
+    console.error('Error fetching AI logs:', error);
+    return [];
+  }
+  return data || [];
+}
   return data || null;
 }
 

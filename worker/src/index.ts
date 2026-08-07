@@ -47,14 +47,43 @@ function cors(request: Request, env: Env): HeadersInit {
   };
 }
 
-async function requireUser(request: Request, env: Env): Promise<boolean> {
+async function getUserId(request: Request, env: Env): Promise<string | null> {
   const authorization = request.headers.get('Authorization');
-  if (!authorization?.startsWith('Bearer ')) return false;
-  if (env.SUPABASE_URL.includes('placeholder')) return true;
+  if (!authorization?.startsWith('Bearer ')) return null;
+  if (env.SUPABASE_URL.includes('placeholder')) return 'placeholder-user';
   const response = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1/user`, {
     headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: authorization },
   });
-  return response.ok;
+  if (!response.ok) return null;
+  const user = await response.json() as any;
+  return user.id;
+}
+
+async function logAiPerformance(env: Env, authHeader: string, data: {
+  user_id: string,
+  operation: string,
+  provider: string,
+  model?: string,
+  chunk_count?: number,
+  total_pages?: number,
+  status: 'success' | 'error',
+  latency_ms: number,
+  error_message?: string
+}) {
+  if (env.SUPABASE_URL.includes('placeholder')) return;
+  try {
+    await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/ai_performance_logs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': env.SUPABASE_ANON_KEY,
+        'Authorization': authHeader
+      },
+      body: JSON.stringify(data)
+    });
+  } catch (e) {
+    console.error('Logging failed', e);
+  }
 }
 
 function extractJson(text: string): unknown {
@@ -136,20 +165,33 @@ async function handler(request: Request, env: Env): Promise<Response> {
   const headers = cors(request, env);
   if (request.method === 'OPTIONS') return new Response(null, { headers });
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, headers);
-  if (!await requireUser(request, env)) return json({ error: 'Authentication required' }, 401, headers);
+  const userId = await getUserId(request, env);
+  if (!userId) return json({ error: 'Authentication required' }, 401, headers);
+  const authHeader = request.headers.get('Authorization')!;
 
   try {
     const body = await request.json() as any;
     const path = new URL(request.url).pathname;
+    const startTime = Date.now();
 
-    if (path === '/api/ai/generate') {
-      const provider = body.provider as Provider;
-      if (!['openrouter', 'openai', 'groq', 'deepseek'].includes(provider) || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
-        return json({ error: 'Invalid generation request' }, 400, headers);
+      if (path === '/api/ai/generate') {
+        const provider = body.provider as Provider;
+        if (!['openrouter', 'openai', 'groq', 'deepseek'].includes(provider) || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
+          return json({ error: 'Invalid generation request' }, 400, headers);
+        }
+        const text = await providerText(provider, quizPrompt(body.topic, body.amount, Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : []), env);
+        const result = extractJson(text);
+        
+        await logAiPerformance(env, authHeader, {
+          user_id: userId,
+          operation: 'generation',
+          provider,
+          status: 'success',
+          latency_ms: Date.now() - startTime
+        });
+
+        return json(result, 200, headers);
       }
-      const text = await providerText(provider, quizPrompt(body.topic, body.amount, Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : []), env);
-      return json(extractJson(text), 200, headers);
-    }
 
     if (path === '/api/ai/explain') {
       if (typeof body.questionText !== 'string' || !Array.isArray(body.options) || typeof body.correctAnswer !== 'string') return json({ error: 'Invalid explanation request' }, 400, headers);
@@ -250,6 +292,17 @@ ${extraInstruction}`;
             for (const res of chunkResults) {
               if (res && Array.isArray(res.questions)) finalQuiz.questions.push(...res.questions);
             }
+
+            await logAiPerformance(env, authHeader, {
+              user_id: userId,
+              operation: 'extraction',
+              provider: 'openrouter',
+              chunk_count: chunks.length,
+              total_pages: pageCount,
+              status: 'success',
+              latency_ms: Date.now() - startTime
+            });
+
             return json(finalQuiz, 200, headers);
           } else if (body.mimeType.includes('wordprocessingml') || body.mimeType.includes('msword')) {
             // Word Extraction
