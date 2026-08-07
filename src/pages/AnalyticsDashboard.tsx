@@ -170,7 +170,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                   bg: 'bg-amber-500/5 border-amber-500/10'
                 },
                 {
-                  label: isAr ? 'خبرة المساعد الذكاء الاصطناعي المتراكمة' : 'Accumulated EXP',
+                  label: isAr ? 'خبرة الكوزمو المتراكمة' : 'Accumulated EXP',
                   val: `${totalSolvedExp} XP`,
                   icon: <Sparkles className="w-5 h-5 text-purple-500 animate-pulse" />,
                   bg: 'bg-purple-500/5 border-purple-500/10'
@@ -411,7 +411,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 <div className="space-y-2">
                   <h4 className="font-bold text-slate-700 dark:text-slate-200">{isAr ? 'لم تقم بتأليف اختبارات بعد' : 'No Created Quizzes'}</h4>
                   <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
-                    {isAr ? 'أنت لست ناشراً بعد. يمكنك استخدام صفحة إنشاء اختبار لتصميم اختبارات مساعد الذكاء الاصطناعي الخاصة بك ومشاركتها مع الطلاب!' : 'Author dynamic quizzes inside the Creator workspace to populate student interaction logs and earn premium payout.'}
+                    {isAr ? 'أنت لست ناشراً بعد. يمكنك استخدام صفحة إنشاء اختبار لتصميم اختبارات كوزمو الخاصة بك ومشاركتها مع الطلاب!' : 'Author dynamic quizzes inside the Creator workspace to populate student interaction logs and earn premium payout.'}
                   </p>
                 </div>
               </div>

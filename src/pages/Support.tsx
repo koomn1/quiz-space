@@ -100,7 +100,7 @@ export default function Support({ lang }: SupportProps) {
 
         <div className="mt-12 text-center text-slate-500 text-sm flex items-center justify-center gap-2">
           <Zap className="w-4 h-4 text-yellow-500" />
-          <span>{isAr ? 'مدعوم بواسطة QuizSpace AI' : 'Powered by QuizSpace AI'}</span>
+          <span>{isAr ? 'مدعوم بواسطة Cosmo AI' : 'Powered by Cosmo AI'}</span>
         </div>
       </div>
     </div>

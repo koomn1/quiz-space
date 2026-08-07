@@ -63,8 +63,8 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
     id: 'welcome',
     role: 'assistant',
     text: isAr
-      ? `مرحباً بك يا صديقي الكوني ومستكشف المستقبل في الباقة الماسية الفاخرة! 🌌💎\n\nأنا **مساعد QuizSpace الذكي**، مساعدك الأكاديمي وصديقك الذكي جداً. يمكنك التحدث معي حول أي موضوع علمي أو طرح الأسئلة الصعبة.\n\n💡 **ميزتي الكبرى:** يمكنني **قراءة الصور وتحليلها**! أرفق لي صورة لمسألة، رسم بياني، أو معادلة معقدة وسأقوم بشرحها وتبسيطها لك بحلول فورية ذكية! 🪐🚀`
-      : `Welcome, cosmic star explorer, to the premium Diamond Elite package! 🌌💎\n\nI am **QuizSpace AI**, your automated smart academic buddy. You can chat with me about scientific concepts, solve hard brain teasers, or plan your study guides.\n\n💡 **My superpower:** I can **read & analyze images**! Attach any screen capture, chart, or homework problem and I will explain and solve it with stellar accuracy instantly! 🪐🚀`,
+      ? `مرحباً بك يا صديقي الكوني ومستكشف المستقبل في الباقة الماسية الفاخرة! 🌌💎\n\nأنا **كوزمو (Cosmo AI)**، مساعدك الأكاديمي وصديقك الذكي جداً. يمكنك التحدث معي حول أي موضوع علمي أو طرح الأسئلة الصعبة.\n\n💡 **ميزتي الكبرى:** يمكنني **قراءة الصور وتحليلها**! أرفق لي صورة لمسألة، رسم بياني، أو معادلة معقدة وسأقوم بشرحها وتبسيطها لك بحلول فورية ذكية! 🪐🚀`
+      : `Welcome, cosmic star explorer, to the premium Diamond Elite package! 🌌💎\n\nI am **Cosmo AI**, your automated smart academic buddy. You can chat with me about scientific concepts, solve hard brain teasers, or plan your study guides.\n\n💡 **My superpower:** I can **read & analyze images**! Attach any screen capture, chart, or homework problem and I will explain and solve it with stellar accuracy instantly! 🪐🚀`,
     timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
   });
 
@@ -442,7 +442,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
 
       const systemPrompt = isAr
         ? `أنت مساعد QuizSpace الذكي، مساعد ذكاء اصطناعي أكاديمي متعدد الوسائط للطلاب والمعلمين. تتكلم العربية بطلاقة وبشكل ودي واحترافي. يمكنك تحليل الصور والمسائل وشرح المفاهيم العلمية والرياضية.`
-        : `You are QuizSpace AI, a multimodal AI academic assistant for students and teachers. You speak fluent English in a friendly and professional manner. You can analyze images, solve problems, and explain scientific and mathematical concepts.`;
+        : `You are Cosmo AI, a multimodal AI academic assistant for students and teachers. You speak fluent English in a friendly and professional manner. You can analyze images, solve problems, and explain scientific and mathematical concepts.`;
 
       const historyParts = recentHistory.map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
@@ -534,7 +534,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
 
       const systemPrompt = isAr
         ? `أنت مساعد QuizSpace الذكي، مساعد ذكاء اصطناعي أكاديمي متعدد الوسائط للطلاب والمعلمين. تتكلم العربية بطلاقة وبشكل ودي واحترافي. يمكنك تحليل الصور والمسائل وشرح المفاهيم العلمية والرياضية.`
-        : `You are QuizSpace AI, a multimodal AI academic assistant for students and teachers. You speak fluent English in a friendly and professional manner. You can analyze images, solve problems, and explain scientific and mathematical concepts.`;
+        : `You are Cosmo AI, a multimodal AI academic assistant for students and teachers. You speak fluent English in a friendly and professional manner. You can analyze images, solve problems, and explain scientific and mathematical concepts.`;
 
       let image: { data: string; mimeType: string } | undefined;
       if (userMsg.image) {
@@ -750,14 +750,14 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
                   </span>
                 </div>
                 <h3 className="font-display font-black text-lg text-white">
-                  {isAr ? 'معلومات المستشار مساعد الذكاء الاصطناعي 🤖💎' : 'QuizSpace AI Information 🤖💎'}
+                  {isAr ? 'معلومات المستشار كوزمو 🤖💎' : 'Cosmo AI Information 🤖💎'}
                 </h3>
               </div>
 
               <div className="text-xs text-slate-300 space-y-2.5 text-right leading-relaxed font-bold w-full p-4 rounded-2xl bg-slate-900/50 border border-slate-800" style={{ textAlign: isAr ? 'right' : 'left' }}>
                 <p>
                   {isAr
-                    ? '🪐 أنا مساعد الذكاء الاصطناعي، مساعدك الكوانتي الذكي المطور لحل المسائل العلمية وتبسيط المناهج بذكاء استثنائي.'
+                    ? '🪐 أنا كوزمو، مساعدك الكوانتي الذكي المطور لحل المسائل العلمية وتبسيط المناهج بذكاء استثنائي.'
                     : '🪐 I am AI, your custom scientific buddy built to clarify homework challenges and simplify lessons.'}
                 </p>
                 <p className="text-[#a78bfa]">
@@ -823,7 +823,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
             <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-sans font-bold text-xs sm:text-sm text-slate-800 dark:text-white">
-                  {isAr ? 'المساعد الذكي مساعد الذكاء الاصطناعي' : 'AI Assistant'}
+                  {isAr ? 'المساعد الذكي كوزمو' : 'Cosmo Assistant'}
                 </h3>
               </div>
               <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold flex items-center gap-1 mt-0.5">
@@ -838,7 +838,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
             <button
               type="button"
               onClick={() => {
-                if (confirm(isAr ? 'هل تود بالتأكيد تصفير محادثة مساعد الذكاء الاصطناعي والبدء من جديد؟' : 'Are you sure you want to clear your conversation history?')) {
+                if (confirm(isAr ? 'هل تود بالتأكيد تصفير محادثة كوزمو والبدء من جديد؟' : 'Are you sure you want to clear your conversation history?')) {
                   setMessages([welcomeMessage()]);
                   if (userId) {
                     clearAIChatHistory(userId).catch(() => {});
@@ -856,7 +856,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
               type="button"
               onClick={() => setShowInfo(true)}
               className="p-2 rounded-xl text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
-              title={isAr ? 'معلومات مساعد الذكاء الاصطناعي' : 'AI Info'}
+              title={isAr ? 'معلومات كوزمو' : 'AI Info'}
             >
               <Info className="w-4 h-4" />
             </button>
@@ -883,7 +883,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
                 {isAr ? 'ألق بالصورة هنا للتحليل! 📷' : 'Drop your image here to analyze! 📷'}
               </h3>
               <p className="text-xs text-slate-500">
-                {isAr ? 'سيروق لمساعد الذكاء الاصطناعي فحصها وتبسيط محتواها الأكاديمي.' : 'AI will look forward to investigating it.'}
+                {isAr ? 'سيروق لكوزمو فحصها وتبسيط محتواها الأكاديمي.' : 'AI will look forward to investigating it.'}
               </p>
             </div>
           )}
@@ -907,7 +907,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
                   { icon: '🖼️', label: isAr ? 'ارفع صورة' : 'Upload image', action: 'image' as const },
                   { icon: '🎓', label: isAr ? 'أنشئ اختبار' : 'Create a quiz', action: 'prompt' as const, prompt: isAr ? 'أنشئ لي 5 أسئلة اختيار من متعدد عن: ' : 'Create 5 multiple-choice questions about: ' },
                   { icon: '💡', label: isAr ? 'اشرح لي درس' : 'Explain a lesson', action: 'prompt' as const, prompt: isAr ? 'اشرح لي بطريقة مبسطة: ' : 'Explain simply: ' },
-                  { icon: '📝', label: isAr ? 'اسأل مساعد الذكاء الاصطناعي' : 'Ask AI Assistant anything', action: 'prompt' as const, prompt: '' },
+                  { icon: '📝', label: isAr ? 'اسأل كوزمو' : 'Ask Cosmo Assistant anything', action: 'prompt' as const, prompt: '' },
                 ].map((item) => (
                   <button
                     key={item.label}
@@ -1043,7 +1043,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
               <div className="flex flex-col gap-1 flex-1">
                 <div className="text-slate-500 flex items-center gap-1.5 py-1">
                   <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-                    {isAr ? 'مساعد الذكاء الاصطناعي يفكر ويكتب...' : 'AI is thinking...'}
+                    {isAr ? 'كوزمو يفكر ويكتب...' : 'AI is thinking...'}
                   </span>
                   <span className="flex gap-1 items-center">
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }}></span>
@@ -1076,7 +1076,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
                   {isAr ? 'صورة مرفقة للتحليل والمناقشة 📷' : 'Image attached for analysis 📷'}
                 </p>
                 <p className="text-[10px] text-slate-400 font-bold">
-                  {isAr ? 'سيقوم مساعد الذكاء الاصطناعي بقراءتها فور الإرسال' : 'AI will read it upon sending'}
+                  {isAr ? 'سيقوم كوزمو بقراءتها فور الإرسال' : 'AI will read it upon sending'}
                 </p>
               </div>
             </div>
@@ -1129,7 +1129,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
                   handleSendMessage();
                 }
               }}
-              placeholder={isAr ? 'اسأل مساعد الذكاء الاصطناعي أي سؤال، أو اسحب الصورة هنا للبدء... 👋🌌' : 'Ask AI Assistant any academic core question, or drop your image... 👋🌌'}
+              placeholder={isAr ? 'اسأل كوزمو أي سؤال، أو اسحب الصورة هنا للبدء... 👋🌌' : 'Ask Cosmo Assistant any academic core question, or drop your image... 👋🌌'}
               className="flex-1 resize-none bg-transparent outline-none text-sm py-2 max-h-40 leading-relaxed text-slate-800 dark:text-slate-100 placeholder-slate-400"
               disabled={isAnalyzing}
               style={{ textAlign: isAr ? 'right' : 'left' }}
@@ -1144,7 +1144,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
             </button>
           </div>
           <p className="text-center text-[10px] text-slate-400 mt-2">
-            {isAr ? 'قد يقوم الذكاء الاصطناعي قد يرتكب أخطاء أحياناً. يرجى التحقق من المعلومات المهمة.' : 'AI can make mistakes. Verify important info.'}
+            {isAr ? 'قد يقوم كوزمو قد يرتكب أخطاء أحياناً. يرجى التحقق من المعلومات المهمة.' : 'Cosmo can make mistakes. Verify important info.'}
           </p>
         </form>
 
@@ -1160,7 +1160,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
           <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
             {isAr
               ? 'مساعد مساعد QuizSpace الذكي يستند لعمليات كوانتية متقدمة وهو مخصص لشركاء الباقة الماسية الفخمة. قم بالترقية الآن واستمتع بقارئ ومحلل الصورة الاستثنائي!'
-              : 'QuizSpace AI chatbot uses quantum reasoning models which operate exclusively for Diamond tier members. Upgrade now to get full image comprehension support!'}
+              : 'Cosmo AI chatbot uses quantum reasoning models which operate exclusively for Diamond tier members. Upgrade now to get full image comprehension support!'}
           </p>
           <div className="flex justify-center gap-3">
             {onUpgradeClick && (

@@ -258,7 +258,7 @@ export default function AdminSubscriptions({
         .map(u => ({
           id: 'msg-' + Math.random().toString(36).substring(2, 11),
           sender_id: COSMO_ADMIN_UID,
-          sender_name: isAr ? 'المساعد مساعد الذكاء الاصطناعي' : 'AI Assistant',
+          sender_name: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant',
           receiver_id: u.uid || u.id,
           receiver_name: u.name || 'Student',
           text: aiPromoMsg,
@@ -276,7 +276,7 @@ export default function AdminSubscriptions({
       await createCommunityPost(
         aiPromoMsg,
         COSMO_ADMIN_UID,
-        isAr ? 'المساعد مساعد الذكاء الاصطناعي' : 'AI Assistant',
+        isAr ? 'المساعد كوزمو' : 'Cosmo Assistant',
         '🤖',
         '#8b5cf6'
       );
@@ -1132,7 +1132,7 @@ export default function AdminSubscriptions({
                   <Megaphone className="w-5 h-5 animate-bounce" />
                   <h4 className="font-extrabold text-base">
                     {isAr
-                      ? "الرسالة الترويجية المقترحة من مساعد الذكاء الاصطناعي 🤖"
+                      ? "الرسالة الترويجية المقترحة من كوزمو 🤖"
                       : "Proposed AI Advertisement Text"}
                   </h4>
                 </div>

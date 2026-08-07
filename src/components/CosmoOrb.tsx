@@ -2,11 +2,11 @@ import React, { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 
-export type AIOrbState = 'idle' | 'thinking';
+export type CosmoOrbState = 'idle' | 'thinking';
 
-interface AIOrbProps {
+interface CosmoOrbProps {
   size?: number;
-  state?: AIOrbState;
+  state?: CosmoOrbState;
   className?: string;
 }
 
@@ -19,7 +19,7 @@ interface AIOrbProps {
  * `state="thinking"` speeds up the orbit rings and intensifies the core
  * pulse/glow — used while AI is generating or streaming a reply.
  */
-export default function AIOrb({ size = 32, state = 'idle', className = '' }: AIOrbProps) {
+export default function CosmoOrb({ size = 32, state = 'idle', className = '' }: CosmoOrbProps) {
   const outerRingRef = useRef<SVGGElement>(null);
   const innerRingRef = useRef<SVGGElement>(null);
   const coreRef = useRef<SVGCircleElement>(null);

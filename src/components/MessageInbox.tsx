@@ -80,7 +80,7 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
         if (usersList.length === 0) {
           usersList.push({
             uid: COSMO_ADMIN_UID,
-            name: 'المساعد مساعد الذكاء الاصطناعي',
+            name: 'المساعد كوزمو',
             bio: 'المساعد الذكي لكافة استفساراتك',
             badgeSymbol: '✔',
             badgeColor: 'text-sky-400',

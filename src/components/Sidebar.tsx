@@ -7,7 +7,7 @@ import { translations } from '../lib/i18n';
 import { AnimatedSidebarIcon } from './AnimatedSidebarIcon';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag, BadgeTier, NameColorKey, BadgeColorKey } from './PremiumNameTag';
-import AIOrb from './AIOrb';
+import CosmoOrb from './CosmoOrb';
 
 interface SidebarProps {
   currentTab: string;
@@ -66,7 +66,7 @@ export default function Sidebar({
     { id: 'create', label: isAr ? 'إنشاء اختبار' : 'Create Quiz' },
     { id: 'my-quizzes', label: isAr ? 'اختباراتي' : 'My Quizzes' },
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms' },
-    { id: 'aichat', label: isAr ? 'دردشة AI' : 'AI Chat', isPremiumOnly: true },
+    { id: 'aichat', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant', isPremiumOnly: true },
     { id: 'community', label: isAr ? 'المجتمع' : 'Community' },
     { id: 'billing', label: isAr ? 'باقات الاشتراك' : 'Subscription Plans' },
     { id: 'settings', label: isAr ? 'الإعدادات' : 'Settings' },
