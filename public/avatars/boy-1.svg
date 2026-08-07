@@ -1,24 +1,23 @@
 <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="boy1Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#3b82f6" />
-      <stop offset="1" stop-color="#1d4ed8" />
+    <linearGradient id="b1bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4f46e5" />
+      <stop offset="1" stop-color="#312e81" />
     </linearGradient>
   </defs>
-  <circle cx="64" cy="64" r="64" fill="url(#boy1Bg)" />
-  <!-- Body/Hoodie -->
-  <path d="M24 116C24 96 41 84 64 84C87 84 104 96 104 116V128H24V116Z" fill="#1e293b" />
-  <path d="M50 84L64 104L78 84H50Z" fill="#38bdf8" />
+  <circle cx="64" cy="64" r="64" fill="url(#b1bg)" />
+  <!-- Shoulders / Hoodie -->
+  <path d="M28 116C28 98 44 86 64 86C84 86 100 98 100 116V128H28V116Z" fill="#1e1b4b" />
+  <path d="M52 86L64 102L76 86H52Z" fill="#818cf8" />
   <!-- Neck -->
-  <rect x="54" y="72" width="20" height="16" fill="#fbcfe8" />
+  <rect x="54" y="74" width="20" height="14" fill="#fde68a" />
   <!-- Head -->
-  <circle cx="64" cy="56" r="22" fill="#fbcfe8" />
-  <!-- Hair -->
-  <path d="M42 56C42 42 52 34 64 34C76 34 86 42 86 56C86 60 84 60 84 56C84 44 75 38 64 38C53 38 44 44 44 56C44 60 42 60 42 56Z" fill="#0f172a" />
-  <!-- Glasses -->
-  <rect x="49" y="48" width="12" height="10" rx="3" fill="none" stroke="#0f172a" stroke-width="2.5" />
-  <rect x="67" y="48" width="12" height="10" rx="3" fill="none" stroke="#0f172a" stroke-width="2.5" />
-  <line x1="61" y1="53" x2="67" y2="53" stroke="#0f172a" stroke-width="2.5" />
-  <!-- Smile -->
-  <path d="M58 66C58 68 70 68 70 66" stroke="#0f172a" stroke-width="2" stroke-linecap="round" />
+  <circle cx="64" cy="56" r="22" fill="#fde68a" />
+  <!-- Stylish Modern Hair -->
+  <path d="M42 56C42 40 50 32 64 32C78 32 86 40 86 56C86 60 84 58 84 52C84 42 76 36 64 36C52 36 44 42 44 52C44 58 42 60 42 56Z" fill="#111827" />
+  <!-- Eyes -->
+  <circle cx="55" cy="54" r="2.5" fill="#1f2937" />
+  <circle cx="73" cy="54" r="2.5" fill="#1f2937" />
+  <!-- Friendly smile -->
+  <path d="M58 65C58 67 70 67 70 65" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round" />
 </svg>

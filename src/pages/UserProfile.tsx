@@ -1166,22 +1166,20 @@ export default function UserProfile({
                   </label>
                   <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5">
                     {[
-                      { name: 'Boy 1', url: './avatars/boy-1.svg' },
-                      { name: 'Boy 2', url: './avatars/boy-2.svg' },
-                      { name: 'Boy 3', url: './avatars/boy-3.svg' },
-                      { name: 'Girl 1', url: './avatars/girl-1.svg' },
-                      { name: 'Girl 2', url: './avatars/girl-2.svg' },
-                      { name: 'Girl 3', url: './avatars/girl-3.svg' },
-                      { name: 'Cosmo', url: './avatars/cosmo.svg' },
-                    ].map((item, idx) => (
+                      './avatars/boy-1.svg',
+                      './avatars/boy-2.svg',
+                      './avatars/boy-3.svg',
+                      './avatars/girl-1.svg',
+                      './avatars/girl-2.svg',
+                      './avatars/girl-3.svg',
+                    ].map((url, idx) => (
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => setEditPhotoURL(item.url)}
-                        className={`relative group aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${editPhotoURL === item.url ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
-                        title={item.name}
+                        onClick={() => setEditPhotoURL(url)}
+                        className={`relative group aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${editPhotoURL === url ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
                       >
-                        <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
+                        <img src={url} alt="Avatar" className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
