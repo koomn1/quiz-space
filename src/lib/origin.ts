@@ -25,16 +25,8 @@ function sanitizeAndSecureOrigin(origin: string): string {
 }
 
 export function getAppOrigin(): string {
-  // استخدم AI Worker مباشرة إذا تم تحديده في .env
-  const workerUrl = (import.meta as any).env?.VITE_AI_WORKER_URL;
-
-  if (workerUrl) {
-    try {
-      return sanitizeAndSecureOrigin(new URL(workerUrl).origin);
-    } catch (e) {
-      console.warn("Invalid VITE_AI_WORKER_URL:", workerUrl);
-    }
-  }
+  // لا نستخدم عنوان AI Worker كرابط للواجهة؛ فهو مخصص لطلبات API فقط.
+  // روابط المشاركة يجب أن تشير دائماً إلى الموقع الذي يتصفحه المستخدم.
 
   let matchedOrigin = '';
 
