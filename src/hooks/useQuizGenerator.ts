@@ -3,7 +3,7 @@ import React from 'react';
 import { createQuiz } from '../lib/db';
 import { Question } from '../types';
 import { generateQuizWithFallback } from './useQuizzes';
-import { generateQuizFromFile } from '../services/aiWorkerClient';
+import { generateQuizFromFile, generateQuizFromFileStreaming, StreamProgress } from '../services/aiWorkerClient';
 import { splitPdfIntoPageImages } from '../lib/pdfSplitter';
 
 
@@ -120,14 +120,6 @@ export function useQuizGenerator() {
           message: 'جاري تحليل المستند وتجهيز الـ Chunks...',
         });
 
-        // Fake progress for better UX since worker is monolithic now
-        const progressInterval = setInterval(() => {
-          setProgress(prev => {
-            if (!prev || prev.current >= 90) return prev;
-            return { ...prev, current: prev.current + 2, message: `جاري معالجة البيانات واستخراج الأسئلة (${prev.current}%)...` };
-          });
-        }, 1500);
-
         let base64 = '';
         if (sourceFile) {
           const reader = new FileReader();
@@ -143,9 +135,31 @@ export function useQuizGenerator() {
 
         let data;
         try {
+          data = await generateQuizFromFileStreaming(
+            base64,
+            mimeType || 'application/pdf',
+            customInstruction,
+            (progress: StreamProgress) => {
+              if (progress.type === 'init') {
+                setProgress({
+                  current: 0,
+                  total: progress.totalChunks || 1,
+                  stage: 'generating',
+                  message: `جاري معالجة ${progress.totalPages} صفحة في ${progress.totalChunks} مجموعة...`,
+                });
+              } else if (progress.type === 'progress') {
+                setProgress({
+                  current: progress.processed || 0,
+                  total: progress.total || 1,
+                  stage: 'generating',
+                  message: `معالجة المجموعة ${progress.processed}/${progress.total} - استخراج ${progress.questionsExtracted} سؤال (${progress.percentage}%)`,
+                });
+              }
+            }
+          );
+        } catch (err) {
+          console.warn('Streaming failed, falling back to standard extraction:', err);
           data = await generateQuizFromFile(base64, mimeType || 'application/pdf', totalQuestions, customInstruction, extractionMode);
-        } finally {
-          clearInterval(progressInterval);
         }
 
         if (data.questions && Array.isArray(data.questions)) {

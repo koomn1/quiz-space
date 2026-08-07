@@ -1,6 +1,7 @@
 import { PDFDocument } from 'pdf-lib';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
+import { handleStreamingExtraction } from './streaming';
 
 export interface Env {
   OPENROUTER_API_KEY: string;
@@ -197,6 +198,13 @@ async function handler(request: Request, env: Env): Promise<Response> {
       if (typeof body.questionText !== 'string' || !Array.isArray(body.options) || typeof body.correctAnswer !== 'string') return json({ error: 'Invalid explanation request' }, 400, headers);
       const prompt = `اشرح باختصار بالعربية لماذا الإجابة "${body.correctAnswer}" صحيحة للسؤال: ${body.questionText}. الخيارات: ${body.options.join(', ')}. أجب بـ JSON فقط: {"explanation":"..."}`;
       return json(extractJson(await providerText('openrouter', prompt, env)), 200, headers);
+    }
+
+    if (path === '/api/ai/generate-file/stream') {
+      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 15_000_000 || typeof body.mimeType !== 'string') {
+        return json({ error: 'Invalid file generation request' }, 400, headers);
+      }
+      return handleStreamingExtraction(body.fileBase64, body.mimeType, body.customInstruction, env, userId, authHeader, startTime);
     }
 
     if (path === '/api/ai/generate-file') {

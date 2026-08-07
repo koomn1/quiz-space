@@ -167,3 +167,87 @@ export async function askGroq(
     throw err;
   }
 }
+
+export interface StreamProgress {
+  type: 'init' | 'progress' | 'complete' | 'error';
+  totalChunks?: number;
+  totalPages?: number;
+  processed?: number;
+  total?: number;
+  questionsExtracted?: number;
+  percentage?: number;
+  quiz?: GeneratedQuiz;
+  message?: string;
+  warning?: string;
+}
+
+export async function generateQuizFromFileStreaming(
+  fileBase64: string,
+  mimeType: string,
+  customInstruction?: string,
+  onProgress?: (progress: StreamProgress) => void,
+): Promise<GeneratedQuiz> {
+  try {
+    const response = await fetchWithAuth(getApiUrl('/api/ai/generate-file/stream'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileBase64,
+        mimeType,
+        customInstruction,
+        extractionMode: 'literal',
+      }),
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({})) as WorkerError;
+      throw new Error(payload.error || `AI service failed (${response.status}).`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body from streaming endpoint');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finalQuiz: GeneratedQuiz | null = null;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+
+        const dataStr = trimmed.slice(5).trim();
+        if (!dataStr) continue;
+
+        try {
+          const parsed = JSON.parse(dataStr) as StreamProgress;
+          onProgress?.(parsed);
+
+          if (parsed.type === 'complete' && parsed.quiz) {
+            finalQuiz = parsed.quiz;
+          }
+        } catch (e) {
+          console.warn('Failed to parse SSE message:', e);
+        }
+      }
+    }
+
+    if (!finalQuiz) {
+      throw new Error('No quiz data received from streaming endpoint');
+    }
+
+    return finalQuiz;
+  } catch (err: any) {
+    console.error('Streaming generation failed:', err);
+    throw err;
+  }
+}
