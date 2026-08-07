@@ -162,7 +162,7 @@ function FormattedText({ text }: { text: string }) {
 }
 
 /* ─── Message row with gsap entrance ───────────────────── */
-function MessageRow({ msg, index, copiedMsgId, onCopy }: { msg: Message; index: number; copiedMsgId: string | null; onCopy: (m: Message) => void }) {
+function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial }: { msg: Message; index: number; copiedMsgId: string | null; onCopy: (m: Message) => void; userPhoto?: string; userInitial: string }) {
   const rowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -181,6 +181,14 @@ function MessageRow({ msg, index, copiedMsgId, onCopy }: { msg: Message; index: 
             {msg.image && <img src={msg.image} alt="Upload" className="max-w-xs rounded-lg mb-3 shadow-md" />}
             <div>{msg.text}</div>
             <p className="text-[10px] mt-1 text-right" style={{ color: MUTED }}>{msg.timestamp}</p>
+          </div>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden"
+            style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)', color: 'white' }}>
+            {userPhoto ? (
+              <img src={userPhoto} alt="" className="w-full h-full object-cover" />
+            ) : (
+              userInitial
+            )}
           </div>
         </div>
       ) : (
@@ -489,8 +497,8 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
 
   return (
     <div ref={containerRef}
-      className="chat-container flex h-[calc(100vh-80px)] w-full overflow-hidden"
-      style={{ fontFamily: "'Inter', sans-serif", background: BG, color: FG }}>
+      className="chat-container flex w-full overflow-hidden"
+      style={{ fontFamily: "'Inter', sans-serif", background: BG, color: FG, minHeight: '100dvh' }}>
 
       {/* ── Sidebar ── */}
       <aside
@@ -690,7 +698,7 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
             /* ── Messages ── */
             <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">
               {messages.map((msg, i) => (
-                <MessageRow key={msg.id} msg={msg} index={i} copiedMsgId={copiedMsgId} onCopy={copyMessage} />
+                <MessageRow key={msg.id} msg={msg} index={i} copiedMsgId={copiedMsgId} onCopy={copyMessage} userPhoto={userPhoto} userInitial={userInitial} />
               ))}
 
               {isAnalyzing && (
@@ -727,8 +735,8 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                 placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي حاجة...` : `Ask ${ASSISTANT_NAME_EN} anything...`}
                 rows={1}
                 dir="rtl"
-                className="w-full px-5 pt-4 pb-2 bg-transparent resize-none outline-none text-[15px] leading-7 placeholder:opacity-40"
-                style={{ color: FG, fontFamily: 'inherit', maxHeight: '200px', caretColor: ACCENT, textAlign: 'right' }}
+                className="w-full px-5 pt-3.5 pb-2 bg-transparent resize-none outline-none text-[15px] leading-7 placeholder:opacity-40"
+                style={{ color: FG, fontFamily: 'inherit', maxHeight: '120px', caretColor: ACCENT, textAlign: 'right' }}
               />
 
               <div className="flex items-center justify-between px-3 pb-3 pt-1" dir="rtl">
@@ -760,13 +768,14 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                   ref={sendBtnRef}
                   onClick={() => sendMessage()}
                   disabled={(!inputText.trim() && !selectedImage) || isAnalyzing}
-                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors active:scale-90"
+                  aria-label={isAr ? 'إرسال' : 'Send'}
+                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90"
                   style={{
-                    background: (inputText.trim() || selectedImage) && !isAnalyzing ? '#ffffff' : 'rgba(255,255,255,0.15)',
-                    cursor: (inputText.trim() || selectedImage) && !isAnalyzing ? 'pointer' : 'not-allowed',
+                    background: (inputText.trim() || selectedImage) && !isAnalyzing ? '#ffffff' : '#10a37f',
+                    cursor: (!inputText.trim() && !selectedImage) || isAnalyzing ? 'pointer' : 'pointer',
                   }}
                 >
-                  <Send className="w-5 h-5" style={{ color: (inputText.trim() || selectedImage) && !isAnalyzing ? BG : '#4a4a4a' }} />
+                  <Send className="w-5 h-5" style={{ color: (inputText.trim() || selectedImage) && !isAnalyzing ? BG : '#ffffff' }} />
                 </button>
               </div>
             </div>
