@@ -1558,6 +1558,9 @@ export default function App() {
                   isPremium={isUserPremium} 
                   planName={userPlanName} 
                   userId={userId}
+                  userName={userName}
+                  userPhoto={userPhoto || undefined}
+                  defaultAvatar="./avatars/boy-1.png"
                   onUpgradeClick={() => setActiveTab('billing')} 
                   onOpenAuthModal={(mode) => {
                     setAuthModalMode(mode);
@@ -1580,7 +1583,7 @@ export default function App() {
               )}
 
               {activeTab === 'messages' && (
-                <MessageInbox lang={lang} userId={userId} userName={userName} />
+                <MessageInbox lang={lang} userId={userId} userName={userName} userPhoto={userPhoto || undefined} defaultAvatar="./avatars/boy-1.png" />
               )}
 
               {activeTab === 'classrooms' && (

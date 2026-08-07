@@ -16,6 +16,8 @@ interface MessageInboxProps {
   lang: 'ar' | 'en';
   userId: string;
   userName: string;
+  userPhoto?: string;
+  defaultAvatar?: string;
 }
 
 interface Chat {
@@ -40,8 +42,9 @@ interface Member {
   avatar_url?: string;
 }
 
-export default function MessageInbox({ lang, userId, userName }: MessageInboxProps) {
+export default function MessageInbox({ lang, userId, userName, userPhoto, defaultAvatar }: MessageInboxProps) {
   const isAr = lang === 'ar';
+  const FALLBACK_AVATAR = defaultAvatar || './avatars/boy-1.png';
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [selectedRecipient, setSelectedRecipient] = useState<Member | null>(null);
@@ -73,7 +76,7 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
               badgeSymbol: p.badgeSymbol || '',
               badgeColor: p.badgeColor || '',
               isPremium: p.isPremium || false,
-              avatar_url: p.avatar_url || ''
+              avatar_url: p.photo_url || p.avatar_url || ''
             });
           }
         });
@@ -318,7 +321,7 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
                 >
                   <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/50 flex items-center justify-center overflow-hidden shrink-0 text-slate-200">
                     <img 
-                      src={member.avatar_url || './avatars/boy-1.svg'} 
+                      src={member.avatar_url || FALLBACK_AVATAR} 
                       alt={member.name} 
                       className="w-full h-full object-cover" 
                     />
@@ -363,7 +366,7 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
                 <div className="flex items-center gap-3 text-right">
                   <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center overflow-hidden text-white">
                     <img 
-                      src={selectedRecipient.avatar_url || './avatars/boy-1.svg'} 
+                      src={selectedRecipient.avatar_url || FALLBACK_AVATAR} 
                       alt={selectedRecipient.name} 
                       className="w-full h-full object-cover" 
                     />
@@ -417,8 +420,16 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
                         className={`flex gap-3 sm:gap-4 w-full ${isOwn ? 'justify-end' : 'justify-start'}`}
                       >
                         {!isOwn && (
-                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-slate-800 border border-slate-700/50 text-slate-300 shadow-xs text-xs font-bold uppercase">
-                            {selectedRecipient.name.substring(0, 1)}
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-slate-800 border border-slate-700/50 text-slate-300 shadow-xs text-xs font-bold uppercase overflow-hidden">
+                            {selectedRecipient.avatar_url ? (
+                              <img 
+                                src={selectedRecipient.avatar_url} 
+                                alt={selectedRecipient.name} 
+                                className="w-full h-full object-cover" 
+                              />
+                            ) : (
+                              <span className="uppercase">{selectedRecipient.name.substring(0, 1)}</span>
+                            )}
                           </div>
                         )}
 
@@ -444,8 +455,16 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
                         </div>
 
                         {isOwn && (
-                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-indigo-950/60 border border-indigo-900/50 shadow-xs text-xs">
-                            👤
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-indigo-950/60 border border-indigo-900/50 shadow-xs text-xs overflow-hidden">
+                            {userPhoto ? (
+                              <img 
+                                src={userPhoto} 
+                                alt={userName} 
+                                className="w-full h-full object-cover" 
+                              />
+                            ) : (
+                              <span className="font-bold text-indigo-200">{userName ? userName.substring(0, 1) : '👤'}</span>
+                            )}
                           </div>
                         )}
                       </div>

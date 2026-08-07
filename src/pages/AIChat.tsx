@@ -20,12 +20,16 @@ interface AIChatProps {
   isPremium: boolean;
   planName: string;
   userId?: string;
+  userName?: string;
+  userPhoto?: string;
+  defaultAvatar?: string;
   onUpgradeClick?: () => void;
   onOpenAuthModal?: (mode: 'login' | 'register') => void;
 }
 
-export default function AIChat({ lang, isPremium, planName, userId, onUpgradeClick, onOpenAuthModal }: AIChatProps) {
+export default function AIChat({ lang, isPremium, planName, userId, userName, userPhoto, defaultAvatar, onUpgradeClick, onOpenAuthModal }: AIChatProps) {
   const isAr = lang === 'ar';
+  const FALLBACK_AVATAR = defaultAvatar || './avatars/boy-1.png';
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -239,8 +243,14 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
           {messages.map((msg, idx) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
               <div className={`flex gap-4 max-w-[85%] md:max-w-[75%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'}`}>
-                  {msg.role === 'user' ? <Plus size={14} /> : <CosmoOrb size={20} />}
+                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm overflow-hidden ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'}`}>
+                  {msg.role === 'user' ? (
+                    userPhoto ? (
+                      <img src={userPhoto} alt={userName || ''} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs font-bold">{userName ? userName.substring(0, 1) : <Plus size={14} />}</span>
+                    )
+                  ) : <CosmoOrb size={20} />}
                 </div>
                 <div className="space-y-1">
                   <div className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${

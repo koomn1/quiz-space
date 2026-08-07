@@ -1166,12 +1166,12 @@ export default function UserProfile({
                   </label>
                   <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5">
                     {[
-                      './avatars/boy-1.svg',
-                      './avatars/boy-2.svg',
-                      './avatars/boy-3.svg',
-                      './avatars/girl-1.svg',
-                      './avatars/girl-2.svg',
-                      './avatars/girl-3.svg',
+                      './avatars/boy-1.png',
+                      './avatars/boy-2.png',
+                      './avatars/boy-3.png',
+                      './avatars/girl-1.png',
+                      './avatars/girl-2.png',
+                      './avatars/girl-3.png',
                     ].map((url, idx) => (
                       <button
                         key={idx}
