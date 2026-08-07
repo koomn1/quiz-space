@@ -64,16 +64,7 @@ export default function App() {
 
   const authContext = useAuth();
   // Show splash only once per day — not on every page refresh
-  const [splashActive, setSplashActive] = React.useState(() => {
-    try {
-      const last = localStorage.getItem('quiz_splash_last_shown');
-      if (!last) return true;
-      // Show again if more than 24 hours have passed
-      return Date.now() - parseInt(last, 10) > 24 * 60 * 60 * 1000;
-    } catch {
-      return true;
-    }
-  });
+  const [splashActive, setSplashActive] = React.useState(true);
 
   const [isQuizLocked, setIsQuizLocked] = React.useState(false);
   const [userId, setUserId] = React.useState('');
@@ -1101,12 +1092,10 @@ export default function App() {
           <ToastHost />
           {splashActive ? (
         <SplashScreen
-          
           lang={lang}
           userName={userName}
           isGuest={!userId || userId.startsWith('user-')}
           onComplete={() => {
-            try { localStorage.setItem('quiz_splash_last_shown', String(Date.now())); } catch {}
             setSplashActive(false);
           }}
         />
