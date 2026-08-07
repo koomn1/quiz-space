@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { askAI, askAIStream, askGroq } from '../services/aiWorkerClient';
-import { getCosmoHistory, saveCosmoMessage, clearCosmoHistory, getCosmoConversations, createCosmoConversation, renameCosmoConversation, deleteCosmoConversation, CosmoConversation } from '../lib/db';
+import { getAIChatHistory, saveAIChatMessage, clearAIChatHistory, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
 import { Image, Send, Trash2, Sparkles, Brain, Compass, Camera, AlertCircle, X, Info, HelpCircle, XCircle, Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, FileText, Mic, Menu, Plus, Search, Pencil } from 'lucide-react';
 import ThreeDIcon from '../components/ThreeDIcon';
 
@@ -14,7 +14,7 @@ interface Message {
   timestamp: string;
 }
 
-interface CosmoChatbotProps {
+interface AIChatProps {
   lang: 'ar' | 'en';
   isPremium: boolean;
   planName: string;
@@ -23,7 +23,7 @@ interface CosmoChatbotProps {
   onOpenAuthModal?: (mode: 'login' | 'register') => void;
 }
 
-export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgradeClick, onOpenAuthModal }: CosmoChatbotProps) {
+export default function AIChat({ lang, isPremium, planName, userId, onUpgradeClick, onOpenAuthModal }: AIChatProps) {
   const isAr = lang === 'ar';
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +51,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Multi-conversation sidebar state
-  const [conversations, setConversations] = useState<CosmoConversation[]>([]);
+  const [conversations, setConversations] = useState<AIChatConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [convSearchQuery, setConvSearchQuery] = useState('');
@@ -61,10 +61,10 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
 
   const welcomeMessage = (): Message => ({
     id: 'welcome',
-    role: 'cosmo',
+    role: 'assistant',
     text: isAr
-      ? `مرحباً بك يا صديقي الكوني ومستكشف المستقبل في الباقة الماسية الفاخرة! 🌌💎\n\nأنا **كوزمو (Cosmo AI)**، مساعدك الأكاديمي وصديقك الذكي جداً. يمكنك التحدث معي حول أي موضوع علمي أو طرح الأسئلة الصعبة.\n\n💡 **ميزتي الكبرى:** يمكنني **قراءة الصور وتحليلها**! أرفق لي صورة لمسألة، رسم بياني، أو معادلة معقدة وسأقوم بشرحها وتبسيطها لك بحلول فورية ذكية! 🪐🚀`
-      : `Welcome, cosmic star explorer, to the premium Diamond Elite package! 🌌💎\n\nI am **Cosmo (Cosmo AI)**, your automated smart academic buddy. You can chat with me about scientific concepts, solve hard brain teasers, or plan your study guides.\n\n💡 **My superpower:** I can **read & analyze images**! Attach any screen capture, chart, or homework problem and I will explain and solve it with stellar accuracy instantly! 🪐🚀`,
+      ? `مرحباً بك يا صديقي الكوني ومستكشف المستقبل في الباقة الماسية الفاخرة! 🌌💎\n\nأنا **مساعد QuizSpace الذكي**، مساعدك الأكاديمي وصديقك الذكي جداً. يمكنك التحدث معي حول أي موضوع علمي أو طرح الأسئلة الصعبة.\n\n💡 **ميزتي الكبرى:** يمكنني **قراءة الصور وتحليلها**! أرفق لي صورة لمسألة، رسم بياني، أو معادلة معقدة وسأقوم بشرحها وتبسيطها لك بحلول فورية ذكية! 🪐🚀`
+      : `Welcome, cosmic star explorer, to the premium Diamond Elite package! 🌌💎\n\nI am **QuizSpace AI**, your automated smart academic buddy. You can chat with me about scientific concepts, solve hard brain teasers, or plan your study guides.\n\n💡 **My superpower:** I can **read & analyze images**! Attach any screen capture, chart, or homework problem and I will explain and solve it with stellar accuracy instantly! 🪐🚀`,
     timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
   });
 
@@ -93,7 +93,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
     if (!userId) { setConversations([]); return; }
     let cancelled = false;
     (async () => {
-      const list = await getCosmoConversations(userId);
+      const list = await getAIChatConversations(userId);
       if (cancelled) return;
       setConversations(list);
       // Auto-select the most recent conversation on first load, if any.
@@ -112,7 +112,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
 
     (async () => {
       if (userId && activeConversationId) {
-        const history = await getCosmoHistory(userId, activeConversationId);
+        const history = await getAIChatHistory(userId, activeConversationId);
         if (cancelled) return;
         if (history.length > 0) {
           setMessages(history.map((row) => ({
@@ -146,7 +146,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
   };
 
   const handleDeleteConversation = async (id: string) => {
-    await deleteCosmoConversation(id);
+    await deleteAIChatConversation(id);
     setConversations((prev) => prev.filter((c) => c.id !== id));
     setDeletingConvId(null);
     if (activeConversationId === id) {
@@ -158,7 +158,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
   const handleRenameConversation = async (id: string) => {
     const title = renameValue.trim();
     if (title) {
-      await renameCosmoConversation(id, title);
+      await renameAIChatConversation(id, title);
       setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, title } : c)));
     }
     setRenamingConvId(null);
@@ -171,7 +171,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
     const filtered = q ? conversations.filter((c) => c.title.toLowerCase().includes(q)) : conversations;
     const today = new Date().toDateString();
     const yesterday = new Date(Date.now() - 86400000).toDateString();
-    const groups: { label: string; items: CosmoConversation[] }[] = [
+    const groups: { label: string; items: AIChatConversation[] }[] = [
       { label: isAr ? 'اليوم' : 'Today', items: [] },
       { label: isAr ? 'أمس' : 'Yesterday', items: [] },
       { label: isAr ? 'أقدم' : 'Older', items: [] },
@@ -422,7 +422,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
     let conversationId = activeConversationId;
     if (userId && !conversationId) {
       const title = (currentText || (isAr ? 'محادثة بالصورة' : 'Image conversation')).slice(0, 60);
-      const created = await createCosmoConversation(userId, title);
+      const created = await createAIChatConversation(userId, title);
       if (created) {
         conversationId = created.id;
         setActiveConversationId(created.id);
@@ -431,7 +431,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
     }
 
     if (userId) {
-      saveCosmoMessage(userId, 'user', currentText, !!currentImg, conversationId || undefined).catch(() => {});
+      saveAIChatMessage(userId, 'user', currentText, !!currentImg, conversationId || undefined).catch(() => {});
     }
 
     try {
@@ -441,11 +441,11 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
         .map(m => ({ role: m.role, text: m.text }));
 
       const systemPrompt = isAr
-        ? `أنت كوزمو (Cosmo AI)، مساعد ذكاء اصطناعي أكاديمي متعدد الوسائط للطلاب والمعلمين. تتكلم العربية بطلاقة وبشكل ودي واحترافي. يمكنك تحليل الصور والمسائل وشرح المفاهيم العلمية والرياضية.`
-        : `You are Cosmo (Cosmo AI), a multimodal AI academic assistant for students and teachers. You speak fluent English in a friendly and professional manner. You can analyze images, solve problems, and explain scientific and mathematical concepts.`;
+        ? `أنت مساعد QuizSpace الذكي، مساعد ذكاء اصطناعي أكاديمي متعدد الوسائط للطلاب والمعلمين. تتكلم العربية بطلاقة وبشكل ودي واحترافي. يمكنك تحليل الصور والمسائل وشرح المفاهيم العلمية والرياضية.`
+        : `You are QuizSpace AI, a multimodal AI academic assistant for students and teachers. You speak fluent English in a friendly and professional manner. You can analyze images, solve problems, and explain scientific and mathematical concepts.`;
 
       const historyParts = recentHistory.map(m => ({
-        role: m.role === 'cosmo' ? 'model' : 'user',
+        role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.text }]
       }));
 
@@ -460,7 +460,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
       const promptText = currentText || (isAr ? 'حلل الصورة المرفقة.' : 'Analyze the attached image.');
 
       // Cosmo runs on OpenRouter for all messages (text + images via multimodal support).
-      const cosmoMsgId = 'msg-' + (Date.now() + 1);
+      const aiMsgId = 'msg-' + (Date.now() + 1);
       let streamStarted = false;
       const { text: replyText } = await askAIStream(
         promptText,
@@ -470,13 +470,13 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
             streamStarted = true;
             setIsAnalyzing(false); // hide "thinking..." the moment real tokens start
             setMessages((prev) => [...prev, {
-              id: cosmoMsgId,
-              role: 'cosmo',
+              id: aiMsgId,
+              role: 'assistant',
               text: fullSoFar,
               timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
             }]);
           } else {
-            setMessages((prev) => prev.map((m) => (m.id === cosmoMsgId ? { ...m, text: fullSoFar } : m)));
+            setMessages((prev) => prev.map((m) => (m.id === aiMsgId ? { ...m, text: fullSoFar } : m)));
           }
         },
       );
@@ -486,15 +486,15 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
       // something instead of silently doing nothing.
       if (!streamStarted) {
         setMessages((prev) => [...prev, {
-          id: cosmoMsgId,
-          role: 'cosmo',
+          id: aiMsgId,
+          role: 'assistant',
           text: replyText || (isAr ? 'لم يصل رد، حاول مرة أخرى.' : 'No response received, please try again.'),
           timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
         }]);
       }
 
       if (userId) {
-        saveCosmoMessage(userId, 'cosmo', replyText, false, conversationId || undefined).catch(() => {});
+        saveAIChatMessage(userId, 'cosmo', replyText, false, conversationId || undefined).catch(() => {});
       }
     } catch (err: any) {
       console.error('Error fetching cosmo reply:', err);
@@ -507,7 +507,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
 
       const errMessage: Message = {
         id: 'msg-err-' + Date.now(),
-        role: 'cosmo',
+        role: 'assistant',
         text: errMsgText,
         timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
       };
@@ -519,22 +519,22 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
 
   // Regenerate: re-send the user message that led to this reply, and
   // replace the reply in place instead of appending a new one.
-  const handleRegenerate = async (cosmoMsgIdx: number) => {
-    const cosmoMsg = messages[cosmoMsgIdx];
+  const handleRegenerate = async (aiMsgIdx: number) => {
+    const cosmoMsg = messages[aiMsgIdx];
     if (!cosmoMsg || cosmoMsg.role !== 'cosmo') return;
-    const userMsg = messages.slice(0, cosmoMsgIdx).reverse().find((m) => m.role === 'user');
+    const userMsg = messages.slice(0, aiMsgIdx).reverse().find((m) => m.role === 'user');
     if (!userMsg) return;
 
     setIsAnalyzing(true);
     try {
       const recentHistory = messages
-        .slice(0, cosmoMsgIdx - 1)
+        .slice(0, aiMsgIdx - 1)
         .slice(-5)
-        .map((m) => ({ role: m.role === 'cosmo' ? 'model' as const : 'user' as const, text: m.text }));
+        .map((m) => ({ role: m.role === 'assistant' ? 'model' as const : 'user' as const, text: m.text }));
 
       const systemPrompt = isAr
-        ? `أنت كوزمو (Cosmo AI)، مساعد ذكاء اصطناعي أكاديمي متعدد الوسائط للطلاب والمعلمين. تتكلم العربية بطلاقة وبشكل ودي واحترافي. يمكنك تحليل الصور والمسائل وشرح المفاهيم العلمية والرياضية.`
-        : `You are Cosmo (Cosmo AI), a multimodal AI academic assistant for students and teachers. You speak fluent English in a friendly and professional manner. You can analyze images, solve problems, and explain scientific and mathematical concepts.`;
+        ? `أنت مساعد QuizSpace الذكي، مساعد ذكاء اصطناعي أكاديمي متعدد الوسائط للطلاب والمعلمين. تتكلم العربية بطلاقة وبشكل ودي واحترافي. يمكنك تحليل الصور والمسائل وشرح المفاهيم العلمية والرياضية.`
+        : `You are QuizSpace AI, a multimodal AI academic assistant for students and teachers. You speak fluent English in a friendly and professional manner. You can analyze images, solve problems, and explain scientific and mathematical concepts.`;
 
       let image: { data: string; mimeType: string } | undefined;
       if (userMsg.image) {
@@ -548,13 +548,13 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
         promptText,
         { systemInstruction: systemPrompt, history: recentHistory, ...(image ? { image } : {}) },
         (_delta, fullSoFar) => {
-          setMessages((prev) => prev.map((m, i) => (i === cosmoMsgIdx ? { ...m, text: fullSoFar } : m)));
+          setMessages((prev) => prev.map((m, i) => (i === aiMsgIdx ? { ...m, text: fullSoFar } : m)));
         },
       );
 
-      setMessages((prev) => prev.map((m, i) => (i === cosmoMsgIdx ? { ...m, text: replyText, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) } : m)));
+      setMessages((prev) => prev.map((m, i) => (i === aiMsgIdx ? { ...m, text: replyText, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) } : m)));
       if (userId) {
-        saveCosmoMessage(userId, 'cosmo', replyText, false, activeConversationId || undefined).catch(() => {});
+        saveAIChatMessage(userId, 'cosmo', replyText, false, activeConversationId || undefined).catch(() => {});
       }
     } catch (err) {
       console.error('Error regenerating cosmo reply:', err);
@@ -734,7 +734,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
                 <div className="absolute inset-[-6px] rounded-full opacity-60 bg-gradient-to-tr from-[#7c3aed]/40 to-[#ec4899]/40 blur-md" />
                 <div className="w-full h-full rounded-2xl p-[2px] bg-gradient-to-tr from-[#7c3aed] to-[#ec4899] shadow-lg relative z-10">
                   <div className="w-full h-full bg-[#0b0f19] rounded-xl flex items-center justify-center">
-                    <ThreeDIcon name="cosmobot" className="w-full h-full" />
+                    <ThreeDIcon name="bot" className="w-full h-full" />
                   </div>
                 </div>
               </div>
@@ -750,7 +750,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
                   </span>
                 </div>
                 <h3 className="font-display font-black text-lg text-white">
-                  {isAr ? 'معلومات المستشار كوزمو 🤖💎' : 'Cosmo AI Information 🤖💎'}
+                  {isAr ? 'معلومات المستشار كوزمو 🤖💎' : 'QuizSpace AI Information 🤖💎'}
                 </h3>
               </div>
 
@@ -823,7 +823,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
             <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-sans font-bold text-xs sm:text-sm text-slate-800 dark:text-white">
-                  {isAr ? 'المساعد الذكي كوزمو' : 'Cosmo Assistant'}
+                  {isAr ? 'المساعد الذكي كوزمو' : 'AI Assistant'}
                 </h3>
               </div>
               <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold flex items-center gap-1 mt-0.5">
@@ -841,7 +841,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
                 if (confirm(isAr ? 'هل تود بالتأكيد تصفير محادثة كوزمو والبدء من جديد؟' : 'Are you sure you want to clear your conversation history?')) {
                   setMessages([welcomeMessage()]);
                   if (userId) {
-                    clearCosmoHistory(userId).catch(() => {});
+                    clearAIChatHistory(userId).catch(() => {});
                   }
                 }
               }}
@@ -907,7 +907,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
                   { icon: '🖼️', label: isAr ? 'ارفع صورة' : 'Upload image', action: 'image' as const },
                   { icon: '🎓', label: isAr ? 'أنشئ اختبار' : 'Create a quiz', action: 'prompt' as const, prompt: isAr ? 'أنشئ لي 5 أسئلة اختيار من متعدد عن: ' : 'Create 5 multiple-choice questions about: ' },
                   { icon: '💡', label: isAr ? 'اشرح لي درس' : 'Explain a lesson', action: 'prompt' as const, prompt: isAr ? 'اشرح لي بطريقة مبسطة: ' : 'Explain simply: ' },
-                  { icon: '📝', label: isAr ? 'اسأل كوزمو' : 'Ask Cosmo anything', action: 'prompt' as const, prompt: '' },
+                  { icon: '📝', label: isAr ? 'اسأل مساعد الذكاء الاصطناعي' : 'Ask AI Assistant anything', action: 'prompt' as const, prompt: '' },
                 ].map((item) => (
                   <button
                     key={item.label}
@@ -1129,7 +1129,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
                   handleSendMessage();
                 }
               }}
-              placeholder={isAr ? 'اسأل كوزمو أي سؤال، أو اسحب الصورة هنا للبدء... 👋🌌' : 'Ask Cosmo any academic core question, or drop your image... 👋🌌'}
+              placeholder={isAr ? 'اسأل مساعد الذكاء الاصطناعي أي سؤال، أو اسحب الصورة هنا للبدء... 👋🌌' : 'Ask AI Assistant any academic core question, or drop your image... 👋🌌'}
               className="flex-1 resize-none bg-transparent outline-none text-sm py-2 max-h-40 leading-relaxed text-slate-800 dark:text-slate-100 placeholder-slate-400"
               disabled={isAnalyzing}
               style={{ textAlign: isAr ? 'right' : 'left' }}
@@ -1144,7 +1144,7 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
             </button>
           </div>
           <p className="text-center text-[10px] text-slate-400 mt-2">
-            {isAr ? 'قد يقوم كوزمو بارتكاب أخطاء أحياناً. يرجى التحقق من المعلومات المهمة.' : 'Cosmo can make mistakes. Verify important info.'}
+            {isAr ? 'قد يقوم الذكاء الاصطناعي قد يرتكب أخطاء أحياناً. يرجى التحقق من المعلومات المهمة.' : 'AI can make mistakes. Verify important info.'}
           </p>
         </form>
 
@@ -1159,8 +1159,8 @@ export default function CosmoChatbot({ lang, isPremium, planName, userId, onUpgr
           </h4>
           <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
             {isAr
-              ? 'مساعد كوزمو (Cosmo AI) يستند لعمليات كوانتية متقدمة وهو مخصص لشركاء الباقة الماسية الفخمة. قم بالترقية الآن واستمتع بقارئ ومحلل الصورة الاستثنائي!'
-              : 'Cosmo AI chatbot uses quantum reasoning models which operate exclusively for Diamond tier members. Upgrade now to get full image comprehension support!'}
+              ? 'مساعد مساعد QuizSpace الذكي يستند لعمليات كوانتية متقدمة وهو مخصص لشركاء الباقة الماسية الفخمة. قم بالترقية الآن واستمتع بقارئ ومحلل الصورة الاستثنائي!'
+              : 'QuizSpace AI chatbot uses quantum reasoning models which operate exclusively for Diamond tier members. Upgrade now to get full image comprehension support!'}
           </p>
           <div className="flex justify-center gap-3">
             {onUpgradeClick && (

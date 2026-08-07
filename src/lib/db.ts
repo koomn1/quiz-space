@@ -538,14 +538,14 @@ export interface CosmoMessageRow {
   createdAt: string;
 }
 
-export interface CosmoConversation {
+export interface AIChatConversation {
   id: string;
   title: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export async function getCosmoConversations(userId: string): Promise<CosmoConversation[]> {
+export async function getAIChatConversations(userId: string): Promise<AIChatConversation[]> {
   if (!userId || !isSupabaseConfigured) return [];
   const { data, error } = await supabase
     .from('cosmo_conversations')
@@ -564,7 +564,7 @@ export async function getCosmoConversations(userId: string): Promise<CosmoConver
   }));
 }
 
-export async function createCosmoConversation(userId: string, title?: string): Promise<CosmoConversation | null> {
+export async function createAIChatConversation(userId: string, title?: string): Promise<AIChatConversation | null> {
   if (!userId || !isSupabaseConfigured) return null;
   const id = 'conv-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const { data, error } = await supabase
@@ -579,19 +579,19 @@ export async function createCosmoConversation(userId: string, title?: string): P
   return { id: data.id, title: data.title, createdAt: data.created_at, updatedAt: data.updated_at };
 }
 
-export async function renameCosmoConversation(conversationId: string, title: string): Promise<void> {
+export async function renameAIChatConversation(conversationId: string, title: string): Promise<void> {
   if (!isSupabaseConfigured) return;
   const { error } = await supabase.from('cosmo_conversations').update({ title }).eq('id', conversationId);
   if (error) console.error('Error renaming Cosmo conversation:', error.message);
 }
 
-export async function deleteCosmoConversation(conversationId: string): Promise<void> {
+export async function deleteAIChatConversation(conversationId: string): Promise<void> {
   if (!isSupabaseConfigured) return;
   const { error } = await supabase.from('cosmo_conversations').delete().eq('id', conversationId);
   if (error) console.error('Error deleting Cosmo conversation:', error.message);
 }
 
-export async function getCosmoHistory(userId: string, conversationId?: string, limit = 200): Promise<CosmoMessageRow[]> {
+export async function getAIChatHistory(userId: string, conversationId?: string, limit = 200): Promise<CosmoMessageRow[]> {
   if (!userId || !isSupabaseConfigured) return [];
   let query = supabase
     .from('cosmo_messages')
@@ -612,7 +612,7 @@ export async function getCosmoHistory(userId: string, conversationId?: string, l
   }));
 }
 
-export async function saveCosmoMessage(userId: string, role: 'user' | 'cosmo', text: string, hadImage = false, conversationId?: string): Promise<void> {
+export async function saveAIChatMessage(userId: string, role: 'user' | 'cosmo', text: string, hadImage = false, conversationId?: string): Promise<void> {
   if (!userId || !isSupabaseConfigured) return;
   const { error } = await supabase.from('cosmo_messages').insert({
     user_id: userId,
@@ -626,7 +626,7 @@ export async function saveCosmoMessage(userId: string, role: 'user' | 'cosmo', t
   }
 }
 
-export async function clearCosmoHistory(userId: string): Promise<void> {
+export async function clearAIChatHistory(userId: string): Promise<void> {
   if (!userId || !isSupabaseConfigured) return;
   const { error } = await supabase.from('cosmo_messages').delete().eq('user_id', userId);
   if (error) {

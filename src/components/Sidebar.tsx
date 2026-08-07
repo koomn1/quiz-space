@@ -7,7 +7,7 @@ import { translations } from '../lib/i18n';
 import { AnimatedSidebarIcon } from './AnimatedSidebarIcon';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag, BadgeTier, NameColorKey, BadgeColorKey } from './PremiumNameTag';
-import CosmoOrb from './CosmoOrb';
+import AIOrb from './AIOrb';
 
 interface SidebarProps {
   currentTab: string;
@@ -67,7 +67,7 @@ export default function Sidebar({
     { id: 'my-quizzes', label: isAr ? 'اختباراتي' : 'My Quizzes' },
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms' },
     ...(activePlanId !== 'free' 
-      ? [{ id: 'cosmobot', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant', isPremiumOnly: true }] 
+      ? [{ id: 'aichat', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant', isPremiumOnly: true }] 
       : [{ id: 'support', label: isAr ? 'الدعم الفني' : 'Support', isLink: true, href: 'https://wa.me/201018995002' }]),
     { id: 'community', label: isAr ? 'المجتمع' : 'Community' },
     { id: 'billing', label: isAr ? 'باقات الاشتراك' : 'Subscription Plans' },
@@ -98,8 +98,8 @@ export default function Sidebar({
         return <BookOpen size={size} className={colorClass} />;
       case 'classrooms':
         return <GraduationCap size={size} className={colorClass} />;
-      case 'cosmobot':
-        return <CosmoOrb size={size} />;
+      case 'aichat':
+        return <Bot size={size} className={colorClass} />;
       case 'support':
         return <MessageCircle size={size} className={colorClass} />;
       case 'community':
@@ -243,7 +243,7 @@ export default function Sidebar({
               key={item.id}
               onClick={() => {
                 if (isLocked) {
-                  alert(isAr ? 'المساعد كوزمو متاح فقط للباقات الفضية فأعلى. يرجى الترقية.' : 'Cosmo Assistant is only available for Silver plans and above. Please upgrade.');
+                  alert(isAr ? 'هذه الميزة متاحة فقط للباقات الفضية فأعلى. يرجى الترقية.' : 'This feature is only available for Silver plans and above. Please upgrade.');
                   setTab('billing');
                 } else {
                   setTab(item.id);

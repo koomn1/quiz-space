@@ -40,7 +40,7 @@ import NetworkFailedModal from './components/NetworkFailedModal';
 import { PremiumCursor } from './components/PremiumCursor';
 import { PostRegisterOnboardingModal } from './components/PostRegisterOnboardingModal';
 import DailyQuizCard from './components/DailyQuizCard';
-const CosmoChatbot = React.lazy(() => import('./pages/CosmoChatbot'));
+const AIChat = React.lazy(() => import('./pages/AIChat'));
 import SplashScreen from './components/SplashScreen';
 import { ToastHost } from './components/Toast';
 const Classrooms = React.lazy(() => import('./components/Classrooms'));
@@ -1551,13 +1551,13 @@ export default function App() {
                 />
               )}
 
-              {activeTab === 'cosmobot' && (
-                <CosmoChatbot 
+              {activeTab === 'aichat' && (
+                <AIChat 
                   lang={lang} 
                   isPremium={isUserPremium} 
                   planName={userPlanName} 
                   userId={userId}
-                  onUpgradeClick={() => setActiveTab('profile')} 
+                  onUpgradeClick={() => setActiveTab('billing')} 
                   onOpenAuthModal={(mode) => {
                     setAuthModalMode(mode);
                     setIsAuthModalOpen(true);
@@ -1633,6 +1633,12 @@ export default function App() {
                   currentUserEmail={userEmail}
                   userPlanName={getUserRoleAndPlan(userStats).plan}
                 />
+              )}
+
+              {activeTab === 'support' && (
+                <React.Suspense fallback={<CosmicLoader />}>
+                  <Support lang={lang} />
+                </React.Suspense>
               )}
 
               {activeTab === 'admin' && (

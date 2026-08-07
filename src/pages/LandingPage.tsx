@@ -80,6 +80,7 @@ const SPARK_TOPICS_AR = [
 ];
 
 import { PremiumLoader } from '../components/PremiumLoader';
+import ContactFooter from '../components/ContactFooter';
 
 export default function LandingPage({
   quizzes,
@@ -493,6 +494,7 @@ export default function LandingPage({
           </div>
         )}
 
+      <ContactFooter lang={lang} />
     </div>
   );
 }
