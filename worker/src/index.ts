@@ -22,12 +22,12 @@ type Provider = 'openrouter' | 'openai' | 'groq' | 'deepseek';
 // endpoints (including the ones previously used here) were delisted mid-2026.
 // These are confirmed live on the free tier as of Aug 2026; double-check at
 // https://openrouter.ai/models?max_price=0 if generation starts failing again.
-const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free';
+const OPENROUTER_TEXT_MODEL = 'openai/gpt-oss-20b:free';
 const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
 // Free models on OpenRouter get rate-limited hard during peak hours and can
 // disappear without warning — if the primary model fails, try these next
 // instead of just erroring out.
-const OPENROUTER_TEXT_FALLBACKS = ['nvidia/nemotron-3-ultra-550b-a55b:free', 'openai/gpt-oss-20b:free', 'meta-llama/llama-3.3-70b-instruct:free'];
+const OPENROUTER_TEXT_FALLBACKS = ['openai/gpt-oss-20b:free', 'nvidia/nemotron-3-super-120b-a12b:free', 'meta-llama/llama-3.3-70b-instruct:free'];
 const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'google/gemma-4-26b-a4b-it:free'];
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
