@@ -108,8 +108,8 @@ export default function LandingPage({
 
   const isAr = lang === 'ar';
   
-  // Spark topics feature
-  const currentSparkTopics = isAr ? SPARK_TOPICS_AR : SPARK_TOPICS_EN;
+  // Cosmo AI topics feature
+  const currentCosmoAITopics = isAr ? SPARK_TOPICS_AR : SPARK_TOPICS_EN;
 
   const [profilesMap, setProfilesMap] = React.useState<Record<string, any>>({});
 
@@ -216,7 +216,7 @@ export default function LandingPage({
     <div ref={containerRef} className="space-y-12 pb-16" dir={isAr ? 'rtl' : 'ltr'}>
       
       {/* Massive GSAP Hero Section */}
-      <HeroAnimation t={t} isAr={isAr} onCreateQuizTab={onCreateQuizTab} sparkTopics={currentSparkTopics} />
+      <HeroAnimation t={t} isAr={isAr} onCreateQuizTab={onCreateQuizTab} cosmoAITopics={currentCosmoAITopics} />
 
       {/* Statistics Banner / Interactive counters */}
       <div className="gsap-stats-container grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-12 relative z-10">

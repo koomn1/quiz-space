@@ -292,7 +292,7 @@ export function ShootingStarsBg({ mode = 'cosmic' }: ShootingStarsBgProps) {
               {/* Fast core cluster: Counter-Clockwise Slow */}
               <div className="absolute top-[30%] left-[45%] w-36 h-36 rounded-full bg-violet-600/8 blur-2xl spin-ccw-slow" />
 
-              {/* Twinkling galaxy sparks */}
+              {/* Twinkling galaxy cosmo ais */}
               <div className="absolute top-10 left-[20%] w-1.5 h-1.5 bg-purple-200 rounded-full animate-pulse" />
               <div className="absolute bottom-12 right-[40%] w-1 h-1 bg-pink-200 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
             </div>

@@ -279,7 +279,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                     {isAr ? 'قم بربط حساب Google Drive' : 'Connect Google Drive Account'}
                   </h5>
                   <p className="text-xs text-slate-400">
-                    {isAr ? 'يتيح لك سبارك الوصول الآمن لمستنداتك ومناهجك بصيغ PDF والصور لبدء تحويلها فوراً لمسابقات ذكية.' : 'Authorizes Quiz Space to securely pull your PDF books, exam sheets, and study materials.'}
+                    {isAr ? 'يتيح لك كوزمو الوصول الآمن لمستنداتك ومناهجك بصيغ PDF والصور لبدء تحويلها فوراً لمسابقات ذكية.' : 'Authorizes Quiz Space to securely pull your PDF books, exam sheets, and study materials.'}
                   </p>
                 </div>
 

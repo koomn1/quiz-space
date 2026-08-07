@@ -64,7 +64,7 @@ export function MyQuizzes({
               {isAr ? 'لم تقم بإنشاء أي اختبار بعد' : 'You haven\'t created any quizzes yet'}
             </h3>
             <p className="text-xs text-slate-400 font-medium max-w-xs leading-relaxed">
-              {isAr ? 'ابدأ الآن بتأليف اختبار تفاعلي باستخدام سبارك لتبدأ رحلتك العلمية!' : 'Author a smart quiz or prompt the AI companion right now to start your cosmic journey!'}
+              {isAr ? 'ابدأ الآن بتأليف اختبار تفاعلي باستخدام كوزمو لتبدأ رحلتك العلمية!' : 'Author a smart quiz or prompt the AI companion right now to start your cosmic journey!'}
             </p>
           </div>
         </div>

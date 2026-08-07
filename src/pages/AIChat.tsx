@@ -11,8 +11,8 @@ import { Image as ImageIcon, Send, Trash2, Sparkles, X, Copy, Check, Search, Mes
    dark #212121 background, #2f2f2f cards, emerald #10a37f accent.
    ═══════════════════════════════════════════════════════════ */
 
-const ASSISTANT_NAME_AR = 'سبارك';
-const ASSISTANT_NAME_EN = 'Spark';
+const ASSISTANT_NAME_AR = 'كوزمو AI';
+const ASSISTANT_NAME_EN = 'Cosmo AI';
 const ACCENT = '#10a37f';
 const BG = '#212121';
 const CARD = '#2f2f2f';
@@ -218,7 +218,7 @@ function ThinkingRow({ isAr }: { isAr: boolean }) {
     gsap.from(rowRef.current, { y: 18, opacity: 0, duration: 0.4, ease: 'power3.out' });
 
     if (!labelRef.current) return;
-    const text = isAr ? 'سبارك بيفكر...' : 'Spark is thinking...';
+    const text = isAr ? 'كوزمو AI بيفكر...' : 'Cosmo AI is thinking...';
     labelRef.current.textContent = '';
     let i = 0;
     const id = setInterval(() => {
@@ -789,7 +789,7 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
               <Sparkles className="w-7 h-7 text-white" />
             </div>
             <h3 className="text-lg font-semibold" style={{ color: FG }}>
-              {isAr ? 'سجل دخولك للتحدث مع سبارك' : 'Sign in to chat with Spark'}
+              {isAr ? 'سجل دخولك للتحدث مع كوزمو AI' : 'Sign in to chat with Cosmo AI'}
             </h3>
             <p className="text-sm" style={{ color: MUTED }}>
               {isAr ? 'أنشئ حسابك أو سجل دخولك لتبدأ محادثاتك الذكية.' : 'Create an account or sign in to start smart conversations.'}

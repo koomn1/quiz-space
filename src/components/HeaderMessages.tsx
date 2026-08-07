@@ -42,8 +42,8 @@ export default function HeaderMessages({ userId, userName, lang }: HeaderMessage
   // Default admin recipient if user lists empty
   const defaultAdmin = {
     uid: COSMO_ADMIN_UID,
-    name: isAr ? 'المساعد سبارك' : 'Assistant AI',
-    role: isAr ? 'المساعد الذكي' : 'Spark Assistant'
+    name: isAr ? 'المساعد كوزمو' : 'Assistant AI',
+    role: isAr ? 'المساعد الذكي' : 'Cosmo Assistant'
   };
 
   // Subscribe to real-time messages where current user is sender or receiver
@@ -303,8 +303,8 @@ export default function HeaderMessages({ userId, userName, lang }: HeaderMessage
                           <span className="text-2xl animate-bounce">🎓✨</span>
                           <p className="text-xs text-slate-500 dark:text-slate-400 font-bold max-w-[80%] leading-relaxed">
                             {isAr 
-                              ? 'اكتب رسالتك بالأسفل لطلب الدعم والمساعدة والتحدث مع المساعد الذكي سبارك!' 
-                              : 'Type your message below for promo codes or real-time support from AI Spark Assistant!'
+                              ? 'اكتب رسالتك بالأسفل لطلب الدعم والمساعدة والتحدث مع المساعد الذكي كوزمو!' 
+                              : 'Type your message below for promo codes or real-time support from AI Cosmo Assistant!'
                             }
                           </p>
                         </div>
@@ -379,7 +379,7 @@ export default function HeaderMessages({ userId, userName, lang }: HeaderMessage
                           </h4>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold leading-relaxed">
                             {isAr 
-                              ? 'تواصل مع المساعد الذكي سبارك لطلب الدعم الفني أو الاستفسارات الأكاديمية!' 
+                              ? 'تواصل مع المساعد الذكي كوزمو لطلب الدعم الفني أو الاستفسارات الأكاديمية!' 
                               : 'Contact AI AI directly for promo codes or academic inquiries!'
                             }
                           </p>
@@ -389,7 +389,7 @@ export default function HeaderMessages({ userId, userName, lang }: HeaderMessage
                           className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-[11px] font-black transition-all hover:scale-103 cursor-pointer shadow-md shadow-primary/20 flex items-center gap-1.5 select-none"
                         >
                           <Send className="w-3.5 h-3.5 rotate-0 rtl:rotate-180" />
-                          <span>{isAr ? 'مراسلة سبارك فوراً 💬' : 'Contact AI 💬'}</span>
+                          <span>{isAr ? 'مراسلة كوزمو فوراً 💬' : 'Contact AI 💬'}</span>
                         </button>
                       </div>
                     )}

@@ -12,13 +12,13 @@ interface HeroAnimationProps {
   t: any;
   isAr: boolean;
   onCreateQuizTab: () => void;
-  sparkTopics?: string[];
+  cosmoAITopics?: string[];
 }
 
-export function HeroAnimation({ t, isAr, onCreateQuizTab, sparkTopics }: HeroAnimationProps) {
+export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroAnimationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef<HTMLHeadingElement>(null);
-  const sparkTextRef = useRef<HTMLParagraphElement>(null);
+  const cosmoAITextRef = useRef<HTMLParagraphElement>(null);
   const btnsRef = useRef<HTMLDivElement>(null);
   const orbsRef = useRef<(HTMLDivElement | null)[]>([]);
   const iconsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -29,7 +29,7 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, sparkTopics }: HeroAni
     ? ["تطوير المهارات العلمية", "استكشاف الكون العميق", "الذكاء الاصطناعي التوليدي"]
     : ["SKILL DEVELOPMENT", "DEEP UNIVERSE EXPLORATION", "GENERATIVE AI"];
     
-  const topicsToUse = sparkTopics || defaultTopics;
+  const topicsToUse = cosmoAITopics || defaultTopics;
 
   useGSAP(() => {
     // Note: orbs and floating icons used to animate infinitely (gsap.to with
@@ -79,18 +79,18 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, sparkTopics }: HeroAni
     }
 
     // Type/Erase with GSAP TextPlugin
-    if (sparkTextRef.current) {
-      sparkTextRef.current.innerText = '';
+    if (cosmoAITextRef.current) {
+      cosmoAITextRef.current.innerText = '';
       const tl = gsap.timeline({ repeat: -1, delay: 1 });
 
       topicsToUse.forEach((topic) => {
-        tl.to(sparkTextRef.current, {
+        tl.to(cosmoAITextRef.current, {
           text: topic,
           duration: topic.length * 0.1,
           ease: "none",
         })
         .to({}, { duration: 3 })
-        .to(sparkTextRef.current, {
+        .to(cosmoAITextRef.current, {
           text: "",
           duration: topic.length * 0.05,
           ease: "none",
@@ -156,7 +156,7 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, sparkTopics }: HeroAni
           </span>
           <div className="flex items-center">
             <span 
-              ref={sparkTextRef} 
+              ref={cosmoAITextRef} 
               className={`text-2xl md:text-5xl text-[#0ae448] font-black ${isAr ? "" : "tracking-wide"}`}
               style={{ textShadow: '0 0 30px rgba(10,228,72,0.5)' }}
             >

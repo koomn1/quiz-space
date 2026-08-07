@@ -436,7 +436,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                                     try {
                                       await sendDirectMessage(
                                         COSMO_SYSTEM_UID,
-                                        isAr ? 'سبارك 🤖' : 'AI 🤖',
+                                        isAr ? 'كوزمو 🤖' : 'AI 🤖',
                                         user.userId,
                                         user.name || 'Student',
                                         `${promoMessage} ${promoType === 'Promo Code' ? `Code: ${promoCode}` : ''}`
@@ -447,7 +447,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                                   }
                                 }
 
-                                alert(isAr ? `تم إرسال العرض بنجاح وبدأ سبارك بإرسال الرسائل لجميع الـ ${allUsers.length} مستخدمين!` : `Offer sent successfully, AI is messaging all ${allUsers.length} users!`);
+                                alert(isAr ? `تم إرسال العرض بنجاح وبدأ كوزمو بإرسال الرسائل لجميع الـ ${allUsers.length} مستخدمين!` : `Offer sent successfully, AI is messaging all ${allUsers.length} users!`);
                                 setPromoCode('');
                                 setPromoMessage('');
                               } catch (err) {

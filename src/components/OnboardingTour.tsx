@@ -28,7 +28,7 @@ export default function OnboardingTour({
   const steps: Step[] = React.useMemo(() => [
     {
       id: 'welcome',
-      title: 'مرحباً بك في Quiz Space! ✨',
+      title: '! ✨',
       content: 'دعنا نأخذك في جولة تعليمية سريعة ومبسطة للتعرف على المنصة وكيفية استغلال الذكاء الاصطناعي في قياس مستواك وتوليد الأسئلة فوراً!',
       selector: 'body', // Center of screen
       icon: <Sparkles className="w-6 h-6 text-primary" />

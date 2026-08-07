@@ -994,7 +994,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
     {
       id: 'ac1',
       titleAr: 'أول الغيث 💧',
-      titleEn: 'First Spark 💧',
+      titleEn: 'First Cosmo AI 💧',
       descAr: 'قم بإنهاء وحل مسابقة واحدة بالكامل لتسجيل علامتك بقاعدة البيانات.',
       descEn: 'Solve and fully submit your first interactive exam score globally.',
       unlocked: totalSolved >= 1,
@@ -1206,7 +1206,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
                   <span className="drop-shadow-md select-none">{celebrationMedal.icon}</span>
                 </div>
 
-                {/* Sparkling title labels */}
+                {/* Cosmo AIling title labels */}
                 <div className="space-y-1.5">
                   <span 
                     
