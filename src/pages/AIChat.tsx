@@ -374,7 +374,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       if (history.length > 0) {
         setMessages(history.map(m => ({
           id: m.id,
-          role: m.role === 'cosmo' || m.role === 'assistant' ? 'assistant' : 'user',
+          role: m.role === 'cosmo' ? 'assistant' : 'user',
           text: m.text,
           timestamp: new Date(m.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
         })));
@@ -442,9 +442,11 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     let currentConvId = activeConversationId;
     if (!currentConvId && userId) {
       const newConv = await createAIChatConversation(userId, trimmed.slice(0, 30) || (isAr ? 'محادثة جديدة' : 'New Chat'));
-      currentConvId = newConv.id;
-      setActiveConversationId(currentConvId);
-      setConversations(prev => [newConv, ...prev]);
+      if (newConv) {
+        currentConvId = newConv.id;
+        setActiveConversationId(currentConvId);
+        setConversations(prev => [newConv, ...prev]);
+      }
     }
 
     if (userId && currentConvId) {
@@ -458,7 +460,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       const { text: fullText } = await askAIStream(
         trimmed,
         {
-          history: messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text })),
+          history: messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', text: m.text })),
           image: selectedImage ? { data: selectedImage, mimeType: 'image/png' } : undefined,
         },
         (_delta, fullTextSoFar) => {
@@ -520,14 +522,14 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const handleConvRename = async (convId: string) => {
     const value = renameValue.trim();
     if (!value) { setRenamingConvId(null); return; }
-    await renameAIChatConversation(userId!, convId, value);
+    await renameAIChatConversation(convId, value);
     setConversations(prev => prev.map(c => c.id === convId ? { ...c, title: value } : c));
     setRenamingConvId(null);
     setRenameValue('');
   };
 
   const handleConvDelete = async (convId: string) => {
-    await deleteAIChatConversation(userId!, convId);
+    await deleteAIChatConversation(convId);
     setConversations(prev => prev.filter(c => c.id !== convId));
     if (activeConversationId === convId) {
       setActiveConversationId(null);
@@ -559,7 +561,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
   return (
     <div ref={containerRef}
-      className="chat-container fixed inset-0 w-full flex overflow-hidden"
+      className="chat-container relative w-full h-[calc(100vh-150px)] min-h-[520px] flex overflow-hidden rounded-2xl"
       style={{ fontFamily: "'Inter', sans-serif", background: theme.BG, color: theme.FG }}>
 
       {/* ── Sidebar ── */}
@@ -572,7 +574,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
           <div className="flex items-center justify-between px-3 py-3">
             <button onClick={toggleSidebar}
               className="p-2 rounded-lg transition-colors"
-              style={{ ':hover': {} }}
+              style={{}}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
               <PanelLeftClose className="w-5 h-5" style={{ color: theme.MUTED }} />
