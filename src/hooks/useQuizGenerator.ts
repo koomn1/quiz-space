@@ -115,10 +115,18 @@ export function useQuizGenerator() {
       } else if (type === 'file_direct') {
         setProgress({
           current: 0,
-          total: totalQuestions,
+          total: 100,
           stage: 'generating',
-          message: 'جاري تحليل المستند باستخدام محرك الاستخراج الذكي...',
+          message: 'جاري تحليل المستند وتجهيز الـ Chunks...',
         });
+
+        // Fake progress for better UX since worker is monolithic now
+        const progressInterval = setInterval(() => {
+          setProgress(prev => {
+            if (!prev || prev.current >= 90) return prev;
+            return { ...prev, current: prev.current + 2, message: `جاري معالجة البيانات واستخراج الأسئلة (${prev.current}%)...` };
+          });
+        }, 1500);
 
         let base64 = '';
         if (sourceFile) {
@@ -133,7 +141,12 @@ export function useQuizGenerator() {
 
         if (!base64) throw new Error('لم يتم العثور على محتوى المستند.');
 
-        const data = await generateQuizFromFile(base64, mimeType || 'application/pdf', totalQuestions, customInstruction, extractionMode);
+        let data;
+        try {
+          data = await generateQuizFromFile(base64, mimeType || 'application/pdf', totalQuestions, customInstruction, extractionMode);
+        } finally {
+          clearInterval(progressInterval);
+        }
 
         if (data.questions && Array.isArray(data.questions)) {
           if (!finalTitle && data.title) finalTitle = data.title;

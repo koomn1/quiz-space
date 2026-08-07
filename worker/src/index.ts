@@ -268,21 +268,28 @@ ${extraInstruction}`;
               chunks.push(btoa(binary));
             }
 
-            const chunkResults = await Promise.all(chunks.map(async (chunkBase64) => {
-              try {
-                const text = await callOpenRouterWithFallback(env, [{
-                  role: 'user',
-                  content: [
-                    { type: 'text', text: losslessPrompt },
-                    { type: 'file', file: { filename: 'chunk.pdf', file_data: `data:application/pdf;base64,${chunkBase64}` } },
-                  ]
-                }], OPENROUTER_VISION_FALLBACKS, [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }]);
-                return extractJson(text) as any;
-              } catch (e) {
-                console.error("Chunk processing failed:", e);
-                return null;
-              }
-            }));
+            // Process chunks in batches of 2 to avoid timeouts and rate limits
+            const chunkResults: any[] = [];
+            const CONCURRENCY = 2;
+            for (let i = 0; i < chunks.length; i += CONCURRENCY) {
+              const batch = chunks.slice(i, i + CONCURRENCY);
+              const batchResults = await Promise.all(batch.map(async (chunkBase64, idx) => {
+                try {
+                  const text = await callOpenRouterWithFallback(env, [{
+                    role: 'user',
+                    content: [
+                      { type: 'text', text: losslessPrompt },
+                      { type: 'file', file: { filename: `chunk_${i + idx}.pdf`, file_data: `data:application/pdf;base64,${chunkBase64}` } },
+                    ]
+                  }], OPENROUTER_VISION_FALLBACKS, [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }]);
+                  return extractJson(text) as any;
+                } catch (e) {
+                  console.error(`Chunk ${i + idx} failed:`, e);
+                  return { questions: [], error: String(e) };
+                }
+              }));
+              chunkResults.push(...batchResults);
+            }
 
             const finalQuiz: any = {
               title: chunkResults.find(r => r?.title)?.title || "Generated Quiz",

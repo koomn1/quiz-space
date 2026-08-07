@@ -1,5 +1,5 @@
 -- ============================================
--- AI Performance Monitoring Schema
+-- AI Performance Monitoring Schema (Idempotent Fix)
 -- ============================================
 
 CREATE TABLE IF NOT EXISTS ai_performance_logs (
@@ -24,13 +24,23 @@ CREATE INDEX IF NOT EXISTS idx_ai_logs_created_at ON ai_performance_logs(created
 ALTER TABLE ai_performance_logs ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
--- Admins can read all logs
-CREATE POLICY ai_logs_admin_read ON ai_performance_logs 
-    FOR SELECT 
-    USING (EXISTS (SELECT 1 FROM users WHERE uid = auth.uid()::text AND is_admin = true));
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'ai_performance_logs' AND policyname = 'ai_logs_admin_read'
+    ) THEN
+        CREATE POLICY ai_logs_admin_read ON ai_performance_logs 
+            FOR SELECT 
+            USING (EXISTS (SELECT 1 FROM users WHERE uid = auth.uid()::text AND is_admin = true));
+    END IF;
 
--- Workers (using service role or anon key with specific header) might need insert
--- For simplicity in this environment, we allow authenticated users to insert their own logs
-CREATE POLICY ai_logs_insert_own ON ai_performance_logs 
-    FOR INSERT 
-    WITH CHECK (auth.uid()::text = user_id);
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'ai_performance_logs' AND policyname = 'ai_logs_insert_own'
+    ) THEN
+        CREATE POLICY ai_logs_insert_own ON ai_performance_logs 
+            FOR INSERT 
+            WITH CHECK (auth.uid()::text = user_id);
+    END IF;
+END $$;
