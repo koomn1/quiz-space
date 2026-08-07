@@ -15,6 +15,7 @@ import LandingPage from './pages/LandingPage';
 const QuizCreator = React.lazy(() => import('./pages/QuizCreator'));
 import QuizResolver from './components/QuizResolver';
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+const Support = React.lazy(() => import('./pages/Support'));
 import MessageInbox from './components/MessageInbox';
 const MyQuizzes = React.lazy(() => import('./pages/MyQuizzes').then(module => ({ default: module.MyQuizzes })));
 import AdminGuard from './components/AdminGuard';

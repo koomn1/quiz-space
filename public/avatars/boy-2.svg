@@ -1,0 +1,19 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="boy2Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10b981" />
+      <stop offset="1" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="64" fill="url(#boy2Bg)" />
+  <path d="M24 116C24 96 41 84 64 84C87 84 104 96 104 116V128H24V116Z" fill="#065f46" />
+  <rect x="54" y="72" width="20" height="16" fill="#fed7aa" />
+  <circle cx="64" cy="56" r="22" fill="#fed7aa" />
+  <!-- Cap -->
+  <path d="M42 52C42 38 52 34 64 34C76 34 86 38 86 52H42Z" fill="#1e293b" />
+  <path d="M38 52H90V56H38V52Z" fill="#0f172a" />
+  <!-- Smile & eyes -->
+  <circle cx="56" cy="56" r="2.5" fill="#1e293b" />
+  <circle cx="72" cy="56" r="2.5" fill="#1e293b" />
+  <path d="M58 66C58 69 70 69 70 66" stroke="#1e293b" stroke-width="2" stroke-linecap="round" />
+</svg>

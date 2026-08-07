@@ -314,8 +314,12 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
                   }`}
                   style={{ direction: isAr ? 'rtl' : 'ltr' }}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/50 flex items-center justify-center text-xs font-bold uppercase shrink-0 text-slate-200">
-                    {member.name.substring(0, 1)}
+                  <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/50 flex items-center justify-center overflow-hidden shrink-0 text-slate-200">
+                    <img 
+                      src={member.uid === COSMO_ADMIN_UID || member.badgeSymbol === '🤖' ? '/avatars/cosmo.svg' : (member.photoUrl || '/avatars/boy-1.svg')} 
+                      alt={member.name} 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
                   <div className="flex-1 text-right overflow-hidden">
                     <div className="flex items-center gap-1.5 flex-row-reverse justify-end">
@@ -355,8 +359,12 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
               {/* Header */}
               <header className="shrink-0 p-4 border-b border-slate-800/60 bg-slate-950/40 backdrop-blur-md flex items-center justify-between z-10" dir={isAr ? 'rtl' : 'ltr'}>
                 <div className="flex items-center gap-3 text-right">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-xs font-bold text-white uppercase">
-                    {selectedRecipient.name.substring(0, 1)}
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center overflow-hidden text-white">
+                    <img 
+                      src={selectedRecipient.uid === COSMO_ADMIN_UID || selectedRecipient.badgeSymbol === '🤖' ? '/avatars/cosmo.svg' : (selectedRecipient.photoUrl || '/avatars/boy-1.svg')} 
+                      alt={selectedRecipient.name} 
+                      className="w-full h-full object-cover" 
+                    />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">

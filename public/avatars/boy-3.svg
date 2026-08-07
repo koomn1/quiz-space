@@ -1,0 +1,19 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="boy3Bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8b5cf6" />
+      <stop offset="1" stop-color="#6d28d9" />
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="64" fill="url(#boy3Bg)" />
+  <path d="M24 116C24 96 41 84 64 84C87 84 104 96 104 116V128H24V116Z" fill="#312e81" />
+  <rect x="54" y="72" width="20" height="16" fill="#fde68a" />
+  <circle cx="64" cy="56" r="22" fill="#fde68a" />
+  <!-- Hair -->
+  <path d="M42 52C42 40 52 34 64 34C76 34 86 40 86 52H42Z" fill="#78350f" />
+  <!-- Headphones -->
+  <path d="M42 64C42 46 51 40 64 40C77 40 86 46 86 64" fill="none" stroke="#f43f5e" stroke-width="5" stroke-linecap="round" />
+  <rect x="38" y="56" width="8" height="16" rx="4" fill="#e11d48" />
+  <rect x="82" y="56" width="8" height="16" rx="4" fill="#e11d48" />
+  <path d="M58 66C58 68 70 68 70 66" stroke="#78350f" stroke-width="2" stroke-linecap="round" />
+</svg>
