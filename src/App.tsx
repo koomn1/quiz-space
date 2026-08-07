@@ -1502,7 +1502,7 @@ export default function App() {
                       setAuthModalMode(mode);
                       setIsAuthModalOpen(true);
                     }}
-                    userPlan={getUserRoleAndPlan(userStats || { planName: '', isAdmin: false, streak: 0, quizzesSolved: 0, totalAttempts: 0, correctAnswers: 0, wrongAnswers: 0, perfectScores: 0, avgTimePerQuestion: 0, badges: [], lastActiveAt: '', createdAt: '' }).plan}
+                    userPlan={getUserRoleAndPlan(userStats || { userId: '', name: '', createdQuizzes: [], completions: [] }).plan}
                   />
                 )
               )}
