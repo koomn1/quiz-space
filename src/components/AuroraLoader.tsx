@@ -56,7 +56,7 @@ export default function AuroraLoader({ message = 'چاري تحليل البيا
       {/* Interstellar Center Board Frame */}
       <div className="relative z-10 flex flex-col items-center max-w-lg p-8 mx-4 text-center space-y-6">
         
-        {/* Cosmo AIling Core Circle Loader */}
+        {/* Sparking Core Circle Loader */}
         <div className="relative flex items-center justify-center w-24 h-24">
           {/* Outer Rotating Neon Rings */}
           <div className="absolute inset-x-0 inset-y-0 border-2 border-t-emerald-400 border-r-teal-400 border-l-blue-400 border-b-transparent rounded-full animate-spin [animation-duration:1.5s]" />

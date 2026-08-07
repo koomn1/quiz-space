@@ -1206,7 +1206,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
                   <span className="drop-shadow-md select-none">{celebrationMedal.icon}</span>
                 </div>
 
-                {/* Cosmo AIling title labels */}
+                {/* Sparking title labels */}
                 <div className="space-y-1.5">
                   <span 
                     

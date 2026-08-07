@@ -444,7 +444,7 @@ export default function ThreeDIcon({ name, className = "w-5 h-5", size }: ThreeD
           <path d="M 60,350 L 440,350 L 410,130 L 320,240 L 250,110 L 180,240 L 90,130 Z" fill="url(#goldGrad3D)" stroke="#ffffff" strokeWidth="4" />
           {/* Volumetric red velvet liner cushion bottom */}
           <rect x="80" y="340" width="340" height="40" rx="15" fill="url(#pinkGrad3D)" />
-          {/* Embedded cosmo ailing jewels */}
+          {/* Embedded stellar jewels */}
           <circle cx="130" cy="360" r="10" fill="#3b82f6" />
           <circle cx="250" cy="360" r="10" fill="#22c55e" />
           <circle cx="370" cy="360" r="10" fill="#ec4899" />
@@ -680,14 +680,14 @@ export default function ThreeDIcon({ name, className = "w-5 h-5", size }: ThreeD
       break;
 
     case 'cloud':
-      // Volumetric 3D glowing Cloud with soft stellar cosmo ais (as shown in images)
+      // Volumetric 3D glowing Cloud with soft stellar stars (as shown in images)
       iconContent = (
         <g filter="url(#softShadow3D)">
           <path d="M 180,360 C 130,360 90,320 90,270 C 90,225 125,185 170,180 C 190,120 250,80 310,80 C 375,80 425,130 430,195 C 470,205 500,240 500,285 C 500,335 460,375 410,375 Z" fill="url(#blueGrad3D)" opacity="0.30" transform="translate(6, 6)" />
           <path d="M 180,360 C 130,360 90,320 90,270 C 90,225 125,185 170,180 C 190,120 250,80 310,80 C 375,80 425,130 430,195 C 470,205 500,240 500,285 C 500,335 460,375 410,375 Z" fill="url(#blueGrad3D)" stroke="#ffffff" strokeWidth="3" />
           <path d="M 180,350 C 140,350 110,310 110,270" fill="none" stroke="url(#glassGrad3D)" strokeWidth="12" strokeLinecap="round" />
           
-          {/* Floating tiny cosmo ais */}
+          {/* Floating tiny stars */}
           <polygon points="120,130 123,140 133,143 123,146 120,156 117,146 107,143 117,140" fill="url(#goldGrad3D)" />
           <polygon points="390,290 392,298 402,300 392,302 390,310 388,302 378,300 388,298" fill="url(#goldGrad3D)" />
         </g>
@@ -806,14 +806,14 @@ export default function ThreeDIcon({ name, className = "w-5 h-5", size }: ThreeD
       break;
 
     default:
-      // Fallback elegant 3D star cosmo aile (as shown in photos)
+      // Fallback elegant 3D star star (as shown in photos)
       iconContent = (
         <g filter="url(#intenseShadow3D)">
           <path 
             d="M 250,50 C 250,150 350,250 450,250 C 350,250 250,350 250,450 C 250,350 150,250 50,250 C 150,250 250,150 250,50 Z" 
             fill="url(#goldGrad3D)" 
           />
-          {/* Inner cosmo ailing gloss core */}
+          {/* Inner stellar gloss core */}
           <path 
             d="M 250,120 C 250,200 320,250 400,250 C 320,250 250,300 250,380 C 250,300 180,250 100,250 C 180,250 250,200 250,120 Z" 
             fill="url(#glassGrad3D)" 

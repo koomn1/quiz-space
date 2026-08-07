@@ -78,7 +78,7 @@ const getBadgesForPlan = (planId: string | undefined, isPremium: boolean): { ico
   const diamondBadges = [
     { icon: '💎', nameAr: 'الماس الكوني الثمين', nameEn: 'Cosmic Diamond', color: 'bg-pink-500 shadow-pink-500/20' },
     { icon: '🪐', nameAr: 'حكيم الكواكب والمدارات', nameEn: 'Planet Master', color: 'bg-violet-600 shadow-violet-600/20' },
-    { icon: '✨', nameAr: 'شرارة السديم المضيئة', nameEn: 'Nebula Cosmo AIle', color: 'bg-emerald-500 shadow-emerald-500/20' },
+    { icon: '✨', nameAr: 'شرارة السديم المضيئة', nameEn: 'Nebula Sparkle', color: 'bg-emerald-500 shadow-emerald-500/20' },
     { icon: '⚡', nameAr: 'صاعقة البرق الفضائية', nameEn: 'Superbolt', color: 'bg-purple-600 shadow-purple-600/20' },
     ...goldBadges
   ];
