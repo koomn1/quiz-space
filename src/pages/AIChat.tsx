@@ -12,7 +12,7 @@ import CosmoOrb from '../components/CosmoOrb';
    dark #212121 background, #2f2f2f cards, emerald #10a37f accent.
    ═══════════════════════════════════════════════════════════ */
 
-const ASSISTANT_NAME_AR = 'كوزمو AI';
+const ASSISTANT_NAME_AR = 'Cosmo AI';
 const ASSISTANT_NAME_EN = 'Cosmo AI';
 const ACCENT = '#10a37f';
 
