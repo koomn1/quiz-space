@@ -322,10 +322,10 @@ export default function QuizDetailedReport({
                         <Sparkles className="w-3 h-3 text-purple-600 dark:text-purple-400 shrink-0" />
                         <span>
                           {aiLoading[qId] 
-                            ? (isAr ? 'جاري استدعاء كوزمو...' : 'Summoning AI AI...') 
+                            ? (isAr ? 'جاري استدعاء سبارك...' : 'Summoning AI AI...') 
                             : aiExplanations[qId] 
                             ? (isAr ? 'تم استحضار الشرح الذكي ✔' : 'AI Explanation Ready ✔') 
-                            : (isAr ? 'اسأل كوزمو لشرح أعمق بالذكاء الاصطناعي 🧠' : 'Ask AI AI for Deep Explanation 🧠')}
+                            : (isAr ? 'اسأل سبارك لشرح أعمق بالذكاء الاصطناعي 🧠' : 'Ask AI AI for Deep Explanation 🧠')}
                         </span>
                       </button>
                     </div>
@@ -353,7 +353,7 @@ export default function QuizDetailedReport({
                         className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1.5"
                       >
                         <div className="text-[10px] uppercase font-black text-purple-600 dark:text-purple-400 tracking-wider">
-                          {isAr ? '💡 شرح المعلم الذكي (كوزمو):' : '💡 Lesson by AI Tutor (AI):'}
+                          {isAr ? '💡 شرح المعلم الذكي (سبارك):' : '💡 Lesson by AI Tutor (AI):'}
                         </div>
                         <p className="text-slate-705 dark:text-purple-100 text-xs leading-relaxed whitespace-pre-line bg-purple-500/[0.025] dark:bg-purple-950/15 p-3 rounded-xl border border-purple-500/10 font-medium">
                           {aiExplanations[qId]}

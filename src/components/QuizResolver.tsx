@@ -951,7 +951,7 @@ export default function QuizResolver({
                         {/* Custom lesson explanation block generated live on-demand */}
                         {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id] && (
                           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
-                            <span className="text-[9px] uppercase font-black text-purple-650 dark:text-purple-400 block">{isAr ? '⚡ شرح كوزمو المعلم الرقمي:' : '⚡ Lesson by AI Tutor AI:'}</span>
+                            <span className="text-[9px] uppercase font-black text-purple-650 dark:text-purple-400 block">{isAr ? '⚡ شرح سبارك المعلم الرقمي:' : '⚡ Lesson by AI Tutor AI:'}</span>
                             <p className="text-[11px] text-purple-950 dark:text-purple-105 leading-relaxed bg-purple-500/5 dark:bg-purple-950/20 p-2.5 rounded-xl border border-purple-500/10 whitespace-pre-line font-medium text-right">
                               {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id]}
                             </p>
@@ -980,7 +980,7 @@ export default function QuizResolver({
                         <Sparkles className="w-3 h-3 text-purple-500" />
                         <span>
                           {aiFlashcardLoading[quiz.questions[currentFlashcardIdx].id]
-                            ? (isAr ? 'استحضار كوزمو...' : 'Summoning AI...')
+                            ? (isAr ? 'استحضار سبارك...' : 'Summoning AI...')
                             : aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id]
                             ? (isAr ? 'جاهز كلياً ✔' : 'Lesson Ready ✔')
                             : (isAr ? 'شرح ذكي مفصل بالـ AI 🧠' : 'Detailed AI Lesson 🧠')}
@@ -1299,7 +1299,7 @@ export default function QuizResolver({
                     <div className="mt-3 p-3 rounded-xl bg-primary/5 border border-primary/20 space-y-1.5">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-primary">
                         <Sparkles className="w-3.5 h-3.5" />
-                        <span>{isAr ? 'شرح كوزمو' : "AI's Explanation"}</span>
+                        <span>{isAr ? 'شرح سبارك' : "AI's Explanation"}</span>
                       </div>
                       <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                         {aiFlashcardExplanations[currentQuestion.id]}
@@ -1314,8 +1314,8 @@ export default function QuizResolver({
                     >
                       <Sparkles className={`w-3.5 h-3.5 ${aiFlashcardLoading[currentQuestion.id] ? 'animate-pulse' : ''}`} />
                       {aiFlashcardLoading[currentQuestion.id]
-                        ? (isAr ? 'كوزمو بيفكر...' : 'AI is thinking...')
-                        : (isAr ? '💡 اشرحلي أكتر مع كوزمو' : '💡 Explain more with AI')}
+                        ? (isAr ? 'سبارك بيفكر...' : 'AI is thinking...')
+                        : (isAr ? '💡 اشرحلي أكتر مع سبارك' : '💡 Explain more with AI')}
                     </button>
                   )}
                 </div>

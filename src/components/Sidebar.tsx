@@ -66,7 +66,7 @@ export default function Sidebar({
     { id: 'create', label: isAr ? 'إنشاء اختبار' : 'Create Quiz' },
     { id: 'my-quizzes', label: isAr ? 'اختباراتي' : 'My Quizzes' },
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms' },
-    { id: 'aichat', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant', isPremiumOnly: true },
+    { id: 'aichat', label: isAr ? 'المساعد سبارك' : 'Spark Assistant', isPremiumOnly: true },
     { id: 'community', label: isAr ? 'المجتمع' : 'Community' },
     { id: 'billing', label: isAr ? 'باقات الاشتراك' : 'Subscription Plans' },
     { id: 'settings', label: isAr ? 'الإعدادات' : 'Settings' },

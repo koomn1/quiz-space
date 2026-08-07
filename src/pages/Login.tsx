@@ -114,7 +114,7 @@ export default function Login() {
       <div className="absolute top-6 inset-x-6 flex justify-between items-center z-20">
         <div className="flex items-center gap-1.5 text-xs font-black tracking-widest text-primary/80 uppercase">
           <Sparkles className="w-4 h-4 text-violet-400 animate-spin-slow" />
-          <span>كوزمو كويز • AIQuiz</span>
+          <span>سبارك كويز • AIQuiz</span>
         </div>
         <button
           onClick={handleToggleLang}

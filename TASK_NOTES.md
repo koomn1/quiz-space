@@ -1,27 +1,27 @@
-# Task Notes: New Avatars + Show Avatars in Cosmo/Class Chats
+# Task Notes (updated 2)
 
-## Repo
-- /home/ubuntu/quiz-space (cloned from koomn1/quiz-space, branch main)
-- Deploy: GitHub Pages via .github/workflows/deploy.yml (push to main triggers build + deploy pages; URL https://koomn1.github.io/quiz-space/)
-- Build: `npx vite build` works (npm install succeeded; pnpm lockfile mismatch).
-- Supabase users table column: `photo_url` (see supabase/migrations/20260728_complete_schema.sql line 26)
+## User request (Arabic, second message)
+Take the uploaded package design (/home/ubuntu/upload/AIChatforQuizSpace(1).zip, extracted to /home/ubuntu/aichat_package/) and put it in place of Cosmo in quiz-space, rename it, wire to DB, fix everything.
 
-## Key code findings
-- Avatars live in `public/avatars/`. OLD: 7 SVGs (boy-1..3, girl-1..3, cosmo.svg) — DELETED. NEW: 6 PNGs (boy-1..3, girl-1..3) generated, resized to 512px.
-- DB bug: MessageInbox read `p.avatar_url` but users table has `photo_url` — fixed to `p.photo_url || p.avatar_url`.
-- AIChat (src/pages/AIChat.tsx): user messages used <Plus /> icon. Now uses user photo (userPhoto/userName props passed from App.tsx).
-- MessageInbox (src/components/MessageInbox.tsx): 
-  - member list avatars + chat header: now show member photo, fallback FALLBACK_AVATAR (./avatars/boy-1.png)
-  - chat bubbles: other side shows recipient photo (or initial), own side shows user photo (or initial) instead of 👤 emoji
-  - props: userPhoto, defaultAvatar
-- UserProfile (src/pages/UserProfile.tsx): preset avatar grid updated to .png paths.
-- App.tsx: AIChat gets userName/userPhoto/defaultAvatar; MessageInbox gets userPhoto/defaultAvatar.
-- App.tsx line ~1563 (AIChat), ~1586 (MessageInbox) edits done.
+## Design applied
+ChatGPT-like dark theme: bg #212121, cards #2f2f2f, accent emerald #10a37f, fg #ececec, muted #8e8ea0. Components ported: ThinkingOrb (GSAP SVG), AssistantAvatar (green gradient + Sparkles), FormattedText (**bold**), MessageRow (gsap fade, copy/thumbs up-down/regenerate buttons), ThinkingRow (typewriter "سبارك بيفكر..."), Welcome starters (اشرحلي درس/لخصلي المادة/اختبرني/حضرني للامتحان), Sidebar 260px with DB conversation groups (اليوم/أمس/الأسبوع الماضي via groupLabel), rename/delete conv, user chip, topbar dropdown, rounded-3xl input with image attach + white Send arrow, footer disclaimer, custom scrollbar CSS.
 
-## Still to do
-1. Build succeeds? Verify with npx vite build.
-2. Commit + push to main -> GitHub Pages auto-deploy.
-3. Deliver PNG avatars + summary to user.
+## Renaming
+Cosmo -> "سبارك" (Spark). Constants ASSISTANT_NAME_AR/EN in src/pages/AIChat.tsx. Welcome text, thinking label, disclaimer all renamed.
 
-## User request (Arabic)
-Replace avatars entirely with newly generated ones, and show each user's avatar in Cosmo chat (AIChat) and class/direct chats (MessageInbox).
+## DB wiring (kept real)
+- getAIChatConversations / createAIChatConversation / renameAIChatConversation / deleteAIChatConversation / getAIChatHistory / saveAIChatMessage (role 'cosmo') in src/lib/db.ts; messages table col role='cosmo' (saved as 'cosmo' as any; display role converts cosmo->assistant).
+- askAIStream signature: (prompt, {systemInstruction?, history?, image?}, onChunk(delta, full)) from services/aiWorkerClient.ts — used with image support {data, mimeType}.
+- Unauthenticated users see an auth overlay inviting sign-in.
+
+## Remaining
+1. Check MessageInbox COSMO_ADMIN_UID naming OK to keep (it's internal uid, fine). Check if sidebar/header elsewhere shows "كوزمو" name that should change (Header search? CosmoOrb still used in CosmoOrb.tsx component — no longer imported by AIChat).
+2. Build (npx vite build), commit, push main -> auto deploy to https://koomn1.github.io/quiz-space/ (verify after workflow; gh run list; check avatars PNG 200 + chunk refs).
+3. Deliver result.
+
+## First request status (done & deployed)
+New avatars boy-1..3 girl-1..3 PNGs in public/avatars/ (old SVGs + cosmo.svg deleted). MessageInbox shows avatars both sides + photo_url fix. AIChat user-photo bubbles. UserProfile PNG grid. Commit 75d9606 pushed, deployed verified.
+
+## Deploy facts
+- Workflow: .github/workflows/deploy.yml (push main -> pages deploy + worker deploy)
+- Verify: curl -s https://koomn1.github.io/quiz-space/avatars/boy-1.png => 200; index JS references userPhoto/photo_url; new chunk AIChat-*.js has accent green refs.

@@ -1,12 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { askAIStream } from '../services/aiWorkerClient';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
-import { Image as ImageIcon, Send, Trash2, Sparkles, Brain, Camera, X, Info, Copy, Check, Menu, Plus, Search, Pencil, MessageSquare, History, Settings, MoreVertical } from 'lucide-react';
-import ThreeDIcon from '../components/ThreeDIcon';
-import CosmoOrb from '../components/CosmoOrb';
+import { Image as ImageIcon, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
 
+/* ═══════════════════════════════════════════════════════════
+   ✦ "Spark" — the new AI assistant (replaces Cosmo) ✦
+   Design adopted from the user-provided ChatGPT-style kit:
+   dark #212121 background, #2f2f2f cards, emerald #10a37f accent.
+   ═══════════════════════════════════════════════════════════ */
+
+const ASSISTANT_NAME_AR = 'سبارك';
+const ASSISTANT_NAME_EN = 'Spark';
+const ACCENT = '#10a37f';
+const BG = '#212121';
+const CARD = '#2f2f2f';
+const FG = '#ececec';
+const MUTED = '#8e8ea0';
+
+/* ─── Types ─────────────────────────────────────────────── */
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -27,38 +40,261 @@ interface AIChatProps {
   onOpenAuthModal?: (mode: 'login' | 'register') => void;
 }
 
+/* ─── Thinking orb (GSAP) from the reference kit ───────── */
+function ThinkingOrb() {
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    const C = 40;
+    const dot1 = svgRef.current?.getElementById('d1') as SVGCircleElement | null;
+    const dot2 = svgRef.current?.getElementById('d2') as SVGCircleElement | null;
+    const dot3 = svgRef.current?.getElementById('d3') as SVGCircleElement | null;
+    const dot4 = svgRef.current?.getElementById('d4') as SVGCircleElement | null;
+    const core = svgRef.current?.getElementById('core') as SVGCircleElement | null;
+    const glow = svgRef.current?.getElementById('glow') as SVGCircleElement | null;
+    const scan = svgRef.current?.getElementById('scan') as SVGCircleElement | null;
+    const inner = svgRef.current?.getElementById('inner') as SVGCircleElement | null;
+
+    if (core) gsap.to(core, { attr: { r: 9.5 }, duration: 1.1, repeat: -1, yoyo: true, ease: 'power2.inOut' });
+    if (inner) gsap.to(inner, { attr: { r: 5.5 }, duration: 0.9, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+    if (glow) gsap.to(glow, { attr: { r: 30 }, opacity: 0.18, duration: 1.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+    if (scan) {
+      gsap.fromTo(
+        scan,
+        { attr: { r: 6 }, opacity: 0.7, strokeWidth: 1.8 },
+        { attr: { r: 38 }, opacity: 0, strokeWidth: 0.3, duration: 2.4, repeat: -1, ease: 'power3.out' }
+      );
+    }
+
+    let t1 = 0, t2 = Math.PI * 0.65, t3 = Math.PI * 1.3, t4 = Math.PI * 0.3;
+    const a2 = (55 * Math.PI) / 180;
+    const a3 = (-48 * Math.PI) / 180;
+    const a4 = (20 * Math.PI) / 180;
+
+    const orbit = (el: SVGCircleElement | null, t: number, rx: number, ry: number, ang: number) => {
+      if (!el) return;
+      const lx = rx * Math.cos(t);
+      const ly = ry * Math.sin(t);
+      el.setAttribute('cx', String(C + lx * Math.cos(ang) - ly * Math.sin(ang)));
+      el.setAttribute('cy', String(C + lx * Math.sin(ang) + ly * Math.cos(ang)));
+    };
+
+    const tick = () => {
+      t1 += 0.048; t2 += 0.032; t3 += 0.022; t4 += 0.055;
+      orbit(dot1, t1, 23, 8,  0);
+      orbit(dot2, t2, 18, 7,  a2);
+      orbit(dot3, t3, 21, 6,  a3);
+      orbit(dot4, t4, 13, 10, a4);
+    };
+
+    gsap.ticker.add(tick);
+    return () => { gsap.ticker.remove(tick); gsap.killTweensOf([core, inner, glow, scan]); };
+  }, []);
+
+  return (
+    <svg ref={svgRef} width="80" height="80" viewBox="0 0 80 80" style={{ overflow: 'visible' }}>
+      <defs>
+        <radialGradient id="cg" cx="40%" cy="30%" r="65%">
+          <stop offset="0%"   stopColor="#6effdb" />
+          <stop offset="100%" stopColor="#10a37f" />
+        </radialGradient>
+        <radialGradient id="dg1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="#ffffff" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#10a37f" />
+        </radialGradient>
+        <filter id="f1" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="2.5" />
+        </filter>
+        <filter id="f2" x="-80%" y="-80%" width="360%" height="360%">
+          <feGaussianBlur stdDeviation="5" />
+        </filter>
+      </defs>
+      <circle id="glow" cx="40" cy="40" r="24" fill="#10a37f" opacity="0.12" filter="url(#f2)" />
+      <ellipse cx="40" cy="40" rx="23" ry="8"  fill="none" stroke="rgba(16,163,127,0.22)" strokeWidth="0.7" />
+      <ellipse cx="40" cy="40" rx="18" ry="7"  fill="none" stroke="rgba(16,163,127,0.18)" strokeWidth="0.7" transform="rotate(55 40 40)" />
+      <ellipse cx="40" cy="40" rx="21" ry="6"  fill="none" stroke="rgba(16,163,127,0.15)" strokeWidth="0.7" transform="rotate(-48 40 40)" />
+      <ellipse cx="40" cy="40" rx="13" ry="10" fill="none" stroke="rgba(16,163,127,0.12)" strokeWidth="0.7" transform="rotate(20 40 40)" />
+      <circle id="scan" cx="40" cy="40" r="6" fill="none" stroke="#10a37f" strokeWidth="1.5" opacity="0" />
+      <circle id="d1" cx="63" cy="40" r="5" fill="#10a37f" opacity="0.2" filter="url(#f1)" />
+      <circle id="d2" cx="40" cy="40" r="4" fill="#4fffda" opacity="0.2" filter="url(#f1)" />
+      <circle id="d3" cx="40" cy="40" r="4" fill="#10a37f" opacity="0.2" filter="url(#f1)" />
+      <circle id="d4" cx="40" cy="40" r="3" fill="#6effdb" opacity="0.2" filter="url(#f1)" />
+      <circle id="d1" cx="63" cy="40" r="2.8" fill="url(#dg1)" />
+      <circle id="d2" cx="40" cy="40" r="2.2" fill="#6effdb" />
+      <circle id="d3" cx="40" cy="40" r="2"   fill="#4fffda" opacity="0.85" />
+      <circle id="d4" cx="40" cy="40" r="1.6" fill="#ffffff"  opacity="0.7" />
+      <circle cx="40" cy="40" r="12" fill="#10a37f" opacity="0.25" filter="url(#f1)" />
+      <circle id="core"  cx="40" cy="40" r="8" fill="url(#cg)" />
+      <circle id="inner" cx="40" cy="40" r="4" fill="#ffffff" opacity="0.55" />
+    </svg>
+  );
+}
+
+/* ─── Assistant avatar (small) ─────────────────────────── */
+function AssistantAvatar() {
+  return (
+    <div
+      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+      style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}
+    >
+      <Sparkles className="w-4 h-4 text-white" strokeWidth={1.8} />
+    </div>
+  );
+}
+
+/* ─── Markdown-lite text formatter ─────────────────────── */
+function FormattedText({ text }: { text: string }) {
+  return (
+    <div className="space-y-1.5 leading-7 text-[15px]" style={{ color: FG }}>
+      {text.split('\n').map((line, i) => {
+        if (!line) return <br key={i} />;
+        return (
+          <p
+            key={i}
+            dangerouslySetInnerHTML={{
+              __html: line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'),
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Message row with gsap entrance ───────────────────── */
+function MessageRow({ msg, index, copiedMsgId, onCopy }: { msg: Message; index: number; copiedMsgId: string | null; onCopy: (m: Message) => void }) {
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!rowRef.current) return;
+    gsap.from(rowRef.current, { y: 22, opacity: 0, duration: 0.45, ease: 'power3.out' });
+  }, [index]);
+
+  return (
+    <div ref={rowRef} data-index={index}>
+      {msg.role === 'user' ? (
+        <div className="flex items-end justify-end gap-3">
+          <div
+            className="max-w-[85%] px-4 py-3 rounded-3xl text-[15px] leading-7"
+            style={{ background: CARD, color: FG }}
+          >
+            {msg.image && <img src={msg.image} alt="Upload" className="max-w-xs rounded-lg mb-3 shadow-md" />}
+            <div>{msg.text}</div>
+            <p className="text-[10px] mt-1 text-right" style={{ color: MUTED }}>{msg.timestamp}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-start gap-4">
+          <AssistantAvatar />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold mb-2" style={{ color: FG }}>{ASSISTANT_NAME_AR}</p>
+            <FormattedText text={msg.text} />
+            <div className="flex items-center gap-1 mt-3">
+              {([Copy, ThumbsUp, ThumbsDown, RotateCcw] as const).map((Icon, k) => (
+                <button
+                  key={k}
+                  onClick={() => k === 0 && onCopy(msg)}
+                  className="p-1.5 rounded-md transition-colors hover:bg-white/10"
+                  style={{ color: copiedMsgId === msg.id && k === 0 ? ACCENT : MUTED }}
+                >
+                  {copiedMsgId === msg.id && k === 0 ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Thinking row (orb + typewriter label) ────────────── */
+function ThinkingRow({ isAr }: { isAr: boolean }) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!rowRef.current) return;
+    gsap.from(rowRef.current, { y: 18, opacity: 0, duration: 0.4, ease: 'power3.out' });
+
+    if (!labelRef.current) return;
+    const text = isAr ? 'سبارك بيفكر...' : 'Spark is thinking...';
+    labelRef.current.textContent = '';
+    let i = 0;
+    const id = setInterval(() => {
+      if (!labelRef.current) return clearInterval(id);
+      labelRef.current.textContent = text.slice(0, i + 1);
+      i++;
+      if (i >= text.length) clearInterval(id);
+    }, 60);
+    return () => clearInterval(id);
+  }, [isAr]);
+
+  return (
+    <div ref={rowRef} className="flex items-start gap-4">
+      <AssistantAvatar />
+      <div className="flex-1">
+        <p className="text-sm font-semibold mb-1" style={{ color: FG }}>{ASSISTANT_NAME_AR}</p>
+        <div className="flex items-center gap-3">
+          <div style={{ width: 80, height: 80, flexShrink: 0 }}>
+            <ThinkingOrb />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span ref={labelRef} className="text-sm font-medium" style={{ color: ACCENT }} />
+            <span className="text-xs" style={{ color: '#4a4a4a' }}>
+              {isAr ? 'يحلل سؤالك ويجهز إجابة مناسبة' : 'Analyzing your question…'}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Starter cards for the welcome screen ─────────────── */
+const starters = [
+  { icon: BookOpen,      title: 'اشرحلي درس',    sub: 'أي موضوع دراسي بطريقة بسيطة' },
+  { icon: BrainCircuit,  title: 'لخصلي المادة',  sub: 'ملخص سريع ومنظم' },
+  { icon: Zap,           title: 'اختبرني',       sub: 'أسئلة تفاعلية على المادة' },
+  { icon: GraduationCap, title: 'حضرني للامتحان',sub: 'خطة مذاكرة وأسئلة متوقعة' },
+];
+
+function groupLabel(conv: AIChatConversation): string {
+  const d = new Date(conv.createdAt || 0);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  if (diff < 86400000) return 'اليوم';
+  if (diff < 172800000) return 'أمس';
+  return 'الأسبوع الماضي';
+}
+
 export default function AIChat({ lang, isPremium, planName, userId, userName, userPhoto, defaultAvatar, onUpgradeClick, onOpenAuthModal }: AIChatProps) {
   const isAr = lang === 'ar';
   const FALLBACK_AVATAR = defaultAvatar || './avatars/boy-1.png';
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const sendBtnRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const welcomeRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
-  
+
   // Sidebar & Conversations
   const [conversations, setConversations] = useState<AIChatConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [convSearchQuery, setConvSearchQuery] = useState('');
   const [renamingConvId, setRenamingConvId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  const welcomeMessage = (): Message => ({
-    id: 'welcome',
-    role: 'assistant',
-    text: isAr
-      ? `مرحباً بك! أنا **كوزمو (Cosmo AI)**، مساعدك الذكي المتطور. كيف يمكنني مساعدتك اليوم؟\n\n💡 يمكنك سؤالي عن أي شيء، أو إرسال صورة لمسألة صعبة وسأقوم بتحليلها لك فوراً.`
-      : `Welcome! I am **Cosmo AI**, your advanced smart assistant. How can I help you today?\n\n💡 You can ask me anything, or send a picture of a difficult problem and I will analyze it for you instantly.`,
-    timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-  });
-
-  // Load conversations
+  /* Load conversations (from database) */
   useEffect(() => {
     if (!userId) return;
     (async () => {
@@ -68,43 +304,76 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
         setActiveConversationId(list[0].id);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // Load messages for active conversation
+  /* Load messages for active conversation (from database) */
   useEffect(() => {
     if (!userId || !activeConversationId) {
-      setMessages([welcomeMessage()]);
-      setHistoryLoaded(true);
+      setMessages([]);
       return;
     }
 
     (async () => {
-      setHistoryLoaded(false);
       const history = await getAIChatHistory(userId, activeConversationId);
       if (history.length > 0) {
         setMessages(history.map(m => ({
           id: m.id,
-          role: m.role as 'user' | 'assistant',
+          role: m.role === 'cosmo' || m.role === 'assistant' ? 'assistant' : 'user',
           text: m.text,
           timestamp: new Date(m.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
         })));
       } else {
-        setMessages([welcomeMessage()]);
+        setMessages([]);
       }
-      setHistoryLoaded(true);
     })();
   }, [activeConversationId, userId]);
 
-  const handleSendMessage = async () => {
-    const text = inputText.trim();
-    if (!text && !selectedImage) return;
+  /* auto-scroll */
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isAnalyzing]);
+
+  /* welcome stagger */
+  useEffect(() => {
+    if (messages.length > 0 || isAnalyzing || !welcomeRef.current) return;
+    gsap.from(welcomeRef.current.querySelectorAll('.starter-card'), {
+      y: 30, opacity: 0, duration: 0.5,
+      stagger: 0.1, ease: 'power3.out', delay: 0.15,
+    });
+    gsap.from(welcomeRef.current.querySelector('.welcome-title'), {
+      y: -20, opacity: 0, duration: 0.55, ease: 'power3.out',
+    });
+  }, [messages.length, isAnalyzing]);
+
+  const copyMessage = useCallback(async (msg: Message) => {
+    try {
+      await navigator.clipboard.writeText(msg.text);
+      setCopiedMsgId(msg.id);
+      setTimeout(() => setCopiedMsgId(null), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }, []);
+
+  /* send (real streaming + database persistence) */
+  const sendMessage = useCallback(async (text?: string) => {
+    const trimmed = (text ?? inputText).trim();
+    if (!trimmed && !selectedImage) return;
     if (isAnalyzing) return;
 
-    const userMsgId = Date.now().toString();
+    if (sendBtnRef.current) {
+      gsap.fromTo(sendBtnRef.current,
+        { scale: 0.85 },
+        { scale: 1, duration: 0.4, ease: 'elastic.out(1.2,0.5)' }
+      );
+    }
+
+    const displayText = trimmed || (isAr ? 'صورة مرفقة' : 'Attached image');
     const userMsg: Message = {
-      id: userMsgId,
+      id: Date.now().toString(),
       role: 'user',
-      text: text || (isAr ? 'صورة مرفقة' : 'Attached image'),
+      text: displayText,
       image: selectedImage || undefined,
       timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
     };
@@ -112,246 +381,435 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setSelectedImage(null);
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setIsAnalyzing(true);
 
     let currentConvId = activeConversationId;
     if (!currentConvId && userId) {
-      const newConv = await createAIChatConversation(userId, text.slice(0, 30) || (isAr ? 'محادثة جديدة' : 'New Chat'));
+      const newConv = await createAIChatConversation(userId, trimmed.slice(0, 30) || (isAr ? 'محادثة جديدة' : 'New Chat'));
       currentConvId = newConv.id;
       setActiveConversationId(currentConvId);
       setConversations(prev => [newConv, ...prev]);
     }
 
     if (userId && currentConvId) {
-      await saveAIChatMessage(userId, 'user', userMsg.text, !!selectedImage, currentConvId);
+      await saveAIChatMessage(userId, 'cosmo' as any, userMsg.text, !!selectedImage, currentConvId);
     }
 
-    // AI Response logic
     try {
       const aiMsgId = (Date.now() + 1).toString();
-      let fullText = '';
-      
-      await askAIStream(
-        text,
-        messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text })),
-        (chunk) => {
-          fullText += chunk;
+      setMessages(prev => [...prev, { id: aiMsgId, role: 'assistant', text: '', timestamp: userMsg.timestamp }]);
+
+      const { text: fullText } = await askAIStream(
+        trimmed,
+        {
+          history: messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text })),
+          image: selectedImage ? { data: selectedImage, mimeType: 'image/png' } : undefined,
+        },
+        (_delta, fullTextSoFar) => {
           setMessages(prev => {
             const last = prev[prev.length - 1];
             if (last && last.id === aiMsgId) {
-              return [...prev.slice(0, -1), { ...last, text: fullText }];
+              return [...prev.slice(0, -1), { ...last, text: fullTextSoFar }];
             }
-            return [...prev, { id: aiMsgId, role: 'assistant', text: fullText, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }];
+            return [...prev, { id: aiMsgId, role: 'assistant', text: fullTextSoFar, timestamp: userMsg.timestamp }];
           });
-        },
-        selectedImage || undefined
+        }
       );
 
-      if (userId && currentConvId) {
-        await saveAIChatMessage(userId, 'cosmo', fullText, false, currentConvId);
+      if (userId && currentConvId && fullText) {
+        await saveAIChatMessage(userId, 'cosmo' as any, fullText, false, currentConvId);
       }
     } catch (err) {
       console.error(err);
     } finally {
       setIsAnalyzing(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputText, selectedImage, isAnalyzing, userId, activeConversationId, isAr]);
 
   const startNewChat = () => {
     setActiveConversationId(null);
-    setMessages([welcomeMessage()]);
-    setIsSidebarOpen(false);
+    setMessages([]);
+    setIsAnalyzing(false);
   };
 
+  /* sidebar GSAP slide */
+  const toggleSidebar = useCallback(() => {
+    const el = sidebarRef.current;
+    if (!el) { setSidebarOpen(p => !p); return; }
+    if (sidebarOpen) {
+      gsap.to(el, { width: 0, duration: 0.35, ease: 'power3.inOut',
+        onComplete: () => setSidebarOpen(false) });
+    } else {
+      setSidebarOpen(true);
+      gsap.fromTo(el, { width: 0 }, { width: 260, duration: 0.35, ease: 'power3.inOut' });
+    }
+  }, [sidebarOpen]);
+
+  const handleConvRename = async (convId: string) => {
+    const value = renameValue.trim();
+    if (!value) { setRenamingConvId(null); return; }
+    await renameAIChatConversation(userId!, convId, value);
+    setConversations(prev => prev.map(c => c.id === convId ? { ...c, title: value } : c));
+    setRenamingConvId(null);
+    setRenameValue('');
+  };
+
+  const handleConvDelete = async (convId: string) => {
+    await deleteAIChatConversation(userId!, convId);
+    setConversations(prev => prev.filter(c => c.id !== convId));
+    if (activeConversationId === convId) {
+      setActiveConversationId(null);
+      setMessages([]);
+    }
+  };
+
+  const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(e.target.value);
+    const el = textareaRef.current;
+    if (el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }
+  };
+
+  const filteredConvs = conversations.filter(c =>
+    c.title.toLowerCase().includes(convSearchQuery.toLowerCase().trim())
+  );
+  const convGroups = [...new Set(filteredConvs.map(groupLabel))];
+  const userInitial = userName ? userName.trim().charAt(0).toUpperCase() : 'U';
+
   useGSAP(() => {
-    gsap.from(".chat-container", { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' });
+    gsap.from('.chat-container', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' });
   }, { scope: containerRef });
 
+  const emptyState = messages.length === 0 && !isAnalyzing;
+
   return (
-    <div ref={containerRef} className="flex h-[calc(100vh-80px)] w-full bg-[#f8fafc] dark:bg-[#0f172a] overflow-hidden rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800">
-      {/* Sidebar - Desktop */}
-      <div className={`hidden md:flex flex-col w-72 bg-white dark:bg-[#1e293b] border-r border-slate-200 dark:border-slate-800 transition-all duration-300`}>
-        <div className="p-4">
-          <button 
-            onClick={startNewChat}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95"
-          >
-            <Plus size={18} />
-            {isAr ? 'محادثة جديدة' : 'New Chat'}
-          </button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto px-2 space-y-1 custom-scrollbar">
-          <div className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-            {isAr ? 'المحادثات الأخيرة' : 'Recent Chats'}
-          </div>
-          {conversations.map(conv => (
-            <button
-              key={conv.id}
-              onClick={() => setActiveConversationId(conv.id)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${activeConversationId === conv.id ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
-            >
-              <MessageSquare size={16} />
-              <span className="flex-1 text-sm text-right truncate font-medium">{conv.title}</span>
+    <div ref={containerRef}
+      className="chat-container flex h-[calc(100vh-80px)] w-full overflow-hidden"
+      style={{ fontFamily: "'Inter', sans-serif", background: BG, color: FG }}>
+
+      {/* ── Sidebar ── */}
+      <aside
+        ref={sidebarRef}
+        className="hidden md:flex flex-shrink-0 flex-col overflow-hidden"
+        style={{ width: sidebarOpen ? '260px' : '0px', background: '#171717' }}
+      >
+        <div className="flex flex-col h-full w-[260px]">
+          <div className="flex items-center justify-between px-3 py-3">
+            <button onClick={toggleSidebar}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+              <PanelLeftClose className="w-5 h-5" style={{ color: MUTED }} />
             </button>
-          ))}
-        </div>
-
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
-              {planName[0]}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{planName}</p>
-              <p className="text-[10px] text-slate-400 uppercase tracking-tighter">{isAr ? 'عضو مميز' : 'Premium Member'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#0f172a]">
-        {/* Header */}
-        <header className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <div className="md:hidden">
-              <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-500"><Menu size={20} /></button>
-            </div>
-            <div className="w-10 h-10 flex items-center justify-center">
-              <CosmoOrb size={32} state={isAnalyzing ? 'thinking' : 'idle'} />
-            </div>
-            <div>
-              <h2 className="text-base font-black text-slate-800 dark:text-white leading-tight">
-                {isAr ? 'كوزمو' : 'Cosmo AI'}
-              </h2>
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] font-bold text-emerald-500 uppercase">{isAr ? 'متصل الآن' : 'Online'}</span>
-              </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setConvSearchQuery(q => q ? '' : q)}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                title={isAr ? 'بحث' : 'Search'}>
+                <Search className="w-5 h-5" style={{ color: MUTED }} />
+              </button>
+              <button onClick={startNewChat}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                title={isAr ? 'محادثة جديدة' : 'New Chat'}>
+                <SquarePen className="w-5 h-5" style={{ color: MUTED }} />
+              </button>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><Search size={18} /></button>
-            <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><Settings size={18} /></button>
-          </div>
-        </header>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 custom-scrollbar">
-          {messages.map((msg, idx) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-              <div className={`flex gap-4 max-w-[85%] md:max-w-[75%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm overflow-hidden ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'}`}>
-                  {msg.role === 'user' ? (
-                    userPhoto ? (
-                      <img src={userPhoto} alt={userName || ''} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xs font-bold">{userName ? userName.substring(0, 1) : <Plus size={14} />}</span>
-                    )
-                  ) : <CosmoOrb size={20} />}
-                </div>
-                <div className="space-y-1">
-                  <div className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
-                    msg.role === 'user' 
-                      ? 'bg-indigo-600 text-white rounded-tr-none' 
-                      : 'bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-slate-700/50 rounded-tl-none'
-                  }`}>
-                    {msg.image && <img src={msg.image} alt="Upload" className="max-w-xs rounded-lg mb-3 shadow-md" />}
-                    <div className="whitespace-pre-wrap font-medium">{msg.text}</div>
-                  </div>
-                  <p className={`text-[10px] font-medium text-slate-400 ${msg.role === 'user' ? 'text-left' : 'text-right'}`}>{msg.timestamp}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-          {isAnalyzing && (
-            <div className="flex justify-start animate-pulse">
-              <div className="flex gap-4 items-center bg-slate-50 dark:bg-slate-800/50 px-5 py-3 rounded-2xl border border-slate-100 dark:border-slate-700/50">
-                <div className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce"></span>
-                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce [animation-delay:0.4s]"></span>
-                </div>
-                <span className="text-xs font-bold text-slate-400">{isAr ? 'كوزمو يفكر...' : 'Cosmo is thinking...'}</span>
-              </div>
+          {convSearchQuery && (
+            <div className="px-3 pb-2">
+              <input
+                value={convSearchQuery}
+                onChange={e => setConvSearchQuery(e.target.value)}
+                placeholder={isAr ? 'ابحث في المحادثات...' : 'Search chats...'}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/30 outline-none focus:border-[#10a37f]/50"
+                dir={isAr ? 'rtl' : 'ltr'}
+              />
             </div>
           )}
-          <div ref={chatEndRef} />
+
+          <div className="flex-1 overflow-y-auto px-2 py-1">
+            {filteredConvs.length === 0 ? (
+              <p className="text-xs text-center py-6" style={{ color: MUTED }}>
+                {isAr ? 'لا توجد محادثات بعد' : 'No conversations yet'}
+              </p>
+            ) : (
+              convGroups.map(group => (
+                <div key={group} className="mb-3">
+                  <p className="text-xs px-3 py-1 font-medium" style={{ color: MUTED }}>{group}</p>
+                  {filteredConvs.filter(h => groupLabel(h) === group).map(h => (
+                    <div key={h.id} className="group/conv relative">
+                      {renamingConvId === h.id ? (
+                        <input
+                          autoFocus
+                          value={renameValue}
+                          onChange={e => setRenameValue(e.target.value)}
+                          onBlur={() => handleConvRename(h.id)}
+                          onKeyDown={e => { if (e.key === 'Enter') handleConvRename(h.id); if (e.key === 'Escape') setRenamingConvId(null); }}
+                          className="w-full text-right text-sm px-2 py-2 rounded-lg bg-white/10 text-white outline-none"
+                          dir={isAr ? 'rtl' : 'ltr'}
+                        />
+                      ) : (
+                        <button
+                          onClick={() => setActiveConversationId(h.id)}
+                          className="w-full text-right text-sm px-3 py-2 rounded-lg transition-colors truncate block"
+                          style={{
+                            background: activeConversationId === h.id ? 'rgba(255,255,255,0.1)' : 'transparent',
+                            color: activeConversationId === h.id ? FG : MUTED,
+                          }}
+                          onMouseEnter={e => { if (activeConversationId !== h.id) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+                          onMouseLeave={e => { if (activeConversationId !== h.id) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                        >
+                          {h.title}
+                        </button>
+                      )}
+                      <div className="absolute top-0.5 left-1 hidden group-hover/conv:flex items-center gap-0.5">
+                        <button
+                          onClick={e => { e.stopPropagation(); setRenamingConvId(h.id); setRenameValue(h.title); }}
+                          className="p-1 rounded hover:bg-white/10"
+                          title={isAr ? 'إعادة تسمية' : 'Rename'}>
+                          <Pencil className="w-3 h-3" style={{ color: MUTED }} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); handleConvDelete(h.id); }}
+                          className="p-1 rounded hover:bg-white/10"
+                          title={isAr ? 'حذف' : 'Delete'}>
+                          <Trash2 className="w-3 h-3 text-rose-400" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="px-3 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 cursor-pointer transition-colors"
+                 onClick={onOpenAuthModal ? undefined : undefined}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden"
+                style={{ background: '#10a37f', color: 'white' }}>
+                {userPhoto ? (
+                  <img src={userPhoto} alt={userName || ''} className="w-full h-full object-cover" />
+                ) : (
+                  userInitial
+                )}
+              </div>
+              <span className="text-sm text-white/80 flex-1 truncate">
+                {userName || (isAr ? 'طالب متميز' : 'Bright Scholar')}
+              </span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── Main ── */}
+      <div className="flex-1 flex flex-col min-w-0 relative">
+
+        {/* top bar */}
+        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            {!sidebarOpen && (
+              <>
+                <button onClick={toggleSidebar}
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                  <PanelLeftOpen className="w-5 h-5" style={{ color: MUTED }} />
+                </button>
+                <button onClick={startNewChat}
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+                  <SquarePen className="w-5 h-5" style={{ color: MUTED }} />
+                </button>
+              </>
+            )}
+          </div>
+
+          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors font-semibold text-sm"
+            style={{ color: FG }}>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}>
+              <Sparkles className="w-3.5 h-3.5 text-white" strokeWidth={1.8} />
+            </div>
+            {isAr ? ASSISTANT_NAME_AR : ASSISTANT_NAME_EN}
+            <ChevronDown className="w-4 h-4" style={{ color: MUTED }} />
+          </button>
+
+          <div className="w-24 flex items-center justify-end gap-1">
+            <button onClick={startNewChat}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              title={isAr ? 'محادثة جديدة' : 'New Chat'}>
+              <Plus className="w-5 h-5" style={{ color: MUTED }} />
+            </button>
+          </div>
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 md:p-6 bg-white dark:bg-[#0f172a] border-t border-slate-100 dark:border-slate-800">
-          <div className="max-w-4xl mx-auto relative">
+        {/* chat / welcome */}
+        <div className="flex-1 overflow-y-auto" dir="rtl" style={sidebarOpen ? {} : { maxWidth: '100%' }}>
+          {emptyState ? (
+
+            /* ── Welcome ── */
+            <div ref={welcomeRef}
+              className="flex flex-col items-center justify-center h-full px-4 pb-8">
+
+              <div className="welcome-title flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}>
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold" style={{ color: FG }}>
+                    {isAr ? 'مرحباً بك في Quiz Space' : 'Welcome to Quiz Space'}
+                  </h1>
+                  <p className="text-sm" style={{ color: MUTED }}>
+                    {isAr ? `أنا ${ASSISTANT_NAME_AR}، مساعدك الذكي للمذاكرة` : `I'm ${ASSISTANT_NAME_EN}, your smart study assistant`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 w-full max-w-xl">
+                {starters.map(({ icon: Icon, title, sub }) => (
+                  <button
+                    key={title}
+                    onClick={() => sendMessage(title)}
+                    className="starter-card text-right p-4 rounded-2xl transition-colors"
+                    style={{ background: CARD, border: '1px solid rgba(255,255,255,0.08)' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#363636'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = CARD}
+                  >
+                    <Icon className="w-5 h-5 mb-2" style={{ color: ACCENT }} />
+                    <p className="text-sm font-medium" style={{ color: FG }}>{title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: MUTED }}>{sub}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          ) : (
+
+            /* ── Messages ── */
+            <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">
+              {messages.map((msg, i) => (
+                <MessageRow key={msg.id} msg={msg} index={i} copiedMsgId={copiedMsgId} onCopy={copyMessage} />
+              ))}
+
+              {isAnalyzing && (
+                <ThinkingRow isAr={isAr} />
+              )}
+
+              <div ref={chatEndRef} />
+            </div>
+          )}
+        </div>
+
+        {/* ── Input ── */}
+        <div className="px-4 pb-5 pt-2 flex-shrink-0">
+          <div className="max-w-3xl mx-auto">
             {selectedImage && (
-              <div className="absolute bottom-full left-0 mb-4 p-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 animate-in zoom-in duration-200">
+              <div className="relative inline-block mb-3 mr-3 p-1.5 rounded-xl"
+                style={{ background: CARD, border: '1px solid rgba(255,255,255,0.08)' }}>
                 <img src={selectedImage} alt="Preview" className="h-24 w-auto rounded-lg object-cover" />
-                <button onClick={() => setSelectedImage(null)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors">
+                <button onClick={() => setSelectedImage(null)}
+                  className="absolute -top-2 -right-2 p-1 rounded-full shadow-lg"
+                  style={{ background: '#ef4444', color: 'white' }}>
                   <X size={12} />
                 </button>
               </div>
             )}
-            
-            <div className="flex items-end gap-2 bg-slate-50 dark:bg-slate-800/80 p-2 rounded-2xl border border-slate-200 dark:border-slate-700 focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 transition-all">
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                className="p-3 text-slate-400 hover:text-purple-500 transition-colors"
-              >
-                <ImageIcon size={20} />
-              </button>
-               <input 
-                 type="file" 
-                 ref={fileInputRef} 
-                 onChange={(e) => {
-                   const file = e.target.files?.[0];
-                   if (file) {
-                     const reader = new FileReader();
-                     reader.onload = (evt) => {
-                       if (evt.target?.result) {
-                         setSelectedImage(evt.target.result as string);
-                       }
-                     };
-                     reader.readAsDataURL(file);
-                   }
-                 }} 
-                 accept="image/*" 
-                 className="hidden" 
-               />
-              
+            <div className="rounded-3xl overflow-hidden"
+              style={{ background: CARD, border: '1px solid rgba(255,255,255,0.1)' }}>
+
               <textarea
+                ref={textareaRef}
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-                placeholder={isAr ? 'اسأل كوزمو أي شيء...' : 'Ask Cosmo anything...'}
-                className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-3 px-2 max-h-32 resize-none text-slate-700 dark:text-slate-200 placeholder-slate-400 custom-scrollbar"
+                onChange={handleInput}
+                onKeyDown={handleKey}
+                placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي حاجة...` : `Ask ${ASSISTANT_NAME_EN} anything...`}
                 rows={1}
-                style={{ textAlign: isAr ? 'right' : 'left' }}
+                dir="rtl"
+                className="w-full px-5 pt-4 pb-2 bg-transparent resize-none outline-none text-[15px] leading-7 placeholder:opacity-40"
+                style={{ color: FG, fontFamily: 'inherit', maxHeight: '200px', caretColor: ACCENT, textAlign: 'right' }}
               />
-              
-              <button
-                onClick={handleSendMessage}
-                disabled={(!inputText.trim() && !selectedImage) || isAnalyzing}
-                className={`p-3 rounded-xl transition-all ${
-                  (inputText.trim() || selectedImage) && !isAnalyzing
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30 hover:bg-purple-700 active:scale-95'
-                    : 'bg-slate-200 dark:bg-slate-700 text-slate-400'
-                }`}
-              >
-                <Send size={18} className={isAr ? 'rotate-180' : ''} />
-              </button>
+
+              <div className="flex items-center justify-between px-3 pb-3 pt-1" dir="rtl">
+                <div className="flex items-center gap-1">
+                  <button onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors"
+                    style={{ color: MUTED }}>
+                    <ImageIcon className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = evt => {
+                          if (evt.target?.result) setSelectedImage(evt.target.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </div>
+
+                <button
+                  ref={sendBtnRef}
+                  onClick={() => sendMessage()}
+                  disabled={(!inputText.trim() && !selectedImage) || isAnalyzing}
+                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors active:scale-90"
+                  style={{
+                    background: (inputText.trim() || selectedImage) && !isAnalyzing ? '#ffffff' : 'rgba(255,255,255,0.15)',
+                    cursor: (inputText.trim() || selectedImage) && !isAnalyzing ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  <Send className="w-5 h-5" style={{ color: (inputText.trim() || selectedImage) && !isAnalyzing ? BG : '#4a4a4a' }} />
+                </button>
+              </div>
             </div>
-            <p className="text-center text-[10px] text-slate-400 mt-3 font-medium">
-              {isAr ? 'كوزمو قد يرتكب أخطاء أحياناً، يرجى مراجعة المعلومات المهمة.' : 'Cosmo can make mistakes. Consider checking important info.'}
+
+            <p className="text-center text-xs mt-3" style={{ color: '#4a4a4a' }}>
+              {isAr
+                ? `${ASSISTANT_NAME_AR} بيقدر يغلط. اتأكد من المعلومات المهمة.`
+                : `${ASSISTANT_NAME_EN} can make mistakes. Consider checking important info.`}
             </p>
           </div>
         </div>
       </div>
+
+      {/* welcome screen for unauthenticated users */}
+      {!userId && emptyState && (
+        <div className="absolute inset-0 flex items-center justify-center z-20" style={{ background: 'rgba(10,10,10,0.75)' }}>
+          <div className="bg-[#2f2f2f] border border-white/10 rounded-3xl p-8 max-w-sm text-center space-y-4">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
+              style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}>
+              <Sparkles className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold" style={{ color: FG }}>
+              {isAr ? 'سجل دخولك للتحدث مع سبارك' : 'Sign in to chat with Spark'}
+            </h3>
+            <p className="text-sm" style={{ color: MUTED }}>
+              {isAr ? 'أنشئ حسابك أو سجل دخولك لتبدأ محادثاتك الذكية.' : 'Create an account or sign in to start smart conversations.'}
+            </p>
+            <button
+              onClick={() => onOpenAuthModal?.('register')}
+              className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95"
+              style={{ background: '#10a37f', color: 'white' }}>
+              {isAr ? 'تسجيل الدخول / إنشاء حساب' : 'Sign in / Create account'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .chat-container ::-webkit-scrollbar { width: 6px; }
+        .chat-container ::-webkit-scrollbar-track { background: transparent; }
+        .chat-container ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 6px; }
+        .chat-container ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+      `}</style>
     </div>
   );
 }

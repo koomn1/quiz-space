@@ -1459,7 +1459,7 @@ export default function Classrooms({
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-base font-black text-white">{isAr ? 'قنوات الكويزات التفاعلية المباشرة' : 'Interactive Quiz checkpoints'}</h4>
-                      <p className="text-xs text-slate-400 mt-1">{isAr ? 'حل كويزات المعلم المباشرة أو اطلب من كوزمو توليد مسودة اختبار فوري.' : 'Solve assigned tests or prompt AI AI to generate a quiz draft.'}</p>
+                      <p className="text-xs text-slate-400 mt-1">{isAr ? 'حل كويزات المعلم المباشرة أو اطلب من سبارك توليد مسودة اختبار فوري.' : 'Solve assigned tests or prompt AI AI to generate a quiz draft.'}</p>
                     </div>
 
                     {isTeacher && activeClassroomView.createdBy === currentUserId && (
@@ -2047,7 +2047,7 @@ export default function Classrooms({
                   <div className="p-5 rounded-2xl bg-purple-950/20 border border-purple-500/20 flex gap-4 items-start">
                     <span className="text-xl">💡</span>
                     <div className="space-y-1">
-                      <h5 className="text-xs font-bold text-white">{isAr ? 'ملاحظة كوزمو للذكاء الاصطناعي الأكاديمي' : 'AI AI Pedagogical Feedback'}</h5>
+                      <h5 className="text-xs font-bold text-white">{isAr ? 'ملاحظة سبارك للذكاء الاصطناعي الأكاديمي' : 'AI AI Pedagogical Feedback'}</h5>
                       <p className="text-[11px] text-slate-300 leading-relaxed">
                         {isAr 
                           ? 'أداء الفصل ممتاز جداً ويسير في منحنى تصاعدي رائع! تم إنجاز بايثون01 بنسبة 91% في يوم واحد. نقترح تدريب الطلاب أكثر على التكرارات العودية (Recursions) في الجلسات القادمة.' 
@@ -2127,8 +2127,8 @@ export default function Classrooms({
       {isAiQuizOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-4">
-            <h5 className="font-bold text-white text-sm">{isAr ? 'توليد اختبار ذكي بالذكاء الاصطناعي كوزمو' : 'Generate Smart Quiz Draft via AI AI'}</h5>
-            <p className="text-xs text-slate-400">{isAr ? 'اكتب الموضوع أو المفهوم التعليمي وسيقوم كوزمو بصياغة اختبار متكامل مع مفتاح الإجابات.' : 'Prompt AI AI to compile questions on your selected curriculum topic.'}</p>
+            <h5 className="font-bold text-white text-sm">{isAr ? 'توليد اختبار ذكي بالذكاء الاصطناعي سبارك' : 'Generate Smart Quiz Draft via AI AI'}</h5>
+            <p className="text-xs text-slate-400">{isAr ? 'اكتب الموضوع أو المفهوم التعليمي وسيقوم سبارك بصياغة اختبار متكامل مع مفتاح الإجابات.' : 'Prompt AI AI to compile questions on your selected curriculum topic.'}</p>
             <input 
               type="text" 
               placeholder={isAr ? 'مثال: المتجهات الميكانيكية، البرمجة كائنية التوجه' : 'e.g. Mechanical Vector Forces, Python Loops'} 

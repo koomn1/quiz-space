@@ -85,7 +85,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
         if (usersList.length === 0) {
           usersList.push({
             uid: COSMO_ADMIN_UID,
-            name: 'المساعد كوزمو',
+            name: 'المساعد سبارك',
             bio: 'المساعد الذكي لكافة استفساراتك',
             badgeSymbol: '✔',
             badgeColor: 'text-sky-400',

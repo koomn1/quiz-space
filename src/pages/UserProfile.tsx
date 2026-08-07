@@ -755,7 +755,7 @@ export default function UserProfile({
       id: "points_guru",
       titleAr: "حكيم المعرفة المطلق",
       titleEn: "Academic Guru",
-      descAr: "احصد أكثر من 2000 نقطة كوزمو علمية مخصصة.",
+      descAr: "احصد أكثر من 2000 نقطة سبارك علمية مخصصة.",
       descEn: "Accumulate more than 2,000 knowledge points.",
       unlocked: totalKnowledgePoints >= 2000,
       progress: `${Math.min(totalKnowledgePoints, 2000)} / 2000`,
