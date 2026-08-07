@@ -4,6 +4,7 @@ import { useGSAP } from '@gsap/react';
 import { askAIStream } from '../services/aiWorkerClient';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
 import { Image as ImageIcon, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
+import CosmoOrb from '../components/CosmoOrb';
 
 /* ═══════════════════════════════════════════════════════════
    ✦ "Spark" — the new AI assistant (replaces Cosmo) ✦
@@ -176,11 +177,9 @@ function ThinkingOrb() {
 /* ─── Assistant avatar (small) ─────────────────────────── */
 function AssistantAvatar() {
   return (
-    <div
-      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-      style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}
-    >
-      <Sparkles className="w-4 h-4 text-white" strokeWidth={1.8} />
+    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-visible"
+      style={{ background: 'rgba(139,92,246,0.16)', boxShadow: '0 0 18px rgba(139,92,246,0.28)' }}>
+      <CosmoOrb size={42} state="idle" />
     </div>
   );
 }
@@ -238,7 +237,7 @@ function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial, t
         <div className="flex items-start gap-4">
           <AssistantAvatar />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold mb-2" style={{ color: theme.FG }}>{ASSISTANT_NAME_AR}</p>
+            <p className="text-sm font-semibold mb-2" style={{ color: theme.FG }}>{ASSISTANT_NAME_EN}</p>
             <FormattedText text={msg.text} fg={theme.FG} />
             <div className="flex items-center gap-1 mt-3">
               {([Copy, ThumbsUp, ThumbsDown, RotateCcw] as const).map((Icon, k) => (
@@ -287,7 +286,7 @@ function ThinkingRow({ isAr, theme }: { isAr: boolean; theme: Palette }) {
     <div ref={rowRef} className="flex items-start gap-4">
       <AssistantAvatar />
       <div className="flex-1">
-        <p className="text-sm font-semibold mb-1" style={{ color: theme.FG }}>{ASSISTANT_NAME_AR}</p>
+        <p className="text-sm font-semibold mb-1" style={{ color: theme.FG }}>{ASSISTANT_NAME_EN}</p>
         <div className="flex items-center gap-3">
           <div style={{ width: 80, height: 80, flexShrink: 0 }}>
             <ThinkingOrb />
@@ -344,7 +343,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   // Sidebar & Conversations
   const [conversations, setConversations] = useState<AIChatConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' ? true : window.innerWidth >= 768);
   const [convSearchQuery, setConvSearchQuery] = useState('');
   const [renamingConvId, setRenamingConvId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -567,7 +566,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       {/* ── Sidebar ── */}
       <aside
         ref={sidebarRef}
-        className="hidden md:flex flex-shrink-0 flex-col overflow-hidden"
+        className="absolute md:relative inset-y-0 right-0 z-30 flex flex-shrink-0 flex-col overflow-hidden shadow-2xl md:shadow-none"
         style={{ width: sidebarOpen ? '260px' : '0px', background: theme.SIDEBAR }}
       >
         <div className="flex flex-col h-full w-[260px]">
@@ -721,10 +720,10 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
             <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}>
-              <Sparkles className="w-3.5 h-3.5 text-white" strokeWidth={1.8} />
+              style={{ background: 'rgba(139,92,246,0.16)' }}>
+              <CosmoOrb size={28} state="idle" />
             </div>
-            {isAr ? ASSISTANT_NAME_AR : ASSISTANT_NAME_EN}
+            {ASSISTANT_NAME_EN}
             <ChevronDown className="w-4 h-4" style={{ color: theme.MUTED }} />
           </button>
 
@@ -748,9 +747,9 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
               className="flex flex-col items-center justify-center h-full px-4 pb-8">
 
               <div className="welcome-title flex items-center gap-3 mb-8">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}>
-                  <Sparkles className="w-6 h-6 text-white" />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'rgba(139,92,246,0.16)', boxShadow: '0 0 24px rgba(139,92,246,0.25)' }}>
+                  <CosmoOrb size={58} state="idle" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-semibold" style={{ color: theme.FG }}>
@@ -894,7 +893,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
       {/* welcome screen for unauthenticated users */}
       {!userId && emptyState && (
-        <div className="absolute inset-0 flex items-center justify-center z-20" style={{ background: theme.OVERLAY_BACKDROP }}>
+        <div className="absolute inset-0 flex items-center justify-center z-40" style={{ background: theme.OVERLAY_BACKDROP }}>
           <div className="rounded-3xl p-8 max-w-sm text-center space-y-4"
             style={{ background: theme.OVERLAY_BG, border: `1px solid ${theme.BORDER}`, color: theme.FG }}>
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
