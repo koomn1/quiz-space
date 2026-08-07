@@ -1407,8 +1407,6 @@ export async function getAiPerformanceLogs(): Promise<any[]> {
   }
   return data || [];
 }
-  return data || null;
-}
 
 // ---------------- SEASONS (SUPABASE DIRECT) ----------------
 
