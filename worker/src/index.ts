@@ -27,7 +27,7 @@ const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
 // Free models on OpenRouter get rate-limited hard during peak hours and can
 // disappear without warning — if the primary model fails, try these next
 // instead of just erroring out.
-const OPENROUTER_TEXT_FALLBACKS = ['openai/gpt-oss-20b:free', 'nvidia/nemotron-3-super-120b-a12b:free', 'meta-llama/llama-3.3-70b-instruct:free'];
+const OPENROUTER_TEXT_FALLBACKS = ['openai/gpt-oss-20b:free', 'qwen/qwen3-235b-a22b:free', 'nvidia/nemotron-3-super-120b-a12b:free', 'meta-llama/llama-3.3-70b-instruct:free'];
 const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'google/gemma-4-26b-a4b-it:free'];
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
@@ -404,6 +404,8 @@ ${extraInstruction}`;
         'deepseek/deepseek-chat',
         'anthropic/claude-3.5-haiku',
         'qwen/qwen-2.5-72b-instruct',
+        'openai/gpt-oss-20b:free',
+        'qwen/qwen3-235b-a22b:free',
       ];
       const model = allowedModels.includes(body.model) ? body.model : OPENROUTER_TEXT_MODEL;
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];

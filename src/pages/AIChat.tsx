@@ -14,10 +14,52 @@ import { Image as ImageIcon, Send, Trash2, Sparkles, X, Copy, Check, Search, Mes
 const ASSISTANT_NAME_AR = 'كوزمو AI';
 const ASSISTANT_NAME_EN = 'Cosmo AI';
 const ACCENT = '#10a37f';
-const BG = '#212121';
-const CARD = '#2f2f2f';
-const FG = '#ececec';
-const MUTED = '#8e8ea0';
+
+/* Theme-aware palette — mirrors the site's dark/light toggle */
+function usePalette(darkMode: boolean) {
+  if (darkMode) {
+    return {
+      BG: '#212121',
+      CARD: '#2f2f2f',
+      SIDEBAR: '#171717',
+      FG: '#ececec',
+      MUTED: '#8e8ea0',
+      BORDER: 'rgba(255,255,255,0.1)',
+      BORDER_SOFT: 'rgba(255,255,255,0.08)',
+      HOVER: 'rgba(255,255,255,0.1)',
+      HOVER_SOFT: 'rgba(255,255,255,0.06)',
+      SUBTLE_TEXT: '#6b6b76',
+      OVERLAY_BG: '#2f2f2f',
+      OVERLAY_BACKDROP: 'rgba(10,10,10,0.75)',
+      SEND_IDLE: '#10a37f',
+      SEND_ACTIVE_FG: '#212121',
+      SCROLL_THUMB: 'rgba(255,255,255,0.1)',
+      SCROLL_THUMB_HOVER: 'rgba(255,255,255,0.18)',
+      INPUT_BG: '#363636',
+    };
+  }
+  return {
+    BG: '#f7f7f8',
+    CARD: '#ffffff',
+    SIDEBAR: '#f1f1f2',
+    FG: '#3f3f46',
+    MUTED: '#71717a',
+    BORDER: 'rgba(0,0,0,0.08)',
+    BORDER_SOFT: 'rgba(0,0,0,0.06)',
+    HOVER: 'rgba(0,0,0,0.06)',
+    HOVER_SOFT: 'rgba(0,0,0,0.04)',
+    SUBTLE_TEXT: '#a1a1aa',
+    OVERLAY_BG: '#ffffff',
+    OVERLAY_BACKDROP: 'rgba(247,247,248,0.8)',
+    SEND_IDLE: '#10a37f',
+    SEND_ACTIVE_FG: '#ffffff',
+    SCROLL_THUMB: 'rgba(0,0,0,0.12)',
+    SCROLL_THUMB_HOVER: 'rgba(0,0,0,0.2)',
+    INPUT_BG: '#ffffff',
+  };
+}
+
+type Palette = ReturnType<typeof usePalette>;
 
 /* ─── Types ─────────────────────────────────────────────── */
 interface Message {
@@ -30,6 +72,7 @@ interface Message {
 
 interface AIChatProps {
   lang: 'ar' | 'en';
+  darkMode: boolean;
   isPremium: boolean;
   planName: string;
   userId?: string;
@@ -143,9 +186,9 @@ function AssistantAvatar() {
 }
 
 /* ─── Markdown-lite text formatter ─────────────────────── */
-function FormattedText({ text }: { text: string }) {
+function FormattedText({ text, fg }: { text: string; fg: string }) {
   return (
-    <div className="space-y-1.5 leading-7 text-[15px]" style={{ color: FG }}>
+    <div className="space-y-1.5 leading-7 text-[15px]" style={{ color: fg }}>
       {text.split('\n').map((line, i) => {
         if (!line) return <br key={i} />;
         return (
@@ -162,7 +205,7 @@ function FormattedText({ text }: { text: string }) {
 }
 
 /* ─── Message row with gsap entrance ───────────────────── */
-function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial }: { msg: Message; index: number; copiedMsgId: string | null; onCopy: (m: Message) => void; userPhoto?: string; userInitial: string }) {
+function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial, theme }: { msg: Message; index: number; copiedMsgId: string | null; onCopy: (m: Message) => void; userPhoto?: string; userInitial: string; theme: Palette }) {
   const rowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -176,11 +219,11 @@ function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial }:
         <div className="flex items-end justify-end gap-3">
           <div
             className="max-w-[85%] px-4 py-3 rounded-3xl text-[15px] leading-7"
-            style={{ background: CARD, color: FG }}
+            style={{ background: theme.CARD, color: theme.FG }}
           >
             {msg.image && <img src={msg.image} alt="Upload" className="max-w-xs rounded-lg mb-3 shadow-md" />}
             <div>{msg.text}</div>
-            <p className="text-[10px] mt-1 text-right" style={{ color: MUTED }}>{msg.timestamp}</p>
+            <p className="text-[10px] mt-1 text-right" style={{ color: theme.MUTED }}>{msg.timestamp}</p>
           </div>
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden"
             style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)', color: 'white' }}>
@@ -195,15 +238,17 @@ function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial }:
         <div className="flex items-start gap-4">
           <AssistantAvatar />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold mb-2" style={{ color: FG }}>{ASSISTANT_NAME_AR}</p>
-            <FormattedText text={msg.text} />
+            <p className="text-sm font-semibold mb-2" style={{ color: theme.FG }}>{ASSISTANT_NAME_AR}</p>
+            <FormattedText text={msg.text} fg={theme.FG} />
             <div className="flex items-center gap-1 mt-3">
               {([Copy, ThumbsUp, ThumbsDown, RotateCcw] as const).map((Icon, k) => (
                 <button
                   key={k}
                   onClick={() => k === 0 && onCopy(msg)}
-                  className="p-1.5 rounded-md transition-colors hover:bg-white/10"
-                  style={{ color: copiedMsgId === msg.id && k === 0 ? ACCENT : MUTED }}
+                  className="p-1.5 rounded-md transition-colors"
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                  style={{ color: copiedMsgId === msg.id && k === 0 ? ACCENT : theme.MUTED }}
                 >
                   {copiedMsgId === msg.id && k === 0 ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                 </button>
@@ -217,7 +262,7 @@ function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial }:
 }
 
 /* ─── Thinking row (orb + typewriter label) ────────────── */
-function ThinkingRow({ isAr }: { isAr: boolean }) {
+function ThinkingRow({ isAr, theme }: { isAr: boolean; theme: Palette }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
 
@@ -242,14 +287,14 @@ function ThinkingRow({ isAr }: { isAr: boolean }) {
     <div ref={rowRef} className="flex items-start gap-4">
       <AssistantAvatar />
       <div className="flex-1">
-        <p className="text-sm font-semibold mb-1" style={{ color: FG }}>{ASSISTANT_NAME_AR}</p>
+        <p className="text-sm font-semibold mb-1" style={{ color: theme.FG }}>{ASSISTANT_NAME_AR}</p>
         <div className="flex items-center gap-3">
           <div style={{ width: 80, height: 80, flexShrink: 0 }}>
             <ThinkingOrb />
           </div>
           <div className="flex flex-col gap-1">
             <span ref={labelRef} className="text-sm font-medium" style={{ color: ACCENT }} />
-            <span className="text-xs" style={{ color: '#4a4a4a' }}>
+            <span className="text-xs" style={{ color: theme.SUBTLE_TEXT }}>
               {isAr ? 'يحلل سؤالك ويجهز إجابة مناسبة' : 'Analyzing your question…'}
             </span>
           </div>
@@ -276,8 +321,9 @@ function groupLabel(conv: AIChatConversation): string {
   return 'الأسبوع الماضي';
 }
 
-export default function AIChat({ lang, isPremium, planName, userId, userName, userPhoto, defaultAvatar, onUpgradeClick, onOpenAuthModal }: AIChatProps) {
+export default function AIChat({ lang, darkMode, isPremium, planName, userId, userName, userPhoto, defaultAvatar, onUpgradeClick, onOpenAuthModal }: AIChatProps) {
   const isAr = lang === 'ar';
+  const theme = usePalette(darkMode);
   const FALLBACK_AVATAR = defaultAvatar || './avatars/boy-1.png';
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -293,6 +339,7 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   // Sidebar & Conversations
   const [conversations, setConversations] = useState<AIChatConversation[]>([]);
@@ -425,11 +472,15 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
         }
       );
 
-      if (userId && currentConvId && fullText) {
+      if (!fullText) throw new Error('empty');
+      if (userId && currentConvId) {
         await saveAIChatMessage(userId, 'cosmo' as any, fullText, false, currentConvId);
       }
+      setLastError(null);
     } catch (err) {
       console.error(err);
+      setLastError(isAr ? 'للأسف حصل خطأ في الاتصال. اضغط على الزرار عشان نعيد المحاولة.' : 'Connection failed — tap the button to retry.');
+      setMessages(prev => prev.filter(m => !(m.role === 'assistant' && m.text === '')));
     } finally {
       setIsAnalyzing(false);
     }
@@ -440,6 +491,17 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
     setActiveConversationId(null);
     setMessages([]);
     setIsAnalyzing(false);
+    setLastError(null);
+  };
+
+  const retryLastMessage = () => {
+    if (isAnalyzing || messages.length === 0) return;
+    const lastUser = [...messages].reverse().find(m => m.role === 'user');
+    if (!lastUser) return;
+    // drop the failed empty assistant placeholder if present
+    setMessages(prev => prev.filter(m => !(m.role === 'assistant' && !m.text)));
+    setInputText('');
+    setTimeout(() => sendMessage(lastUser.text.replace('صورة مرفقة', '').trim()), 50);
   };
 
   /* sidebar GSAP slide */
@@ -497,31 +559,38 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
 
   return (
     <div ref={containerRef}
-      className="chat-container flex w-full overflow-hidden"
-      style={{ fontFamily: "'Inter', sans-serif", background: BG, color: FG, minHeight: '100dvh' }}>
+      className="chat-container fixed inset-0 w-full flex overflow-hidden"
+      style={{ fontFamily: "'Inter', sans-serif", background: theme.BG, color: theme.FG }}>
 
       {/* ── Sidebar ── */}
       <aside
         ref={sidebarRef}
         className="hidden md:flex flex-shrink-0 flex-col overflow-hidden"
-        style={{ width: sidebarOpen ? '260px' : '0px', background: '#171717' }}
+        style={{ width: sidebarOpen ? '260px' : '0px', background: theme.SIDEBAR }}
       >
         <div className="flex flex-col h-full w-[260px]">
           <div className="flex items-center justify-between px-3 py-3">
             <button onClick={toggleSidebar}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-              <PanelLeftClose className="w-5 h-5" style={{ color: MUTED }} />
+              className="p-2 rounded-lg transition-colors"
+              style={{ ':hover': {} }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+              <PanelLeftClose className="w-5 h-5" style={{ color: theme.MUTED }} />
             </button>
             <div className="flex items-center gap-1">
               <button onClick={() => setConvSearchQuery(q => q ? '' : q)}
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                 title={isAr ? 'بحث' : 'Search'}>
-                <Search className="w-5 h-5" style={{ color: MUTED }} />
+                <Search className="w-5 h-5" style={{ color: theme.MUTED }} />
               </button>
               <button onClick={startNewChat}
-                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                 title={isAr ? 'محادثة جديدة' : 'New Chat'}>
-                <SquarePen className="w-5 h-5" style={{ color: MUTED }} />
+                <SquarePen className="w-5 h-5" style={{ color: theme.MUTED }} />
               </button>
             </div>
           </div>
@@ -532,7 +601,8 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                 value={convSearchQuery}
                 onChange={e => setConvSearchQuery(e.target.value)}
                 placeholder={isAr ? 'ابحث في المحادثات...' : 'Search chats...'}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/30 outline-none focus:border-[#10a37f]/50"
+                className="w-full border rounded-lg px-3 py-1.5 text-xs outline-none"
+                style={{ background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', borderColor: theme.BORDER, color: theme.FG }}
                 dir={isAr ? 'rtl' : 'ltr'}
               />
             </div>
@@ -540,13 +610,13 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
 
           <div className="flex-1 overflow-y-auto px-2 py-1">
             {filteredConvs.length === 0 ? (
-              <p className="text-xs text-center py-6" style={{ color: MUTED }}>
+              <p className="text-xs text-center py-6" style={{ color: theme.MUTED }}>
                 {isAr ? 'لا توجد محادثات بعد' : 'No conversations yet'}
               </p>
             ) : (
               convGroups.map(group => (
                 <div key={group} className="mb-3">
-                  <p className="text-xs px-3 py-1 font-medium" style={{ color: MUTED }}>{group}</p>
+                  <p className="text-xs px-3 py-1 font-medium" style={{ color: theme.MUTED }}>{group}</p>
                   {filteredConvs.filter(h => groupLabel(h) === group).map(h => (
                     <div key={h.id} className="group/conv relative">
                       {renamingConvId === h.id ? (
@@ -556,7 +626,8 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                           onChange={e => setRenameValue(e.target.value)}
                           onBlur={() => handleConvRename(h.id)}
                           onKeyDown={e => { if (e.key === 'Enter') handleConvRename(h.id); if (e.key === 'Escape') setRenamingConvId(null); }}
-                          className="w-full text-right text-sm px-2 py-2 rounded-lg bg-white/10 text-white outline-none"
+                          className="w-full text-right text-sm px-2 py-2 rounded-lg outline-none"
+                          style={{ background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', color: theme.FG }}
                           dir={isAr ? 'rtl' : 'ltr'}
                         />
                       ) : (
@@ -564,10 +635,10 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                           onClick={() => setActiveConversationId(h.id)}
                           className="w-full text-right text-sm px-3 py-2 rounded-lg transition-colors truncate block"
                           style={{
-                            background: activeConversationId === h.id ? 'rgba(255,255,255,0.1)' : 'transparent',
-                            color: activeConversationId === h.id ? FG : MUTED,
+                            background: activeConversationId === h.id ? (darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                            color: activeConversationId === h.id ? theme.FG : theme.MUTED,
                           }}
-                          onMouseEnter={e => { if (activeConversationId !== h.id) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+                          onMouseEnter={e => { if (activeConversationId !== h.id) (e.currentTarget as HTMLElement).style.background = theme.HOVER_SOFT; }}
                           onMouseLeave={e => { if (activeConversationId !== h.id) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                         >
                           {h.title}
@@ -576,13 +647,17 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                       <div className="absolute top-0.5 left-1 hidden group-hover/conv:flex items-center gap-0.5">
                         <button
                           onClick={e => { e.stopPropagation(); setRenamingConvId(h.id); setRenameValue(h.title); }}
-                          className="p-1 rounded hover:bg-white/10"
+                          className="p-1 rounded transition-colors"
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                           title={isAr ? 'إعادة تسمية' : 'Rename'}>
-                          <Pencil className="w-3 h-3" style={{ color: MUTED }} />
+                          <Pencil className="w-3 h-3" style={{ color: theme.MUTED }} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); handleConvDelete(h.id); }}
-                          className="p-1 rounded hover:bg-white/10"
+                          className="p-1 rounded transition-colors"
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                           title={isAr ? 'حذف' : 'Delete'}>
                           <Trash2 className="w-3 h-3 text-rose-400" />
                         </button>
@@ -594,8 +669,10 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
             )}
           </div>
 
-          <div className="px-3 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-            <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 cursor-pointer transition-colors"
+          <div className="px-3 py-3 border-t" style={{ borderColor: theme.BORDER_SOFT }}>
+            <div className="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors"
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                  onClick={onOpenAuthModal ? undefined : undefined}>
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden"
                 style={{ background: '#10a37f', color: 'white' }}>
@@ -605,7 +682,7 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                   userInitial
                 )}
               </div>
-              <span className="text-sm text-white/80 flex-1 truncate">
+              <span className="text-sm flex-1 truncate" style={{ color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
                 {userName || (isAr ? 'طالب متميز' : 'Bright Scholar')}
               </span>
             </div>
@@ -617,37 +694,45 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
       <div className="flex-1 flex flex-col min-w-0 relative">
 
         {/* top bar */}
-        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b" style={{ borderColor: theme.BORDER_SOFT }}>
           <div className="flex items-center gap-2">
             {!sidebarOpen && (
               <>
                 <button onClick={toggleSidebar}
-                  className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                  <PanelLeftOpen className="w-5 h-5" style={{ color: MUTED }} />
+                  className="p-2 rounded-lg transition-colors"
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                  <PanelLeftOpen className="w-5 h-5" style={{ color: theme.MUTED }} />
                 </button>
                 <button onClick={startNewChat}
-                  className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                  <SquarePen className="w-5 h-5" style={{ color: MUTED }} />
+                  className="p-2 rounded-lg transition-colors"
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                  <SquarePen className="w-5 h-5" style={{ color: theme.MUTED }} />
                 </button>
               </>
             )}
           </div>
 
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors font-semibold text-sm"
-            style={{ color: FG }}>
+          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors font-semibold text-sm"
+            style={{ color: theme.FG }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
             <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}>
               <Sparkles className="w-3.5 h-3.5 text-white" strokeWidth={1.8} />
             </div>
             {isAr ? ASSISTANT_NAME_AR : ASSISTANT_NAME_EN}
-            <ChevronDown className="w-4 h-4" style={{ color: MUTED }} />
+            <ChevronDown className="w-4 h-4" style={{ color: theme.MUTED }} />
           </button>
 
           <div className="w-24 flex items-center justify-end gap-1">
             <button onClick={startNewChat}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg transition-colors"
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
               title={isAr ? 'محادثة جديدة' : 'New Chat'}>
-              <Plus className="w-5 h-5" style={{ color: MUTED }} />
+              <Plus className="w-5 h-5" style={{ color: theme.MUTED }} />
             </button>
           </div>
         </div>
@@ -666,10 +751,10 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold" style={{ color: FG }}>
+                  <h1 className="text-2xl font-semibold" style={{ color: theme.FG }}>
                     {isAr ? 'مرحباً بك في Quiz Space' : 'Welcome to Quiz Space'}
                   </h1>
-                  <p className="text-sm" style={{ color: MUTED }}>
+                  <p className="text-sm" style={{ color: theme.MUTED }}>
                     {isAr ? `أنا ${ASSISTANT_NAME_AR}، مساعدك الذكي للمذاكرة` : `I'm ${ASSISTANT_NAME_EN}, your smart study assistant`}
                   </p>
                 </div>
@@ -681,13 +766,13 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                     key={title}
                     onClick={() => sendMessage(title)}
                     className="starter-card text-right p-4 rounded-2xl transition-colors"
-                    style={{ background: CARD, border: '1px solid rgba(255,255,255,0.08)' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#363636'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = CARD}
+                    style={{ background: theme.INPUT_BG, border: `1px solid ${theme.BORDER_SOFT}` }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = darkMode ? '#363636' : 'rgba(0,0,0,0.04)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = theme.INPUT_BG}
                   >
                     <Icon className="w-5 h-5 mb-2" style={{ color: ACCENT }} />
-                    <p className="text-sm font-medium" style={{ color: FG }}>{title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: MUTED }}>{sub}</p>
+                    <p className="text-sm font-medium" style={{ color: theme.FG }}>{title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: theme.MUTED }}>{sub}</p>
                   </button>
                 ))}
               </div>
@@ -698,11 +783,25 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
             /* ── Messages ── */
             <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">
               {messages.map((msg, i) => (
-                <MessageRow key={msg.id} msg={msg} index={i} copiedMsgId={copiedMsgId} onCopy={copyMessage} userPhoto={userPhoto} userInitial={userInitial} />
+                <MessageRow key={msg.id} msg={msg} index={i} copiedMsgId={copiedMsgId} onCopy={copyMessage} userPhoto={userPhoto} userInitial={userInitial} theme={theme} />
               ))}
 
               {isAnalyzing && (
-                <ThinkingRow isAr={isAr} />
+                <ThinkingRow isAr={isAr} theme={theme} />
+              )}
+
+              {lastError && !isAnalyzing && (
+                <div className="flex flex-col items-center gap-2 py-3">
+                  <p className="text-sm text-center max-w-md" style={{ color: '#ef4444' }}>{lastError}</p>
+                  <button
+                    onClick={retryLastMessage}
+                    disabled={isAnalyzing}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-transform active:scale-95"
+                    style={{ background: ACCENT, color: 'white' }}
+                  >
+                    <RotateCcw className="w-4 h-4" /> {isAr ? 'إعادة المحاولة' : 'Retry'}
+                  </button>
+                </div>
               )}
 
               <div ref={chatEndRef} />
@@ -715,7 +814,7 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
           <div className="max-w-3xl mx-auto">
             {selectedImage && (
               <div className="relative inline-block mb-3 mr-3 p-1.5 rounded-xl"
-                style={{ background: CARD, border: '1px solid rgba(255,255,255,0.08)' }}>
+                style={{ background: theme.INPUT_BG, border: `1px solid ${theme.BORDER_SOFT}` }}>
                 <img src={selectedImage} alt="Preview" className="h-24 w-auto rounded-lg object-cover" />
                 <button onClick={() => setSelectedImage(null)}
                   className="absolute -top-2 -right-2 p-1 rounded-full shadow-lg"
@@ -725,7 +824,7 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
               </div>
             )}
             <div className="rounded-3xl overflow-hidden"
-              style={{ background: CARD, border: '1px solid rgba(255,255,255,0.1)' }}>
+              style={{ background: theme.CARD, border: `1px solid ${theme.BORDER}` }}>
 
               <textarea
                 ref={textareaRef}
@@ -736,14 +835,16 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                 rows={1}
                 dir="rtl"
                 className="w-full px-5 pt-3.5 pb-2 bg-transparent resize-none outline-none text-[15px] leading-7 placeholder:opacity-40"
-                style={{ color: FG, fontFamily: 'inherit', maxHeight: '120px', caretColor: ACCENT, textAlign: 'right' }}
+                style={{ color: theme.FG, fontFamily: 'inherit', maxHeight: '120px', caretColor: ACCENT, textAlign: 'right' }}
               />
 
               <div className="flex items-center justify-between px-3 pb-3 pt-1" dir="rtl">
                 <div className="flex items-center gap-1">
                   <button onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors"
-                    style={{ color: MUTED }}>
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
+                    style={{ color: theme.MUTED }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
                     <ImageIcon className="w-4 h-4" />
                   </button>
                   <input
@@ -771,16 +872,16 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
                   aria-label={isAr ? 'إرسال' : 'Send'}
                   className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90"
                   style={{
-                    background: (inputText.trim() || selectedImage) && !isAnalyzing ? '#ffffff' : '#10a37f',
-                    cursor: (!inputText.trim() && !selectedImage) || isAnalyzing ? 'pointer' : 'pointer',
+                    background: (inputText.trim() || selectedImage) && !isAnalyzing ? '#ffffff' : theme.SEND_IDLE,
+                    cursor: 'pointer',
                   }}
                 >
-                  <Send className="w-5 h-5" style={{ color: (inputText.trim() || selectedImage) && !isAnalyzing ? BG : '#ffffff' }} />
+                  <Send className="w-5 h-5" style={{ color: (inputText.trim() || selectedImage) && !isAnalyzing ? theme.SEND_ACTIVE_FG : '#ffffff' }} />
                 </button>
               </div>
             </div>
 
-            <p className="text-center text-xs mt-3" style={{ color: '#4a4a4a' }}>
+            <p className="text-center text-xs mt-3" style={{ color: theme.SUBTLE_TEXT }}>
               {isAr
                 ? `${ASSISTANT_NAME_AR} بيقدر يغلط. اتأكد من المعلومات المهمة.`
                 : `${ASSISTANT_NAME_EN} can make mistakes. Consider checking important info.`}
@@ -791,16 +892,17 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
 
       {/* welcome screen for unauthenticated users */}
       {!userId && emptyState && (
-        <div className="absolute inset-0 flex items-center justify-center z-20" style={{ background: 'rgba(10,10,10,0.75)' }}>
-          <div className="bg-[#2f2f2f] border border-white/10 rounded-3xl p-8 max-w-sm text-center space-y-4">
+        <div className="absolute inset-0 flex items-center justify-center z-20" style={{ background: theme.OVERLAY_BACKDROP }}>
+          <div className="rounded-3xl p-8 max-w-sm text-center space-y-4"
+            style={{ background: theme.OVERLAY_BG, border: `1px solid ${theme.BORDER}`, color: theme.FG }}>
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
               style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}>
               <Sparkles className="w-7 h-7 text-white" />
             </div>
-            <h3 className="text-lg font-semibold" style={{ color: FG }}>
+            <h3 className="text-lg font-semibold" style={{ color: theme.FG }}>
               {isAr ? 'سجل دخولك للتحدث مع كوزمو AI' : 'Sign in to chat with Cosmo AI'}
             </h3>
-            <p className="text-sm" style={{ color: MUTED }}>
+            <p className="text-sm" style={{ color: theme.MUTED }}>
               {isAr ? 'أنشئ حسابك أو سجل دخولك لتبدأ محادثاتك الذكية.' : 'Create an account or sign in to start smart conversations.'}
             </p>
             <button
@@ -816,8 +918,8 @@ export default function AIChat({ lang, isPremium, planName, userId, userName, us
       <style>{`
         .chat-container ::-webkit-scrollbar { width: 6px; }
         .chat-container ::-webkit-scrollbar-track { background: transparent; }
-        .chat-container ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 6px; }
-        .chat-container ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+        .chat-container ::-webkit-scrollbar-thumb { background: ${theme.SCROLL_THUMB}; border-radius: 6px; }
+        .chat-container ::-webkit-scrollbar-thumb:hover { background: ${theme.SCROLL_THUMB_HOVER}; }
       `}</style>
     </div>
   );

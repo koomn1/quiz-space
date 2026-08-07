@@ -1555,6 +1555,7 @@ export default function App() {
               {activeTab === 'aichat' && (
                 <AIChat 
                   lang={lang} 
+                  darkMode={darkMode} 
                   isPremium={isUserPremium} 
                   planName={userPlanName} 
                   userId={userId}
