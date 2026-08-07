@@ -459,7 +459,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
       const chatHistory = historyParts.map(item => ({ role: item.role as 'user' | 'model', text: item.parts[0].text }));
       const promptText = currentText || (isAr ? 'حلل الصورة المرفقة.' : 'Analyze the attached image.');
 
-      // Cosmo runs on OpenRouter for all messages (text + images via multimodal support).
+      // AI runs on OpenRouter for all messages (text + images via multimodal support).
       const aiMsgId = 'msg-' + (Date.now() + 1);
       let streamStarted = false;
       const { text: replyText } = await askAIStream(
@@ -713,7 +713,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
         </div>
       )}
 
-      {/* ℹ️ Cosmo Premium Information & Simulator Settings Modal Overlay */}
+      {/* ℹ️ AI Premium Information & Simulator Settings Modal Overlay */}
       {showInfo && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md info-modal-bg" dir={isAr ? 'rtl' : 'ltr'}>
           <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-primary/30 bg-[#0c0f1a]/95 text-white p-6 shadow-2xl info-modal-content">
@@ -750,15 +750,15 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
                   </span>
                 </div>
                 <h3 className="font-display font-black text-lg text-white">
-                  {isAr ? 'معلومات المستشار كوزمو 🤖💎' : 'QuizSpace AI Information 🤖💎'}
+                  {isAr ? 'معلومات المستشار مساعد الذكاء الاصطناعي 🤖💎' : 'QuizSpace AI Information 🤖💎'}
                 </h3>
               </div>
 
               <div className="text-xs text-slate-300 space-y-2.5 text-right leading-relaxed font-bold w-full p-4 rounded-2xl bg-slate-900/50 border border-slate-800" style={{ textAlign: isAr ? 'right' : 'left' }}>
                 <p>
                   {isAr
-                    ? '🪐 أنا كوزمو، مساعدك الكوانتي الذكي المطور لحل المسائل العلمية وتبسيط المناهج بذكاء استثنائي.'
-                    : '🪐 I am Cosmo, your custom scientific buddy built to clarify homework challenges and simplify lessons.'}
+                    ? '🪐 أنا مساعد الذكاء الاصطناعي، مساعدك الكوانتي الذكي المطور لحل المسائل العلمية وتبسيط المناهج بذكاء استثنائي.'
+                    : '🪐 I am AI, your custom scientific buddy built to clarify homework challenges and simplify lessons.'}
                 </p>
                 <p className="text-[#a78bfa]">
                   {isAr
@@ -823,7 +823,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
             <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
               <div className="flex items-center gap-1.5">
                 <h3 className="font-sans font-bold text-xs sm:text-sm text-slate-800 dark:text-white">
-                  {isAr ? 'المساعد الذكي كوزمو' : 'AI Assistant'}
+                  {isAr ? 'المساعد الذكي مساعد الذكاء الاصطناعي' : 'AI Assistant'}
                 </h3>
               </div>
               <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold flex items-center gap-1 mt-0.5">
@@ -838,7 +838,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
             <button
               type="button"
               onClick={() => {
-                if (confirm(isAr ? 'هل تود بالتأكيد تصفير محادثة كوزمو والبدء من جديد؟' : 'Are you sure you want to clear your conversation history?')) {
+                if (confirm(isAr ? 'هل تود بالتأكيد تصفير محادثة مساعد الذكاء الاصطناعي والبدء من جديد؟' : 'Are you sure you want to clear your conversation history?')) {
                   setMessages([welcomeMessage()]);
                   if (userId) {
                     clearAIChatHistory(userId).catch(() => {});
@@ -856,7 +856,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
               type="button"
               onClick={() => setShowInfo(true)}
               className="p-2 rounded-xl text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
-              title={isAr ? 'معلومات كوزمو' : 'Cosmo Info'}
+              title={isAr ? 'معلومات مساعد الذكاء الاصطناعي' : 'AI Info'}
             >
               <Info className="w-4 h-4" />
             </button>
@@ -883,7 +883,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
                 {isAr ? 'ألق بالصورة هنا للتحليل! 📷' : 'Drop your image here to analyze! 📷'}
               </h3>
               <p className="text-xs text-slate-500">
-                {isAr ? 'سيروق لكوزمو فحصها وتبسيط محتواها الأكاديمي.' : 'Cosmo will look forward to investigating it.'}
+                {isAr ? 'سيروق لمساعد الذكاء الاصطناعي فحصها وتبسيط محتواها الأكاديمي.' : 'AI will look forward to investigating it.'}
               </p>
             </div>
           )}
@@ -940,7 +940,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
               >
                 {/* Plain sender label instead of a circular bot/user icon */}
                 <span className={`text-[10px] font-black px-1 ${isUser ? 'text-indigo-500 dark:text-indigo-400' : 'text-primary'}`}>
-                  {isUser ? (isAr ? 'أنت' : 'You') : 'Cosmo'}
+                  {isUser ? (isAr ? 'أنت' : 'You') : 'AI'}
                 </span>
 
                 <div className={`flex flex-col gap-1 ${isUser ? 'max-w-[75%]' : 'w-full'}`}>
@@ -1039,11 +1039,11 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
           {/* Elegant typing bubble */}
           {isAnalyzing && (
             <div className="flex flex-col gap-1 w-full items-start">
-              <span className="text-[10px] font-black px-1 text-primary">Cosmo</span>
+              <span className="text-[10px] font-black px-1 text-primary">AI</span>
               <div className="flex flex-col gap-1 flex-1">
                 <div className="text-slate-500 flex items-center gap-1.5 py-1">
                   <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-                    {isAr ? 'كوزمو يفكر ويكتب...' : 'Cosmo is thinking...'}
+                    {isAr ? 'مساعد الذكاء الاصطناعي يفكر ويكتب...' : 'AI is thinking...'}
                   </span>
                   <span className="flex gap-1 items-center">
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }}></span>
@@ -1076,7 +1076,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
                   {isAr ? 'صورة مرفقة للتحليل والمناقشة 📷' : 'Image attached for analysis 📷'}
                 </p>
                 <p className="text-[10px] text-slate-400 font-bold">
-                  {isAr ? 'سيقوم كوزمو بقراءتها فور الإرسال' : 'Cosmo will read it upon sending'}
+                  {isAr ? 'سيقوم مساعد الذكاء الاصطناعي بقراءتها فور الإرسال' : 'AI will read it upon sending'}
                 </p>
               </div>
             </div>

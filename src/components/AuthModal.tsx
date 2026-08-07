@@ -143,7 +143,7 @@ export default function AuthModal({ isOpen, onClose, mode: initialMode, onSucces
                 <div>
                   <div className="flex items-center gap-1 text-primary text-xs font-black tracking-wider mb-1.5 uppercase">
                     <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-                    <span>كوزمو كويز • CosmoQuiz</span>
+                    <span>مساعد الذكاء الاصطناعي كويز • AIQuiz</span>
                   </div>
                   <h2 className="text-2xl font-black bg-gradient-to-r from-slate-900 via-primary to-violet-950 dark:from-white dark:via-purple-300 dark:to-slate-300 bg-clip-text text-transparent leading-none">
                     {step === '2fa' 

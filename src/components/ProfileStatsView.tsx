@@ -68,7 +68,7 @@ const getBadgesForPlan = (planId: string | undefined, isPremium: boolean): { ico
   ];
 
   const goldBadges = [
-    { icon: '👑', nameAr: 'تاج الفضاء الذهبي', nameEn: 'Cosmo Crown', color: 'bg-amber-500 shadow-amber-500/20' },
+    { icon: '👑', nameAr: 'تاج الفضاء الذهبي', nameEn: 'AI Crown', color: 'bg-amber-500 shadow-amber-500/20' },
     { icon: '🏅', nameAr: 'ميدالية التفوق الذهبية', nameEn: 'Excellence Medal', color: 'bg-yellow-500 shadow-yellow-500/20' },
     { icon: '🔥', nameAr: 'لهيب المعرفة المشتعل', nameEn: 'Fierce Scholar', color: 'bg-orange-500 shadow-orange-500/20' },
     { icon: '🌟', nameAr: 'النجم الساطع الذهبي', nameEn: 'Radiant Stella', color: 'bg-amber-600 shadow-amber-600/20' },

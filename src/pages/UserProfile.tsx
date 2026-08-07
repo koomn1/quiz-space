@@ -694,7 +694,7 @@ export default function UserProfile({
     {
       id: "step_one",
       titleAr: "الخطوة الأولى الكونية",
-      titleEn: "Cosmo First Step",
+      titleEn: "AI First Step",
       descAr: "اتخطى الاختبار الأول وافتح بوابات المعرفة.",
       descEn: "Cross the first educational test successfully.",
       unlocked: completionsCount >= 1,
@@ -706,7 +706,7 @@ export default function UserProfile({
     {
       id: "knowledge_gatherer",
       titleAr: "جامع النقاط الكوني",
-      titleEn: "Cosmo Gatherer",
+      titleEn: "AI Gatherer",
       descAr: "اجمع 500 نقطة فما فوق من إتقان الاختبارات العلمية.",
       descEn: "Amass 500 Knowledge Points through quiz scores.",
       unlocked: totalKnowledgePoints >= 500,
@@ -755,7 +755,7 @@ export default function UserProfile({
       id: "points_guru",
       titleAr: "حكيم المعرفة المطلق",
       titleEn: "Academic Guru",
-      descAr: "احصد أكثر من 2000 نقطة كوزمو علمية مخصصة.",
+      descAr: "احصد أكثر من 2000 نقطة مساعد الذكاء الاصطناعي علمية مخصصة.",
       descEn: "Accumulate more than 2,000 knowledge points.",
       unlocked: totalKnowledgePoints >= 2000,
       progress: `${Math.min(totalKnowledgePoints, 2000)} / 2000`,

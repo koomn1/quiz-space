@@ -47,13 +47,13 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       tagColor: 'bg-slate-500 text-white',
       badge: isAr ? 'طالب متميز' : 'Student Pro',
       features: isAr ? [
-        'المساعد كوزمو الشخصي (Cosmo AI)',
+        'المساعد مساعد الذكاء الاصطناعي الشخصي (AI AI)',
         'اختبارات تفاعلية لا محدودة',
         'توليد 10 اختبارات بالذكاء الاصطناعي شهرياً',
         'تحميل تقارير حلول الاختبارات بصيغة PDF',
         'دعم فني متميز عبر البريد الإلكتروني'
       ] : [
-        'Cosmo Personal Assistant (AI)',
+        'AI Personal Assistant (AI)',
         'Unlimited interactive quizzes',
         'Generating 10 quizzes by AI per month',
         'Download student results as PDF documents',

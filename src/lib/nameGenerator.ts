@@ -1,5 +1,5 @@
 /**
- * CosmoQuiz Name Generator
+ * AIQuiz Name Generator
  * Generates beautiful, inspiring, and professional Arabic & English temporary student names.
  */
 
@@ -7,23 +7,23 @@ export function generateCoolStudentName(lang: 'ar' | 'en' = 'ar'): string {
   const arNouns = [
     "نابغة", "عبقري", "مفكر", "باحث", "مستكشف", 
     "طموح", "نجم", "مبدع", "ذكي", "متفوق", 
-    "قارئ", "كوزموناوت", "رائد", "مهندس", "مبتكر"
+    "قارئ", "مساعد الذكاء الاصطناعيناوت", "رائد", "مهندس", "مبتكر"
   ];
   
   const arAdjectives = [
-    "كوزمو", "المستقبل", "الذكي", "المتألق", "النشيط", 
+    "مساعد الذكاء الاصطناعي", "المستقبل", "الذكي", "المتألق", "النشيط", 
     "الواعد", "المتميز", "المبدع", "الذهبي", "الماسي",
     "المثابر", "العلمي", "العبقري"
   ];
   
   const enNouns = [
     "Scholar", "Genius", "Thinker", "Explorer", "Star", 
-    "Pioneer", "Mind", "Creator", "Cosmonaut", "Seeker",
+    "Pioneer", "Mind", "Creator", "AInaut", "Seeker",
     "Leader", "Innovator"
   ];
   
   const enAdjectives = [
-    "Cosmo", "Bright", "Smart", "Shining", "Golden", 
+    "AI", "Bright", "Smart", "Shining", "Golden", 
     "Active", "Creative", "Elite", "Future", "Brilliant",
     "Inspired", "Dynamic"
   ];

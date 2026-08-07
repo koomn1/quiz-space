@@ -173,7 +173,7 @@ export default function ThreeDIcon({ name, className = "w-5 h-5", size }: ThreeD
           <circle cx="205" cy="220" r="6" fill="#ffffff" />
           <circle cx="295" cy="220" r="16" fill="#38bdf8" filter="url(#glowDraft)" />
           <circle cx="295" cy="220" r="6" fill="#ffffff" />
-          {/* Cosmo high-tech antenna */}
+          {/* AI high-tech antenna */}
           <line x1="250" y1="105" x2="250" y2="40" stroke="url(#goldGrad3D)" strokeWidth="14" strokeLinecap="round" />
           <circle cx="250" cy="35" r="22" fill="url(#pinkGrad3D)" filter="url(#glowDraft)" stroke="#ffffff" strokeWidth="3" />
           {/* Animated smiley mouth */}

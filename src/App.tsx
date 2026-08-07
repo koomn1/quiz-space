@@ -1842,7 +1842,7 @@ export default function App() {
         )}
       
 
-      {/* Pulsing Support Button (WhatsApp) — Cosmo no longer has a floating
+      {/* Pulsing Support Button (WhatsApp) — AI no longer has a floating
           popup; it's a full-page experience accessed from the sidebar/tab
           instead, so this spot is support-contact only now. */}
       

@@ -7,7 +7,7 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 
-// System/bot pseudo-accounts (Cosmo AI, admin broadcasts). Every row in
+// System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
 // `users` is required to have a valid UUID `uid` — a trigger
 // (sync_users_id) casts uid::uuid on every insert, so plain strings like
 // 'admin-cosmo' fail with "invalid input syntax for type uuid". These fixed
@@ -525,12 +525,12 @@ export async function saveUserProfile(
 }
 
 // ---------------------------------------------------------------------------
-// Cosmo chat history — persisted per-user in Supabase so the conversation
+// AI chat history — persisted per-user in Supabase so the conversation
 // survives clearing the browser or logging in from another device. Only
 // text is stored (not raw image bytes, to avoid bloating the table); a
 // message that had an image attached is flagged with had_image.
 // ---------------------------------------------------------------------------
-export interface CosmoMessageRow {
+export interface AIMessageRow {
   id: string;
   role: 'user' | 'cosmo';
   text: string;
@@ -553,7 +553,7 @@ export async function getAIChatConversations(userId: string): Promise<AIChatConv
     .eq('user_id', userId)
     .order('updated_at', { ascending: false });
   if (error) {
-    console.error('Error loading Cosmo conversations:', error.message);
+    console.error('Error loading AI conversations:', error.message);
     return [];
   }
   return (data || []).map((row: any) => ({
@@ -573,7 +573,7 @@ export async function createAIChatConversation(userId: string, title?: string): 
     .select('id, title, created_at, updated_at')
     .single();
   if (error) {
-    console.error('Error creating Cosmo conversation:', error.message);
+    console.error('Error creating AI conversation:', error.message);
     return null;
   }
   return { id: data.id, title: data.title, createdAt: data.created_at, updatedAt: data.updated_at };
@@ -582,16 +582,16 @@ export async function createAIChatConversation(userId: string, title?: string): 
 export async function renameAIChatConversation(conversationId: string, title: string): Promise<void> {
   if (!isSupabaseConfigured) return;
   const { error } = await supabase.from('cosmo_conversations').update({ title }).eq('id', conversationId);
-  if (error) console.error('Error renaming Cosmo conversation:', error.message);
+  if (error) console.error('Error renaming AI conversation:', error.message);
 }
 
 export async function deleteAIChatConversation(conversationId: string): Promise<void> {
   if (!isSupabaseConfigured) return;
   const { error } = await supabase.from('cosmo_conversations').delete().eq('id', conversationId);
-  if (error) console.error('Error deleting Cosmo conversation:', error.message);
+  if (error) console.error('Error deleting AI conversation:', error.message);
 }
 
-export async function getAIChatHistory(userId: string, conversationId?: string, limit = 200): Promise<CosmoMessageRow[]> {
+export async function getAIChatHistory(userId: string, conversationId?: string, limit = 200): Promise<AIMessageRow[]> {
   if (!userId || !isSupabaseConfigured) return [];
   let query = supabase
     .from('cosmo_messages')
@@ -600,7 +600,7 @@ export async function getAIChatHistory(userId: string, conversationId?: string, 
   query = conversationId ? query.eq('conversation_id', conversationId) : query.is('conversation_id', null);
   const { data, error } = await query.order('created_at', { ascending: true }).limit(limit);
   if (error) {
-    console.error('Error loading Cosmo history:', error.message);
+    console.error('Error loading AI history:', error.message);
     return [];
   }
   return (data || []).map((row: any) => ({
@@ -622,7 +622,7 @@ export async function saveAIChatMessage(userId: string, role: 'user' | 'cosmo', 
     conversation_id: conversationId || null,
   });
   if (error) {
-    console.error('Error saving Cosmo message:', error.message);
+    console.error('Error saving AI message:', error.message);
   }
 }
 
@@ -630,7 +630,7 @@ export async function clearAIChatHistory(userId: string): Promise<void> {
   if (!userId || !isSupabaseConfigured) return;
   const { error } = await supabase.from('cosmo_messages').delete().eq('user_id', userId);
   if (error) {
-    console.error('Error clearing Cosmo history:', error.message);
+    console.error('Error clearing AI history:', error.message);
   }
 }
 

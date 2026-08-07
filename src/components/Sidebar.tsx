@@ -66,12 +66,11 @@ export default function Sidebar({
     { id: 'create', label: isAr ? 'إنشاء اختبار' : 'Create Quiz' },
     { id: 'my-quizzes', label: isAr ? 'اختباراتي' : 'My Quizzes' },
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms' },
-    ...(activePlanId !== 'free' 
-      ? [{ id: 'aichat', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant', isPremiumOnly: true }] 
-      : [{ id: 'support', label: isAr ? 'الدعم الفني' : 'Support', isLink: true, href: 'https://wa.me/201018995002' }]),
+    { id: 'aichat', label: isAr ? 'دردشة AI' : 'AI Chat', isPremiumOnly: true },
     { id: 'community', label: isAr ? 'المجتمع' : 'Community' },
     { id: 'billing', label: isAr ? 'باقات الاشتراك' : 'Subscription Plans' },
-    { id: 'settings', label: isAr ? 'الإعدادات' : 'Settings' }
+    { id: 'settings', label: isAr ? 'الإعدادات' : 'Settings' },
+    { id: 'support', label: isAr ? 'الدعم الفني' : 'Support' }
   ];
 
   if (isAdmin || userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com') {

@@ -156,7 +156,7 @@ export async function askAIStream(
   return { text: fullText };
 }
 
-// Groq counterpart to askAI, used to power Cosmo's chat as an alternative provider.
+// Groq counterpart to askAI, used to power AI's chat as an alternative provider.
 export async function askGroq(
   prompt: string,
   options: { model?: string; systemInstruction?: string; history?: AiChatMessage[] } = {},
