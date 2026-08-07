@@ -89,22 +89,30 @@ async function logAiPerformance(env: Env, authHeader: string, data: {
   }
 }
 
+// esbuild 0.25+ refuses regexes containing literal backticks, so strip
+// fenced-code wrappers with plain string ops instead of a regex.
 function extractJson(text: string): unknown {
-  const cleaned = text.replace(/^```json\s*|^```|```$/gim, '').trim();
+  let cleaned = text.trim();
+  const fenceIdx = cleaned.indexOf('{');
+  if (fenceIdx > 0) cleaned = cleaned.slice(fenceIdx);
+  if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3).trimEnd();
   return JSON.parse(cleaned);
 }
 
 function quizPrompt(topic: string, amount: number, previous: string[]): string {
   const exclusions = previous.length ? `\nلا تكرر هذه الأسئلة: ${previous.join(' | ')}` : '';
-  return `أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.${exclusions}
+  // esbuild 0.25+ refuses template literals containing three consecutive
+  // backticks (code-fence markers), so build the prompt without fences.
+  const fence = String.fromCharCode(96, 96, 96); // ```
+  return (`أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.` + exclusions + `
 نوّع أنواع الأسئلة: اختيار من متعدد (mcq) وصح/خطأ (tf) وأسئلة مقالية (essay) حسب الموضوع.
-أجب بـ JSON صالح فقط وفق الشكل التالي:
+أجب بـ JSON صالح فقط محاط بوسم ${fence}json ... ${fence} وفق الشكل التالي:
 {"title":"عنوان الاختبار","description":"وصف الاختبار","questions":[
   {"text":"نص السؤال","type":"mcq","options":["خيار 1","خيار 2","خيار 3","خيار 4"],"correctIndex":0,"correctAnswer":"","explanation":"الشرح العلمي"},
   {"text":"سؤال صح أو خطأ","type":"tf","options":["صح","خطأ"],"correctIndex":0,"correctAnswer":"صح","explanation":"شرح"},
   {"text":"سؤال مقالي","type":"essay","options":[],"correctIndex":0,"correctAnswer":"الإجابة النموذجية","explanation":"شرح"}
 ]
-— تذكير أخير: ${amount} سؤال بالضبط، لا أقل، ثم أغلق JSON."};
+— تذكير أخير: ${amount} سؤال بالضبط، لا أقل، ثم أغلق JSON.`);
 }
 
 async function callOpenRouter(env: Env, messages: any[], model = OPENROUTER_TEXT_MODEL, plugins?: any[]): Promise<string> {
