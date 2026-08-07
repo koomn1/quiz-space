@@ -218,17 +218,14 @@ async function handler(request: Request, env: Env): Promise<Response> {
 
       // User's specific "Lossless" prompt for document extraction
       const losslessPrompt = `You are a lossless document extraction engine.
-
 Extract EVERY question exactly as written.
 
 Rules:
-- Do not summarize.
-- Do not rewrite.
-- Do not fix spelling.
-- Preserve numbering.
-- Preserve A/B/C/D exactly.
-- Do not skip any line.
+- Do not summarize or rewrite.
+- Do not skip any question, including multiple choice, true/false, and essay/short answer questions.
+- Preserve numbering and options (A/B/C/D) exactly.
 - If a question starts on one page and continues on the next, merge it into one complete question.
+- For Essay/Short answer questions, use type "essay" and leave options as an empty array [].
 - Return JSON only in the following format:
 {
   "title": "Quiz Title",
@@ -237,19 +234,14 @@ Rules:
     {
       "number": 1,
       "text": "Question text...",
-      "type": "mcq",
-      "options": ["A...", "B...", "C...", "D..."],
-      "correctIndex": 0,
-      "correctAnswer": "A...",
+      "type": "mcq", // "mcq" | "tf" | "essay"
+      "options": ["Option 1", "Option 2", ...], // empty array for essay
+      "correctIndex": 0, // index of correct option, 0 for essay
+      "correctAnswer": "The correct answer text",
       "explanation": "Brief explanation"
     }
   ]
 }
-
-Strict Rules for type:
-- Multiple choice -> "mcq"
-- True/False -> "tf"
-- Essay/Short answer -> "essay"
 ${extraInstruction}`;
 
       if (isLiteral) {
@@ -349,7 +341,7 @@ ${extraInstruction}`;
               const text = await callOpenRouterWithFallback(env, [{
                 role: 'user',
                 content: `Content:\n${chunk}\n\n${losslessPrompt}`
-              }]);
+              }], OPENROUTER_TEXT_FALLBACKS);
               return extractJson(text) as any;
             }));
 

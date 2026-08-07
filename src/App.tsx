@@ -1050,6 +1050,18 @@ export default function App() {
   const handleExitQuiz = () => {
     setActiveQuizId(null);
     fetchQuizzesList(); // Refresh dashboards ratings
+    
+    // Refresh statistics when exiting a quiz to ensure dashboard is up to date
+    if (userId) {
+      getUserProfileStats(userId).then(stats => {
+        if (stats) {
+          setUserStats(stats);
+          if (stats.completions) {
+            setCompletions(stats.completions);
+          }
+        }
+      }).catch(e => console.warn('Error refreshing stats on exit:', e));
+    }
   };
 
   // Direct links can bypass handleSetTab(), so protect the create route during initial render.

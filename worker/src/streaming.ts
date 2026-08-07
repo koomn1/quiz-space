@@ -1,5 +1,32 @@
 import { PDFDocument } from 'pdf-lib';
 
+async function logAiPerformance(env: Env, authHeader: string, data: {
+  user_id: string,
+  operation: string,
+  provider: string,
+  model?: string,
+  chunk_count?: number,
+  total_pages?: number,
+  status: 'success' | 'error',
+  latency_ms: number,
+  error_message?: string
+}) {
+  if (env.SUPABASE_URL.includes('placeholder')) return;
+  try {
+    await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/ai_performance_logs`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': env.SUPABASE_ANON_KEY,
+        'Authorization': authHeader
+      },
+      body: JSON.stringify(data)
+    });
+  } catch (e) {
+    console.error('Logging failed', e);
+  }
+}
+
 export interface Env {
   OPENROUTER_API_KEY: string;
   OPENAI_API_KEY: string;
@@ -63,14 +90,29 @@ export async function handleStreamingExtraction(
 
   const losslessPrompt = `You are a lossless document extraction engine.
 Extract EVERY question exactly as written.
+
 Rules:
-- Do not summarize.
-- Do not rewrite.
-- Do not fix spelling.
-- Preserve numbering.
-- Preserve A/B/C/D exactly.
-- Do not skip any line.
-- Return JSON only.
+- Do not summarize or rewrite.
+- Do not skip any question, including multiple choice, true/false, and essay/short answer questions.
+- Preserve numbering and options (A/B/C/D) exactly.
+- If a question starts on one page and continues on the next, merge it into one complete question.
+- For Essay/Short answer questions, use type "essay" and leave options as an empty array [].
+- Return JSON only in the following format:
+{
+  "title": "Quiz Title",
+  "description": "Quiz Description",
+  "questions": [
+    {
+      "number": 1,
+      "text": "Question text...",
+      "type": "mcq", // "mcq" | "tf" | "essay"
+      "options": ["Option 1", "Option 2", ...], // empty array for essay
+      "correctIndex": 0, // index of correct option, 0 for essay
+      "correctAnswer": "The correct answer text",
+      "explanation": "Brief explanation"
+    }
+  ]
+}
 ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 1000)}` : ''}`;
 
   const stream = new ReadableStream({
@@ -164,19 +206,45 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
         };
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'complete', quiz: finalQuiz })}\n\n`));
 
+        // Log performance
+        await logAiPerformance(env, authHeader, {
+          user_id: userId,
+          operation: 'extraction_streaming',
+          provider: 'openrouter',
+          chunk_count: chunks.length,
+          total_pages: pageCount,
+          status: 'success',
+          latency_ms: Date.now() - startTime
+        });
+
         controller.close();
       } catch (error) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: String(error) })}\n\n`));
+        
+        await logAiPerformance(env, authHeader, {
+          user_id: userId,
+          operation: 'extraction_streaming',
+          provider: 'openrouter',
+          status: 'error',
+          latency_ms: Date.now() - startTime,
+          error_message: String(error)
+        });
+
         controller.close();
       }
     },
   });
 
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    },
-  });
+  const allowedOrigins = env.ALLOWED_ORIGIN.split(',').map(v => v.trim());
+  const responseHeaders: HeadersInit = {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': allowedOrigins[0],
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'X-Content-Type-Options': 'nosniff',
+  };
+
+  return new Response(stream, { headers: responseHeaders });
 }
