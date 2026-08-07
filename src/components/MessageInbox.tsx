@@ -64,7 +64,7 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
         const usersList: Member[] = [];
         
         profiles.forEach((p) => {
-          if (p.uid && p.uid !== userId) {
+          if (p.uid && p.uid !== userId && p.uid !== COSMO_ADMIN_UID && p.badgeSymbol !== '🤖') {
             usersList.push({
               uid: p.uid,
               name: p.name || (isAr ? 'عضو أكاديمي' : 'Scholar'),
@@ -72,7 +72,8 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
               bio: p.bio || '',
               badgeSymbol: p.badgeSymbol || '',
               badgeColor: p.badgeColor || '',
-              isPremium: p.isPremium || false
+              isPremium: p.isPremium || false,
+              avatar_url: p.avatar_url || ''
             });
           }
         });
@@ -317,7 +318,7 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
                 >
                   <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/50 flex items-center justify-center overflow-hidden shrink-0 text-slate-200">
                     <img 
-                      src={member.uid === COSMO_ADMIN_UID || member.badgeSymbol === '🤖' ? '/avatars/cosmo.svg' : (member.avatar_url || '/avatars/boy-1.svg')} 
+                      src={member.avatar_url || './avatars/boy-1.svg'} 
                       alt={member.name} 
                       className="w-full h-full object-cover" 
                     />
@@ -362,7 +363,7 @@ export default function MessageInbox({ lang, userId, userName }: MessageInboxPro
                 <div className="flex items-center gap-3 text-right">
                   <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center overflow-hidden text-white">
                     <img 
-                      src={selectedRecipient.uid === COSMO_ADMIN_UID || selectedRecipient.badgeSymbol === '🤖' ? '/avatars/cosmo.svg' : (selectedRecipient.avatar_url || '/avatars/boy-1.svg')} 
+                      src={selectedRecipient.avatar_url || './avatars/boy-1.svg'} 
                       alt={selectedRecipient.name} 
                       className="w-full h-full object-cover" 
                     />

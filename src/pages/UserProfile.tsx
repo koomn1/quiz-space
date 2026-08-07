@@ -1166,13 +1166,13 @@ export default function UserProfile({
                   </label>
                   <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5">
                     {[
-                      { name: 'Boy 1', url: '/avatars/boy-1.svg' },
-                      { name: 'Boy 2', url: '/avatars/boy-2.svg' },
-                      { name: 'Boy 3', url: '/avatars/boy-3.svg' },
-                      { name: 'Girl 1', url: '/avatars/girl-1.svg' },
-                      { name: 'Girl 2', url: '/avatars/girl-2.svg' },
-                      { name: 'Girl 3', url: '/avatars/girl-3.svg' },
-                      { name: 'Cosmo', url: '/avatars/cosmo.svg' },
+                      { name: 'Boy 1', url: './avatars/boy-1.svg' },
+                      { name: 'Boy 2', url: './avatars/boy-2.svg' },
+                      { name: 'Boy 3', url: './avatars/boy-3.svg' },
+                      { name: 'Girl 1', url: './avatars/girl-1.svg' },
+                      { name: 'Girl 2', url: './avatars/girl-2.svg' },
+                      { name: 'Girl 3', url: './avatars/girl-3.svg' },
+                      { name: 'Cosmo', url: './avatars/cosmo.svg' },
                     ].map((item, idx) => (
                       <button
                         key={idx}

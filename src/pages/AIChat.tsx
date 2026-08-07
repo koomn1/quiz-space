@@ -119,7 +119,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
     }
 
     if (userId && currentConvId) {
-      await saveAIChatMessage(userId, currentConvId, 'user', userMsg.text);
+      await saveAIChatMessage(userId, 'user', userMsg.text, !!selectedImage, currentConvId);
     }
 
     // AI Response logic
@@ -144,7 +144,7 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
       );
 
       if (userId && currentConvId) {
-        await saveAIChatMessage(userId, currentConvId, 'assistant', fullText);
+        await saveAIChatMessage(userId, 'cosmo', fullText, false, currentConvId);
       }
     } catch (err) {
       console.error(err);
@@ -290,7 +290,24 @@ export default function AIChat({ lang, isPremium, planName, userId, onUpgradeCli
               >
                 <ImageIcon size={20} />
               </button>
-              <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
+               <input 
+                 type="file" 
+                 ref={fileInputRef} 
+                 onChange={(e) => {
+                   const file = e.target.files?.[0];
+                   if (file) {
+                     const reader = new FileReader();
+                     reader.onload = (evt) => {
+                       if (evt.target?.result) {
+                         setSelectedImage(evt.target.result as string);
+                       }
+                     };
+                     reader.readAsDataURL(file);
+                   }
+                 }} 
+                 accept="image/*" 
+                 className="hidden" 
+               />
               
               <textarea
                 value={inputText}
