@@ -5,6 +5,7 @@
 
 export interface Question {
   id: string;
+  number?: number;
   type: 'mcq' | 'tf' | 'essay';
   text: string;
   options: string[]; // empty for True/False, or contains ["صح", "خطأ"]. empty for essay.
@@ -213,6 +214,7 @@ export interface QuestionRating {
 }
 
 export interface GeneratedQuestion {
+  number?: number;
   text: string;
   type: 'mcq' | 'tf' | 'essay';
   options?: string[];

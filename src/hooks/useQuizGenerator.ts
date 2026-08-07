@@ -113,99 +113,49 @@ export function useQuizGenerator() {
           }
         }
       } else if (type === 'file_direct') {
-        const isPdf = (mimeType || '').includes('pdf');
+        setProgress({
+          current: 0,
+          total: totalQuestions,
+          stage: 'generating',
+          message: 'جاري تحليل المستند باستخدام محرك الاستخراج الذكي...',
+        });
 
-        if (isPdf && sourceFile) {
-          // Split the PDF into one image per page, then process pages in
-          // parallel batches (up to 3 at a time) to cut total wait time
-          // without blasting the API with too many simultaneous requests.
-          setProgress({
-            current: 0,
-            total: 1,
-            stage: 'scanning',
-            message: 'جاري تقسيم ملف الـ PDF إلى صفحات مستقلة...',
+        let base64 = '';
+        if (sourceFile) {
+          const reader = new FileReader();
+          base64 = await new Promise((resolve) => {
+            reader.onload = () => resolve((reader.result as string).split(',')[1]);
+            reader.readAsDataURL(sourceFile);
           });
+        } else if (fileUri) {
+          base64 = fileUri.split(',')[1] || fileUri;
+        }
 
-          const pages = await splitPdfIntoPageImages(sourceFile, (current, total) => {
-            setProgress({
-              current,
-              total,
-              stage: 'scanning',
-              message: `جاري تجهيز الصفحة ${current} من ${total}...`,
-            });
-          });
+        if (!base64) throw new Error('لم يتم العثور على محتوى المستند.');
 
-          if (pages.length === 0) {
-            throw new Error('تعذّر قراءة أي صفحات من ملف الـ PDF المرفوع.');
-          }
+        const data = await generateQuizFromFile(base64, mimeType || 'application/pdf', totalQuestions, customInstruction, extractionMode);
 
-          const numPages = pages.length;
-          const perPageAmount = totalQuestions === 0 ? 0 : Math.max(1, Math.ceil(totalQuestions / numPages));
-          const seenQuestionKeys = new Set<string>();
+        if (data.questions && Array.isArray(data.questions)) {
+          if (!finalTitle && data.title) finalTitle = data.title;
+          if (!finalDescription && data.description) finalDescription = data.description;
+          accumulatedQuestions = data.questions;
 
-          // Process pages in parallel batches of up to 3
-          const BATCH_CONCURRENCY = 3;
-          let processedPages = 0;
-
-          for (let batchStart = 0; batchStart < pages.length; batchStart += BATCH_CONCURRENCY) {
-            const batch = pages.slice(batchStart, batchStart + BATCH_CONCURRENCY);
-
-            setProgress({
-              current: processedPages,
-              total: numPages,
-              stage: 'generating',
-              message: `جاري تحليل الصفحات ${batchStart + 1}–${Math.min(batchStart + BATCH_CONCURRENCY, numPages)} من ${numPages}...`,
-            });
-
-            const batchResults = await Promise.allSettled(
-              batch.map(page => generateQuizFromFile(page.base64, 'image/jpeg', perPageAmount, customInstruction, extractionMode))
-            );
-
-            for (const result of batchResults) {
-              processedPages++;
-              if (result.status === 'fulfilled') {
-                const data = result.value;
-                if (data.questions && Array.isArray(data.questions)) {
-                  if (!finalTitle && data.title) finalTitle = data.title;
-                  if (!finalDescription && data.description) finalDescription = data.description;
-                  for (const q of data.questions) {
-                    const key = String(q.text || '').trim().toLowerCase();
-                    if (key && !seenQuestionKeys.has(key)) {
-                      seenQuestionKeys.add(key);
-                      accumulatedQuestions.push(q);
-                    }
-                  }
-                }
-              } else {
-                console.warn('Failed to process a PDF page batch member:', result.reason);
-              }
+          // Validation logic for sequential numbering
+          const sorted = [...accumulatedQuestions].sort((a, b) => (a.number || 0) - (b.number || 0));
+          let expected = 1;
+          const gaps: number[] = [];
+          for (const q of sorted) {
+            if (q.number && q.number > expected) {
+              for (let m = expected; m < q.number; m++) gaps.push(m);
+              expected = q.number + 1;
+            } else if (q.number) {
+              expected = q.number + 1;
             }
-
-            setProgress({
-              current: processedPages,
-              total: numPages,
-              stage: 'generating',
-              message: `تم معالجة ${processedPages} من ${numPages} صفحة...`,
-            });
-
-            if (totalQuestions > 0 && accumulatedQuestions.length >= totalQuestions) break;
           }
 
-        } else {
-          setProgress({
-            current: 0,
-            total: totalQuestions,
-            stage: 'generating',
-            message: 'جاري مسح المستند وتحليله بالذكاء الاصطناعي متعدد الوسائط...',
-          });
-
-          if (!fileUri) throw new Error('لم يتم العثور على محتوى المستند.');
-          const data = await generateQuizFromFile(fileUri, mimeType || 'image/png', totalQuestions, customInstruction, extractionMode);
-
-          if (data.questions && Array.isArray(data.questions)) {
-            if (!finalTitle && data.title) finalTitle = data.title;
-            if (!finalDescription && data.description) finalDescription = data.description;
-            accumulatedQuestions = data.questions;
+          if (gaps.length > 0) {
+            console.warn('Gaps detected in question numbering:', gaps);
+            // Optionally notify user or attempt a targeted recovery here
           }
         }
       }
@@ -237,6 +187,7 @@ export function useQuizGenerator() {
           const isEnglish = !/[\u0600-\u06FF]/.test(q.text || '');
           return {
             id: `q-gen-${idx}-${Date.now()}`,
+            number: q.number || (idx + 1),
             type: q.type === 'tf' ? 'tf' : q.type === 'essay' ? 'essay' : 'mcq',
             text: q.text || '',
             options: q.type === 'tf'

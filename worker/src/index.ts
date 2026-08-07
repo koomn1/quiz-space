@@ -1,3 +1,7 @@
+import { PDFDocument } from 'pdf-lib';
+import * as mammoth from 'mammoth';
+import * as XLSX from 'xlsx';
+
 export interface Env {
   OPENROUTER_API_KEY: string;
   OPENAI_API_KEY: string;
@@ -154,67 +158,151 @@ async function handler(request: Request, env: Env): Promise<Response> {
     }
 
     if (path === '/api/ai/generate-file') {
-      // amount === 0 is the frontend's "Auto-detect" option (COUNT_OPTIONS_WITH_AUTO,
-      // value: 0) — it means "extract exactly however many questions the document
-      // actually contains", not "generate zero questions". The cap of 500 matches
-      // the highest option the UI offers.
-      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 12_000_000 || typeof body.mimeType !== 'string' || !Number.isInteger(body.amount) || body.amount < 0 || body.amount > 500) {
+      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 15_000_000 || typeof body.mimeType !== 'string' || !Number.isInteger(body.amount) || body.amount < 0 || body.amount > 500) {
         return json({ error: 'Invalid file generation request' }, 400, headers);
       }
-      const isAutoDetect = body.amount === 0;
-      const isLiteral = body.extractionMode !== 'generate'; // default to the safer, non-inventive mode
-      const extraInstruction = typeof body.customInstruction === 'string' ? ` تعليمات إضافية من المستخدم: ${body.customInstruction.slice(0, 2000)}` : '';
+      
+      const isPdf = body.mimeType === 'application/pdf';
+      const isLiteral = body.extractionMode !== 'generate';
+      const extraInstruction = typeof body.customInstruction === 'string' ? ` تعليمات إضافية: ${body.customInstruction.slice(0, 1000)}` : '';
 
-      // Unified JSON shape that covers all question types with clear type rules
-      const jsonShape = `أجب بـ JSON صالح فقط وفق الشكل التالي، ولا تكتب أي شيء قبله أو بعده:
-{"title":"عنوان الاختبار","description":"وصف الاختبار","questions":[
-  {"text":"نص السؤال (إذا كان مرتبطاً بصورة صِف محتواها هكذا: [صورة: وصف الصورة])","type":"mcq","options":["أ","ب","ج","د"],"correctIndex":0,"correctAnswer":"","explanation":"شرح مختصر"},
-  {"text":"سؤال صح أو خطأ","type":"tf","options":["صح","خطأ"],"correctIndex":0,"correctAnswer":"صح","explanation":"شرح"},
-  {"text":"سؤال مقالي","type":"essay","options":[],"correctIndex":0,"correctAnswer":"الإجابة النموذجية","explanation":"شرح"}
-]}
-قواعد صارمة لتحديد نوع السؤال:
-- اختيار من متعدد (أكثر من خيارين) → type: "mcq"
-- صح/خطأ أو True/False أو نعم/لا → type: "tf" مع options: ["صح","خطأ"] أو ["True","False"]
-- اكتب/اشرح/ناقش/عرّف/قارن/استنتج → type: "essay" مع options: []`;
+      // User's specific "Lossless" prompt for document extraction
+      const losslessPrompt = `You are a lossless document extraction engine.
 
-      let prompt: string;
-      if (isLiteral && isAutoDetect) {
-        prompt = `أنت أداة استخراج دقيقة وليس مولّد أسئلة. المستند المرفق يحتوي على أسئلة جاهزة.
-استخرج بأمانة تامة **كل** الأسئلة الموجودة فعلياً في هذه الصفحة بنفس صياغتها وترتيبها وخياراتها الأصلية.
-- لا تحذف أي سؤال، ولا تولد سؤالاً جديداً من عندك.
-- إذا كانت الصفحة تحتوي صوراً أو رسوماً مرتبطة بسؤال، صِف محتوى الصورة بين قوسين في نص السؤال: [صورة: وصف].
-- إذا لم تجد أي أسئلة، أرجع قائمة أسئلة فارغة.
-- حدد نوع كل سؤال بدقة (mcq / tf / essay) حسب القواعد في الشكل أدناه.
-إن كانت الإجابة غير مكتوبة صراحة، استنتجها من محتوى المادة العلمية نفسها.${extraInstruction}
-${jsonShape}`;
-      } else if (isLiteral && !isAutoDetect) {
-        prompt = `أنت أداة استخراج دقيقة وليس مولّد أسئلة. المستند المرفق يحتوي على أسئلة جاهزة.
-استخرج منه بأمانة تامة حتى ${body.amount} سؤال من الأسئلة الموجودة فعلياً بنفس صياغتها الأصلية.
-- لا تولد أي سؤال جديد. إن كان العدد الفعلي أقل من ${body.amount}، استخرج كل ما هو موجود ولا تُكمل العدد باختراع أسئلة.
-- إذا كانت الصفحة تحتوي صوراً أو رسوماً مرتبطة بسؤال، صِف محتوى الصورة بين قوسين في نص السؤال: [صورة: وصف].
-- حدد نوع كل سؤال بدقة (mcq / tf / essay) حسب القواعد في الشكل أدناه.
-إن كانت الإجابة غير مكتوبة صراحة، استنتجها من محتوى المادة العلمية نفسها.${extraInstruction}
-${jsonShape}`;
-      } else if (!isLiteral && isAutoDetect) {
-        prompt = `اقرأ محتوى المستند المرفق (شرح، محاضرة، أو فصل دراسي) بعناية، وولّد أكبر عدد ممكن من الأسئلة عالية الجودة تغطي كل نقطة علمية مهمة وردت في هذه الصفحة.
-- نوّع بين اختيار من متعدد وصح/خطأ وأسئلة مقالية حسب طبيعة المحتوى.
-- إذا كانت الصفحة تحتوي صوراً أو رسوماً، اذكر وصفها في نص السؤال المرتبط بها: [صورة: وصف].
-- لا تكرر نفس الفكرة في أكثر من سؤال، وبدون إضافة معلومات من خارج المستند.${extraInstruction}
-${jsonShape}`;
-      } else {
-        prompt = `اقرأ محتوى المستند المرفق (شرح، محاضرة، أو فصل دراسي) بعناية، وولّد بالضبط ${body.amount} سؤال عالي الجودة يغطون أهم النقاط العلمية الواردة في هذه الصفحة.
-- نوّع بين اختيار من متعدد وصح/خطأ وأسئلة مقالية حسب طبيعة المحتوى.
-- إذا كانت الصفحة تحتوي صوراً أو رسوماً، اذكر وصفها في نص السؤال المرتبط بها: [صورة: وصف].
-- لا تكرر نفس الفكرة في أكثر من سؤال، وبدون إضافة معلومات من خارج المستند.${extraInstruction}
-${jsonShape}`;
+Extract EVERY question exactly as written.
+
+Rules:
+- Do not summarize.
+- Do not rewrite.
+- Do not fix spelling.
+- Preserve numbering.
+- Preserve A/B/C/D exactly.
+- Do not skip any line.
+- If a question starts on one page and continues on the next, merge it into one complete question.
+- Return JSON only in the following format:
+{
+  "title": "Quiz Title",
+  "description": "Quiz Description",
+  "questions": [
+    {
+      "number": 1,
+      "text": "Question text...",
+      "type": "mcq",
+      "options": ["A...", "B...", "C...", "D..."],
+      "correctIndex": 0,
+      "correctAnswer": "A...",
+      "explanation": "Brief explanation"
+    }
+  ]
+}
+
+Strict Rules for type:
+- Multiple choice -> "mcq"
+- True/False -> "tf"
+- Essay/Short answer -> "essay"
+${extraInstruction}`;
+
+      if (isLiteral) {
+        try {
+          let textContent = '';
+          const fileData = Uint8Array.from(atob(body.fileBase64), c => c.charCodeAt(0));
+
+          if (isPdf) {
+            // PDF Chunking Pipeline
+            const pdfDoc = await PDFDocument.load(fileData);
+            const pageCount = pdfDoc.getPageCount();
+            const chunkSize = 3;
+            const chunks: string[] = [];
+            
+            for (let i = 0; i < pageCount; i += chunkSize) {
+              const newDoc = await PDFDocument.create();
+              const end = Math.min(i + chunkSize, pageCount);
+              const pages = await newDoc.copyPages(pdfDoc, Array.from({ length: end - i }, (_, k) => i + k));
+              pages.forEach(p => newDoc.addPage(p));
+              const pdfBytes = await newDoc.save();
+              let binary = '';
+              const bytes = new Uint8Array(pdfBytes);
+              for (let j = 0; j < bytes.byteLength; j++) binary += String.fromCharCode(bytes[j]);
+              chunks.push(btoa(binary));
+            }
+
+            const chunkResults = await Promise.all(chunks.map(async (chunkBase64) => {
+              try {
+                const text = await callOpenRouterWithFallback(env, [{
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: losslessPrompt },
+                    { type: 'file', file: { filename: 'chunk.pdf', file_data: `data:application/pdf;base64,${chunkBase64}` } },
+                  ]
+                }], OPENROUTER_VISION_FALLBACKS, [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }]);
+                return extractJson(text) as any;
+              } catch (e) {
+                console.error("Chunk processing failed:", e);
+                return null;
+              }
+            }));
+
+            const finalQuiz: any = {
+              title: chunkResults.find(r => r?.title)?.title || "Generated Quiz",
+              description: chunkResults.find(r => r?.description)?.description || "",
+              questions: []
+            };
+            for (const res of chunkResults) {
+              if (res && Array.isArray(res.questions)) finalQuiz.questions.push(...res.questions);
+            }
+            return json(finalQuiz, 200, headers);
+          } else if (body.mimeType.includes('wordprocessingml') || body.mimeType.includes('msword')) {
+            // Word Extraction
+            const result = await mammoth.extractRawText({ arrayBuffer: fileData.buffer });
+            textContent = result.value;
+          } else if (body.mimeType.includes('spreadsheetml') || body.mimeType.includes('excel')) {
+            // Excel Extraction
+            const workbook = XLSX.read(fileData, { type: 'array' });
+            textContent = workbook.SheetNames.map(name => {
+              const sheet = workbook.Sheets[name];
+              return `Sheet: ${name}\n${XLSX.utils.sheet_to_txt(sheet)}`;
+            }).join('\n\n');
+          } else if (body.mimeType.includes('presentationml') || body.mimeType.includes('powerpoint')) {
+            // PPTX Extraction (OpenRouter fallback as PPTX parsing is complex)
+            const text = await callOpenRouterWithFallback(env, [{
+              role: 'user',
+              content: [
+                { type: 'text', text: losslessPrompt },
+                { type: 'file', file: { filename: 'presentation.pptx', file_data: `data:${body.mimeType};base64,${body.fileBase64}` } },
+              ]
+            }], OPENROUTER_VISION_FALLBACKS, [{ id: 'file-parser' }]);
+            return json(extractJson(text), 200, headers);
+          }
+
+          if (textContent) {
+            // Process extracted text in chunks if it's very long
+            const textChunks = textContent.match(/[\s\S]{1,10000}/g) || [textContent];
+            const chunkResults = await Promise.all(textChunks.map(async (chunk) => {
+              const text = await callOpenRouterWithFallback(env, [{
+                role: 'user',
+                content: `Content:\n${chunk}\n\n${losslessPrompt}`
+              }]);
+              return extractJson(text) as any;
+            }));
+
+            const finalQuiz: any = {
+              title: chunkResults.find(r => r?.title)?.title || "Generated Quiz",
+              description: chunkResults.find(r => r?.description)?.description || "",
+              questions: []
+            };
+            for (const res of chunkResults) {
+              if (res && Array.isArray(res.questions)) finalQuiz.questions.push(...res.questions);
+            }
+            return json(finalQuiz, 200, headers);
+          }
+        } catch (err) {
+          console.error("Extraction failed:", err);
+          // Fallback to direct file sending if custom extraction fails
+        }
       }
 
-
-      const isPdf = body.mimeType === 'application/pdf';
-      // PDFs aren't images — sending a PDF as an image_url to a vision model
-      // silently fails since the model can't decode raw PDF bytes as a
-      // picture. OpenRouter has a dedicated `file` content part + pdf-text
-      // parsing plugin for this; only real images go through image_url.
+      // Fallback for non-literal mode or failed extraction
+      const prompt = isLiteral ? losslessPrompt : quizPrompt("document content", body.amount, []);
       const text = await callOpenRouterWithFallback(env, [{
         role: 'user',
         content: isPdf
@@ -227,6 +315,7 @@ ${jsonShape}`;
               { type: 'image_url', image_url: { url: `data:${body.mimeType};base64,${body.fileBase64}` } },
             ],
       }], OPENROUTER_VISION_FALLBACKS, isPdf ? [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }] : undefined);
+      
       return json(extractJson(text), 200, headers);
     }
 
