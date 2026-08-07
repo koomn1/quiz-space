@@ -138,6 +138,9 @@ export default function App() {
     if (pathParts[0] === 'profile' && pathParts[1]) {
       return 'profile';
     }
+    if (pathParts[0] === 'quiz' || pathParts[0] === 'dashboard') {
+      return 'landing';
+    }
     if (pathParts[0]) {
       return pathParts[0];
     }
@@ -155,6 +158,9 @@ export default function App() {
       }
       if (parts[0] === 'profile' && parts[1]) {
         return 'profile';
+      }
+      if (parts[0] === 'quiz' || parts[0] === 'dashboard') {
+        return 'landing';
       }
       if (parts[0]) {
         return parts[0];

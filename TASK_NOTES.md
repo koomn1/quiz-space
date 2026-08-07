@@ -76,3 +76,14 @@ Still to do:
 9. Search input: done (inline style).
 10. Then: npx vite build, commit+push, verify deploy: grep chunks for 'fixed inset-0' and 'gpt-oss'.
 11. Worker chunk also deployed by workflow; verify gpt-oss in main bundle too (AI worker is separate domain, not bundled in pages assets).
+## v7 — blank screen diagnosis (screenshot /quiz URL)
+User screenshot URL: koomn1.github.io/quiz (bare /quiz, no id). App activeTab memo returns 'quiz' but activeQuizId=null -> QuizResolver branch skipped -> no tab section matches 'quiz' -> blank page with only header + footer. FIX: when activeTab==='quiz' && !activeQuizId -> show landing (or redirect). Do: in activeTab memo, `if (pathParts[0]==='quiz' && !pathParts[1]) return 'landing'` (hash version too).
+
+Also: Sidebar aichat item is isPremiumOnly (line 69 Sidebar.tsx). Locked users get alert+redirect to billing. User said "Cosmo not showing at all" — likely they're free plan and clicking shows lock alert OR on mobile there's no sidebar (header nav?). Check Header.tsx for aichat entry. The user probably expected Cosmo in chat screens, not sidebar.
+
+Chat avatars: AssistantAvatar renders green Sparkles icon (not an image) — user wants Cosmo avatar visible. Keep as-is (it does render), but if they see blank it was the URL issue.
+
+Plan:
+1. Fix activeTab memo: bare /quiz -> landing.
+2. Also ensure 'dashboard' bare path -> landing.
+3. Rebuild, commit push, verify deploy, message user.
