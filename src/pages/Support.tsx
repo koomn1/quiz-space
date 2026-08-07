@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Mail, Phone, MessageCircle, Heart, ShieldCheck, Zap } from 'lucide-react';
+import { Mail, Phone, MessageCircle, Heart, Shield, Zap, Star } from 'lucide-react';
 
 interface SupportProps {
   lang: 'ar' | 'en';
@@ -9,98 +9,118 @@ interface SupportProps {
 
 export default function Support({ lang }: SupportProps) {
   const isAr = lang === 'ar';
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    gsap.fromTo(".support-card", 
-      { opacity: 0, y: 30, scale: 0.9 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.2, ease: 'power3.out' }
-    );
-    gsap.fromTo(".contact-btn",
-      { opacity: 0, x: -20 },
-      { opacity: 1, x: 0, duration: 0.5, stagger: 0.1, delay: 0.5, ease: 'back.out(1.7)' }
-    );
+    const tl = gsap.timeline();
+    tl.from(".support-header", { opacity: 0, y: -30, duration: 0.8, ease: "power3.out" })
+      .from(".support-card", { opacity: 0, scale: 0.9, duration: 0.6, stagger: 0.1, ease: "back.out(1.7)" }, "-=0.4")
+      .from(".support-footer", { opacity: 0, y: 20, duration: 0.5 }, "-=0.2");
   }, { scope: containerRef });
 
-  return (
-    <div ref={containerRef} className="min-h-screen p-4 sm:p-8 bg-[#0a0518] text-white overflow-hidden relative">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none" />
+  const contactMethods = [
+    {
+      icon: <Mail className="w-6 h-6" />,
+      title: isAr ? 'البريد الإلكتروني' : 'Email Support',
+      value: 'youssefbadawy5002@gmail.com',
+      link: 'mailto:youssefbadawy5002@gmail.com',
+      color: 'bg-blue-500',
+      desc: isAr ? 'راسلنا في أي وقت وسنرد عليك خلال 24 ساعة.' : 'Email us anytime, we reply within 24 hours.'
+    },
+    {
+      icon: <Phone className="w-6 h-6" />,
+      title: isAr ? 'اتصال هاتفي' : 'Phone Call',
+      value: '01018995002',
+      link: 'tel:01018995002',
+      color: 'bg-indigo-500',
+      desc: isAr ? 'متاحون للرد على استفساراتكم العاجلة.' : 'Available for your urgent inquiries.'
+    },
+    {
+      icon: <MessageCircle className="w-6 h-6" />,
+      title: isAr ? 'واتساب' : 'WhatsApp',
+      value: '01018995002',
+      link: 'https://wa.me/201018995002',
+      color: 'bg-green-500',
+      desc: isAr ? 'تواصل معنا مباشرة عبر الواتساب.' : 'Chat with us directly on WhatsApp.'
+    }
+  ];
 
-      <div className="max-w-4xl mx-auto relative z-10">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-black mb-4 bg-gradient-to-r from-white via-purple-200 to-indigo-300 bg-clip-text text-transparent">
-            {isAr ? 'الدعم الفني والمساعدة' : 'Support & Assistance'}
+  return (
+    <div ref={containerRef} className="min-h-screen bg-slate-50 dark:bg-[#0f172a] p-6 md:p-12 transition-colors duration-500">
+      <div className="max-w-6xl mx-auto">
+        {/* Header Section */}
+        <div className="support-header text-center mb-16">
+          <div className="inline-flex items-center justify-center p-3 bg-purple-100 dark:bg-purple-900/30 rounded-2xl mb-6 text-purple-600 dark:text-purple-400 shadow-sm">
+            <Heart className="w-8 h-8 fill-current" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-white mb-4 tracking-tight">
+            {isAr ? 'نحن هنا لمساعدتك' : 'We\'re Here to Help'}
           </h1>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
             {isAr 
-              ? 'نحن هنا لضمان حصولك على أفضل تجربة تعليمية. لا تتردد في التواصل معنا في أي وقت!' 
-              : 'We are here to ensure you have the best learning experience. Feel free to reach out to us anytime!'}
+              ? 'شكرًا لكونك جزءًا من عائلة QuizSpace. نحن نسعى دائماً لتقديم أفضل تجربة تعليمية لك، وفريقنا جاهز للإجابة على جميع استفساراتك.' 
+              : 'Thank you for being part of the QuizSpace family. We strive to provide the best educational experience, and our team is ready to answer all your questions.'}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          <div className="support-card p-8 rounded-3xl bg-slate-900/40 border border-white/10 backdrop-blur-xl hover:border-purple-500/50 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-6">
-              <Heart className="text-purple-400 w-6 h-6" />
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          {[
+            { icon: <Shield className="w-5 h-5" />, title: isAr ? 'دعم آمن' : 'Secure Support', desc: isAr ? 'بياناتك وخصوصيتك هي أولويتنا.' : 'Your data and privacy are our priority.' },
+            { icon: <Zap className="w-5 h-5" />, title: isAr ? 'استجابة سريعة' : 'Fast Response', desc: isAr ? 'نرد على جميع الاستفسارات بأسرع وقت.' : 'We reply to all inquiries as fast as possible.' },
+            { icon: <Star className="w-5 h-5" />, title: isAr ? 'خدمة متميزة' : 'Premium Service', desc: isAr ? 'نهتم بكل تفاصيل تجربتك التعليمية.' : 'We care about every detail of your learning experience.' }
+          ].map((feat, i) => (
+            <div key={i} className="support-card p-8 bg-white dark:bg-slate-800/40 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-6">
+                {feat.icon}
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3">{feat.title}</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{feat.desc}</p>
             </div>
-            <h3 className="text-xl font-bold mb-3">{isAr ? 'رسالة لمستخدمينا' : 'Message to Our Users'}</h3>
-            <p className="text-slate-400 leading-relaxed">
-              {isAr 
-                ? 'أنتم القلب النابض لـ QuizSpace. كل تعليق أو اقتراح منكم يساعدنا على التطور وتقديم أدوات ذكاء اصطناعي أفضل لمستقبلكم الدراسي. شكراً لثقتكم بنا!' 
-                : 'You are the beating heart of QuizSpace. Every piece of feedback or suggestion from you helps us evolve and provide better AI tools for your academic future. Thank you for trusting us!'}
-            </p>
-          </div>
-
-          <div className="support-card p-8 rounded-3xl bg-slate-900/40 border border-white/10 backdrop-blur-xl hover:border-indigo-500/50 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 flex items-center justify-center mb-6">
-              <ShieldCheck className="text-indigo-400 w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold mb-3">{isAr ? 'التزامنا بالجودة' : 'Our Commitment'}</h3>
-            <p className="text-slate-400 leading-relaxed">
-              {isAr 
-                ? 'نلتزم بالرد على جميع استفساراتكم في أسرع وقت ممكن. فريقنا التقني يعمل على مدار الساعة لحل أي مشكلات تواجهونها.' 
-                : 'We are committed to responding to all your inquiries as quickly as possible. Our technical team works around the clock to resolve any issues you encounter.'}
-            </p>
-          </div>
+          ))}
         </div>
 
-        <div className="support-card p-8 rounded-3xl bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border border-white/20 backdrop-blur-2xl">
-          <h2 className="text-2xl font-black mb-8 text-center">{isAr ? 'تواصل معنا مباشرة' : 'Contact Us Directly'}</h2>
-          
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+        {/* Contact Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {contactMethods.map((method, idx) => (
             <a 
-              href="mailto:youssefbadawy5002@gmail.com"
-              className="contact-btn flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-white text-slate-900 font-black hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/5"
-            >
-              <Mail className="w-5 h-5" />
-              <span>youssefbadawy5002@gmail.com</span>
-            </a>
-            
-            <a 
-              href="tel:01018995002"
-              className="contact-btn flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-indigo-600 text-white font-black hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-500/20"
-            >
-              <Phone className="w-5 h-5" />
-              <span>01018995002</span>
-            </a>
-
-            <a 
-              href="https://wa.me/201018995002"
-              target="_blank"
+              key={idx} 
+              href={method.link} 
+              target="_blank" 
               rel="noopener noreferrer"
-              className="contact-btn flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-emerald-600 text-white font-black hover:scale-105 active:scale-95 transition-all shadow-xl shadow-emerald-500/20"
+              className="support-card group relative overflow-hidden p-8 bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
             >
-              <MessageCircle className="w-5 h-5" />
-              <span>WhatsApp</span>
+              <div className={`absolute top-0 right-0 w-32 h-32 ${method.color} opacity-5 blur-3xl -mr-16 -mt-16 group-hover:opacity-10 transition-opacity`} />
+              
+              <div className={`w-14 h-14 rounded-2xl ${method.color} text-white flex items-center justify-center mb-6 shadow-lg shadow-inherit/20`}>
+                {method.icon}
+              </div>
+              
+              <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">
+                {method.title}
+              </h3>
+              
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed font-medium">
+                {method.desc}
+              </p>
+              
+              <div className="flex items-center justify-between mt-auto">
+                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 font-mono">
+                  {method.value}
+                </span>
+                <div className={`w-8 h-8 rounded-full ${method.color} text-white flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all`}>
+                  <Zap className="w-4 h-4 fill-current" />
+                </div>
+              </div>
             </a>
-          </div>
+          ))}
         </div>
 
-        <div className="mt-12 text-center text-slate-500 text-sm flex items-center justify-center gap-2">
-          <Zap className="w-4 h-4 text-yellow-500" />
-          <span>{isAr ? 'مدعوم بواسطة Cosmo AI' : 'Powered by Cosmo AI'}</span>
+        {/* Footer Text */}
+        <div className="support-footer text-center mt-20">
+          <p className="text-slate-400 dark:text-slate-500 text-sm font-bold tracking-wide">
+            {isAr ? '© 2026 QuizSpace - صنع بكل حب لدعم رحلتك التعليمية' : '© 2026 QuizSpace - Made with love to support your learning journey'}
+          </p>
         </div>
       </div>
     </div>
