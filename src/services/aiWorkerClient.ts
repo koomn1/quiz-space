@@ -138,7 +138,12 @@ export async function askAIStream(
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed.startsWith('data:')) continue;
-      const dataStr = trimmed.slice(5).trim();
+      let dataStr = trimmed.slice(5).trim();
+      if (!dataStr) continue;
+      // OpenRouter prepends [OPENAI_STREAM_CHUNK] to some models (gpt-oss etc.)
+      if (dataStr.startsWith('[OPENAI_STREAM_CHUNK]')) {
+        dataStr = dataStr.slice(21);
+      }
       if (dataStr === '[DONE]') continue;
       try {
         const parsed = JSON.parse(dataStr);

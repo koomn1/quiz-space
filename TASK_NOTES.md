@@ -87,3 +87,30 @@ Plan:
 1. Fix activeTab memo: bare /quiz -> landing.
 2. Also ensure 'dashboard' bare path -> landing.
 3. Rebuild, commit push, verify deploy, message user.
+## v8 — 3 user complaints (Aug 8)
+1. **Cosmo AI chat empty (no reply)** — user sends msg, "كوزمو AI بيفكر..." stuck, no reply shown.
+   - Already fixed: SSE parser in src/services/aiWorkerClient.ts now strips `[OPENAI_STREAM_CHUNK]` prefix (gpt-oss uses it). Worker fallback list: openai/gpt-oss-20b:free, qwen/qwen3-235b-a22b:free, nvidia/nemotron-3-super-120b-a12b:free, meta-llama/llama-3.3-70b-instruct:free
+   - AIChat.tsx already throws on !fullText and shows error banner + retry. DONE (not committed yet? -> need commit+push after rebuild).
+2. **Arabic quality bad** — Arabic user said output "كلام مش مفهوم". Fix: switch primary streaming model to qwen3-235b-a22b:free (best Arabic among free), put gpt-oss as fallback instead. Also quizPrompt worker models: change OPENROUTER_TEXT_MODEL in index.ts default to qwen3.
+3. **100 questions -> only 40 returned** — cause found: src/hooks/useQuizGenerator.ts uses BATCH_SIZE=40; each batch calls generateQuizWithFallback (from useQuizzes.ts). Only 1 batch of 40 came back? Likely one batch failed or user saw partial. No enforcement that each batch returns full amount. Fix: in worker, after JSON parse, if questions.length < amount, retry generation up to 2x with instruction to fill remaining count (call again appending previously generated text questions + ask for remainder), OR simpler: in worker extractJson validation, if count < amount, log; and in useQuizGenerator if batch returns < expected, retry that batch once with remaining count. Also strengthen quizPrompt: emphasize EXACT count, don't stop early.
+   - quizPrompt already says `اختباراً من ${amount} سؤال` — strengthen: add "يجب أن يكون عدد الأسئلة بالضبط ${amount} ولا أقل" and repeat at end of prompt.
+
+### Key locations
+- worker/src/index.ts: OPENROUTER_TEXT_MODEL (line 25), OPENROUTER_TEXT_FALLBACKS (line 30), quizPrompt (line 95), extractJson (line 92), /api/ai/openrouter/stream (430)
+- src/services/aiWorkerClient.ts: askAIStream SSE parsing (fixed locally, not pushed)
+- src/hooks/useQuizGenerator.ts: BATCH_SIZE=40 (line 66), topic loop line 68-91
+- src/hooks/useQuizzes.ts: generateQuizWithFallback definition
+- src/pages/AIChat.tsx: sendMessage + error banner done
+- Sidebar.tsx line 69: aichat isPremiumOnly (user said not visible; earlier explained; user didn't follow up)
+
+### Deploy state
+- Last pushed commit: 89abde3 (blank page fix). AIChat fixes (theme/fullscreen/error banner/avatars) = commit 66e2e7e pushed earlier.
+- Worker deployed via workflow 'Deploy AI Worker' job = success. Local worker bundle uses npx wrangler deploy in CI.
+- Verify after push: index chunk + check AIChat chunk for fixes.
+
+### Next actions (in order)
+1. In worker: swap primary/streaming model to qwen3-235b-a22b:free (better Arabic), gpt-oss fallback 2nd; strengthen quizPrompt exact-count; add batch validation (if parsed questions < amount, retry once with remaining).
+2. In useQuizGenerator: if a batch returns fewer than expected, retry that batch with remaining count once; also handle failure per-batch gracefully (continue loop).
+3. Rebuild frontend, commit+push all.
+4. Verify deploy: index chunk has fixes, run view jobs success.
+5. Deliver message to user.

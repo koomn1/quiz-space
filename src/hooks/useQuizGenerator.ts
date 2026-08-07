@@ -76,11 +76,26 @@ export function useQuizGenerator() {
             message: `جاري توليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${totalQuestions} سؤال)...`,
           });
 
-          const data = await generateQuizWithFallback(
+          let data = await generateQuizWithFallback(
             topic || '',
             currentBatchSize,
             accumulatedQuestions.map(q => q.text)
           );
+          // Models occasionally return fewer questions than requested —
+          // retry the batch once, asking for the exact missing remainder.
+          const returned = Array.isArray(data?.questions) ? data.questions.length : 0;
+          if (returned > 0 && returned < currentBatchSize) {
+            try {
+              const extra = await generateQuizWithFallback(
+                topic || '',
+                currentBatchSize - returned,
+                [...accumulatedQuestions.map(q => q.text), ...data.questions.map((q: any) => String(q.text || ''))].slice(-200)
+              );
+              if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
+                data.questions = [...data.questions, ...extra.questions];
+              }
+            } catch { /* keep whatever we already have */ }
+          }
 
           if (data.questions && Array.isArray(data.questions)) {
             if (!finalTitle && data.title) finalTitle = data.title;
@@ -100,11 +115,24 @@ export function useQuizGenerator() {
             message: `جاري تحليل النص وتوليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${totalQuestions} سؤال)...`,
           });
 
-          const data = await generateQuizWithFallback(
+          let data = await generateQuizWithFallback(
             `النص المصدر للأسئلة:\n\n${text}`,
             currentBatchSize,
             accumulatedQuestions.map(q => q.text)
           );
+          const returned2 = Array.isArray(data?.questions) ? data.questions.length : 0;
+          if (returned2 > 0 && returned2 < currentBatchSize) {
+            try {
+              const extra = await generateQuizWithFallback(
+                `النص المصدر للأسئلة:\n\n${text}`,
+                currentBatchSize - returned2,
+                [...accumulatedQuestions.map(q => q.text), ...data.questions.map((q: any) => String(q.text || ''))].slice(-200)
+              );
+              if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
+                data.questions = [...data.questions, ...extra.questions];
+              }
+            } catch { /* keep whatever we already have */ }
+          }
 
           if (data.questions && Array.isArray(data.questions)) {
             if (!finalTitle && data.title) finalTitle = data.title;

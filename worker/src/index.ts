@@ -22,12 +22,14 @@ type Provider = 'openrouter' | 'openai' | 'groq' | 'deepseek';
 // endpoints (including the ones previously used here) were delisted mid-2026.
 // These are confirmed live on the free tier as of Aug 2026; double-check at
 // https://openrouter.ai/models?max_price=0 if generation starts failing again.
-const OPENROUTER_TEXT_MODEL = 'openai/gpt-oss-20b:free';
+// qwen3 is the strongest free OpenRouter model for Arabic text; gpt-oss
+// (very fast) and nemotron-3-super (very fast, 120B) sit in the fallbacks.
+const OPENROUTER_TEXT_MODEL = 'qwen/qwen3-235b-a22b:free';
 const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
 // Free models on OpenRouter get rate-limited hard during peak hours and can
 // disappear without warning — if the primary model fails, try these next
 // instead of just erroring out.
-const OPENROUTER_TEXT_FALLBACKS = ['openai/gpt-oss-20b:free', 'qwen/qwen3-235b-a22b:free', 'nvidia/nemotron-3-super-120b-a12b:free', 'meta-llama/llama-3.3-70b-instruct:free'];
+const OPENROUTER_TEXT_FALLBACKS = ['qwen/qwen3-235b-a22b:free', 'openai/gpt-oss-20b:free', 'nvidia/nemotron-3-super-120b-a12b:free', 'meta-llama/llama-3.3-70b-instruct:free', 'deepseek/deepseek-v3-0324:free'];
 const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'google/gemma-4-26b-a4b-it:free'];
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
@@ -94,14 +96,15 @@ function extractJson(text: string): unknown {
 
 function quizPrompt(topic: string, amount: number, previous: string[]): string {
   const exclusions = previous.length ? `\nلا تكرر هذه الأسئلة: ${previous.join(' | ')}` : '';
-  return `أنشئ اختباراً من ${amount} سؤال عن: ${topic}.${exclusions}
+  return `أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.${exclusions}
 نوّع أنواع الأسئلة: اختيار من متعدد (mcq) وصح/خطأ (tf) وأسئلة مقالية (essay) حسب الموضوع.
 أجب بـ JSON صالح فقط وفق الشكل التالي:
 {"title":"عنوان الاختبار","description":"وصف الاختبار","questions":[
   {"text":"نص السؤال","type":"mcq","options":["خيار 1","خيار 2","خيار 3","خيار 4"],"correctIndex":0,"correctAnswer":"","explanation":"الشرح العلمي"},
   {"text":"سؤال صح أو خطأ","type":"tf","options":["صح","خطأ"],"correctIndex":0,"correctAnswer":"صح","explanation":"شرح"},
   {"text":"سؤال مقالي","type":"essay","options":[],"correctIndex":0,"correctAnswer":"الإجابة النموذجية","explanation":"شرح"}
-]}`;
+]
+— تذكير أخير: ${amount} سؤال بالضبط، لا أقل، ثم أغلق JSON."};
 }
 
 async function callOpenRouter(env: Env, messages: any[], model = OPENROUTER_TEXT_MODEL, plugins?: any[]): Promise<string> {
@@ -180,8 +183,32 @@ async function handler(request: Request, env: Env): Promise<Response> {
         if (!['openrouter', 'openai', 'groq', 'deepseek'].includes(provider) || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
           return json({ error: 'Invalid generation request' }, 400, headers);
         }
-        const text = await providerText(provider, quizPrompt(body.topic, body.amount, Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : []), env);
-        const result = extractJson(text);
+        const baseQuestions = Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : [];
+        let text = await providerText(provider, quizPrompt(body.topic, body.amount, baseQuestions), env);
+        let result = extractJson(text) as any;
+        // Models occasionally stop early and return fewer questions than
+        // requested — retry up to 2 times, asking explicitly for the missing
+        // remainder so the returned quiz honors the requested count.
+        let missing = Number.isInteger(body.amount) && Array.isArray(result?.questions)
+          ? body.amount - result.questions.length : body.amount;
+        let retries = 0;
+        while (missing > 0 && retries < 2) {
+          retries++;
+          try {
+            const remainder = await providerText('openrouter', quizPrompt(
+              `${body.topic} — أكمل الاختبار السابق بالأسئلة الناقصة فقط دون تكرار، وأجب بعدد ${missing} سؤال بالضبط`,
+              missing,
+              [...baseQuestions, ...((result?.questions || []).map((q: any) => String(q.text || '')))].slice(-200)
+            ), env);
+            const extra = extractJson(remainder) as any;
+            if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
+              if (!result.title && extra.title) result.title = extra.title;
+              if (!result.description && extra.description) result.description = extra.description;
+              result.questions = (result.questions || []).concat(extra.questions);
+              missing = body.amount - result.questions.length;
+            } else { missing = 0; }
+          } catch { break; }
+        }
         
         await logAiPerformance(env, authHeader, {
           user_id: userId,
