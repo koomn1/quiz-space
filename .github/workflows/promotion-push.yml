@@ -1,0 +1,25 @@
+name: Scheduled Promotion Push
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send-promotion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Send rotating promotion
+        env:
+          SUPABASE_FUNCTION_URL: https://eqfrxrsstatryaetgerw.supabase.co/functions/v1
+          PROMOTION_CRON_SECRET: ${{ secrets.PROMOTION_CRON_SECRET }}
+        run: node scripts/send_scheduled_promotion.mjs

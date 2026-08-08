@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext.tsx';
 import App from './App.tsx';
+import { recordPushNotificationOpen } from './lib/db';
 import './index.css';
 
 // Instantiate the global Query Client with real-time defaults
@@ -14,6 +15,10 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const pushQuery = window.location.search.slice(1) || window.location.hash.split('?')[1] || '';
+const pushEventId = new URLSearchParams(pushQuery).get('pushEventId');
+if (pushEventId) void recordPushNotificationOpen(pushEventId);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -318,6 +318,7 @@ export default function AdminSubscriptions({
             title: isAr ? '🎁 عرض جديد من SpaceQuiz' : '🎁 New SpaceQuiz offer',
             body: aiPromoMsg.replace(/\n+/g, ' ').slice(0, 180),
             url: '/quiz-space/#/dashboard/landing',
+            category: 'promotion',
           },
         });
         if (pushError) console.warn('Push broadcast was not delivered:', pushError.message);

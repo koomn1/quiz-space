@@ -347,6 +347,15 @@ export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPla
     console.error('Error creating quiz:', error);
     throw error;
   }
+  if (quiz.classroomId) {
+    void sendPushEvent({
+      title: '🧠 كويز جديد في فصلك',
+      body: `${creatorName} نشر كويزاً جديداً: ${quiz.title}`.slice(0, 180),
+      url: `/quiz-space/#/classrooms`,
+      category: 'quiz',
+      classId: quiz.classroomId,
+    });
+  }
   return mapQuizRow(data);
 }
 
@@ -1407,6 +1416,30 @@ export async function markMessagesAsRead(userId: string, contactId: string): Pro
 }
 
 // ---------------- ALERTS & GENERAL NOTIFICATIONS (SUPABASE DIRECT) ----------------
+export async function recordPushNotificationOpen(eventId: string): Promise<void> {
+  if (!isSupabaseConfigured || !eventId) return;
+  try {
+    await supabase.rpc('record_push_notification_open', { p_event_id: eventId });
+  } catch (error) {
+    console.warn('Could not record push notification open:', error);
+  }
+}
+
+export async function sendPushEvent(payload: { title: string; body: string; url?: string; category: 'classroom' | 'community' | 'quiz' | 'system'; classId?: string }): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
+  try {
+    const { data, error } = await supabase.functions.invoke('send-promotion-push', { body: { ...payload, url: payload.url || '/' } });
+    if (error) {
+      console.warn('Could not send push event:', error.message);
+      return 0;
+    }
+    return Number(data?.sent || 0);
+  } catch (error) {
+    console.warn('Push event unavailable:', error);
+    return 0;
+  }
+}
+
 export async function savePushSubscription(userId: string, subscription: { endpoint?: string; keys?: { p256dh?: string; auth?: string } }): Promise<void> {
   if (!isSupabaseConfigured || !userId || !subscription.endpoint) return;
   const { error } = await supabase.from('push_subscriptions').upsert({

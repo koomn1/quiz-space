@@ -63,6 +63,7 @@ self.addEventListener('push', (event) => {
     requireInteraction: Boolean(data.requireInteraction),
     data: {
       url: data.url || '/quiz-space/#/classrooms',
+      eventId: data.eventId || null,
     },
     vibrate: [200, 100, 200],
   };
@@ -75,6 +76,9 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const targetUrl = event.notification.data?.url || '/quiz-space/#/classrooms';
+  const eventId = event.notification.data?.eventId;
+  const separator = targetUrl.includes('?') ? '&' : '?';
+  const openUrl = eventId ? `${targetUrl}${separator}pushEventId=${encodeURIComponent(eventId)}` : targetUrl;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
@@ -82,12 +86,12 @@ self.addEventListener('notificationclick', (event) => {
         if ('focus' in client) {
           client.focus();
           if ('navigate' in client) {
-            return client.navigate(targetUrl);
+            return client.navigate(openUrl);
           }
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+        return clients.openWindow(openUrl);
       }
     })
   );

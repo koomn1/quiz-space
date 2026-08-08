@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getCommunityPosts, createCommunityPost, likeCommunityPost, deleteCommunityPost,
   getDirectMessages, sendDirectMessage, markMessagesAsRead,
-  getNotifications, createNotification
+  getNotifications, createNotification, sendPushEvent
 } from '../lib/db';
 
 export function useCommunity(userId?: string) {
@@ -38,8 +38,11 @@ export function useCommunity(userId?: string) {
 
   // Mutations for Community Posts
   const createPostMutation = useMutation({
-    mutationFn: (data: { text: string; authorId: string; authorName: string; authorBadgeSymbol?: string; authorBadgeColor?: string }) => 
-      createCommunityPost(data.text, data.authorId, data.authorName, data.authorBadgeSymbol, data.authorBadgeColor),
+    mutationFn: async (data: { text: string; authorId: string; authorName: string; authorBadgeSymbol?: string; authorBadgeColor?: string }) => {
+      const post = await createCommunityPost(data.text, data.authorId, data.authorName, data.authorBadgeSymbol, data.authorBadgeColor);
+      void sendPushEvent({ title: '🌐 منشور جديد في المجتمع', body: `${data.authorName}: ${data.text.slice(0, 160)}`, url: '/quiz-space/#/community', category: 'community' });
+      return post;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communityPosts'] });
     }
