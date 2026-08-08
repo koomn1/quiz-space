@@ -590,6 +590,11 @@ export default function QuizResolver({
 
   // Retake test setup
   const handleRetake = () => {
+    // Retakes create a new server-side attempt; never reuse the previous
+    // client session or overwrite the student's improvement history.
+    try {
+      localStorage.removeItem(`quiz_session_${userId || 'anonymous'}_${quizId}`);
+    } catch (_) {}
     setCurrentIdx(0);
     setSelectedIdx(null);
     setIsAnswersFrozen(false);
@@ -597,6 +602,9 @@ export default function QuizResolver({
     setScore(0);
     setIsQuizCompleted(false);
     setIsReviewSubmitted(false);
+    setSavedCompletionId(null);
+    setSelectedRating(0);
+    setFeedbackText('');
     setFeedback('');
     setRating(5);
     setIsTimeOut(false);
@@ -604,12 +612,8 @@ export default function QuizResolver({
     setEssayAnswerText('');
     setEssayAssessed(null);
     setEssayAssessments({});
-    if (quiz && quiz.timeLimit) {
-      setTimeLeft(quiz.timeLimit);
-    }
-    try {
-      localStorage.removeItem(`quiz_session_${userId || 'anonymous'}_${quizId}`);
-    } catch (_) {}
+    if (quiz && quiz.timeLimit) setTimeLeft(quiz.timeLimit);
+    if (onQuizLockChange) onQuizLockChange(false);
   };
 
   // Print friendly / Export PDF trigger
@@ -1507,6 +1511,19 @@ export default function QuizResolver({
                 className="w-full bg-[#0a0518] border border-[#3d1d6d]/50 rounded-2xl p-3 text-xs text-slate-100 outline-none focus:border-[#b175ff] focus:ring-1 focus:ring-[#b175ff]/30 transition-all placeholder:text-slate-500"
                 style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
               />
+            </div>
+
+            {/* Retake is always available: each run is saved as a separate improvement attempt. */}
+            <div className="max-w-xs mx-auto pt-2 space-y-2">
+              <button
+                type="button"
+                onClick={handleRetake}
+                disabled={isSubmittingReview}
+                className="w-full py-3 rounded-2xl font-black text-xs text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>{isAr ? 'إعادة الامتحان لتحسين الدرجة' : 'Retake to improve your score'}</span>
+              </button>
             </div>
 
             {/* Forced Button: "إنهاء وخروج" (Finish & Exit) */}

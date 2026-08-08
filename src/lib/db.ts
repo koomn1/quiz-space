@@ -266,7 +266,10 @@ export async function getQuizzes(): Promise<Quiz[]> {
 export async function getQuizById(id: string): Promise<Quiz | null> {
   if (!id) return null;
 
-  if (isSupabaseConfigured) {
+  // Daily quizzes are private payloads. Never query public.quizzes for a daily id,
+  // otherwise an old published row can win before the current session snapshot.
+  const isPrivateDailyQuiz = String(id).startsWith('daily-');
+  if (isSupabaseConfigured && !isPrivateDailyQuiz) {
     const { data, error } = await supabase.from('quizzes').select('*').eq('id', id).single();
     if (!error && data) return mapQuizRow(data);
     if (error && error.code !== 'PGRST116') {
@@ -278,21 +281,10 @@ export async function getQuizById(id: string): Promise<Quiz | null> {
   if (sample) return sample;
   if (typeof window !== 'undefined') {
     try {
-      // A daily quiz may only be attempted once. Never resurrect an answered
-      // quiz from sessionStorage, even if a stale snapshot remains there.
+      // Daily payloads are private and intentionally restored only from the
+      // current tab snapshot; public rows are never a source for daily ids.
       const stored = JSON.parse(window.sessionStorage.getItem(`quizspace-daily-${id}`) || 'null');
       if (stored && stored.id === id && String(stored.id).startsWith('daily-')) {
-        // The sessionStorage purge in DailyQuizCard is the primary cleanup,
-        // but a stale snapshot may still exist in the same tab after a
-        // re-rating bug flow. Verify the slot is not answered first.
-        try {
-          const userIdHint = stored.creatorId || stored.userId || null;
-          const tierHint = planNameToDailyQuizTier(stored.planName || '', !!stored.isPremium);
-          if (userIdHint && !String(userIdHint).startsWith('user-guest')) {
-            const slot = await getUserDailyQuizSlot(userIdHint, tierHint);
-            if (slot?.answered) return null; // answered daily quiz must stay dead
-          }
-        } catch (_) { /* network hiccups must not unblock an answered quiz */ }
         return stored as Quiz;
       }
       if (stored && stored.id === id && !String(id).startsWith('daily-')) return stored as Quiz;
@@ -438,25 +430,29 @@ export async function submitQuizAttempt(
   const { data: quiz, error: quizError } = await supabase
     .from('quizzes').select('title, questions').eq('id', quizId).single();
   if (quizError || !quiz) throw error;
-  const { data: existing } = await supabase
-    .from('completions').select('id').eq('quiz_id', quizId).eq('taker_id', data.takerId).maybeSingle();
+  const { data: previousAttempts } = await supabase
+    .from('completions').select('score').eq('quiz_id', quizId).eq('taker_id', data.takerId);
   const totalQuestions = Math.max(1, Array.isArray(quiz.questions) ? quiz.questions.length : 1);
-  const xpAwarded = existing ? 0 : 10 + Math.max(0, data.score) * 10;
-  let completionId = existing?.id;
-  if (completionId) {
-    const { error: updateError } = await supabase.from('completions').update({
-      score: data.score, total_questions: totalQuestions,
-      rating: data.rating ?? null, feedback: data.feedback || '',
-    }).eq('id', completionId);
-    if (updateError) throw updateError;
-  } else {
-    completionId = `comp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-    const { error: insertError } = await supabase.from('completions').insert({
-      id: completionId, quiz_id: quizId, quiz_title: quiz.title,
-      taker_id: data.takerId, taker_name: data.takerName, score: data.score,
-      total_questions: totalQuestions, rating: data.rating ?? null, feedback: data.feedback || '',
-    });
-    if (insertError) throw insertError;
+  const previousBest = Math.max(0, ...(previousAttempts || []).map((row: any) => Number(row.score) || 0));
+  const attemptNumber = (previousAttempts || []).length + 1;
+  const xpAwarded = attemptNumber === 1
+    ? 10 + Math.max(0, data.score) * 10
+    : Math.max(0, data.score - previousBest) * 10;
+  const completionId = `comp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  const isBest = attemptNumber === 1 || data.score > previousBest;
+  if (isBest) {
+    const { error: bestError } = await supabase.from('completions').update({ is_best: false })
+      .eq('quiz_id', quizId).eq('taker_id', data.takerId);
+    if (bestError && bestError.code !== '42703') throw bestError;
+  }
+  const { error: insertError } = await supabase.from('completions').insert({
+    id: completionId, quiz_id: quizId, quiz_title: quiz.title,
+    taker_id: data.takerId, taker_name: data.takerName, score: data.score,
+    total_questions: totalQuestions, rating: data.rating ?? null, feedback: data.feedback || '',
+    attempt_number: attemptNumber, is_best: isBest,
+  });
+  if (insertError) throw insertError;
+  if (xpAwarded > 0) {
     const { data: userRow, error: userReadError } = await supabase
       .from('users').select('xp').eq('uid', data.takerId).single();
     if (userReadError || !userRow) throw userReadError || new Error('User profile not found while awarding XP.');
@@ -464,7 +460,7 @@ export async function submitQuizAttempt(
       .update({ xp: (userRow.xp || 0) + xpAwarded }).eq('uid', data.takerId);
     if (xpError) throw xpError;
   }
-  return { success: true, fallback: true, xp_awarded: xpAwarded, id: completionId };
+  return { success: true, fallback: true, xp_awarded: xpAwarded, id: completionId, attempt_number: attemptNumber, is_best: isBest };
 }
 
 // ---------------- PROFILE STATS & MANAGEMENT HANDLERS ----------------
