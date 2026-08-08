@@ -20,11 +20,17 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
     const ctx = gsap.context(() => {
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const digits = gsap.utils.toArray<HTMLElement>('.nf-digit');
+      const errorChars = gsap.utils.toArray<HTMLElement>('.nf-error-char');
+      const errorLines = gsap.utils.toArray<HTMLElement>('.nf-error-line');
       gsap.set([titleRef.current, textRef.current, actionsRef.current], { opacity: 0, y: 18 });
       gsap.set(digits, { opacity: 0, y: 24, rotateX: -28 });
+      gsap.set(errorChars, { opacity: 0, y: 10, scale: 0.82, filter: 'blur(5px)' });
+      gsap.set(errorLines, { scaleX: 0.25, opacity: 0.25 });
       if (reduced) {
         gsap.set([titleRef.current, textRef.current, actionsRef.current], { opacity: 1, y: 0 });
         gsap.set(digits, { opacity: 1, y: 0, rotateX: 0 });
+        gsap.set(errorChars, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' });
+        gsap.set(errorLines, { scaleX: 1, opacity: 0.7 });
         return;
       }
       gsap.timeline({ defaults: { ease: 'power3.out' } })
@@ -33,7 +39,15 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
         .to(textRef.current, { opacity: 1, y: 0, duration: 0.5 }, '-=.25')
         .to(actionsRef.current, { opacity: 1, y: 0, duration: 0.45 }, '-=.18');
       gsap.to('.nf-digit', { y: -7, duration: 2.6, repeat: -1, yoyo: true, stagger: 0.18, ease: 'sine.inOut' });
-      gsap.to('.nf-signal', { scaleX: 1.45, opacity: 0.35, duration: 2.2, repeat: -1, yoyo: true, stagger: 0.12, ease: 'sine.inOut' });
+
+      // The signal resolves into ERROR, holds for a beat, then dissolves and repeats.
+      const errorLoop = gsap.timeline({ repeat: -1, repeatDelay: 1.1, delay: 1.4 });
+      errorLoop
+        .to(errorLines, { scaleX: 1, opacity: 0.7, duration: 0.45, stagger: 0.08, ease: 'power2.out' })
+        .to(errorChars, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.3, stagger: 0.1, ease: 'back.out(1.8)' })
+        .to(errorChars, { color: '#f0abfc', textShadow: '0 0 22px rgba(217,70,239,.85)', duration: 0.55, stagger: 0.06, ease: 'sine.inOut' })
+        .to(errorChars, { opacity: 0, y: -8, scale: 1.18, filter: 'blur(5px)', duration: 0.35, stagger: 0.06, ease: 'power2.in' }, '+=0.7')
+        .to(errorLines, { scaleX: 0.25, opacity: 0.25, duration: 0.35, stagger: 0.06, ease: 'power2.in' }, '-=0.18');
       gsap.to('.nf-scan', { xPercent: 180, duration: 8, repeat: -1, ease: 'none', delay: 1 });
     }, root);
     return () => ctx.revert();
@@ -77,13 +91,14 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
                   <span key={`${digit}-${index}`} className="nf-digit flex aspect-[.72] w-[clamp(4.5rem,18vw,8rem)] items-center justify-center rounded-[1.2rem] border border-white/15 bg-gradient-to-b from-white/[.16] to-white/[.035] font-mono text-[clamp(5.5rem,18vw,10rem)] font-black leading-none text-transparent bg-clip-text shadow-[inset_0_1px_0_rgba(255,255,255,.16),0_18px_60px_rgba(139,92,246,.18)] backdrop-blur-sm" style={{ backgroundImage: index === 1 ? 'linear-gradient(180deg, #67e8f9 0%, #a78bfa 48%, #f9a8d4 100%)' : 'linear-gradient(180deg, #ffffff 0%, #e9d5ff 46%, #67e8f9 100%)' }}>{digit}</span>
                 ))}
               </div>
-              <div className="mt-7 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[.45em] text-white/35">
-                <span className="nf-signal h-px w-10 bg-cyan-300/60" />
-                <span>signal lost</span>
-                <span className="nf-signal h-px w-10 bg-fuchsia-300/60" />
-              </div>
-              <div className="mt-6 grid grid-cols-5 gap-2 opacity-50">
-                {[1, 2, 3, 4, 5].map((item) => <span key={item} className="nf-signal h-1 rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300" />)}
+              <div className="nf-error-stage mt-7 flex min-h-10 items-center justify-center gap-3 text-[clamp(.85rem,2.2vw,1.1rem)] font-black uppercase tracking-[.5em] text-cyan-200/80" aria-label="ERROR">
+                <span className="nf-error-line h-px w-8 origin-right bg-gradient-to-l from-cyan-300/80 to-transparent sm:w-14" />
+                <span className="inline-flex gap-[.18em]">
+                  {'ERROR'.split('').map((letter, index) => (
+                    <span key={`${letter}-${index}`} className="nf-error-char inline-block">{letter}</span>
+                  ))}
+                </span>
+                <span className="nf-error-line h-px w-8 origin-left bg-gradient-to-r from-fuchsia-300/80 to-transparent sm:w-14" />
               </div>
             </div>
           </div>
