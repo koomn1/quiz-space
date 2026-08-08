@@ -157,17 +157,6 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
       {/* Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#05060f] z-10 pointer-events-none" />
 
-      {/* Premium QuizSpace Brand Mark */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
-        <img
-          src={`${import.meta.env.BASE_URL || '/'}brand/quizspace-logo-512.png`}
-          alt="QuizSpace"
-          className="w-20 h-20 md:w-28 md:h-28 object-contain drop-shadow-[0_0_28px_rgba(139,92,246,0.75)] animate-pulse"
-          draggable={false}
-        />
-        <span className="text-white/85 font-black tracking-[0.32em] text-[10px] uppercase">QuizSpace</span>
-      </div>
-      
       {/* Bottom Content Area */}
       <div className="relative z-10 flex flex-col items-center justify-end h-full w-full max-w-2xl px-8 pb-20 text-center space-y-10">
         
