@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#090b2a"/><stop offset="0.55" stop-color="#24105c"/><stop offset="1" stop-color="#7c2d92"/></linearGradient>
+  <radialGradient id="glow"><stop offset="0" stop-color="#a78bfa" stop-opacity=".7"/><stop offset="1" stop-color="#a78bfa" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1200" height="630" rx="34" fill="url(#bg)"/>
+<circle cx="1030" cy="90" r="270" fill="url(#glow)" opacity=".55"/>
+<circle cx="180" cy="600" r="250" fill="url(#glow)" opacity=".28"/>
+<path d="M0 520 C240 420 370 570 610 470 S980 420 1200 520 V630 H0Z" fill="#050617" opacity=".45"/>
+<g fill="#fff" opacity=".8"><circle cx="92" cy="105" r="3"/><circle cx="280" cy="76" r="2"/><circle cx="920" cy="230" r="3"/><circle cx="1090" cy="360" r="2"/><circle cx="740" cy="80" r="2"/></g>
+<text x="1050" y="105" text-anchor="end" fill="#c4b5fd" font-size="24" font-family="Arial, sans-serif" font-weight="700">QUIZ SPACE</text>
+
+<circle cx="180" cy="270" r="108" fill="#8b5cf6" opacity=".92"/>
+<text x="180" y="300" text-anchor="middle" fill="#fff" font-size="92" font-family="Arial, sans-serif" font-weight="900">?</text>
+<text x="1050" y="235" text-anchor="end" fill="#fff" font-size="58" font-family="Arial, sans-serif" font-weight="900">اختبار تفاعلي جديد</text>
+<text x="1050" y="315" text-anchor="end" fill="#ddd6fe" font-size="31" font-family="Arial, sans-serif">هل تستطيع تصدّر لوحة المتصدرين؟</text>
+<rect x="790" y="390" width="260" height="70" rx="35" fill="#ec4899"/>
+<text x="920" y="435" text-anchor="middle" fill="#fff" font-size="27" font-family="Arial, sans-serif" font-weight="800">حل الاختبار الآن</text>
+<text x="1050" y="555" text-anchor="end" fill="#c4b5fd" font-size="22" font-family="Arial, sans-serif">شارك الرابط وتحدَّ أصدقاءك</text>
+</svg>

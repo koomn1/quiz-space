@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>اختبار تفاعلي جديد | QuizSpace</title>
+  <meta name="description" content="هل تستطيع تصدّر لوحة المتصدرين؟ حل الاختبار الآن على QuizSpace.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="QuizSpace">
+  <meta property="og:title" content="اختبار تفاعلي جديد | QuizSpace">
+  <meta property="og:description" content="هل تستطيع تصدّر لوحة المتصدرين؟ حل الاختبار الآن وشارك التحدي مع أصدقائك.">
+  <meta property="og:image" content="https://koomn1.github.io/quiz-space/quiz-share-card.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://koomn1.github.io/quiz-space/quiz-share-card.png">
+  <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#090b2a;color:#fff;font-family:Arial,sans-serif}main{text-align:center;padding:2rem}a{color:#c4b5fd}</style>
+</head>
+<body>
+  <main><h1>جاري فتح الاختبار...</h1><p>استعد للتحدي.</p><a id="fallback" href="/quiz-space/">العودة إلى QuizSpace</a></main>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var id = params.get('quiz');
+      var challenge = params.get('challenge') === 'true' ? '?challenge=true' : '';
+      var base = location.pathname.split('/share/quiz.html')[0] || '/quiz-space';
+      var target = base + '/#/quiz/' + encodeURIComponent(id || '') + challenge;
+      document.getElementById('fallback').href = base + '/';
+      if (id) setTimeout(function () { location.replace(target); }, 250);
+    }());
+  </script>
+</body>
+</html>

@@ -51,9 +51,7 @@ export default function ShareModal({
     closeTooltip: isAr ? 'إغلاق التبويب' : 'Close'
   };
 
-  const shareUrl = isChallengeMode
-    ? `${getAppBaseUrl()}/#/quiz/${quizId}?challenge=true`
-    : `${getAppBaseUrl()}/#/quiz/${quizId}`;
+  const shareUrl = `${getAppBaseUrl()}/share/quiz.html?quiz=${encodeURIComponent(quizId)}${isChallengeMode ? '&challenge=true' : ''}`;
 
   const shareText = isChallengeMode
     ? (isAr 
@@ -188,6 +186,15 @@ export default function ShareModal({
               {quizDescription}
             </p>
           )}
+        </div>
+
+        {/* Share Poster Preview */}
+        <div className="overflow-hidden rounded-2xl border border-primary/20 bg-slate-950 shadow-lg">
+          <img
+            src={`${getAppBaseUrl()}/quiz-share-card.png`}
+            alt={isAr ? 'بوستر مشاركة الاختبار' : 'Quiz sharing poster'}
+            className="w-full aspect-[1200/630] object-cover"
+          />
         </div>
 
         {/* Challenge Mode Toggle Indicator */}
