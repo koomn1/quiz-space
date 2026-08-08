@@ -48,10 +48,11 @@ export default function ParallaxTiltCard({
     gsap.to(card, {
       rotateX: rX,
       rotateY: rY,
-      scale: 1.04,
-      boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.7), 0 0 50px rgba(99, 102, 241, 0.25)',
-      duration: 0.1,
-      ease: 'power1.out',
+      scale: 1.025,
+      boxShadow: '0 20px 42px -18px rgba(0, 0, 0, 0.42), 0 0 32px rgba(99, 102, 241, 0.16)',
+      duration: 0.18,
+      ease: 'power2.out',
+      overwrite: 'auto',
       transformPerspective: 1000,
       transformOrigin: 'center center'
     });
@@ -69,8 +70,9 @@ export default function ParallaxTiltCard({
       rotateY: 0,
       scale: 1,
       boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)',
-      duration: 0.5,
-      ease: 'power3.out'
+      duration: 0.55,
+      ease: 'power3.out',
+      overwrite: 'auto'
     });
   });
 

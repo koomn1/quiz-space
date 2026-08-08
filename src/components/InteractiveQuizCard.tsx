@@ -163,10 +163,10 @@ export function InteractiveQuizCard({
     <ParallaxTiltCard
       idx={idx}
       onClick={() => onStartQuiz(quiz.id)}
-      className="glass-card hover:border-transparent p-[1px] rounded-[24px] hover:shadow-[0_30px_60px_-15px_rgba(99,102,241,0.3)] hover:scale-[1.035] dark:hover:shadow-[0_30px_60px_-15px_rgba(124,58,237,0.4)] duration-300 flex flex-col justify-between overflow-hidden group relative"
+      className="glass-card hover:border-primary/35 p-[1px] rounded-[24px] hover:shadow-[0_18px_42px_-18px_rgba(99,102,241,0.22)] hover:scale-[1.015] dark:hover:shadow-[0_18px_42px_-18px_rgba(124,58,237,0.28)] duration-500 ease-out flex flex-col justify-between overflow-hidden group relative"
     >
       {/* Animated Gradient Border */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-violet-500 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[24px] pointer-events-none before:absolute before:inset-0 before:bg-[conic-gradient(from_0deg_at_50%_50%,#8b5cf6_0%,#3b82f6_33%,#10b981_66%,#8b5cf6_100%)] before:animate-[spin_4s_linear_infinite] before:opacity-0 group-hover:before:opacity-100 before:transition-opacity -z-20"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/55 via-violet-500/45 to-cyan-400/35 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out rounded-[24px] pointer-events-none -z-20"></div>
       
       {/* Inner Card Content Wrapper */}
       <div className="bg-white/95 dark:bg-[#090d16]/95 backdrop-blur-xl h-full w-full rounded-[23px] p-6 flex flex-col justify-between z-10 relative overflow-hidden transition-colors duration-300">
