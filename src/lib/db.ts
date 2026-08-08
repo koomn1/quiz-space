@@ -278,8 +278,10 @@ export async function getQuizById(id: string): Promise<Quiz | null> {
   if (sample) return sample;
   if (typeof window !== 'undefined') {
     try {
+      // A daily quiz may only be attempted once. Never resurrect an answered
+      // quiz from sessionStorage, even if a stale snapshot remains there.
       const stored = JSON.parse(window.sessionStorage.getItem(`quizspace-daily-${id}`) || 'null');
-      if (stored && stored.id === id) return stored as Quiz;
+      if (stored && stored.id === id && !String(id).startsWith('daily-')) return stored as Quiz;
     } catch (e) { console.warn('Could not restore private daily quiz:', e); }
   }
   return null;

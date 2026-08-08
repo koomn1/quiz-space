@@ -101,10 +101,34 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         setIsGenerating(false);
         return;
       }
-      if (slot.quizPayload?.id) {
+      const hasPrivatePayload = !!slot.quizPayload?.id;
+      // A daily quiz can only be attempted once. When the slot is already
+      // answered, the old quiz must never be exposed again: purge its
+      // sessionStorage snapshot and any lingering payload so the user moves
+      // straight to the cooldown (or a brand-new challenge when it ends).
+      if (slot.answered) {
+        setQuizId(null);
+        setAnswered(true);
+        setSecondsLeft(slot.secondsUntilRefresh);
+        setGenerationError(false);
+        // Purge stale sessionStorage snapshots of answered daily quizzes.
+        for (let i = 0; i < window.sessionStorage.length; i++) {
+          const key = window.sessionStorage.key(i);
+          if (key && key.startsWith('quizspace-daily-')) window.sessionStorage.removeItem(key);
+        }
+        setGenerationError(false);
+        // Already answered and cooldown active -> keep waiting.
+        if (slot.secondsUntilRefresh > 0) { setIsGenerating(false); return; }
+        // Cooldown elapsed (or never started): release and claim a fresh one.
+        if (slot.refreshing) { setIsGenerating(true); return; }
+        const won = await claimUserDailyQuizRefresh(userId, tier);
+        if (won) await generate();
+        else setIsGenerating(true);
+        return;
+      }
+      if (hasPrivatePayload) {
         window.sessionStorage.setItem(`quizspace-daily-${slot.quizPayload.id}`, JSON.stringify(slot.quizPayload));
       }
-      const hasPrivatePayload = !!slot.quizPayload?.id;
       // A legacy slot can contain only quiz_id from the old public-quiz flow.
       // It is not a valid private daily challenge and must be cleared before
       // claiming a fresh payload; never send the user back to that old quiz.
@@ -116,17 +140,14 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         setIsGenerating(false);
         return sync();
       }
-      const activeQuizId = slot.quizPayload?.id || (slot.answered ? null : slot.quizId);
+      const activeQuizId = slot.quizPayload?.id || null;
       setQuizId(activeQuizId);
-      setAnswered(slot.answered);
       setSecondsLeft(slot.secondsUntilRefresh);
       setGenerationError(false);
       // A private quiz without an answer is always pinned, regardless of age.
-      if (hasPrivatePayload && !slot.answered) { setIsGenerating(false); return; }
-      // After answering, keep showing the cooldown; claim only when it ends.
-      if (slot.answered && slot.secondsUntilRefresh > 0) { setIsGenerating(false); return; }
+      if (hasPrivatePayload) { setIsGenerating(false); return; }
       if (slot.refreshing) { setIsGenerating(!activeQuizId); return; }
-      if (!activeQuizId || (slot.answered && slot.secondsUntilRefresh <= 0)) {
+      if (!activeQuizId) {
         const won = await claimUserDailyQuizRefresh(userId, tier);
         if (won) await generate();
         else setIsGenerating(true);
@@ -153,6 +174,10 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
 
   const label = isAr ? TIER_LABEL[tier].ar : TIER_LABEL[tier].en;
   const waiting = answered && secondsLeft > 0;
+  // A quiz can only be rated once. If the slot is already answered, never
+  // expose a start button for the old daily quiz id, even if sessionStorage
+  // still holds it.
+  const startableQuizId = answered ? null : quizId;
   return (
     <div className={`relative overflow-hidden rounded-3xl p-5 mb-6 bg-gradient-to-l ${TIER_GRADIENT[tier]} text-white shadow-lg shadow-black/10`}>
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -167,7 +192,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
           {(!isGuest && (waiting || isGenerating)) && <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 text-sm font-mono tabular-nums"><Clock className="w-4 h-4" />{formatCountdown(secondsLeft, isAr)}</div>}
           {isGuest ? <button onClick={onLoginClick} className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform">{isAr ? 'سجّل الدخول للبدء' : 'Sign in to start'}</button>
             : waiting ? <span className="text-sm font-semibold bg-white/15 rounded-full px-4 py-2">{isAr ? 'تم الحل — الاختبار القادم بعد المهلة' : 'Solved — next quiz after cooldown'}</span>
-            : !isGenerating && quizId ? <button onClick={() => onStartQuiz(quizId)} className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform">{isAr ? 'ابدأ الآن + XP' : 'Start now + XP'}</button>
+            : !isGenerating && startableQuizId ? <button onClick={() => onStartQuiz(startableQuizId)} className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform">{isAr ? 'ابدأ الآن + XP' : 'Start now + XP'}</button>
             : generationError ? <div className="flex items-center gap-2"><span className="text-xs text-white/80">{isAr ? 'تعذر الاتصال بنظام الاختبار اليومي' : 'Daily quiz service unavailable'}</span><button onClick={sync} className="bg-white/20 text-white font-bold rounded-full px-5 py-2 text-sm hover:bg-white/30 active:scale-95 transition-transform">{isAr ? 'إعادة المحاولة' : 'Retry'}</button></div>
             : <div className="flex items-center gap-2 text-sm text-white/80 px-3"><Loader2 className="w-4 h-4 animate-spin" />{isAr ? 'جاري التوليد...' : 'Generating...'}</div>}
         </div>

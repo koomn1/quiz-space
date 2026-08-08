@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, rateQuestion, getBestScoreByQuizId, completeUserDailyQuiz } from '../lib/db';
+import { getQuizById, submitQuizAttempt, rateQuestion, getBestScoreByQuizId, completeUserDailyQuiz, getUserDailyQuizSlot, planNameToDailyQuizTier } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { getApiUrl } from '../lib/origin';
@@ -81,6 +81,8 @@ interface QuizResolverProps {
   lang?: 'ar' | 'en';
   onQuizLockChange?: (isLocked: boolean) => void;
   userPlan?: 'Free' | 'Silver' | 'Gold' | 'Diamond';
+  planName?: string;
+  isPremium?: boolean;
 }
 
 export default function QuizResolver({
@@ -91,7 +93,9 @@ export default function QuizResolver({
   onShareQuiz,
   lang = 'ar',
   onQuizLockChange,
-  userPlan = 'Free'
+  userPlan = 'Free',
+  planName,
+  isPremium
 }: QuizResolverProps) {
   const t = translations[lang];
   const isAr = lang === 'ar';
@@ -299,6 +303,20 @@ export default function QuizResolver({
         const data = await getQuizById(quizId);
         if (!data) {
           throw new Error('لم يتم العثور على هذا الاختبار!');
+        }
+        // A daily quiz can only be attempted and rated once. If the server
+        // slot is already answered, refuse to re-open it and drop any
+        // lingering local session state so the user cannot re-rate it.
+        if (String(quizId).startsWith('daily-') && userId) {
+          try {
+            const slot = await getUserDailyQuizSlot(userId, planNameToDailyQuizTier(planName, isPremium));
+            if (slot?.answered && slot.quizPayload?.id !== quizId && slot.quizId !== quizId) {
+              localStorage.removeItem(`quiz_session_${userId}_${quizId}`);
+              throw new Error('تم حل هذا التحدي اليومي وتقييمه بالفعل — انتظر انتهاء المهلة للحصول على تحدي جديد.');
+            }
+          } catch (slotErr: any) {
+            if (String(slotErr?.message || '').includes('تم حل هذا التحدي اليومي')) throw slotErr;
+          }
         }
         if (isActive) {
           setQuiz(data);

@@ -1355,6 +1355,8 @@ export default function App() {
             lang={lang}
             onQuizLockChange={setIsQuizLocked}
             userPlan={getUserRoleAndPlan(userStats).plan}
+            planName={userPlanName}
+            isPremium={isUserPremium}
           />
         ) : (
           
