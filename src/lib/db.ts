@@ -1478,8 +1478,8 @@ export async function recordCouponUsage(
   discountPercent: number,
   planId?: string,
   orderId?: string
-): Promise<void> {
-  if (!isSupabaseConfigured) return;
+): Promise<string> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured');
   const { data, error } = await supabase.rpc('record_coupon_usage', {
     p_coupon_id: couponId,
     p_user_id: userId,
@@ -1489,7 +1489,36 @@ export async function recordCouponUsage(
   });
   if (error) {
     console.error('Error recording coupon usage:', error);
+    throw error;
   }
+  return String(data || '');
+}
+
+export async function redeemCouponForUser(
+  couponId: string,
+  userId: string,
+  discountPercent: number,
+  planId: string,
+  planName: string,
+  orderId: string,
+  renewalDate: string,
+): Promise<string> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured');
+  const { data, error } = await supabase.rpc('redeem_coupon_for_user', {
+    p_coupon_id: couponId,
+    p_user_id: userId,
+    p_discount_percent: discountPercent,
+    p_plan_id: planId,
+    p_plan_name: planName,
+    p_order_id: orderId,
+    p_renewal_date: renewalDate,
+  });
+  if (error) {
+    console.error('Error redeeming coupon atomically:', error);
+    throw error;
+  }
+  if (!data) throw new Error('Coupon redemption was not persisted');
+  return String(data);
 }
 
 export async function getAiPerformanceLogs(): Promise<any[]> {
