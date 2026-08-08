@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Bell, Mail, ShieldAlert, Award, FileSpreadsheet, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Bell, Mail, ShieldAlert, Award, FileSpreadsheet, RefreshCw, CheckCircle2, Trophy, BellRing } from 'lucide-react';
 import { LiquidGlassSwitch } from '../../components/LiquidGlassSwitch';
+import { registerPushNotifications } from '../../lib/pushManager';
+import { supabase } from '../../lib/supabaseClient';
 
 interface NotificationsProps {
   lang: 'ar' | 'en';
@@ -17,6 +19,8 @@ export default function Notifications({ lang }: NotificationsProps) {
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isActivatingPush, setIsActivatingPush] = useState(false);
+  const [pushMessage, setPushMessage] = useState<'success' | 'error' | null>(null);
 
   const handleSavePreferences = () => {
     setIsSaving(true);
@@ -30,6 +34,35 @@ export default function Notifications({ lang }: NotificationsProps) {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     }, 500);
+  };
+
+  const handleActivateLeaderboardPush = async () => {
+    if (isActivatingPush) return;
+    setIsActivatingPush(true);
+    setPushMessage(null);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        setPushMessage('error');
+        return;
+      }
+
+      const permission = await registerPushNotifications(user.id);
+      if (permission === 'granted') {
+        setPushEnabled(true);
+        localStorage.setItem('pref_pushEnabled', 'true');
+        localStorage.removeItem('quiz_push_banner_dismissed');
+        setPushMessage('success');
+      } else {
+        setPushMessage('error');
+      }
+    } catch (error) {
+      console.error('Leaderboard push activation failed:', error);
+      setPushMessage('error');
+    } finally {
+      setIsActivatingPush(false);
+    }
   };
 
   const notificationOptions = [
@@ -113,6 +146,42 @@ export default function Notifications({ lang }: NotificationsProps) {
               </div>
             );
           })}
+        </div>
+
+        {/* Live Leaderboard Push activation */}
+        <div className="pt-6 border-t border-slate-150 dark:border-slate-800/80">
+          <div className="rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-indigo-500/5 to-purple-500/10 p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex gap-4">
+                <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 shrink-0">
+                  <Trophy className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-slate-800 dark:text-white leading-tight">
+                    🏆 {isAr ? 'فعل إشعارات لوحة المتصدرين الحية!' : 'Enable Live Leaderboard Notifications!'}
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
+                    {isAr ? 'احصل على إشعار فوري من المتصفح عندما يقوم طالب آخر بكسر رقمك القياسي واحتلال الصدارة!' : 'Get an instant browser notification when another student breaks your record and takes the lead!'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleActivateLeaderboardPush}
+                disabled={isActivatingPush || pushEnabled}
+                className="w-full sm:w-auto shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-xs font-black shadow-lg shadow-amber-500/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isActivatingPush ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <BellRing className="w-3.5 h-3.5" />}
+                {pushEnabled ? (isAr ? 'الإشعارات مفعّلة ✅' : 'Notifications Enabled ✅') : (isAr ? 'تفعيل الإشعارات' : 'Enable Notifications')}
+              </button>
+            </div>
+            {pushMessage === 'success' && (
+              <div className="mt-3 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{isAr ? 'تم تفعيل إشعارات لوحة المتصدرين بنجاح.' : 'Live leaderboard notifications are now enabled.'}</div>
+            )}
+            {pushMessage === 'error' && (
+              <div className="mt-3 text-[11px] font-bold text-red-500">{isAr ? 'لم يتم تفعيل الإشعارات. اسمح بها من إعدادات المتصفح ثم حاول مرة أخرى.' : 'Notifications were not enabled. Allow them in your browser settings and try again.'}</div>
+            )}
+          </div>
         </div>
 
         {/* Browser Push Notifications */}
