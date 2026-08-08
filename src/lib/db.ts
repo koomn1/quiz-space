@@ -386,9 +386,26 @@ export async function submitQuizAttempt(
     score: number;
     rating?: number;
     feedback?: string;
+    totalQuestions?: number;
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
+  // Daily challenges are private payloads and intentionally do not exist in quizzes.
+  // Use their dedicated RPC so solving them still records XP and completion.
+  if (quizId.startsWith('daily-')) {
+    const { data: dailyResult, error: dailyError } = await supabase.rpc('submit_user_daily_quiz_attempt', {
+      p_quiz_id: quizId,
+      p_taker_id: data.takerId,
+      p_taker_name: data.takerName,
+      p_score: data.score,
+      p_total_questions: data.totalQuestions || 1,
+      p_rating: data.rating ?? null,
+      p_feedback: data.feedback || '',
+    });
+    if (dailyError) throw dailyError;
+    return dailyResult;
+  }
+
   const { data: result, error } = await supabase.rpc('submit_quiz_attempt', {
     p_quiz_id: quizId,
     p_taker_id: data.takerId,

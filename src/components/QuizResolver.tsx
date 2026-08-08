@@ -216,7 +216,8 @@ export default function QuizResolver({
             takerName: finalName,
             score,
             rating: undefined,
-            feedback: ''
+            feedback: '',
+            totalQuestions: quiz.questions.length
           });
 
           if (res && res.completion) {
@@ -534,7 +535,8 @@ export default function QuizResolver({
             takerName: finalName,
             score,
             rating: selectedRating,
-            feedback: feedbackText.trim()
+            feedback: feedbackText.trim(),
+            totalQuestions: quiz.questions.length
           });
         } catch (e) {
           console.error('Failed to submit quiz attempt with rating:', e);
