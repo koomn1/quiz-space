@@ -224,17 +224,47 @@ export default function AdminSubscriptions({
     }
   };
 
+  const formatPromotionMessage = (text: string, code: string, percent: number) => {
+    const cleaned = text
+      .replace(/\*\*/g, '')
+      .replace(/^[#>]+\s*/gm, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const sentences = cleaned
+      .split(/(?<=[.!؟!])\s+/)
+      .map((sentence) => sentence.trim())
+      .filter(Boolean);
+
+    const lead = sentences[0] || `خصم ${percent}% على خدمات SpaceQuiz`;
+    const details = sentences.slice(1).join(' ') || 'استفيدوا من العرض وابدأوا تجربتكم الآن.';
+
+    return [
+      `🎁 عرض خاص من SpaceQuiz`,
+      '',
+      `استخدموا كود الخصم: ${code}`,
+      `واحصلوا على خصم ${percent}% على خدماتنا.`,
+      '',
+      `✨ ${lead}`,
+      details ? `📌 ${details}` : '',
+      '',
+      '⏳ العرض لفترة محدودة.',
+      '🚀 سارعوا بالاشتراك الآن واستفيدوا من الخصم!',
+    ].filter(Boolean).join('\n');
+  };
+
   const handleGenerateAiMessageForCoupon = async (
     code: string,
     percent: number,
   ) => {
     setIsGeneratingAi(true);
     try {
-      const prompt = `أنت خبير تسويق. اكتب رسالة ترويجية قصيرة وجذابة بالعربية لكود خصم (${code}) بقيمة ${percent}%. الرسالة يجب أن تكون احترافية وتشجع على الاشتراك.`;
+      const prompt = `أنت كاتب تسويق عربي محترف. اكتب جملة أو جملتين فقط، جذابتين وواضحتين، عن كود الخصم ${code} ونسبة الخصم ${percent}%. لا تستخدم Markdown أو علامات ** أو عناوين أو مقدمات، ولا تكرر الكود أو النسبة أكثر من مرة.`;
       const { text } = await askAI(prompt);
-      setAiPromoMsg(text || `🎉 استخدم كود ${code} واحصل على خصم ${percent}% على باقات Quiz Space!`);
+      setAiPromoMsg(formatPromotionMessage(text || '', code, percent));
     } catch (err) {
       console.error(err);
+      setAiPromoMsg(formatPromotionMessage('', code, percent));
     } finally {
       setIsGeneratingAi(false);
     }
@@ -281,10 +311,25 @@ export default function AdminSubscriptions({
         '#8b5cf6'
       );
 
+      let pushSent = 0;
+      try {
+        const { data: pushResult, error: pushError } = await supabase.functions.invoke('send-promotion-push', {
+          body: {
+            title: isAr ? '🎁 عرض جديد من SpaceQuiz' : '🎁 New SpaceQuiz offer',
+            body: aiPromoMsg.replace(/\n+/g, ' ').slice(0, 180),
+            url: '/quiz-space/#/dashboard/landing',
+          },
+        });
+        if (pushError) console.warn('Push broadcast was not delivered:', pushError.message);
+        pushSent = Number(pushResult?.sent || 0);
+      } catch (pushError) {
+        console.warn('Push broadcast is unavailable until the Edge Function is deployed:', pushError);
+      }
+
       alert(
         isAr
-          ? `تم بث الإعلان بنجاح ونشره بالمجتمع! وتم إرساله إلى عدد ${messagesToInsert.length} مستخدم في الرسائل الخاصة.`
-          : `Promotion broadcasted successfully! Posted to community feed and delivered as direct messages to ${messagesToInsert.length} users.`,
+          ? `تم بث الإعلان بنجاح ونشره بالمجتمع! الرسائل الخاصة: ${messagesToInsert.length}، وإشعارات الهاتف: ${pushSent}.`
+          : `Promotion broadcasted successfully! Direct messages: ${messagesToInsert.length}; push notifications: ${pushSent}.`,
       );
       setAiPromoMsg("");
     } catch (err) {

@@ -58,8 +58,11 @@ self.addEventListener('push', (event) => {
     body: data.body || 'قام المعلم بنشر كويز جديد. اضغط هنا للدخول والحل فوراً قبل انتهاء الوقت.',
     icon: data.icon || '/assets/logo.png',
     badge: data.badge || '/assets/logo.png',
+    dir: data.dir || 'rtl',
+    lang: data.lang || 'ar',
+    requireInteraction: Boolean(data.requireInteraction),
     data: {
-      url: data.url || '/#/classrooms',
+      url: data.url || '/quiz-space/#/classrooms',
     },
     vibrate: [200, 100, 200],
   };
@@ -71,7 +74,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/#/classrooms';
+  const targetUrl = event.notification.data?.url || '/quiz-space/#/classrooms';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

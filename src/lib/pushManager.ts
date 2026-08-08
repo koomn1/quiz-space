@@ -1,3 +1,5 @@
+import { savePushSubscription } from './db';
+
 export async function registerPushNotifications(userId: string): Promise<'granted' | 'denied' | 'default'> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('Notification' in window)) {
     return 'default';
@@ -17,8 +19,13 @@ export async function registerPushNotifications(userId: string): Promise<'grante
 
     if (permission === 'granted' && pushEnabled && !dismissed) {
       try {
-        const vapidKey = localStorage.getItem('quiz_vapid_public_key') || '';
-        const keyArray = vapidKey ? urlBase64ToUint8Array(vapidKey) : undefined;
+        const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY || localStorage.getItem('quiz_vapid_public_key') || '';
+        if (!vapidKey) {
+          console.warn('Push permission granted, but VAPID public key is not configured.');
+          localStorage.setItem('push_permission', permission);
+          return permission;
+        }
+        const keyArray = urlBase64ToUint8Array(vapidKey);
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: keyArray as any,
@@ -27,6 +34,7 @@ export async function registerPushNotifications(userId: string): Promise<'grante
         const subJson = subscription.toJSON();
         if (subJson) {
           localStorage.setItem(`push_sub_${userId}`, JSON.stringify(subJson));
+          await savePushSubscription(userId, subJson);
         }
       } catch (subError) {
         console.warn('Push subscription failed:', subError);

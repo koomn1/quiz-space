@@ -1407,6 +1407,18 @@ export async function markMessagesAsRead(userId: string, contactId: string): Pro
 }
 
 // ---------------- ALERTS & GENERAL NOTIFICATIONS (SUPABASE DIRECT) ----------------
+export async function savePushSubscription(userId: string, subscription: { endpoint?: string; keys?: { p256dh?: string; auth?: string } }): Promise<void> {
+  if (!isSupabaseConfigured || !userId || !subscription.endpoint) return;
+  const { error } = await supabase.from('push_subscriptions').upsert({
+    user_id: userId,
+    endpoint: subscription.endpoint,
+    p256dh: subscription.keys?.p256dh || null,
+    auth: subscription.keys?.auth || null,
+    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 500) : null,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'endpoint' });
+  if (error) console.warn('Could not save push subscription:', error.message);
+}
 
 export async function getNotifications(): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
