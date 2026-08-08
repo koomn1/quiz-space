@@ -273,6 +273,7 @@ export default function QuizCreator({
   const t = translations[lang];
   const isAr = lang === 'ar';
   const [activeMode, setActiveMode] = React.useState<'manual' | 'ocr' | 'ai' | 'paste'>('manual');
+  const [isModeMenuOpen, setIsModeMenuOpen] = React.useState(false);
 
   // Dynamic free tier limits for non-premium accounts (2 uses each)
   const [fileUses, setFileUses] = React.useState<number>(() => {
@@ -1159,56 +1160,68 @@ export default function QuizCreator({
 
       {!quizToEdit && (
         <>
-        {/* Creation Mode Select Toggles */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 bg-slate-100/50 dark:bg-slate-800/40 p-2 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 font-medium backdrop-blur-sm">
+        {/* Branded creation mode dropdown */}
+        <div className="relative z-30">
           <button
-            onClick={() => setActiveMode('manual')}
-            className={`flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs transition-all cursor-pointer ${
-              activeMode === 'manual'
-                ? 'bg-white dark:bg-slate-700/80 text-primary shadow-sm shadow-black/5 font-extrabold border border-slate-200/50 dark:border-slate-600/50'
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold hover:bg-slate-200/50 dark:hover:bg-slate-700/30'
-            }`}
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={isModeMenuOpen}
+            onClick={() => setIsModeMenuOpen((open) => !open)}
+            className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-violet-500/25 bg-gradient-to-l from-violet-600/10 via-white/80 to-indigo-500/10 px-4 py-4 text-right shadow-lg shadow-violet-950/5 backdrop-blur-xl transition-all hover:border-violet-500/50 hover:shadow-violet-500/10 focus:outline-none focus:ring-4 focus:ring-violet-500/10 dark:from-violet-500/15 dark:via-slate-900/80 dark:to-indigo-500/10"
           >
-            <Plus className="w-4 h-4" />
-            <span>كتابة يدوية</span>
+            <span className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20">
+                {activeMode === 'manual' && <Plus className="h-5 w-5" />}
+                {activeMode === 'ocr' && <Camera className="h-5 w-5" />}
+                {activeMode === 'paste' && <FileText className="h-5 w-5" />}
+                {activeMode === 'ai' && <Sparkles className="h-5 w-5" />}
+              </span>
+              <span>
+                <span className="block text-[10px] font-bold text-violet-600 dark:text-violet-300">طريقة إنشاء الاختبار</span>
+                <span className="mt-0.5 block text-sm font-black text-slate-800 dark:text-slate-100">
+                  {activeMode === 'manual' && 'كتابة يدوية'}
+                  {activeMode === 'ocr' && 'صورة أو PDF'}
+                  {activeMode === 'paste' && 'لصق نصوص PDF'}
+                  {activeMode === 'ai' && 'توليد تلقائي بالذكاء الاصطناعي'}
+                </span>
+              </span>
+            </span>
+            <span className={`text-xl text-violet-500 transition-transform duration-300 ${isModeMenuOpen ? 'rotate-180' : ''}`}>⌄</span>
           </button>
 
-          <button
-            id="tab-btn-ocr"
-            onClick={() => setActiveMode('ocr')}
-            className={`flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs transition-all cursor-pointer ${
-              activeMode === 'ocr'
-                ? 'bg-white dark:bg-slate-700/80 text-primary shadow-sm shadow-black/5 font-extrabold border border-slate-200/50 dark:border-slate-600/50'
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold hover:bg-slate-200/50 dark:hover:bg-slate-700/30'
-            }`}
-          >
-            <Camera className="w-4 h-4" />
-            <span>صورة أو PDF</span>
-          </button>
-
-          <button
-            onClick={() => setActiveMode('paste')}
-            className={`flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs transition-all cursor-pointer ${
-              activeMode === 'paste'
-                ? 'bg-white dark:bg-slate-700/80 text-primary shadow-sm shadow-black/5 font-extrabold border border-slate-200/50 dark:border-slate-600/50'
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold hover:bg-slate-200/50 dark:hover:bg-slate-700/30'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span>لصق نصوص PDF</span>
-          </button>
-
-          <button
-            onClick={() => setActiveMode('ai')}
-            className={`flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs transition-all cursor-pointer ${
-              activeMode === 'ai'
-                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-primary/20 font-extrabold border-none'
-                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold hover:bg-slate-200/50 dark:hover:bg-slate-700/30'
-            }`}
-          >
-            <Sparkles className={`w-4 h-4 ${activeMode === 'ai' ? 'text-white' : 'text-primary'}`} />
-            <span>توليد تلقائي AI</span>
-          </button>
+          {isModeMenuOpen && (
+            <div role="listbox" className="absolute inset-x-0 top-[calc(100%+0.5rem)] overflow-hidden rounded-2xl border border-violet-500/20 bg-white/95 p-2 shadow-2xl shadow-slate-950/20 backdrop-blur-xl dark:bg-slate-900/95">
+              {([
+                { id: 'manual', label: 'كتابة يدوية', hint: 'أضف الأسئلة والاختيارات بنفسك', icon: Plus },
+                { id: 'ocr', label: 'صورة أو PDF', hint: 'استخرج الأسئلة من ملف أو صورة', icon: Camera },
+                { id: 'paste', label: 'لصق نصوص PDF', hint: 'حوّل نصاً جاهزاً إلى أسئلة', icon: FileText },
+                { id: 'ai', label: 'توليد تلقائي بالذكاء الاصطناعي', hint: 'أنشئ مسودة أسئلة من موضوع تختاره', icon: Sparkles },
+              ] as const).map((mode) => {
+                const ModeIcon = mode.icon;
+                const selected = activeMode === mode.id;
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    onClick={() => {
+                      setActiveMode(mode.id);
+                      setIsModeMenuOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-right transition-all ${selected ? 'bg-gradient-to-l from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20' : 'text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-500/10'}`}
+                  >
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selected ? 'bg-white/15 text-white' : 'bg-violet-500/10 text-violet-500'}`}><ModeIcon className="h-4 w-4" /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs font-black">{mode.label}</span>
+                      <span className={`mt-0.5 block text-[10px] ${selected ? 'text-violet-100' : 'text-slate-500 dark:text-slate-400'}`}>{mode.hint}</span>
+                    </span>
+                    {selected && <Check className="h-4 w-4 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
         </>
       )}
