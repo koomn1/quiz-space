@@ -179,9 +179,10 @@ async function handler(request: Request, env: Env): Promise<Response> {
   const headers = cors(request, env);
   if (request.method === 'OPTIONS') return new Response(null, { headers });
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, headers);
-  const userId = await getUserId(request, env);
-  if (!userId) return json({ error: 'Authentication required' }, 401, headers);
-  const authHeader = request.headers.get('Authorization')!;
+      // Cosmo is available to guests as a limited preview. Authenticated users
+      // still receive their real user id for persistence/performance logging.
+      const userId = (await getUserId(request, env)) || 'guest';
+      const authHeader = request.headers.get('Authorization') || '';
 
   try {
     const body = await request.json() as any;
@@ -220,7 +221,7 @@ async function handler(request: Request, env: Env): Promise<Response> {
           } catch { break; }
         }
         
-        await logAiPerformance(env, authHeader, {
+        if (userId !== 'guest') await logAiPerformance(env, authHeader, {
           user_id: userId,
           operation: 'generation',
           provider,
