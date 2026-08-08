@@ -14,6 +14,7 @@ import ParallaxTiltCard from '../components/ParallaxTiltCard';
 import { getApiUrl } from '../lib/origin';
 import { UserBadge } from '../components/UserBadge';
 import { getAllProfiles } from '../lib/db';
+import DailyQuizCard from '../components/DailyQuizCard';
 
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
@@ -43,6 +44,7 @@ interface LandingPageProps {
   isPremium?: boolean;
   viewMode?: 'grid' | 'list';
   onToggleViewMode?: () => void;
+  dailyQuiz?: { userId?: string | null; planName?: string; isPremium?: boolean; onStartQuiz: (quizId: string) => void; onLoginClick?: () => void };
 }
 
 const SPARK_TOPICS_EN = [
@@ -99,7 +101,8 @@ export default function LandingPage({
   planName = 'free',
   isPremium = false,
   viewMode = 'grid',
-  onToggleViewMode
+  onToggleViewMode,
+  dailyQuiz
 }: LandingPageProps) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [quizToDelete, setQuizToDelete] = React.useState<string | null>(null);
@@ -290,8 +293,22 @@ export default function LandingPage({
         </div>
       )}
 
+      {/* Daily challenge stays visible directly above the first quiz. */}
+      {dailyQuiz && (
+        <div className="gsap-fade-section mt-10">
+          <DailyQuizCard
+            lang={lang}
+            userId={dailyQuiz.userId}
+            planName={dailyQuiz.planName}
+            isPremium={dailyQuiz.isPremium}
+            onStartQuiz={dailyQuiz.onStartQuiz}
+            onLoginClick={dailyQuiz.onLoginClick}
+          />
+        </div>
+      )}
+
       {/* Main Interactive Quizzes Showcase list */}
-      <div id="quizzes-catalog" className="space-y-6 mt-12">
+      <div id="quizzes-catalog" className="space-y-6 mt-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
             <h3 className="font-display text-2xl sm:text-3xl font-black bg-gradient-to-r from-primary via-violet-500 to-cyan-500 bg-clip-text text-transparent inline-block">

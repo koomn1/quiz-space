@@ -1404,14 +1404,14 @@ export default function App() {
                   }}
                   viewMode={viewMode}
                   onToggleViewMode={handleToggleViewMode}
+                  dailyQuiz={{
+                    userId,
+                    planName: userPlanName,
+                    isPremium: isUserPremium,
+                    onStartQuiz: handleStartQuiz,
+                    onLoginClick: () => setIsAuthModalOpen(true),
+                  }}
                 />
-                  <DailyQuizCard
-                    lang={lang}
-                    userId={userId}
-                    planName={userPlanName}
-                    isPremium={isUserPremium}
-                    onStartQuiz={handleStartQuiz}
-                  />
                 </>
               )}
 

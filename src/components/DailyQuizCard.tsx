@@ -23,6 +23,7 @@ interface DailyQuizCardProps {
   planName?: string;
   isPremium?: boolean;
   onStartQuiz: (quizId: string) => void;
+  onLoginClick?: () => void;
 }
 
 const TIER_LABEL: Record<DailyQuizTier, { ar: string; en: string }> = {
@@ -58,8 +59,9 @@ function formatCountdown(totalSeconds: number, isAr: boolean): string {
   return `${s}${isAr ? 'ث' : 's'}`;
 }
 
-export default function DailyQuizCard({ lang, userId, planName, isPremium, onStartQuiz }: DailyQuizCardProps) {
+export default function DailyQuizCard({ lang, userId, planName, isPremium, onStartQuiz, onLoginClick }: DailyQuizCardProps) {
   const isAr = lang === 'ar';
+  const isGuest = !userId || userId.startsWith('user-');
   const tier = planNameToDailyQuizTier(planName, isPremium);
 
   const [quizId, setQuizId] = useState<string | null>(null);
@@ -162,13 +164,18 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
   };
 
   useEffect(() => {
+    if (isGuest) {
+      setQuizId(null);
+      setIsGenerating(false);
+      return;
+    }
     setQuizId(null);
     setIsGenerating(true);
     sync();
     const pollId = window.setInterval(sync, 5000);
     return () => window.clearInterval(pollId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tier]);
+  }, [tier, isGuest]);
 
   useEffect(() => {
     const tickId = window.setInterval(() => {
@@ -176,8 +183,6 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     }, 1000);
     return () => window.clearInterval(tickId);
   }, []);
-
-  if (!userId || userId.startsWith('user-')) return null; // Daily challenge requires a real signed-in account
 
   const tierLabel = isAr ? TIER_LABEL[tier].ar : TIER_LABEL[tier].en;
   const intervalLabel = isAr ? TIER_INTERVAL_LABEL[tier].ar : TIER_INTERVAL_LABEL[tier].en;
@@ -207,7 +212,14 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
             {formatCountdown(secondsLeft, isAr)}
           </div>
 
-          {!isGenerating && quizId ? (
+          {isGuest ? (
+            <button
+              onClick={onLoginClick}
+              className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform"
+            >
+              {isAr ? 'سجّل الدخول للبدء' : 'Sign in to start'}
+            </button>
+          ) : !isGenerating && quizId ? (
             <button
               onClick={() => onStartQuiz(quizId)}
               className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform"
