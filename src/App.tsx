@@ -1094,6 +1094,22 @@ export default function App() {
   // Rendering QuizCreator without an authenticated user previously left the app blank in this case.
   const isGuestCreateRoute = activeTab === 'create' && !authContext.loading && !authContext.isAuthenticated && !userId;
 
+  // Only the core dashboard sections use the shared site frame. Other routes
+  // (404, quiz resolver, support, admin tools, etc.) render as independent
+  // full-screen experiences so the outer page background cannot peek through.
+  const usesSharedFrame = React.useMemo(() => {
+    const sharedTabs = new Set([
+      'landing',
+      'profile',
+      'create',
+      'community',
+      'settings',
+      'my-quizzes',
+      'billing',
+    ]);
+    return sharedTabs.has(activeTab) && !activeQuizId;
+  }, [activeTab, activeQuizId]);
+
   React.useEffect(() => {
     if (!isGuestCreateRoute) return;
     setLoginRedirectTab('create');
@@ -1139,7 +1155,7 @@ export default function App() {
         />
       ) : (
         <>
-          <Header
+          {usesSharedFrame && <Header
             currentTab={activeTab}
             setTab={handleSetTab}
             toggleSidebar={() => {
@@ -1168,7 +1184,7 @@ export default function App() {
             isPremium={isUserPremium}
             isSidebarOpen={isSidebarOpen}
             isQuizLocked={isQuizLocked}
-          />
+          />}
 
           <div
             
@@ -1176,7 +1192,7 @@ export default function App() {
             
             
             
-          className={`flex min-h-screen transition-colors duration-500 ${
+          className={`flex min-h-screen w-full transition-colors duration-500 ${
             darkMode
               ? colorTheme === 'sky' 
                 ? 'bg-[#020617] text-slate-100' 
@@ -1200,7 +1216,8 @@ export default function App() {
         >
           <PremiumCursor />
       
-      <div className="flex-1 flex flex-col min-w-0 transition-colors duration-300 relative overflow-x-hidden">                
+                <div className={`flex-1 flex flex-col min-w-0 transition-colors duration-300 relative overflow-x-hidden ${usesSharedFrame ? '' : 'min-h-[100dvh]'}`}>                
+                
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
           {/* Light mode background elements */}
           <div className="absolute inset-0 dark:hidden opacity-30">
@@ -1229,7 +1246,7 @@ export default function App() {
         <div className="absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none" />
 
         {/* Padding applied here to clear the fixed header for all banners and main content */}
-        <div className="pt-20 sm:pt-24 md:pt-28 flex flex-col w-full relative z-10">
+        <div className={`${usesSharedFrame ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0'} flex flex-col w-full relative z-10`}>
           {showQuotaWarning && localStorage.getItem('firebase_quota_exceeded_dismissed') !== 'true' && (
             <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-3 text-amber-700 dark:text-amber-300 font-sans z-30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
               <div className="flex items-center gap-2 max-w-4xl" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
@@ -1360,7 +1377,7 @@ export default function App() {
         
 
         {/* Main page frame wrapping */}
-        <main ref={mainContainerRef} className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 relative z-10 pt-4">
+        <main ref={mainContainerRef} className={`${usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4' : 'flex-1 w-full min-h-[100dvh] p-0'} relative z-10`}>
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (
@@ -1385,7 +1402,7 @@ export default function App() {
               
               
               
-              className="will-change-transform transform-gpu gsap-tab-wrapper"
+              className={`${usesSharedFrame ? '' : 'min-h-[100dvh]'} will-change-transform transform-gpu gsap-tab-wrapper`}
               style={{ backfaceVisibility: 'hidden' }}
             >
               <React.Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] w-full"><CosmicLoader /></div>}>
