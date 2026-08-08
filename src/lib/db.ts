@@ -978,7 +978,21 @@ export async function getCouponByCode(code: string): Promise<Coupon | null> {
     console.error('Error looking up coupon:', error);
     return null;
   }
-  return data || null;
+  // get_coupon_by_code is declared as RETURNS SETOF coupon_codes, so
+  // Supabase returns an array even though the lookup is limited to one row.
+  // Normalize it here so every caller receives the documented Coupon object.
+  const row: any = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return {
+    ...row,
+    discountPercent: row.discountPercent ?? row.discount_percent,
+    maxUses: row.maxUses ?? row.max_uses,
+    usedCount: row.usedCount ?? row.used_count,
+    expiryDate: row.expiryDate ?? row.expiry_date,
+    isActive: row.isActive ?? row.is_active,
+    createdAt: row.createdAt ?? row.created_at,
+    applicablePlans: row.applicablePlans ?? row.applicable_plans,
+  } as Coupon;
 }
 
 export async function saveCoupon(coupon: Coupon): Promise<void> {
