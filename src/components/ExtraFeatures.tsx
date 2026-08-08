@@ -356,7 +356,8 @@ function CommunityPostCard({
   isAr,
   handleReact,
   onDelete,
-  onOpenInsights
+  onOpenInsights,
+  onViewRecorded
 }: {
   post: CommunityPost;
   userId: string;
@@ -367,6 +368,7 @@ function CommunityPostCard({
   handleReact: (postId: string, reaction: ReactionType, e: React.MouseEvent) => void;
   onDelete: (postId: string) => void;
   onOpenInsights?: (post: CommunityPost) => void;
+  onViewRecorded?: (postId: string, viewsCount: number) => void;
 }) {
   const hasTriggeredView = React.useRef(false);
 
@@ -378,10 +380,28 @@ function CommunityPostCard({
       try {
         const activeUserId = userId || 'user-guest';
         const activeUserName = userName || (isAr ? 'زائر متميز' : 'Guest Scholar');
-        const { data: postData } = await supabase.from('community_posts').select('views').eq('id', post.id).single();
+        const { data: postData, error: readError } = await supabase
+          .from('community_posts')
+          .select('views_count, viewers')
+          .eq('id', post.id)
+          .single();
+        if (readError) throw readError;
         if (postData) {
-          const newViews = (postData.views || 0) + 1;
-          await supabase.from('community_posts').update({ views: newViews }).eq('id', post.id);
+          const existingViewers = Array.isArray(postData.viewers) ? postData.viewers : [];
+          const alreadyRecorded = existingViewers.some((viewer: any) => viewer?.userId === activeUserId);
+          if (alreadyRecorded) {
+            onViewRecorded?.(post.id, Number(postData.views_count || 0));
+            return;
+          }
+          const viewer = { userId: activeUserId, userName: activeUserName, createdAt: new Date().toISOString() };
+          const nextViewers = [...existingViewers, viewer];
+          const newViews = Number(postData.views_count || 0) + 1;
+          const { error: updateError } = await supabase
+            .from('community_posts')
+            .update({ views_count: newViews, viewers: nextViewers })
+            .eq('id', post.id);
+          if (updateError) throw updateError;
+          onViewRecorded?.(post.id, newViews);
         }
       } catch (err) {
         console.warn('Failed to record post view:', err);
@@ -821,6 +841,10 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                   }
                 }}
                 onOpenInsights={handleOpenInsights}
+                onViewRecorded={(postId, viewsCount) => {
+                  setPosts(prev => prev.map(item => item.id === postId ? { ...item, viewsCount } : item));
+                  setSelectedPostForInsights(prev => prev?.id === postId ? { ...prev, viewsCount } : prev);
+                }}
               />
             );
           })
