@@ -1173,6 +1173,10 @@ export default function UserProfile({
                       './avatars/boy-5.png',
                       './avatars/boy-6.png',
                       './avatars/boy-7.png',
+                      './avatars/boy-8.png',
+                      './avatars/boy-9.png',
+                      './avatars/boy-10.png',
+                      './avatars/boy-11.png',
                       './avatars/girl-1.png',
                       './avatars/girl-2.png',
                       './avatars/girl-3.png',
@@ -1180,6 +1184,10 @@ export default function UserProfile({
                       './avatars/girl-5.png',
                       './avatars/girl-6.png',
                       './avatars/girl-7.png',
+                      './avatars/girl-8.png',
+                      './avatars/girl-9.png',
+                      './avatars/girl-10.png',
+                      './avatars/girl-11.png',
                     ].map((url, idx) => (
                       <button
                         key={idx}

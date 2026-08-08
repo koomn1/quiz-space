@@ -408,16 +408,17 @@ export default function ProfileStatsView({
     ? Math.round((completions.reduce((acc, c) => acc + (c.totalQuestions > 0 ? (c.score / c.totalQuestions) : 0), 0) / completions.length) * 100)
     : 0;
 
-  // Calculate knowledge points dynamically
-  const totalPoints = completions.length > 0
-    ? completions.reduce((acc, c) => acc + (c.score * 150), 0)
-    : 0;
+  // Prefer the server-authoritative XP balance. The fallback keeps legacy
+  // profiles readable until the XP migration has been applied everywhere.
+  const totalPoints = typeof profileData?.xp === 'number'
+    ? profileData.xp
+    : completions.reduce((acc, c) => acc + (c.score * 10 + 10), 0);
 
   // Calculate dynamic streak based on actual quizzes
   const currentStreak = completions.length > 0 ? Math.min(32, completions.length + 1) : 0;
   
-  // Calculate level based on actual completions and creations
-  const calculatedLevel = 1 + Math.floor((completions.length * 15 + creations.length * 30) / 10);
+  // Level is derived from persisted XP: every 100 XP advances one level.
+  const calculatedLevel = 1 + Math.floor(totalPoints / 100);
 
   // Generate dynamic space rank
   const currentRank = completions.length > 0 
@@ -445,7 +446,7 @@ export default function ProfileStatsView({
     
     sortedCompletions.slice(0, 4).forEach((comp, idx) => {
       const completionPercentage = comp.totalQuestions > 0 ? Math.round((comp.score / comp.totalQuestions) * 100) : 0;
-      const pointsEarned = comp.score * 150;
+      const pointsEarned = comp.score * 10 + 10;
       
       const date = new Date(comp.createdAt);
       const diffMs = Date.now() - date.getTime();

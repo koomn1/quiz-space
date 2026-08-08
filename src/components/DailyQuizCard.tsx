@@ -67,20 +67,34 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
   const [quizId, setQuizId] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [isGenerating, setIsGenerating] = useState(true);
+  const [generationError, setGenerationError] = useState(false);
 
   const generatingRef = useRef(false);
+
+  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+    let timeoutId: number | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(() => reject(new Error('Daily quiz request timed out')), timeoutMs);
+    });
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+    }
+  };
 
   const generateAndFinalize = async () => {
     if (generatingRef.current) return;
     generatingRef.current = true;
     setIsGenerating(true);
+    setGenerationError(false);
     try {
       const topic = DAILY_TOPICS[Math.floor(Math.random() * DAILY_TOPICS.length)];
-      const generated = await generateQuizWithFallback(
+      const generated = await withTimeout(generateQuizWithFallback(
         `${topic} — اختبار يومي منوّع بمستوى صعوبة متوسط، بعيد عن الأسئلة شديدة السهولة أو التخصصية جداً`,
         8,
-      );
-      const quiz = await createQuiz({
+      ), 45000);
+      const quiz = await withTimeout(createQuiz({
         title: `⚡ ${isAr ? 'التحدي اليومي' : 'Daily Challenge'} — ${generated.title}`,
         description: generated.description,
         questions: generated.questions.map((q, i) => ({
@@ -90,11 +104,12 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         creatorId: 'daily-quiz-system',
         creatorName: isAr ? 'QuizSpace ⚡ (يومي)' : 'QuizSpace ⚡ (Daily)',
         category: isAr ? 'يومي' : 'Daily',
-      } as any);
+      } as any), 12000);
       await finalizeDailyQuizRefresh(tier, quiz.id);
       setQuizId(quiz.id);
     } catch (err) {
       console.error('Failed to generate daily quiz:', err);
+      setGenerationError(true);
       await releaseDailyQuizRefresh(tier);
     } finally {
       setIsGenerating(false);
@@ -103,8 +118,13 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
   };
 
   const sync = async () => {
-    const slot = await getDailyQuizSlot(tier);
-    if (!slot) return;
+    try {
+      const slot = await withTimeout(getDailyQuizSlot(tier), 12000);
+      if (!slot) {
+        setGenerationError(true);
+        setIsGenerating(false);
+        return;
+      }
 
     setSecondsLeft(slot.secondsUntilRefresh);
 
@@ -159,6 +179,11 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     } else {
       // We have a pinned quiz and the user hasn't finished it yet — just
       // keep showing it, don't join the regeneration race.
+      setIsGenerating(false);
+    }
+    } catch (err) {
+      console.error('Failed to sync daily quiz:', err);
+      setGenerationError(true);
       setIsGenerating(false);
     }
   };
@@ -225,6 +250,13 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
               className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform"
             >
               {isAr ? 'ابدأ الآن +100 XP' : 'Start now +100 XP'}
+            </button>
+          ) : generationError ? (
+            <button
+              onClick={sync}
+              className="bg-white/20 text-white font-bold rounded-full px-5 py-2 text-sm hover:bg-white/30 active:scale-95 transition-transform"
+            >
+              {isAr ? 'إعادة المحاولة' : 'Retry'}
             </button>
           ) : (
             <div className="flex items-center gap-2 text-sm text-white/80 px-3">
