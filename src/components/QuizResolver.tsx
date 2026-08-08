@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, rateQuestion, getBestScoreByQuizId } from '../lib/db';
+import { getQuizById, submitQuizAttempt, rateQuestion, getBestScoreByQuizId, completeUserDailyQuiz } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { getApiUrl } from '../lib/origin';
@@ -223,6 +223,7 @@ export default function QuizResolver({
             setSavedCompletionId(res.completion.id);
             console.log('Quiz auto-saved successfully, completion ID:', res.completion.id);
           }
+          if (userId) await completeUserDailyQuiz(userId, quizId);
         } catch (e) {
           console.error('Quiz auto-save failed:', e);
         }
@@ -487,14 +488,14 @@ export default function QuizResolver({
     try {
       const previousBestScore = await getBestScoreByQuizId(quizId);
       
-      await submitQuizAttempt(quizId, {
+            await submitQuizAttempt(quizId, {
         takerId: userId,
         takerName: takerName.trim(),
         score,
         rating,
         feedback: feedback.trim()
       });
-
+      if (userId) await completeUserDailyQuiz(userId, quizId);
       if (previousBestScore > 0 && score > previousBestScore) {
         const body = lang === 'ar' 
           ? `تهانينا! الطالب «${takerName.trim()}» حطم الرقم القياسي السابق وسجل ${score} في اختبار «${quiz.title}»!`
