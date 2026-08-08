@@ -703,13 +703,18 @@ export async function getUserDailyQuizSlot(userId: string, tier: DailyQuizTier):
     console.error('Error loading user daily quiz slot:', error?.message);
     return null;
   }
+  const nextAvailableMs = row.next_available_at ? new Date(row.next_available_at).getTime() : 0;
+  const calculatedSeconds = nextAvailableMs > Date.now()
+    ? Math.ceil((nextAvailableMs - Date.now()) / 1000)
+    : 0;
+  const rawSeconds = Number(row.seconds_until_refresh);
   return {
     quizId: row.quiz_id || row.quiz_payload?.id || null,
     quizPayload: row.quiz_payload || null,
     refreshing: !!row.refreshing,
     refreshedAt: row.generated_at || null,
-    refreshIntervalSeconds: row.refresh_interval_seconds || 86400,
-    secondsUntilRefresh: row.seconds_until_refresh || 0,
+    refreshIntervalSeconds: Number(row.refresh_interval_seconds) || 86400,
+    secondsUntilRefresh: Number.isFinite(rawSeconds) && rawSeconds > 0 ? rawSeconds : calculatedSeconds,
     answered: !!row.answered_at,
   };
 }
