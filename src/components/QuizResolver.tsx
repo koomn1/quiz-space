@@ -706,18 +706,39 @@ export default function QuizResolver({
         }
       };
 
-      const canvas = await html2canvas(element, {
-        scale: 2, // Retain crystal clear rendering
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.getElementById('quiz-pdf-export-content');
-          if (clonedElement) {
-            inlineResolvedColors(element, clonedElement);
+      // html2canvas can return a blank canvas or fail when the source is positioned
+      // far outside the viewport (the report template is intentionally hidden).
+      // Render a temporary copy inside the viewport, then remove it immediately.
+      const renderElement = element.cloneNode(true) as HTMLElement;
+      renderElement.id = 'quiz-pdf-export-temp';
+      renderElement.style.position = 'fixed';
+      renderElement.style.top = '0px';
+      renderElement.style.left = '0px';
+      renderElement.style.width = '794px';
+      renderElement.style.height = 'auto';
+      renderElement.style.visibility = 'visible';
+      renderElement.style.opacity = '1';
+      renderElement.style.zIndex = '-1000';
+      renderElement.style.pointerEvents = 'none';
+      document.body.appendChild(renderElement);
+
+      let canvas: HTMLCanvasElement;
+      try {
+        canvas = await html2canvas(renderElement, {
+          scale: Math.min(2, window.devicePixelRatio || 1.5),
+          useCORS: true,
+          allowTaint: false,
+          backgroundColor: '#ffffff',
+          windowWidth: Math.max(window.innerWidth, renderElement.scrollWidth),
+          windowHeight: Math.max(window.innerHeight, renderElement.scrollHeight),
+          onclone: (clonedDoc) => {
+            const clonedElement = clonedDoc.getElementById('quiz-pdf-export-temp');
+            if (clonedElement) inlineResolvedColors(renderElement, clonedElement);
           }
-        }
-      });
+        });
+      } finally {
+        renderElement.remove();
+      }
 
       const imgData = canvas.toDataURL('image/png');
       
