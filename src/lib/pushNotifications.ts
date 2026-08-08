@@ -97,7 +97,7 @@ class PushNotificationManager {
       try {
         const option = {
           body: payload.body,
-          icon: '/favicon.ico',
+          icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.png`,
           tag: 'record-broken-' + quizId,
           renotify: true
         };
@@ -134,7 +134,7 @@ class PushNotificationManager {
       try {
         const option = {
           body: fullPayload.body,
-          icon: '/favicon.ico',
+          icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.png`,
           tag: 'general-' + fullPayload.id,
           renotify: true
         };

@@ -552,7 +552,7 @@ export default function App() {
               try {
                 new Notification(lang === 'ar' ? `رسالة جديدة من ${senderName} 💬` : `New message from ${senderName} 💬`, {
                   body: text.length > 70 ? text.substring(0, 70) + '...' : text,
-                  icon: '/favicon.ico'
+                  icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.png`
                 });
               } catch (err) {
                 console.warn('Native notification instantiation error:', err);
