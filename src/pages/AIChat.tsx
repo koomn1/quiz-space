@@ -756,7 +756,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
   return (
     <div ref={containerRef}
-      className="chat-container relative w-full h-[calc(100vh-150px)] min-h-[520px] flex overflow-hidden rounded-2xl"
+      className="chat-container relative w-full h-[calc(100dvh-7rem)] min-h-[520px] flex overflow-hidden rounded-2xl md:rounded-none"
       style={{ fontFamily: "'Inter', sans-serif", background: theme.BG, color: theme.FG }}>
 
       {/* ── Sidebar ── */}

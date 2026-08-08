@@ -1094,9 +1094,10 @@ export default function App() {
   // Rendering QuizCreator without an authenticated user previously left the app blank in this case.
   const isGuestCreateRoute = activeTab === 'create' && !authContext.loading && !authContext.isAuthenticated && !userId;
 
-  // Only the core dashboard sections use the shared site frame. Other routes
-  // (404, quiz resolver, support, admin tools, etc.) render as independent
-  // full-screen experiences so the outer page background cannot peek through.
+  // Core sections keep the shared content frame, while independent screens
+  // use their own full-screen surface. The global Header remains available
+  // on every non-quiz screen so users never lose navigation context.
+  const showAppHeader = !activeQuizId;
   const usesSharedFrame = React.useMemo(() => {
     const sharedTabs = new Set([
       'landing',
@@ -1155,7 +1156,7 @@ export default function App() {
         />
       ) : (
         <>
-          {usesSharedFrame && <Header
+          {showAppHeader && <Header
             currentTab={activeTab}
             setTab={handleSetTab}
             toggleSidebar={() => {
@@ -1246,7 +1247,7 @@ export default function App() {
         <div className="absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none" />
 
         {/* Padding applied here to clear the fixed header for all banners and main content */}
-        <div className={`${usesSharedFrame ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0'} flex flex-col w-full relative z-10`}>
+        <div className={`${showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0'} flex flex-col w-full relative z-10`}>
           {showQuotaWarning && localStorage.getItem('firebase_quota_exceeded_dismissed') !== 'true' && (
             <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-3 text-amber-700 dark:text-amber-300 font-sans z-30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
               <div className="flex items-center gap-2 max-w-4xl" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
