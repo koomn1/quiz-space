@@ -428,16 +428,17 @@ export default function App() {
     }
   }, [userId]);
 
-  // Body scroll lock when mobile sidebar or auth modals are open
+  // Body scroll lock when mobile sidebar, auth modals, or the Cosmo chat
+  // screen are open — the chat page itself never scrolls
   React.useEffect(() => {
-    if (isSidebarOpen || isAuthModalOpen || authRedirectQuizId) {
+    if (isSidebarOpen || isAuthModalOpen || authRedirectQuizId || isCosmoTab) {
       const originalStyle = window.getComputedStyle(document.body).overflow;
       document.body.style.overflow = 'hidden';
       return () => {
         document.body.style.overflow = originalStyle;
       };
     }
-  }, [isSidebarOpen, isAuthModalOpen, authRedirectQuizId]);
+  }, [isSidebarOpen, isAuthModalOpen, authRedirectQuizId, isCosmoTab]);
 
   // Scroll to top when active tab or active quiz changes
   React.useEffect(() => {
@@ -1094,6 +1095,12 @@ export default function App() {
   // Rendering QuizCreator without an authenticated user previously left the app blank in this case.
   const isGuestCreateRoute = activeTab === 'create' && !authContext.loading && !authContext.isAuthenticated && !userId;
 
+  // Cosmo (AIChat) is a full-height app shell: fixed header on top, Cosmo
+  // workspace fills ALL remaining height, only its messages scroll internally,
+  // and the page itself never scrolls. Site backgrounds/footer are hidden
+  // so nothing shows behind the chat; the whole surface recolors with mode.
+  const isCosmoTab = activeTab === 'aichat' && !activeQuizId;
+
   // Core sections keep the shared content frame, while independent screens
   // use their own full-screen surface. The global Header remains available
   // on every non-quiz screen so users never lose navigation context.
@@ -1193,7 +1200,7 @@ export default function App() {
             
             
             
-          className={`flex min-h-screen w-full transition-colors duration-500 ${
+          className={`flex w-full transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : 'min-h-screen'} {
             darkMode
               ? colorTheme === 'sky' 
                 ? 'bg-[#020617] text-slate-100' 
@@ -1217,9 +1224,9 @@ export default function App() {
         >
           <PremiumCursor />
       
-                <div className={`flex-1 flex flex-col min-w-0 transition-colors duration-300 relative overflow-x-hidden ${usesSharedFrame ? '' : 'min-h-[100dvh]'}`}>                
+                <div className={`flex-1 flex flex-col min-w-0 transition-colors duration-300 relative overflow-x-hidden ${isCosmoTab ? 'h-full' : (usesSharedFrame ? '' : 'min-h-[100dvh]')}`}>                
                 
-        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+        <div className={`fixed inset-0 pointer-events-none z-0 overflow-hidden select-none ${isCosmoTab ? 'hidden' : ''}`}>
           {/* Light mode background elements */}
           <div className="absolute inset-0 dark:hidden opacity-30">
             <div 
@@ -1244,10 +1251,10 @@ export default function App() {
           </div>
         </div>
 
-        <div className="absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none" />
+        <div className={`absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none ${isCosmoTab ? 'hidden' : ''}`} />
 
         {/* Padding applied here to clear the fixed header for all banners and main content */}
-        <div className={`${showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0'} flex flex-col w-full relative z-10`}>
+        <div className={`${isCosmoTab ? 'pt-0' : (showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0')} flex flex-col w-full relative z-10 ${isCosmoTab ? 'h-full' : ''}`}>
           {showQuotaWarning && localStorage.getItem('firebase_quota_exceeded_dismissed') !== 'true' && (
             <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-3 text-amber-700 dark:text-amber-300 font-sans z-30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
               <div className="flex items-center gap-2 max-w-4xl" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
@@ -1378,7 +1385,7 @@ export default function App() {
         
 
         {/* Main page frame wrapping */}
-        <main ref={mainContainerRef} className={`${usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4' : 'flex-1 w-full min-h-[100dvh] p-0'} relative z-10`}>
+        <main ref={mainContainerRef} className={`${isCosmoTab ? 'h-full w-full p-0 overflow-hidden min-h-0' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4' : 'flex-1 w-full min-h-[100dvh] p-0')} relative z-10`}>
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (
@@ -1403,7 +1410,7 @@ export default function App() {
               
               
               
-              className={`${usesSharedFrame ? '' : 'min-h-[100dvh]'} will-change-transform transform-gpu gsap-tab-wrapper`}
+              className={`${isCosmoTab ? 'h-full min-h-0' : (usesSharedFrame ? '' : 'min-h-[100dvh]')} will-change-transform transform-gpu gsap-tab-wrapper`}
               style={{ backfaceVisibility: 'hidden' }}
             >
               <React.Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] w-full"><CosmicLoader /></div>}>
@@ -1719,8 +1726,9 @@ export default function App() {
       </main>
       </div>
 
-      {/* Footer copyright */}
-      <footer className="w-full border-t border-slate-100 dark:border-slate-800 bg-white/60 dark:bg-[#090d16] py-6 text-center text-xs text-slate-400 dark:text-slate-500 font-medium print:hidden transition-colors">
+      {/* Footer copyright — hidden on the Cosmo chat page so the chat
+          surface stays edge-to-edge under the fixed header */}
+      <footer className={`w-full border-t border-slate-100 dark:border-slate-800 bg-white/60 dark:bg-[#090d16] py-6 text-center text-xs text-slate-400 dark:text-slate-500 font-medium print:hidden transition-colors ${isCosmoTab ? 'hidden' : ''}`}>
         <p>{lang === 'ar' ? 'جميع الحقوق محفوظة لموقع Quiz Space © 2026 - بواسطة يوسف بدوي' : 'All rights reserved © 2026 Quiz Space - Built by Youssef Badawy'}</p>
       </footer>
 

@@ -756,7 +756,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
   return (
     <div ref={containerRef}
-      className="chat-container relative w-full h-[calc(100dvh-7rem)] min-h-[520px] flex overflow-hidden rounded-2xl md:rounded-none"
+      className="chat-container relative w-full h-full flex flex-col overflow-hidden"
       style={{ fontFamily: "'Inter', sans-serif", background: theme.BG, color: theme.FG }}>
 
       {/* ── Sidebar ── */}
@@ -933,8 +933,8 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
           </div>
         </div>
 
-        {/* chat / welcome */}
-        <div className="flex-1 overflow-y-auto" dir="rtl" style={sidebarOpen ? {} : { maxWidth: '100%' }}>
+        {/* chat / welcome — the ONLY scrollable region of the page */}
+        <div className="flex-1 overflow-y-auto min-h-0" dir="rtl" style={sidebarOpen ? {} : { maxWidth: '100%' }}>
           {emptyState ? (
 
             /* ── Welcome ── */
