@@ -31,7 +31,7 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-import { getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, updateBadgeAndNameColor } from "../lib/db";
+import { getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, updateBadgeAndNameColor, recordCouponUsage } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
 import { getApiUrl } from "../lib/origin";
 import { supabase } from "../lib/supabaseClient";
@@ -572,9 +572,13 @@ export default function UserProfile({
         const requestId =
           "req-auto-" + Math.random().toString(36).substring(2, 11);
         
+        const renewalDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
         const { error: userErr } = await supabase.from('users').update({
           is_premium: true,
-          plan_name: 'Diamond'
+          plan_name: 'Diamond',
+          plan_id: 'diamond',
+          is_lifetime: false,
+          renewal_date: renewalDate,
         }).eq('uid', currentUserId);
 
         const { error: reqErr } = await supabase.from('premium_requests').insert({
@@ -592,6 +596,10 @@ export default function UserProfile({
         });
 
         if (!userErr && !reqErr) {
+          // Persist the redemption itself as well as the upgraded profile.
+          // This makes the entitlement survive a full page reload and lets
+          // the database enforce coupon usage limits.
+          await recordCouponUsage(couponObj.id, currentUserId, discountPercent, 'diamond', requestId);
           showToast('success', 
             isAr
               ? `تهانينا! 🎉 تم تطبيق الخصم الحصري بنسبة 100% بنجاح وتفعيل الباقة الذهبية لحسابك مباشرة دون الحاجة لمراجعة المشرف!`
