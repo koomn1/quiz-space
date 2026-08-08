@@ -1331,7 +1331,7 @@ export async function togglePostReaction(postId: string, reaction: ReactionType)
   }
   return {
     counts: data?.counts || {},
-    myReaction: data?.myReaction || null,
+    myReaction: data?.myReaction ?? data?.my_reaction ?? null,
   };
 }
 

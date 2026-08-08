@@ -432,7 +432,7 @@ function CommunityPostCard({
         {post.text}
       </p>
 
-      <div className="border-t border-slate-100 dark:border-slate-800/50 pt-2 flex items-center justify-start gap-4" dir={isAr ? 'rtl' : 'ltr'}>
+      <div className="border-t border-slate-100 dark:border-slate-800/50 pt-2 flex w-full min-w-0 flex-wrap items-center justify-start gap-2" dir={isAr ? 'rtl' : 'ltr'}>
         <ReactionButton post={post} isAr={isAr} onReact={(reaction, e) => handleReact(post.id, reaction, e)} />
 
         {isAdmin && (
@@ -509,7 +509,8 @@ function ReactionButton({ post, isAr, onReact }: {
       {showPicker && (
         <div
           ref={pickerRef}
-          className="absolute bottom-full left-0 mb-2 flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-2 py-1.5 shadow-xl z-20"
+          className="absolute bottom-full mb-2 flex max-w-[min(90vw,260px)] flex-wrap items-center justify-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-2 py-1.5 shadow-xl z-20"
+          style={{ [isAr ? 'right' : 'left']: 0 }}
           onMouseLeave={() => setShowPicker(false)}
         >
           {REACTION_ORDER.map((r) => (
@@ -528,7 +529,7 @@ function ReactionButton({ post, isAr, onReact }: {
 
       <button
         onClick={(e) => onReact(myReaction || 'like', e)}
-        className={`flex items-center gap-1.5 text-[10.5px] font-medium py-1 px-3.5 rounded-lg border transition-all cursor-pointer ${
+        className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 text-[10.5px] font-medium py-1 px-3.5 rounded-lg border transition-all cursor-pointer ${
           buttonMeta
             ? buttonMeta.activeClasses
             : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700'
@@ -554,6 +555,7 @@ function ReactionButton({ post, isAr, onReact }: {
 
 export function CommunitySection({ lang, userId, userName, userEmail, userRole, isGuest = false, isAdmin: isAdminProp }: { lang: 'ar' | 'en', userId: string, userName: string, userEmail?: string, userRole?: string, isGuest?: boolean, isAdmin?: boolean }) {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const postsRef = useRef<CommunityPost[]>([]);
   const [inputText, setInputText] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
   const [currentUserProfile, setCurrentUserProfile] = useState<{ badgeTier?: BadgeTier; nameColor?: NameColorKey } | null>(null);
@@ -561,6 +563,8 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
 
   const [selectedPostForInsights, setSelectedPostForInsights] = useState<CommunityPost | null>(null);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+  const loadRequestRef = useRef(0);
+  const pendingReactionIds = useRef<Set<string>>(new Set());
 
   const handleOpenInsights = (post: CommunityPost) => {
     const isAdmin = isAdminProp !== undefined ? isAdminProp : (userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com' || userRole === 'admin');
@@ -594,19 +598,28 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
   // Retrieve community posts
   useEffect(() => {
     async function loadPosts() {
+      const requestId = ++loadRequestRef.current;
       try {
         const fetched = await getCommunityPosts();
         const ids = (fetched || []).map((p: any) => p.id);
         const reactionsMap = await getReactionsForPosts(ids, userId);
-        const merged = (fetched || []).map((p: any) => ({
-          ...p,
-          reactions: reactionsMap[p.id]?.counts || {},
-          myReaction: reactionsMap[p.id]?.myReaction || null,
-        }));
+        if (requestId !== loadRequestRef.current) return;
+        const merged = (fetched || []).map((p: any) => {
+          const local = postsRef.current.find(existing => existing.id === p.id);
+          // Never let a polling response that started before a click overwrite
+          // the optimistic/server-confirmed reaction currently on screen.
+          return pendingReactionIds.current.has(p.id) && local
+            ? local
+            : {
+                ...p,
+                reactions: reactionsMap[p.id]?.counts || {},
+                myReaction: reactionsMap[p.id]?.myReaction || null,
+              };
+        });
         setPosts(merged);
+        postsRef.current = merged;
       } catch (error) {
-        console.error('Failed to load community posts:', error);
-        setPosts([]);
+        if (requestId === loadRequestRef.current) console.error('Failed to load community posts:', error);
       }
     }
     loadPosts();
@@ -668,8 +681,9 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
     }
     playChimeSound('click');
 
-    const targetPost = posts.find(p => p.id === postId);
+    const targetPost = postsRef.current.find(p => p.id === postId) || posts.find(p => p.id === postId);
     if (!targetPost) return;
+    pendingReactionIds.current.add(postId);
 
     const prevReaction = targetPost.myReaction || null;
     const prevCounts = { ...(targetPost.reactions || {}) };
@@ -690,32 +704,44 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
 
     const nextTotal = Object.values(nextCounts).reduce((sum, n) => sum + (n || 0), 0);
 
-    setPosts(prev => prev.map(p => {
-      if (p.id === postId) {
-        return { ...p, reactions: nextCounts, myReaction: nextMyReaction, likes: nextTotal };
-      }
-      return p;
-    }));
+    setPosts(prev => {
+      const next = prev.map(p => p.id === postId
+        ? { ...p, reactions: nextCounts, myReaction: nextMyReaction, likes: nextTotal }
+        : p
+      );
+      postsRef.current = next;
+      return next;
+    });
 
     try {
       const result = await togglePostReaction(postId, reaction);
-      setPosts(prev => prev.map(p => {
-        if (p.id === postId) {
-          const total = Object.values(result.counts).reduce((sum, n) => sum + (n || 0), 0);
-          return { ...p, reactions: result.counts, myReaction: result.myReaction, likes: total };
-        }
-        return p;
-      }));
+      setPosts(prev => {
+        const next = prev.map(p => {
+          if (p.id === postId) {
+            const total = Object.values(result.counts).reduce((sum, n) => sum + (n || 0), 0);
+            return { ...p, reactions: result.counts, myReaction: result.myReaction, likes: total };
+          }
+          return p;
+        });
+        postsRef.current = next;
+        return next;
+      });
+      pendingReactionIds.current.delete(postId);
     } catch (err) {
       console.warn('Reaction update on server failed:', err);
       // Roll back the optimistic update on failure.
-      setPosts(prev => prev.map(p => {
-        if (p.id === postId) {
-          const total = Object.values(prevCounts).reduce((sum, n) => sum + (n || 0), 0);
-          return { ...p, reactions: prevCounts, myReaction: prevReaction, likes: total };
-        }
-        return p;
-      }));
+      setPosts(prev => {
+        const next = prev.map(p => {
+          if (p.id === postId) {
+            const total = Object.values(prevCounts).reduce((sum, n) => sum + (n || 0), 0);
+            return { ...p, reactions: prevCounts, myReaction: prevReaction, likes: total };
+          }
+          return p;
+        });
+        postsRef.current = next;
+        return next;
+      });
+      pendingReactionIds.current.delete(postId);
     }
   };
 
