@@ -168,7 +168,8 @@ export default function App() {
         return 'landing';
       }
       if (parts[0]) {
-        return parts[0];
+        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin']);
+        return knownTabs.has(parts[0]) ? parts[0] : 'not-found';
       }
     }
 
