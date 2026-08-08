@@ -43,6 +43,17 @@ BEGIN
       rating = p_rating, feedback = COALESCE(p_feedback, '') WHERE id = v_completion_id;
   END IF;
 
+  -- Mark the private slot solved in the same transaction. The payload is cleared
+  -- so the old daily quiz can never be opened again after a successful save.
+  UPDATE public.daily_quiz_user_slots
+     SET quiz_payload = NULL,
+         quiz_id = NULL,
+         answered_at = COALESCE(answered_at, now()),
+         next_available_at = COALESCE(next_available_at, now() + refresh_interval_seconds * interval '1 second'),
+         refreshing = false
+   WHERE user_id = p_taker_id
+     AND quiz_payload->>'id' = p_quiz_id;
+
   RETURN QUERY SELECT c.id, c.quiz_id, c.taker_id, c.taker_name, c.score, c.total_questions,
     c.rating, c.feedback, c.created_at, v_xp FROM public.completions c WHERE c.id = v_completion_id;
 END;
@@ -61,6 +72,17 @@ UPDATE public.users u
  WHERE u.uid = totals.taker_id
    AND COALESCE(u.xp, 0) = 0
    AND totals.rebuilt_xp > 0;
+
+-- Reconcile daily slots for attempts already saved before this repair.
+UPDATE public.daily_quiz_user_slots s
+   SET quiz_payload = NULL,
+       quiz_id = NULL,
+       answered_at = COALESCE(s.answered_at, now()),
+       next_available_at = COALESCE(s.next_available_at, now() + s.refresh_interval_seconds * interval '1 second'),
+       refreshing = false
+ WHERE s.quiz_payload->>'id' IN (
+   SELECT c.quiz_id FROM public.completions c WHERE c.taker_id = s.user_id
+ );
 
 -- Release stale generation locks only; do not delete a valid unsolved payload.
 UPDATE public.daily_quiz_user_slots
