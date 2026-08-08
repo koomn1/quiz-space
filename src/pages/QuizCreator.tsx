@@ -1158,8 +1158,9 @@ export default function QuizCreator({
       </div>
 
       {!quizToEdit && (
-        /* Creation Mode Select Toggles */
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-100/50 dark:bg-slate-800/40 p-2 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 font-medium backdrop-blur-sm">
+        <>
+        {/* Creation Mode Select Toggles */}
+        <div className="hidden lg:grid grid-cols-4 gap-3 bg-slate-100/50 dark:bg-slate-800/40 p-2 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 font-medium backdrop-blur-sm">
           <button
             onClick={() => setActiveMode('manual')}
             className={`flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs transition-all cursor-pointer ${
@@ -1209,6 +1210,23 @@ export default function QuizCreator({
             <span>توليد تلقائي AI</span>
           </button>
         </div>
+        <div className="lg:hidden relative">
+          <label className="sr-only" htmlFor="creator-mode-select">طريقة إنشاء الاختبار</label>
+          <select
+            id="creator-mode-select"
+            value={activeMode}
+            onChange={(e) => setActiveMode(e.target.value as typeof activeMode)}
+            className="w-full appearance-none rounded-2xl border border-violet-500/20 bg-white/80 dark:bg-slate-900/80 px-4 py-4 pr-12 text-sm font-black text-slate-700 dark:text-slate-100 shadow-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
+            dir="rtl"
+          >
+            <option value="manual">✍️ كتابة يدوية</option>
+            <option value="ocr">📷 صورة أو PDF</option>
+            <option value="paste">📄 لصق نصوص PDF</option>
+            <option value="ai">✨ توليد تلقائي بالذكاء الاصطناعي</option>
+          </select>
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-violet-500">⌄</span>
+        </div>
+        </>
       )}
 
       {/* UI Panels for different creation modes */}
@@ -1962,7 +1980,7 @@ A computer is a digital electronic machine...
             className="space-y-8"
           >
             {/* Meta-Info Card and Top Actions */}
-            <div className="glass-card p-6 sm:p-10 rounded-[32px] space-y-6 relative overflow-hidden">
+            <div className="glass-card p-4 sm:p-8 rounded-[28px] space-y-5 relative overflow-hidden border border-slate-200/60 dark:border-slate-800/70 shadow-xl shadow-slate-950/5">
               <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-primary/5 rounded-full blur-[60px] pointer-events-none" />
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100/50 dark:border-slate-800/50 pb-5 relative z-10">
@@ -2127,8 +2145,13 @@ A computer is a digital electronic machine...
                   </div>
                 </div>
 
-                {/* Enforce Criterion #2: Professional 3-way distribution routing system */}
-                <div className="space-y-3 sm:col-span-2 text-right pt-4 border-t border-slate-200/50 dark:border-slate-800/80 mt-2">
+                {/* Advanced publishing settings */}
+                <details open className="sm:col-span-2 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-950/20 overflow-hidden">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-right font-black text-sm text-slate-700 dark:text-slate-200 marker:hidden">
+                    <span className="flex items-center gap-2"><span className="text-lg">🌐</span> إعدادات النشر والوصول المتقدمة</span>
+                    <span className="text-violet-500 text-lg transition-transform">⌄</span>
+                  </summary>
+                  <div className="space-y-3 px-4 pb-4 pt-1 text-right">
                   <label className="text-xs font-black text-slate-700 dark:text-slate-300 block uppercase tracking-wide px-1">
                     {isAr ? 'مسار توزيع وتوجيه نشر الاختبار 🌐:' : 'Quiz Publishing Distribution Router:'}
                   </label>
@@ -2269,7 +2292,8 @@ A computer is a digital electronic machine...
                       })()}
                     </div>
                   )}
-                </div>
+                  </div>
+                </details>
 
               </div>
             </div>
