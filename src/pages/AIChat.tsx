@@ -4,7 +4,7 @@ import { useGSAP } from '@gsap/react';
 import { askAIStream } from '../services/aiWorkerClient';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
 import { Image as ImageIcon, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
-import CosmoOrb from '../components/CosmoOrb';
+const COSMO_AVATAR = `${(import.meta as any).env?.BASE_URL || '/'}avatars/cosmo-boy.png`;
 
 /* ═══════════════════════════════════════════════════════════
    ✦ "Spark" — the new AI assistant (replaces Cosmo) ✦
@@ -177,9 +177,8 @@ function ThinkingOrb() {
 /* ─── Assistant avatar (small) ─────────────────────────── */
 function AssistantAvatar() {
   return (
-    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-visible"
-      style={{ background: 'rgba(139,92,246,0.16)', boxShadow: '0 0 18px rgba(139,92,246,0.28)' }}>
-      <CosmoOrb size={42} state="idle" />
+    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-violet-400/60 shadow-lg shadow-violet-500/20">
+      <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover" />
     </div>
   );
 }
@@ -256,6 +255,19 @@ function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial, t
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── Streaming response row ────────────────────────────── */
+function StreamingRow({ text, theme }: { text: string; theme: Palette }) {
+  return (
+    <div className="flex items-start gap-4">
+      <AssistantAvatar />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold mb-2" style={{ color: theme.FG }}>{ASSISTANT_NAME_EN}</p>
+        <FormattedText text={text} fg={theme.FG} />
+      </div>
     </div>
   );
 }
@@ -337,6 +349,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -347,6 +360,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const [convSearchQuery, setConvSearchQuery] = useState('');
   const [renamingConvId, setRenamingConvId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const skipNextHistoryLoadRef = useRef<string | null>(null);
 
   /* Load conversations (from database) */
   useEffect(() => {
@@ -365,6 +379,11 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   useEffect(() => {
     if (!userId || !activeConversationId) {
       setMessages([]);
+      return;
+    }
+
+    if (skipNextHistoryLoadRef.current === activeConversationId) {
+      skipNextHistoryLoadRef.current = null;
       return;
     }
 
@@ -437,24 +456,25 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     setSelectedImage(null);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setIsAnalyzing(true);
+    setStreamingText('');
 
     let currentConvId = activeConversationId;
     if (!currentConvId && userId) {
       const newConv = await createAIChatConversation(userId, trimmed.slice(0, 30) || (isAr ? 'محادثة جديدة' : 'New Chat'));
       if (newConv) {
         currentConvId = newConv.id;
+        skipNextHistoryLoadRef.current = currentConvId;
         setActiveConversationId(currentConvId);
         setConversations(prev => [newConv, ...prev]);
       }
     }
 
     if (userId && currentConvId) {
-      await saveAIChatMessage(userId, 'cosmo' as any, userMsg.text, !!selectedImage, currentConvId);
+      await saveAIChatMessage(userId, 'user', userMsg.text, !!selectedImage, currentConvId);
     }
 
     try {
       const aiMsgId = (Date.now() + 1).toString();
-      setMessages(prev => [...prev, { id: aiMsgId, role: 'assistant', text: '', timestamp: userMsg.timestamp }]);
 
       const { text: fullText } = await askAIStream(
         trimmed,
@@ -463,27 +483,24 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
           image: selectedImage ? { data: selectedImage, mimeType: 'image/png' } : undefined,
         },
         (_delta, fullTextSoFar) => {
-          setMessages(prev => {
-            const last = prev[prev.length - 1];
-            if (last && last.id === aiMsgId) {
-              return [...prev.slice(0, -1), { ...last, text: fullTextSoFar }];
-            }
-            return [...prev, { id: aiMsgId, role: 'assistant', text: fullTextSoFar, timestamp: userMsg.timestamp }];
-          });
+          setStreamingText(fullTextSoFar);
         }
       );
 
       if (!fullText) throw new Error('empty');
+      setMessages(prev => [...prev, { id: aiMsgId, role: 'assistant', text: fullText, timestamp: userMsg.timestamp }]);
+      setStreamingText('');
       if (userId && currentConvId) {
-        await saveAIChatMessage(userId, 'cosmo' as any, fullText, false, currentConvId);
+        await saveAIChatMessage(userId, 'cosmo', fullText, false, currentConvId);
       }
       setLastError(null);
     } catch (err) {
       console.error(err);
       setLastError(isAr ? 'للأسف حصل خطأ في الاتصال. اضغط على الزرار عشان نعيد المحاولة.' : 'Connection failed — tap the button to retry.');
-      setMessages(prev => prev.filter(m => !(m.role === 'assistant' && m.text === '')));
+      setStreamingText('');
     } finally {
       setIsAnalyzing(false);
+      setStreamingText('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputText, selectedImage, isAnalyzing, userId, activeConversationId, isAr]);
@@ -492,6 +509,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     setActiveConversationId(null);
     setMessages([]);
     setIsAnalyzing(false);
+    setStreamingText('');
     setLastError(null);
   };
 
@@ -719,9 +737,8 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
             style={{ color: theme.FG }}
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(139,92,246,0.16)' }}>
-              <CosmoOrb size={28} state="idle" />
+            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover" />
             </div>
             {ASSISTANT_NAME_EN}
             <ChevronDown className="w-4 h-4" style={{ color: theme.MUTED }} />
@@ -747,9 +764,8 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
               className="flex flex-col items-center justify-center h-full px-4 pb-8">
 
               <div className="welcome-title flex items-center gap-3 mb-8">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                  style={{ background: 'rgba(139,92,246,0.16)', boxShadow: '0 0 24px rgba(139,92,246,0.25)' }}>
-                  <CosmoOrb size={58} state="idle" />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg shadow-violet-500/20">
+                  <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-semibold" style={{ color: theme.FG }}>
@@ -787,9 +803,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                 <MessageRow key={msg.id} msg={msg} index={i} copiedMsgId={copiedMsgId} onCopy={copyMessage} userPhoto={userPhoto} userInitial={userInitial} theme={theme} />
               ))}
 
-              {isAnalyzing && (
-                <ThinkingRow isAr={isAr} theme={theme} />
-              )}
+              {isAnalyzing && (streamingText ? <StreamingRow text={streamingText} theme={theme} /> : <ThinkingRow isAr={isAr} theme={theme} />)}
 
               {lastError && !isAnalyzing && (
                 <div className="flex flex-col items-center gap-2 py-3">
