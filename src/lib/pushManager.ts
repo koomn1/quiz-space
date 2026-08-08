@@ -6,7 +6,9 @@ export async function registerPushNotifications(userId: string): Promise<'grante
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    const baseUrl = (import.meta as any).env?.BASE_URL || '/';
+    const serviceWorkerUrl = `${baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`}sw.js`;
+    const registration = await navigator.serviceWorker.register(serviceWorkerUrl, { scope: baseUrl });
 
     let permission = Notification.permission;
 
