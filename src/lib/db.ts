@@ -281,6 +281,20 @@ export async function getQuizById(id: string): Promise<Quiz | null> {
       // A daily quiz may only be attempted once. Never resurrect an answered
       // quiz from sessionStorage, even if a stale snapshot remains there.
       const stored = JSON.parse(window.sessionStorage.getItem(`quizspace-daily-${id}`) || 'null');
+      if (stored && stored.id === id && String(stored.id).startsWith('daily-')) {
+        // The sessionStorage purge in DailyQuizCard is the primary cleanup,
+        // but a stale snapshot may still exist in the same tab after a
+        // re-rating bug flow. Verify the slot is not answered first.
+        try {
+          const userIdHint = stored.creatorId || stored.userId || null;
+          const tierHint = planNameToDailyQuizTier(stored.planName || '', !!stored.isPremium);
+          if (userIdHint && !String(userIdHint).startsWith('user-guest')) {
+            const slot = await getUserDailyQuizSlot(userIdHint, tierHint);
+            if (slot?.answered) return null; // answered daily quiz must stay dead
+          }
+        } catch (_) { /* network hiccups must not unblock an answered quiz */ }
+        return stored as Quiz;
+      }
       if (stored && stored.id === id && !String(id).startsWith('daily-')) return stored as Quiz;
     } catch (e) { console.warn('Could not restore private daily quiz:', e); }
   }

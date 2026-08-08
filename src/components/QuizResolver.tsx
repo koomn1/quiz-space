@@ -300,7 +300,14 @@ export default function QuizResolver({
       }
 
       try {
-        const data = await getQuizById(quizId);
+        let data = await getQuizById(quizId);
+        // Private daily quizzes live only in sessionStorage, and the card's
+        // sync poll (5s) may not have stored the payload yet when the route
+        // lands here immediately after pressing "ابدأ الآن". Retry once after
+        // a short delay before declaring the link broken.
+        if (!data && String(quizId).startsWith('daily-')) {
+          data = await new Promise((resolve) => window.setTimeout(() => resolve(getQuizById(quizId)), 1500));
+        }
         if (!data) {
           throw new Error('لم يتم العثور على هذا الاختبار!');
         }

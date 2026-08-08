@@ -11,6 +11,10 @@ import {
 } from '../lib/db';
 import { generateQuizWithFallback } from '../hooks/useQuizzes';
 
+// In-memory cache of the latest private daily payload so the start click can
+// guarantee the sessionStorage snapshot exists before navigation.
+let latestDailyPayload: Record<string, any> | null = null;
+
 const DAILY_TOPICS = ['ثقافة عامة', 'علوم عامة', 'تاريخ', 'جغرافيا', 'رياضيات أساسية', 'لغة عربية', 'لغة إنجليزية', 'تكنولوجيا وابتكار'];
 
 interface DailyQuizCardProps {
@@ -78,6 +82,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       } as any;
       await finalizeUserDailyQuizRefresh(userId, tier, quiz);
       window.sessionStorage.setItem(`quizspace-daily-${quiz.id}`, JSON.stringify(quiz));
+      latestDailyPayload = quiz;
       setQuizId(quiz.id);
       setAnswered(false);
       setSecondsLeft(0);
@@ -128,6 +133,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       }
       if (hasPrivatePayload) {
         window.sessionStorage.setItem(`quizspace-daily-${slot.quizPayload.id}`, JSON.stringify(slot.quizPayload));
+        latestDailyPayload = slot.quizPayload;
       }
       // A legacy slot can contain only quiz_id from the old public-quiz flow.
       // It is not a valid private daily challenge and must be cleared before
@@ -192,7 +198,19 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
           {(!isGuest && (waiting || isGenerating)) && <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 text-sm font-mono tabular-nums"><Clock className="w-4 h-4" />{formatCountdown(secondsLeft, isAr)}</div>}
           {isGuest ? <button onClick={onLoginClick} className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform">{isAr ? 'سجّل الدخول للبدء' : 'Sign in to start'}</button>
             : waiting ? <span className="text-sm font-semibold bg-white/15 rounded-full px-4 py-2">{isAr ? 'تم الحل — الاختبار القادم بعد المهلة' : 'Solved — next quiz after cooldown'}</span>
-            : !isGenerating && startableQuizId ? <button onClick={() => onStartQuiz(startableQuizId)} className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform">{isAr ? 'ابدأ الآن + XP' : 'Start now + XP'}</button>
+            : !isGenerating && startableQuizId ? <button onClick={() => {
+              // Guard the start navigation: the quiz must be snapshot-able from
+              // sessionStorage before the route changes, otherwise the resolver
+              // would show "رابط غير متوفر". Fall back to the in-memory cache.
+              const key = `quizspace-daily-${startableQuizId}`;
+              try {
+                const existing = window.sessionStorage.getItem(key);
+                if (!existing && latestDailyPayload) {
+                  window.sessionStorage.setItem(key, JSON.stringify(latestDailyPayload));
+                }
+              } catch (e) { console.warn('Could not persist daily quiz snapshot before start:', e); }
+              onStartQuiz(startableQuizId);
+            }} className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform">{isAr ? 'ابدأ الآن + XP' : 'Start now + XP'}</button>
             : generationError ? <div className="flex items-center gap-2"><span className="text-xs text-white/80">{isAr ? 'تعذر الاتصال بنظام الاختبار اليومي' : 'Daily quiz service unavailable'}</span><button onClick={sync} className="bg-white/20 text-white font-bold rounded-full px-5 py-2 text-sm hover:bg-white/30 active:scale-95 transition-transform">{isAr ? 'إعادة المحاولة' : 'Retry'}</button></div>
             : <div className="flex items-center gap-2 text-sm text-white/80 px-3"><Loader2 className="w-4 h-4 animate-spin" />{isAr ? 'جاري التوليد...' : 'Generating...'}</div>}
         </div>
