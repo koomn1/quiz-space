@@ -31,7 +31,7 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-import { getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, updateBadgeAndNameColor, redeemCouponForUser } from "../lib/db";
+import { getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
 import { getApiUrl } from "../lib/origin";
 import { supabase } from "../lib/supabaseClient";
@@ -40,6 +40,17 @@ import { GsapCoverBackground } from "../components/GsapCoverBackground";
 import { SocialSupportLinks } from "../components/SocialSupportLinks";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
+
+const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
+  cosmic: { background: 'radial-gradient(circle at 25% 20%, #312e81, #111827 48%, #020617)' },
+  waves: { background: 'linear-gradient(135deg, #09051a, #172554 48%, #4c1d95)' },
+  aurora: { background: 'linear-gradient(125deg, #042f2e, #164e63 38%, #581c87)' },
+  sunset: { background: 'linear-gradient(135deg, #431407, #9a3412 42%, #701a75)' },
+  ocean: { background: 'linear-gradient(135deg, #082f49, #075985 45%, #164e63)' },
+  matrix: { background: 'linear-gradient(135deg, #052e16, #064e3b 45%, #020617)' },
+  velvet: { background: 'linear-gradient(135deg, #2e1065, #581c87 48%, #1e1b4b)' },
+  prism: { background: 'linear-gradient(120deg, #172554, #6d28d9 36%, #be185d 68%, #0e7490)' },
+};
 
 interface UserProfileProps {
   profileId: string;
@@ -135,6 +146,8 @@ export default function UserProfile({
 
   // Premium Animated Cover states
   const [chosenBg, setChosenBg] = React.useState("cosmic");
+  const [customBgUrl, setCustomBgUrl] = React.useState("");
+  const [isUploadingCover, setIsUploadingCover] = React.useState(false);
   const [bgSettings, setBgSettings] = React.useState<any>({
     speed: 1.0,
     brightness: 100,
@@ -258,6 +271,7 @@ export default function UserProfile({
           const locStr = stats.location || "";
           let parsedBg = "cosmic";
           let parsedCoverText = "";
+          let parsedCustomBgUrl = "";
           let parsedGithub = "";
           let parsedInstagram = "";
           let parsedLinkedin = "";
@@ -272,6 +286,8 @@ export default function UserProfile({
             bgChunks.forEach((chunk: string) => {
               if (chunk.startsWith("coverText:"))
                 parsedCoverText = chunk.substring(10);
+              if (chunk.startsWith("customBg:"))
+                parsedCustomBgUrl = chunk.substring(9);
               if (chunk.startsWith("github:"))
                 parsedGithub = chunk.substring(7);
               if (chunk.startsWith("instagram:"))
@@ -335,6 +351,7 @@ export default function UserProfile({
           }
 
           setChosenBg(parsedBg);
+          setCustomBgUrl(parsedCustomBgUrl);
           setBgSettings({
             speed: parsedBgSpeed,
             brightness: parsedBgBrightness,
@@ -360,6 +377,31 @@ export default function UserProfile({
     }
     loadStats();
   }, [profileId]);
+
+  const handleCoverUpload = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('error', isAr ? 'اختار صورة بصيغة صحيحة.' : 'Please choose a valid image.');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      showToast('error', isAr ? 'حجم الصورة يجب ألا يتجاوز 8 ميجابايت.' : 'Image size must be under 8 MB.');
+      return;
+    }
+    setIsUploadingCover(true);
+    try {
+      const url = await uploadCoverImage(profileId, file);
+      if (!url) throw new Error('cover upload failed');
+      setCustomBgUrl(url);
+      setChosenBg('custom');
+      showToast('success', isAr ? 'تم تجهيز الخلفية المخصصة. اضغط حفظ لتثبيتها.' : 'Custom cover ready. Save to apply it.');
+    } catch (error) {
+      console.error(error);
+      showToast('error', isAr ? 'تعذر رفع الخلفية حالياً.' : 'Could not upload the cover right now.');
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (editCustomId.trim()) {
@@ -421,7 +463,7 @@ export default function UserProfile({
       }
 
       // Serialize background, custom cover slogan, custom social urls and verification badge customization back into location field
-      const serializedLocation = `||bg:${chosenBg}||coverText:${coverText.trim()}||github:${githubUrl.trim()}||instagram:${instagramUrl.trim()}||linkedin:${linkedinUrl.trim()}||facebook:${facebookUrl.trim()}||role:${editRole.trim()}||country:${editCountry.trim()}||bgSpeed:${bgSettings.speed}||bgBrightness:${bgSettings.brightness}||bgGlow:${bgSettings.glow}||bgDensity:${bgSettings.density}||bgWaveHeight:${bgSettings.waveHeight}||bgTheme:${bgSettings.theme}||bgBlur:${bgSettings.blur}`;
+      const serializedLocation = `||bg:${chosenBg}||customBg:${customBgUrl}||coverText:${coverText.trim()}||github:${githubUrl.trim()}||instagram:${instagramUrl.trim()}||linkedin:${linkedinUrl.trim()}||facebook:${facebookUrl.trim()}||role:${editRole.trim()}||country:${editCountry.trim()}||bgSpeed:${bgSettings.speed}||bgBrightness:${bgSettings.brightness}||bgGlow:${bgSettings.glow}||bgDensity:${bgSettings.density}||bgWaveHeight:${bgSettings.waveHeight}||bgTheme:${bgSettings.theme}||bgBlur:${bgSettings.blur}`;
 
       await saveUserProfile(
         profileId,
@@ -787,7 +829,7 @@ export default function UserProfile({
       {/* 1. Profile Banner Header */}
       <section className="relative bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="h-44 md:h-56 relative rounded-t-3xl overflow-hidden">
-          <GsapCoverBackground mode={chosenBg || "cosmic"} />
+          <GsapCoverBackground mode={chosenBg || "cosmic"} customImage={customBgUrl} />
 
           {/* If premium cover text exists, display it beautifully! */}
           {isPremium && coverText && (
@@ -1443,36 +1485,30 @@ export default function UserProfile({
                 {isAr ? "خلفية الغلاف المتحركة" : "Animated Cover Background"}
               </h4>
 
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setChosenBg("cosmic")}
-                  className={`p-4 rounded-2xl border-2 text-center transition-all cursor-pointer ${
-                    chosenBg === "cosmic" || !chosenBg
-                      ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
-                      : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-primary/50"
-                  }`}
-                >
-                  <div className="text-2xl mb-2">🌌</div>
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {isAr ? "الفضاء الكوني" : "Cosmic Space"}
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setChosenBg("waves")}
-                  className={`p-4 rounded-2xl border-2 text-center transition-all cursor-pointer ${
-                    chosenBg === "waves"
-                      ? "border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/20"
-                      : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-indigo-500/50"
-                  }`}
-                >
-                  <div className="text-2xl mb-2">🌊</div>
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {isAr ? "الأمواج النيون" : "Neon Waves"}
-                  </div>
-                </button>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  ['cosmic', '🌌', 'الفضاء الكوني', 'Cosmic Space'],
+                  ['waves', '🌊', 'الأمواج النيون', 'Neon Waves'],
+                  ['aurora', '🌈', 'الشفق القطبي', 'Aurora Mist'],
+                  ['sunset', '🌅', 'غروب مخملي', 'Velvet Sunset'],
+                  ['ocean', '🫧', 'عمق المحيط', 'Deep Ocean'],
+                  ['matrix', '⌁', 'شبكة المعرفة', 'Knowledge Grid'],
+                  ['velvet', '🪐', 'مخمل بنفسجي', 'Purple Velvet'],
+                  ['prism', '✦', 'منشور الضوء', 'Light Prism'],
+                ].map(([id, icon, ar, en]) => (
+                  <button key={id} type="button" onClick={() => setChosenBg(id)} className={`relative overflow-hidden p-3 rounded-2xl border-2 text-center transition-all cursor-pointer ${chosenBg === id ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20 scale-[1.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-primary/50'}`}>
+                    <div className="h-12 rounded-xl mb-2 opacity-90" style={COVER_PREVIEW_STYLES[id]} />
+                    <div className="text-lg leading-none mb-1">{icon}</div>
+                    <div className="text-[10px] font-bold text-slate-800 dark:text-slate-200">{isAr ? ar : en}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
+                <label className="flex-1 cursor-pointer rounded-xl bg-white/80 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 px-4 py-3 text-xs font-black text-slate-700 dark:text-slate-200 hover:border-primary transition-colors text-center">
+                  {isUploadingCover ? (isAr ? 'جاري رفع الصورة...' : 'Uploading...') : (isAr ? 'اختيار صورة من الجهاز' : 'Choose an image from device')}
+                  <input type="file" accept="image/*" className="hidden" disabled={isUploadingCover} onChange={(e) => { void handleCoverUpload(e.target.files?.[0]); e.currentTarget.value = ''; }} />
+                </label>
+                {customBgUrl && <button type="button" onClick={() => { setCustomBgUrl(''); setChosenBg('cosmic'); }} className="px-4 py-3 rounded-xl text-xs font-black text-rose-600 bg-rose-500/10 hover:bg-rose-500/20">{isAr ? 'إزالة الصورة' : 'Remove image'}</button>}
               </div>
 
               {/* Cover Slogan block */}

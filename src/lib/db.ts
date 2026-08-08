@@ -19,6 +19,28 @@ export const COSMO_SYSTEM_UID = '00000000-0000-4000-8000-000000000002';
 
 // ---------------- SUPABASE STORAGE UPLOAD HELPERS ----------------
 
+export async function uploadCoverImage(userId: string, file: File): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+  try {
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const path = `covers/${userId}_${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('avatars').upload(path, file, {
+      cacheControl: '31536000',
+      upsert: true,
+      contentType: file.type || 'image/jpeg',
+    });
+    if (error) {
+      console.error('Cover upload error:', error.message);
+      return null;
+    }
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    return publicUrl;
+  } catch (e) {
+    console.error('Cover upload exception:', e);
+    return null;
+  }
+}
+
 export async function uploadAvatar(userId: string, file: File): Promise<string | null> {
   if (!isSupabaseConfigured) return null;
   try {
