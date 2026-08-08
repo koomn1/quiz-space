@@ -224,11 +224,17 @@ export default function QuizResolver({
             totalQuestions: quiz.questions.length
           });
 
-          if (res && res.completion) {
-            setSavedCompletionId(res.completion.id);
-            console.log('Quiz auto-saved successfully, completion ID:', res.completion.id);
+          // Supabase RPC table results are returned as an array, while the
+          // legacy fallback returns an object. Normalize both shapes so the
+          // completion is recognized and the review step does not submit a
+          // second time (which previously made XP appear not to update).
+          const savedRow = Array.isArray(res) ? res[0] : (res?.completion || res);
+          if (savedRow?.id) {
+            setSavedCompletionId(savedRow.id);
+            console.log('Quiz auto-saved successfully, completion ID:', savedRow.id, 'XP:', savedRow.xp_awarded ?? 0);
           }
           if (userId) await completeUserDailyQuiz(userId, quizId);
+          window.dispatchEvent(new CustomEvent('quizspace:xp-updated', { detail: { userId, xpAwarded: savedRow?.xp_awarded ?? 0 } }));
         } catch (e) {
           console.error('Quiz auto-save failed:', e);
         }

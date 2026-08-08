@@ -1054,6 +1054,19 @@ export default function App() {
     }
   };
 
+  React.useEffect(() => {
+    const refreshXpAfterQuiz = (event: Event) => {
+      const detail = (event as CustomEvent<{ userId?: string }>).detail;
+      if (!userId || (detail?.userId && detail.userId !== userId)) return;
+      getUserProfileStats(userId).then(stats => {
+        setUserStats(stats);
+        if (stats.completions) setCompletions(stats.completions);
+      }).catch(e => console.warn('Error refreshing XP after quiz:', e));
+    };
+    window.addEventListener('quizspace:xp-updated', refreshXpAfterQuiz);
+    return () => window.removeEventListener('quizspace:xp-updated', refreshXpAfterQuiz);
+  }, [userId]);
+
   const handleExitQuiz = () => {
     setActiveQuizId(null);
     fetchQuizzesList(); // Refresh dashboards ratings
