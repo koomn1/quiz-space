@@ -12,6 +12,7 @@ import { registerPushNotifications } from './lib/pushManager';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import LandingPage from './pages/LandingPage';
+import NotFound from './pages/NotFound';
 const QuizCreator = React.lazy(() => import('./pages/QuizCreator'));
 import QuizResolver from './components/QuizResolver';
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
@@ -142,7 +143,8 @@ export default function App() {
       return 'landing';
     }
     if (pathParts[0]) {
-      return pathParts[0];
+      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin']);
+      return knownTabs.has(pathParts[0]) ? pathParts[0] : 'not-found';
     }
 
     // Check hash
@@ -158,6 +160,9 @@ export default function App() {
       }
       if (parts[0] === 'profile' && parts[1]) {
         return 'profile';
+      }
+      if (parts[0] === 'join' && parts[1]) {
+        return 'classrooms';
       }
       if (parts[0] === 'quiz' || parts[0] === 'dashboard') {
         return 'landing';
@@ -1383,6 +1388,9 @@ export default function App() {
               style={{ backfaceVisibility: 'hidden' }}
             >
               <React.Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] w-full"><CosmicLoader /></div>}>
+              {activeTab === 'not-found' && (
+                <NotFound lang={lang} onGoHome={() => setActiveTab('landing')} />
+              )}
               {activeTab === 'landing' && (
                 <>
                   <LandingPage

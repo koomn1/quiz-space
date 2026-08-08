@@ -576,7 +576,8 @@ export default function Classrooms({
   };
 
   const handleCopyInviteLink = (code: string) => {
-    const url = `${window.location.origin}/#/join/${code}`;
+    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    const url = `${window.location.origin}${base}/#/join/${code}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopiedCode(code);
       playChimeSound('click');

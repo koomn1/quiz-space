@@ -956,8 +956,8 @@ export default function UserProfile({
               )}
               <button
                 onClick={() => {
-                  const url =
-                    window.location.origin + "/#/profile/" + profileId;
+                  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+                  const url = `${window.location.origin}${base}/#/profile/${profileId}`;
                   navigator.clipboard.writeText(url);
                   showToast('success', 
                     isAr
