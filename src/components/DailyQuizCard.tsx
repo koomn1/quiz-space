@@ -6,7 +6,6 @@ import {
   finalizeUserDailyQuizRefresh,
   releaseUserDailyQuizRefresh,
   planNameToDailyQuizTier,
-  createQuiz,
   DailyQuizTier,
 } from '../lib/db';
 import { generateQuizWithFallback } from '../hooks/useQuizzes';
@@ -62,15 +61,22 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     try {
       const topic = DAILY_TOPICS[Math.floor(Math.random() * DAILY_TOPICS.length)];
       const generated = await withTimeout(generateQuizWithFallback(`${topic} — اختبار يومي منوّع بمستوى متوسط، 8 أسئلة أصلية`, 8), 45000);
-      const quiz = await withTimeout(createQuiz({
+      const quizId = `daily-${userId}-${Date.now()}`;
+      const quiz = {
+        id: quizId,
         title: `⚡ ${isAr ? 'التحدي اليومي' : 'Daily Challenge'} — ${generated.title}`,
         description: generated.description,
-        questions: generated.questions.map((q, i) => ({ ...q, id: `daily-${Date.now()}-${i}` })) as any,
+        questions: generated.questions.map((q, i) => ({ ...q, id: `daily-${Date.now()}-${i}` })),
         creatorId: userId,
         creatorName: isAr ? 'QuizSpace ⚡ (يومي)' : 'QuizSpace ⚡ (Daily)',
         category: isAr ? 'يومي' : 'Daily',
-      } as any), 12000);
-      await finalizeUserDailyQuizRefresh(userId, tier, quiz.id);
+        createdAt: new Date().toISOString(),
+        totalPlays: 0,
+        avgRating: 0,
+        ratingsCount: 0,
+      } as any;
+      await finalizeUserDailyQuizRefresh(userId, tier, quiz);
+      window.sessionStorage.setItem(`quizspace-daily-${quiz.id}`, JSON.stringify(quiz));
       setQuizId(quiz.id);
       setAnswered(false);
       setSecondsLeft(0);
@@ -94,16 +100,20 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         setIsGenerating(false);
         return;
       }
-      setQuizId(slot.quizId);
+      if (slot.quizPayload?.id) {
+        window.sessionStorage.setItem(`quizspace-daily-${slot.quizPayload.id}`, JSON.stringify(slot.quizPayload));
+      }
+      const activeQuizId = slot.quizPayload?.id || slot.quizId;
+      setQuizId(activeQuizId);
       setAnswered(slot.answered);
       setSecondsLeft(slot.secondsUntilRefresh);
       setGenerationError(false);
       // A quiz without an answer is always pinned, regardless of age.
-      if (slot.quizId && !slot.answered) { setIsGenerating(false); return; }
+      if ((slot.quizPayload?.id || slot.quizId) && !slot.answered) { setIsGenerating(false); return; }
       // After answering, keep showing the cooldown; claim only when it ends.
       if (slot.answered && slot.secondsUntilRefresh > 0) { setIsGenerating(false); return; }
-      if (slot.refreshing) { setIsGenerating(!slot.quizId); return; }
-      if (!slot.quizId || (slot.answered && slot.secondsUntilRefresh <= 0)) {
+      if (slot.refreshing) { setIsGenerating(!activeQuizId); return; }
+      if (!activeQuizId || (slot.answered && slot.secondsUntilRefresh <= 0)) {
         const won = await claimUserDailyQuizRefresh(userId, tier);
         if (won) await generate();
         else setIsGenerating(true);

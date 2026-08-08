@@ -275,7 +275,14 @@ export async function getQuizById(id: string): Promise<Quiz | null> {
   }
 
   const sample = SAMPLE_QUIZZES.find(q => q.id === id);
-  return sample || null;
+  if (sample) return sample;
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = JSON.parse(window.sessionStorage.getItem(`quizspace-daily-${id}`) || 'null');
+      if (stored && stored.id === id) return stored as Quiz;
+    } catch (e) { console.warn('Could not restore private daily quiz:', e); }
+  }
+  return null;
 }
 
 export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPlays' | 'avgRating' | 'ratingsCount'> & { id?: string; timeLimit?: number }): Promise<Quiz> {
@@ -673,6 +680,7 @@ export type DailyQuizTier = 'free' | 'gold' | 'diamond';
 
 export interface DailyQuizSlot {
   quizId: string | null;
+  quizPayload?: Quiz | null;
   refreshing: boolean;
   refreshedAt: string | null;
   refreshIntervalSeconds: number;
@@ -696,7 +704,8 @@ export async function getUserDailyQuizSlot(userId: string, tier: DailyQuizTier):
     return null;
   }
   return {
-    quizId: row.quiz_id || null,
+    quizId: row.quiz_id || row.quiz_payload?.id || null,
+    quizPayload: row.quiz_payload || null,
     refreshing: !!row.refreshing,
     refreshedAt: row.generated_at || null,
     refreshIntervalSeconds: row.refresh_interval_seconds || 86400,
@@ -712,9 +721,9 @@ export async function claimUserDailyQuizRefresh(userId: string, tier: DailyQuizT
   return !!data;
 }
 
-export async function finalizeUserDailyQuizRefresh(userId: string, tier: DailyQuizTier, quizId: string): Promise<void> {
+export async function finalizeUserDailyQuizRefresh(userId: string, tier: DailyQuizTier, quizPayload: Quiz): Promise<void> {
   if (!userId || !isSupabaseConfigured) return;
-  const { error } = await supabase.rpc('finalize_user_daily_quiz_refresh', { p_user_id: userId, p_tier: tier, p_quiz_id: quizId });
+  const { error } = await supabase.rpc('finalize_user_daily_quiz_refresh', { p_user_id: userId, p_tier: tier, p_quiz_payload: quizPayload });
   if (error) throw error;
 }
 
@@ -1485,17 +1494,12 @@ export async function recordCouponUsage(
 
 export async function getAiPerformanceLogs(): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
-  const { data, error } = await supabase
-    .from('ai_performance_logs')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(100);
-  
+  const { data, error } = await supabase.rpc('get_ai_performance_logs');
   if (error) {
-    console.error('Error fetching AI logs:', error);
+    console.error('Error fetching AI logs:', error.message);
     return [];
   }
-  return data || [];
+  return Array.isArray(data) ? data : [];
 }
 
 // ---------------- SEASONS (SUPABASE DIRECT) ----------------
