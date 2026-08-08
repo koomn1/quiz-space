@@ -137,6 +137,7 @@ export default function QuizResolver({
   const [savedCompletionId, setSavedCompletionId] = React.useState<string | null>(null);
   const [selectedRating, setSelectedRating] = React.useState<number>(0);
   const [feedbackText, setFeedbackText] = React.useState<string>('');
+  const [hasRatedQuiz, setHasRatedQuiz] = React.useState(false);
 
   // Question ratings states
   const [questionRatings, setQuestionRatings] = React.useState<Record<string, 'like' | 'dislike'>>({});
@@ -203,13 +204,28 @@ export default function QuizResolver({
     }
   };
 
+  // One overall rating per student and quiz; retakes do not ask for another rating.
+  React.useEffect(() => {
+    let active = true;
+    setHasRatedQuiz(false);
+    if (!userId || !quizId) return () => { active = false; };
+    supabase.from('completions').select('id').eq('quiz_id', quizId).eq('taker_id', userId)
+      .not('rating', 'is', null).limit(1).maybeSingle()
+      .then(({ data, error }) => { if (active && !error) setHasRatedQuiz(!!data); });
+    return () => { active = false; };
+  }, [quizId, userId]);
+
+  React.useEffect(() => {
+    if (onQuizLockChange) onQuizLockChange(isQuizCompleted && !hasRatedQuiz);
+  }, [isQuizCompleted, hasRatedQuiz, onQuizLockChange]);
+
   // Play premium success sound when quiz finishes & trigger auto-save + route lock
   React.useEffect(() => {
     if (isQuizCompleted) {
       playNotificationSound('success');
 
       if (onQuizLockChange) {
-        onQuizLockChange(true);
+        onQuizLockChange(!hasRatedQuiz);
       }
 
       const autoSave = async () => {
@@ -245,11 +261,11 @@ export default function QuizResolver({
         onQuizLockChange(false);
       }
     }
-  }, [isQuizCompleted, quizId, userId, takerName, userName, score]);
+  }, [isQuizCompleted, quizId, userId, takerName, userName, score, hasRatedQuiz]);
 
   // Intercept and block all navigation popstate, back gestures, and close actions when in results overlay
   React.useEffect(() => {
-    if (isQuizCompleted && selectedRating === 0) {
+    if (isQuizCompleted && !hasRatedQuiz && selectedRating === 0) {
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         e.preventDefault();
         e.returnValue = isAr 
@@ -275,7 +291,7 @@ export default function QuizResolver({
         window.removeEventListener('popstate', handlePopState);
       };
     }
-  }, [isQuizCompleted, selectedRating, isAr]);
+  }, [isQuizCompleted, hasRatedQuiz, selectedRating, isAr]);
 
   // Fetch single Quiz on load with localStorage restore capability
   React.useEffect(() => {
@@ -546,6 +562,12 @@ export default function QuizResolver({
 
   // Submit the forced star rating and release route lock
   const handleFinalSubmitAndExit = async () => {
+    // After the first saved rating, retakes can exit without rating again.
+    if (hasRatedQuiz) {
+      if (onQuizLockChange) onQuizLockChange(false);
+      onGoHome();
+      return;
+    }
     if (selectedRating === 0) return;
     setIsSubmittingReview(true);
 
@@ -559,6 +581,7 @@ export default function QuizResolver({
           feedback: feedbackText.trim()
         }).eq('id', savedCompletionId);
         if (error) console.error('Failed to save quiz rating:', error);
+        else setHasRatedQuiz(true);
       } else {
         try {
           await submitQuizAttempt(quizId, {
@@ -569,6 +592,7 @@ export default function QuizResolver({
             feedback: feedbackText.trim(),
             totalQuestions: quiz.questions.length
           });
+          setHasRatedQuiz(true);
         } catch (e) {
           console.error('Failed to submit quiz attempt with rating:', e);
         }
@@ -1414,6 +1438,17 @@ export default function QuizResolver({
               )}
             </div>
 
+            {hasRatedQuiz && (
+              <button
+                type="button"
+                onClick={handleFinalSubmitAndExit}
+                className="w-full max-w-xs mx-auto py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 print:hidden"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{isAr ? 'خروج والعودة للصفحة الرئيسية' : 'Exit to home'}</span>
+              </button>
+            )}
+
             {/* Print or Direct PDF actions */}
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2 print:hidden">
               <button
@@ -1456,6 +1491,8 @@ export default function QuizResolver({
 
           </div>
 
+          {!hasRatedQuiz && (
+          <>
           {/* Ratings & Star review submissions panel */}
           <div className="bg-[#130b2b]/95 border-2 border-[#9b51e0]/60 p-6 sm:p-8 rounded-3xl shadow-[0_0_30px_rgba(155,81,224,0.35)] space-y-6 text-center select-none relative overflow-hidden print:hidden">
             {/* Ambient Background Glows */}
@@ -1557,6 +1594,8 @@ export default function QuizResolver({
               </button>
             </div>
           </div>
+          </>
+          )}
 
           {/* Interactive Detailed Academic Answers Report */}
           <QuizDetailedReport
