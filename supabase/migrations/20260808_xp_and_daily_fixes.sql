@@ -21,10 +21,19 @@ BEGIN
      WHERE tier = p_tier
      FOR UPDATE;
 
-    IF NOT FOUND OR v_refreshing THEN
+    IF NOT FOUND THEN
         RETURN false;
     END IF;
-
+    -- Recover a slot left locked by a crashed browser/Worker attempt.
+    IF v_refreshing AND (v_refreshed_at IS NULL OR now() - v_refreshed_at > interval '10 minutes') THEN
+        UPDATE daily_quiz_slots
+           SET refreshing = false
+         WHERE tier = p_tier;
+        v_refreshing := false;
+    END IF;
+    IF v_refreshing THEN
+        RETURN false;
+    END IF;
     IF v_quiz_id IS NULL
        OR v_refreshed_at IS NULL
        OR now() - v_refreshed_at >= v_interval * interval '1 second' THEN

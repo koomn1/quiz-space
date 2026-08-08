@@ -381,19 +381,50 @@ export async function submitQuizAttempt(
     feedback?: string;
   }
 ): Promise<any> {
-  try {
-    const { data: result, error } = await supabase.rpc('submit_quiz_attempt', {
-      p_quiz_id: quizId,
-      p_taker_id: data.takerId,
-      p_taker_name: data.takerName,
-      p_score: data.score,
-      p_rating: data.rating ?? null,
-      p_feedback: data.feedback || '',
-    });
-    if (!error) return result;
-  } catch (e) { console.error('Unhandled Supabase error:', e); }
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
+  const { data: result, error } = await supabase.rpc('submit_quiz_attempt', {
+    p_quiz_id: quizId,
+    p_taker_id: data.takerId,
+    p_taker_name: data.takerName,
+    p_score: data.score,
+    p_rating: data.rating ?? null,
+    p_feedback: data.feedback || '',
+  });
+  if (!error) return result;
 
-  return { success: true, local: true };
+  // Keep older databases usable while the RPC migration is being applied.
+  // Never return a fake success: save the completion directly and update XP.
+  console.error('submit_quiz_attempt RPC failed; using direct persistence fallback:', error);
+  const { data: quiz, error: quizError } = await supabase
+    .from('quizzes').select('title, questions').eq('id', quizId).single();
+  if (quizError || !quiz) throw error;
+  const { data: existing } = await supabase
+    .from('completions').select('id').eq('quiz_id', quizId).eq('taker_id', data.takerId).maybeSingle();
+  const totalQuestions = Math.max(1, Array.isArray(quiz.questions) ? quiz.questions.length : 1);
+  const xpAwarded = existing ? 0 : 10 + Math.max(0, data.score) * 10;
+  let completionId = existing?.id;
+  if (completionId) {
+    const { error: updateError } = await supabase.from('completions').update({
+      score: data.score, total_questions: totalQuestions,
+      rating: data.rating ?? null, feedback: data.feedback || '',
+    }).eq('id', completionId);
+    if (updateError) throw updateError;
+  } else {
+    completionId = `comp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    const { error: insertError } = await supabase.from('completions').insert({
+      id: completionId, quiz_id: quizId, quiz_title: quiz.title,
+      taker_id: data.takerId, taker_name: data.takerName, score: data.score,
+      total_questions: totalQuestions, rating: data.rating ?? null, feedback: data.feedback || '',
+    });
+    if (insertError) throw insertError;
+    const { data: userRow, error: userReadError } = await supabase
+      .from('users').select('xp').eq('uid', data.takerId).single();
+    if (userReadError || !userRow) throw userReadError || new Error('User profile not found while awarding XP.');
+    const { error: xpError } = await supabase.from('users')
+      .update({ xp: (userRow.xp || 0) + xpAwarded }).eq('uid', data.takerId);
+    if (xpError) throw xpError;
+  }
+  return { success: true, fallback: true, xp_awarded: xpAwarded, id: completionId };
 }
 
 // ---------------- PROFILE STATS & MANAGEMENT HANDLERS ----------------

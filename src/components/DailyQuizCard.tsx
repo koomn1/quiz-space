@@ -101,7 +101,10 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
           ...q,
           id: `daily-${Date.now()}-${i}`,
         })) as any,
-        creatorId: 'daily-quiz-system',
+        // quizzes.creator_id references users(uid) and RLS only allows the
+        // authenticated user to insert their own quiz. The old synthetic
+        // daily-quiz-system id caused every generation to fail at insert time.
+        creatorId: userId,
         creatorName: isAr ? 'QuizSpace ⚡ (يومي)' : 'QuizSpace ⚡ (Daily)',
         category: isAr ? 'يومي' : 'Daily',
       } as any), 12000);
