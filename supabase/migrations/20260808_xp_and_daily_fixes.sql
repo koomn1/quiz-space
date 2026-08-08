@@ -41,6 +41,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- The old function counted rows in quizzes (0 or 1), not questions in the
 -- JSONB payload, and never awarded XP. Replace it with an atomic first-attempt
 -- award. Retakes update the completion but do not farm XP repeatedly.
+-- The return shape now includes xp_awarded, so drop the old signature first;
+-- PostgreSQL cannot change a function's OUT parameters with CREATE OR REPLACE.
+DROP FUNCTION IF EXISTS submit_quiz_attempt(TEXT, TEXT, TEXT, INTEGER, INTEGER, TEXT);
+
 CREATE OR REPLACE FUNCTION submit_quiz_attempt(
     p_quiz_id TEXT,
     p_taker_id TEXT,
