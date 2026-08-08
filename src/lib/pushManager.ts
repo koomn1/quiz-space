@@ -8,16 +8,13 @@ export async function registerPushNotifications(userId: string): Promise<'grante
   try {
     const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
 
-    const pushEnabled = localStorage.getItem('pref_pushEnabled') !== 'false';
-    const dismissed = localStorage.getItem('quiz_push_banner_dismissed') === 'true';
-
     let permission = Notification.permission;
 
     if (permission === 'default') {
       permission = await Notification.requestPermission();
     }
 
-    if (permission === 'granted' && pushEnabled && !dismissed) {
+    if (permission === 'granted') {
       try {
         const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY || localStorage.getItem('quiz_vapid_public_key') || '';
         if (!vapidKey) {
@@ -26,7 +23,8 @@ export async function registerPushNotifications(userId: string): Promise<'grante
           return permission;
         }
         const keyArray = urlBase64ToUint8Array(vapidKey);
-        const subscription = await registration.pushManager.subscribe({
+        const existingSubscription = await registration.pushManager.getSubscription();
+        const subscription = existingSubscription || await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: keyArray as any,
         });

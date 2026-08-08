@@ -21,6 +21,7 @@ export default function Notifications({ lang }: NotificationsProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isActivatingPush, setIsActivatingPush] = useState(false);
   const [pushMessage, setPushMessage] = useState<'success' | 'error' | null>(null);
+  const [isLeaderboardPushEnabled, setIsLeaderboardPushEnabled] = useState(false);
 
   const handleSavePreferences = () => {
     setIsSaving(true);
@@ -51,6 +52,7 @@ export default function Notifications({ lang }: NotificationsProps) {
       const permission = await registerPushNotifications(user.id);
       if (permission === 'granted') {
         setPushEnabled(true);
+        setIsLeaderboardPushEnabled(true);
         localStorage.setItem('pref_pushEnabled', 'true');
         localStorage.removeItem('quiz_push_banner_dismissed');
         setPushMessage('success');
@@ -168,7 +170,7 @@ export default function Notifications({ lang }: NotificationsProps) {
               <button
                 type="button"
                 onClick={handleActivateLeaderboardPush}
-                disabled={isActivatingPush || pushEnabled}
+                disabled={isActivatingPush || isLeaderboardPushEnabled}
                 className="w-full sm:w-auto shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-xs font-black shadow-lg shadow-amber-500/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isActivatingPush ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <BellRing className="w-3.5 h-3.5" />}
