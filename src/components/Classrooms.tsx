@@ -591,23 +591,28 @@ export default function Classrooms({
     try {
       const encrypted = await encryptMessage(text, activeClassroomView.id);
       const { error } = await supabase.from('classroom_messages').insert({
+        // The schema requires an explicit text id and has no sender_photo column.
+        id: crypto.randomUUID(),
         classroom_id: activeClassroomView.id,
         sender_id: currentUserId,
         sender_name: currentUserName,
-        sender_photo: currentUserPhoto,
         encrypted_text: encrypted
       });
 
       if (error) throw new Error(error.message);
       setChatMessageText('');
       playChimeSound('click');
-    } catch (err) {
-      console.error(err);
+        } catch (err) {
+      console.error('Failed to send classroom message:', err);
+      triggerToast(
+        isAr ? 'تعذر إرسال الرسالة' : 'Message was not sent',
+        isAr ? 'تحقق من الاتصال ثم حاول مرة أخرى.' : 'Check your connection and try again.',
+        'info'
+      );
     } finally {
       setIsSendingChat(false);
     }
   };
-
   // Files tab operations
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault();
