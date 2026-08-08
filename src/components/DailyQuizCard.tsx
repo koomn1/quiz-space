@@ -9,13 +9,14 @@ import {
   planNameToDailyQuizTier,
   DailyQuizTier,
 } from '../lib/db';
-import { generateQuizWithFallback } from '../hooks/useQuizzes';
+import { DAILY_QUIZ_BANK } from '../data/dailyQuizBank';
 
 // In-memory cache of the latest private daily payload so the start click can
 // guarantee the sessionStorage snapshot exists before navigation.
 let latestDailyPayload: Record<string, any> | null = null;
 
-const DAILY_TOPICS = ['ثقافة عامة', 'علوم عامة', 'تاريخ', 'جغرافيا', 'رياضيات أساسية', 'لغة عربية', 'لغة إنجليزية', 'تكنولوجيا وابتكار'];
+// Fixed offline bank: no AI request is made while users load or solve daily quizzes.
+const DAILY_BANK_SIZE = DAILY_QUIZ_BANK.length;
 
 interface DailyQuizCardProps {
   lang: 'ar' | 'en';
@@ -51,30 +52,29 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
   const [generationError, setGenerationError] = useState(false);
   const generatingRef = useRef(false);
 
-  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
-    let timeoutId: number | undefined;
-    const timeout = new Promise<never>((_, reject) => { timeoutId = window.setTimeout(() => reject(new Error('Daily quiz request timed out')), timeoutMs); });
-    try { return await Promise.race([promise, timeout]); }
-    finally { if (timeoutId !== undefined) window.clearTimeout(timeoutId); }
-  };
-
   const generate = async () => {
     if (!userId || generatingRef.current) return;
     generatingRef.current = true;
     setIsGenerating(true);
     setGenerationError(false);
     try {
-      const topic = DAILY_TOPICS[Math.floor(Math.random() * DAILY_TOPICS.length)];
-      const generated = await withTimeout(generateQuizWithFallback(`${topic} — اختبار يومي منوّع بمستوى متوسط، 8 أسئلة أصلية`, 8), 45000);
-      const quizId = `daily-${userId}-${Date.now()}`;
+      // Pick deterministically from the 60-item bank for this user/tier/time
+      // window. This rotates the bank without any runtime AI generation.
+      const intervalMs = Math.max(1, 86400) * 1000;
+      const windowNumber = Math.floor(Date.now() / intervalMs);
+      const seedText = `${userId}:${tier}:${windowNumber}`;
+      let hash = 0;
+      for (let i = 0; i < seedText.length; i++) hash = (hash * 31 + seedText.charCodeAt(i)) >>> 0;
+      const source = DAILY_QUIZ_BANK[hash % DAILY_BANK_SIZE] as any;
+      const quizId = `daily-${userId}-${windowNumber}-${String(hash % DAILY_BANK_SIZE + 1).padStart(2, '0')}`;
       const quiz = {
+        ...source,
         id: quizId,
-        title: `⚡ ${isAr ? 'التحدي اليومي' : 'Daily Challenge'} — ${generated.title}`,
-        description: generated.description,
-        questions: generated.questions.map((q, i) => ({ ...q, id: `daily-${Date.now()}-${i}` })),
-        creatorId: userId,
-        creatorName: isAr ? 'QuizSpace ⚡ (يومي)' : 'QuizSpace ⚡ (Daily)',
-        category: isAr ? 'يومي' : 'Daily',
+        title: `⚡ ${isAr ? 'التحدي اليومي' : 'Daily Challenge'} — ${source.title}`,
+        questions: source.questions.map((q: any, i: number) => ({ ...q, id: `${quizId}-q${i + 1}` })),
+        creatorId: 'quizspace-daily-bank',
+        creatorName: isAr ? 'QuizSpace ⚡ (بنك ثابت)' : 'QuizSpace ⚡ (Fixed Bank)',
+        category: isAr ? 'يومي — بنك ثابت' : 'Daily — Fixed Bank',
         createdAt: new Date().toISOString(),
         totalPlays: 0,
         avgRating: 0,
@@ -87,7 +87,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       setAnswered(false);
       setSecondsLeft(0);
     } catch (error) {
-      console.error('Failed to generate per-user daily quiz:', error);
+      console.error('Failed to prepare fixed daily quiz:', error);
       setGenerationError(true);
       await releaseUserDailyQuizRefresh(userId, tier);
     } finally {
@@ -212,7 +212,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
               onStartQuiz(startableQuizId);
             }} className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform">{isAr ? 'ابدأ الآن + XP' : 'Start now + XP'}</button>
             : generationError ? <div className="flex items-center gap-2"><span className="text-xs text-white/80">{isAr ? 'تعذر الاتصال بنظام الاختبار اليومي' : 'Daily quiz service unavailable'}</span><button onClick={sync} className="bg-white/20 text-white font-bold rounded-full px-5 py-2 text-sm hover:bg-white/30 active:scale-95 transition-transform">{isAr ? 'إعادة المحاولة' : 'Retry'}</button></div>
-            : <div className="flex items-center gap-2 text-sm text-white/80 px-3"><Loader2 className="w-4 h-4 animate-spin" />{isAr ? 'جاري التوليد...' : 'Generating...'}</div>}
+            : <div className="flex items-center gap-2 text-sm text-white/80 px-3"><Loader2 className="w-4 h-4 animate-spin" />{isAr ? 'جاري تجهيز الكويز...' : 'Preparing quiz...'}</div>}
         </div>
       </div>
     </div>
