@@ -5,6 +5,7 @@ import {
   claimUserDailyQuizRefresh,
   finalizeUserDailyQuizRefresh,
   releaseUserDailyQuizRefresh,
+  resetLegacyDailyQuizSlot,
   planNameToDailyQuizTier,
   DailyQuizTier,
 } from '../lib/db';
@@ -103,13 +104,25 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       if (slot.quizPayload?.id) {
         window.sessionStorage.setItem(`quizspace-daily-${slot.quizPayload.id}`, JSON.stringify(slot.quizPayload));
       }
-      const activeQuizId = slot.quizPayload?.id || slot.quizId;
+      const hasPrivatePayload = !!slot.quizPayload?.id;
+      // A legacy slot can contain only quiz_id from the old public-quiz flow.
+      // It is not a valid private daily challenge and must be cleared before
+      // claiming a fresh payload; never send the user back to that old quiz.
+      if (slot.quizId && !hasPrivatePayload && !slot.answered) {
+        await resetLegacyDailyQuizSlot(userId, tier);
+        setQuizId(null);
+        setAnswered(false);
+        setSecondsLeft(0);
+        setIsGenerating(false);
+        return sync();
+      }
+      const activeQuizId = slot.quizPayload?.id || (slot.answered ? null : slot.quizId);
       setQuizId(activeQuizId);
       setAnswered(slot.answered);
       setSecondsLeft(slot.secondsUntilRefresh);
       setGenerationError(false);
-      // A quiz without an answer is always pinned, regardless of age.
-      if ((slot.quizPayload?.id || slot.quizId) && !slot.answered) { setIsGenerating(false); return; }
+      // A private quiz without an answer is always pinned, regardless of age.
+      if (hasPrivatePayload && !slot.answered) { setIsGenerating(false); return; }
       // After answering, keep showing the cooldown; claim only when it ends.
       if (slot.answered && slot.secondsUntilRefresh > 0) { setIsGenerating(false); return; }
       if (slot.refreshing) { setIsGenerating(!activeQuizId); return; }

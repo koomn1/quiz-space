@@ -736,6 +736,13 @@ export async function getUserDailyQuizSlot(userId: string, tier: DailyQuizTier):
   };
 }
 
+export async function resetLegacyDailyQuizSlot(userId: string, tier: DailyQuizTier): Promise<boolean> {
+  if (!userId || !isSupabaseConfigured) return false;
+  const { data, error } = await supabase.rpc('reset_legacy_daily_quiz_slot', { p_user_id: userId, p_tier: tier });
+  if (error) { console.error('Error resetting legacy daily quiz slot:', error.message); return false; }
+  return !!data;
+}
+
 export async function claimUserDailyQuizRefresh(userId: string, tier: DailyQuizTier): Promise<boolean> {
   if (!userId || !isSupabaseConfigured) return false;
   const { data, error } = await supabase.rpc('claim_user_daily_quiz_refresh', { p_user_id: userId, p_tier: tier });
@@ -774,7 +781,8 @@ export async function getDailyQuizSlot(tier: DailyQuizTier): Promise<DailyQuizSl
     refreshing: (data as any).refreshing,
     refreshedAt: (data as any).refreshed_at,
     refreshIntervalSeconds: (data as any).refresh_interval_seconds,
-    secondsUntilRefresh: (data as any).seconds_until_refresh,
+    secondsUntilRefresh: (data as any).seconds_until_refresh || 0,
+    answered: !!(data as any).answered_at,
   };
 }
 

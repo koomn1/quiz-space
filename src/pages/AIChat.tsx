@@ -419,7 +419,7 @@ function StreamingRow({ text, theme }: { text: string; theme: Palette }) {
       <AssistantAvatar />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold mb-2" style={{ color: theme.FG }}>{ASSISTANT_NAME_EN}</p>
-        <FormattedText text={text} fg={theme.FG} />
+        <FormattedText text={text} fg={theme.FG} theme={theme} />
       </div>
     </div>
   );
