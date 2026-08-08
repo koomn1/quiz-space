@@ -1160,7 +1160,7 @@ export default function QuizCreator({
       {!quizToEdit && (
         <>
         {/* Creation Mode Select Toggles */}
-        <div className="hidden lg:grid grid-cols-4 gap-3 bg-slate-100/50 dark:bg-slate-800/40 p-2 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 font-medium backdrop-blur-sm">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 bg-slate-100/50 dark:bg-slate-800/40 p-2 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 font-medium backdrop-blur-sm">
           <button
             onClick={() => setActiveMode('manual')}
             className={`flex items-center justify-center gap-2 py-3.5 rounded-xl text-xs transition-all cursor-pointer ${
@@ -1209,22 +1209,6 @@ export default function QuizCreator({
             <Sparkles className={`w-4 h-4 ${activeMode === 'ai' ? 'text-white' : 'text-primary'}`} />
             <span>توليد تلقائي AI</span>
           </button>
-        </div>
-        <div className="lg:hidden relative">
-          <label className="sr-only" htmlFor="creator-mode-select">طريقة إنشاء الاختبار</label>
-          <select
-            id="creator-mode-select"
-            value={activeMode}
-            onChange={(e) => setActiveMode(e.target.value as typeof activeMode)}
-            className="w-full appearance-none rounded-2xl border border-violet-500/20 bg-white/80 dark:bg-slate-900/80 px-4 py-4 pr-12 text-sm font-black text-slate-700 dark:text-slate-100 shadow-sm outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10"
-            dir="rtl"
-          >
-            <option value="manual">✍️ كتابة يدوية</option>
-            <option value="ocr">📷 صورة أو PDF</option>
-            <option value="paste">📄 لصق نصوص PDF</option>
-            <option value="ai">✨ توليد تلقائي بالذكاء الاصطناعي</option>
-          </select>
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-violet-500">⌄</span>
         </div>
         </>
       )}
