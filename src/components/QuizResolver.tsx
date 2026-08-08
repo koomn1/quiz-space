@@ -956,8 +956,12 @@ export default function QuizResolver({
                 {/* Inner Card Container with perspective 3D transform */}
                 <div
                   className="w-full h-full relative preserve-3d"
-                  
-                  
+                  style={{
+                    transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                    transformStyle: 'preserve-3d',
+                    transition: 'transform 650ms cubic-bezier(0.22, 1, 0.36, 1)',
+                    willChange: 'transform'
+                  }}
                 >
                   {/* FRONT SIDE (Question) */}
                   <div className="absolute inset-0 w-full h-full backface-hidden rounded-x3 rounded-3xl bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-805 p-8 flex flex-col justify-between shadow-xs transition-all hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
