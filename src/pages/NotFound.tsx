@@ -59,7 +59,7 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
   };
 
   return (
-    <main ref={rootRef} dir={isAr ? 'rtl' : 'ltr'} className="relative isolate flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-[#070711] px-5 py-16 text-white">
+    <main ref={rootRef} dir={isAr ? 'rtl' : 'ltr'} className="relative isolate flex w-full items-center justify-center overflow-hidden bg-[#070711] px-5 py-16 text-white" style={{ minHeight: 'calc(100dvh - 64px)', marginTop: '64px' }}>
       <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_35%,#28134b_0%,#0c0b1e_44%,#05050b_100%)]" />
       <div className="absolute -left-24 top-1/3 -z-10 h-72 w-72 rounded-full bg-fuchsia-700/10 blur-[110px]" />
       <div className="absolute -right-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-cyan-500/10 blur-[120px]" />
