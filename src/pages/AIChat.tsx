@@ -5,7 +5,7 @@ import { askAI, askAIStream } from '../services/aiWorkerClient';
 import { generateQuizWithFallback } from '../hooks/useQuizzes';
 import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
-import { Image as ImageIcon, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
+import { Image as ImageIcon, FileText, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
 const COSMO_AVATAR = `${(import.meta as any).env?.BASE_URL || '/'}avatars/cosmo-boy.png`;
 
 /* ═══════════════════════════════════════════════════════════
@@ -138,11 +138,18 @@ function usePalette(darkMode: boolean) {
 type Palette = ReturnType<typeof usePalette>;
 
 /* ─── Types ─────────────────────────────────────────────── */
+interface ChatAttachment {
+  data: string;
+  mimeType: string;
+  name: string;
+  kind: 'image' | 'file';
+}
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   text: string;
   image?: string;
+  attachmentName?: string;
   timestamp: string;
 }
 
@@ -355,6 +362,7 @@ function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial, t
             style={{ background: theme.CARD, color: theme.FG }}
           >
             {msg.image && <img src={msg.image} alt="Upload" className="max-w-xs rounded-lg mb-3 shadow-md" />}
+            {msg.attachmentName && <div className="flex items-center gap-2 mb-2 text-xs opacity-80"><FileText className="w-4 h-4" />{msg.attachmentName}</div>}
             <div>{msg.text}</div>
             <p className="text-[10px] mt-1 text-right" style={{ color: theme.MUTED }}>{msg.timestamp}</p>
           </div>
@@ -488,6 +496,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sendBtnRef = useRef<HTMLButtonElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
@@ -496,7 +505,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedAttachment, setSelectedAttachment] = useState<ChatAttachment | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
@@ -582,7 +591,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   /* send (real streaming + database persistence) */
   const sendMessage = useCallback(async (text?: string) => {
     const trimmed = (text ?? inputText).trim();
-    if (!trimmed && !selectedImage) return;
+    if (!trimmed && !selectedAttachment) return;
     if (isAnalyzing) return;
 
     const requestedQuiz = parseQuizRequest(trimmed);
@@ -605,18 +614,19 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       );
     }
 
-    const displayText = trimmed || (isAr ? 'صورة مرفقة' : 'Attached image');
+    const displayText = trimmed || (isAr ? 'مرفق: ' + (selectedAttachment?.name || 'ملف') : 'Attachment: ' + (selectedAttachment?.name || 'file'));
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
       text: displayText,
-      image: selectedImage || undefined,
+      image: selectedAttachment?.kind === 'image' ? selectedAttachment.data : undefined,
+      attachmentName: selectedAttachment?.kind === 'file' ? selectedAttachment.name : undefined,
       timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
-    setSelectedImage(null);
+    setSelectedAttachment(null);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setIsAnalyzing(true);
     setStreamingText('');
@@ -641,13 +651,13 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     }
 
     if (currentConvId) {
-      const localUserMessage: LocalChatMessage = { id: userMsg.id, role: 'user', text: userMsg.text, hadImage: !!selectedImage, createdAt: new Date().toISOString() };
+      const localUserMessage: LocalChatMessage = { id: userMsg.id, role: 'user', text: userMsg.text, hadImage: !!selectedAttachment, createdAt: new Date().toISOString() };
       localData.messages[currentConvId] = [...(localData.messages[currentConvId] || []), localUserMessage];
       const conv = localData.conversations.find(c => c.id === currentConvId);
       if (conv) conv.updatedAt = new Date().toISOString();
       writeLocalChatData(userId, localData);
     }
-    if (userId && currentConvId) await saveAIChatMessage(userId, 'user', userMsg.text, !!selectedImage, currentConvId);
+    if (userId && currentConvId) await saveAIChatMessage(userId, 'user', userMsg.text, !!selectedAttachment, currentConvId);
 
     try {
       const aiMsgId = (Date.now() + 1).toString();
@@ -659,7 +669,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
           systemInstruction: cosmoSystemInstruction,
           currentPage,
           siteStatus,
-          image: selectedImage ? { data: selectedImage, mimeType: 'image/png' } : undefined,
+          attachment: selectedAttachment ? { data: selectedAttachment.data, mimeType: selectedAttachment.mimeType, name: selectedAttachment.name, kind: selectedAttachment.kind } : undefined,
         },
         (_delta, fullTextSoFar) => {
           setStreamingText(fullTextSoFar);
@@ -698,7 +708,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       setStreamingText('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputText, selectedImage, isAnalyzing, userId, activeConversationId, isAr, cosmoSystemInstruction]);
+  }, [inputText, selectedAttachment, isAnalyzing, userId, activeConversationId, isAr, cosmoSystemInstruction]);
 
   const confirmQuizGeneration = async () => {
     if (!pendingQuiz || isGeneratingQuiz) return;
@@ -792,6 +802,26 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     }
   };
 
+  const handleAttachmentFile = (file?: File) => {
+    if (!file) return;
+    const isImage = file.type.startsWith('image/');
+    const isDocument = file.type === 'application/pdf' || file.type === 'text/markdown' || file.type === 'text/plain' || /\.(pdf|md|txt)$/i.test(file.name);
+    if ((!isImage && !isDocument) || file.size > 10 * 1024 * 1024) {
+      setLastError(isAr ? 'الملف غير مدعوم أو أكبر من 10 ميجابايت.' : 'Unsupported file or file is larger than 10 MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = event => {
+      const dataUrl = String(event.target?.result || '');
+      const comma = dataUrl.indexOf(',');
+      if (comma < 0) return;
+      const lowerName = file.name.toLowerCase();
+      const mimeType = file.type || (lowerName.endsWith('.pdf') ? 'application/pdf' : lowerName.endsWith('.md') ? 'text/markdown' : 'text/plain');
+      setSelectedAttachment({ data: dataUrl.slice(comma + 1), mimeType, name: file.name, kind: isImage ? 'image' : 'file' });
+      setLastError(null);
+    };
+    reader.readAsDataURL(file);
+  };
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
@@ -1097,15 +1127,12 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
         {/* ── Input ── */}
         <div className="px-4 pb-5 pt-2 flex-shrink-0">
           <div className="max-w-3xl mx-auto">
-            {selectedImage && (
-              <div className="relative inline-block mb-3 mr-3 p-1.5 rounded-xl"
+            {selectedAttachment && (
+              <div className="relative inline-flex items-center gap-2 mb-3 mr-3 p-2 rounded-xl"
                 style={{ background: theme.INPUT_BG, border: `1px solid ${theme.BORDER_SOFT}` }}>
-                <img src={selectedImage} alt="Preview" className="h-24 w-auto rounded-lg object-cover" />
-                <button onClick={() => setSelectedImage(null)}
-                  className="absolute -top-2 -right-2 p-1 rounded-full shadow-lg"
-                  style={{ background: '#ef4444', color: 'white' }}>
-                  <X size={12} />
-                </button>
+                {selectedAttachment.kind === 'image' ? <img src={selectedAttachment.data} alt="Preview" className="h-20 w-auto rounded-lg object-cover" /> : <FileText className="w-5 h-5" style={{ color: ACCENT }} />}
+                <span className="max-w-[180px] truncate text-xs" style={{ color: theme.FG }}>{selectedAttachment.name}</span>
+                <button onClick={() => setSelectedAttachment(null)} className="p-1 rounded-full shadow-lg" style={{ background: '#ef4444', color: 'white' }}><X size={12} /></button>
               </div>
             )}
             <div className="rounded-3xl overflow-hidden"
@@ -1125,46 +1152,39 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
               <div className="flex items-center justify-between px-3 pb-3 pt-1" dir="rtl">
                 <div className="flex items-center gap-1">
-                  <button onClick={() => fileInputRef.current?.click()}
+                  <button onClick={() => imageInputRef.current?.click()} title={isAr ? 'إرفاق صورة' : 'Attach image'}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
                     style={{ color: theme.MUTED }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                    <ImageIcon className="w-4 h-4" />
+                    <ImageIcon className="w-4 h-4" /><span>{isAr ? 'صورة' : 'Image'}</span>
                   </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = evt => {
-                          if (evt.target?.result) setSelectedImage(evt.target.result as string);
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    accept="image/*"
-                    className="hidden"
-                  />
+                  <button onClick={() => fileInputRef.current?.click()} title={isAr ? 'إرفاق PDF أو MD أو TXT' : 'Attach PDF, MD or TXT'}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
+                    style={{ color: theme.MUTED }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    <FileText className="w-4 h-4" /><span>{isAr ? 'ملف' : 'File'}</span>
+                  </button>
+                  <input type="file" ref={imageInputRef} accept="image/*" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
+                  <input type="file" ref={fileInputRef} accept=".pdf,.md,.txt,application/pdf,text/markdown,text/plain" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
                 </div>
 
                 <button
                   ref={sendBtnRef}
                   onClick={() => sendMessage()}
-                  disabled={(!inputText.trim() && !selectedImage) || isAnalyzing}
+                  disabled={(!inputText.trim() && !selectedAttachment) || isAnalyzing}
                   aria-label={isAr ? 'إرسال' : 'Send'}
                   className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90"
                   style={{
-                    background: isAnalyzing ? 'rgba(16,163,127,0.14)' : (inputText.trim() || selectedImage) ? '#ffffff' : theme.SEND_IDLE,
+                    background: isAnalyzing ? 'rgba(16,163,127,0.14)' : (inputText.trim() || selectedAttachment) ? '#ffffff' : theme.SEND_IDLE,
                     border: isAnalyzing ? `1px solid ${ACCENT}66` : 'none',
-                    color: isAnalyzing ? ACCENT : (inputText.trim() || selectedImage) ? '#111827' : '#ffffff',
+                    color: isAnalyzing ? ACCENT : (inputText.trim() || selectedAttachment) ? '#111827' : '#ffffff',
                     cursor: isAnalyzing ? 'wait' : 'pointer',
                     transform: isAnalyzing ? 'scale(.94)' : undefined,
                   }}
                 >
-                  <Send className="w-5 h-5" style={{ color: (inputText.trim() || selectedImage) && !isAnalyzing ? theme.SEND_ACTIVE_FG : '#ffffff' }} />
+                  <Send className="w-5 h-5" style={{ color: (inputText.trim() || selectedAttachment) && !isAnalyzing ? theme.SEND_ACTIVE_FG : '#ffffff' }} />
                 </button>
               </div>
             </div>

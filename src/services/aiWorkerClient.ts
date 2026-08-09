@@ -85,6 +85,13 @@ export async function generateQuizFromFile(
   }
 }
 
+export interface AiChatAttachment {
+  data: string;
+  mimeType: string;
+  name: string;
+  kind: 'image' | 'file';
+}
+
 export interface AiChatMessage {
   role: 'user' | 'model';
   text: string;
@@ -92,7 +99,7 @@ export interface AiChatMessage {
 
 export async function askAI(
   prompt: string,
-  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; currentPage?: string; siteStatus?: string } = {},
+  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string } = {},
 ): Promise<{ text: string }> {
   try {
     return await workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
@@ -108,17 +115,25 @@ export async function askAI(
 // server-side by then).
 export async function askAIStream(
   prompt: string,
-  options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; currentPage?: string; siteStatus?: string },
+  options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string },
   onChunk: (deltaText: string, fullTextSoFar: string) => void,
 ): Promise<{ text: string }> {
-  const response = await fetchWithAuth(getApiUrl('/api/ai/openrouter/stream'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, ...options }),
-  });
+  let response: Response;
+  try {
+    response = await fetchWithAuth(getApiUrl('/api/ai/openrouter/stream'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, ...options }),
+    });
+  } catch {
+    return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
+  }
 
   if (!response.ok || !response.body) {
     const payload = await response.json().catch(() => ({})) as WorkerError;
+    if (response.status >= 500) {
+      return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
+    }
     throw new Error(payload.error || `AI streaming failed (${response.status}).`);
   }
 
@@ -158,6 +173,9 @@ export async function askAIStream(
     }
   }
 
+  if (!fullText) {
+    return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
+  }
   return { text: fullText };
 }
 

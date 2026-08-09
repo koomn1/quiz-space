@@ -202,6 +202,41 @@ async function providerText(provider: Provider, prompt: string, env: Env): Promi
   throw lastError ?? new Error('All providers failed');
 }
 
+function decodeBase64Utf8(value: string): string {
+  const binary = atob(value);
+  const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function buildCosmoUserContent(body: any): any {
+  const prompt = typeof body.prompt === 'string' ? body.prompt : '';
+  const attachment = body.attachment;
+  const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
+  const mimeType = attachment && typeof attachment.mimeType === 'string' ? attachment.mimeType : '';
+  const name = attachment && typeof attachment.name === 'string' ? attachment.name : 'attachment';
+  if (body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') {
+    return [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${body.image.mimeType};base64,${body.image.data}` } }];
+  }
+  if (data && mimeType.startsWith('image/')) {
+    return [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${mimeType};base64,${data}` } }];
+  }
+  if (data && mimeType === 'application/pdf') {
+    return [{ type: 'text', text: prompt }, { type: 'file', file: { filename: name, file_data: `data:${mimeType};base64,${data}` } }];
+  }
+  if (data && (mimeType === 'text/plain' || mimeType === 'text/markdown' || /\.(md|txt)$/i.test(name))) {
+    const decoded = decodeBase64Utf8(data).slice(0, 120_000);
+    return `${prompt}\n\nمحتوى الملف (${name}):\n${decoded}`;
+  }
+  return prompt;
+}
+
+function hasCosmoAttachment(body: any): boolean {
+  const attachment = body.attachment;
+  const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
+  const mimeType = attachment && typeof attachment.mimeType === 'string' ? attachment.mimeType : '';
+  return Boolean((body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') || (data && mimeType && data.length <= 15_000_000));
+}
+
 async function handler(request: Request, env: Env): Promise<Response> {
   const headers = cors(request, env);
   if (request.method === 'OPTIONS') return new Response(null, { headers });
@@ -478,18 +513,14 @@ ${extraInstruction}`;
       const accountContext = await getCosmoAccountContext(request, env, userId);
       messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
-      const hasImage = !!(body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string' && body.image.data.length <= 8_000_000);
-      if (hasImage) {
-        messages.push({ role: 'user', content: [{ type: 'text', text: body.prompt }, { type: 'image_url', image_url: { url: `data:${body.image.mimeType};base64,${body.image.data}` } }] });
-      } else {
-        messages.push({ role: 'user', content: body.prompt });
-      }
+      const hasAttachment = hasCosmoAttachment(body);
+      messages.push({ role: 'user', content: buildCosmoUserContent(body) });
       // Route to the vision model whenever an image is actually attached —
       // checking the model NAME for the substring 'vision' silently broke
       // this once the models were swapped to ones whose names don't contain
       // that word (google/gemma-4-31b-it:free, nvidia/nemotron-...), so
       // every image was being sent to a text-only model and failing.
-      const text = await callOpenRouterWithFallback(env, messages, hasImage ? OPENROUTER_VISION_FALLBACKS : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS));
+      const text = await callOpenRouterWithFallback(env, messages, hasAttachment ? OPENROUTER_VISION_FALLBACKS : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS));
       return json({ text }, 200, headers);
     }
 
@@ -500,14 +531,10 @@ ${extraInstruction}`;
       const accountContext = await getCosmoAccountContext(request, env, userId);
       messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
-      const hasImage = !!(body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string' && body.image.data.length <= 8_000_000);
-      if (hasImage) {
-        messages.push({ role: 'user', content: [{ type: 'text', text: body.prompt }, { type: 'image_url', image_url: { url: `data:${body.image.mimeType};base64,${body.image.data}` } }] });
-      } else {
-        messages.push({ role: 'user', content: body.prompt });
-      }
+      const hasAttachment = hasCosmoAttachment(body);
+      messages.push({ role: 'user', content: buildCosmoUserContent(body) });
 
-      const candidates = hasImage ? OPENROUTER_VISION_FALLBACKS : OPENROUTER_TEXT_FALLBACKS;
+      const candidates = hasAttachment ? OPENROUTER_VISION_FALLBACKS : OPENROUTER_TEXT_FALLBACKS;
       // Fallback only applies to picking which model actually starts
       // streaming — once a model accepts the connection and starts sending
       // tokens, we commit to it and pipe the rest straight through (a

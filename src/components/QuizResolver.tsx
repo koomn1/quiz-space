@@ -662,111 +662,75 @@ export default function QuizResolver({
     window.print();
   };
 
-  // PDF dynamic generate & export using html2canvas & jsPDF
+  // Export a clean question sheet: answers, scores, explanations, and review state are never included.
   const handleExportPDF = async () => {
     setIsGeneratingPdf(true);
+    let renderElement: HTMLElement | null = null;
     try {
-      const element = document.getElementById('quiz-pdf-export-content');
-      if (!element) {
-        throw new Error('لم يتم العثور على محتوى التوصيف للشهادة.');
-      }
-
       const { default: html2canvas } = await import('html2canvas');
-      const { jsPDF } = await import('jspdf');
+      const jspdfModule = await import('jspdf');
+      const JsPDF = jspdfModule.jsPDF;
 
-      // Tailwind v4 emits oklch()/color-mix() colors everywhere — including
-      // inside gradients (background-image), shadows, and outlines — which
-      // html2canvas cannot parse and throws on. Instead of trying to trick
-      // html2canvas's internal style reader, we walk the ORIGINAL element
-      // (whose computed styles the real browser already resolved to final
-      // oklch values) and copy each color-bearing property onto the CLONED
-      // element as a converted, !important inline style. That guarantees
-      // html2canvas only ever sees plain rgb()/rgba() values.
-      const COLOR_PROPS = [
-        'color', 'backgroundColor', 'backgroundImage',
-        'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
-        'boxShadow', 'textShadow', 'outlineColor', 'textDecorationColor',
-        'fill', 'stroke', 'caretColor',
-      ] as const;
+      const escapeHtml = (value: unknown) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 
-      const HAS_UNSUPPORTED_COLOR = /(oklch|oklab|lab\(|lch\(|color-mix)\(/i;
-
-      const inlineResolvedColors = (original: Element, clone: Element) => {
-        const computed = window.getComputedStyle(original);
-        const cloneStyle = (clone as HTMLElement).style;
-        for (const prop of COLOR_PROPS) {
-          const raw = (computed as any)[prop] as string;
-          if (typeof raw === 'string' && HAS_UNSUPPORTED_COLOR.test(raw)) {
-            const converted = replaceOklchColors(raw);
-            // Safety net: if anything still slipped through unparsed, fall
-            // back to a neutral value instead of letting html2canvas crash.
-            const finalValue = HAS_UNSUPPORTED_COLOR.test(converted)
-              ? (prop === 'backgroundImage' ? 'none' : prop === 'boxShadow' || prop === 'textShadow' ? 'none' : 'transparent')
-              : converted;
-            cloneStyle.setProperty(
-              prop.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`),
-              finalValue,
-              'important'
-            );
-          }
+      const optionMarkup = (q: typeof quiz.questions[number]) => {
+        if (q.type === 'essay') {
+          return '<div style="margin-top:12px;border:1px solid #cbd5e1;border-radius:8px;min-height:92px;padding:12px;color:#64748b;font-size:12px">مساحة الإجابة:</div>';
         }
-        const originalChildren = original.children;
-        const cloneChildren = clone.children;
-        for (let i = 0; i < originalChildren.length; i++) {
-          if (cloneChildren[i]) inlineResolvedColors(originalChildren[i], cloneChildren[i]);
-        }
+        const options = q.type === 'mcq' ? q.options : ['صح', 'خطأ'];
+        return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px">${options.map((option) => `
+          <div style="display:flex;align-items:center;gap:8px;border:1px solid #cbd5e1;border-radius:8px;padding:10px;color:#334155;font-size:12px;min-height:18px">
+            <span style="display:inline-block;width:13px;height:13px;border:1.5px solid #64748b;border-radius:50%;flex:0 0 auto"></span>
+            <span>${escapeHtml(option)}</span>
+          </div>`).join('')}</div>`;
       };
 
-      // html2canvas can return a blank canvas or fail when the source is positioned
-      // far outside the viewport (the report template is intentionally hidden).
-      // Render a temporary copy inside the viewport, then remove it immediately.
-      const renderElement = element.cloneNode(true) as HTMLElement;
-      renderElement.id = 'quiz-pdf-export-temp';
-      renderElement.style.position = 'fixed';
-      renderElement.style.top = '0px';
-      renderElement.style.left = '0px';
-      renderElement.style.width = '794px';
-      renderElement.style.height = 'auto';
-      renderElement.style.visibility = 'visible';
-      renderElement.style.opacity = '1';
-      renderElement.style.zIndex = '-1000';
-      renderElement.style.pointerEvents = 'none';
+      const questionsMarkup = quiz.questions.map((q, index) => `
+        <section style="border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:14px;break-inside:avoid">
+          <h2 style="font-size:14px;line-height:1.8;margin:0;color:#0f172a;font-weight:700">س ${index + 1}: ${escapeHtml(q.text)}</h2>
+          ${optionMarkup(q)}
+        </section>`).join('');
+
+      renderElement = document.createElement('div');
+      renderElement.setAttribute('dir', 'rtl');
+      renderElement.style.cssText = 'position:fixed;top:0;left:0;width:794px;background:#ffffff;color:#0f172a;padding:42px;box-sizing:border-box;font-family:Arial,Tahoma,sans-serif;z-index:-1000;pointer-events:none;';
+      renderElement.innerHTML = `
+        <header style="border-bottom:2px solid #7c3aed;padding-bottom:18px;margin-bottom:24px;text-align:right">
+          <h1 style="font-size:24px;margin:0 0 6px;color:#6d28d9">منصة Quiz Space</h1>
+          <p style="font-size:11px;color:#64748b;margin:0">ورقة أسئلة للاختبار — بدون حلول أو إجابات</p>
+        </header>
+        <div style="border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;padding:18px;margin-bottom:24px">
+          <h2 style="font-size:19px;margin:0 0 8px;color:#0f172a">${escapeHtml(quiz.title)}</h2>
+          <p style="font-size:12px;line-height:1.8;color:#475569;margin:0">${escapeHtml(quiz.description || '')}</p>
+          <p style="font-size:11px;color:#64748b;margin:12px 0 0">عدد الأسئلة: ${quiz.questions.length} | الاسم: ____________________</p>
+        </div>
+        <main>${questionsMarkup}</main>`;
       document.body.appendChild(renderElement);
 
-      let canvas: HTMLCanvasElement;
-      try {
-        canvas = await html2canvas(renderElement, {
-          scale: Math.min(2, window.devicePixelRatio || 1.5),
-          useCORS: true,
-          allowTaint: false,
-          backgroundColor: '#ffffff',
-          windowWidth: Math.max(window.innerWidth, renderElement.scrollWidth),
-          windowHeight: Math.max(window.innerHeight, renderElement.scrollHeight),
-          onclone: (clonedDoc) => {
-            const clonedElement = clonedDoc.getElementById('quiz-pdf-export-temp');
-            if (clonedElement) inlineResolvedColors(renderElement, clonedElement);
-          }
-        });
-      } finally {
-        renderElement.remove();
-      }
+      const canvas = await html2canvas(renderElement, {
+        scale: Math.min(2, window.devicePixelRatio || 1.5),
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        width: renderElement.scrollWidth,
+        height: renderElement.scrollHeight,
+        logging: false,
+      });
 
       const imgData = canvas.toDataURL('image/png');
-      
-      // Calculate aspect ratio for A4
-      const imgWidth = 595.28; // A4 size width in pt (approx. 210mm)
-      const pageHeight = 841.89; // A4 size height in pt (approx. 297mm)
+      const imgWidth = 595.28;
+      const pageHeight = 841.89;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+      const pdf = new JsPDF('p', 'pt', 'a4');
       let heightLeft = imgHeight;
-      const pdf = new jsPDF('p', 'pt', 'a4');
       let position = 0;
-
-      // Add first page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-
-      // Add extra pages if report is taller than A4 page height
       while (heightLeft > 0) {
         position = -(imgHeight - heightLeft);
         pdf.addPage();
@@ -774,12 +738,13 @@ export default function QuizResolver({
         heightLeft -= pageHeight;
       }
 
-      const cleanTitle = quiz.title.replace(/[\s\W]+/g, '_');
-      pdf.save(`تقرير_${cleanTitle}_${takerName.trim() || 'طالب'}.pdf`);
+      const cleanTitle = quiz.title.replace(/[\s\W]+/g, '_') || 'quiz';
+      pdf.save(`اختبار_${cleanTitle}.pdf`);
     } catch (err: any) {
-      console.error('Error generating PDF:', err);
-      alert(`حدث خطأ أثناء تحويل التقرير لملف PDF. يرجى المحاولة مرة أخرى.${err?.message ? `\n(${err.message})` : ''}`);
+      console.error('Error generating clean quiz PDF:', err);
+      alert(`حدث خطأ أثناء تصدير الاختبار. يرجى المحاولة مرة أخرى.${err?.message ? `\n(${err.message})` : ''}`);
     } finally {
+      renderElement?.remove();
       setIsGeneratingPdf(false);
     }
   };

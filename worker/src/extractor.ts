@@ -15,7 +15,9 @@ export async function splitPdf(pdfBase64: string, chunkSize: number = 3): Promis
     const pages = await newDoc.copyPages(pdfDoc, Array.from({ length: end - i }, (_, k) => i + k));
     pages.forEach(page => newDoc.addPage(page));
     const pdfBytes = await newDoc.save();
-    chunks.push(Buffer.from(pdfBytes).toString('base64'));
+    let binary = '';
+    for (const byte of pdfBytes) binary += String.fromCharCode(byte);
+    chunks.push(btoa(binary));
   }
 
   return chunks;
