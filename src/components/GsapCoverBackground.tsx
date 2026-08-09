@@ -41,7 +41,7 @@ export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, 
   useGSAP(() => {
     const root = containerRef.current;
     if (!root || safeMode === 'custom') return;
-    const items = gsap.utils.toArray<HTMLElement>('.cover-orb, .cover-line, .cover-star', root);
+    const items = gsap.utils.toArray<HTMLElement>('.cover-orb, .cover-line, .cover-particle', root);
     gsap.to(items, {
       x: 'random(-28, 28)', y: 'random(-18, 18)', rotation: 'random(-12, 12)',
       opacity: 'random(0.35, 1)', scale: 'random(0.82, 1.18)',
@@ -85,7 +85,20 @@ export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, 
       {safeMode === 'matrix' && <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(74,222,128,.18)_1px,transparent_1px),linear-gradient(90deg,rgba(74,222,128,.18)_1px,transparent_1px)] [background-size:22px_22px]" />}
       {safeMode === 'prism' && <div className="cover-line absolute left-1/2 top-1/2 h-[180%] w-20 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-gradient-to-b from-transparent via-white/25 to-transparent blur-xl" />}
       {stars.map((_, i) => (
-        <span key={i} className="cover-star absolute rounded-full bg-white" style={{ width: `${1 + (i % 3)}px`, height: `${1 + (i % 3)}px`, top: `${(i * 37) % 100}%`, left: `${(i * 61) % 100}%`, opacity: 0.25 + (i % 5) / 10, boxShadow: '0 0 10px rgba(255,255,255,.8)' }} />
+        <span 
+          key={i} 
+          className="cover-particle absolute" 
+          style={{ 
+            width: `${2 + (i % 4)}px`, 
+            height: `${2 + (i % 4)}px`, 
+            top: `${(i * 37) % 100}%`, 
+            left: `${(i * 61) % 100}%`, 
+            opacity: 0.15 + (i % 5) / 15, 
+            background: safeMode === 'sunset' ? '#fed7aa' : safeMode === 'aurora' ? '#ccfbf1' : '#fff',
+            borderRadius: i % 3 === 0 ? '50%' : '2px', // Mix of circles and squares
+            boxShadow: i % 5 === 0 ? '0 0 8px rgba(255,255,255,.4)' : 'none'
+          }} 
+        />
       ))}
     </div>
   );

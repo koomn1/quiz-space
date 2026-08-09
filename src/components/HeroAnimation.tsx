@@ -4,7 +4,7 @@ import { SplitText } from 'gsap/SplitText';
 import { TextPlugin } from 'gsap/TextPlugin';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import { Sparkles, Star, Rocket, Cpu, Layers } from 'lucide-react';
+import { Sparkles, BookOpen, GraduationCap, Brain, Layers, Target, Trophy } from 'lucide-react';
 
 gsap.registerPlugin(useGSAP, SplitText, ScrollTrigger, TextPlugin);
 
@@ -114,17 +114,18 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
         {/* Grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e512_1px,transparent_1px),linear-gradient(to_bottom,#4f46e512_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_70%,transparent_100%)]" />
         
-        {/* Glowing Orbs */}
-        <div ref={el => { orbsRef.current[0] = el; }} className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-violet-600/30 blur-[120px] mix-blend-screen" />
-        <div ref={el => { orbsRef.current[1] = el; }} className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#0ae448]/20 blur-[120px] mix-blend-screen" />
-        <div ref={el => { orbsRef.current[2] = el; }} className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-cyan-500/20 blur-[100px] mix-blend-screen" />
+        {/* Glowing Orbs - Diversified colors (Indigo, Emerald, Rose, Amber) */}
+        <div ref={el => { orbsRef.current[0] = el; }} className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-600/25 blur-[120px] mix-blend-screen" />
+        <div ref={el => { orbsRef.current[1] = el; }} className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-500/20 blur-[120px] mix-blend-screen" />
+        <div ref={el => { orbsRef.current[2] = el; }} className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-rose-500/15 blur-[100px] mix-blend-screen" />
+        <div ref={el => { orbsRef.current[3] = el; }} className="absolute bottom-[10%] right-[20%] w-[35vw] h-[35vw] rounded-full bg-amber-500/10 blur-[110px] mix-blend-screen" />
         
-        {/* Floating Icons */}
-        <div ref={el => { iconsRef.current[0] = el; }} className="absolute top-[15%] right-[15%] text-[#0ae448]/50"><Sparkles size={56} /></div>
-        <div ref={el => { iconsRef.current[1] = el; }} className="absolute bottom-[20%] left-[10%] text-violet-400/50"><Star size={72} /></div>
-        <div ref={el => { iconsRef.current[2] = el; }} className="absolute top-[30%] left-[15%] text-cyan-400/40"><Rocket size={64} /></div>
-        <div ref={el => { iconsRef.current[3] = el; }} className="absolute bottom-[30%] right-[10%] text-fuchsia-400/40"><Cpu size={48} /></div>
-        <div ref={el => { iconsRef.current[4] = el; }} className="absolute top-[10%] left-[40%] text-amber-400/40"><Layers size={40} /></div>
+        {/* Floating Educational & Achievement Icons (Removed Stars/Space theme) */}
+        <div ref={el => { iconsRef.current[0] = el; }} className="absolute top-[15%] right-[15%] text-emerald-400/40"><GraduationCap size={56} /></div>
+        <div ref={el => { iconsRef.current[1] = el; }} className="absolute bottom-[20%] left-[10%] text-indigo-400/40"><BookOpen size={72} /></div>
+        <div ref={el => { iconsRef.current[2] = el; }} className="absolute top-[30%] left-[15%] text-rose-400/35"><Brain size={64} /></div>
+        <div ref={el => { iconsRef.current[3] = el; }} className="absolute bottom-[30%] right-[10%] text-amber-400/35"><Trophy size={48} /></div>
+        <div ref={el => { iconsRef.current[4] = el; }} className="absolute top-[10%] left-[40%] text-cyan-400/35"><Target size={40} /></div>
       </div>
 
       <div className="relative z-20 flex flex-col items-center text-center px-6 max-w-6xl w-full">

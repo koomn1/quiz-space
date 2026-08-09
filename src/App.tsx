@@ -1238,7 +1238,7 @@ export default function App() {
         <div className={`absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none ${isCosmoTab ? 'hidden' : ''}`} />
 
         {/* Padding applied here to clear the fixed header for all banners and main content */}
-        <div className={`${isCosmoTab ? 'pt-0' : (showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0')} flex flex-col w-full relative z-10 ${isCosmoTab ? 'h-full' : ''}`}>
+        <div className={`${isCosmoTab ? 'pt-14 sm:pt-16' : (showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0')} flex flex-col w-full relative z-10 ${isCosmoTab ? 'h-full' : ''}`}>
           {showQuotaWarning && localStorage.getItem('firebase_quota_exceeded_dismissed') !== 'true' && (
             <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-3 text-amber-700 dark:text-amber-300 font-sans z-30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
               <div className="flex items-center gap-2 max-w-4xl" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
@@ -1369,7 +1369,7 @@ export default function App() {
         
 
         {/* Main page frame wrapping */}
-        <main ref={mainContainerRef} className={`${isCosmoTab ? 'h-full w-full p-0 overflow-hidden min-h-0' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4' : 'flex-1 w-full min-h-[100dvh] p-0')} relative z-10`}>
+        <main ref={mainContainerRef} className={`${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4' : 'flex-1 w-full min-h-[100dvh] p-0')} relative z-10`}>
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (
@@ -1887,40 +1887,7 @@ export default function App() {
         )}
       
 
-      {/* Pulsing Support Button (WhatsApp) — AI no longer has a floating
-          popup; it's a full-page experience accessed from the sidebar/tab
-          instead, so this spot is support-contact only now. */}
-      
-        {!activeQuizId && !isUserPremium && (
-          <div className={`fixed bottom-8 sm:bottom-6 ${lang === 'ar' ? 'left-6' : 'right-6'} z-40`}>
-            <>
-                {/* Ambient WhatsApp Green Background Glow Aura */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-500 to-[#128c7e] rounded-full blur-xl opacity-35 animate-pulse pointer-events-none scale-105" />
-                
-                
-                <a
-                  href="https://wa.me/201018995002"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative overflow-hidden w-16 h-16 rounded-full bg-[#0f172a]/95 dark:bg-[#075e54]/95 text-white flex items-center justify-center cursor-pointer border border-[#128c7e]/30 hover:border-[#128c7e]/60 transition-all shadow-[0_12px_35px_rgba(18,140,126,0.4)] group hover:scale-105"
-                  title={lang === 'ar' ? 'تواصل مع الدعم' : 'Contact Support'}
-                >
-                  {/* Inner animated sweep */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 via-[#128c7e]/30 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  {/* Active Support Container */}
-                  <div className="relative flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-[#128c7e] to-[#25d366] shadow-inner shrink-0 overflow-hidden border border-white/20">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.2),transparent_70%)] animate-pulse" />
-                    <MessageCircle className="w-6 h-6 text-white group-hover:scale-110 transition-transform duration-300" />
-                    <span className="absolute bottom-1 left-1 flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                  </div>
-                </a>
-              </>
-          </div>
-        )}
+      {/* Support button removed as requested */}
       
         <PostRegisterOnboardingModal
           isOpen={showPostRegisterModal}

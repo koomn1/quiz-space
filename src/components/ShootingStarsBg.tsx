@@ -265,9 +265,9 @@ export function ShootingStarsBg({ mode = 'cosmic' }: ShootingStarsBgProps) {
               {/* Secondary spinning component: clockwise fast with low capacity */}
               <div className="absolute top-[20%] right-[25%] w-40 h-40 rounded-full bg-emerald-400/5 blur-2xl spin-cw-fast" />
 
-              {/* Floating stars */}
-              <div className="absolute top-1/4 left-1/3 w-1 h-1 bg-white rounded-full animate-ping" />
-              <div className="absolute top-1/2 right-1/4 w-1.5 h-1.5 bg-emerald-200 rounded-full animate-ping" style={{ animationDelay: '2s' }} />
+              {/* Floating energy particles */}
+              <div className="absolute top-1/4 left-1/3 w-2 h-2 bg-emerald-400/30 rounded-full blur-[1px] animate-pulse" />
+              <div className="absolute top-1/2 right-1/4 w-3 h-3 bg-teal-300/20 rounded-full blur-[2px] animate-pulse" style={{ animationDelay: '2s' }} />
             </div>
           );
         }
@@ -292,9 +292,9 @@ export function ShootingStarsBg({ mode = 'cosmic' }: ShootingStarsBgProps) {
               {/* Fast core cluster: Counter-Clockwise Slow */}
               <div className="absolute top-[30%] left-[45%] w-36 h-36 rounded-full bg-violet-600/8 blur-2xl spin-ccw-slow" />
 
-              {/* Twinkling galaxy stars */}
-              <div className="absolute top-10 left-[20%] w-1.5 h-1.5 bg-purple-200 rounded-full animate-pulse" />
-              <div className="absolute bottom-12 right-[40%] w-1 h-1 bg-pink-200 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+              {/* Floating cosmic dust */}
+              <div className="absolute top-10 left-[20%] w-2 h-2 bg-purple-400/20 rounded-sm rotate-45 animate-pulse" />
+              <div className="absolute bottom-12 right-[40%] w-1.5 h-1.5 bg-pink-400/20 rounded-full blur-[1px] animate-pulse" style={{ animationDelay: '1s' }} />
             </div>
           );
         }
