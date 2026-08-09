@@ -649,3 +649,17 @@ body.scroll-lock {
   width: 100% !important;
   position: fixed !important;
 }
+
+/* 404 light-mode contrast: inline gradients are intentionally overridden here. */
+html:not(.dark) .nf-digit {
+  background-image: linear-gradient(180deg, #312e81 0%, #4f46e5 48%, #0891b2 100%) !important;
+  border-color: rgba(71, 85, 105, .48);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 18px 60px rgba(79, 70, 229, .28);
+}
+html:not(.dark) .nf-error-char {
+  color: #b91c1c !important;
+  text-shadow: 0 0 16px rgba(185, 28, 28, .35) !important;
+}
+html:not(.dark) .nf-error-line {
+  opacity: .9;
+}

@@ -60,16 +60,16 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
 
   return (
     <main ref={rootRef} dir={isAr ? 'rtl' : 'ltr'} className="relative isolate flex min-h-full w-full flex-1 items-center justify-center overflow-hidden bg-slate-50 px-5 py-12 text-slate-900 transition-colors duration-500 dark:bg-[#020617] dark:text-white sm:px-8 sm:py-16">
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_35%,rgba(139,92,246,.14)_0%,rgba(248,250,252,.7)_48%,#f8fafc_100%)] dark:bg-[radial-gradient(ellipse_at_70%_35%,#28134b_0%,#0c0b1e_44%,#05050b_100%)]" />
-      <div className="absolute -left-24 top-1/3 -z-10 h-72 w-72 rounded-full bg-fuchsia-700/10 blur-[110px] dark:bg-fuchsia-700/15" />
-      <div className="absolute -right-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-cyan-500/10 blur-[120px] dark:bg-cyan-500/15" />
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_35%,rgba(109,40,217,.22)_0%,rgba(224,231,255,.82)_48%,#eef2ff_100%)] dark:bg-[radial-gradient(ellipse_at_70%_35%,#28134b_0%,#0c0b1e_44%,#05050b_100%)]" />
+      <div className="absolute -left-24 top-1/3 -z-10 h-72 w-72 rounded-full bg-fuchsia-700/20 blur-[110px] dark:bg-fuchsia-700/15" />
+      <div className="absolute -right-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-cyan-500/20 blur-[120px] dark:bg-cyan-500/15" />
       <div className="nf-scan pointer-events-none absolute -left-1/3 top-0 -z-10 h-full w-1/4 skew-x-[-18deg] bg-gradient-to-r from-transparent via-slate-900/[.035] to-transparent dark:via-white/[.045]" />
 
       <section className="relative w-full max-w-6xl">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-20">
           <div className="order-2 text-center lg:order-1 lg:text-right">
-            <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[.035] px-4 py-2 text-[10px] font-bold uppercase tracking-[.28em] text-cyan-200/70 backdrop-blur-md">
-              <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+            <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-slate-300 bg-white/80 px-4 py-2 text-[10px] font-bold uppercase tracking-[.28em] text-violet-800 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/[.035] dark:text-cyan-200/70">
+              <Sparkles className="h-3.5 w-3.5 text-violet-700 dark:text-cyan-300" />
               404 · {isAr ? 'إحداثيات غير معروفة' : 'unknown coordinates'}
             </div>
             <h1 ref={titleRef} className="max-w-2xl text-4xl font-black leading-[1.2] tracking-[-.04em] text-slate-950 dark:text-white sm:text-6xl">{isAr ? 'الصفحة خرجت من المدار' : 'This page drifted out of orbit'}</h1>
@@ -88,17 +88,17 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
               <div className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-[85%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/15 blur-3xl" />
               <div className="relative flex items-center justify-center gap-2 sm:gap-4" aria-label="404">
                 {['4', '0', '4'].map((digit, index) => (
-                  <span key={`${digit}-${index}`} className="nf-digit flex aspect-[.72] w-[clamp(4.5rem,18vw,8rem)] items-center justify-center rounded-[1.2rem] border border-white/15 bg-gradient-to-b from-white/[.16] to-white/[.035] font-mono text-[clamp(5.5rem,18vw,10rem)] font-black leading-none text-transparent bg-clip-text shadow-[inset_0_1px_0_rgba(255,255,255,.16),0_18px_60px_rgba(139,92,246,.18)] backdrop-blur-sm" style={{ backgroundImage: index === 1 ? 'linear-gradient(180deg, #67e8f9 0%, #a78bfa 48%, #f9a8d4 100%)' : 'linear-gradient(180deg, #ffffff 0%, #e9d5ff 46%, #67e8f9 100%)' }}>{digit}</span>
+                  <span key={`${digit}-${index}`} className="nf-digit flex aspect-[.72] w-[clamp(4.5rem,18vw,8rem)] items-center justify-center rounded-[1.2rem] border border-slate-400/70 bg-gradient-to-b from-white/90 to-violet-100/80 dark:border-white/15 dark:from-white/[.16] dark:to-white/[.035] font-mono text-[clamp(5.5rem,18vw,10rem)] font-black leading-none text-transparent bg-clip-text shadow-[inset_0_1px_0_rgba(255,255,255,.8),0_18px_60px_rgba(79,70,229,.24)] backdrop-blur-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,.16),0_18px_60px_rgba(139,92,246,.18)]" style={{ backgroundImage: index === 1 ? 'linear-gradient(180deg, #67e8f9 0%, #a78bfa 48%, #f9a8d4 100%)' : 'linear-gradient(180deg, #ffffff 0%, #e9d5ff 46%, #67e8f9 100%)' }}>{digit}</span>
                 ))}
               </div>
-              <div className="nf-error-stage mt-7 flex min-h-10 items-center justify-center gap-3 text-[clamp(.85rem,2.2vw,1.1rem)] font-black uppercase tracking-[.5em] text-cyan-200/80" aria-label="ERROR">
-                <span className="nf-error-line h-px w-8 origin-right bg-gradient-to-l from-cyan-300/80 to-transparent sm:w-14" />
+              <div className="nf-error-stage mt-7 flex min-h-10 items-center justify-center gap-3 text-[clamp(.85rem,2.2vw,1.1rem)] font-black uppercase tracking-[.5em] text-violet-800 dark:text-cyan-200/80" aria-label="ERROR">
+                <span className="nf-error-line h-px w-8 origin-right bg-gradient-to-l from-violet-700/80 to-transparent dark:from-cyan-300/80 sm:w-14" />
                 <span className="inline-flex gap-[.18em]">
                   {'ERROR'.split('').map((letter, index) => (
                     <span key={`${letter}-${index}`} className="nf-error-char inline-block">{letter}</span>
                   ))}
                 </span>
-                <span className="nf-error-line h-px w-8 origin-left bg-gradient-to-r from-fuchsia-300/80 to-transparent sm:w-14" />
+                <span className="nf-error-line h-px w-8 origin-left bg-gradient-to-r from-violet-700/80 to-transparent dark:from-fuchsia-300/80 sm:w-14" />
               </div>
             </div>
           </div>
