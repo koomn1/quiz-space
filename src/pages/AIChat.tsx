@@ -839,6 +839,19 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   }, { scope: containerRef });
 
   const emptyState = messages.length === 0 && !isAnalyzing;
+  const quickSuggestions = isAr
+    ? [
+        { label: 'لخّص آخر شرح', prompt: 'لخّص آخر شرح في المحادثة في نقاط قصيرة، ثم اقترح لي الخطوة التالية.' },
+        { label: 'اختبرني في الموضوع', prompt: 'أنشئ لي اختبارًا من 10 أسئلة في موضوع آخر شرح، مستوى متوسط.' },
+        { label: 'راجع أخطائي', prompt: 'حلّل أخطائي الأخيرة واقترح خطة مراجعة قصيرة.' },
+        { label: 'اشرح بطريقة أبسط', prompt: 'أعد شرح آخر فكرة بطريقة أبسط مع مثال.' },
+      ]
+    : [
+        { label: 'Summarize the lesson', prompt: 'Summarize the latest lesson in short points, then suggest my next step.' },
+        { label: 'Quiz me on it', prompt: 'Create a 10-question medium quiz about the latest lesson.' },
+        { label: 'Review my mistakes', prompt: 'Analyze my recent mistakes and suggest a short review plan.' },
+        { label: 'Explain it simply', prompt: 'Explain the latest idea more simply with an example.' },
+      ];
 
   return (
     <div ref={containerRef}
@@ -1068,16 +1081,19 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
               ))}
 
               {pendingQuiz && (
-                <div className="rounded-2xl p-4 border" dir="rtl" style={{ background: theme.CARD, borderColor: `${ACCENT}55` }}>
-                  <div className="flex items-center gap-2 mb-3" style={{ color: ACCENT }}><FileQuestion className="w-5 h-5" /><strong>{isAr ? 'تأكيد إعدادات الاختبار' : 'Confirm quiz settings'}</strong></div>
-                  <div className="grid grid-cols-3 gap-2 text-sm mb-4">
-                    <div className="rounded-xl p-2" style={{ background: theme.INPUT_BG }}><span className="block text-xs" style={{ color: theme.MUTED }}>{isAr ? 'الموضوع' : 'Topic'}</span><b>{pendingQuiz.topic}</b></div>
-                    <div className="rounded-xl p-2" style={{ background: theme.INPUT_BG }}><span className="block text-xs" style={{ color: theme.MUTED }}>{isAr ? 'الأسئلة' : 'Questions'}</span><b>{pendingQuiz.amount}</b></div>
-                    <div className="rounded-xl p-2" style={{ background: theme.INPUT_BG }}><span className="block text-xs" style={{ color: theme.MUTED }}>{isAr ? 'المستوى' : 'Level'}</span><b>{pendingQuiz.difficulty}</b></div>
+                <div className="rounded-2xl p-4 sm:p-5 border shadow-sm" dir="rtl" style={{ background: theme.CARD, borderColor: `${ACCENT}55` }}>
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2" style={{ color: ACCENT }}><FileQuestion className="w-5 h-5" /><div><strong className="block">{isAr ? 'راجع إعدادات الاختبار' : 'Review quiz settings'}</strong><span className="text-xs" style={{ color: theme.MUTED }}>{isAr ? 'عدّل أي اختيار قبل التوليد' : 'Adjust any option before generating'}</span></div></div>
+                    <button onClick={() => setPendingQuiz(null)} disabled={isGeneratingQuiz} className="p-1.5 rounded-lg" style={{ color: theme.MUTED }} aria-label={isAr ? 'إغلاق' : 'Close'}><X className="w-4 h-4" /></button>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={confirmQuizGeneration} disabled={isGeneratingQuiz} className="flex-1 rounded-xl py-2.5 font-bold text-white disabled:opacity-60" style={{ background: ACCENT }}>{isGeneratingQuiz ? (isAr ? 'جاري التوليد...' : 'Generating...') : (isAr ? 'تأكيد وتوليد' : 'Confirm & generate')}</button>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm mb-4">
+                    <label className="rounded-xl p-3" style={{ background: theme.INPUT_BG }}><span className="block text-xs mb-1" style={{ color: theme.MUTED }}>{isAr ? 'الموضوع' : 'Topic'}</span><input value={pendingQuiz.topic} onChange={e => setPendingQuiz(prev => prev ? { ...prev, topic: e.target.value } : prev)} className="w-full bg-transparent outline-none font-semibold" style={{ color: theme.FG }} /></label>
+                    <label className="rounded-xl p-3" style={{ background: theme.INPUT_BG }}><span className="block text-xs mb-1" style={{ color: theme.MUTED }}>{isAr ? 'عدد الأسئلة' : 'Questions'}</span><select value={pendingQuiz.amount} onChange={e => setPendingQuiz(prev => prev ? { ...prev, amount: Math.min(20, Math.max(3, Number(e.target.value))) } : prev)} className="w-full bg-transparent outline-none font-semibold" style={{ color: theme.FG }}><option value={5}>5</option><option value={10}>10</option><option value={15}>15</option><option value={20}>20</option></select></label>
+                    <label className="rounded-xl p-3" style={{ background: theme.INPUT_BG }}><span className="block text-xs mb-1" style={{ color: theme.MUTED }}>{isAr ? 'المستوى' : 'Level'}</span><select value={pendingQuiz.difficulty} onChange={e => setPendingQuiz(prev => prev ? { ...prev, difficulty: e.target.value } : prev)} className="w-full bg-transparent outline-none font-semibold" style={{ color: theme.FG }}><option value="سهل">{isAr ? 'سهل' : 'Easy'}</option><option value="متوسط">{isAr ? 'متوسط' : 'Medium'}</option><option value="صعب">{isAr ? 'صعب' : 'Hard'}</option></select></label>
+                  </div>
+                  <div className="flex flex-col-reverse sm:flex-row gap-2">
                     <button onClick={() => setPendingQuiz(null)} disabled={isGeneratingQuiz} className="rounded-xl px-4 py-2.5 font-semibold" style={{ background: theme.INPUT_BG, color: theme.FG }}>{isAr ? 'إلغاء' : 'Cancel'}</button>
+                    <button onClick={confirmQuizGeneration} disabled={isGeneratingQuiz || !pendingQuiz.topic.trim()} className="flex-1 rounded-xl py-2.5 font-bold text-white disabled:opacity-60" style={{ background: ACCENT }}>{isGeneratingQuiz ? (isAr ? 'جاري التوليد...' : 'Generating...') : (isAr ? 'تأكيد وتوليد الاختبار' : 'Confirm & generate quiz')}</button>
                   </div>
                 </div>
               )}
@@ -1101,6 +1117,20 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
               <div ref={chatEndRef} />
             </div>
           )}
+        </div>
+
+        {/* ── Optional next-step suggestions ── */}
+        <div className="px-4 pt-2 flex-shrink-0" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <span className="text-xs font-semibold whitespace-nowrap" style={{ color: theme.MUTED }}>{isAr ? 'اقتراحات اختيارية' : 'Optional ideas'}</span>
+              {quickSuggestions.map(suggestion => (
+                <button key={suggestion.label} onClick={() => sendMessage(suggestion.prompt)} disabled={isAnalyzing} className="whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all active:scale-95 disabled:opacity-50" style={{ color: ACCENT, background: theme.INPUT_BG, border: `1px solid ${ACCENT}44` }}>
+                  {suggestion.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ── Input ── */}
