@@ -42,14 +42,14 @@ import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
-  cosmic: { background: 'radial-gradient(circle at 25% 20%, #312e81, #111827 48%, #020617)' },
-  waves: { background: 'linear-gradient(135deg, #09051a, #172554 48%, #4c1d95)' },
-  aurora: { background: 'linear-gradient(125deg, #042f2e, #164e63 38%, #581c87)' },
-  sunset: { background: 'linear-gradient(135deg, #431407, #9a3412 42%, #701a75)' },
-  ocean: { background: 'linear-gradient(135deg, #082f49, #075985 45%, #164e63)' },
-  matrix: { background: 'linear-gradient(135deg, #052e16, #064e3b 45%, #020617)' },
-  velvet: { background: 'linear-gradient(135deg, #2e1065, #581c87 48%, #1e1b4b)' },
-  prism: { background: 'linear-gradient(120deg, #172554, #6d28d9 36%, #be185d 68%, #0e7490)' },
+  cosmic: { background: 'radial-gradient(circle at 30% 30%, #4338ca 0%, #1e1b4b 60%, #09090b 100%)' },
+  waves: { background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%)' },
+  aurora: { background: 'linear-gradient(125deg, #10b981 0%, #047857 50%, #064e3b 100%)' },
+  sunset: { background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #831843 100%)' },
+  ocean: { background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 50%, #1e3a8a 100%)' },
+  matrix: { background: 'linear-gradient(135deg, #22c55e 0%, #15803d 50%, #052e16 100%)' },
+  velvet: { background: 'linear-gradient(135deg, #d946ef 0%, #a855f7 50%, #3b0764 100%)' },
+  prism: { background: 'linear-gradient(120deg, #ec4899 0%, #8b5cf6 50%, #06b6d4 100%)' },
 };
 
 interface UserProfileProps {

@@ -24,14 +24,14 @@ const modeClasses: Record<string, string> = {
 };
 
 const modeStyles: Record<string, React.CSSProperties> = {
-  cosmic: { background: 'radial-gradient(circle at 25% 20%, #312e81 0%, #111827 46%, #020617 100%)' },
-  waves: { background: 'linear-gradient(135deg, #09051a 0%, #172554 48%, #4c1d95 100%)' },
-  aurora: { background: 'linear-gradient(125deg, #042f2e 0%, #164e63 38%, #581c87 100%)' },
-  sunset: { background: 'linear-gradient(135deg, #431407 0%, #9a3412 42%, #701a75 100%)' },
-  ocean: { background: 'linear-gradient(135deg, #082f49 0%, #075985 45%, #164e63 100%)' },
-  matrix: { background: 'linear-gradient(135deg, #052e16 0%, #064e3b 45%, #020617 100%)' },
-  velvet: { background: 'linear-gradient(135deg, #2e1065 0%, #581c87 48%, #1e1b4b 100%)' },
-  prism: { background: 'linear-gradient(120deg, #172554 0%, #6d28d9 36%, #be185d 68%, #0e7490 100%)' },
+  cosmic: { background: 'radial-gradient(circle at 30% 30%, #4338ca 0%, #1e1b4b 60%, #09090b 100%)' },
+  waves: { background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%)' },
+  aurora: { background: 'linear-gradient(125deg, #10b981 0%, #047857 50%, #064e3b 100%)' },
+  sunset: { background: 'linear-gradient(135deg, #f97316 0%, #ea580c 50%, #831843 100%)' },
+  ocean: { background: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 50%, #1e3a8a 100%)' },
+  matrix: { background: 'linear-gradient(135deg, #22c55e 0%, #15803d 50%, #052e16 100%)' },
+  velvet: { background: 'linear-gradient(135deg, #d946ef 0%, #a855f7 50%, #3b0764 100%)' },
+  prism: { background: 'linear-gradient(120deg, #ec4899 0%, #8b5cf6 50%, #06b6d4 100%)' },
 };
 
 export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, customImage }) => {
@@ -61,8 +61,24 @@ export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, 
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,.12),transparent_48%)]" />
       <div className="cover-rotate absolute -inset-1/2 rounded-[45%] border border-white/10 opacity-60" />
       <div className="cover-rotate absolute -inset-1/3 rounded-[42%] border border-white/10 opacity-40" style={{ animationDirection: 'reverse' }} />
-      <div className="cover-orb absolute -top-20 left-[10%] h-52 w-52 rounded-full bg-fuchsia-400/25 blur-3xl" />
-      <div className="cover-orb absolute -bottom-24 right-[8%] h-64 w-64 rounded-full bg-cyan-300/20 blur-3xl" />
+      <div className={`cover-orb absolute -top-20 left-[10%] h-52 w-52 rounded-full blur-3xl ${
+        safeMode === 'waves' ? 'bg-sky-400/30' :
+        safeMode === 'aurora' ? 'bg-emerald-400/30' :
+        safeMode === 'sunset' ? 'bg-amber-400/30' :
+        safeMode === 'ocean' ? 'bg-cyan-400/30' :
+        safeMode === 'matrix' ? 'bg-green-400/30' :
+        safeMode === 'velvet' ? 'bg-purple-400/30' :
+        safeMode === 'prism' ? 'bg-pink-400/30' : 'bg-indigo-400/30'
+      }`} />
+      <div className={`cover-orb absolute -bottom-24 right-[8%] h-64 w-64 rounded-full blur-3xl ${
+        safeMode === 'waves' ? 'bg-blue-600/30' :
+        safeMode === 'aurora' ? 'bg-teal-500/30' :
+        safeMode === 'sunset' ? 'bg-rose-500/30' :
+        safeMode === 'ocean' ? 'bg-blue-500/30' :
+        safeMode === 'matrix' ? 'bg-emerald-600/30' :
+        safeMode === 'velvet' ? 'bg-fuchsia-500/30' :
+        safeMode === 'prism' ? 'bg-cyan-500/30' : 'bg-violet-500/30'
+      }`} />
       <div className="cover-shimmer pointer-events-none absolute -left-1/2 top-0 h-full w-1/3 skew-x-[-22deg] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       {safeMode === 'waves' && <div className="cover-line absolute inset-x-[-20%] top-1/2 h-24 rounded-[50%] border-y-2 border-cyan-300/50 shadow-[0_0_35px_rgba(34,211,238,.45)]" />}
       {safeMode === 'aurora' && <div className="cover-line absolute -left-1/4 top-1/4 h-32 w-[150%] rotate-[-12deg] rounded-[50%] bg-gradient-to-r from-cyan-300/0 via-cyan-300/40 to-violet-400/0 blur-xl" />}
