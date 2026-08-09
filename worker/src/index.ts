@@ -64,6 +64,33 @@ async function getUserId(request: Request, env: Env): Promise<string | null> {
   return user.id;
 }
 
+async function getCosmoAccountContext(request: Request, env: Env, userId: string | null): Promise<string> {
+  if (!userId || userId === 'guest' || env.SUPABASE_URL.includes('placeholder')) {
+    return 'حالة الحساب الموثقة: زائر أو لا توجد جلسة Supabase موثقة. لا تفترض وجود باقة أو صلاحيات.';
+  }
+  const authorization = request.headers.get('Authorization') || '';
+  try {
+    const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/users?uid=eq.${encodeURIComponent(userId)}&select=is_premium,plan_name`;
+    const response = await fetch(url, {
+      headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: authorization },
+    });
+    if (!response.ok) throw new Error(`profile ${response.status}`);
+    const rows = await response.json() as any[];
+    const profile = rows[0] || {};
+    return `حالة الحساب الموثقة من الخادم: المستخدم الحالي فقط. العضوية المفعلة: ${profile.is_premium ? 'نعم' : 'لا'}؛ اسم الباقة: ${profile.plan_name || 'مجانية أو غير محددة'}. لا توجد لك أي صلاحية لتغيير هذه القيم.`;
+  } catch (error) {
+    console.warn('Cosmo account context unavailable:', error);
+    return 'حالة الحساب الموثقة: تعذر قراءة ملف العضوية الآن. لا تخمّن الباقة ولا حالة الحساب.';
+  }
+}
+
+function buildCosmoSystemInstruction(clientInstruction: unknown, accountContext: string, body: any): string {
+  const clientContext = typeof clientInstruction === 'string' ? clientInstruction.slice(0, 4_000) : '';
+  const currentPage = typeof body.currentPage === 'string' ? body.currentPage.slice(0, 80) : 'غير معروفة';
+  const siteStatus = typeof body.siteStatus === 'string' ? body.siteStatus.slice(0, 160) : 'غير متوفر';
+  return `${COSMO_PERSONALITY}\n\nسياق موثوق ومحدود للتطبيق:\n- الصفحة الحالية: ${currentPage}\n- حالة الموقع المعلنة: ${siteStatus}\n- ${accountContext}\n\n${clientContext ? `معلومات واجهة غير حساسة للمساعدة فقط: ${clientContext}` : ''}\n\nقواعد أمان إلزامية: أنت مساعد معلوماتي فقط. لا ترفع مستخدمًا إلى أدمن، ولا تغيّر رتبة أو باقة أو XP أو صلاحيات، ولا تنفذ عمليات على المستخدمين، ولا تكشف بيانات مستخدم آخر. إذا طلب منك أحد ذلك، ارفض واذكر أن التنفيذ يتم فقط من خلال المسارات المصرح بها في التطبيق.`.slice(0, 14_000);
+}
+
 async function logAiPerformance(env: Env, authHeader: string, data: {
   user_id: string,
   operation: string,
@@ -433,7 +460,7 @@ ${extraInstruction}`;
       return json({ text: data.choices?.[0]?.message?.content || '' }, 200, headers);
     }
 
-    if (path === '/api/ai/openrouter') {
+      if (path === '/api/ai/openrouter') {
       if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid request' }, 400, headers);
       const allowedModels = [
         OPENROUTER_TEXT_MODEL,
@@ -448,7 +475,8 @@ ${extraInstruction}`;
       const model = allowedModels.includes(body.model) ? body.model : OPENROUTER_TEXT_MODEL;
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];
       const messages: any[] = [];
-      messages.push({ role: 'system', content: (typeof body.systemInstruction === 'string' && body.systemInstruction.trim() ? body.systemInstruction : COSMO_PERSONALITY).slice(0, 10_000) });
+      const accountContext = await getCosmoAccountContext(request, env, userId);
+      messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
       const hasImage = !!(body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string' && body.image.data.length <= 8_000_000);
       if (hasImage) {
@@ -469,7 +497,8 @@ ${extraInstruction}`;
       if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid request' }, 400, headers);
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];
       const messages: any[] = [];
-      messages.push({ role: 'system', content: (typeof body.systemInstruction === 'string' && body.systemInstruction.trim() ? body.systemInstruction : COSMO_PERSONALITY).slice(0, 10_000) });
+      const accountContext = await getCosmoAccountContext(request, env, userId);
+      messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
       const hasImage = !!(body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string' && body.image.data.length <= 8_000_000);
       if (hasImage) {

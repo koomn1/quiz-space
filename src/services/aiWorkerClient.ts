@@ -92,7 +92,7 @@ export interface AiChatMessage {
 
 export async function askAI(
   prompt: string,
-  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string } } = {},
+  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; currentPage?: string; siteStatus?: string } = {},
 ): Promise<{ text: string }> {
   try {
     return await workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
@@ -108,7 +108,7 @@ export async function askAI(
 // server-side by then).
 export async function askAIStream(
   prompt: string,
-  options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string } },
+  options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; currentPage?: string; siteStatus?: string },
   onChunk: (deltaText: string, fullTextSoFar: string) => void,
 ): Promise<{ text: string }> {
   const response = await fetchWithAuth(getApiUrl('/api/ai/openrouter/stream'), {

@@ -1618,6 +1618,8 @@ export default function App() {
                   planName={userPlanName} 
                   userId={userId}
                   userName={userName}
+                  currentPage={activeTab}
+                  siteStatus="QuizSpace يعمل بشكل طبيعي"
                   userPhoto={userPhoto || undefined}
                   defaultAvatar="./avatars/boy-1.png"
                   onUpgradeClick={() => handleSetTab('billing')}
