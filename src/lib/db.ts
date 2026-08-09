@@ -1233,11 +1233,26 @@ export async function getBestScoreByQuizId(quizId: string): Promise<number> {
   return 0;
 }
 
+function mapCompletionRow(row: any): QuizCompletion {
+  return {
+    id: row.id,
+    quizId: row.quiz_id ?? row.quizId ?? '',
+    quizTitle: row.quiz_title ?? row.quizTitle ?? '',
+    takerId: row.taker_id ?? row.takerId ?? '',
+    takerName: row.taker_name ?? row.takerName ?? '',
+    score: Number(row.score ?? 0),
+    totalQuestions: Number(row.total_questions ?? row.totalQuestions ?? 0),
+    rating: row.rating ?? undefined,
+    feedback: row.feedback ?? undefined,
+    createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
+  };
+}
+
 export async function getCompletionsByQuizId(quizId: string): Promise<QuizCompletion[]> {
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase.from('completions').select('*').eq('quiz_id', quizId).order('created_at', { ascending: false });
-      if (!error && data) return data;
+      if (!error && data) return data.map(mapCompletionRow);
     } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
@@ -1247,7 +1262,7 @@ export async function getRecentCompletions(limitCount = 10): Promise<QuizComplet
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase.from('completions').select('*').order('created_at', { ascending: false }).limit(limitCount);
-      if (!error && data) return data;
+      if (!error && data) return data.map(mapCompletionRow);
     } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
