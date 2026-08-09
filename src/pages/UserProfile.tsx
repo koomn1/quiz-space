@@ -644,7 +644,11 @@ export default function UserProfile({
           created_at: new Date().toISOString()
         });
 
-        if (!userErr && !reqErr) {
+        // The atomic redemption RPC is the source of truth for activation.
+        // Audit-request insertion is best-effort and must not turn a successful
+        // entitlement update into a misleading activation error.
+        if (!userErr) {
+          if (reqErr) console.warn('Premium request audit insert failed after successful coupon redemption:', reqErr);
           showToast('success', 
             isAr
               ? `تهانينا! 🎉 تم تطبيق الخصم الحصري بنسبة 100% بنجاح وتفعيل الباقة الذهبية لحسابك مباشرة دون الحاجة لمراجعة المشرف!`
@@ -657,10 +661,12 @@ export default function UserProfile({
           setProfileData(stats);
           setPromoCodeInput("");
         } else {
+          const errorMessage = userErr instanceof Error ? userErr.message : String(userErr || 'unknown redemption error');
+          console.error('Automatic coupon activation failed:', userErr);
           showToast('error', 
             isAr
-              ? "عذراً، حدث خطأ أثناء تفعيل الحساب التلقائي."
-              : "Error performing automatic upgrade.",
+              ? `عذراً، تعذر تفعيل الباقة تلقائياً. ${errorMessage}`
+              : `Automatic upgrade failed. ${errorMessage}`,
           );
         }
       } else {

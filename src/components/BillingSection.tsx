@@ -20,7 +20,7 @@ import {
   CheckCircle,
   PartyPopper
 } from 'lucide-react';
-import { createPremiumRequest, getPremiumRequests, getCouponByCode } from '../lib/db';
+import { createPremiumRequest, getPremiumRequests, getCouponByCode, redeemCouponForUser } from '../lib/db';
 import { getApiUrl } from '../lib/origin';
 import { supabase } from '../lib/supabaseClient';
 
@@ -147,6 +147,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
   const [screenshotName, setScreenshotName] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
+  const [appliedCouponId, setAppliedCouponId] = useState<string | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
 
   // Helper to compress image to max width 800px and jpeg quality 0.7
@@ -229,14 +230,15 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
           if (coupon) {
             const applicablePlans = coupon.applicable_plans || coupon.applicablePlans;
             if (applicablePlans) {
-              const allowed = applicablePlans.split(',');
-              if (!allowed.includes(selectedPlan)) {
+              const allowed = applicablePlans.split(',').map((plan: string) => plan.trim().toLowerCase());
+              if (!allowed.includes(selectedPlan.toLowerCase())) {
                 alert(isAr 
                   ? `تنبيه: كود الخصم المطبق "${code}" لا يسري على باقة "${selectedPlan === 'silver' ? 'الفضية' : selectedPlan === 'gold' ? 'الذهبية' : 'الماسية'}". تم إلغاء تفعيل الخصم.`
                   : `Notice: applied coupon "${code}" is not applicable on the selected plan "${selectedPlan}". Discount has been reset.`
                 );
-                setPromoDiscount(0);
-                setPromoCode('');
+        setPromoDiscount(0);
+        setAppliedCouponId(null);
+        setPromoCode('');
               }
             }
           }
@@ -266,13 +268,10 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         alert(isAr ? 'تم تطبيق كود الخصم الفعال بنسبة 50% بنجاح!' : 'Coupon applied! Enjoy 50% discount.');
         setIsApplyingPromo(false);
         return;
-      } else if (code === 'FREE100' || code === 'ADMAN100') {
-        setPromoDiscount(100);
-        alert(isAr ? 'كود الخصم الفعال للمشرف بنسبة 100% تم تطبيقه بنجاح! التفعيل سيتم فورياً وتلقائياً.' : 'VIP 100% discount code applied successfully! Activation will be instant & automatic.');
-        setIsApplyingPromo(false);
-        return;
       }
 
+      // Full-discount codes must also come from the database so the secure
+      // redemption RPC receives a real coupon id and can enforce its rules.
       // Dynamic database check
       const coupon = await getCouponByCode(code);
       if (coupon) {
@@ -324,13 +323,15 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
         // Successfully applied
         setPromoDiscount(discountPercent);
+        setAppliedCouponId(coupon.id || null);
         alert(isAr 
-          ? `تم تطبيق كود الخصم المعتمد بخصم ${coupon.discountPercent}% بنجاح!` 
-          : `Promo code discount of ${coupon.discountPercent}% applied successfully!`
+          ? `تم تطبيق كود الخصم المعتمد بخصم ${discountPercent}% بنجاح!` 
+          : `Promo code discount of ${discountPercent}% applied successfully!`
         );
       } else {
         alert(isAr ? 'كود الخصم غير موجود أو انتهت صلاحيته.' : 'Discount code not found or expired.');
         setPromoDiscount(0);
+        setAppliedCouponId(null);
       }
     } catch (err) {
       console.error(err);
@@ -408,8 +409,29 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       const formattedPrice = discountedPrice === 0 ? 'FREE' : `${discountedPrice} EGP / ${discountedPrice} ج.م`;
 
       const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-      
-      await createPremiumRequest(requestId, {
+
+      // A full discount must be redeemed atomically before we show the plan as active.
+      // The coupon id comes from the validated database coupon, so the RPC can
+      // enforce plan, expiry, usage and ownership rules server-side.
+      if (promoDiscount === 100) {
+        if (!appliedCouponId) {
+          throw new Error('The 100% coupon must be validated from the database before activation.');
+        }
+        const renewalDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        await redeemCouponForUser(
+          appliedCouponId,
+          userId,
+          promoDiscount,
+          selectedPlan,
+          targetPlanObj?.name || selectedPlan,
+          requestId,
+          renewalDate,
+        );
+      }
+
+      let requestError: unknown = null;
+      try {
+        await createPremiumRequest(requestId, {
         userId,
         name: subscriberName,
         email: subscriberEmail,
@@ -420,7 +442,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         promoCodeUsed: promoCode ? `${promoCode} (${promoDiscount}%)` : '',
         status: promoDiscount === 100 ? 'approved' : 'pending',
         createdAt: new Date().toISOString()
-      });
+        });
+      } catch (error) {
+        requestError = error;
+        console.warn('Premium request audit insert failed after coupon redemption:', error);
+        if (promoDiscount < 100) throw error;
+      }
 
       // Special handling if 100% off has activated user premium status immediately
       if (promoDiscount === 100) {
@@ -441,6 +468,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       setScreenshotName('');
       setPromoCode('');
       setPromoDiscount(0);
+      setAppliedCouponId(null);
       
       // Update requests list
       await fetchMyRequests();
