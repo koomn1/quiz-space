@@ -428,6 +428,12 @@ export default function App() {
     }
   }, [userId]);
 
+  // Cosmo (AIChat) is a full-height app shell: fixed header on top, Cosmo
+  // workspace fills ALL remaining height, only its messages scroll internally,
+  // and the page itself never scrolls. Site backgrounds/footer are hidden
+  // so nothing shows behind the chat; the whole surface recolors with mode.
+  const isCosmoTab = activeTab === 'aichat' && !activeQuizId;
+
   // Body scroll lock when mobile sidebar, auth modals, or the Cosmo chat
   // screen are open — the chat page itself never scrolls
   React.useEffect(() => {
@@ -1094,12 +1100,6 @@ export default function App() {
   // Direct links can bypass handleSetTab(), so protect the create route during initial render.
   // Rendering QuizCreator without an authenticated user previously left the app blank in this case.
   const isGuestCreateRoute = activeTab === 'create' && !authContext.loading && !authContext.isAuthenticated && !userId;
-
-  // Cosmo (AIChat) is a full-height app shell: fixed header on top, Cosmo
-  // workspace fills ALL remaining height, only its messages scroll internally,
-  // and the page itself never scrolls. Site backgrounds/footer are hidden
-  // so nothing shows behind the chat; the whole surface recolors with mode.
-  const isCosmoTab = activeTab === 'aichat' && !activeQuizId;
 
   // Core sections keep the shared content frame, while independent screens
   // use their own full-screen surface. The global Header remains available
