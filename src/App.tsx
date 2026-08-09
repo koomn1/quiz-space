@@ -1623,6 +1623,7 @@ export default function App() {
                   userPhoto={userPhoto || undefined}
                   defaultAvatar="./avatars/boy-1.png"
                   onUpgradeClick={() => handleSetTab('billing')}
+                  onOpenGeneratedQuiz={(quizId) => handleStartQuiz(quizId)}
                   onOpenAuthModal={(mode) => {
                     setAuthModalMode(mode);
                     setIsAuthModalOpen(true);

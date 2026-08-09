@@ -180,7 +180,17 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     if (isGuest) { setQuizId(null); setAnswered(false); setSecondsLeft(0); setIsGenerating(false); return; }
     sync();
     const pollId = window.setInterval(sync, 5000);
-    const onDailyCompleted = () => { void sync(); };
+    const onDailyCompleted = (event: Event) => {
+      const completedQuizId = (event as CustomEvent<{ quizId?: string }>).detail?.quizId;
+      if (completedQuizId) {
+        try { window.sessionStorage.removeItem(`quizspace-daily-${completedQuizId}`); } catch (_) {}
+      }
+      latestDailyPayload = null;
+      setQuizId(null);
+      setAnswered(true);
+      setSecondsLeft(0);
+      void sync();
+    };
     window.addEventListener('quizspace:daily-completed', onDailyCompleted);
     return () => {
       window.clearInterval(pollId);

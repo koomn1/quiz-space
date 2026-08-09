@@ -252,6 +252,7 @@ export default function QuizResolver({
           if (userId) {
             const completedDaily = await completeUserDailyQuiz(userId, quizId);
             if (completedDaily) {
+              try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}
               window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
             }
           }

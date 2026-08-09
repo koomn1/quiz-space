@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { askAIStream } from '../services/aiWorkerClient';
+import { generateQuizWithFallback } from '../hooks/useQuizzes';
+import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
 import { Image as ImageIcon, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
 const COSMO_AVATAR = `${(import.meta as any).env?.BASE_URL || '/'}avatars/cosmo-boy.png`;
@@ -32,6 +34,21 @@ function readLocalChatData(userId?: string | null): { conversations: AIChatConve
 function writeLocalChatData(userId: string | null | undefined, data: { conversations: AIChatConversation[]; messages: Record<string, LocalChatMessage[]> }) {
   if (typeof window === 'undefined') return;
   try { localStorage.setItem(localChatKey(userId), JSON.stringify(data)); } catch { /* storage can be unavailable */ }
+}
+
+function parseQuizRequest(text: string): { topic: string; amount: number; difficulty: string } | null {
+  const normalized = text.trim();
+  if (!/(أنشئ|اعمل|اعملّي|ولد|اختبار|quiz|test)/i.test(normalized)) return null;
+  if (!/(اختبار|quiz|test)/i.test(normalized)) return null;
+  const amountMatch = normalized.match(/(\d{1,2})\s*(?:سؤال|اسئلة|أسئلة|questions?)/i);
+  const amount = Math.min(20, Math.max(3, amountMatch ? Number(amountMatch[1]) : 10));
+  const difficulty = /صعب|متقدم|hard|advanced/i.test(normalized) ? 'صعب' : /سهل|مبتدئ|easy|beginner/i.test(normalized) ? 'سهل' : 'متوسط';
+  const topic = normalized
+    .replace(/(?:أنشئ|اعمل(?:ي|ِّي)?|ولد|لي|اختبار|quiz|test|\d{1,2}\s*(?:سؤال|اسئلة|أسئلة|questions?))/gi, ' ')
+    .replace(/(?:صعب|متقدم|سهل|مبتدئ|hard|advanced|easy|beginner|متوسط|medium)/gi, ' ')
+    .replace(/[،,:؛]/g, ' ')
+    .replace(/\s+/g, ' ').trim() || 'معلومات عامة';
+  return { topic, amount, difficulty };
 }
 
 /* Theme-aware palette — mirrors the site's dark/light toggle */
@@ -102,6 +119,7 @@ interface AIChatProps {
   defaultAvatar?: string;
   onUpgradeClick?: () => void;
   onOpenAuthModal?: (mode: 'login' | 'register') => void;
+  onOpenGeneratedQuiz?: (quizId: string) => void;
 }
 
 /* ─── Thinking orb (GSAP) from the reference kit ───────── */
@@ -487,7 +505,7 @@ function groupLabel(conv: AIChatConversation): string {
   return 'الأسبوع الماضي';
 }
 
-export default function AIChat({ lang, darkMode, isPremium, planName, userId, userName, currentPage = 'aichat', siteStatus = 'QuizSpace يعمل بشكل طبيعي', userPhoto, defaultAvatar, onUpgradeClick, onOpenAuthModal }: AIChatProps) {
+export default function AIChat({ lang, darkMode, isPremium, planName, userId, userName, currentPage = 'aichat', siteStatus = 'QuizSpace يعمل بشكل طبيعي', userPhoto, defaultAvatar, onUpgradeClick, onOpenAuthModal, onOpenGeneratedQuiz }: AIChatProps) {
   const isAr = lang === 'ar';
   const theme = usePalette(darkMode);
   const FALLBACK_AVATAR = defaultAvatar || './avatars/boy-1.png';
@@ -501,7 +519,10 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 - لديه عضوية مفعلة: ${isPremium ? 'نعم' : 'لا'}
 - معرّف المستخدم: ${userId ? 'موجود في الجلسة فقط، لا تعرضه للمستخدم' : 'غير مسجل'}
 لا تذكر معرّف المستخدم ولا تكشف بيانات أي مستخدم آخر.`;
-  const cosmoSystemInstruction = `${COSMO_PERSONALITY}${cosmoContext}`;
+  const cosmoSystemInstruction = `${COSMO_PERSONALITY}${cosmoContext}
+
+قواعد التلخيص: إذا طلب المستخدم تلخيص شرح أو مادة، قدم ملخصًا منظمًا ومختصرًا، ثم أضف قسمًا بعنوان «اقتراحات للخطوة التالية» يتضمن 2-4 اقتراحات عملية مناسبة لمستواه، مثل أسئلة مراجعة أو نقاط تحتاج مذاكرة.
+قواعد إنشاء الاختبار: إذا طلب المستخدم إنشاء اختبار، افهم الموضوع وعدد الأسئلة والصعوبة إن ذكرها، ثم اعرض الإعدادات واطلب تأكيدًا قبل التوليد. لا تعتبر الاختبار منشأً إلا بعد تأكيد المستخدم.`;
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -518,6 +539,8 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const [streamingText, setStreamingText] = useState('');
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [pendingQuiz, setPendingQuiz] = useState<{ topic: string; amount: number; difficulty: string } | null>(null);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
 
   // Sidebar & Conversations
   const [conversations, setConversations] = useState<AIChatConversation[]>([]);
@@ -598,6 +621,19 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     const trimmed = (text ?? inputText).trim();
     if (!trimmed && !selectedImage) return;
     if (isAnalyzing) return;
+
+    const requestedQuiz = parseQuizRequest(trimmed);
+    if (requestedQuiz && !pendingQuiz) {
+      setPendingQuiz(requestedQuiz);
+      setMessages(prev => [...prev,
+        { id: Date.now().toString(), role: 'user', text: trimmed, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) },
+        { id: `${Date.now()}-confirm`, role: 'assistant', text: isAr
+          ? `أقدر أجهز لك اختبارًا في **${requestedQuiz.topic}** من **${requestedQuiz.amount} أسئلة** بمستوى **${requestedQuiz.difficulty}**. راجع الإعدادات بالأسفل واضغط تأكيد للتوليد.`
+          : `I can prepare a **${requestedQuiz.topic}** quiz with **${requestedQuiz.amount} questions** at **${requestedQuiz.difficulty}** level. Review the settings below and confirm to generate it.`, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }
+      ]);
+      setInputText('');
+      return;
+    }
 
     if (sendBtnRef.current) {
       gsap.fromTo(sendBtnRef.current,
@@ -690,6 +726,41 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputText, selectedImage, isAnalyzing, userId, activeConversationId, isAr, cosmoSystemInstruction]);
+
+  const confirmQuizGeneration = async () => {
+    if (!pendingQuiz || isGeneratingQuiz) return;
+    setIsGeneratingQuiz(true);
+    try {
+      const generated = await generateQuizWithFallback(pendingQuiz.topic, pendingQuiz.amount);
+      const saved = await createQuiz({
+        title: generated.title,
+        description: generated.description,
+        creatorId: userId || 'user-guest',
+        creatorName: userName || 'Cosmo AI user',
+        questions: generated.questions.map((question, index) => ({
+          id: `cosmo-${Date.now()}-q${index + 1}`,
+          number: question.number ?? index + 1,
+          type: question.type,
+          text: question.text,
+          options: question.options ?? (question.type === 'tf' ? ['صح', 'خطأ'] : []),
+          correctIndex: question.correctIndex ?? 0,
+          correctAnswer: question.correctAnswer,
+          explanation: question.explanation,
+        })),
+        category: 'Cosmo AI',
+        distributionRouting: 'public',
+        timeLimit: pendingQuiz.amount * 60,
+      });
+      setMessages(prev => [...prev, { id: `${Date.now()}-created`, role: 'assistant', text: isAr ? `تم إنشاء الاختبار **${saved.title}** بنجاح. هتقدر تبدأه دلوقتي.` : `The quiz **${saved.title}** was created successfully. You can start it now.`, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }]);
+      setPendingQuiz(null);
+      onOpenGeneratedQuiz?.(saved.id);
+    } catch (error) {
+      console.error('Cosmo quiz generation failed', error);
+      setLastError(isAr ? 'حصلت مشكلة أثناء إنشاء الاختبار. جرّب مرة ثانية.' : 'Quiz generation failed. Please try again.');
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
+  };
 
   const startNewChat = () => {
     setActiveConversationId(null);
@@ -995,6 +1066,21 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
               {messages.map((msg, i) => (
                 <MessageRow key={msg.id} msg={msg} index={i} copiedMsgId={copiedMsgId} onCopy={copyMessage} userPhoto={userPhoto} userInitial={userInitial} theme={theme} />
               ))}
+
+              {pendingQuiz && (
+                <div className="rounded-2xl p-4 border" dir="rtl" style={{ background: theme.CARD, borderColor: `${ACCENT}55` }}>
+                  <div className="flex items-center gap-2 mb-3" style={{ color: ACCENT }}><FileQuestion className="w-5 h-5" /><strong>{isAr ? 'تأكيد إعدادات الاختبار' : 'Confirm quiz settings'}</strong></div>
+                  <div className="grid grid-cols-3 gap-2 text-sm mb-4">
+                    <div className="rounded-xl p-2" style={{ background: theme.INPUT_BG }}><span className="block text-xs" style={{ color: theme.MUTED }}>{isAr ? 'الموضوع' : 'Topic'}</span><b>{pendingQuiz.topic}</b></div>
+                    <div className="rounded-xl p-2" style={{ background: theme.INPUT_BG }}><span className="block text-xs" style={{ color: theme.MUTED }}>{isAr ? 'الأسئلة' : 'Questions'}</span><b>{pendingQuiz.amount}</b></div>
+                    <div className="rounded-xl p-2" style={{ background: theme.INPUT_BG }}><span className="block text-xs" style={{ color: theme.MUTED }}>{isAr ? 'المستوى' : 'Level'}</span><b>{pendingQuiz.difficulty}</b></div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={confirmQuizGeneration} disabled={isGeneratingQuiz} className="flex-1 rounded-xl py-2.5 font-bold text-white disabled:opacity-60" style={{ background: ACCENT }}>{isGeneratingQuiz ? (isAr ? 'جاري التوليد...' : 'Generating...') : (isAr ? 'تأكيد وتوليد' : 'Confirm & generate')}</button>
+                    <button onClick={() => setPendingQuiz(null)} disabled={isGeneratingQuiz} className="rounded-xl px-4 py-2.5 font-semibold" style={{ background: theme.INPUT_BG, color: theme.FG }}>{isAr ? 'إلغاء' : 'Cancel'}</button>
+                  </div>
+                </div>
+              )}
 
               {isAnalyzing && (streamingText ? <StreamingRow text={streamingText} theme={theme} /> : <ThinkingRow isAr={isAr} theme={theme} />)}
 
