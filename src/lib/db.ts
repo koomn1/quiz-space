@@ -1247,18 +1247,18 @@ export async function saveCoupon(coupon: Coupon): Promise<void> {
     created_at: coupon.createdAt ?? coupon.created_at ?? new Date().toISOString(),
     applicable_plans: coupon.applicablePlans ?? coupon.applicable_plans ?? 'silver,gold,diamond',
   };
-  const { error } = await supabase.from('coupon_codes').upsert(row);
+  const { error } = await supabase.rpc('admin_save_coupon', { p_coupon: row });
   if (error) {
-    console.error('Error saving coupon:', error.message);
+    console.error('Error saving coupon via admin RPC:', error.message);
     throw error;
   }
 }
 
 export async function deleteCoupon(couponId: string): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot delete coupon.');
-  const { error } = await supabase.from('coupon_codes').delete().eq('id', couponId);
+  const { error } = await supabase.rpc('admin_delete_coupon', { p_coupon_id: couponId });
   if (error) {
-    console.error('Error deleting coupon:', error.message);
+    console.error('Error deleting coupon via admin RPC:', error.message);
     throw error;
   }
 }
