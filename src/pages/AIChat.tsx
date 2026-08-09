@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { askAIStream } from '../services/aiWorkerClient';
+import { askAI, askAIStream } from '../services/aiWorkerClient';
 import { generateQuizWithFallback } from '../hooks/useQuizzes';
 import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
@@ -59,6 +59,21 @@ function buildDynamicSuggestions(userText: string, assistantText: string, isAr: 
   add(isAr ? 'لخّص الرد' : 'Summarize this reply', isAr ? 'لخّص ردك الأخير في 3 نقاط واضحة.' : 'Summarize your last reply in 3 clear points.');
   add(isAr ? 'أنشئ اختبارًا من الرد' : 'Create a quiz from this', isAr ? `أنشئ اختبارًا من 10 أسئلة مبنيًا على ردك الأخير عن ${topic}.` : `Create a 10-question quiz based on your last reply about ${topic}.`);
   return suggestions.slice(0, 4);
+}
+
+function parseAiSuggestions(raw: string, isAr: boolean): QuickSuggestion[] {
+  try {
+    const cleaned = raw.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    const items = Array.isArray(parsed) ? parsed : parsed.suggestions;
+    if (!Array.isArray(items)) return [];
+    return items
+      .map((item: any) => ({ label: String(item.label || item.title || ''), prompt: String(item.prompt || item.message || '') }))
+      .filter((item: QuickSuggestion) => item.label && item.prompt)
+      .slice(0, 4);
+  } catch {
+    return [];
+  }
 }
 
 function parseQuizRequest(text: string): { topic: string; amount: number; difficulty: string } | null {
@@ -149,91 +164,13 @@ interface AIChatProps {
 
 /* ─── Thinking orb (GSAP) from the reference kit ───────── */
 function ThinkingOrb() {
-  const svgRef = useRef<SVGSVGElement>(null);
-
-  useEffect(() => {
-    const C = 40;
-    const dot1 = svgRef.current?.getElementById('d1') as SVGCircleElement | null;
-    const dot2 = svgRef.current?.getElementById('d2') as SVGCircleElement | null;
-    const dot3 = svgRef.current?.getElementById('d3') as SVGCircleElement | null;
-    const dot4 = svgRef.current?.getElementById('d4') as SVGCircleElement | null;
-    const core = svgRef.current?.getElementById('core') as SVGCircleElement | null;
-    const glow = svgRef.current?.getElementById('glow') as SVGCircleElement | null;
-    const scan = svgRef.current?.getElementById('scan') as SVGCircleElement | null;
-    const inner = svgRef.current?.getElementById('inner') as SVGCircleElement | null;
-
-    if (core) gsap.to(core, { attr: { r: 9.5 }, duration: 1.1, repeat: -1, yoyo: true, ease: 'power2.inOut' });
-    if (inner) gsap.to(inner, { attr: { r: 5.5 }, duration: 0.9, repeat: -1, yoyo: true, ease: 'sine.inOut' });
-    if (glow) gsap.to(glow, { attr: { r: 30 }, opacity: 0.18, duration: 1.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
-    if (scan) {
-      gsap.fromTo(
-        scan,
-        { attr: { r: 6 }, opacity: 0.7, strokeWidth: 1.8 },
-        { attr: { r: 38 }, opacity: 0, strokeWidth: 0.3, duration: 2.4, repeat: -1, ease: 'power3.out' }
-      );
-    }
-
-    let t1 = 0, t2 = Math.PI * 0.65, t3 = Math.PI * 1.3, t4 = Math.PI * 0.3;
-    const a2 = (55 * Math.PI) / 180;
-    const a3 = (-48 * Math.PI) / 180;
-    const a4 = (20 * Math.PI) / 180;
-
-    const orbit = (el: SVGCircleElement | null, t: number, rx: number, ry: number, ang: number) => {
-      if (!el) return;
-      const lx = rx * Math.cos(t);
-      const ly = ry * Math.sin(t);
-      el.setAttribute('cx', String(C + lx * Math.cos(ang) - ly * Math.sin(ang)));
-      el.setAttribute('cy', String(C + lx * Math.sin(ang) + ly * Math.cos(ang)));
-    };
-
-    const tick = () => {
-      t1 += 0.048; t2 += 0.032; t3 += 0.022; t4 += 0.055;
-      orbit(dot1, t1, 23, 8,  0);
-      orbit(dot2, t2, 18, 7,  a2);
-      orbit(dot3, t3, 21, 6,  a3);
-      orbit(dot4, t4, 13, 10, a4);
-    };
-
-    gsap.ticker.add(tick);
-    return () => { gsap.ticker.remove(tick); gsap.killTweensOf([core, inner, glow, scan]); };
-  }, []);
-
   return (
-    <svg ref={svgRef} width="80" height="80" viewBox="0 0 80 80" style={{ overflow: 'visible' }}>
-      <defs>
-        <radialGradient id="cg" cx="40%" cy="30%" r="65%">
-          <stop offset="0%"   stopColor="#6effdb" />
-          <stop offset="100%" stopColor="#10a37f" />
-        </radialGradient>
-        <radialGradient id="dg1" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="#ffffff" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#10a37f" />
-        </radialGradient>
-        <filter id="f1" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="2.5" />
-        </filter>
-        <filter id="f2" x="-80%" y="-80%" width="360%" height="360%">
-          <feGaussianBlur stdDeviation="5" />
-        </filter>
-      </defs>
-      <circle id="glow" cx="40" cy="40" r="24" fill="#10a37f" opacity="0.12" filter="url(#f2)" />
-      <ellipse cx="40" cy="40" rx="23" ry="8"  fill="none" stroke="rgba(16,163,127,0.22)" strokeWidth="0.7" />
-      <ellipse cx="40" cy="40" rx="18" ry="7"  fill="none" stroke="rgba(16,163,127,0.18)" strokeWidth="0.7" transform="rotate(55 40 40)" />
-      <ellipse cx="40" cy="40" rx="21" ry="6"  fill="none" stroke="rgba(16,163,127,0.15)" strokeWidth="0.7" transform="rotate(-48 40 40)" />
-      <ellipse cx="40" cy="40" rx="13" ry="10" fill="none" stroke="rgba(16,163,127,0.12)" strokeWidth="0.7" transform="rotate(20 40 40)" />
-      <circle id="scan" cx="40" cy="40" r="6" fill="none" stroke="#10a37f" strokeWidth="1.5" opacity="0" />
-      <circle id="d1" cx="63" cy="40" r="5" fill="#10a37f" opacity="0.2" filter="url(#f1)" />
-      <circle id="d2" cx="40" cy="40" r="4" fill="#4fffda" opacity="0.2" filter="url(#f1)" />
-      <circle id="d3" cx="40" cy="40" r="4" fill="#10a37f" opacity="0.2" filter="url(#f1)" />
-      <circle id="d4" cx="40" cy="40" r="3" fill="#6effdb" opacity="0.2" filter="url(#f1)" />
-      <circle id="d1" cx="63" cy="40" r="2.8" fill="url(#dg1)" />
-      <circle id="d2" cx="40" cy="40" r="2.2" fill="#6effdb" />
-      <circle id="d3" cx="40" cy="40" r="2"   fill="#4fffda" opacity="0.85" />
-      <circle id="d4" cx="40" cy="40" r="1.6" fill="#ffffff"  opacity="0.7" />
-      <circle cx="40" cy="40" r="12" fill="#10a37f" opacity="0.25" filter="url(#f1)" />
-      <circle id="core"  cx="40" cy="40" r="8" fill="url(#cg)" />
-      <circle id="inner" cx="40" cy="40" r="4" fill="#ffffff" opacity="0.55" />
-    </svg>
+    <div className="flex items-center justify-center w-11 h-11 rounded-2xl" style={{ background: 'rgba(16,163,127,0.08)', border: '1px solid rgba(16,163,127,0.2)' }} aria-label="Cosmo is thinking">
+      <div className="flex items-end gap-1 h-4">
+        {[0, 1, 2].map(index => <span key={index} className="w-1.5 rounded-full" style={{ height: index === 1 ? 15 : 9, background: ACCENT, opacity: 0.72, animation: 'cosmoThinking 1.15s ease-in-out infinite', animationDelay: `${index * 0.16}s` }} />)}
+      </div>
+      <style>{`@keyframes cosmoThinking { 0%, 100% { transform: scaleY(.65); opacity: .4; } 50% { transform: scaleY(1); opacity: .9; } }`}</style>
+    </div>
   );
 }
 
@@ -498,7 +435,7 @@ function ThinkingRow({ isAr, theme }: { isAr: boolean; theme: Palette }) {
       <div className="flex-1">
         <p className="text-sm font-semibold mb-1" style={{ color: theme.FG }}>{ASSISTANT_NAME_EN}</p>
         <div className="flex items-center gap-3">
-          <div style={{ width: 80, height: 80, flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, flexShrink: 0 }}>
             <ThinkingOrb />
           </div>
           <div className="flex flex-col gap-1">
@@ -731,7 +668,16 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
       if (!fullText) throw new Error('empty');
       setMessages(prev => [...prev, { id: aiMsgId, role: 'assistant', text: fullText, timestamp: userMsg.timestamp }]);
-      setQuickSuggestions(buildDynamicSuggestions(userMsg.text, fullText, isAr));
+      try {
+        const suggestionReply = await askAI(
+          `أنشئ 3 أو 4 اقتراحات قصيرة اختيارية للخطوة التالية بناءً على سؤال المستخدم وآخر رد للمساعد. الاقتراحات يجب أن تكون مرتبطة مباشرة بالموضوع، متنوعة بين التلخيص والشرح والتدريب وإنشاء اختبار عند الحاجة. أعد JSON فقط بهذا الشكل: {"suggestions":[{"label":"نص قصير للزر","prompt":"الطلب الكامل الذي سيرسل للمساعد"}]}. لا تكرر كلام الرد ولا تضف مقدمة.\n\nسؤال المستخدم:\n${userMsg.text}\n\nآخر رد للمساعد:\n${fullText}`,
+          { systemInstruction: 'أنت مولد اقتراحات واجهة لمساعد تعليمي. أعد JSON صالحًا فقط. اجعل النصوص قصيرة وواضحة وبنفس لغة المستخدم.' }
+        );
+        const aiSuggestions = parseAiSuggestions(suggestionReply.text, isAr);
+        setQuickSuggestions(aiSuggestions.length ? aiSuggestions : buildDynamicSuggestions(userMsg.text, fullText, isAr));
+      } catch {
+        setQuickSuggestions(buildDynamicSuggestions(userMsg.text, fullText, isAr));
+      }
       setStreamingText('');
       if (currentConvId) {
         const updated = readLocalChatData(userId);
@@ -1211,8 +1157,11 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                   aria-label={isAr ? 'إرسال' : 'Send'}
                   className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90"
                   style={{
-                    background: (inputText.trim() || selectedImage) && !isAnalyzing ? '#ffffff' : theme.SEND_IDLE,
-                    cursor: 'pointer',
+                    background: isAnalyzing ? 'rgba(16,163,127,0.14)' : (inputText.trim() || selectedImage) ? '#ffffff' : theme.SEND_IDLE,
+                    border: isAnalyzing ? `1px solid ${ACCENT}66` : 'none',
+                    color: isAnalyzing ? ACCENT : (inputText.trim() || selectedImage) ? '#111827' : '#ffffff',
+                    cursor: isAnalyzing ? 'wait' : 'pointer',
+                    transform: isAnalyzing ? 'scale(.94)' : undefined,
                   }}
                 >
                   <Send className="w-5 h-5" style={{ color: (inputText.trim() || selectedImage) && !isAnalyzing ? theme.SEND_ACTIVE_FG : '#ffffff' }} />
