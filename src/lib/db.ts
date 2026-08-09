@@ -1164,7 +1164,35 @@ export async function getCoupons(): Promise<Coupon[]> {
 export async function getCouponByCode(code: string): Promise<Coupon | null> {
   if (!code || !isSupabaseConfigured) return null;
   const cleanedCode = code.trim().toUpperCase();
-  const { data, error } = await supabase.rpc('get_coupon_by_code', { p_code: cleanedCode });
+  let data: any = null;
+  let error: any = null;
+  ({ data, error } = await supabase.rpc('get_coupon_by_code', { p_code: cleanedCode }));
+
+  // Keep coupon validation resilient if an older deployed RPC is unavailable;
+  // coupon_codes is intentionally readable through RLS for coupon validation.
+  if (error || !data || (Array.isArray(data) && data.length === 0)) {
+    if (error) console.error('RPC coupon lookup failed; using direct lookup:', error);
+    const byCode = await supabase
+      .from('coupon_codes')
+      .select('*')
+      .ilike('code', cleanedCode)
+      .limit(1)
+      .maybeSingle();
+    if (!byCode.data && !byCode.error) {
+      const byId = await supabase
+        .from('coupon_codes')
+        .select('*')
+        .ilike('id', cleanedCode)
+        .limit(1)
+        .maybeSingle();
+      data = byId.data;
+      error = byId.error;
+    } else {
+      data = byCode.data;
+      error = byCode.error;
+    }
+  }
+
   if (error) {
     console.error('Error looking up coupon:', error);
     return null;

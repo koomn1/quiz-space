@@ -310,8 +310,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
         // Validate plan suitability
         if (applicablePlans) {
-          const allowed = applicablePlans.split(',');
-          if (!allowed.includes(selectedPlan)) {
+          const allowed = applicablePlans.split(',').map((plan: string) => plan.trim().toLowerCase());
+          if (!allowed.includes(selectedPlan.toLowerCase())) {
             alert(isAr 
               ? `عذراً، كود الخصم هذا لا يسري على الباقة المحددة (${selectedPlan === 'silver' ? 'الفضية' : selectedPlan === 'gold' ? 'الذهبية' : 'الماسية'}).` 
               : `Sorry, this coupon is not applicable to the selected plan (${selectedPlan}).`
