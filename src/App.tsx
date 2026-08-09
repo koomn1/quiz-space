@@ -428,11 +428,13 @@ export default function App() {
     }
   }, [userId]);
 
-  // Cosmo (AIChat) is a full-height app shell: fixed header on top, Cosmo
-  // workspace fills ALL remaining height, only its messages scroll internally,
-  // and the page itself never scrolls. Site backgrounds/footer are hidden
-  // so nothing shows behind the chat; the whole surface recolors with mode.
-  const isCosmoTab = activeTab === 'aichat' && !activeQuizId;
+  // A membership is active when the profile is marked premium or carries a paid plan.
+  // Keep this check centralized so navigation, direct links, and rendering agree.
+  const hasActiveMembership = isUserPremium || ['gold', 'diamond', 'premium'].includes((userPlanName || '').trim().toLowerCase());
+
+  // Cosmo (AIChat) is a full-height app shell only for active members.
+  // Guests and free accounts are redirected to the plans page before the chat opens.
+  const isCosmoTab = activeTab === 'aichat' && !activeQuizId && hasActiveMembership;
 
   // Body scroll lock when mobile sidebar, auth modals, or the Cosmo chat
   // screen are open — the chat page itself never scrolls
@@ -1022,6 +1024,17 @@ export default function App() {
       return;
     }
 
+    // Cosmo is a paid feature. Do not allow free accounts or direct links to open it.
+    if (!bypassAuth && tab === 'aichat' && !hasActiveMembership) {
+      const basePath = getAppBasePath();
+      const billingParams = new URLSearchParams({ tab: 'billing' });
+      window.history.pushState(null, '', `${basePath}#/dashboard/billing?${billingParams.toString()}`);
+      setSearchParams(billingParams);
+      setActiveTab('billing');
+      setNavKey(prev => prev + 1);
+      return;
+    }
+
     const currentParams = new URLSearchParams(window.location.search || (window.location.hash.includes('?') ? window.location.hash.split('?')[1] : ''));
     const basePath = getAppBasePath();
 
@@ -1049,7 +1062,17 @@ export default function App() {
       currentParams.delete('profileId');
       window.history.pushState(null, '', `${basePath}#/dashboard/${tab}?${currentParams.toString()}`);
     }
-  };
+    };
+
+  // Direct hash links must follow the same membership rule as sidebar clicks.
+  React.useEffect(() => {
+    if (activeTab !== 'aichat' || hasActiveMembership || authContext.loading || !isStatsLoaded) return;
+    const basePath = getAppBasePath();
+    const billingParams = new URLSearchParams({ tab: 'billing' });
+    window.history.replaceState(null, '', `${basePath}#/dashboard/billing?${billingParams.toString()}`);
+    setSearchParams(billingParams);
+    setActiveTab('billing');
+  }, [activeTab, hasActiveMembership, authContext.loading, isStatsLoaded]);
 
   // Trigger login guard when starting any quiz to track progress
   const handleStartQuiz = (quizId: string) => {
@@ -1586,7 +1609,7 @@ export default function App() {
                 />
               )}
 
-              {activeTab === 'aichat' && (
+              {activeTab === 'aichat' && hasActiveMembership && (
                 <AIChat 
                   lang={lang} 
                   darkMode={darkMode} 
@@ -1596,12 +1619,22 @@ export default function App() {
                   userName={userName}
                   userPhoto={userPhoto || undefined}
                   defaultAvatar="./avatars/boy-1.png"
-                  onUpgradeClick={() => setActiveTab('billing')} 
+                  onUpgradeClick={() => handleSetTab('billing')}
                   onOpenAuthModal={(mode) => {
                     setAuthModalMode(mode);
                     setIsAuthModalOpen(true);
                   }}
                 />
+              )}
+              {activeTab === 'aichat' && !hasActiveMembership && (
+                <section className="flex min-h-[65vh] w-full items-center justify-center px-4 py-16 sm:px-6">
+                  <div className="w-full max-w-xl rounded-3xl border border-violet-200/70 bg-white/90 p-8 text-center shadow-xl shadow-violet-500/10 backdrop-blur-xl dark:border-violet-500/20 dark:bg-slate-950/90 sm:p-12">
+                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-3xl shadow-lg shadow-violet-500/25">✦</div>
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-white">{lang === 'ar' ? 'كوزمو متاح للأعضاء فقط' : 'Cosmo is for members only'}</h2>
+                    <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-slate-600 dark:text-slate-300">{lang === 'ar' ? 'فعّل أي عضوية للوصول إلى المحادثة الذكية وأدوات كوزمو.' : 'Activate any membership to unlock Cosmo AI chat and its tools.'}</p>
+                    <button type="button" onClick={() => handleSetTab('billing')} className="mt-7 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-500 px-6 py-3 text-sm font-black text-white shadow-lg shadow-violet-500/20 transition hover:-translate-y-0.5">{lang === 'ar' ? 'عرض الباقات وتفعيل العضوية' : 'View plans and activate membership'}</button>
+                  </div>
+                </section>
               )}
 
               {activeTab === 'categories' && (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Crown, Gem, Bot, Medal, Home, Compass, Sparkles, BookOpen, 
-  Users, CreditCard, Settings, LogOut, ShieldAlert, User, Check, GraduationCap, MessageCircle 
+  Users, CreditCard, Settings, LogOut, ShieldAlert, User, Check, GraduationCap, MessageCircle, Lock
 } from 'lucide-react';
 import { translations } from '../lib/i18n';
 import { AnimatedSidebarIcon } from './AnimatedSidebarIcon';
@@ -78,6 +78,7 @@ export default function Sidebar({
   }
 
   const isGuest = !userEmail;
+  const hasActiveMembership = isPremium || ['gold', 'diamond', 'premium'].includes(planClean);
 
   // Minimalist Line-Art Icon Mapper
   const getNavIcon = (id: string, isActive: boolean) => {
@@ -211,7 +212,7 @@ export default function Sidebar({
       <nav className="flex-1 space-y-0.5 py-1 pr-0.5 overflow-y-auto scrollbar-none">
         {menuItems.map((item) => {
           const isActive = currentTab === item.id;
-          const isLocked = item.isPremiumOnly && activePlanId === 'free';
+          const isLocked = (item.isPremiumOnly && activePlanId === 'free') || (item.id === 'aichat' && !hasActiveMembership);
           
           if (item.isLink) {
             return (
@@ -242,7 +243,9 @@ export default function Sidebar({
               key={item.id}
               onClick={() => {
                 if (isLocked) {
-                  alert(isAr ? 'هذه الميزة متاحة فقط للباقات الفضية فأعلى. يرجى الترقية.' : 'This feature is only available for Silver plans and above. Please upgrade.');
+                  alert(item.id === 'aichat'
+                    ? (isAr ? 'شات كوزمو متاح بعد تفعيل أي عضوية.' : 'Cosmo Chat is available after activating a membership.')
+                    : (isAr ? 'هذه الميزة متاحة فقط للباقات الفضية فأعلى. يرجى الترقية.' : 'This feature is only available for Silver plans and above. Please upgrade.'));
                   setTab('billing');
                 } else {
                   setTab(item.id);
@@ -268,8 +271,9 @@ export default function Sidebar({
                 </AnimatedSidebarIcon>
                 <span className="truncate">{item.label}</span>
                 {isLocked && (
-                  <span className="text-[9px] bg-amber-500 text-white px-1.5 py-0.5 rounded-md ml-2 ml-auto" style={{ marginRight: isAr ? 'auto' : 0, marginLeft: isAr ? 0 : 'auto' }}>
-                    {isAr ? 'برو' : 'PRO'}
+                  <span className="ml-auto inline-flex items-center gap-1 rounded-md bg-amber-500/90 px-1.5 py-0.5 text-[9px] font-black text-white" style={{ marginRight: isAr ? 'auto' : 0, marginLeft: isAr ? 0 : 'auto' }}>
+                    <Lock size={10} />
+                    {item.id === 'aichat' ? (isAr ? 'عضوية' : 'MEMBERS') : (isAr ? 'برو' : 'PRO')}
                   </span>
                 )}
               </div>
