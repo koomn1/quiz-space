@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Quiz } from '../types';
-import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2 } from 'lucide-react';
+import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet } from 'lucide-react';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag } from './PremiumNameTag';
 import ParallaxTiltCard from './ParallaxTiltCard';
@@ -63,12 +63,47 @@ export function InteractiveQuizCard({
     }
   };
 
+  const downloadFile = (filename: string, content: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportAttemptsCsv = () => {
+    if (!canEdit || attemptsLoading || attempts.length === 0) return;
+    const headers = isAr ? ['اسم العضو', 'الدرجة', 'إجمالي الأسئلة', 'تاريخ الحل'] : ['Member', 'Score', 'Total Questions', 'Solved At'];
+    const escapeCsv = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const rows = attempts.map((attempt) => [attempt.takerName, attempt.score, attempt.totalQuestions, attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : '']);
+    const csv = '\ufeff' + [headers, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n');
+    downloadFile(`${quiz.title || 'quiz'}-members.csv`, csv, 'text/csv;charset=utf-8');
+  };
+
+  const exportAttemptsExcel = () => {
+    if (!canEdit || attemptsLoading || attempts.length === 0) return;
+    const headers = isAr ? ['اسم العضو', 'الدرجة', 'إجمالي الأسئلة', 'تاريخ الحل'] : ['Member', 'Score', 'Total Questions', 'Solved At'];
+    const escapeHtml = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const cells = (row: unknown[]) => row.map((value) => `<td>${escapeHtml(value)}</td>`).join('');
+    const rows = attempts.map((attempt) => [attempt.takerName, attempt.score, attempt.totalQuestions, attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : '']);
+    const html = `\ufeff<html><head><meta charset="utf-8"><style>body{font-family:Arial}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:6px}</style></head><body><h2>${escapeHtml(quiz.title)}</h2><table><thead><tr>${cells(headers)}</tr></thead><tbody>${rows.map((row) => `<tr>${cells(row)}</tr>`).join('')}</tbody></table></body></html>`;
+    downloadFile(`${quiz.title || 'quiz'}-members.xls`, html, 'application/vnd.ms-excel;charset=utf-8');
+  };
+
   const attemptsPanel = attemptsOpen ? (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onClick={() => setAttemptsOpen(false)}>
       <div className="w-full max-w-lg max-h-[min(640px,90vh)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900" onClick={(e) => e.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
           <div><h3 className="font-black text-slate-800 dark:text-white">{isAr ? 'الأعضاء الذين حلوا الاختبار' : 'Members who solved this quiz'}</h3><p className="mt-1 text-xs text-slate-500">{quiz.title}</p></div>
-          <button type="button" onClick={() => setAttemptsOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={exportAttemptsCsv} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-2 text-[11px] font-black text-emerald-600 transition-colors hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400" title="CSV"><Download className="h-3.5 w-3.5" />CSV</button>
+            <button type="button" onClick={exportAttemptsExcel} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 px-3 py-2 text-[11px] font-black text-blue-600 transition-colors hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-blue-400" title="Excel"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
+            <button type="button" onClick={() => setAttemptsOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
+          </div>
         </div>
         <div className="max-h-[min(520px,70vh)] overflow-y-auto p-4">
           {attemptsLoading ? <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" />{isAr ? 'جاري تحميل الأعضاء...' : 'Loading members...'}</div> : attempts.length === 0 ? <p className="py-12 text-center text-sm text-slate-500">{isAr ? 'لا توجد محاولات مسجلة بعد.' : 'No recorded attempts yet.'}</p> : <div className="space-y-2">{attempts.map((attempt) => <div key={attempt.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50"><div><p className="font-bold text-slate-800 dark:text-slate-100">{attempt.takerName || (isAr ? 'عضو' : 'Member')}</p><p className="text-[11px] text-slate-500">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p></div><span className="rounded-lg bg-primary/10 px-2 py-1 text-xs font-black text-primary">{attempt.score}/{attempt.totalQuestions}</span></div>)}</div>}
