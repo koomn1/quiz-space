@@ -249,7 +249,12 @@ export default function QuizResolver({
             setSavedCompletionId(savedRow.id);
             console.log('Quiz auto-saved successfully, completion ID:', savedRow.id, 'XP:', savedRow.xp_awarded ?? 0);
           }
-          if (userId) await completeUserDailyQuiz(userId, quizId);
+          if (userId) {
+            const completedDaily = await completeUserDailyQuiz(userId, quizId);
+            if (completedDaily) {
+              window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
+            }
+          }
           window.dispatchEvent(new CustomEvent('quizspace:xp-updated', { detail: { userId, xpAwarded: savedRow?.xp_awarded ?? 0 } }));
         } catch (e) {
           console.error('Quiz auto-save failed:', e);
@@ -543,7 +548,12 @@ export default function QuizResolver({
         rating,
         feedback: feedback.trim()
       });
-      if (userId) await completeUserDailyQuiz(userId, quizId);
+      if (userId) {
+        const completedDaily = await completeUserDailyQuiz(userId, quizId);
+        if (completedDaily) {
+          window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
+        }
+      }
       if (previousBestScore > 0 && score > previousBestScore) {
         const body = lang === 'ar' 
           ? `تهانينا! الطالب «${takerName.trim()}» حطم الرقم القياسي السابق وسجل ${score} في اختبار «${quiz.title}»!`

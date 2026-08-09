@@ -750,8 +750,11 @@ export interface DailyQuizSlot {
 
 export function planNameToDailyQuizTier(planName?: string, isPremium?: boolean): DailyQuizTier {
   const p = (planName || '').toLowerCase();
-  if (p.includes('diamond') || p.includes('الماسي')) return 'diamond';
-  if (p.includes('gold') || p.includes('الذهبي')) return 'gold';
+  if (p.includes('diamond') || p.includes('الماسي') || p.includes('الماسية')) return 'diamond';
+  if (p.includes('gold') || p.includes('الذهبي') || p.includes('الذهبية')) return 'gold';
+  // Some older profiles only have isPremium=true and no plan_name. Treat
+  // those paid profiles as Gold instead of silently giving them the free timer.
+  if (isPremium) return 'gold';
   return 'free';
 }
 
@@ -798,7 +801,9 @@ export async function getUserDailyQuizSlot(userId: string, tier: DailyQuizTier):
 
 export async function resetLegacyDailyQuizSlot(userId: string, tier: DailyQuizTier): Promise<boolean> {
   if (!userId || !isSupabaseConfigured) return false;
-  const { data, error } = await supabase.rpc('reset_legacy_daily_quiz_slot', { p_user_id: userId, p_tier: tier });
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveUserId = authData.user?.id || userId;
+  const { data, error } = await supabase.rpc('reset_legacy_daily_quiz_slot', { p_user_id: effectiveUserId, p_tier: tier });
   if (error) { console.error('Error resetting legacy daily quiz slot:', error.message); return false; }
   return !!data;
 }
@@ -822,14 +827,21 @@ export async function finalizeUserDailyQuizRefresh(userId: string, tier: DailyQu
 
 export async function releaseUserDailyQuizRefresh(userId: string, tier: DailyQuizTier): Promise<void> {
   if (!userId || !isSupabaseConfigured) return;
-  const { error } = await supabase.rpc('release_user_daily_quiz_refresh', { p_user_id: userId, p_tier: tier });
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveUserId = authData.user?.id || userId;
+  const { error } = await supabase.rpc('release_user_daily_quiz_refresh', { p_user_id: effectiveUserId, p_tier: tier });
   if (error) console.error('Error releasing user daily quiz refresh:', error.message);
 }
-
 export async function completeUserDailyQuiz(userId: string, quizId: string): Promise<boolean> {
   if (!userId || !quizId || !isSupabaseConfigured) return false;
-  const { data, error } = await supabase.rpc('complete_user_daily_quiz', { p_user_id: userId, p_quiz_id: quizId });
-  if (error) { console.error('Error completing user daily quiz:', error.message); return false; }
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveUserId = authData.user?.id || userId;
+  const { data, error } = await supabase.rpc('complete_user_daily_quiz', { p_user_id: effectiveUserId, p_quiz_id: quizId });
+  if (error) {
+    console.error('Error completing user daily quiz:', { message: error.message, code: error.code, details: error.details, quizId });
+    return false;
+  }
+  if (!data) console.warn('Daily quiz completion did not match an open private slot:', quizId);
   return !!data;
 }
 

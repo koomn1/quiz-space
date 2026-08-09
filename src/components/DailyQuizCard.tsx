@@ -70,7 +70,8 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     try {
       // Pick deterministically from the 60-item bank for this user/tier/time
       // window. This rotates the bank without any runtime AI generation.
-      const intervalMs = Math.max(1, 86400) * 1000;
+      const intervalSeconds = tier === 'diamond' ? 60 : tier === 'gold' ? 3600 : 86400;
+      const intervalMs = intervalSeconds * 1000;
       const windowNumber = Math.floor(Date.now() / intervalMs);
       const seedText = `${userId}:${tier}:${windowNumber}`;
       let hash = 0;
@@ -176,10 +177,15 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
   };
 
   useEffect(() => {
-    if (isGuest) { setQuizId(null); setAnswered(false); setIsGenerating(false); return; }
+    if (isGuest) { setQuizId(null); setAnswered(false); setSecondsLeft(0); setIsGenerating(false); return; }
     sync();
     const pollId = window.setInterval(sync, 5000);
-    return () => window.clearInterval(pollId);
+    const onDailyCompleted = () => { void sync(); };
+    window.addEventListener('quizspace:daily-completed', onDailyCompleted);
+    return () => {
+      window.clearInterval(pollId);
+      window.removeEventListener('quizspace:daily-completed', onDailyCompleted);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tier, userId, isGuest]);
 
@@ -189,7 +195,8 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
   }, []);
 
   const label = isAr ? TIER_LABEL[tier].ar : TIER_LABEL[tier].en;
-  const waiting = answered && secondsLeft > 0;
+  const waiting = secondsLeft > 0;
+  const nextQuizLabel = isAr ? `التحدي التالي بعد ${formatCountdown(secondsLeft, true)}` : `Next challenge in ${formatCountdown(secondsLeft, false)}`;
   // A quiz can only be rated once. If the slot is already answered, never
   // expose a start button for the old daily quiz id, even if sessionStorage
   // still holds it.
@@ -207,7 +214,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         <div className="flex items-center gap-3">
           {(!isGuest && (waiting || isGenerating)) && <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 text-sm font-mono tabular-nums"><Clock className="w-4 h-4" />{formatCountdown(secondsLeft, isAr)}</div>}
           {isGuest ? <button onClick={onLoginClick} className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform">{isAr ? 'سجّل الدخول للبدء' : 'Sign in to start'}</button>
-            : waiting ? <span className="text-sm font-semibold bg-white/15 rounded-full px-4 py-2">{isAr ? 'تم الحل — الاختبار القادم بعد المهلة' : 'Solved — next quiz after cooldown'}</span>
+            : waiting ? <span className="text-sm font-semibold bg-white/15 rounded-full px-4 py-2">{nextQuizLabel}</span>
             : !isGenerating && startableQuizId ? <button onClick={() => {
               // Guard the start navigation: the quiz must be snapshot-able from
               // sessionStorage before the route changes, otherwise the resolver
