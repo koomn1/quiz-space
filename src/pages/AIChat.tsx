@@ -36,6 +36,31 @@ function writeLocalChatData(userId: string | null | undefined, data: { conversat
   try { localStorage.setItem(localChatKey(userId), JSON.stringify(data)); } catch { /* storage can be unavailable */ }
 }
 
+type QuickSuggestion = { label: string; prompt: string };
+
+function buildDynamicSuggestions(userText: string, assistantText: string, isAr: boolean): QuickSuggestion[] {
+  const clean = userText.replace(/\s+/g, ' ').trim();
+  const topic = clean.replace(/(?:لخّص|لخص|اشرح|وضح|اعمل|أنشئ|اختبار|اختبرني|summarize|explain|create|quiz|test)/gi, '').trim().slice(0, 48) || (isAr ? 'الموضوع ده' : 'this topic');
+  const response = assistantText.toLowerCase();
+  const suggestions: QuickSuggestion[] = [];
+  const add = (label: string, prompt: string) => { if (!suggestions.some(item => item.label === label)) suggestions.push({ label, prompt }); };
+
+  if (/شرح|تعريف|يعني|مثال|explain|means|example|concept/i.test(response + ' ' + clean)) {
+    add(isAr ? 'اختبرني في النقطة دي' : 'Quiz me on this', isAr ? `أنشئ لي اختبارًا من 8 أسئلة عن ${topic}، مستوى متوسط.` : `Create an 8-question medium quiz about ${topic}.`);
+    add(isAr ? 'اديني مثالًا إضافيًا' : 'Give me another example', isAr ? `اشرح ${topic} بمثال جديد من الحياة العملية.` : `Explain ${topic} with another practical example.`);
+  }
+  if (/خطأ|غلط|مراجعة|صعب|mistake|review|difficult|incorrect/i.test(response + ' ' + clean)) {
+    add(isAr ? 'راجع نقطة الضعف' : 'Review the weak point', isAr ? `اعمل لي مراجعة قصيرة لأصعب نقطة في ${topic} مع سؤال تطبيقي.` : `Give me a short review of the hardest part of ${topic} with one practice question.`);
+    add(isAr ? 'اختبرني تدريجيًا' : 'Practice step by step', isAr ? `اختبرني في ${topic} بثلاثة أسئلة تبدأ سهلًا ثم تصبح أصعب.` : `Practice ${topic} with three questions that gradually get harder.`);
+  }
+  if (/ملخص|خلاصة|summary|summar/i.test(response + ' ' + clean)) {
+    add(isAr ? 'حوّل الملخص لبطاقات' : 'Turn it into flashcards', isAr ? `حوّل ملخص ${topic} إلى بطاقات سؤال وإجابة للمراجعة.` : `Turn the summary of ${topic} into Q&A flashcards.`);
+  }
+  add(isAr ? 'لخّص الرد' : 'Summarize this reply', isAr ? 'لخّص ردك الأخير في 3 نقاط واضحة.' : 'Summarize your last reply in 3 clear points.');
+  add(isAr ? 'أنشئ اختبارًا من الرد' : 'Create a quiz from this', isAr ? `أنشئ اختبارًا من 10 أسئلة مبنيًا على ردك الأخير عن ${topic}.` : `Create a 10-question quiz based on your last reply about ${topic}.`);
+  return suggestions.slice(0, 4);
+}
+
 function parseQuizRequest(text: string): { topic: string; amount: number; difficulty: string } | null {
   const normalized = text.trim();
   if (!/(أنشئ|اعمل|اعملّي|ولد|اختبار|quiz|test)/i.test(normalized)) return null;
@@ -541,6 +566,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const [lastError, setLastError] = useState<string | null>(null);
   const [pendingQuiz, setPendingQuiz] = useState<{ topic: string; amount: number; difficulty: string } | null>(null);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [quickSuggestions, setQuickSuggestions] = useState<QuickSuggestion[]>([]);
 
   // Sidebar & Conversations
   const [conversations, setConversations] = useState<AIChatConversation[]>([]);
@@ -705,6 +731,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
       if (!fullText) throw new Error('empty');
       setMessages(prev => [...prev, { id: aiMsgId, role: 'assistant', text: fullText, timestamp: userMsg.timestamp }]);
+      setQuickSuggestions(buildDynamicSuggestions(userMsg.text, fullText, isAr));
       setStreamingText('');
       if (currentConvId) {
         const updated = readLocalChatData(userId);
@@ -768,6 +795,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     setIsAnalyzing(false);
     setStreamingText('');
     setLastError(null);
+    setQuickSuggestions([]);
   };
 
   const retryLastMessage = () => {
@@ -839,19 +867,6 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   }, { scope: containerRef });
 
   const emptyState = messages.length === 0 && !isAnalyzing;
-  const quickSuggestions = isAr
-    ? [
-        { label: 'لخّص آخر شرح', prompt: 'لخّص آخر شرح في المحادثة في نقاط قصيرة، ثم اقترح لي الخطوة التالية.' },
-        { label: 'اختبرني في الموضوع', prompt: 'أنشئ لي اختبارًا من 10 أسئلة في موضوع آخر شرح، مستوى متوسط.' },
-        { label: 'راجع أخطائي', prompt: 'حلّل أخطائي الأخيرة واقترح خطة مراجعة قصيرة.' },
-        { label: 'اشرح بطريقة أبسط', prompt: 'أعد شرح آخر فكرة بطريقة أبسط مع مثال.' },
-      ]
-    : [
-        { label: 'Summarize the lesson', prompt: 'Summarize the latest lesson in short points, then suggest my next step.' },
-        { label: 'Quiz me on it', prompt: 'Create a 10-question medium quiz about the latest lesson.' },
-        { label: 'Review my mistakes', prompt: 'Analyze my recent mistakes and suggest a short review plan.' },
-        { label: 'Explain it simply', prompt: 'Explain the latest idea more simply with an example.' },
-      ];
 
   return (
     <div ref={containerRef}
