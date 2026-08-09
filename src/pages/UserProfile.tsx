@@ -651,11 +651,11 @@ export default function UserProfile({
           if (reqErr) console.warn('Premium request audit insert failed after successful coupon redemption:', reqErr);
           showToast('success', 
             isAr
-              ? `تهانينا! 🎉 تم تطبيق الخصم الحصري بنسبة 100% بنجاح وتفعيل الباقة الذهبية لحسابك مباشرة دون الحاجة لمراجعة المشرف!`
-              : `Congratulations! 🎉 100% discount applied. Educator Gold active directly without admin review!`,
+              ? `تهانينا! 🎉 تم تطبيق الخصم بنسبة 100% وتفعيل باقة Diamond لحسابك مباشرة دون الحاجة لمراجعة المشرف!`
+              : `Congratulations! 🎉 100% discount applied. Diamond is active directly without admin review!`,
           );
           // Notify parent of updated status immediately
-          onPremiumStatusChange(true, "Educator Gold (300 EGP)");
+          onPremiumStatusChange(true, "Diamond");
           // Reload profile statistics
           const stats = await getUserProfileStats(profileId);
           setProfileData(stats);

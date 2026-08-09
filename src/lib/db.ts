@@ -615,9 +615,23 @@ export async function saveUserProfile(
   if (birthdate !== undefined) updatedUser.birthdate = birthdate;
   if (onboarded !== undefined) updatedUser.onboarded = onboarded;
 
-  const { error } = await supabase.from('users').upsert(updatedUser, { onConflict: 'uid' });
+  // Preserve server-side entitlement fields when a generic profile save is made.
+  // A broad upsert from an old/stale client payload can otherwise overwrite a
+  // freshly redeemed subscription with Free/default values.
+  const { data: existingProfile, error: lookupError } = await supabase
+    .from('users')
+    .select('uid')
+    .eq('uid', userId)
+    .maybeSingle();
+  if (lookupError) {
+    console.error(`Error checking existing user profile for ${userId}:`, lookupError.message);
+    throw lookupError;
+  }
+  const { error } = existingProfile
+    ? await supabase.from('users').update(updatedUser).eq('uid', userId)
+    : await supabase.from('users').insert(updatedUser);
   if (error) {
-    console.error(`Error upserting user profile for ${userId}:`, error.message);
+    console.error(`Error saving user profile for ${userId}:`, error.message);
     throw error;
   }
 }
