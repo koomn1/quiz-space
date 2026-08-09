@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Quiz } from '../types';
-import { Star, Play, Share2, Trash2, Tag, Sparkles } from 'lucide-react';
+import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2 } from 'lucide-react';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag } from './PremiumNameTag';
 import ParallaxTiltCard from './ParallaxTiltCard';
+import { getCompletionsByQuizId } from '../lib/db';
+import { QuizCompletion } from '../types';
 
 interface InteractiveQuizCardProps {
   quiz: Quiz;
@@ -45,9 +47,39 @@ export function InteractiveQuizCard({
     currentUserEmail === 'adman777888999@gmail.com' || 
     quiz.creatorId === currentUserId
   );
+  const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
+  const [attemptsOpen, setAttemptsOpen] = useState(false);
+  const [attemptsLoading, setAttemptsLoading] = useState(false);
+
+  const openAttempts = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!canEdit) return;
+    setAttemptsOpen(true);
+    setAttemptsLoading(true);
+    try {
+      setAttempts(await getCompletionsByQuizId(quiz.id));
+    } finally {
+      setAttemptsLoading(false);
+    }
+  };
+
+  const attemptsPanel = attemptsOpen ? (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onClick={() => setAttemptsOpen(false)}>
+      <div className="w-full max-w-lg max-h-[min(640px,90vh)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900" onClick={(e) => e.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+          <div><h3 className="font-black text-slate-800 dark:text-white">{isAr ? 'الأعضاء الذين حلوا الاختبار' : 'Members who solved this quiz'}</h3><p className="mt-1 text-xs text-slate-500">{quiz.title}</p></div>
+          <button type="button" onClick={() => setAttemptsOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="max-h-[min(520px,70vh)] overflow-y-auto p-4">
+          {attemptsLoading ? <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" />{isAr ? 'جاري تحميل الأعضاء...' : 'Loading members...'}</div> : attempts.length === 0 ? <p className="py-12 text-center text-sm text-slate-500">{isAr ? 'لا توجد محاولات مسجلة بعد.' : 'No recorded attempts yet.'}</p> : <div className="space-y-2">{attempts.map((attempt) => <div key={attempt.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50"><div><p className="font-bold text-slate-800 dark:text-slate-100">{attempt.takerName || (isAr ? 'عضو' : 'Member')}</p><p className="text-[11px] text-slate-500">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p></div><span className="rounded-lg bg-primary/10 px-2 py-1 text-xs font-black text-primary">{attempt.score}/{attempt.totalQuestions}</span></div>)}</div>}
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   if (view === 'list') {
     return (
+      <>
       <ParallaxTiltCard
         idx={idx}
         onClick={() => onStartQuiz(quiz.id)}
@@ -98,7 +130,7 @@ export function InteractiveQuizCard({
                 />
               </span>
               <span>•</span>
-              <span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span>
+              <button type="button" onClick={openAttempts} disabled={!canEdit} className={canEdit ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canEdit ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
             </div>
           </div>
         </div>
@@ -156,10 +188,13 @@ export function InteractiveQuizCard({
           </button>
         </div>
       </ParallaxTiltCard>
+      {attemptsPanel}
+      </>
     );
   }
 
   return (
+    <>
     <ParallaxTiltCard
       idx={idx}
       onClick={() => onStartQuiz(quiz.id)}
@@ -231,7 +266,7 @@ export function InteractiveQuizCard({
               />
             </span>
             <span className="text-slate-300 dark:text-slate-700 font-normal select-none">•</span>
-            <span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span>
+            <button type="button" onClick={openAttempts} disabled={!canEdit} className={canEdit ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canEdit ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
           </div>
         </div>
 
@@ -301,5 +336,7 @@ export function InteractiveQuizCard({
       </div>
       </div>
     </ParallaxTiltCard>
+    {attemptsPanel}
+    </>
   );
 }
