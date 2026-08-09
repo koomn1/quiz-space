@@ -438,10 +438,9 @@ export default function App() {
   // screen are open — the chat page itself never scrolls
   React.useEffect(() => {
     if (isSidebarOpen || isAuthModalOpen || authRedirectQuizId || isCosmoTab) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('scroll-lock');
       return () => {
-        document.body.style.overflow = originalStyle;
+        document.body.classList.remove('scroll-lock');
       };
     }
   }, [isSidebarOpen, isAuthModalOpen, authRedirectQuizId, isCosmoTab]);
@@ -1238,7 +1237,7 @@ export default function App() {
         <div className={`absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none ${isCosmoTab ? 'hidden' : ''}`} />
 
         {/* Padding applied here to clear the fixed header for all banners and main content */}
-        <div className={`${isCosmoTab ? 'pt-14 sm:pt-16 overflow-hidden' : (showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0')} flex flex-col w-full relative z-10 ${isCosmoTab ? 'h-full' : ''}`}>
+        <div className={`${isCosmoTab ? 'pt-14 sm:pt-16 overflow-hidden flex-1 min-h-0' : (showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0')} flex flex-col w-full relative z-10`}>
           {showQuotaWarning && localStorage.getItem('firebase_quota_exceeded_dismissed') !== 'true' && (
             <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-3 text-amber-700 dark:text-amber-300 font-sans z-30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
               <div className="flex items-center gap-2 max-w-4xl" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
@@ -1369,7 +1368,7 @@ export default function App() {
         
 
         {/* Main page frame wrapping */}
-        <main ref={mainContainerRef} className={`${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4' : 'flex-1 w-full min-h-[100dvh] p-0')} relative z-10`}>
+        <main ref={mainContainerRef} className={`${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10')}`}>
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (

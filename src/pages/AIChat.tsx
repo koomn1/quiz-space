@@ -888,7 +888,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       </aside>
 
       {/* ── Main ── */}
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
 
         {/* top bar */}
         <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b" style={{ borderColor: theme.BORDER_SOFT }}>

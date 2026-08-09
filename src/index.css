@@ -579,3 +579,11 @@ html, body, header, main, footer, div, section, article, nav, button, input, tex
 .dark .btn-3d:active {
   box-shadow: 1px 1px 0px 0px rgba(255, 255, 255, 0.9);
 }
+
+/* Force body scroll lock for full-screen modes */
+body.scroll-lock {
+  overflow: hidden !important;
+  height: 100dvh !important;
+  width: 100% !important;
+  position: fixed !important;
+}
