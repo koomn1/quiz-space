@@ -118,6 +118,23 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         return;
       }
       const hasPrivatePayload = !!slot.quizPayload?.id;
+      // Older deployments generated daily IDs with Date.now(), leaving an
+      // unanswered payload pinned forever. Current IDs use the tier window
+      // number, so clear legacy timestamp-based payloads before reusing them.
+      const payloadId = String(slot.quizPayload?.id || '');
+      const legacyPayloadMatch = userId
+        ? payloadId.match(new RegExp(`^daily-${userId}-(\\d+)-\\d+$`))
+        : null;
+      const isLegacyPayload = !!legacyPayloadMatch && Number(legacyPayloadMatch[1]) > 1_000_000_000;
+      if (hasPrivatePayload && isLegacyPayload && !slot.answered) {
+        await resetLegacyDailyQuizSlot(userId, tier);
+        latestDailyPayload = null;
+        setQuizId(null);
+        setAnswered(false);
+        setSecondsLeft(0);
+        setIsGenerating(false);
+        return sync();
+      }
       // A daily quiz can only be attempted once. When the slot is already
       // answered, the old quiz must never be exposed again: purge its
       // sessionStorage snapshot and any lingering payload so the user moves
