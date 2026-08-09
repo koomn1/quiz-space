@@ -1127,6 +1127,7 @@ export default function App() {
   // use their own full-screen surface. The global Header remains available
   // on every non-quiz screen so users never lose navigation context.
   const showAppHeader = !activeQuizId;
+  const isNotFoundTab = activeTab === 'not-found' && !activeQuizId;
   const usesSharedFrame = React.useMemo(() => {
     const sharedTabs = new Set([
       'landing',
@@ -1387,7 +1388,7 @@ export default function App() {
         
 
         {/* Main page frame wrapping */}
-        <main ref={mainContainerRef} className={`${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10')}`}>
+        <main ref={mainContainerRef} className={`${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (isNotFoundTab ? 'flex-1 w-full min-h-0 p-0 relative z-10' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10'))}`}>
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (
@@ -1412,12 +1413,12 @@ export default function App() {
               
               
               
-              className={`${isCosmoTab ? 'h-full min-h-0' : (usesSharedFrame ? '' : 'min-h-[100dvh]')} will-change-transform transform-gpu gsap-tab-wrapper`}
+              className={`${isCosmoTab || isNotFoundTab ? 'h-full min-h-0' : (usesSharedFrame ? '' : 'min-h-[100dvh]')} will-change-transform transform-gpu gsap-tab-wrapper`}
               style={{ backfaceVisibility: 'hidden' }}
             >
               <React.Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] w-full"><CosmicLoader /></div>}>
               {activeTab === 'not-found' && (
-                <NotFound lang={lang} onGoHome={() => setActiveTab('landing')} />
+                <NotFound lang={lang} onGoHome={() => handleSetTab('landing')} />
               )}
               {activeTab === 'landing' && (
                 <>

@@ -59,11 +59,11 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
   };
 
   return (
-    <main ref={rootRef} dir={isAr ? 'rtl' : 'ltr'} className="relative isolate flex w-full items-center justify-center overflow-hidden bg-[#070711] px-5 text-white" style={{ minHeight: '100dvh' }}>
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_35%,#28134b_0%,#0c0b1e_44%,#05050b_100%)]" />
-      <div className="absolute -left-24 top-1/3 -z-10 h-72 w-72 rounded-full bg-fuchsia-700/10 blur-[110px]" />
-      <div className="absolute -right-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-cyan-500/10 blur-[120px]" />
-      <div className="nf-scan pointer-events-none absolute -left-1/3 top-0 -z-10 h-full w-1/4 skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/[.045] to-transparent" />
+    <main ref={rootRef} dir={isAr ? 'rtl' : 'ltr'} className="relative isolate flex min-h-full w-full flex-1 items-center justify-center overflow-hidden bg-slate-50 px-5 py-12 text-slate-900 transition-colors duration-500 dark:bg-[#020617] dark:text-white sm:px-8 sm:py-16">
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_35%,rgba(139,92,246,.14)_0%,rgba(248,250,252,.7)_48%,#f8fafc_100%)] dark:bg-[radial-gradient(ellipse_at_70%_35%,#28134b_0%,#0c0b1e_44%,#05050b_100%)]" />
+      <div className="absolute -left-24 top-1/3 -z-10 h-72 w-72 rounded-full bg-fuchsia-700/10 blur-[110px] dark:bg-fuchsia-700/15" />
+      <div className="absolute -right-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-cyan-500/10 blur-[120px] dark:bg-cyan-500/15" />
+      <div className="nf-scan pointer-events-none absolute -left-1/3 top-0 -z-10 h-full w-1/4 skew-x-[-18deg] bg-gradient-to-r from-transparent via-slate-900/[.035] to-transparent dark:via-white/[.045]" />
 
       <section className="relative w-full max-w-6xl">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-20">
@@ -72,14 +72,14 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
               <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
               404 · {isAr ? 'إحداثيات غير معروفة' : 'unknown coordinates'}
             </div>
-            <h1 ref={titleRef} className="max-w-2xl text-4xl font-black leading-[1.2] tracking-[-.04em] text-white sm:text-6xl">{isAr ? 'الصفحة خرجت من المدار' : 'This page drifted out of orbit'}</h1>
-            <p ref={textRef} className="mt-6 max-w-xl text-sm leading-8 text-slate-300/70 sm:text-base">{isAr ? 'الرابط الذي وصلت إليه غير موجود، لكن رحلتك داخل QuizSpace لم تنتهِ. ارجع إلى المسار الرئيسي واستكشف شيئاً جديداً.' : 'The coordinates you entered do not exist, but your QuizSpace journey is still on. Return to the main orbit and discover something new.'}</p>
+            <h1 ref={titleRef} className="max-w-2xl text-4xl font-black leading-[1.2] tracking-[-.04em] text-slate-950 dark:text-white sm:text-6xl">{isAr ? 'الصفحة خرجت من المدار' : 'This page drifted out of orbit'}</h1>
+            <p ref={textRef} className="mt-6 max-w-xl text-sm leading-8 text-slate-600 dark:text-slate-300/70 sm:text-base">{isAr ? 'الرابط الذي وصلت إليه غير موجود، لكن رحلتك داخل QuizSpace لم تنتهِ. ارجع إلى المسار الرئيسي واستكشف شيئاً جديداً.' : 'The coordinates you entered do not exist, but your QuizSpace journey is still on. Return to the main orbit and discover something new.'}</p>
             <div ref={actionsRef} className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
               <button type="button" onClick={handleHome} className="group inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#11101c] shadow-[0_16px_45px_rgba(139,92,246,.24)] transition hover:-translate-y-1 hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-300">
                 <Home size={16} /> {isAr ? 'العودة للرئيسية' : 'Return home'}
                 {isAr ? <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> : <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />}
               </button>
-              <button type="button" onClick={() => window.history.back()} className="rounded-2xl border border-white/15 bg-white/[.035] px-5 py-3 text-sm font-bold text-white/75 backdrop-blur-md transition hover:-translate-y-1 hover:border-white/35 hover:bg-white/[.08]">{isAr ? 'العودة خطوة' : 'Go back'}</button>
+              <button type="button" onClick={() => window.history.back()} className="rounded-2xl border border-slate-300 bg-white/60 px-5 py-3 text-sm font-bold text-slate-700 backdrop-blur-md transition hover:-translate-y-1 hover:border-slate-400 hover:bg-white dark:border-white/15 dark:bg-white/[.035] dark:text-white/75 dark:hover:border-white/35 dark:hover:bg-white/[.08]">{isAr ? 'العودة خطوة' : 'Go back'}</button>
             </div>
           </div>
 
