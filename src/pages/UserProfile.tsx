@@ -145,7 +145,7 @@ export default function UserProfile({
   const [facebookUrl, setFacebookUrl] = React.useState("");
 
   // Premium Animated Cover states
-  const [chosenBg, setChosenBg] = React.useState("cosmic");
+  const [chosenBg, setChosenBg] = React.useState("profile-cover-youth");
   const [customBgUrl, setCustomBgUrl] = React.useState("");
   const [isUploadingCover, setIsUploadingCover] = React.useState(false);
   const [bgSettings, setBgSettings] = React.useState<any>({
@@ -269,7 +269,7 @@ export default function UserProfile({
 
           // Parse serialized location info column for custom backdrops, slogs & social urls
           const locStr = stats.location || "";
-          let parsedBg = "cosmic";
+          let parsedBg = "profile-cover-youth";
           let parsedCoverText = "";
           let parsedCustomBgUrl = "";
           let parsedGithub = "";
@@ -282,7 +282,7 @@ export default function UserProfile({
           if (locStr.includes("||bg:")) {
             const afterBg = locStr.split("||bg:")[1] || "";
             const bgChunks = afterBg.split("||");
-            parsedBg = bgChunks[0] || "cosmic";
+            parsedBg = bgChunks[0] || "profile-cover-youth";
             bgChunks.forEach((chunk: string) => {
               if (chunk.startsWith("coverText:"))
                 parsedCoverText = chunk.substring(10);
@@ -350,7 +350,11 @@ export default function UserProfile({
             if (val) parsedBgBlur = parseInt(val);
           }
 
-          setChosenBg(parsedBg);
+          const availableCoverIds = new Set([
+            "profile-cover-youth", "profile-cover-girl", "profile-cover-gaming", "profile-cover-education",
+            "profile-cover-sport", "profile-cover-coding", "profile-cover-music", "profile-cover-nature"
+          ]);
+          setChosenBg(availableCoverIds.has(parsedBg) ? parsedBg : "profile-cover-youth");
           setCustomBgUrl(parsedCustomBgUrl);
           setBgSettings({
             speed: parsedBgSpeed,
@@ -1488,24 +1492,25 @@ export default function UserProfile({
             {/* GSAP Cover Background Selection */}
             <div className="border-t border-slate-200 dark:border-slate-800 pt-5 space-y-6">
               <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                {isAr ? "خلفية الغلاف المتحركة" : "Animated Cover Background"}
+                {isAr ? "خلفية غلاف الملف الشخصي" : "Profile Cover Background"}
               </h4>
 
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  ['cosmic', '🌌', 'الفضاء الكوني', 'Cosmic Space'],
-                  ['waves', '🌊', 'الأمواج النيون', 'Neon Waves'],
-                  ['aurora', '🌈', 'الشفق القطبي', 'Aurora Mist'],
-                  ['sunset', '🌅', 'غروب مخملي', 'Velvet Sunset'],
-                  ['ocean', '🫧', 'عمق المحيط', 'Deep Ocean'],
-                  ['matrix', '⌁', 'شبكة المعرفة', 'Knowledge Grid'],
-                  ['velvet', '🪐', 'مخمل بنفسجي', 'Purple Velvet'],
-                  ['prism', '✦', 'منشور الضوء', 'Light Prism'],
+                  ['profile-cover-youth', '🎧', 'شاب التقنية', 'Tech Student'],
+                  ['profile-cover-girl', '📚', 'فتاة مبدعة', 'Creative Student'],
+                  ['profile-cover-gaming', '🎮', 'عالم الألعاب', 'Gaming Zone'],
+                  ['profile-cover-education', '✏️', 'مكتب التعليم', 'Study Desk'],
+                  ['profile-cover-sport', '🏃', 'الطاقة الرياضية', 'Sports Energy'],
+                  ['profile-cover-coding', '💻', 'مطور الذكاء الاصطناعي', 'AI Coder'],
+                  ['profile-cover-music', '🎵', 'استوديو الموسيقى', 'Music Studio'],
+                  ['profile-cover-nature', '🏔️', 'مغامرة الطبيعة', 'Nature Explorer'],
                 ].map(([id, icon, ar, en]) => (
                   <button key={id} type="button" onClick={() => setChosenBg(id)} className={`relative overflow-hidden p-3 rounded-2xl border-2 text-center transition-all cursor-pointer ${chosenBg === id ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20 scale-[1.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-primary/50'}`}>
-                    <div className="h-12 rounded-xl mb-2 opacity-90" style={COVER_PREVIEW_STYLES[id]} />
-                    <div className="text-lg leading-none mb-1">{icon}</div>
-                    <div className="text-[10px] font-bold text-slate-800 dark:text-slate-200">{isAr ? ar : en}</div>
+                    <div className="absolute inset-0 bg-cover bg-center opacity-55" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}backgrounds/${id}.png)` }} />
+                    <div className="absolute inset-0 bg-slate-950/35" />
+                    <div className="relative z-10 text-lg leading-none mb-1">{icon}</div>
+                    <div className="relative z-10 text-[10px] font-black text-white drop-shadow-md">{isAr ? ar : en}</div>
                   </button>
                 ))}
               </div>
@@ -1514,7 +1519,7 @@ export default function UserProfile({
                   {isUploadingCover ? (isAr ? 'جاري رفع الصورة...' : 'Uploading...') : (isAr ? 'اختيار صورة من الجهاز' : 'Choose an image from device')}
                   <input type="file" accept="image/*" className="hidden" disabled={isUploadingCover} onChange={(e) => { void handleCoverUpload(e.target.files?.[0]); e.currentTarget.value = ''; }} />
                 </label>
-                {customBgUrl && <button type="button" onClick={() => { setCustomBgUrl(''); setChosenBg('cosmic'); }} className="px-4 py-3 rounded-xl text-xs font-black text-rose-600 bg-rose-500/10 hover:bg-rose-500/20">{isAr ? 'إزالة الصورة' : 'Remove image'}</button>}
+                {customBgUrl && <button type="button" onClick={() => { setCustomBgUrl(''); setChosenBg('profile-cover-youth'); }} className="px-4 py-3 rounded-xl text-xs font-black text-rose-600 bg-rose-500/10 hover:bg-rose-500/20">{isAr ? 'إزالة الصورة' : 'Remove image'}</button>}
               </div>
 
               {/* Cover Slogan block */}

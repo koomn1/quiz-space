@@ -36,7 +36,8 @@ const modeStyles: Record<string, React.CSSProperties> = {
 
 export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, customImage }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const safeMode = mode === 'custom' && customImage ? 'custom' : (modeClasses[mode] ? mode : 'cosmic');
+  const isProfileImage = mode.startsWith('profile-cover-');
+  const safeMode = mode === 'custom' && customImage ? 'custom' : (isProfileImage || modeClasses[mode] ? mode : 'cosmic');
 
   useGSAP(() => {
     const root = containerRef.current;
@@ -53,6 +54,20 @@ export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, 
 
   if (safeMode === 'custom') {
     return <div ref={containerRef} className="absolute inset-0 overflow-hidden bg-slate-950" style={{ backgroundImage: `linear-gradient(115deg, rgba(5,8,25,.72), rgba(7,12,35,.18)), url(${customImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />;
+  }
+
+  if (isProfileImage) {
+    return (
+      <div
+        ref={containerRef}
+        className="absolute inset-0 overflow-hidden bg-slate-950 bg-cover bg-center"
+        style={{
+          backgroundImage: `linear-gradient(115deg, rgba(5,8,25,.48), rgba(7,12,35,.12)), url(${import.meta.env.BASE_URL}backgrounds/${safeMode}.png)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+    );
   }
 
   const stars = Array.from({ length: safeMode === 'matrix' ? 26 : 34 });
