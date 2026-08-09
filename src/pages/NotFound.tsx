@@ -1,4 +1,5 @@
 import React from 'react';
+import gsap from 'gsap';
 import { ArrowLeft, ArrowRight, Home, Sparkles } from 'lucide-react';
 
 interface NotFoundProps {
@@ -7,69 +8,100 @@ interface NotFoundProps {
 }
 
 export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const titleRef = React.useRef<HTMLHeadingElement>(null);
+  const textRef = React.useRef<HTMLParagraphElement>(null);
+  const actionsRef = React.useRef<HTMLDivElement>(null);
   const isAr = lang === 'ar';
 
+  React.useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const ctx = gsap.context(() => {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const digits = gsap.utils.toArray<HTMLElement>('.nf-digit');
+      const errorChars = gsap.utils.toArray<HTMLElement>('.nf-error-char');
+      const errorLines = gsap.utils.toArray<HTMLElement>('.nf-error-line');
+      gsap.set([titleRef.current, textRef.current, actionsRef.current], { opacity: 0, y: 18 });
+      gsap.set(digits, { opacity: 0, y: 24, rotateX: -28 });
+      gsap.set(errorChars, { opacity: 0, y: 10, scale: 0.82, filter: 'blur(5px)' });
+      gsap.set(errorLines, { scaleX: 0.25, opacity: 0.25 });
+      if (reduced) {
+        gsap.set([titleRef.current, textRef.current, actionsRef.current], { opacity: 1, y: 0 });
+        gsap.set(digits, { opacity: 1, y: 0, rotateX: 0 });
+        gsap.set(errorChars, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' });
+        gsap.set(errorLines, { scaleX: 1, opacity: 0.7 });
+        return;
+      }
+      gsap.timeline({ defaults: { ease: 'power3.out' } })
+        .to(digits, { opacity: 1, y: 0, rotateX: 0, duration: 0.7, stagger: 0.11 })
+        .to(titleRef.current, { opacity: 1, y: 0, duration: 0.6 }, '-=.25')
+        .to(textRef.current, { opacity: 1, y: 0, duration: 0.5 }, '-=.25')
+        .to(actionsRef.current, { opacity: 1, y: 0, duration: 0.45 }, '-=.18');
+      gsap.to('.nf-digit', { y: -7, duration: 2.6, repeat: -1, yoyo: true, stagger: 0.18, ease: 'sine.inOut' });
+
+      // The signal resolves into ERROR, holds for a beat, then dissolves and repeats.
+      const errorLoop = gsap.timeline({ repeat: -1, repeatDelay: 1.1, delay: 1.4 });
+      errorLoop
+        .to(errorLines, { scaleX: 1, opacity: 0.7, duration: 0.45, stagger: 0.08, ease: 'power2.out' })
+        .to(errorChars, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.3, stagger: 0.1, ease: 'back.out(1.8)' })
+        .to(errorChars, { color: '#f0abfc', textShadow: '0 0 22px rgba(217,70,239,.85)', duration: 0.55, stagger: 0.06, ease: 'sine.inOut' })
+        .to(errorChars, { opacity: 0, y: -8, scale: 1.18, filter: 'blur(5px)', duration: 0.35, stagger: 0.06, ease: 'power2.in' }, '+=0.7')
+        .to(errorLines, { scaleX: 0.25, opacity: 0.25, duration: 0.35, stagger: 0.06, ease: 'power2.in' }, '-=0.18');
+      gsap.to('.nf-scan', { xPercent: 180, duration: 8, repeat: -1, ease: 'none', delay: 1 });
+    }, root);
+    return () => ctx.revert();
+  }, []);
+
   const handleHome = () => {
-    if (onGoHome) {
-      onGoHome();
-      return;
-    }
+    if (onGoHome) return onGoHome();
     window.location.assign(import.meta.env.BASE_URL || '/');
   };
 
   return (
-    <main
-      dir={isAr ? 'rtl' : 'ltr'}
-      className="flex min-h-full w-full flex-1 items-center justify-center bg-slate-50 px-4 py-12 text-slate-950 transition-colors duration-300 dark:bg-[#020617] dark:text-white sm:px-6 sm:py-16"
-    >
-      <section className="flex w-full max-w-5xl flex-col items-center text-center">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-extrabold tracking-wide text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[.04] dark:text-slate-300">
-          <Sparkles className="h-4 w-4 text-cyan-500" />
-          <span dir="ltr">404</span>
-          <span>· {isAr ? 'خطأ في المسار' : 'ROUTE ERROR'}</span>
-        </div>
+    <main ref={rootRef} dir={isAr ? 'rtl' : 'ltr'} className="relative isolate flex min-h-full w-full flex-1 items-center justify-center overflow-hidden bg-slate-50 px-5 py-12 text-slate-900 transition-colors duration-500 dark:bg-[#020617] dark:text-white sm:px-8 sm:py-16">
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_35%,rgba(139,92,246,.14)_0%,rgba(248,250,252,.7)_48%,#f8fafc_100%)] dark:bg-[radial-gradient(ellipse_at_70%_35%,#28134b_0%,#0c0b1e_44%,#05050b_100%)]" />
+      <div className="absolute -left-24 top-1/3 -z-10 h-72 w-72 rounded-full bg-fuchsia-700/10 blur-[110px] dark:bg-fuchsia-700/15" />
+      <div className="absolute -right-20 bottom-0 -z-10 h-80 w-80 rounded-full bg-cyan-500/10 blur-[120px] dark:bg-cyan-500/15" />
+      <div className="nf-scan pointer-events-none absolute -left-1/3 top-0 -z-10 h-full w-1/4 skew-x-[-18deg] bg-gradient-to-r from-transparent via-slate-900/[.035] to-transparent dark:via-white/[.045]" />
 
-        <div className="flex items-center justify-center gap-2 sm:gap-4" aria-label="404">
-          <span className="nf-number-card">4</span>
-          <span className="nf-number-card nf-zero-card" aria-label="error zero">
-            <span className="nf-zero-orb" aria-hidden="true" />
-            <span className="relative z-10">0</span>
-          </span>
-          <span className="nf-number-card">4</span>
-        </div>
+      <section className="relative w-full max-w-6xl">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-20">
+          <div className="order-2 text-center lg:order-1 lg:text-right">
+            <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[.035] px-4 py-2 text-[10px] font-bold uppercase tracking-[.28em] text-cyan-200/70 backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+              404 · {isAr ? 'إحداثيات غير معروفة' : 'unknown coordinates'}
+            </div>
+            <h1 ref={titleRef} className="max-w-2xl text-4xl font-black leading-[1.2] tracking-[-.04em] text-slate-950 dark:text-white sm:text-6xl">{isAr ? 'الصفحة خرجت من المدار' : 'This page drifted out of orbit'}</h1>
+            <p ref={textRef} className="mt-6 max-w-xl text-sm leading-8 text-slate-600 dark:text-slate-300/70 sm:text-base">{isAr ? 'الرابط الذي وصلت إليه غير موجود، لكن رحلتك داخل QuizSpace لم تنتهِ. ارجع إلى المسار الرئيسي واستكشف شيئاً جديداً.' : 'The coordinates you entered do not exist, but your QuizSpace journey is still on. Return to the main orbit and discover something new.'}</p>
+            <div ref={actionsRef} className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
+              <button type="button" onClick={handleHome} className="group inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#11101c] shadow-[0_16px_45px_rgba(139,92,246,.24)] transition hover:-translate-y-1 hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-300">
+                <Home size={16} /> {isAr ? 'العودة للرئيسية' : 'Return home'}
+                {isAr ? <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> : <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />}
+              </button>
+              <button type="button" onClick={() => window.history.back()} className="rounded-2xl border border-slate-300 bg-white/60 px-5 py-3 text-sm font-bold text-slate-700 backdrop-blur-md transition hover:-translate-y-1 hover:border-slate-400 hover:bg-white dark:border-white/15 dark:bg-white/[.035] dark:text-white/75 dark:hover:border-white/35 dark:hover:bg-white/[.08]">{isAr ? 'العودة خطوة' : 'Go back'}</button>
+            </div>
+          </div>
 
-        <div className="mt-7 flex items-center justify-center gap-3" dir="ltr" aria-label="ERROR">
-          <span className="h-px w-10 bg-red-500/70 sm:w-16" />
-          <span className="nf-error-label">ERROR</span>
-          <span className="h-px w-10 bg-red-500/70 sm:w-16" />
-        </div>
-
-        <h1 className="mt-10 max-w-3xl text-4xl font-black leading-tight tracking-tight text-slate-950 dark:text-white sm:text-6xl">
-          {isAr ? 'الصفحة خرجت من المسار' : 'This page left the route'}
-        </h1>
-        <p className="mt-5 max-w-2xl text-base font-medium leading-8 text-slate-600 dark:text-slate-300 sm:text-lg">
-          {isAr
-            ? 'الرابط الذي وصلت إليه غير موجود، لكن رحلتك داخل QuizSpace لم تنتهِ. ارجع إلى المسار الرئيسي واستكشف شيئًا جديدًا.'
-            : 'The link you followed does not exist, but your QuizSpace journey is not over. Return home and discover something new.'}
-        </p>
-
-        <div className="mt-9 flex w-full flex-col-reverse items-center justify-center gap-3 sm:w-auto sm:flex-row">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400 dark:border-white/15 dark:bg-white/[.04] dark:text-slate-200 dark:hover:bg-white/[.09] sm:w-auto"
-          >
-            {isAr ? 'العودة خطوة' : 'Go back'}
-          </button>
-          <button
-            type="button"
-            onClick={handleHome}
-            className="group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-7 py-3 text-sm font-black text-white shadow-lg shadow-slate-950/15 transition hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-400 dark:bg-white dark:text-slate-950 dark:hover:bg-cyan-50 sm:w-auto"
-          >
-            <Home className="h-4 w-4" />
-            {isAr ? 'العودة للرئيسية' : 'Return home'}
-            {isAr ? <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> : <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
-          </button>
+          <div className="order-1 flex justify-center lg:order-2">
+            <div className="relative w-[min(88vw,470px)] py-10">
+              <div className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-[85%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/15 blur-3xl" />
+              <div className="relative flex items-center justify-center gap-2 sm:gap-4" aria-label="404">
+                {['4', '0', '4'].map((digit, index) => (
+                  <span key={`${digit}-${index}`} className="nf-digit flex aspect-[.72] w-[clamp(4.5rem,18vw,8rem)] items-center justify-center rounded-[1.2rem] border border-white/15 bg-gradient-to-b from-white/[.16] to-white/[.035] font-mono text-[clamp(5.5rem,18vw,10rem)] font-black leading-none text-transparent bg-clip-text shadow-[inset_0_1px_0_rgba(255,255,255,.16),0_18px_60px_rgba(139,92,246,.18)] backdrop-blur-sm" style={{ backgroundImage: index === 1 ? 'linear-gradient(180deg, #67e8f9 0%, #a78bfa 48%, #f9a8d4 100%)' : 'linear-gradient(180deg, #ffffff 0%, #e9d5ff 46%, #67e8f9 100%)' }}>{digit}</span>
+                ))}
+              </div>
+              <div className="nf-error-stage mt-7 flex min-h-10 items-center justify-center gap-3 text-[clamp(.85rem,2.2vw,1.1rem)] font-black uppercase tracking-[.5em] text-cyan-200/80" aria-label="ERROR">
+                <span className="nf-error-line h-px w-8 origin-right bg-gradient-to-l from-cyan-300/80 to-transparent sm:w-14" />
+                <span className="inline-flex gap-[.18em]">
+                  {'ERROR'.split('').map((letter, index) => (
+                    <span key={`${letter}-${index}`} className="nf-error-char inline-block">{letter}</span>
+                  ))}
+                </span>
+                <span className="nf-error-line h-px w-8 origin-left bg-gradient-to-r from-fuchsia-300/80 to-transparent sm:w-14" />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
