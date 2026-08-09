@@ -814,7 +814,7 @@ export async function completeUserDailyQuiz(userId: string, quizId: string): Pro
 
 export async function getDailyQuizSlot(tier: DailyQuizTier): Promise<DailyQuizSlot | null> {
   if (!isSupabaseConfigured) return null;
-  const { data, error } = await supabase.rpc('get_daily_quiz_slot', { p_tier: tier }).maybeSingle();
+  const { data, error } = await supabase.rpc('get_user_daily_quiz_slot', { p_tier: tier }).maybeSingle();
   if (error || !data) {
     console.error('Error loading daily quiz slot:', error?.message);
     return null;
@@ -834,7 +834,7 @@ export async function getDailyQuizSlot(tier: DailyQuizTier): Promise<DailyQuizSl
 // the previous quiz has actually expired).
 export async function claimDailyQuizRefresh(tier: DailyQuizTier): Promise<boolean> {
   if (!isSupabaseConfigured) return false;
-  const { data, error } = await supabase.rpc('claim_daily_quiz_refresh', { p_tier: tier });
+  const { data, error } = await supabase.rpc('claim_user_daily_quiz_refresh', { p_tier: tier });
   if (error) {
     console.error('Error claiming daily quiz refresh:', error.message);
     return false;
@@ -844,7 +844,7 @@ export async function claimDailyQuizRefresh(tier: DailyQuizTier): Promise<boolea
 
 export async function finalizeDailyQuizRefresh(tier: DailyQuizTier, quizId: string): Promise<void> {
   if (!isSupabaseConfigured) return;
-  const { error } = await supabase.rpc('finalize_daily_quiz_refresh', { p_tier: tier, p_quiz_id: quizId });
+  const { error } = await supabase.rpc('finalize_user_daily_quiz_refresh', { p_tier: tier, p_quiz_id: quizId });
   if (error) console.error('Error finalizing daily quiz refresh:', error.message);
 }
 
@@ -852,7 +852,7 @@ export async function finalizeDailyQuizRefresh(tier: DailyQuizTier, quizId: stri
 // stuck on "refreshing" forever and block every other tab/user.
 export async function releaseDailyQuizRefresh(tier: DailyQuizTier): Promise<void> {
   if (!isSupabaseConfigured) return;
-  const { error } = await supabase.rpc('release_daily_quiz_refresh', { p_tier: tier });
+  const { error } = await supabase.rpc('release_user_daily_quiz_refresh', { p_tier: tier });
   if (error) console.error('Error releasing daily quiz refresh:', error.message);
 }
 
