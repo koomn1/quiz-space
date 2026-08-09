@@ -939,7 +939,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
             /* ── Welcome ── */
             <div ref={welcomeRef}
-              className="flex flex-col items-center justify-center h-full px-4 pb-8">
+              className="flex flex-col items-center justify-center min-h-full px-4 py-8">
 
               <div className="welcome-title flex items-center gap-3 mb-8">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg shadow-violet-500/20">

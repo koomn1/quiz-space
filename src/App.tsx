@@ -1200,26 +1200,10 @@ export default function App() {
             
             
             
-          className={`flex w-full transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : 'min-h-screen'} {
+          className={`flex w-full transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : 'min-h-screen'} ${
             darkMode
-              ? colorTheme === 'sky' 
-                ? 'bg-[#020617] text-slate-100' 
-                : colorTheme === 'emerald' 
-                  ? 'bg-[#020617] text-slate-100' 
-                  : colorTheme === 'sunset' 
-                    ? 'bg-[#020617] text-slate-100' 
-                    : colorTheme === 'honey'
-                      ? 'bg-[#020617] text-slate-100'
-                      : 'bg-[#020617] text-slate-100' // Indigo / default
-              : colorTheme === 'sky'
-                ? 'bg-[#f8fafc] text-slate-800'
-                : colorTheme === 'emerald'
-                  ? 'bg-[#f8fafc] text-slate-800'
-                  : colorTheme === 'sunset'
-                    ? 'bg-[#f8fafc] text-slate-800'
-                    : colorTheme === 'honey'
-                      ? 'bg-[#f8fafc] text-slate-800'
-                      : 'bg-[#f8fafc] text-slate-800' // Indigo / default
+              ? 'bg-[#020617] text-slate-100'
+              : 'bg-[#f8fafc] text-slate-800'
           }`}
         >
           <PremiumCursor />
