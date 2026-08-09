@@ -98,7 +98,7 @@ export default function Header({
     <header className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 pointer-events-none px-2 sm:px-4 pt-0 pb-2 sm:pb-3 bg-white/80 dark:bg-slate-950/95">
       <div className="max-w-5xl mx-auto pointer-events-auto">
         <div 
-          className="flex items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md saturate-150 border border-slate-100 dark:border-slate-800/80 rounded-b-2xl px-4 sm:px-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
+          className="flex items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/80 rounded-b-2xl px-4 sm:px-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
           
           
           

@@ -934,7 +934,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
         </div>
 
         {/* chat / welcome — the ONLY scrollable region of the page */}
-        <div className="flex-1 overflow-y-auto min-h-0" dir="rtl" style={sidebarOpen ? {} : { maxWidth: '100%' }}>
+        <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain scroll-smooth" dir="rtl" style={sidebarOpen ? {} : { maxWidth: '100%' }}>
           {emptyState ? (
 
             /* ── Welcome ── */

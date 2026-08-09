@@ -1208,7 +1208,7 @@ export default function App() {
         >
           <PremiumCursor />
       
-                <div className={`flex-1 flex flex-col min-w-0 transition-colors duration-300 relative overflow-x-hidden ${isCosmoTab ? 'h-full' : (usesSharedFrame ? '' : 'min-h-[100dvh]')}`}>                
+                <div className={`flex-1 flex flex-col min-w-0 transition-colors duration-300 relative ${isCosmoTab ? 'h-full overflow-hidden' : 'overflow-x-hidden ' + (usesSharedFrame ? '' : 'min-h-[100dvh]')}`}>                
                 
         <div className={`fixed inset-0 pointer-events-none z-0 overflow-hidden select-none ${isCosmoTab ? 'hidden' : ''}`}>
           {/* Light mode background elements */}
@@ -1238,7 +1238,7 @@ export default function App() {
         <div className={`absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none ${isCosmoTab ? 'hidden' : ''}`} />
 
         {/* Padding applied here to clear the fixed header for all banners and main content */}
-        <div className={`${isCosmoTab ? 'pt-14 sm:pt-16' : (showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0')} flex flex-col w-full relative z-10 ${isCosmoTab ? 'h-full' : ''}`}>
+        <div className={`${isCosmoTab ? 'pt-14 sm:pt-16 overflow-hidden' : (showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0')} flex flex-col w-full relative z-10 ${isCosmoTab ? 'h-full' : ''}`}>
           {showQuotaWarning && localStorage.getItem('firebase_quota_exceeded_dismissed') !== 'true' && (
             <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-3 text-amber-700 dark:text-amber-300 font-sans z-30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
               <div className="flex items-center gap-2 max-w-4xl" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
