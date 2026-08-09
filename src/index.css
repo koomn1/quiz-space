@@ -507,6 +507,68 @@ html, body, header, main, footer, div, section, article, nav, button, input, tex
   color: inherit;
 }
 
+/* App-wide viewport and responsive shell fixes */
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+}
+
+html {
+  min-height: 100%;
+  background: var(--app-background, #f8fafc);
+  color-scheme: light;
+}
+
+html.dark {
+  background: #020617;
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background: inherit;
+}
+
+#root {
+  min-height: 100dvh;
+  isolation: isolate;
+}
+
+button,
+a,
+[role='button'] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 640px) {
+  main {
+    max-width: 100%;
+  }
+
+  .fixed.inset-x-0.top-0 {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.dark body {
+  background: #020617;
+}
+
 /* Premium Glassmorphic and Cosmic hover effects */
 .glow-card {
   position: relative;

@@ -757,10 +757,27 @@ export function planNameToDailyQuizTier(planName?: string, isPremium?: boolean):
 
 export async function getUserDailyQuizSlot(userId: string, tier: DailyQuizTier): Promise<DailyQuizSlot | null> {
   if (!userId || !isSupabaseConfigured) return null;
-  const { data, error } = await supabase.rpc('get_user_daily_quiz_slot', { p_user_id: userId, p_tier: tier });
+
+  // The RPC validates auth.uid() against p_user_id. Resolve the current
+  // Supabase session first so a stale profile id can never produce a false
+  // "service unavailable" state.
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const authenticatedUserId = authData.user?.id;
+  if (authError || !authenticatedUserId) {
+    console.error('Daily quiz requires an authenticated Supabase session:', authError?.message || 'No session');
+    return null;
+  }
+  const effectiveUserId = authenticatedUserId === userId ? userId : authenticatedUserId;
+  const { data, error } = await supabase.rpc('get_user_daily_quiz_slot', { p_user_id: effectiveUserId, p_tier: tier });
   const row: any = Array.isArray(data) ? data[0] : data;
   if (error || !row) {
-    console.error('Error loading user daily quiz slot:', error?.message);
+    console.error('Error loading user daily quiz slot:', {
+      message: error?.message,
+      code: error?.code,
+      details: error?.details,
+      hint: error?.hint,
+      tier,
+    });
     return null;
   }
   const nextAvailableMs = row.next_available_at ? new Date(row.next_available_at).getTime() : 0;
@@ -788,14 +805,18 @@ export async function resetLegacyDailyQuizSlot(userId: string, tier: DailyQuizTi
 
 export async function claimUserDailyQuizRefresh(userId: string, tier: DailyQuizTier): Promise<boolean> {
   if (!userId || !isSupabaseConfigured) return false;
-  const { data, error } = await supabase.rpc('claim_user_daily_quiz_refresh', { p_user_id: userId, p_tier: tier });
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveUserId = authData.user?.id || userId;
+  const { data, error } = await supabase.rpc('claim_user_daily_quiz_refresh', { p_user_id: effectiveUserId, p_tier: tier });
   if (error) { console.error('Error claiming user daily quiz refresh:', error.message); return false; }
   return !!data;
 }
 
 export async function finalizeUserDailyQuizRefresh(userId: string, tier: DailyQuizTier, quizPayload: Quiz): Promise<void> {
   if (!userId || !isSupabaseConfigured) return;
-  const { error } = await supabase.rpc('finalize_user_daily_quiz_refresh', { p_user_id: userId, p_tier: tier, p_quiz_payload: quizPayload });
+  const { data: authData } = await supabase.auth.getUser();
+  const effectiveUserId = authData.user?.id || userId;
+  const { error } = await supabase.rpc('finalize_user_daily_quiz_refresh', { p_user_id: effectiveUserId, p_tier: tier, p_quiz_payload: quizPayload });
   if (error) throw error;
 }
 

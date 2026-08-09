@@ -34,6 +34,16 @@ const TIER_GRADIENT: Record<DailyQuizTier, string> = {
   free: 'from-slate-500 to-slate-700', gold: 'from-amber-400 to-yellow-600', diamond: 'from-fuchsia-500 to-purple-700',
 };
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error('Daily quiz request timed out')), ms);
+    promise.then(
+      (value) => { window.clearTimeout(timeoutId); resolve(value); },
+      (error) => { window.clearTimeout(timeoutId); reject(error); },
+    );
+  });
+}
+
 function formatCountdown(totalSeconds: number, isAr: boolean): string {
   const s = Math.max(0, totalSeconds);
   if (s >= 3600) return `${Math.floor(s / 3600)}${isAr ? 'س' : 'h'} ${Math.floor((s % 3600) / 60)}${isAr ? 'د' : 'm'}`;

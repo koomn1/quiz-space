@@ -1194,12 +1194,7 @@ export default function App() {
           />}
 
           <div
-            
-            
-            
-            
-            
-          className={`flex w-full transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : 'min-h-screen'} ${
+          className={`min-h-dvh w-full max-w-none overflow-x-hidden transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : ''} ${
             darkMode
               ? 'bg-[#020617] text-slate-100'
               : 'bg-[#f8fafc] text-slate-800'
@@ -1207,7 +1202,8 @@ export default function App() {
         >
           <PremiumCursor />
       
-                <div className={`flex-1 flex flex-col min-w-0 transition-colors duration-300 relative ${isCosmoTab ? 'h-full overflow-hidden' : 'overflow-x-hidden ' + (usesSharedFrame ? '' : 'min-h-[100dvh]')}`}>                
+                <div className={`relative flex min-h-0 min-w-0 flex-1 flex-col transition-colors duration-300 ${isCosmoTab ? 'h-full overflow-hidden' : 'min-h-dvh overflow-x-hidden'}`}>
+
                 
         <div className={`fixed inset-0 pointer-events-none z-0 overflow-hidden select-none ${isCosmoTab ? 'hidden' : ''}`}>
           {/* Light mode background elements */}

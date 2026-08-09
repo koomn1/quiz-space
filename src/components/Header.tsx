@@ -95,10 +95,10 @@ export default function Header({
   const isGuest = !userId || userId.startsWith('user-');
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 pointer-events-none px-2 sm:px-4 pt-0 pb-2 sm:pb-3 bg-white dark:bg-[#020617]">
-      <div className="max-w-5xl mx-auto pointer-events-auto">
+    <header className="fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 pointer-events-none bg-white/95 px-0 pb-2 pt-0 backdrop-blur-xl dark:bg-[#020617]/95 sm:pb-3">
+      <div className="w-full pointer-events-auto">
         <div 
-          className="flex items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/80 rounded-b-2xl px-4 sm:px-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
+          className="flex min-w-0 items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white/90 dark:bg-slate-950/90 border-b border-slate-100 dark:border-slate-800/80 rounded-b-2xl px-3 sm:px-6 lg:px-10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
           
           
           
