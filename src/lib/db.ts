@@ -4,7 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, VipTier, RewardChallenge, DailyGiftStatus } from '../types';
+import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, VipTier, RewardChallenge, DailyGiftStatus, WeeklyVipLeaderboardEntry } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
@@ -410,10 +410,13 @@ export async function deleteQuiz(quizId: string): Promise<void> {
     throw new Error('Supabase is not configured; cannot delete quiz.');
   }
 
-  const { error } = await supabase.from('quizzes').delete().eq('id', quizId);
+  const { data, error } = await supabase.rpc('delete_owned_quiz', { p_quiz_id: quizId });
   if (error) {
     console.error('Error deleting quiz:', error.message);
     throw error;
+  }
+  if (data !== true) {
+    throw new Error('Quiz was not deleted. You may not own this quiz or it no longer exists.');
   }
 }
 
@@ -540,6 +543,21 @@ export async function getRewardsSummary(userId: string): Promise<RewardsSummary>
     console.warn('Rewards are not available yet:', error);
     return empty;
   }
+}
+
+export async function getWeeklyVipLeaderboard(): Promise<WeeklyVipLeaderboardEntry[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.rpc('get_weekly_vip_leaderboard');
+  if (error) throw error;
+  return (data || []).map((row: any) => ({
+    leaderboardRank: Number(row.leaderboard_rank || 0),
+    userId: String(row.user_id || ''),
+    displayName: String(row.display_name || 'Quiz Space Player'),
+    photoUrl: row.photo_url || undefined,
+    vipTier: String(row.vip_tier || 'none'),
+    weeklyPoints: Number(row.weekly_points || 0),
+    isMe: Boolean(row.is_me),
+  }));
 }
 
 export async function claimDailyGift(): Promise<DailyGiftStatus> {
@@ -1573,6 +1591,21 @@ export async function sendDirectMessage(
     throw error;
   }
   return data;
+}
+
+export async function deleteDirectMessage(messageId: string): Promise<void> {
+  if (!messageId) return;
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot delete message.');
+  }
+  const { data, error } = await supabase.rpc('delete_own_direct_message', { p_message_id: messageId });
+  if (error) {
+    console.error('Failed to delete direct message:', error);
+    throw error;
+  }
+  if (data !== true) {
+    throw new Error('Message was not deleted. Only the sender can delete it.');
+  }
 }
 
 export async function markMessagesAsRead(userId: string, contactId: string): Promise<void> {

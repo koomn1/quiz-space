@@ -547,28 +547,43 @@ function ReactionButton({ post, isAr, onReact }: {
         </div>
       )}
 
-      <button
-        onClick={(e) => onReact(myReaction || 'like', e)}
-        className={`flex items-center gap-1.5 whitespace-nowrap shrink-0 text-[10.5px] font-medium py-1 px-3.5 rounded-lg border transition-all cursor-pointer ${
-          buttonMeta
-            ? buttonMeta.activeClasses
-            : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700'
-        }`}
-      >
-        {buttonMeta ? (
-          <span className="text-sm leading-none">{buttonMeta.emoji}</span>
-        ) : (
-          <ThumbsUp className="w-3.5 h-3.5" />
-        )}
-        {topReactions.length > 0 && (
-          <span className="flex items-center -space-x-1 rtl:space-x-reverse">
-            {topReactions.map((r) => (
-              <span key={r} className="text-[11px] leading-none">{REACTION_META[r].emoji}</span>
-            ))}
-          </span>
-        )}
-        <span>{total}</span>
-      </button>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          onClick={(e) => onReact(myReaction || 'like', e)}
+          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-[10.5px] font-semibold transition-all cursor-pointer ${
+            buttonMeta
+              ? buttonMeta.activeClasses
+              : 'bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:border-primary/40'
+          }`}
+          title={isAr ? 'إضافة إعجاب' : 'Add like'}
+        >
+          <span className="text-sm leading-none">{buttonMeta?.emoji || '👍'}</span>
+          <span>{isAr ? 'تفاعل' : 'React'}</span>
+          <span className="min-w-4 text-center">{total}</span>
+        </button>
+        {REACTION_ORDER.map((r) => {
+          const count = counts[r] || 0;
+          const meta = REACTION_META[r];
+          const isActive = myReaction === r;
+          return (
+            <button
+              key={r}
+              type="button"
+              onClick={(e) => onReact(r, e)}
+              title={isAr ? meta.labelAr : meta.labelEn}
+              className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-all cursor-pointer ${
+                isActive
+                  ? meta.activeClasses
+                  : 'bg-slate-50/90 dark:bg-slate-900/70 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-white dark:hover:bg-slate-800'
+              }`}
+            >
+              <span className="text-sm leading-none">{meta.emoji}</span>
+              <span className="tabular-nums">{count}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

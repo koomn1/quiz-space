@@ -4,10 +4,11 @@ import {
   getDirectMessages, 
   sendDirectMessage, 
   markMessagesAsRead,
+  deleteDirectMessage,
   createNotification,
   COSMO_ADMIN_UID
 } from '../lib/db';
-import { MessageSquare, Send, Search, Sparkles, User, RefreshCw, Star, ArrowRight, BellRing } from 'lucide-react';
+import { MessageSquare, Send, Search, Sparkles, User, RefreshCw, Star, ArrowRight, BellRing, Trash2 } from 'lucide-react';
 import { TelegramBadge } from './ProfileStatsView';
 import { playChimeSound } from './ExtraFeatures';
 import { UserBadge } from './UserBadge';
@@ -225,6 +226,21 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!messageId) return;
+    const confirmed = window.confirm(isAr ? 'هل تريد حذف هذه الرسالة؟' : 'Delete this message?');
+    if (!confirmed) return;
+
+    try {
+      await deleteDirectMessage(messageId);
+      setMessages(prev => prev.filter(message => message.id !== messageId));
+      playChimeSound('click');
+    } catch (e) {
+      console.error('Failed to delete direct message:', e);
+      alert(isAr ? 'تعذر حذف الرسالة. حاول مرة أخرى.' : 'Failed to delete the message. Please try again.');
+    }
+  };
 
   // Send Direct Message
   const handleSendMessage = async () => {
@@ -449,9 +465,22 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                             </div>
                           )}
 
-                          <p className={`text-[9px] text-slate-400 dark:text-slate-500 font-bold px-1.5 ${isOwn ? 'text-left' : 'text-right'}`}>
-                            {new Date(msg.createdAt).toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
-                          </p>
+                          <div className={`flex items-center gap-2 px-1.5 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">
+                              {new Date(msg.createdAt).toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                            {isOwn && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-semibold text-rose-300/80 hover:text-rose-200 hover:bg-rose-500/10 transition-colors"
+                                title={isAr ? 'حذف الرسالة' : 'Delete message'}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>{isAr ? 'حذف' : 'Delete'}</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         {isOwn && (
