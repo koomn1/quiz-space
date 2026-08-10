@@ -188,13 +188,59 @@ export interface RewardLedgerEntry {
   createdAt: string;
 }
 
+export interface VipTier {
+  id: string;
+  name: string;
+  nameAr: string;
+  minPoints: number;
+  pointsMultiplier: number;
+  dailyCoinBonus: number;
+  challengeSlots: number;
+  color: string;
+  sortOrder: number;
+}
+
+export interface RewardChallenge {
+  id: string;
+  name: string;
+  nameAr: string;
+  description: string;
+  descriptionAr: string;
+  eventType: string;
+  target: number;
+  pointsReward: number;
+  coinsReward: number;
+  icon: string;
+  sortOrder: number;
+  isActive: boolean;
+  progress?: number;
+  claimed?: boolean;
+}
+
+export interface DailyGiftStatus {
+  claimed: boolean;
+  claimDate?: string;
+  dayNumber?: number;
+  streak: number;
+  points?: number;
+  coins?: number;
+}
+
 export interface RewardsSummary {
   points: number;
+  coins: number;
   level: number;
+  dailyStreak: number;
+  lastDailyClaim?: string;
+  vipTier: string;
   currentLevel?: RewardLevel;
   nextLevel?: RewardLevel;
+  currentVip?: VipTier;
+  nextVip?: VipTier;
   badges: RewardBadge[];
   recentEntries: RewardLedgerEntry[];
+  dailyGift?: DailyGiftStatus;
+  dailyChallenges?: RewardChallenge[];
 }
 
 export interface UserStats {

@@ -4,7 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry } from '../types';
+import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, VipTier, RewardChallenge, DailyGiftStatus } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
@@ -509,28 +509,49 @@ export async function submitQuizAttempt(
 }
 
 export async function getRewardsSummary(userId: string): Promise<RewardsSummary> {
-  const empty: RewardsSummary = { points: 0, level: 1, badges: [], recentEntries: [] };
+  const empty: RewardsSummary = { points: 0, coins: 0, level: 1, dailyStreak: 0, vipTier: 'none', badges: [], recentEntries: [], dailyChallenges: [] };
   if (!userId || !isSupabaseConfigured) return empty;
   try {
-    const [balanceRes, levelsRes, badgesRes, earnedRes, ledgerRes] = await Promise.all([
-      supabase.from('user_reward_balances').select('points, level').eq('user_id', userId).maybeSingle(),
+    const today = new Date().toISOString().slice(0, 10);
+    const [balanceRes, levelsRes, badgesRes, earnedRes, ledgerRes, vipRes, challengeRes, giftRes] = await Promise.all([
+      supabase.from('user_reward_balances').select('points, coins, level, daily_streak, last_daily_claim, vip_tier').eq('user_id', userId).maybeSingle(),
       supabase.from('reward_levels').select('level, name, name_ar, min_points').order('level'),
       supabase.from('reward_badges').select('id, name, name_ar, description, description_ar, icon, sort_order').order('sort_order'),
       supabase.from('user_reward_badges').select('badge_id, earned_at').eq('user_id', userId).order('earned_at', { ascending: false }),
       supabase.from('reward_points_ledger').select('id, points, event_type, event_key, reference_id, metadata, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(12),
+      supabase.from('vip_tiers').select('id, name, name_ar, min_points, points_multiplier, daily_coin_bonus, challenge_slots, color, sort_order').order('min_points'),
+      supabase.from('reward_challenge_templates').select('id, name, name_ar, description, description_ar, event_type, target, points_reward, coins_reward, icon, sort_order, is_active').eq('is_active', true).order('sort_order'),
+      supabase.from('daily_gift_claims').select('claim_date, day_number, points_reward, coins_reward').eq('user_id', userId).eq('claim_date', today).maybeSingle(),
     ]);
-    if (balanceRes.error) throw balanceRes.error;
+    if (balanceRes.error && balanceRes.error.code !== 'PGRST205') throw balanceRes.error;
     const points = Number(balanceRes.data?.points || 0);
     const level = Number(balanceRes.data?.level || 1);
     const levels: RewardLevel[] = (levelsRes.data || []).map((r: any) => ({ level: r.level, name: r.name, nameAr: r.name_ar, minPoints: r.min_points }));
+    const vipTiers: VipTier[] = (vipRes.data || []).map((r: any) => ({ id: r.id, name: r.name, nameAr: r.name_ar, minPoints: Number(r.min_points), pointsMultiplier: Number(r.points_multiplier), dailyCoinBonus: Number(r.daily_coin_bonus), challengeSlots: Number(r.challenge_slots), color: r.color, sortOrder: Number(r.sort_order) }));
+    const currentVip = vipTiers.find((v) => v.id === (balanceRes.data?.vip_tier || 'none')) || vipTiers.filter((v) => v.minPoints <= points).at(-1);
     const earnedMap = new Map((earnedRes.data || []).map((r: any) => [r.badge_id, r.earned_at]));
     const badges: RewardBadge[] = (badgesRes.data || []).map((r: any) => ({ id: r.id, name: r.name, nameAr: r.name_ar, description: r.description, descriptionAr: r.description_ar, icon: r.icon, sortOrder: r.sort_order, earnedAt: earnedMap.get(r.id) }));
     const recentEntries: RewardLedgerEntry[] = (ledgerRes.data || []).map((r: any) => ({ id: r.id, points: r.points, eventType: r.event_type, eventKey: r.event_key, referenceId: r.reference_id, metadata: r.metadata, createdAt: r.created_at }));
-    return { points, level, currentLevel: levels.find((l) => l.level === level), nextLevel: levels.find((l) => l.minPoints > points), badges, recentEntries };
+    const claimedKeys = new Set(recentEntries.filter((e) => e.eventType === 'daily_challenge' && e.createdAt.slice(0, 10) === today).map((e) => e.referenceId));
+    const dailyChallenges: RewardChallenge[] = (challengeRes.data || []).slice(0, currentVip?.challengeSlots || 3).map((r: any) => ({ id: r.id, name: r.name, nameAr: r.name_ar, description: r.description, descriptionAr: r.description_ar, eventType: r.event_type, target: Number(r.target), pointsReward: Number(r.points_reward), coinsReward: Number(r.coins_reward), icon: r.icon, sortOrder: Number(r.sort_order), isActive: r.is_active, claimed: claimedKeys.has(r.id) }));
+    const dailyGift: DailyGiftStatus = { claimed: Boolean(giftRes.data), claimDate: giftRes.data?.claim_date, dayNumber: giftRes.data?.day_number, streak: Number(balanceRes.data?.daily_streak || 0), points: giftRes.data?.points_reward, coins: giftRes.data?.coins_reward };
+    return { points, coins: Number(balanceRes.data?.coins || 0), level, dailyStreak: Number(balanceRes.data?.daily_streak || 0), lastDailyClaim: balanceRes.data?.last_daily_claim, vipTier: currentVip?.id || 'none', currentLevel: levels.find((l) => l.level === level), nextLevel: levels.find((l) => l.minPoints > points), currentVip, nextVip: vipTiers.find((v) => v.minPoints > points), badges, recentEntries, dailyGift, dailyChallenges };
   } catch (error) {
     console.warn('Rewards are not available yet:', error);
     return empty;
   }
+}
+
+export async function claimDailyGift(): Promise<DailyGiftStatus> {
+  const { data, error } = await supabase.rpc('claim_daily_gift');
+  if (error) throw error;
+  return { claimed: Boolean(data?.claimed), claimDate: data?.claim_date, dayNumber: data?.day_number, streak: Number(data?.streak || 0), points: Number(data?.points || 0), coins: Number(data?.coins || 0) };
+}
+
+export async function claimDailyChallenge(challengeId: string): Promise<{ claimed: boolean; points?: number; coins?: number; totalPoints?: number }> {
+  const { data, error } = await supabase.rpc('claim_daily_challenge', { p_challenge_id: challengeId });
+  if (error) throw error;
+  return { claimed: Boolean(data?.claimed), points: Number(data?.points || 0), coins: Number(data?.coins || 0), totalPoints: Number(data?.total_points || 0) };
 }
 
 // ---------------- PROFILE STATS & MANAGEMENT HANDLERS ----------------
