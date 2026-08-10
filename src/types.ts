@@ -160,6 +160,43 @@ export interface PaymentProof {
   notes?: string;
 }
 
+export interface RewardLevel {
+  level: number;
+  name: string;
+  nameAr: string;
+  minPoints: number;
+}
+
+export interface RewardBadge {
+  id: string;
+  name: string;
+  nameAr: string;
+  description: string;
+  descriptionAr: string;
+  icon: string;
+  sortOrder: number;
+  earnedAt?: string;
+}
+
+export interface RewardLedgerEntry {
+  id: string;
+  points: number;
+  eventType: string;
+  eventKey: string;
+  referenceId?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface RewardsSummary {
+  points: number;
+  level: number;
+  currentLevel?: RewardLevel;
+  nextLevel?: RewardLevel;
+  badges: RewardBadge[];
+  recentEntries: RewardLedgerEntry[];
+}
+
 export interface UserStats {
   userId: string;
   name: string;

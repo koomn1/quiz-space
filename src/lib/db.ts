@@ -4,7 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember } from '../types';
+import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
@@ -442,6 +442,11 @@ export async function submitQuizAttempt(
       p_feedback: data.feedback || '',
     });
     if (dailyError) throw dailyError;
+    const dailyRow = Array.isArray(dailyResult) ? dailyResult[0] : dailyResult;
+    if (dailyRow?.id) {
+      const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: dailyRow.id });
+      if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
+    }
     return dailyResult;
   }
 
@@ -453,7 +458,14 @@ export async function submitQuizAttempt(
     p_rating: data.rating ?? null,
     p_feedback: data.feedback || '',
   });
-  if (!error) return result;
+  if (!error) {
+    const completionRow = Array.isArray(result) ? result[0] : result;
+    if (completionRow?.id) {
+      const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: completionRow.id });
+      if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
+    }
+    return result;
+  }
 
   // Keep older databases usable while the RPC migration is being applied.
   // Never return a fake success: save the completion directly and update XP.
@@ -491,7 +503,34 @@ export async function submitQuizAttempt(
       .update({ xp: (userRow.xp || 0) + xpAwarded }).eq('uid', data.takerId);
     if (xpError) throw xpError;
   }
+  const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: completionId });
+  if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
   return { success: true, fallback: true, xp_awarded: xpAwarded, id: completionId, attempt_number: attemptNumber, is_best: isBest };
+}
+
+export async function getRewardsSummary(userId: string): Promise<RewardsSummary> {
+  const empty: RewardsSummary = { points: 0, level: 1, badges: [], recentEntries: [] };
+  if (!userId || !isSupabaseConfigured) return empty;
+  try {
+    const [balanceRes, levelsRes, badgesRes, earnedRes, ledgerRes] = await Promise.all([
+      supabase.from('user_reward_balances').select('points, level').eq('user_id', userId).maybeSingle(),
+      supabase.from('reward_levels').select('level, name, name_ar, min_points').order('level'),
+      supabase.from('reward_badges').select('id, name, name_ar, description, description_ar, icon, sort_order').order('sort_order'),
+      supabase.from('user_reward_badges').select('badge_id, earned_at').eq('user_id', userId).order('earned_at', { ascending: false }),
+      supabase.from('reward_points_ledger').select('id, points, event_type, event_key, reference_id, metadata, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(12),
+    ]);
+    if (balanceRes.error) throw balanceRes.error;
+    const points = Number(balanceRes.data?.points || 0);
+    const level = Number(balanceRes.data?.level || 1);
+    const levels: RewardLevel[] = (levelsRes.data || []).map((r: any) => ({ level: r.level, name: r.name, nameAr: r.name_ar, minPoints: r.min_points }));
+    const earnedMap = new Map((earnedRes.data || []).map((r: any) => [r.badge_id, r.earned_at]));
+    const badges: RewardBadge[] = (badgesRes.data || []).map((r: any) => ({ id: r.id, name: r.name, nameAr: r.name_ar, description: r.description, descriptionAr: r.description_ar, icon: r.icon, sortOrder: r.sort_order, earnedAt: earnedMap.get(r.id) }));
+    const recentEntries: RewardLedgerEntry[] = (ledgerRes.data || []).map((r: any) => ({ id: r.id, points: r.points, eventType: r.event_type, eventKey: r.event_key, referenceId: r.reference_id, metadata: r.metadata, createdAt: r.created_at }));
+    return { points, level, currentLevel: levels.find((l) => l.level === level), nextLevel: levels.find((l) => l.minPoints > points), badges, recentEntries };
+  } catch (error) {
+    console.warn('Rewards are not available yet:', error);
+    return empty;
+  }
 }
 
 // ---------------- PROFILE STATS & MANAGEMENT HANDLERS ----------------
