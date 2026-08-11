@@ -50,6 +50,9 @@ const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
   matrix: { background: 'linear-gradient(135deg, #22c55e 0%, #15803d 50%, #052e16 100%)' },
   velvet: { background: 'linear-gradient(135deg, #d946ef 0%, #a855f7 50%, #3b0764 100%)' },
   prism: { background: 'linear-gradient(120deg, #ec4899 0%, #8b5cf6 50%, #06b6d4 100%)' },
+  'profile-cover-1': { background: '#09090b' },
+  'profile-cover-2': { background: '#09090b' },
+  'profile-cover-3': { background: '#09090b' },
 };
 
 interface UserProfileProps {
@@ -1495,6 +1498,9 @@ export default function UserProfile({
                   ['profile-cover-coding', '💻', 'مطور الذكاء الاصطناعي', 'AI Coder'],
                   ['profile-cover-music', '🎵', 'استوديو الموسيقى', 'Music Studio'],
                   ['profile-cover-nature', '🏔️', 'مغامرة الطبيعة', 'Nature Explorer'],
+                  ['profile-cover-1', '🌌', 'الفضاء الكوني', 'Cosmic Space'],
+                  ['profile-cover-2', '🏛️', 'مكتبة المستقبل', 'Future Library'],
+                  ['profile-cover-3', '🕸️', 'الشبكة العصبية', 'Neural Network'],
                 ].map(([id, icon, ar, en]) => (
                   <button key={id} type="button" onClick={() => setChosenBg(id)} className={`relative overflow-hidden p-3 rounded-2xl border-2 text-center transition-all cursor-pointer ${chosenBg === id ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20 scale-[1.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-primary/50'}`}>
                     <div className="absolute inset-0 bg-cover bg-center opacity-55" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}covers/${id}.png)` }} />
