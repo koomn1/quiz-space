@@ -62,7 +62,7 @@ export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, 
         ref={containerRef}
         className="absolute inset-0 overflow-hidden bg-slate-950 bg-cover bg-center"
         style={{
-          backgroundImage: `linear-gradient(115deg, rgba(5,8,25,.48), rgba(7,12,35,.12)), url(${import.meta.env.BASE_URL}backgrounds/${safeMode}.png)`,
+          backgroundImage: `linear-gradient(115deg, rgba(5,8,25,.48), rgba(7,12,35,.12)), url(${import.meta.env.BASE_URL}covers/${safeMode}.png)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

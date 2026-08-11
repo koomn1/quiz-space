@@ -1239,18 +1239,12 @@ export default function UserProfile({
                       './avatars/boy-8.png',
                       './avatars/boy-9.png',
                       './avatars/boy-10.png',
-                      './avatars/boy-11.png',
                       './avatars/girl-1.png',
                       './avatars/girl-2.png',
                       './avatars/girl-3.png',
                       './avatars/girl-4.png',
                       './avatars/girl-5.png',
                       './avatars/girl-6.png',
-                      './avatars/girl-7.png',
-                      './avatars/girl-8.png',
-                      './avatars/girl-9.png',
-                      './avatars/girl-10.png',
-                      './avatars/girl-11.png',
                     ].map((url, idx) => (
                       <button
                         key={idx}
@@ -1507,7 +1501,7 @@ export default function UserProfile({
                   ['profile-cover-nature', '🏔️', 'مغامرة الطبيعة', 'Nature Explorer'],
                 ].map(([id, icon, ar, en]) => (
                   <button key={id} type="button" onClick={() => setChosenBg(id)} className={`relative overflow-hidden p-3 rounded-2xl border-2 text-center transition-all cursor-pointer ${chosenBg === id ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20 scale-[1.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-primary/50'}`}>
-                    <div className="absolute inset-0 bg-cover bg-center opacity-55" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}backgrounds/${id}.png)` }} />
+                    <div className="absolute inset-0 bg-cover bg-center opacity-55" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}covers/${id}.png)` }} />
                     <div className="absolute inset-0 bg-slate-950/35" />
                     <div className="relative z-10 text-lg leading-none mb-1">{icon}</div>
                     <div className="relative z-10 text-[10px] font-black text-white drop-shadow-md">{isAr ? ar : en}</div>

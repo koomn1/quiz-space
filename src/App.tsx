@@ -695,7 +695,10 @@ export default function App() {
         setUserId(user.id);
         setUserName(finalName);
         setUserEmail(user.email || null);
-        setUserPhoto(user.user_metadata?.avatar_url || null);
+        // Don't set photo from auth metadata here — wait for getUserProfileStats
+        // to load the user's actual chosen photo from the DB
+        const savedLocalPhoto = localStorage.getItem('quiz_userPhoto');
+        if (savedLocalPhoto) setUserPhoto(savedLocalPhoto);
         localStorage.setItem('quiz_userId', user.id);
         localStorage.setItem('quiz_userName', finalName);
 
@@ -748,7 +751,9 @@ export default function App() {
 
         // Sync profile into Firestore 'users' collection
         try {
-          await saveUserProfile(user.id, finalName, user.user_metadata?.avatar_url || undefined, user.email || undefined, undefined, undefined, undefined, undefined, undefined);
+          // Only sync avatar_url from auth provider if user hasn't set a custom photo
+          // This preserves the user's chosen avatar/cover after refresh or re-login
+          await saveUserProfile(user.id, finalName, undefined, user.email || undefined);
         } catch (e) {
           console.error("Error setting user profile: ", e);
         }
@@ -761,6 +766,11 @@ export default function App() {
             setUserPlanName(stats.planName || '');
             if (stats.photoURL) {
               setUserPhoto(stats.photoURL);
+              localStorage.setItem('quiz_userPhoto', stats.photoURL);
+            } else if (user.user_metadata?.avatar_url) {
+              // Fallback: use Google/GitHub avatar if user hasn't set a custom one
+              setUserPhoto(user.user_metadata.avatar_url);
+              localStorage.setItem('quiz_userPhoto', user.user_metadata.avatar_url);
             }
             if (stats.customId) {
               setUserCustomId(stats.customId);

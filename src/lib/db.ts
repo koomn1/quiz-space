@@ -724,7 +724,6 @@ export async function saveUserProfile(
     uid: userId,
     id: userId,
     name,
-    photo_url: photoURL || '',
     email: email || '',
     bio: bio || '',
     location: location || '',
@@ -756,13 +755,27 @@ export async function saveUserProfile(
   // freshly redeemed subscription with Free/default values.
   const { data: existingProfile, error: lookupError } = await supabase
     .from('users')
-    .select('uid')
+    .select('photo_url')
     .eq('uid', userId)
     .maybeSingle();
   if (lookupError) {
     console.error(`Error checking existing user profile for ${userId}:`, lookupError.message);
     throw lookupError;
   }
+
+  // Apply photo_url logic: preserve existing photo unless caller provides new one
+  if (existingProfile) {
+    if (photoURL !== undefined && photoURL !== '') {
+      updatedUser.photo_url = photoURL;
+    } else if (existingProfile.photo_url) {
+      updatedUser.photo_url = existingProfile.photo_url;
+    } else {
+      updatedUser.photo_url = photoURL || '';
+    }
+  } else {
+    updatedUser.photo_url = photoURL || '';
+  }
+
   const { error } = existingProfile
     ? await supabase.from('users').update(updatedUser).eq('uid', userId)
     : await supabase.from('users').insert(updatedUser);
@@ -2188,4 +2201,102 @@ export async function incrementLessonVideoViews(videoId: string): Promise<void> 
 export function extractYouTubeId(url: string): string {
   const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
   return match ? match[1] : '';
+}
+
+// ===== Motivation Hub Functions =====
+// Free limited engagement features (lucky spin, mystery box, brain challenge, etc.)
+
+export async function getMotivationStatus() {
+  const user = supabase.auth.getUser();
+  const { data: { user: authUser } } = await user;
+  if (!authUser) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase.rpc('get_motivation_status');
+  if (error) {
+    console.error('get_motivation_status error:', error);
+    return null;
+  }
+  return data;
+}
+
+export async function claimLuckySpin() {
+  const { data, error } = await supabase.rpc('claim_lucky_spin');
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function claimMysteryBox() {
+  const { data, error } = await supabase.rpc('claim_mystery_box');
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function submitBrainChallenge(answer: string) {
+  const { data, error } = await supabase.rpc('submit_brain_challenge', { p_answer: answer });
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function updateDailyStreak() {
+  const { data, error } = await supabase.rpc('update_daily_streak');
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function addReferral(referredUserId: string) {
+  const { data, error } = await supabase.rpc('add_referral', { p_referred_user_id: referredUserId });
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function updateWeeklyAchievement(type: string, increment = 1) {
+  const { data, error } = await supabase.rpc('update_weekly_achievement', {
+    p_achievement_type: type,
+    p_count_increment: increment
+  });
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function createGroupChallenge(classId: string, title: string, description: string, target: number, endDate: string) {
+  const { data, error } = await supabase.rpc('create_group_challenge', {
+    p_class_id: classId,
+    p_title: title,
+    p_description: description,
+    p_target: target,
+    p_end_date: endDate
+  });
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function contributeToGroupChallenge(challengeId: string) {
+  const { data, error } = await supabase.rpc('contribute_to_group_challenge', { p_challenge_id: challengeId });
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function checkHappyHour() {
+  const { data, error } = await supabase.rpc('is_happy_hour');
+  if (error) return { is_happy_hour: false, multiplier: 1.0 };
+  return data;
+}
+
+export async function getGroupChallenges(classId: string) {
+  const { data, error } = await supabase
+    .from('group_challenges')
+    .select('*')
+    .eq('class_id', classId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function getGroupChallengeProgress(challengeId: string) {
+  const { data, error } = await supabase
+    .from('group_challenge_progress')
+    .select('*')
+    .eq('challenge_id', challengeId);
+  if (error) throw error;
+  return data;
 }
