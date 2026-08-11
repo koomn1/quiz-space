@@ -98,9 +98,8 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
   let finalPhotoURL = data?.photo_url || metaPhoto;
   if (!finalPhotoURL || finalPhotoURL === '') {
     // Assign default avatar if none exists (email/password users or first-time)
-    const defaultAvatar = getDefaultAvatar(resolvedName);
-    const baseUrl = import.meta.env.BASE_URL || '/';
-    finalPhotoURL = `${baseUrl}${defaultAvatar}`;
+    // getDefaultAvatar already returns the full path with BASE_URL prefix
+    finalPhotoURL = getDefaultAvatar(resolvedName);
     // Save it to the DB for persistence
     await supabase.from('users').update({ photo_url: finalPhotoURL }).eq('uid', authUser.id);
   }
@@ -146,9 +145,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw new Error(error.message);
     if (data.user) {
       // Assign a default avatar for email/password users (Google sends avatar_url automatically)
-      const defaultAvatar = getDefaultAvatar(name);
-      const baseUrl = import.meta.env.BASE_URL || '/';
-      const avatarUrl = `${baseUrl}${defaultAvatar}`;
+      // getDefaultAvatar already returns the full path with BASE_URL prefix
+      const avatarUrl = getDefaultAvatar(name);
       
       // Create the matching row in public.users (RLS policy allows insert where auth.uid() = uid).
       await supabase.from('users').insert({ 
