@@ -14,6 +14,21 @@ function getPresenceStatus(lastActiveISO: string, isAr: boolean): { color: strin
   }
   return { color: 'text-slate-500', dotClass: 'bg-slate-600', label: isAr ? 'غير متصل' : 'Offline' };
 }
+
+function generateClassroomCode(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const values = new Uint32Array(6);
+
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    crypto.getRandomValues(values);
+  } else {
+    for (let index = 0; index < values.length; index += 1) {
+      values[index] = Math.floor(Math.random() * 0xffffffff);
+    }
+  }
+
+  return Array.from(values, value => alphabet[value % alphabet.length]).join('');
+}
 import { 
   GraduationCap, Plus, Code, Users, Copy, Check, ShieldAlert,
   ArrowRight, Award, Clock, Star, BookOpen, Trash2, ShieldCheck, 
@@ -568,6 +583,7 @@ export default function Classrooms({
     try {
       const { data: newClass, error } = await supabase.from('classrooms').insert({
         name,
+        code: generateClassroomCode(),
         created_by: currentUserId,
         creator_name: currentUserName
       }).select().single();
