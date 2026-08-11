@@ -58,8 +58,12 @@ self.addEventListener('push', (event) => {
     body: data.body || 'قام المعلم بنشر كويز جديد. اضغط هنا للدخول والحل فوراً قبل انتهاء الوقت.',
     icon: data.icon || '/assets/logo.png',
     badge: data.badge || '/assets/logo.png',
+    dir: data.dir || 'rtl',
+    lang: data.lang || 'ar',
+    requireInteraction: Boolean(data.requireInteraction),
     data: {
-      url: data.url || '/#/classrooms',
+      url: data.url || '/quiz-space/#/classrooms',
+      eventId: data.eventId || null,
     },
     vibrate: [200, 100, 200],
   };
@@ -71,7 +75,10 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/#/classrooms';
+  const targetUrl = event.notification.data?.url || '/quiz-space/#/classrooms';
+  const eventId = event.notification.data?.eventId;
+  const separator = targetUrl.includes('?') ? '&' : '?';
+  const openUrl = eventId ? `${targetUrl}${separator}pushEventId=${encodeURIComponent(eventId)}` : targetUrl;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
@@ -79,12 +86,12 @@ self.addEventListener('notificationclick', (event) => {
         if ('focus' in client) {
           client.focus();
           if ('navigate' in client) {
-            return client.navigate(targetUrl);
+            return client.navigate(openUrl);
           }
         }
       }
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+        return clients.openWindow(openUrl);
       }
     })
   );
