@@ -378,7 +378,65 @@ export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPla
       classId: quiz.classroomId,
     });
   }
+
+  // Notify every follower of the creator about the newly published quiz.
+  // Followers get a targeted notification row; the creator never receives one.
+  void notifyFollowersAboutNewQuiz(finalId, creatorId, creatorName, quiz.title);
+
   return mapQuizRow(data);
+}
+
+async function notifyFollowersAboutNewQuiz(
+  quizId: string,
+  creatorId: string,
+  creatorName: string,
+  quizTitle: string,
+): Promise<void> {
+  try {
+    if (!isSupabaseConfigured) return;
+    const { data: followerRows, error: followError } = await supabase
+      .from('follows')
+      .select('follower_id')
+      .eq('following_id', creatorId);
+    if (followError) {
+      console.warn('Could not list followers for quiz notification:', followError);
+      return;
+    }
+    const followers = (followerRows || [])
+      .map(row => row?.follower_id)
+      .filter((id): id is string => Boolean(id) && id !== creatorId);
+    if (followers.length === 0) return;
+
+    const nowIso = new Date().toISOString();
+    const rows = followers.map(followerId => ({
+      id: `notif-fq-${creatorId}-${quizId}-${followers.indexOf(followerId)}`,
+      user_id: followerId,
+      type: 'info' as const,
+      title: isArabicContext() ? 'كويز جديد من شخص تتابعه' : 'New quiz from someone you follow',
+      body: `${creatorName} نشر كويزاً جديداً: ${quizTitle}`.slice(0, 220),
+      sender_name: creatorName || 'System',
+      resource_type: 'quiz',
+      resource_id: quizId,
+      is_read: false,
+      created_at: nowIso,
+    }));
+
+    const { error: insertError } = await supabase.from('notifications').insert(rows);
+    if (insertError) {
+      console.warn('Could not create follower quiz notifications:', insertError);
+    }
+  } catch (e) {
+    console.warn('Follower notification failed:', e);
+  }
+}
+
+function isArabicContext(): boolean {
+  try {
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('quiz-space-lang') : null;
+    return stored === 'ar' || (!stored && /ar/.test(typeof navigator !== 'undefined' ? navigator.language || 'en' : 'en'));
+  } catch (e) {
+    return true;
+  }
 }
 
 export async function updateQuiz(quizId: string, updatedQuiz: Partial<Quiz>): Promise<void> {

@@ -226,6 +226,16 @@ export interface DailyGiftStatus {
   coins?: number;
 }
 
+export interface WeeklyVipLeaderboardEntry {
+  leaderboardRank: number;
+  userId: string;
+  displayName: string;
+  photoUrl?: string;
+  vipTier: string;
+  weeklyPoints: number;
+  isMe: boolean;
+}
+
 export interface RewardsSummary {
   points: number;
   coins: number;

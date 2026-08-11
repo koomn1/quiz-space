@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Award, BookOpen, CheckCircle2, Coins, Crown, Flame, Gift, Medal, Pencil, Sparkles, Star, Target, Trophy } from 'lucide-react';
 import { claimDailyChallenge, claimDailyGift, getRewardsSummary } from '../lib/db';
 import { RewardBadge, RewardsSummary } from '../types';
+import WeeklyVipLeaderboard from './WeeklyVipLeaderboard';
 
 const iconMap: Record<string, typeof Award> = {
   award: Award,
@@ -139,6 +140,9 @@ export default function RewardsSection({ userId, lang }: RewardsSectionProps) {
           <div className="mb-3 flex items-center justify-between"><h3 className="flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white"><Target className="h-4 w-4 text-purple-500" />{isAr ? 'تحديات اليوم' : 'Today’s challenges'}</h3><span className="text-[10px] font-bold text-slate-500">{isAr ? 'تنافس، أكمل، واجمع' : 'Compete, complete, collect'}</span></div>
           <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">{(summary.dailyChallenges || []).map((challenge) => <div key={challenge.id} className="rounded-xl border border-slate-200/70 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="flex items-start justify-between gap-2"><div><p className="text-xs font-black text-slate-900 dark:text-white">{isAr ? challenge.nameAr : challenge.name}</p><p className="mt-1 text-[10px] font-bold text-slate-500">{isAr ? challenge.descriptionAr : challenge.description}</p></div>{challenge.claimed ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" /> : <Target className="h-4 w-4 shrink-0 text-purple-400" />}</div><div className="mt-3 flex items-center justify-between gap-2"><span className="text-[10px] font-black text-amber-500">+{challenge.pointsReward} XP · +{challenge.coinsReward} {isAr ? 'عملة' : 'coins'}</span><button type="button" onClick={() => handleChallenge(challenge.id)} disabled={Boolean(challenge.claimed) || actionLoading === challenge.id} className="rounded-lg bg-purple-500 px-2.5 py-1.5 text-[10px] font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{challenge.claimed ? (isAr ? 'تم' : 'Done') : actionLoading === challenge.id ? '…' : (isAr ? 'مطالبة' : 'Claim')}</button></div></div>)}</div>
         </div>
+
+        <WeeklyVipLeaderboard lang={lang} />
+
         <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/50">
           <div className="flex items-center justify-between gap-3">
             <div>
