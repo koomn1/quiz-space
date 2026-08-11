@@ -275,18 +275,27 @@ export default function QuizCreator({
   const [activeMode, setActiveMode] = React.useState<'manual' | 'ocr' | 'ai' | 'paste'>('manual');
   const [isModeMenuOpen, setIsModeMenuOpen] = React.useState(false);
 
-  // Dynamic free tier limits for non-premium accounts (2 uses each)
+  // Dynamic free tier limits for non-premium accounts (3 uses each, reset daily)
   const [fileUses, setFileUses] = React.useState<number>(() => {
+    const lastDate = localStorage.getItem('cosmo_limit_date');
+    const today = new Date().toDateString();
+    if (lastDate !== today) {
+      localStorage.setItem('cosmo_limit_file_ocr', '3');
+      localStorage.setItem('cosmo_limit_sentence_ai', '3');
+      localStorage.setItem('cosmo_limit_book_paste', '3');
+      localStorage.setItem('cosmo_limit_date', today);
+      return 3;
+    }
     const saved = localStorage.getItem('cosmo_limit_file_ocr');
-    return saved !== null ? parseInt(saved, 10) : 2;
+    return saved !== null ? parseInt(saved, 10) : 3;
   });
   const [sentenceUses, setSentenceUses] = React.useState<number>(() => {
     const saved = localStorage.getItem('cosmo_limit_sentence_ai');
-    return saved !== null ? parseInt(saved, 10) : 2;
+    return saved !== null ? parseInt(saved, 10) : 3;
   });
   const [bookUses, setBookUses] = React.useState<number>(() => {
     const saved = localStorage.getItem('cosmo_limit_book_paste');
-    return saved !== null ? parseInt(saved, 10) : 2;
+    return saved !== null ? parseInt(saved, 10) : 3;
   });
 
   // Paywall overlay modal triggers
@@ -564,21 +573,45 @@ export default function QuizCreator({
   const renderErrorMsg = (errorStr: string | null) => {
     if (!errorStr) return null;
     const needsLogin = errorStr.includes('يجب تسجيل الدخول') || errorStr.includes('تسجيل الدخول') || errorStr.toLowerCase().includes('login');
+    const isGenerationError = !needsLogin && (
+      errorStr.includes('Unable to reach') || errorStr.includes('AI service failed') || 
+      errorStr.includes('فشل') || errorStr.includes('failed') || errorStr.includes('Error')
+    );
     
     return (
       <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-650 dark:text-red-400 text-xs font-medium flex flex-col sm:flex-row items-center justify-between gap-3 text-right w-full" dir="rtl">
         <div className="flex-1">
           {errorStr}
         </div>
-        {needsLogin && onOpenAuthModal && (
-          <button
-            type="button"
-            onClick={() => onOpenAuthModal('login')}
-            className="shrink-0 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-red-600/10 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
-          >
-            <span>{isAr ? 'تسجيل الدخول الآن 🔐' : 'Log In Now 🔐'}</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {isGenerationError && (
+            <button
+              type="button"
+              onClick={() => {
+                // Retry the last action
+                if (aiError === errorStr) {
+                  handleGenerateAiQuiz();
+                } else if (pasteError === errorStr) {
+                  handleGenerateFromPastedText();
+                } else if (ocrError === errorStr) {
+                  handleProcessDocument();
+                }
+              }}
+              className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-violet-600/10 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
+            >
+              <span>{isAr ? '🔄 حاول مرة أخرى' : '🔄 Retry'}</span>
+            </button>
+          )}
+          {needsLogin && onOpenAuthModal && (
+            <button
+              type="button"
+              onClick={() => onOpenAuthModal('login')}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-red-600/10 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
+            >
+              <span>{isAr ? 'تسجيل الدخول الآن 🔐' : 'Log In Now 🔐'}</span>
+            </button>
+          )}
+        </div>
       </div>
     );
   };

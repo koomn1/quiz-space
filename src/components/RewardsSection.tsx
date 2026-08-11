@@ -71,6 +71,31 @@ export default function RewardsSection({ userId, lang }: RewardsSectionProps) {
     }
   };
 
+  // Auto-claim completed challenges when the summary loads
+  const autoClaimCompleted = async () => {
+    if (!summary.dailyChallenges || summary.dailyChallenges.length === 0) return;
+    for (const challenge of summary.dailyChallenges) {
+      if (!challenge.claimed) {
+        try {
+          const result = await claimDailyChallenge(challenge.id);
+          if (result.claimed) {
+            setActionMessage(isAr ? `🎉 تمت إضافة مكافأة «${challenge.nameAr}» تلقائياً: +${result.points || 0} نقطة` : `🎉 Auto-claimed "${challenge.name}": +${result.points || 0} points`);
+            await loadSummary();
+            break; // Claim one at a time
+          }
+        } catch { /* not complete yet */ }
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!loading && summary.dailyChallenges && summary.dailyChallenges.some(c => !c.claimed)) {
+      // Wait 2 seconds for the user to see the UI first, then auto-claim
+      const timer = setTimeout(() => autoClaimCompleted(), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, summary.dailyChallenges]);
+
   const currentLevel = summary.currentLevel;
   const nextLevel = summary.nextLevel;
   const progress = useMemo(() => {

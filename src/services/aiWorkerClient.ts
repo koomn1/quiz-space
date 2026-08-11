@@ -24,6 +24,11 @@ async function workerRequest<T>(path: string, body: unknown): Promise<T> {
   } catch (err: any) {
     console.error("AI Worker request failed:", err);
 
+    // Re-throw the original error message from the worker (payload.error) if available
+    if (err?.message && !err.message.includes("Unable to reach")) {
+      throw err;
+    }
+    
     // لا تستخدم OpenRouter من المتصفح إطلاقًا
     throw new Error(
       "Unable to reach the AI Worker. Please check VITE_AI_WORKER_URL, Cloudflare deployment, or CORS configuration."
@@ -83,6 +88,41 @@ export async function generateQuizFromFile(
   } catch (err) {
     throw err;
   }
+}
+
+export interface FileQuizGenerationResult {
+  quiz: GeneratedQuiz;
+  provider: string;
+}
+
+// Fallback version: tries multiple providers in sequence (same as generateQuizWithFallback)
+export async function generateQuizFromFileWithFallback(
+  fileBase64: string,
+  mimeType: string,
+  amount: number,
+  customInstruction?: string,
+  extractionMode?: 'literal' | 'generate',
+): Promise<GeneratedQuiz> {
+  const providers = ['groq', 'openrouter', 'deepseek', 'openai'] as AiProvider[];
+  let lastError: Error | null = null;
+
+  for (const provider of providers) {
+    try {
+      return await workerRequest<GeneratedQuiz>('/api/ai/generate-file', {
+        provider,
+        fileBase64,
+        mimeType,
+        amount,
+        customInstruction,
+        extractionMode,
+      });
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`Provider ${provider} failed for file generation, trying next:`, err?.message || err);
+    }
+  }
+
+  throw lastError || new Error('All providers failed for file generation.');
 }
 
 export interface AiChatAttachment {

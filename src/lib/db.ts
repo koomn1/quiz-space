@@ -1436,6 +1436,51 @@ export async function getCompletionsByQuizId(quizId: string): Promise<QuizComple
   return [];
 }
 
+export async function getQuizTakersUnique(quizId: string): Promise<QuizCompletion[]> {
+  // Returns one row per solver: best score + attempt count (deduplicates repeat solvers)
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.rpc('get_quiz_takers_unique', { p_quiz_id: quizId });
+      if (!error && data) {
+        return (data as any[]).map(row => ({
+          id: `unique-${row.taker_id}-${row.last_attempt_at}`,
+          quizId: quizId,
+          quizTitle: '',
+          takerId: row.taker_id,
+          takerName: row.taker_name,
+          score: row.best_score,
+          totalQuestions: row.total_questions,
+          rating: row.rating,
+          feedback: '',
+          attemptNumber: row.attempts_count,
+          isBest: true,
+          createdAt: row.last_attempt_at,
+        }));
+      }
+    } catch (e) { console.warn('get_quiz_takers_unique RPC failed, falling back to client dedup:', e); }
+  }
+  // Client-side fallback: group by taker_id, keep latest
+  const all = await getCompletionsByQuizId(quizId);
+  const map = new Map<string, QuizCompletion>();
+  for (const comp of all) {
+    const existing = map.get(comp.takerId);
+    if (!existing || (comp.createdAt && comp.createdAt > existing.createdAt)) {
+      map.set(comp.takerId, comp);
+    }
+  }
+  return Array.from(map.values());
+}
+
+export async function getSiteStats(): Promise<any> {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.rpc('get_site_stats');
+      if (!error && data) return data;
+    } catch (e) { console.warn('get_site_stats RPC failed:', e); }
+  }
+  return null;
+}
+
 export async function getRecentCompletions(limitCount = 10): Promise<QuizCompletion[]> {
   if (isSupabaseConfigured) {
     try {

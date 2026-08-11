@@ -542,13 +542,27 @@ export default function QuizResolver({
     try {
       const previousBestScore = await getBestScoreByQuizId(quizId);
       
-            await submitQuizAttempt(quizId, {
-        takerId: userId,
-        takerName: takerName.trim(),
-        score,
-        rating,
-        feedback: feedback.trim()
-      });
+      // Prevent duplicate insert if already saved (e.g. from autoSave or handleFinalSubmitAndExit)
+      if (savedCompletionId) {
+        const { error: updateError } = await supabase.from('completions').update({
+          rating,
+          feedback: feedback.trim(),
+          score,
+          taker_name: takerName.trim()
+        }).eq('id', savedCompletionId);
+        if (updateError) {
+          console.error('Failed to update completion:', updateError);
+          throw updateError;
+        }
+      } else {
+        await submitQuizAttempt(quizId, {
+          takerId: userId,
+          takerName: takerName.trim(),
+          score,
+          rating,
+          feedback: feedback.trim()
+        });
+      }
       if (userId) {
         const completedDaily = await completeUserDailyQuiz(userId, quizId);
         if (completedDaily) {

@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Quiz } from '../types';
-import { BookOpen, Star, Play, Share2, Search, ArrowLeft, RefreshCw, FileText, CheckCircle, Sparkles, Trash2, Cpu, Trophy, Layers, Flame, Lightbulb, Check, HelpCircle, MessageCircle, BrainCircuit, Rocket, Tag, LayoutGrid, List } from 'lucide-react';
+import { BookOpen, Star, Play, Share2, Search, ArrowLeft, RefreshCw, FileText, CheckCircle, Sparkles, Trash2, Cpu, Trophy, Layers, Flame, Lightbulb, Check, HelpCircle, MessageCircle, BrainCircuit, Rocket, Tag, LayoutGrid, List, Users } from 'lucide-react';
 import { translations } from '../lib/i18n';
 import { MainLogo } from '../components/MainLogo';
 import ThreeDIcon from '../components/ThreeDIcon';
@@ -13,7 +13,7 @@ import { playChimeSound } from '../components/ExtraFeatures';
 import ParallaxTiltCard from '../components/ParallaxTiltCard';
 import { getApiUrl } from '../lib/origin';
 import { UserBadge } from '../components/UserBadge';
-import { getAllProfiles } from '../lib/db';
+import { getAllProfiles, getSiteStats } from '../lib/db';
 import DailyQuizCard from '../components/DailyQuizCard';
 
 import { useGSAP } from '@gsap/react';
@@ -115,10 +115,16 @@ export default function LandingPage({
   const currentCosmoAITopics = isAr ? SPARK_TOPICS_AR : SPARK_TOPICS_EN;
 
   const [profilesMap, setProfilesMap] = React.useState<Record<string, any>>({});
+  const [siteStats, setSiteStats] = React.useState<any>(null);
 
   React.useEffect(() => {
     let active = true;
     
+    // Fetch site stats
+    getSiteStats().then(s => {
+      if (active && s) setSiteStats(s);
+    }).catch(() => {});
+
     // Fetch profiles map to show correct badges
     const loadProfiles = async () => {
       try {
@@ -290,6 +296,64 @@ export default function LandingPage({
           >
             {isAr ? 'تفعيل الحساب' : 'Sign In'}
           </button>
+        </div>
+      )}
+
+      {/* Live site stats */}
+      {siteStats && (
+        <div className="gsap-fade-section mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {siteStats.totalQuizzes > 0 && (
+            <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-violet-500/10 p-4 text-center backdrop-blur-sm">
+              <p className="text-2xl font-black text-purple-500">{siteStats.totalQuizzes.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-slate-500 mt-1">{isAr ? 'اختبار متاح' : 'Quizzes'}</p>
+            </div>
+          )}
+          {siteStats.totalCompletions > 0 && (
+            <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 p-4 text-center backdrop-blur-sm">
+              <p className="text-2xl font-black text-cyan-500">{siteStats.totalCompletions.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-slate-500 mt-1">{isAr ? 'حل اختبارات' : 'Solved'}</p>
+            </div>
+          )}
+          {siteStats.totalUsers > 0 && (
+            <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-green-500/10 p-4 text-center backdrop-blur-sm">
+              <p className="text-2xl font-black text-emerald-500">{siteStats.totalUsers.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-slate-500 mt-1">{isAr ? 'مستخدم نشط' : 'Users'}</p>
+            </div>
+          )}
+          {siteStats.todayQuizzes > 0 && (
+            <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-4 text-center backdrop-blur-sm">
+              <p className="text-2xl font-black text-amber-500">{siteStats.todayQuizzes.toLocaleString()}</p>
+              <p className="text-[10px] font-bold text-slate-500 mt-1">{isAr ? 'كويز اليوم 🆕' : 'New Today'}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Featured quiz of the week */}
+      {siteStats?.featuredQuiz && quizzes.length > 0 && (
+        <div className="gsap-fade-section mt-8">
+          <div className="relative rounded-3xl border-2 border-amber-400/40 bg-gradient-to-r from-amber-400/10 via-yellow-400/5 to-orange-400/10 p-5 backdrop-blur-sm">
+            <div className="absolute -top-3 right-4 flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-[10px] font-black text-amber-950 shadow-lg">
+              <Trophy className="w-3 h-3" />
+              {isAr ? 'كويز الأسبوع ⭐' : 'Quiz of the Week ⭐'}
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <h4 className="text-lg font-black text-slate-900 dark:text-white">{siteStats.featuredQuiz.title}</h4>
+                <p className="text-xs text-slate-500 mt-1">{siteStats.featuredQuiz.description || ''}</p>
+                <div className="flex items-center gap-3 mt-2 text-[10px] font-bold text-slate-400">
+                  <span className="flex items-center gap-1"><Users className="w-3 h-3" />{siteStats.featuredQuiz.takersCount} {isAr ? 'حلّوه' : 'solvers'}</span>
+                  <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" />{siteStats.featuredQuiz.avgRating?.toFixed(1) || '—'}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => onStartQuiz(siteStats.featuredQuiz.id)}
+                className="shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-amber-500/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+              >
+                {isAr ? 'ابدأ الآن' : 'Start Now'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

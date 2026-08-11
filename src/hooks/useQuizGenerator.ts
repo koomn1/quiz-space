@@ -3,7 +3,7 @@ import React from 'react';
 import { createQuiz } from '../lib/db';
 import { Question } from '../types';
 import { generateQuizWithFallback } from './useQuizzes';
-import { generateQuizFromFile, generateQuizFromFileStreaming, StreamProgress } from '../services/aiWorkerClient';
+import { generateQuizFromFile, generateQuizFromFileWithFallback, generateQuizFromFileStreaming, StreamProgress } from '../services/aiWorkerClient';
 import { splitPdfIntoPageImages } from '../lib/pdfSplitter';
 
 
@@ -76,15 +76,32 @@ export function useQuizGenerator() {
             message: `جاري توليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${totalQuestions} سؤال)...`,
           });
 
-          let data = await generateQuizWithFallback(
-            topic || '',
-            currentBatchSize,
-            accumulatedQuestions.map(q => q.text)
-          );
+          let data: GeneratedQuiz | null = null;
+          try {
+            data = await generateQuizWithFallback(
+              topic || '',
+              currentBatchSize,
+              accumulatedQuestions.map(q => q.text)
+            );
+          } catch { /* providers failed, data stays null */ }
+          
+          // If the batch failed entirely (no questions returned), retry with providers
+          if (!data?.questions || data.questions.length === 0) {
+            try {
+              const retry = await generateQuizWithFallback(
+                topic || '',
+                currentBatchSize,
+                accumulatedQuestions.map(q => q.text)
+              );
+              if (retry.questions && retry.questions.length > 0) {
+                data = retry;
+              }
+            } catch { /* keep empty, will throw at end */ }
+          }
           // Models occasionally return fewer questions than requested —
           // retry the batch once, asking for the exact missing remainder.
-          const returned = Array.isArray(data?.questions) ? data.questions.length : 0;
-          if (returned > 0 && returned < currentBatchSize) {
+          const returned = data?.questions ? data.questions.length : 0;
+          if (returned > 0 && returned < currentBatchSize && data) {
             try {
               const extra = await generateQuizWithFallback(
                 topic || '',
@@ -97,7 +114,7 @@ export function useQuizGenerator() {
             } catch { /* keep whatever we already have */ }
           }
 
-          if (data.questions && Array.isArray(data.questions)) {
+          if (data?.questions && Array.isArray(data.questions)) {
             if (!finalTitle && data.title) finalTitle = data.title;
             if (!finalDescription && data.description) finalDescription = data.description;
             
@@ -115,13 +132,30 @@ export function useQuizGenerator() {
             message: `جاري تحليل النص وتوليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${totalQuestions} سؤال)...`,
           });
 
-          let data = await generateQuizWithFallback(
-            `النص المصدر للأسئلة:\n\n${text}`,
-            currentBatchSize,
-            accumulatedQuestions.map(q => q.text)
-          );
-          const returned2 = Array.isArray(data?.questions) ? data.questions.length : 0;
-          if (returned2 > 0 && returned2 < currentBatchSize) {
+          let data: GeneratedQuiz | null = null;
+          try {
+            data = await generateQuizWithFallback(
+              `النص المصدر للأسئلة:\n\n${text}`,
+              currentBatchSize,
+              accumulatedQuestions.map(q => q.text)
+            );
+          } catch { /* providers failed, data stays null */ }
+          
+          // If the batch failed entirely, retry once more
+          if (!data?.questions || data.questions.length === 0) {
+            try {
+              const retry = await generateQuizWithFallback(
+                `النص المصدر للأسئلة:\n\n${text}`,
+                currentBatchSize,
+                accumulatedQuestions.map(q => q.text)
+              );
+              if (retry.questions && retry.questions.length > 0) {
+                data = retry;
+              }
+            } catch { /* keep empty, will throw at end */ }
+          }
+          const returned2 = data?.questions ? data.questions.length : 0;
+          if (returned2 > 0 && returned2 < currentBatchSize && data) {
             try {
               const extra = await generateQuizWithFallback(
                 `النص المصدر للأسئلة:\n\n${text}`,
@@ -134,7 +168,7 @@ export function useQuizGenerator() {
             } catch { /* keep whatever we already have */ }
           }
 
-          if (data.questions && Array.isArray(data.questions)) {
+          if (data?.questions && Array.isArray(data.questions)) {
             if (!finalTitle && data.title) finalTitle = data.title;
             if (!finalDescription && data.description) finalDescription = data.description;
             accumulatedQuestions = [...accumulatedQuestions, ...data.questions];
@@ -187,7 +221,12 @@ export function useQuizGenerator() {
           );
         } catch (err) {
           console.warn('Streaming failed, falling back to standard extraction:', err);
-          data = await generateQuizFromFile(base64, mimeType || 'application/pdf', totalQuestions, customInstruction, extractionMode);
+          try {
+            data = await generateQuizFromFileWithFallback(base64, mimeType || 'application/pdf', totalQuestions, customInstruction, extractionMode);
+          } catch (fallbackErr) {
+            // If all providers fail, try the basic version once more (different error path)
+            data = await generateQuizFromFile(base64, mimeType || 'application/pdf', totalQuestions, customInstruction, extractionMode);
+          }
         }
 
         if (data.questions && Array.isArray(data.questions)) {

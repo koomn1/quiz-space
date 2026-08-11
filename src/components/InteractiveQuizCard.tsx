@@ -4,7 +4,7 @@ import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download,
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag } from './PremiumNameTag';
 import ParallaxTiltCard from './ParallaxTiltCard';
-import { getCompletionsByQuizId } from '../lib/db';
+import { getQuizTakersUnique } from '../lib/db';
 import { QuizCompletion } from '../types';
 
 interface InteractiveQuizCardProps {
@@ -57,7 +57,7 @@ export function InteractiveQuizCard({
     setAttemptsOpen(true);
     setAttemptsLoading(true);
     try {
-      setAttempts(await getCompletionsByQuizId(quiz.id));
+      setAttempts(await getQuizTakersUnique(quiz.id));
     } finally {
       setAttemptsLoading(false);
     }
