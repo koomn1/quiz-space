@@ -111,6 +111,75 @@ function normalizeQuestions(raw: any): any[] {
   return questions;
 }
 
+const MODEL_TIMEOUT_MS = 20_000;
+
+/**
+ * Last-resort parser for conventional exam layouts. It is intentionally strict:
+ * it only accepts numbered questions and clearly labelled options/answers, so
+ * it cannot invent content when a document has no question structure.
+ */
+function parseLiteralQuestions(text: string): any[] {
+  const questions: any[] = [];
+  let current: any | null = null;
+  const flush = () => {
+    if (current) questions.push(current);
+    current = null;
+  };
+  const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+
+  for (const line of lines) {
+    const questionMatch = line.match(/^(?:question\s*)?(\d{1,4})[.)\-:]\s*(.+)$/i);
+    if (questionMatch) {
+      flush();
+      current = {
+        number: Number(questionMatch[1]),
+        text: questionMatch[2].trim(),
+        type: 'essay',
+        options: [],
+        correctIndex: -1,
+        correctAnswer: '',
+        explanation: '',
+      };
+      continue;
+    }
+    if (!current) continue;
+
+    const optionMatch = line.match(/^([A-H])\s*[).:\-]\s*(.+)$/i);
+    if (optionMatch) {
+      current.type = 'mcq';
+      current.options.push(optionMatch[2].trim());
+      continue;
+    }
+
+    const answerMatch = line.match(/^(?:answer|correct\s*answer)\s*[:\-]\s*(.+)$/i);
+    if (answerMatch) {
+      const answer = answerMatch[1].trim();
+      current.correctAnswer = answer;
+      const letter = answer.match(/^([A-H])(?:[).:]|\s|$)/i);
+      if (letter && current.options.length > 0) {
+        current.correctIndex = Math.max(0, Math.min(current.options.length - 1, letter[1].toUpperCase().charCodeAt(0) - 65));
+        current.correctAnswer = current.options[current.correctIndex];
+      } else if (/^(true|false)$/i.test(answer)) {
+        current.type = 'tf';
+        current.options = ['True', 'False'];
+        current.correctIndex = /^true$/i.test(answer) ? 0 : 1;
+      } else if (current.options.length > 0) {
+        const answerKey = normalize(answer);
+        const index = current.options.findIndex((option: string) => normalize(option) === answerKey);
+        if (index >= 0) current.correctIndex = index;
+      }
+      continue;
+    }
+
+    // Preserve wrapped question lines, but never append obvious document headings.
+    if (current.options.length === 0 && !/^(answer|section|chapter|page)\b/i.test(line)) {
+      current.text = `${current.text} ${line}`.trim();
+    }
+  }
+  flush();
+  return questions;
+}
+
 function splitText(text: string): string[] {
   if (text.length <= DOCUMENT_SINGLE_REQUEST_LIMIT) return [text];
   const chunks: string[] = [];
@@ -132,9 +201,13 @@ async function callModel(
 ): Promise<{ raw: string; model: string }> {
   let lastError: unknown;
   for (const model of DOCUMENT_EXTRACTION_MODELS) {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
@@ -149,10 +222,12 @@ async function callModel(
       });
       if (!response.ok) throw new Error(`OpenRouter ${model} failed: ${response.status}`);
       const data = await response.json() as any;
+      clearTimeout(timeout);
       const raw = data.choices?.[0]?.message?.content;
       if (typeof raw !== 'string' || !raw.trim()) throw new Error(`OpenRouter ${model} returned an empty response`);
       return { raw, model };
     } catch (error) {
+      if (timeout) clearTimeout(timeout);
       lastError = error;
       console.warn(`Document extraction model ${model} failed; trying fallback.`, error);
     }
@@ -182,8 +257,7 @@ export async function extractQuestionsFromText(
       try {
         parsedResults.push(extractJson(result.raw));
       } catch (error) {
-        console.error('Nemotron document response was not valid JSON:', error);
-        throw new Error('Invalid JSON from document extraction model.');
+        console.error('Document extraction response was not valid JSON; trying the local literal parser.', error);
       }
     }
   }
@@ -199,7 +273,20 @@ export async function extractQuestionsFromText(
       }
     }
   }
-  if (!questions.length) throw new Error('The document did not contain any valid questions.');
+  if (!questions.length) {
+    const literalQuestions = normalizeQuestions(parseLiteralQuestions(text));
+    if (literalQuestions.length > 0) {
+      return {
+        title: 'Extracted Quiz',
+        description: 'Questions extracted from the uploaded document.',
+        questions: literalQuestions.map((question, index) => ({ ...question, number: question.number || index + 1 })),
+        rawResponses,
+        chunks: chunks.length,
+        provider: `${[...modelsUsed].join(', ') || 'none'}, local-format-parser`,
+      };
+    }
+    throw new Error('The document did not contain any valid questions.');
+  }
 
   return {
     title: 'Extracted Quiz',

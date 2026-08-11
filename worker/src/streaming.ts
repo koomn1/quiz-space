@@ -129,8 +129,10 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
         try {
           const pdfText = await extractPdfTextContent(fileData);
           if (pdfText.trim().length > 40) {
+            // Send a heartbeat before the model call so a slow provider never
+            // leaves the client showing the initial 0/100 state indefinitely.
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'init', totalChunks: 1, totalPages: pageCount })}\n\n`));
             const result = await extractQuestionsFromText(pdfText, env, customInstruction);
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'init', totalChunks: result.chunks, totalPages: pageCount })}\n\n`));
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', processed: result.chunks, total: result.chunks, questionsExtracted: result.questions.length, percentage: 100 })}\n\n`));
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'complete', quiz: { title: result.title, description: result.description, questions: result.questions } })}\n\n`));
             await logAiPerformance(env, authHeader, {

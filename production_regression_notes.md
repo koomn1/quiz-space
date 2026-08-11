@@ -11,3 +11,49 @@ The homepage navigation menu successfully opened. The first attempted click on t
 ## Newly reproduced regression
 
 On 2026-08-11, the live classroom creation form accepted the test name `اختبار Nemotron Regression` but failed on submit with the exact database error: `null value in column "code" of relation "classrooms" violates not-null constraint`. The existing classroom `عنبه • V77ZT0` remained visible, so no new test classroom was created. This is a confirmed production defect in the classroom creation insert payload or database default, and it must be fixed before final verification.
+
+## Classroom code fix deployment
+
+The confirmed fix adds a six-character, uppercase classroom code generated in the browser and sends it explicitly in the Supabase insert. Frontend typecheck and build passed. Commit `0bc4355` was pushed, and GitHub Actions run `31534998717` completed successfully for Build Frontend, Deploy GitHub Pages, and Deploy AI Worker. A cache-busted production reload was then started to avoid reusing the old JavaScript bundle; the app returned to its onboarding/migration screen as expected.
+
+## Classroom creation retest passed
+
+After a cache-busted reload of the deployed `0bc4355` build, creating `اختبار Nemotron Regression 2` succeeded. The UI showed `تم إنشاء فصلك الدراسي الفخم بنجاح!`, generated code `P5VS63`, added the classroom to the active list, and opened its workspace with the expected overview counters and management tabs. This confirms the `code` not-null regression is fixed in production.
+
+The next live check is the lesson/online-class creation flow inside this newly created classroom.
+
+## Lesson creation regression reproduced
+
+Inside the newly created classroom `اختبار Nemotron Regression 2` (`P5VS63`), the `الحصص أونلاين` tab opened correctly and the add-lesson form accepted a valid YouTube URL, title, and description. Submitting `حفظ الحصة` still showed `خطأ — فشل إضافة الحصة`, and no lesson appeared. This confirms the remaining defect is in the `addLessonVideo` data path or its RLS/schema contract rather than in the classroom workspace UI.
+
+## Lesson creation fix passed
+
+Supabase API logs showed the original lesson insert returning `POST | 403` for `classroom_lesson_videos`. Direct privilege inspection confirmed both `anon` and `authenticated` had no table privileges. The applied migration grants authenticated CRUD access, enables RLS, and restricts reads to classroom owners/members while restricting writes, updates, and deletes to the classroom owner.
+
+After applying the migration, resubmitting the same lesson succeeded. The UI displayed `تمت الإضافة — الحصة تمت إضافتها بنجاح`, closed the form, generated the YouTube thumbnail, and displayed `حصة اختبار الإصلاح` with its description and delete action. This confirms the previously reported `Failed to add lesson` issue is fixed in production.
+
+## Quiz Creator regression test started
+
+The production classroom workspace now contains the successful lesson and its YouTube thumbnail. The navigation menu opened from the workspace, and `إنشاء اختبار` loaded the Quiz Creator page in the new published bundle. The initial mode is `كتابة يدوية`; the next step is to switch to the file-extraction mode and upload controlled TXT/PDF/DOCX fixtures.
+
+## File upload fixture setup
+
+The Quiz Creator file mode `صورة أو PDF` loaded successfully. Its DOM contains one hidden file input with `accept="image/*, application/pdf"` and id `document-upload-input`, so the controlled PDF fixture can be uploaded directly without using the manual-question path. TXT and DOCX fixtures are also ready locally for the text/document extraction routes.
+
+## Upload harness note
+
+The PDF extraction screen rendered correctly, but the automated upload helper could not target the hidden `document-upload-input` by the visible element index (`index 0` could not locate it; the label index is not a file input). This is a test-harness limitation, not an application failure. The next attempt will temporarily expose the existing file input through the page DOM, then use the browser upload action against the actual input element.
+
+## Text PDF upload passed
+
+The hidden input was exposed only for test harness purposes and the controlled `nemotron_fixture.pdf` uploaded successfully. Quiz Creator displayed the file name and exposed the extraction controls; `استخراج حرفي فائق الأمانة` was selected, and the configured question-count controls plus the final processing button appeared. The next action will start the live worker request and verify that the resulting draft contains the two fixture questions without blocking or a false failure.
+
+## PDF extraction currently pending
+
+The live PDF request started and the UI correctly switched to `جاري صياغة الأسئلة...` with the Nemotron-specific progress message. Two status checks over the next interval still showed `0 / 100 سؤال` and the disabled processing state. No visible error appeared. The fixture contains only two questions, so the displayed 100-question target is noteworthy and will be investigated if the request does not complete shortly.
+
+A further status check still showed the PDF extraction at `0 / 100` with no UI error. The browser console contained no application exception beyond the temporary test-harness DOM exposure. The next diagnostic is to inspect the worker request resources and server-side logs before deciding whether the live pipeline or only the UI progress target is at fault.
+
+## Extraction diagnosis
+
+Code inspection shows `worker/src/streaming.ts` sends the SSE `init` event only after `extractPdfTextContent()` **and** `extractQuestionsFromText()` finish. Therefore the browser remains at its initial `0 / 100` state while the Nemotron request is in flight. The live request has now remained in that state for more than two minutes, which is not acceptable for the 178-byte fixture. The browser-console isolation request could not reuse the upload because React had replaced the file input and its `files` collection was empty. This points to a worker/model timeout or stalled streaming response, with a secondary UX issue that init is emitted too late.
