@@ -16,16 +16,21 @@ interface MotivationStatus {
   happy_hour: { is_happy_hour: boolean; multiplier: number; start_hour: number; end_hour: number };
 }
 
+const getImageUrl = (name: string) => {
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+  return `${base}/images/${name}.webp`;
+};
+
 const IMAGES: Record<string, string> = {
-  lucky_wheel: '/images/lucky_wheel.png',
-  streak_fire: '/images/streak_fire.png',
-  leaderboard_trophy: '/images/leaderboard_trophy.png',
-  mystery_box: '/images/mystery_box.png',
-  brain_challenge: '/images/brain_challenge.png',
-  referral_friends: '/images/referral_friends.png',
-  weekly_achievement: '/images/weekly_achievement.png',
-  happy_hour: '/images/happy_hour.png',
-  group_challenge: '/images/group_challenge.png',
+  lucky_wheel: getImageUrl('lucky_wheel'),
+  streak_fire: getImageUrl('streak_fire'),
+  leaderboard_trophy: getImageUrl('leaderboard_trophy'),
+  mystery_box: getImageUrl('mystery_box'),
+  brain_challenge: getImageUrl('brain_challenge'),
+  referral_friends: getImageUrl('referral_friends'),
+  weekly_achievement: getImageUrl('weekly_achievement'),
+  happy_hour: getImageUrl('happy_hour'),
+  group_challenge: getImageUrl('group_challenge'),
 };
 
 export default function MotivationHub({ userId, isAr, triggerToast }: MotivationHubProps) {
@@ -151,8 +156,9 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           <img
             src={IMAGES.lucky_wheel}
             alt="Lucky Wheel"
-            className="w-24 h-24 rounded-xl object-cover mb-3"
+            className="w-20 h-20 rounded-xl object-cover mb-3"
             style={{ transform: `rotate(${spinAngle}deg)`, transition: isSpinning ? 'none' : 'transform 0.3s' }}
+            loading="lazy"
           />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'عجلة الحظ' : 'Lucky Spin'}</h4>
           <p className="text-[10px] text-slate-500 mb-2">{isAr ? '1× يومياً — اربح 1-50 نقطة' : '1×/day — Win 1-50 pts'}</p>
@@ -167,7 +173,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
         {/* 2. Streak */}
         <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-orange-500/30 transition-colors">
-          <img src={IMAGES.streak_fire} alt="Streak" className="w-24 h-24 rounded-xl object-cover mb-3" />
+          <img src={IMAGES.streak_fire} alt="Streak" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'سلسلة الأيام' : 'Daily Streak'}</h4>
           <div className="flex items-center gap-1 mb-2">
             <span className="text-lg font-black text-orange-400">🔥 {streakDays}</span>
@@ -193,8 +199,9 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           <img
             src={IMAGES.mystery_box}
             alt="Mystery Box"
-            className="w-24 h-24 rounded-xl object-cover mb-3"
+            className="w-20 h-20 rounded-xl object-cover mb-3"
             style={{ animation: isOpeningBox ? 'pulse 0.5s infinite' : 'none' }}
+            loading="lazy"
           />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'صندوق الغموض' : 'Mystery Box'}</h4>
           <p className="text-[10px] text-slate-500 mb-2">{isAr ? 'كل 3 أيام — مفاجأة عشوائية' : 'Every 3 days — Random reward'}</p>
@@ -214,7 +221,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
         {/* 4. Brain Challenge */}
         <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-cyan-500/30 transition-colors">
-          <img src={IMAGES.brain_challenge} alt="Brain Challenge" className="w-24 h-24 rounded-xl object-cover mb-3" />
+          <img src={IMAGES.brain_challenge} alt="Brain Challenge" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'تحدي العقل' : 'Brain Challenge'}</h4>
           <p className="text-[10px] text-slate-500 mb-2">{isAr ? 'سؤال يومي — 20 نقطة' : 'Daily question — 20 pts'}</p>
           {status?.brain_challenge?.attempts_today !== undefined && (
@@ -249,7 +256,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
         {/* 5. Referral */}
         <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-teal-500/30 transition-colors">
-          <img src={IMAGES.referral_friends} alt="Referral" className="w-24 h-24 rounded-xl object-cover mb-3" />
+          <img src={IMAGES.referral_friends} alt="Referral" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'دعوة صديق' : 'Refer a Friend'}</h4>
           <p className="text-[10px] text-slate-500 mb-2">{isAr ? '50 نقطة لكل صديق — 5 شهرياً' : '50 pts each — 5/month'}</p>
           <p className="text-[9px] text-slate-600 mb-1">
@@ -270,7 +277,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
         {/* 6. Weekly Achievement */}
         <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-amber-500/30 transition-colors">
-          <img src={IMAGES.weekly_achievement} alt="Weekly Achievement" className="w-24 h-24 rounded-xl object-cover mb-3" />
+          <img src={IMAGES.weekly_achievement} alt="Weekly Achievement" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'إنجاز أسبوعي' : 'Weekly Achievement'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? 'حل 5 اختبارات = شارة + 30 نقطة' : 'Solve 5 quizzes = Badge + 30 pts'}</p>
           <p className="text-[9px] text-slate-600">{isAr ? 'يتجدد كل أسبوع' : 'Resets weekly'}</p>
@@ -281,7 +288,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
         {/* 7. Happy Hour */}
         <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-amber-500/30 transition-colors">
-          <img src={IMAGES.happy_hour} alt="Happy Hour" className="w-24 h-24 rounded-xl object-cover mb-3" />
+          <img src={IMAGES.happy_hour} alt="Happy Hour" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'الساعة السعيدة' : 'Happy Hour'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? '6-8 مساءً — نقاط مضاعفة 2x' : '6-8 PM — 2x Points'}</p>
           {status?.happy_hour?.is_happy_hour ? (
@@ -293,7 +300,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
         {/* 8. Group Challenge */}
         <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-green-500/30 transition-colors">
-          <img src={IMAGES.group_challenge} alt="Group Challenge" className="w-24 h-24 rounded-xl object-cover mb-3" />
+          <img src={IMAGES.group_challenge} alt="Group Challenge" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'تحدي المجموعة' : 'Group Challenge'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? 'تحدٍ أسبوعي مع فصلك' : 'Weekly class challenge'}</p>
           <p className="text-[9px] text-slate-600">{isAr ? 'انضم لفصل وشارك في التحدي' : 'Join a class to participate'}</p>
@@ -304,7 +311,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
         {/* 9. Leaderboard */}
         <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-yellow-500/30 transition-colors">
-          <img src={IMAGES.leaderboard_trophy} alt="Leaderboard" className="w-24 h-24 rounded-xl object-cover mb-3" />
+          <img src={IMAGES.leaderboard_trophy} alt="Leaderboard" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'لوحة الصدارة' : 'Leaderboard'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? 'أفضل 10 كل أسبوع' : 'Top 10 weekly'}</p>
           <p className="text-[9px] text-slate-600">{isAr ? 'شارات + VIP مؤقت' : 'Badges + Temp VIP'}</p>
@@ -312,7 +319,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
         {/* 10. AI Quiz (existing) */}
         <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-blue-500/30 transition-colors">
-          <img src={IMAGES.brain_challenge} alt="AI Quiz" className="w-24 h-24 rounded-xl object-cover mb-3" style={{ filter: 'hue-rotate(90deg)' }} />
+          <img src={IMAGES.brain_challenge} alt="AI Quiz" className="w-20 h-20 rounded-xl object-cover mb-3" style={{ filter: 'hue-rotate(90deg)' }} loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'كويز AI يومي' : 'Daily AI Quiz'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? '3 محاولات مجانية يومياً' : '3 free tries/day'}</p>
           <p className="text-[9px] text-slate-600">{isAr ? 'توليد كويز من أي نص' : 'Generate quiz from any text'}</p>

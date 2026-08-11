@@ -614,13 +614,16 @@ export default function App() {
 
   // Trigger Onboarding for new users on mount
   React.useEffect(() => {
-    const tourShown = localStorage.getItem('quiz_onboarding_shown');
-    if (!tourShown) {
+    // Check both localStorage (for guest/speed) and server-side userStats
+    const tourShownLocal = localStorage.getItem('quiz_onboarding_shown');
+    const tourShownServer = userStats?.onboarded;
+    
+    if (!tourShownLocal && !tourShownServer && !isGuestSandbox) {
       // Small delay on mount for transition smoothness
       const timer = setTimeout(() => setShowOnboarding(true), 1200);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [userStats?.onboarded, isGuestSandbox]);
 
   // Sync Google Auth State changes
   React.useEffect(() => {
@@ -702,20 +705,21 @@ export default function App() {
         localStorage.setItem('quiz_userId', user.id);
         localStorage.setItem('quiz_userName', finalName);
 
-        const onboarded = localStorage.getItem(`quiz_profile_onboarded_${user.id}`);
+        let onboarded = localStorage.getItem(`quiz_profile_onboarded_${user.id}`);
         if (!onboarded) {
-          let dbOnboarded = false;
           try {
             const { data: userRow } = await supabase.from('users').select('onboarded').eq('uid', user.id).maybeSingle();
-            dbOnboarded = !!userRow?.onboarded;
+            if (userRow?.onboarded) {
+              localStorage.setItem(`quiz_profile_onboarded_${user.id}`, 'true');
+              onboarded = 'true';
+            }
           } catch (e) {
-            dbOnboarded = true;
+            console.error("Error checking onboarding status:", e);
           }
-          if (!dbOnboarded) {
-            setShowPostRegisterModal(true);
-          } else {
-            localStorage.setItem(`quiz_profile_onboarded_${user.id}`, 'true');
-          }
+        }
+        
+        if (!onboarded) {
+          setShowPostRegisterModal(true);
         }
 
         // Success logged in chime sound
@@ -1777,7 +1781,13 @@ export default function App() {
           <OnboardingTour
             activeTab={activeTab as any}
             setActiveTab={(tab) => handleSetTab(tab as any, true)}
-            onClose={() => setShowOnboarding(false)}
+            onClose={() => {
+              setShowOnboarding(false);
+              localStorage.setItem('quiz_onboarding_shown', 'true');
+              if (userId && !isGuestSandbox) {
+                saveUserProfile(userId, userName, undefined, userEmail || undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, true);
+              }
+            }}
           />
         )}
       

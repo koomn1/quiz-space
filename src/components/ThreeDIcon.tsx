@@ -43,7 +43,8 @@ export default function ThreeDIcon({ name, className = "w-5 h-5", size }: ThreeD
   }
 
   // Pre-configured paths for development and deployed structures
-  const imageSrc = `/src/assets/images/${filename}.png`;
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+  const imageSrc = `${base}/src/assets/images/${filename}.png`;
 
   if (!imgFailed) {
     return (

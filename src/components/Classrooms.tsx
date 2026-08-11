@@ -2232,7 +2232,8 @@ export default function Classrooms({
                               return;
                             }
                             const videoId = extractYouTubeId(newLessonUrl);
-                            if (!videoId) {
+                            // Allow non-YouTube links if marked as Live Stream, otherwise require YouTube ID
+                            if (!videoId && !isLessonLive) {
                               triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'رابط YouTube غير صالح' : 'Invalid YouTube URL', 'info');
                               return;
                             }
@@ -2293,9 +2294,13 @@ export default function Classrooms({
                             }}
                           >
                             <img
-                              src={`https://img.youtube.com/vi/${extractYouTubeId(vid.videoUrl)}/mqdefault.jpg`}
+                              src={extractYouTubeId(vid.videoUrl) 
+                                ? `https://img.youtube.com/vi/${extractYouTubeId(vid.videoUrl)}/mqdefault.jpg`
+                                : `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/images/happy_hour.webp`
+                              }
                               alt={vid.title}
                               className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity"
+                              loading="lazy"
                             />
                             {vid.isLive && (
                               <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600 text-white text-[9px] font-black animate-pulse">
@@ -2359,14 +2364,31 @@ export default function Classrooms({
 
             {/* Protected Video Container */}
             <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
-              <iframe
-                src={`https://www.youtube.com/embed/${extractYouTubeId(watchingVideo.videoUrl)}?modestbranding=1&controls=1&rel=0&showinfo=0&disablekb=0&fs=0`}
-                title={watchingVideo.title}
-                className="w-full h-full"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen={false}
-              ></iframe>
+              {extractYouTubeId(watchingVideo.videoUrl) ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${extractYouTubeId(watchingVideo.videoUrl)}?modestbranding=1&controls=1&rel=0&showinfo=0&disablekb=0&fs=0`}
+                  title={watchingVideo.title}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen={false}
+                ></iframe>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white p-6 text-center">
+                  <div>
+                    <Play className="w-12 h-12 text-purple-500 mx-auto mb-4" />
+                    <p className="text-sm font-bold mb-4">{isAr ? 'هذا البث المباشر خارجي' : 'This is an external live stream'}</p>
+                    <a 
+                      href={watchingVideo.videoUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="px-6 py-2 bg-purple-600 rounded-xl text-xs font-black hover:bg-purple-500 transition-colors inline-block"
+                    >
+                      {isAr ? 'فتح البث في نافذة جديدة' : 'Open Stream in New Window'}
+                    </a>
+                  </div>
+                </div>
+              )}
               {/* Transparent overlay to prevent right-click and drag */}
               <div
                 className="absolute inset-0 bg-transparent z-10"

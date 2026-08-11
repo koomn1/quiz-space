@@ -737,6 +737,7 @@ export async function saveUserProfile(
     updated_at: new Date().toISOString(),
   };
 
+  if (onboarded !== undefined) updatedUser.onboarded = onboarded;
   if (planId !== undefined) updatedUser.plan_id = planId;
   if (isPremium !== undefined) updatedUser.is_premium = isPremium;
   if (planName !== undefined) updatedUser.plan_name = planName;
@@ -2143,8 +2144,8 @@ export async function addLessonVideo(params: {
       .select()
       .single();
     if (error) {
-      console.error('Error adding lesson video:', error.message);
-      return null;
+      console.error('Error adding lesson video:', error.message, error.details, error.hint);
+      throw error;
     }
     return {
       id: data.id,
@@ -2160,8 +2161,13 @@ export async function addLessonVideo(params: {
       viewCount: data.view_count || 0,
       createdAt: data.created_at,
     };
-  } catch (e) {
+  } catch (e: any) {
     console.error('Error adding lesson video:', e);
+    if (typeof window !== 'undefined') {
+      const errorMsg = e.message || JSON.stringify(e);
+      // We'll let the UI handle the error display, but log it clearly
+      console.error('CRITICAL_ERROR_DETAILS:', errorMsg);
+    }
     return null;
   }
 }
