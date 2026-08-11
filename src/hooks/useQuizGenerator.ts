@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import { createQuiz } from '../lib/db';
-import { Question } from '../types';
+import { Question, GeneratedQuiz } from '../types';
 import { generateQuizWithFallback } from './useQuizzes';
 import { generateQuizFromFile, generateQuizFromFileWithFallback, generateQuizFromFileStreaming, StreamProgress } from '../services/aiWorkerClient';
 import { splitPdfIntoPageImages } from '../lib/pdfSplitter';

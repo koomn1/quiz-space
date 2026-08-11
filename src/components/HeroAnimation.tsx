@@ -107,7 +107,7 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
   }, { scope: containerRef, dependencies: [isAr, topicsToUse] });
 
   return (
-    <div ref={containerRef} className="relative w-full h-[80vh] min-h-[600px] bg-[#020617] overflow-hidden flex flex-col items-center justify-center rounded-[40px] shadow-[0_20px_60px_-15px_rgba(109,40,217,0.3)] border border-indigo-500/20">
+    <div ref={containerRef} className="light-hero relative w-full h-[80vh] min-h-[600px] bg-[#020617] overflow-hidden flex flex-col items-center justify-center rounded-[40px] shadow-[0_20px_60px_-15px_rgba(109,40,217,0.3)] border border-indigo-500/20">
       
       {/* Dynamic Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">

@@ -20,7 +20,7 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
-      allowedHosts: ['.monkeycode-ai.live'],
+      allowedHosts: ['.monkeycode-ai.live', '.manus.computer'],
       headers: {
         // Cache public video files aggressively so the splash intro is never
         // re-downloaded after the first visit. The loading overlay reuses the

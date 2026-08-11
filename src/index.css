@@ -663,3 +663,241 @@ html:not(.dark) .nf-error-char {
 html:not(.dark) .nf-error-line {
   opacity: .9;
 }
+
+
+/* ========================================================================
+   Light-mode readability layer
+   The app contains many deliberately dark utility classes for the original
+   glass/cosmic theme. In light mode those surfaces must become real light
+   surfaces instead of translucent charcoal overlays. This scoped layer keeps
+   accent buttons colorful while making content, forms, cards, and navigation
+   readable across every route.
+   ======================================================================== */
+html:not(.dark) .light-readable-ui {
+  color: #0f172a;
+}
+
+html:not(.dark) .light-readable-ui [class~="bg-slate-950"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-950/95"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-950/90"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-950/80"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-950/70"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-950/60"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-950/50"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-950/40"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-950/30"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-950/20"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/95"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/90"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/80"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/70"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/60"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/50"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/40"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/30"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/20"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-900/10"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-800"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-800/80"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-800/60"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-800/40"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-800/20"] {
+  background-color: #ffffff !important;
+  background-image: none;
+}
+
+html:not(.dark) .light-readable-ui [class~="bg-slate-700"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-700/60"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-700/40"],
+html:not(.dark) .light-readable-ui [class~="bg-slate-700/20"] {
+  background-color: #f1f5f9 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="border-slate-950"],
+html:not(.dark) .light-readable-ui [class~="border-slate-900"],
+html:not(.dark) .light-readable-ui [class~="border-slate-900/80"],
+html:not(.dark) .light-readable-ui [class~="border-slate-900/60"],
+html:not(.dark) .light-readable-ui [class~="border-slate-800"],
+html:not(.dark) .light-readable-ui [class~="border-slate-800/80"],
+html:not(.dark) .light-readable-ui [class~="border-slate-800/60"],
+html:not(.dark) .light-readable-ui [class~="border-slate-800/40"],
+html:not(.dark) .light-readable-ui [class~="border-slate-800/20"],
+html:not(.dark) .light-readable-ui [class~="border-slate-700"] {
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="text-slate-100"],
+html:not(.dark) .light-readable-ui [class~="text-slate-200"],
+html:not(.dark) .light-readable-ui [class~="text-slate-300"],
+html:not(.dark) .light-readable-ui [class~="text-slate-400"],
+html:not(.dark) .light-readable-ui [class~="text-slate-500"],
+html:not(.dark) .light-readable-ui [class~="text-slate-600"] {
+  color: #334155 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-slate-700"],
+html:not(.dark) .light-readable-ui [class~="text-slate-800"],
+html:not(.dark) .light-readable-ui [class~="text-slate-900"] {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-purple-300"],
+html:not(.dark) .light-readable-ui [class~="text-purple-400"],
+html:not(.dark) .light-readable-ui [class~="text-indigo-300"],
+html:not(.dark) .light-readable-ui [class~="text-indigo-400"] {
+  color: #6d28d9 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-emerald-300"],
+html:not(.dark) .light-readable-ui [class~="text-emerald-400"],
+html:not(.dark) .light-readable-ui [class~="text-green-300"],
+html:not(.dark) .light-readable-ui [class~="text-green-400"] {
+  color: #047857 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-red-300"],
+html:not(.dark) .light-readable-ui [class~="text-red-400"],
+html:not(.dark) .light-readable-ui [class~="text-rose-400"] {
+  color: #b91c1c !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-amber-300"],
+html:not(.dark) .light-readable-ui [class~="text-amber-400"],
+html:not(.dark) .light-readable-ui [class~="text-yellow-400"] {
+  color: #a16207 !important;
+}
+
+html:not(.dark) .light-readable-ui input,
+html:not(.dark) .light-readable-ui textarea,
+html:not(.dark) .light-readable-ui select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color-scheme: light;
+}
+
+html:not(.dark) .light-readable-ui input::placeholder,
+html:not(.dark) .light-readable-ui textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+/* Restore white labels on saturated action controls after the readable text pass. */
+html:not(.dark) .light-readable-ui [class*="bg-gradient"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-purple-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-purple-700"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-indigo-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-emerald-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-red-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-rose-600"][class~="text-white"] {
+  color: #ffffff !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="bg-purple-950/20"],
+html:not(.dark) .light-readable-ui [class~="bg-purple-950/30"],
+html:not(.dark) .light-readable-ui [class~="bg-indigo-950/20"],
+html:not(.dark) .light-readable-ui [class~="bg-indigo-950/30"],
+html:not(.dark) .light-readable-ui [class~="bg-emerald-950/20"],
+html:not(.dark) .light-readable-ui [class~="bg-red-950/20"] {
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="border-purple-500/40"],
+html:not(.dark) .light-readable-ui [class~="border-purple-500/30"],
+html:not(.dark) .light-readable-ui [class~="border-indigo-500/40"],
+html:not(.dark) .light-readable-ui [class~="border-emerald-500/40"],
+html:not(.dark) .light-readable-ui [class~="border-red-500/20"] {
+  border-color: #c4b5fd !important;
+}
+
+html:not(.dark) .light-readable-ui .backdrop-blur-md,
+html:not(.dark) .light-readable-ui .backdrop-blur-sm {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html:not(.dark) .light-readable-ui .shadow-md,
+html:not(.dark) .light-readable-ui .shadow-xl {
+  --tw-shadow-color: rgba(15, 23, 42, 0.12);
+}
+
+html:not(.dark) .light-readable-ui [class~="divide-slate-800"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="ring-slate-800"] {
+  --tw-ring-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="placeholder-slate-500"]::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+@media (prefers-contrast: more) {
+  html:not(.dark) .light-readable-ui {
+    filter: contrast(1.04);
+  }
+}
+
+
+/* Intentional dark hero surfaces keep their high-contrast light typography in light mode. */
+html:not(.dark) .light-readable-ui .light-hero [class~="text-white"] {
+  color: #ffffff !important;
+}
+
+html:not(.dark) .light-readable-ui .light-hero [class~="text-slate-300"],
+html:not(.dark) .light-readable-ui .light-hero [class~="text-slate-200"] {
+  color: #cbd5e1 !important;
+}
+
+html:not(.dark) .light-readable-ui .light-hero [class~="bg-white/5"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+
+/* High-contrast accent text used on the light catalog/cards. */
+html:not(.dark) .light-readable-ui [class~="text-purple-500"],
+html:not(.dark) .light-readable-ui [class~="text-purple-600"],
+html:not(.dark) .light-readable-ui [class~="text-indigo-500"],
+html:not(.dark) .light-readable-ui [class~="text-indigo-600"] {
+  color: #5b21b6 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-cyan-400"],
+html:not(.dark) .light-readable-ui [class~="text-cyan-500"],
+html:not(.dark) .light-readable-ui [class~="text-cyan-600"],
+html:not(.dark) .light-readable-ui [class~="text-sky-400"],
+html:not(.dark) .light-readable-ui [class~="text-sky-500"],
+html:not(.dark) .light-readable-ui [class~="text-sky-600"] {
+  color: #0e7490 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-amber-500"],
+html:not(.dark) .light-readable-ui [class~="text-amber-600"],
+html:not(.dark) .light-readable-ui [class~="text-yellow-500"],
+html:not(.dark) .light-readable-ui [class~="text-yellow-600"],
+html:not(.dark) .light-readable-ui [class~="text-orange-500"],
+html:not(.dark) .light-readable-ui [class~="text-orange-600"] {
+  color: #b45309 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-emerald-500"],
+html:not(.dark) .light-readable-ui [class~="text-emerald-600"],
+html:not(.dark) .light-readable-ui [class~="text-green-500"],
+html:not(.dark) .light-readable-ui [class~="text-green-600"] {
+  color: #047857 !important;
+}
+
+html:not(.dark) .light-readable-ui [class~="text-rose-500"],
+html:not(.dark) .light-readable-ui [class~="text-rose-600"] {
+  color: #be123c !important;
+}
+
+/* Daily Challenge intentionally uses a dark saturated gradient. */
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-white"],
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-white/80"] {
+  color: #ffffff !important;
+}

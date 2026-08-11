@@ -1242,7 +1242,7 @@ export default function App() {
           />}
 
           <div
-          className={`min-h-dvh w-full max-w-none overflow-x-hidden transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : ''} ${
+          className={`light-readable-ui min-h-dvh w-full max-w-none overflow-x-hidden transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : ''} ${
             darkMode
               ? 'bg-[#020617] text-slate-100'
               : 'bg-[#f8fafc] text-slate-800'

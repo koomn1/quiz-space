@@ -773,7 +773,7 @@ export default function ProfileStatsView({
         <RewardsSection userId={profileData.userId} lang={lang} />
       )}
 
-      {/* 3. Horizontal Scroll Style Tab Navigation Row */
+      {/* 3. Horizontal Scroll Style Tab Navigation Row */}
       <div className="border-b border-slate-200 dark:border-slate-800 pb-2 flex gap-1 overflow-x-auto max-w-full">
         {[
           { id: 'overview', label: isAr ? 'نظرة عامة' : 'Overview' },
