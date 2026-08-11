@@ -901,3 +901,17 @@ html:not(.dark) .light-readable-ui .light-dark-card [class~="text-white"],
 html:not(.dark) .light-readable-ui .light-dark-card [class~="text-white/80"] {
   color: #ffffff !important;
 }
+
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-slate-200"],
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-slate-300"],
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-slate-400"],
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-slate-500"] {
+  color: #cbd5e1 !important;
+}
+
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-purple-300"],
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-purple-400"],
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-300"],
+html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-400"] {
+  color: #c4b5fd !important;
+}

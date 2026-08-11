@@ -1215,7 +1215,7 @@ export default function Classrooms({
               {activeWorkspaceTab === 'overview' && (
                 <div className="space-y-6">
                   {/* Hero welcome banner */}
-                  <div className="p-6 rounded-3xl bg-gradient-to-r from-purple-950/40 via-indigo-950/20 to-slate-950 border border-purple-500/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="light-dark-card p-6 rounded-3xl bg-gradient-to-r from-purple-950/40 via-indigo-950/20 to-slate-950 border border-purple-500/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
                       <h3 className="text-base font-black text-white">{isAr ? 'أهلاً بك في فضاء التعلم التفاعلي! 🪐' : 'Welcome to your Learning Space! 🪐'}</h3>
                       <p className="text-xs text-slate-400 max-w-xl">{isAr ? 'تتبع إنجازاتك الدراسية، وشارك في حل الكويزات المباشرة، وحل تكليفاتك المدرسية أولاً بأول لتكتسح النجوم والترتيب.' : 'Track academic goals, complete assignments, and participate in classroom activities.'}</p>
