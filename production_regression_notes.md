@@ -57,3 +57,17 @@ A further status check still showed the PDF extraction at `0 / 100` with no UI e
 ## Extraction diagnosis
 
 Code inspection shows `worker/src/streaming.ts` sends the SSE `init` event only after `extractPdfTextContent()` **and** `extractQuestionsFromText()` finish. Therefore the browser remains at its initial `0 / 100` state while the Nemotron request is in flight. The live request has now remained in that state for more than two minutes, which is not acceptable for the 178-byte fixture. The browser-console isolation request could not reuse the upload because React had replaced the file input and its `files` collection was empty. This points to a worker/model timeout or stalled streaming response, with a secondary UX issue that init is emitted too late.
+
+## Production extraction fix passed
+
+Commit `7dab5d1` was deployed successfully by GitHub Actions run `31536757372`; Build Frontend, Deploy AI Worker, and Deploy GitHub Pages all completed successfully. The new production bundle was loaded with cache-bust `v=7dab5d1`. After synchronization, Quiz Creator opened in manual mode with an automatically populated draft containing exactly **2 questions** from `nemotron_fixture.pdf`: the multiple-choice `What is 2 + 2?` with four options and the true/false water-freezing question. Both were marked `جاهز ومكتمل`, confirming that the previous 0/100 stall and empty extraction are resolved for a text-based PDF.
+
+## Scanned-PDF fallback test setup
+
+After the text-PDF pass, the published Quiz Creator switched back to `صورة أو PDF` successfully. A separate one-page image-only PDF was generated locally with the same two questions and no selectable text layer; it is ready to verify the vision/OCR fallback without changing the source code.
+
+The image-only PDF uploaded successfully in the published bundle and is displayed as `quizspace_scanned_fixture.pdf` with the same extraction controls. The first upload attempt from `/tmp` was rejected by the browser harness path policy, then the identical file was copied to the project test directory and uploaded successfully; this was not an application error.
+
+## Scanned fallback diagnosis
+
+The scanned-PDF request reached `جاري معالجة 1 صفحة في 1 مجموعة` but remained at `0 / 1` on the current production bundle. Code review showed the vision fallback had no per-model timeout and accepted empty model content as a successful response. A follow-up source fix now adds a 20-second abort per vision provider and rejects empty responses so the fallback chain can continue and the UI can receive a deterministic error rather than hang indefinitely.

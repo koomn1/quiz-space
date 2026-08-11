@@ -39,6 +39,7 @@ export interface Env {
 }
 
 const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'google/gemma-4-26b-a4b-it:free'];
+const VISION_MODEL_TIMEOUT_MS = 20_000;
 
 function extractJson(text: string): unknown {
   const cleaned = text.replace(/^```json\s*|^```|```$/gim, '').trim();
@@ -48,9 +49,13 @@ function extractJson(text: string): unknown {
 async function callOpenRouterWithFallback(env: Env, messages: any[], models: string[]): Promise<string> {
   let lastError: any = null;
   for (const model of models) {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), VISION_MODEL_TIMEOUT_MS);
       const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
@@ -61,8 +66,12 @@ async function callOpenRouterWithFallback(env: Env, messages: any[], models: str
       });
       if (!r.ok) throw new Error(await r.text());
       const d: any = await r.json();
-      return d.choices?.[0]?.message?.content || '';
+      clearTimeout(timeout);
+      const content = d.choices?.[0]?.message?.content;
+      if (typeof content !== 'string' || !content.trim()) throw new Error(`OpenRouter ${model} returned an empty response`);
+      return content;
     } catch (err) {
+      if (timeout) clearTimeout(timeout);
       lastError = err;
       console.warn(`OpenRouter model ${model} failed, trying next:`, err);
     }
