@@ -2051,3 +2051,141 @@ export async function updateSeasonMemberScore(seasonId: string, userId: string, 
   }
 }
 
+
+// ---------------- CLASSROOM LESSON VIDEOS ----------------
+
+export interface LessonVideo {
+  id: string;
+  classId: string;
+  creatorId: string;
+  creatorName: string;
+  title: string;
+  description: string | null;
+  videoUrl: string;
+  videoType: 'youtube' | 'live';
+  isLive: boolean;
+  isPinned: boolean;
+  viewCount: number;
+  createdAt: string;
+}
+
+export async function getLessonVideos(classId: string): Promise<LessonVideo[]> {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase
+      .from('classroom_lesson_videos')
+      .select('*')
+      .eq('class_id', classId)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error getting lesson videos:', error.message);
+      return [];
+    }
+    return (data || []).map(v => ({
+      id: v.id,
+      classId: v.class_id,
+      creatorId: v.creator_id,
+      creatorName: v.creator_name,
+      title: v.title,
+      description: v.description,
+      videoUrl: v.video_url,
+      videoType: v.video_type || 'youtube',
+      isLive: v.is_live || false,
+      isPinned: v.is_pinned || false,
+      viewCount: v.view_count || 0,
+      createdAt: v.created_at,
+    }));
+  } catch (e) {
+    console.error('Error getting lesson videos:', e);
+    return [];
+  }
+}
+
+export async function addLessonVideo(params: {
+  classId: string;
+  creatorId: string;
+  creatorName: string;
+  title: string;
+  description?: string;
+  videoUrl: string;
+  videoType?: 'youtube' | 'live';
+  isLive?: boolean;
+}): Promise<LessonVideo | null> {
+  if (!isSupabaseConfigured) return null;
+  const videoId = `lv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  try {
+    const { data, error } = await supabase
+      .from('classroom_lesson_videos')
+      .insert([{
+        id: videoId,
+        class_id: params.classId,
+        creator_id: params.creatorId,
+        creator_name: params.creatorName,
+        title: params.title,
+        description: params.description || null,
+        video_url: params.videoUrl,
+        video_type: params.videoType || 'youtube',
+        is_live: params.isLive || false,
+      }])
+      .select()
+      .single();
+    if (error) {
+      console.error('Error adding lesson video:', error.message);
+      return null;
+    }
+    return {
+      id: data.id,
+      classId: data.class_id,
+      creatorId: data.creator_id,
+      creatorName: data.creator_name,
+      title: data.title,
+      description: data.description,
+      videoUrl: data.video_url,
+      videoType: data.video_type || 'youtube',
+      isLive: data.is_live || false,
+      isPinned: data.is_pinned || false,
+      viewCount: data.view_count || 0,
+      createdAt: data.created_at,
+    };
+  } catch (e) {
+    console.error('Error adding lesson video:', e);
+    return null;
+  }
+}
+
+export async function deleteLessonVideo(videoId: string, classId: string): Promise<boolean> {
+  if (!isSupabaseConfigured) return false;
+  try {
+    const { error } = await supabase
+      .from('classroom_lesson_videos')
+      .delete()
+      .eq('id', videoId)
+      .eq('class_id', classId);
+    if (error) {
+      console.error('Error deleting lesson video:', error.message);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('Error deleting lesson video:', e);
+    return false;
+  }
+}
+
+export async function incrementLessonVideoViews(videoId: string): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  try {
+    const { error } = await supabase.rpc('increment_lesson_video_views', {
+      p_video_id: videoId,
+    });
+    if (error) console.error('Error incrementing video views:', error.message);
+  } catch (e) {
+    console.error('Error incrementing video views:', e);
+  }
+}
+
+// Extract YouTube video ID from URL
+export function extractYouTubeId(url: string): string {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : '';
+}

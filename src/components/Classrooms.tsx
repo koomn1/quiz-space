@@ -21,13 +21,13 @@ import {
   Volume2, Bell, FileText, Image, Download, FolderOpen, Info, 
   MessageSquare, PlusCircle, Calendar, ClipboardList, Megaphone, 
   CheckCircle, BarChart2, Settings, Sliders, Play, Trash, FileUp, 
-  ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle
+  ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle, Eye
 } from 'lucide-react';
 import { playChimeSound } from './ExtraFeatures';
 import { getApiUrl } from '../lib/origin';
 import { encryptMessage, decryptMessage } from '../lib/encryption';
 import { supabase } from '../lib/supabaseClient';
-import { sendPushEvent } from '../lib/db';
+import { sendPushEvent, getLessonVideos, addLessonVideo, deleteLessonVideo, incrementLessonVideoViews, extractYouTubeId } from '../lib/db';
 import { 
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, 
   XAxis, YAxis, Tooltip as ChartTooltip, Cell, PieChart, Pie 
@@ -99,6 +99,21 @@ interface Announcement {
   postedByName: string;
   postedAt: string;
   reactions: Record<string, number>;
+}
+
+interface LessonVideo {
+  id: string;
+  classId: string;
+  creatorId: string;
+  creatorName: string;
+  title: string;
+  description?: string;
+  videoUrl: string;
+  videoType: 'youtube' | 'live';
+  isLive: boolean;
+  isPinned: boolean;
+  viewCount: number;
+  createdAt: string;
 }
 
 interface ToastMessage {
@@ -234,7 +249,7 @@ export default function Classrooms({
   const [isSendingChat, setIsSendingChat] = useState(false);
 
   // Expanded 11 SaaS Workspace Tabs
-  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'overview' | 'discussion' | 'quizzes' | 'assignments' | 'files' | 'members' | 'announcements' | 'grades' | 'calendar' | 'analytics' | 'settings'>('overview');
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'overview' | 'discussion' | 'quizzes' | 'assignments' | 'files' | 'members' | 'announcements' | 'grades' | 'calendar' | 'analytics' | 'settings' | 'lessons'>('overview');
   
   // Custom Assignment Builder State
   const [isCreatingAssign, setIsCreatingAssign] = useState(false);
@@ -257,6 +272,15 @@ export default function Classrooms({
   const [annContent, setAnnContent] = useState('');
   const [annPriority, setAnnPriority] = useState<'general' | 'important' | 'urgent'>('general');
 
+  // Lesson Videos State
+  const [lessonVideos, setLessonVideos] = useState<LessonVideo[]>([]);
+  const [isAddingLesson, setIsAddingLesson] = useState(false);
+  const [newLessonUrl, setNewLessonUrl] = useState('');
+  const [newLessonTitle, setNewLessonTitle] = useState('');
+  const [newLessonDesc, setNewLessonDesc] = useState('');
+  const [isLessonLive, setIsLessonLive] = useState(false);
+  const [watchingVideo, setWatchingVideo] = useState<LessonVideo | null>(null);
+
   // Drag and drop state
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -267,6 +291,9 @@ export default function Classrooms({
   const [isAiQuizOpen, setIsAiQuizOpen] = useState(false);
   const [aiQuizTopic, setAiQuizTopic] = useState('');
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+
+  // Video player overlay state
+  const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
 
   // Data now lives exclusively in Supabase; classrooms/students are loaded via
   // fetchClassroomsData below, and per-classroom data (assignments, submissions,
@@ -417,6 +444,11 @@ export default function Classrooms({
           sharedAt: f.shared_at, size: f.size_bytes ? (f.size_bytes / (1024 * 1024)).toFixed(1) + ' MB' : '',
           type: f.file_type, url: f.url
         })));
+
+        // Load lesson videos
+        const vids = await getLessonVideos(activeClassroomView.id);
+        if (!isMounted) return;
+        setLessonVideos(vids);
 
         // Submissions are scoped per-assignment; pull them for every assignment in this classroom.
         const assignmentIds = mappedAssignments.map(a => a.id);
@@ -1154,7 +1186,8 @@ export default function Classrooms({
                 { id: 'grades', label: isAr ? 'دفتر الدرجات' : 'Gradebook', icon: Award },
                 { id: 'calendar', label: isAr ? 'التقويم' : 'Calendar', icon: Calendar },
                 { id: 'analytics', label: isAr ? 'الإحصائيات' : 'Analytics', icon: BarChart2 },
-                { id: 'settings', label: isAr ? 'خيارات الإدارة' : 'Settings', icon: Settings }
+                { id: 'settings', label: isAr ? 'خيارات الإدارة' : 'Settings', icon: Settings },
+                { id: 'lessons', label: isAr ? 'الحصص أونلاين' : 'Live Lessons', icon: Play }
               ].map(tab => {
                 const TabIcon = tab.icon;
                 const isSelected = activeWorkspaceTab === tab.id;
@@ -2129,6 +2162,223 @@ export default function Classrooms({
                 </div>
               )}
 
+              {/* TAB: LESSONS (Live Videos) */}
+              {activeWorkspaceTab === 'lessons' && (
+                <div className="space-y-6">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-black text-white flex items-center gap-2">
+                        <Play className="w-5 h-5 text-purple-400" />
+                        {isAr ? 'الحصص المباشرة والفيديوهات' : 'Live Lessons & Videos'}
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {isAr ? 'شاهد حصصك مباشرة أو الفيديوهات المسجلة بأمان كامل' : 'Watch live lessons or recorded videos securely'}
+                      </p>
+                    </div>
+                    {isTeacher && activeClassroomView.createdBy === currentUserId && (
+                      <button
+                        onClick={() => setIsAddingLesson(!isAddingLesson)}
+                        className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-md cursor-pointer transition-all flex items-center gap-1.5"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>{isAr ? 'إضافة حصة' : 'Add Lesson'}</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Add Lesson Form (Teacher only) */}
+                  {isAddingLesson && (
+                    <div className="p-5 rounded-2xl bg-slate-900/60 border border-purple-500/30 space-y-4">
+                      <h5 className="text-xs font-black text-purple-400">{isAr ? 'إضافة حصة جديدة' : 'Add New Lesson'}</h5>
+                      <input
+                        type="text"
+                        placeholder={isAr ? 'رابط YouTube أو البث المباشر...' : 'Paste YouTube or Live stream URL...'}
+                        value={newLessonUrl}
+                        onChange={(e) => setNewLessonUrl(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+                        dir="ltr"
+                      />
+                      <input
+                        type="text"
+                        placeholder={isAr ? 'عنوان الحصة (مثال: حصة 1 - الكسور)' : 'Lesson title (e.g. Lesson 1 - Fractions)'}
+                        value={newLessonTitle}
+                        onChange={(e) => setNewLessonTitle(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder={isAr ? 'وصف اختياري...' : 'Optional description...'}
+                        value={newLessonDesc}
+                        onChange={(e) => setNewLessonDesc(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+                      />
+                      <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isLessonLive}
+                            onChange={(e) => setIsLessonLive(e.target.checked)}
+                            className="w-4 h-4 text-red-600 rounded border-slate-700"
+                          />
+                          {isAr ? 'بث مباشر 🔴' : 'Live Stream 🔴'}
+                        </label>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            if (!newLessonUrl || !newLessonTitle) {
+                              triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'أدخل الرابط والعنوان' : 'Enter URL and title', 'info');
+                              return;
+                            }
+                            const videoId = extractYouTubeId(newLessonUrl);
+                            if (!videoId) {
+                              triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'رابط YouTube غير صالح' : 'Invalid YouTube URL', 'info');
+                              return;
+                            }
+                            const teacherName = currentUserEmail || 'Teacher';
+                            const video = await addLessonVideo({
+                              classId: activeClassroomView.id,
+                              creatorId: currentUserId || '',
+                              creatorName: teacherName,
+                              title: newLessonTitle,
+                              description: newLessonDesc || undefined,
+                              videoUrl: newLessonUrl,
+                              videoType: isLessonLive ? 'live' : 'youtube',
+                              isLive: isLessonLive,
+                            });
+                            if (video) {
+                              setLessonVideos(prev => [video, ...prev]);
+                              setIsAddingLesson(false);
+                              setNewLessonUrl('');
+                              setNewLessonTitle('');
+                              setNewLessonDesc('');
+                              setIsLessonLive(false);
+                              triggerToast(isAr ? 'تمت الإضافة' : 'Added', isAr ? 'الحصة تمت إضافتها بنجاح' : 'Lesson added successfully', 'info');
+                            } else {
+                              triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'فشل إضافة الحصة' : 'Failed to add lesson', 'info');
+                            }
+                          }}
+                          className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black cursor-pointer transition-all"
+                        >
+                          {isAr ? 'حفظ الحصة' : 'Save Lesson'}
+                        </button>
+                        <button
+                          onClick={() => { setIsAddingLesson(false); setNewLessonUrl(''); setNewLessonTitle(''); setNewLessonDesc(''); setIsLessonLive(false); }}
+                          className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold cursor-pointer transition-all"
+                        >
+                          {isAr ? 'إلغاء' : 'Cancel'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Video List */}
+                  {lessonVideos.length === 0 ? (
+                    <div className="p-8 rounded-2xl bg-slate-900/40 border border-slate-800 text-center">
+                      <Play className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                      <p className="text-xs text-slate-400">{isAr ? 'لا توجد حصص بعد. المدرس يمكنه إضافة حصص من رابط YouTube أو بث مباشر.' : 'No lessons yet. Teacher can add YouTube or live stream lessons.'}</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {lessonVideos.map(vid => (
+                        <div key={vid.id} className="rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden group hover:border-purple-500/30 transition-colors">
+                          {/* Thumbnail */}
+                          <div
+                            className="relative aspect-video bg-slate-950 cursor-pointer"
+                            onClick={() => {
+                              setWatchingVideo(vid);
+                              incrementLessonVideoViews(vid.id);
+                              setLessonVideos(prev => prev.map(v => v.id === vid.id ? { ...v, viewCount: v.viewCount + 1 } : v));
+                            }}
+                          >
+                            <img
+                              src={`https://img.youtube.com/vi/${extractYouTubeId(vid.videoUrl)}/mqdefault.jpg`}
+                              alt={vid.title}
+                              className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity"
+                            />
+                            {vid.isLive && (
+                              <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600 text-white text-[9px] font-black animate-pulse">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                                LIVE
+                              </div>
+                            )}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-full bg-purple-600/80 flex items-center justify-center group-hover:bg-purple-500 transition-colors">
+                                <Play className="w-6 h-6 text-white ml-0.5" />
+                              </div>
+                            </div>
+                          </div>
+                          {/* Info */}
+                          <div className="p-3">
+                            <h5 className="text-xs font-bold text-white truncate">{vid.title}</h5>
+                            {vid.description && <p className="text-[10px] text-slate-500 truncate mt-0.5">{vid.description}</p>}
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-[9px] text-slate-600 flex items-center gap-1">
+                                <Eye className="w-3 h-3" />{vid.viewCount}
+                              </span>
+                              {isTeacher && activeClassroomView.createdBy === currentUserId && (
+                                <button
+                                  onClick={() => {
+                                    deleteLessonVideo(vid.id, vid.classId).then(() => {
+                                      setLessonVideos(prev => prev.filter(v => v.id !== vid.id));
+                                      triggerToast(isAr ? 'تم الحذف' : 'Deleted', isAr ? 'تم حذف الحصة' : 'Lesson deleted', 'info');
+                                    });
+                                  }}
+                                  className="text-[9px] text-red-500 hover:text-red-400 font-bold flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Trash className="w-3 h-3" />
+                                  {isAr ? 'حذف' : 'Delete'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Protected Video Player Overlay */}
+      {watchingVideo && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4" onClick={() => setWatchingVideo(null)}>
+          <div className="relative w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+            {/* Close button */}
+            <button
+              onClick={() => setWatchingVideo(null)}
+              className="absolute -top-12 left-0 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold cursor-pointer transition-all z-10"
+            >
+              {isAr ? '✕ إغلاق' : '✕ Close'}
+            </button>
+
+            {/* Protected Video Container */}
+            <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
+              <iframe
+                src={`https://www.youtube.com/embed/${extractYouTubeId(watchingVideo.videoUrl)}?modestbranding=1&controls=1&rel=0&showinfo=0&disablekb=0&fs=0`}
+                title={watchingVideo.title}
+                className="w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen={false}
+              ></iframe>
+              {/* Transparent overlay to prevent right-click and drag */}
+              <div
+                className="absolute inset-0 bg-transparent z-10"
+                style={{ pointerEvents: 'none' }}
+                onContextMenu={(e) => e.preventDefault()}
+              ></div>
+            </div>
+
+            {/* Video info */}
+            <div className="mt-3 text-center">
+              <h5 className="text-sm font-bold text-white">{watchingVideo.title}</h5>
+              <p className="text-[10px] text-slate-500 mt-1">{watchingVideo.isLive ? '🔴 بث مباشر' : `👁 ${watchingVideo.viewCount} مشاهدة`}</p>
             </div>
           </div>
         </div>
