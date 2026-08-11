@@ -765,13 +765,23 @@ export default function App() {
             setIsUserPremium(!!stats.isPremium);
             setUserPlanName(stats.planName || '');
             if (stats.photoURL) {
-              setUserPhoto(stats.photoURL);
-              localStorage.setItem('quiz_userPhoto', stats.photoURL);
-            } else if (user.user_metadata?.avatar_url) {
-              // Fallback: use Google/GitHub avatar if user hasn't set a custom one
-              setUserPhoto(user.user_metadata.avatar_url);
-              localStorage.setItem('quiz_userPhoto', user.user_metadata.avatar_url);
-            }
+            setUserPhoto(stats.photoURL);
+            localStorage.setItem('quiz_userPhoto', stats.photoURL);
+          } else if (user.user_metadata?.avatar_url) {
+            // Fallback: use Google/GitHub avatar if user hasn't set a custom one
+            setUserPhoto(user.user_metadata.avatar_url);
+            localStorage.setItem('quiz_userPhoto', user.user_metadata.avatar_url);
+          } else {
+            // Fallback: assign a default avatar for email/password users
+            const baseUrl = import.meta.env.BASE_URL || '/';
+            // Simple gender heuristic: girl names get girl avatars
+            const nameLower = (finalName || '').toLowerCase();
+            const isFemale = ['fatima','aisha','maryam','noor','sara','sarah','hala','reem','lujain','نور','سارة','مريم','فاطم','عائش','هند','ريم','ياسمين'].some(ind => nameLower.includes(ind));
+            const avatarNum = Math.floor(Math.random() * 6) + 1;
+            const defaultAvatar = `${baseUrl}avatars/${isFemale ? 'girl' : 'boy'}-${avatarNum}.png`;
+            setUserPhoto(defaultAvatar);
+            localStorage.setItem('quiz_userPhoto', defaultAvatar);
+          }
             if (stats.customId) {
               setUserCustomId(stats.customId);
             }
