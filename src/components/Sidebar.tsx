@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Crown, Gem, Bot, Medal, Home, Compass, Sparkles, BookOpen, 
+  Crown, Gem, Bot, Medal, Home, Compass, Sparkles, BookOpen, Gift,
   Users, CreditCard, Settings, LogOut, ShieldAlert, User, Check, GraduationCap, MessageCircle, Lock
 } from 'lucide-react';
 import { translations } from '../lib/i18n';
@@ -66,6 +66,7 @@ export default function Sidebar({
     { id: 'create', label: isAr ? 'إنشاء اختبار' : 'Create Quiz' },
     { id: 'my-quizzes', label: isAr ? 'اختباراتي' : 'My Quizzes' },
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms' },
+    { id: 'motivation', label: isAr ? 'مركز التحفيز' : 'Motivation Hub' },
     { id: 'aichat', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant' },
     { id: 'community', label: isAr ? 'المجتمع' : 'Community' },
     { id: 'billing', label: isAr ? 'باقات الاشتراك' : 'Subscription Plans' },
@@ -98,6 +99,8 @@ export default function Sidebar({
         return <BookOpen size={size} className={colorClass} />;
       case 'classrooms':
         return <GraduationCap size={size} className={colorClass} />;
+      case 'motivation':
+        return <Gift size={size} className={colorClass} />;
       case 'aichat':
         return <Bot size={size} className={colorClass} />;
       case 'support':
@@ -211,7 +214,7 @@ export default function Sidebar({
       {/* Navigation items with micro-animations & layoutId glassmorphism active pill */}
       <nav className="flex-1 space-y-0.5 py-1 pr-0.5 overflow-y-auto scrollbar-none">
         {menuItems.map((item) => {
-          const isActive = currentTab === item.id;
+          const isActive = item.id === 'motivation' ? currentTab.startsWith('motivation') : currentTab === item.id;
           const isLocked = (item.isPremiumOnly && activePlanId === 'free') || (item.id === 'aichat' && !hasActiveMembership);
           
           if (item.isLink) {

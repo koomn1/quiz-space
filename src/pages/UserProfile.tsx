@@ -31,7 +31,7 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-import { getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser } from "../lib/db";
+import { getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
 import { getApiUrl } from "../lib/origin";
 import { supabase } from "../lib/supabaseClient";
@@ -40,6 +40,16 @@ import { GsapCoverBackground } from "../components/GsapCoverBackground";
 import { SocialSupportLinks } from "../components/SocialSupportLinks";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
+
+const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
+  'frame-neon-orbit': { boxShadow: '0 0 0 5px #a855f7, 0 0 22px 8px rgba(168,85,247,.42)' },
+  'frame-aurora': { boxShadow: '0 0 0 5px #22d3ee, 0 0 20px 7px rgba(34,211,238,.35)' },
+  'frame-fire': { boxShadow: '0 0 0 5px #f97316, 0 0 22px 8px rgba(239,68,68,.45)' },
+  'frame-crystal-luxe': { boxShadow: '0 0 0 5px #67e8f9, 0 0 22px 8px rgba(99,102,241,.45)' },
+  'frame-star-crown': { boxShadow: '0 0 0 5px #facc15, 0 0 22px 8px rgba(245,158,11,.45)' },
+  'frame-diamond-comet': { boxShadow: '0 0 0 5px #e0f2fe, 0 0 26px 10px rgba(56,189,248,.55)' },
+  'frame-diamond-crown': { boxShadow: '0 0 0 5px #c4b5fd, 0 0 28px 10px rgba(139,92,246,.6)' },
+};
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
   cosmic: { background: 'radial-gradient(circle at 30% 30%, #4338ca 0%, #1e1b4b 60%, #09090b 100%)' },
@@ -96,6 +106,50 @@ export default function UserProfile({
   const { user: authUser } = useAuth();
   const [profileData, setProfileData] = React.useState<UserStats | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [rewardPoints, setRewardPoints] = React.useState(0);
+  const [rewardCoins, setRewardCoins] = React.useState(0);
+  const [activeFrameClass, setActiveFrameClass] = React.useState('');
+
+  const refreshActiveFrame = React.useCallback(async () => {
+    if (!isOwnProfile || !currentUserId || currentUserId.startsWith('user-')) {
+      setActiveFrameClass('');
+      return;
+    }
+    try {
+      const [inventory, items] = await Promise.all([getRewardInventory(currentUserId), getRewardStoreItems()]);
+      const ownedIds = new Set((inventory || []).map((row: any) => row.item_id));
+      const selectedId = localStorage.getItem('quizspace_active_frame');
+      const selected = (items || []).find((item: any) => item.id === selectedId && ownedIds.has(item.id))
+        || (items || []).find((item: any) => item.item_type === 'frame' && ownedIds.has(item.id));
+      setActiveFrameClass(selected?.css_class || '');
+    } catch (error) {
+      console.warn('Could not load profile frame:', error);
+    }
+  }, [currentUserId, isOwnProfile]);
+
+  const refreshRewards = React.useCallback(async () => {
+    if (!isOwnProfile || !currentUserId || currentUserId.startsWith('user-')) {
+      setRewardPoints(0);
+      setRewardCoins(0);
+      return;
+    }
+    const summary = await getRewardsSummary(currentUserId);
+    setRewardPoints(summary?.points || 0);
+    setRewardCoins(summary?.coins || 0);
+  }, [currentUserId, isOwnProfile]);
+
+  React.useEffect(() => {
+    refreshRewards();
+    refreshActiveFrame();
+    const handleRewardsUpdated = () => { refreshRewards(); refreshActiveFrame(); };
+    const handleFrameUpdated = () => refreshActiveFrame();
+    window.addEventListener('quizspace-rewards-updated', handleRewardsUpdated);
+    window.addEventListener('quizspace-frame-updated', handleFrameUpdated);
+    return () => {
+      window.removeEventListener('quizspace-rewards-updated', handleRewardsUpdated);
+      window.removeEventListener('quizspace-frame-updated', handleFrameUpdated);
+    };
+  }, [refreshRewards, refreshActiveFrame]);
 
   // Real followers/following statistics backed by Postgres
   const [followersCount, setFollowersCount] = React.useState(0);
@@ -860,7 +914,7 @@ export default function UserProfile({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20">
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
-              <div className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-white dark:border-slate-900 overflow-hidden shadow-lg bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center">
+              <div className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-white dark:border-slate-900 overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center" style={ACTIVE_FRAME_STYLES[activeFrameClass] || { boxShadow: '0 10px 24px rgba(15,23,42,.16)' }}>
                 {displayPhotoURL ? (
                   <img
                     src={displayPhotoURL}
@@ -891,6 +945,21 @@ export default function UserProfile({
                     />
                   </h1>
                 </div>
+
+                {isOwnProfile && (
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                    <div className="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>{rewardPoints.toLocaleString()}</span>
+                      <span>{isAr ? 'نقطة' : 'points'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-black text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300">
+                      <span className="text-sm">◈</span>
+                      <span>{rewardCoins.toLocaleString()}</span>
+                      <span>{isAr ? 'عملة' : 'coins'}</span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex flex-wrap items-center gap-2 mt-1.5 justify-center sm:justify-start">
                   <span className="text-xs font-black text-primary dark:text-violet-400 font-mono">
@@ -1232,18 +1301,18 @@ export default function UserProfile({
                   </label>
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
                     {[
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-1.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-2.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-3.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-4.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-5.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-6.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-1.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-2.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-3.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-4.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-5.png`,
-                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-6.png`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-1.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-2.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-3.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-4.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-5.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-6.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-1.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-2.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-3.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-4.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-5.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-6.webp`,
                     ].map((url, idx) => (
                       <button
                         key={idx}

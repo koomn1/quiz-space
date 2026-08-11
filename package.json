@@ -53,6 +53,7 @@
     "supabase": "^2.111.0",
     "typescript": "^5.9.3",
     "vite": "^6.2.3",
+    "vite-plugin-compression": "^0.5.1",
     "wrangler": "^4.118.0"
   }
 }

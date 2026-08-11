@@ -16,7 +16,7 @@ const sizeMap = {
 export const MainLogo = ({ className = '', size = 'md', showText = true }: MainLogoProps) => {
   const currentSize = sizeMap[size];
   const baseUrl = import.meta.env.BASE_URL || '/';
-  const logoSrc = `${baseUrl}brand/quizspace-logo-512.png`;
+  const logoSrc = `${baseUrl}brand/quizspace-logo-512.webp`;
 
   return (
     <div className={`inline-flex items-center ${currentSize.spacing} ${className} select-none cursor-pointer group`}>

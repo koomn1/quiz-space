@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck } from 'lucide-react';
+import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Quiz } from '../types';
-import { getAllProfiles, sendDirectMessage, createNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs } from '../lib/db';
+import { getAllProfiles, sendDirectMessage, createNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
 import { getApiUrl } from '../lib/origin';
 import { decryptMessage } from '../lib/encryption';
@@ -45,7 +45,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const isAr = lang === 'ar';
   const containerRef = React.useRef<HTMLDivElement>(null);
   
-  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring'>('overview');
+  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards'>('overview');
   useGSAP(() => {
     // Initial load animation for header and stats
     gsap.fromTo(
@@ -90,6 +90,32 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const [newAdminMsgText, setNewAdminMsgText] = useState('');
   const [aiLogs, setAiLogs] = useState<any[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [rewardBalances, setRewardBalances] = useState<Record<string, any>>({});
+  const [rewardOrders, setRewardOrders] = useState<any[]>([]);
+  const [grantUserId, setGrantUserId] = useState('');
+  const [grantPoints, setGrantPoints] = useState(100);
+  const [grantNote, setGrantNote] = useState('');
+  const [rewardNotice, setRewardNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [rewardBusy, setRewardBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeAdminTab === 'rewards') {
+      (async () => {
+        try {
+          const [{ data: balances }, orders] = await Promise.all([
+            supabase.from('user_reward_balances').select('user_id, points, coins, level').limit(500),
+            getRewardStoreOrders(),
+          ]);
+          const map: Record<string, any> = {};
+          (balances || []).forEach((row: any) => { map[row.user_id] = row; });
+          setRewardBalances(map);
+          setRewardOrders(orders);
+        } catch (error: any) {
+          setRewardNotice({ ok: false, text: error?.message || 'Could not load rewards data' });
+        }
+      })();
+    }
+  }, [activeAdminTab]);
 
   useEffect(() => {
     if (activeAdminTab === 'ai_monitoring') {
@@ -164,6 +190,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
     { id: 'subscriptions', name: isAr ? 'الاشتراكات' : 'Subscriptions', icon: Crown },
     { id: 'coupons', name: isAr ? 'الكوبونات' : 'Coupons', icon: Ticket },
     { id: 'ai_monitoring', name: isAr ? 'مراقبة الذكاء الاصطناعي' : 'AI Monitoring', icon: Activity },
+    { id: 'rewards', name: isAr ? 'النقاط والمتجر' : 'Rewards & Store', icon: Gift },
     { id: 'settings', name: isAr ? 'الإعدادات' : 'Settings', icon: Settings },
   ];
 
@@ -569,6 +596,42 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                 </div>
               )}
 
+              {activeAdminTab === 'rewards' && (
+                <div className="space-y-8 admin-content-panel">
+                  {rewardNotice && (
+                    <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm font-bold ${rewardNotice.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300'}`}>
+                      <span>{rewardNotice.text}</span>
+                      <button type="button" onClick={() => setRewardNotice(null)}><XCircle className="h-4 w-4" /></button>
+                    </div>
+                  )}
+
+                  <section className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5 dark:border-amber-900/50 dark:from-amber-950/20 dark:to-orange-950/20">
+                    <div className="mb-5 flex items-center gap-3">
+                      <div className="rounded-2xl bg-amber-100 p-3 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Gift className="h-5 w-5" /></div>
+                      <div><h3 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'منح نقاط يدوية' : 'Manual points grant'}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'امنح نقاطاً للمستخدم من خلال RPC محمي بصلاحية السوبر أدمن.' : 'Grant points through an RPC protected by the super-admin role.'}</p></div>
+                    </div>
+                    <div className="grid gap-3 lg:grid-cols-[1.5fr_.7fr_1.5fr_auto]">
+                      <select value={grantUserId} onChange={(event) => setGrantUserId(event.target.value)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                        <option value="">{isAr ? 'اختر مستخدماً' : 'Select a user'}</option>
+                        {allUsers.map((user) => { const id = user.userId || user.uid; return <option key={id} value={id}>{user.name || user.displayName || id} · {id}</option>; })}
+                      </select>
+                      <input type="number" min={1} max={1000000} value={grantPoints} onChange={(event) => setGrantPoints(Number(event.target.value))} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder={isAr ? 'النقاط' : 'Points'} />
+                      <input value={grantNote} onChange={(event) => setGrantNote(event.target.value)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder={isAr ? 'ملاحظة المنح (اختياري)' : 'Grant note (optional)'} />
+                      <button type="button" disabled={!grantUserId || grantPoints <= 0 || rewardBusy === 'grant'} onClick={async () => { setRewardBusy('grant'); const result = await adminGrantRewardPoints(grantUserId, grantPoints, grantNote); setRewardBusy(null); if (result?.success) { setRewardNotice({ ok: true, text: isAr ? `تمت إضافة ${grantPoints} نقطة بنجاح.` : `${grantPoints} points granted successfully.` }); setRewardBalances((current) => ({ ...current, [grantUserId]: { ...(current[grantUserId] || {}), points: Number(current[grantUserId]?.points || 0) + grantPoints } })); setGrantNote(''); } else setRewardNotice({ ok: false, text: result?.message || 'Grant failed' }); }} className="flex items-center justify-center gap-2 rounded-2xl bg-amber-600 px-5 py-3 text-xs font-black text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50">{rewardBusy === 'grant' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />}{isAr ? 'إضافة النقاط' : 'Grant points'}</button>
+                    </div>
+                  </section>
+
+                  <section className="rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                    <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'أرصدة المستخدمين' : 'User reward balances'}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'الرصيد الموحد الذي يظهر في Header والملف الشخصي.' : 'The canonical balance shown in Header and Profile.'}</p></div><Coins className="h-6 w-6 text-sky-500" /></div>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{allUsers.slice(0, 60).map((user) => { const id = user.userId || user.uid; const balance = rewardBalances[id] || {}; return <div key={id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50"><div className="flex items-center justify-between gap-2"><span className="truncate text-xs font-black text-slate-800 dark:text-white">{user.name || user.displayName || id}</span><span className="text-[10px] font-bold text-slate-400">Lv. {balance.level || 1}</span></div><div className="mt-3 flex items-center gap-4 text-xs font-black"><span className="text-amber-600 dark:text-amber-300">✦ {Number(balance.points || 0).toLocaleString()}</span><span className="text-sky-600 dark:text-sky-300">◈ {Number(balance.coins || 0).toLocaleString()}</span></div></div>; })}</div>
+                  </section>
+
+                  <section className="rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                    <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'طلبات شراء النقاط' : 'Points purchase orders'}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'راجع التحويلات الواردة من Vodafone Cash وInstaPay ثم أضف النقاط.' : 'Review Vodafone Cash and InstaPay transfers before adding points.'}</p></div><WalletCards className="h-6 w-6 text-emerald-500" /></div>
+                    <div className="space-y-3">{rewardOrders.length === 0 ? <p className="rounded-2xl border border-dashed border-slate-200 py-10 text-center text-sm font-bold text-slate-400 dark:border-slate-700">{isAr ? 'لا توجد طلبات معلقة.' : 'No payment orders yet.'}</p> : rewardOrders.map((order) => <div key={order.id} className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50 lg:flex-row lg:items-center lg:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="rounded-lg bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">{order.payment_method === 'vodafone_cash' ? 'Vodafone Cash' : 'InstaPay'}</span><span className={`rounded-lg px-2 py-1 text-[10px] font-black ${order.status === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' : order.status === 'approved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'}`}>{order.status}</span></div><p className="mt-2 truncate text-xs font-black text-slate-800 dark:text-white">{order.user_id} · {order.item_id}</p><p className="mt-1 text-xs text-slate-500">{Number(order.amount_points || 0).toLocaleString()} {isAr ? 'نقطة' : 'points'} · {order.amount_egp} EGP · {order.payment_reference || (isAr ? 'بدون رقم عملية' : 'No reference')}</p><p className="mt-1 text-[10px] text-slate-400">{new Date(order.created_at).toLocaleString()}</p>{order.receipt_url && <a href={order.receipt_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[10px] font-black text-primary hover:underline">{isAr ? 'فتح الإيصال' : 'Open receipt'}</a>}</div>{order.status === 'pending' && <div className="flex shrink-0 gap-2"><button type="button" disabled={rewardBusy === order.id} onClick={async () => { setRewardBusy(order.id); const result = await adminReviewRewardOrder(order.id, 'approved'); setRewardBusy(null); if (result?.success) { setRewardOrders((orders) => orders.map((item) => item.id === order.id ? { ...item, status: 'approved' } : item)); setRewardNotice({ ok: true, text: isAr ? `تم اعتماد الطلب وإضافة ${result.points_added || order.amount_points} نقطة.` : `Order approved and ${result.points_added || order.amount_points} points added.` }); } else setRewardNotice({ ok: false, text: result?.message || 'Approval failed' }); }} className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-[11px] font-black text-white disabled:opacity-50"><CheckCircle2 className="h-4 w-4" />{isAr ? 'اعتماد' : 'Approve'}</button><button type="button" disabled={rewardBusy === order.id} onClick={async () => { setRewardBusy(order.id); const result = await adminReviewRewardOrder(order.id, 'rejected'); setRewardBusy(null); if (result?.success) { setRewardOrders((orders) => orders.map((item) => item.id === order.id ? { ...item, status: 'rejected' } : item)); setRewardNotice({ ok: true, text: isAr ? 'تم رفض الطلب.' : 'Order rejected.' }); } else setRewardNotice({ ok: false, text: result?.message || 'Rejection failed' }); }} className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-[11px] font-black text-white disabled:opacity-50"><XCircle className="h-4 w-4" />{isAr ? 'رفض' : 'Reject'}</button></div>}</div>)}</div>
+                  </section>
+                </div>
+              )}
               {activeAdminTab === 'ai_monitoring' && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">

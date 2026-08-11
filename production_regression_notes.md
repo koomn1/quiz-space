@@ -83,3 +83,43 @@ The clean post-deployment re-entry into the `صورة أو PDF` mode succeeded o
 ## Scanned-PDF fallback passed
 
 On the redeployed bundle `v=8ca30fd`, the image-only PDF entered `جاري معالجة 1 صفحة في 1 مجموعة` at `0 / 1`, then completed after the provider fallback window. Quiz Creator returned to the manual editor with exactly **2 complete questions**, including the multiple-choice arithmetic question and the true/false water-freezing question, both marked `جاهز ومكتمل` with explanations. This confirms the scanned/image-only PDF path works after the timeout-safe vision fallback; it is slower than text PDFs but no longer hangs indefinitely.
+
+## Office-file support deployment
+
+Commit `d639321` was deployed successfully by GitHub Actions run `31538055295`; Frontend, GitHub Pages, and AI Worker jobs all passed. The new bundle loaded and the account synchronization restored the previous two-question draft. The fresh upload mode will be opened after the synchronization overlay completes to verify that Word files are accepted and parsed by Mammoth/Nemotron.
+
+The synchronization overlay completed without user action; the stale skip-button attempt did not affect state. A fresh snapshot shows the persisted two-question draft still present, ready for switching to the updated Office-capable upload mode.
+
+The updated production UI now visibly advertises `استخراج الأسئلة من صورة أو ملف PDF أو Word دراسي`, accepts `JPG/PNG/PDF/Word/Excel/PowerPoint`, and renders a matching drop zone. This confirms the frontend part of Office support is live before the actual DOCX upload.
+
+## Final Office upload bundle
+
+Commit `5e5fd09` was deployed successfully by run `31538436738` after correcting the standard drop zone's remaining PDF-only `accept` attribute. The new bundle loaded successfully and the account synchronization again restored the persisted two-question draft. The live DOCX upload test is now ready on this bundle.
+
+The final bundle finished synchronization and the method selector is open. The updated standard drop zone is ready to be selected for the DOCX test; the persisted PDF-derived draft remains unchanged.
+
+## DOCX extraction passed
+
+On bundle `v=5e5fd09`, the browser accepted `quizspace_word_fixture.docx` through the standard drop zone. The UI showed the new non-blocking progress message `جاري قراءة المستند واستخراج نصه عبر Nemotron...`; after processing, Quiz Creator returned to the manual editor with exactly **2 complete questions**: `Which planet is known as the Red Planet?` with Mars marked correct, and `True or False: The Earth revolves around the Sun.` The persisted draft state was replaced with the DOCX-derived questions, confirming the Mammoth → Nemotron path works end to end.
+
+## Cosmo Chat baseline
+
+The published Cosmo Chat loaded successfully with the persisted prior conversation. The previous assistant answer was rendered, the composer and send button were visible, and the `اقتراحات اختيارية` section was present below the answer. This establishes that the non-blocking suggestions UI is available before sending a fresh test message.
+
+## Cosmo Chat test passed
+
+A fresh Arabic message, `ما الفرق بين الكتلة والوزن؟ أجب في سطرين.`, was sent from the published chat. The composer cleared and the UI showed `كوزمو AI بيفكر...` while the request was in progress. After the response completed, Cosmo returned a relevant two-paragraph answer and the background suggestions appeared afterward as four clickable options: `مقارنة مبسطة`, `مثال عملي`, `اختبار قصير`, and `مخطط توضيحي`. The chat remained usable throughout, confirming the non-blocking suggestion generation behavior.
+
+## Motivation Hub baseline
+
+The authenticated LandingPage loaded the Motivation Hub in light mode with the wheel, streak, mystery box, brain challenge, referral, weekly achievement, happy hour, group challenge, leaderboard, and AI quiz cards visible. The wheel image loaded from `/quiz-space/images/lucky_wheel.webp`, and activating the wheel control opened its informational modal, confirming the card-level interaction and pointer/wheel presentation are reachable in production.
+
+The Motivation Hub card interactions were verified further: clicking `إنجاز أسبوعي` opened a dedicated modal with its icon, title, reward description, and close/confirm controls; the modal closed cleanly. The grid remained intact afterward, including the visible pointer above the Lucky Wheel and readable labels in light mode.
+
+## Light-mode contrast check
+
+The browser reported `localStorage.theme = light` and a light page background (`rgb(248, 250, 252)`) before the toggle. The header theme control successfully switched the entire LandingPage and Motivation Hub to the dark palette; the cards, image assets, controls, and labels remained rendered. The next step is to toggle back to light and verify the final persisted appearance.
+
+## Profile cover and light mode passed
+
+The published profile page loaded after synchronization. In light mode, the new wide classroom-style cover image rendered cleanly behind the profile identity, the circular avatar remained sharp, and the username, follower counts, edit/share controls, biography card, statistics cards, and achievement panel were readable with sufficient contrast. No black translucent text blocks or missing cover assets were observed.

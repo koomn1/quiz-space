@@ -4,11 +4,26 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 import { cloudflare } from "@cloudflare/vite-plugin";
+import viteCompression from 'vite-plugin-compression';
 
 export default defineConfig(() => {
   return {
     base: '/quiz-space/',
-    plugins: [react(), tailwindcss(), cloudflare()],
+    plugins: [
+      react(), 
+      tailwindcss(), 
+      cloudflare(),
+      // Generate Gzip files
+      viteCompression({
+        algorithm: 'gzip',
+        ext: '.gz',
+      }),
+      // Generate Brotli files (better compression)
+      viteCompression({
+        algorithm: 'brotliCompress',
+        ext: '.br',
+      }),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

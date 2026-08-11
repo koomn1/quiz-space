@@ -15,7 +15,6 @@ import { getApiUrl } from '../lib/origin';
 import { UserBadge } from '../components/UserBadge';
 import { getAllProfiles, getSiteStats } from '../lib/db';
 import DailyQuizCard from '../components/DailyQuizCard';
-import MotivationHub from '../components/MotivationHub';
 
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
@@ -117,7 +116,6 @@ export default function LandingPage({
 
   const [profilesMap, setProfilesMap] = React.useState<Record<string, any>>({});
   const [siteStats, setSiteStats] = React.useState<any>(null);
-  const [toast, setToast] = React.useState<{ title: string; msg: string; type: string } | null>(null);
 
   React.useEffect(() => {
     let active = true;
@@ -356,21 +354,6 @@ export default function LandingPage({
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Motivation Hub */}
-      {!isGuest && currentUserId && (
-        <div className="gsap-fade-section mt-10">
-          <div className="rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-purple-500/5 p-5 backdrop-blur-sm">
-            <MotivationHub userId={currentUserId} isAr={isAr} triggerToast={(title, msg, type) => { setToast({ title, msg, type }); setTimeout(() => setToast(null), 4000); }} />
-          </div>
-          {toast && (
-            <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-2xl text-sm font-bold ${toast.type === 'success' ? 'bg-green-600 text-white' : toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-indigo-600 text-white'} animate-pulse`}>
-              <span className="mr-2">{toast.title}</span>
-              <span>{toast.msg}</span>
-            </div>
-          )}
         </div>
       )}
 

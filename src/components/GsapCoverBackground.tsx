@@ -60,13 +60,32 @@ export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, 
     return (
       <div
         ref={containerRef}
-        className="absolute inset-0 overflow-hidden bg-slate-950 bg-cover bg-center"
-        style={{
-          backgroundImage: `linear-gradient(115deg, rgba(5,8,25,.48), rgba(7,12,35,.12)), url(${import.meta.env.BASE_URL}covers/${safeMode}.png)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
+        className="absolute inset-0 overflow-hidden bg-slate-950"
+      >
+        {/* Tiny placeholder for blur-up effect */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center blur-xl scale-110 transition-opacity duration-700"
+          style={{ 
+            backgroundImage: `url(${import.meta.env.BASE_URL}covers/${safeMode}-tiny.webp)`,
+            opacity: 1
+          }}
+        />
+        {/* Main optimized WebP image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
+          style={{ 
+            backgroundImage: `linear-gradient(115deg, rgba(5,8,25,.48), rgba(7,12,35,.12)), url(${import.meta.env.BASE_URL}covers/${safeMode}.webp)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+          onLoad={(e) => {
+            const target = e.currentTarget as HTMLDivElement;
+            target.style.opacity = '1';
+            const prev = target.previousElementSibling as HTMLDivElement;
+            if (prev) prev.style.opacity = '0';
+          }}
+        />
+      </div>
     );
   }
 

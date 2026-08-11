@@ -1,0 +1,30 @@
+# Aggressive caching for static assets (Images, WebP, Fonts, Icons)
+/quiz-space/avatars/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/quiz-space/covers/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/quiz-space/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/quiz-space/backgrounds/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/quiz-space/brand/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache JS and CSS chunks (Vite uses content hashing for cache busting)
+/quiz-space/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# No-cache for HTML to ensure users get the latest version of the app
+/quiz-space/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Global security and performance headers
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload

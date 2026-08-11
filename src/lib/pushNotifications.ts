@@ -97,7 +97,7 @@ class PushNotificationManager {
       try {
         const option = {
           body: payload.body,
-          icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.png`,
+          icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.webp`,
           tag: 'record-broken-' + quizId,
           renotify: true
         };
@@ -134,7 +134,7 @@ class PushNotificationManager {
       try {
         const option = {
           body: fullPayload.body,
-          icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.png`,
+          icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.webp`,
           tag: 'general-' + fullPayload.id,
           renotify: true
         };

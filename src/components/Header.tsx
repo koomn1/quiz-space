@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Sparkles, Sun, Moon, Award, User, Layers, BookOpen, LogIn, LogOut, Globe, Menu } from 'lucide-react';
+import { Sparkles, Sun, Moon, Award, User, Layers, BookOpen, LogIn, LogOut, Globe, Menu, Coins } from 'lucide-react';
 import { translations } from '../lib/i18n';
 import { MainLogo } from './MainLogo';
 import { AnimatedGlobeIcon } from './AnimatedGlobeIcon';
@@ -12,6 +12,7 @@ import { AnimatedMenuIcon } from './AnimatedMenuIcon';
 import { AnimatedThemeIcon } from './AnimatedThemeIcon';
 import HeaderMessages from './HeaderMessages';
 import { UserBadge } from './UserBadge';
+import { getRewardsSummary } from '../lib/db';
 
 interface HeaderProps {
   currentTab: string;
@@ -57,6 +58,26 @@ export default function Header({
   const [isEditingName, setIsEditingName] = React.useState(false);
   const [tempName, setTempName] = React.useState(userName);
   const [isThemeOpen, setIsThemeOpen] = React.useState(false);
+  const [rewardPoints, setRewardPoints] = React.useState(0);
+  const [rewardCoins, setRewardCoins] = React.useState(0);
+
+  const refreshRewards = React.useCallback(async () => {
+    if (!userId || userId.startsWith('user-')) {
+      setRewardPoints(0);
+      setRewardCoins(0);
+      return;
+    }
+    const summary = await getRewardsSummary(userId);
+    setRewardPoints(summary?.points || 0);
+    setRewardCoins(summary?.coins || 0);
+  }, [userId]);
+
+  React.useEffect(() => {
+    refreshRewards();
+    const handleRewardsUpdated = () => refreshRewards();
+    window.addEventListener('quizspace-rewards-updated', handleRewardsUpdated);
+    return () => window.removeEventListener('quizspace-rewards-updated', handleRewardsUpdated);
+  }, [refreshRewards]);
 
   const [userLevel, setUserLevel] = React.useState(() => {
     return Number(localStorage.getItem('quiz_user_level') || '4');
@@ -126,6 +147,21 @@ export default function Header({
           {/* User Profile Info, Theme Select & Dark Mode */}
           {!isQuizLocked ? (
             <div className="flex items-center gap-1 sm:gap-2.5">
+              {!isGuest && (
+                <div className="flex items-center gap-1 rounded-xl border border-amber-200/80 bg-gradient-to-r from-amber-50 to-yellow-50 px-2 py-1.5 shadow-sm dark:border-amber-900/50 dark:from-amber-950/40 dark:to-yellow-950/30 sm:gap-2 sm:px-3" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
+                  <span className="flex items-center gap-1 text-[10px] font-black text-amber-700 dark:text-amber-300 sm:text-xs">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>{rewardPoints.toLocaleString()}</span>
+                    <span className="hidden sm:inline">{lang === 'ar' ? 'نقطة' : 'pts'}</span>
+                  </span>
+                  <span className="h-4 w-px bg-amber-200 dark:bg-amber-800" />
+                  <span className="flex items-center gap-1 text-[10px] font-black text-sky-700 dark:text-sky-300 sm:text-xs">
+                    <Coins className="h-3.5 w-3.5" />
+                    <span>{rewardCoins.toLocaleString()}</span>
+                    <span className="hidden sm:inline">{lang === 'ar' ? 'عملة' : 'coins'}</span>
+                  </span>
+                </div>
+              )}
               {/* Real-time Interactive Communication Message Dropdown widget */}
               {!isGuest && (
                 <HeaderMessages 

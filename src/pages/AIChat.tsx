@@ -6,7 +6,7 @@ import { generateQuizWithFallback } from '../hooks/useQuizzes';
 import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
 import { Image as ImageIcon, FileText, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
-const COSMO_AVATAR = `${(import.meta as any).env?.BASE_URL || '/'}avatars/cosmo-boy.png`;
+const COSMO_AVATAR = `${(import.meta as any).env?.BASE_URL || '/'}avatars/cosmo-cartoon.webp`;
 
 /* ═══════════════════════════════════════════════════════════
    ✦ "Spark" — the new AI assistant (replaces Cosmo) ✦

@@ -2264,6 +2264,67 @@ export async function updateWeeklyAchievement(type: string, increment = 1) {
   return data;
 }
 
+export async function getDailyBrainChallenge() {
+  const { data, error } = await supabase.rpc('get_daily_brain_challenge');
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function getRewardStoreItems() {
+  const { data, error } = await supabase.from('reward_store_items').select('*').eq('is_active', true).order('sort_order', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getRewardInventory(userId: string) {
+  const { data, error } = await supabase.from('reward_inventory').select('item_id, quantity, source, is_active, purchased_at').eq('user_id', userId).eq('is_active', true);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function purchaseRewardItem(itemId: string) {
+  const { data, error } = await supabase.rpc('purchase_reward_item', { p_item_id: itemId });
+  if (error) return { success: false, message: error.message };
+  window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  return data;
+}
+
+export async function createRewardPointsOrder(itemId: string, paymentMethod: 'vodafone_cash' | 'instapay', paymentReference?: string, receiptUrl?: string) {
+  const { data, error } = await supabase.rpc('create_reward_points_order', {
+    p_item_id: itemId,
+    p_payment_method: paymentMethod,
+    p_payment_reference: paymentReference || null,
+    p_receipt_url: receiptUrl || null,
+  });
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function getRewardPaymentSettings() {
+  const { data, error } = await supabase.from('reward_payment_settings').select('vodafone_number, instapay_handle, instapay_link').eq('id', 'default').maybeSingle();
+  if (error) throw error;
+  return data || { vodafone_number: '', instapay_handle: '', instapay_link: null };
+}
+
+export async function getRewardStoreOrders() {
+  const { data, error } = await supabase.from('reward_store_orders').select('id, user_id, item_id, amount_points, amount_egp, payment_method, payment_reference, receipt_url, status, notes, created_at, updated_at').order('created_at', { ascending: false }).limit(100);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function adminGrantRewardPoints(userId: string, points: number, note = '') {
+  const { data, error } = await supabase.rpc('admin_grant_reward_points', { p_user_id: userId, p_points: points, p_note: note });
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function adminReviewRewardOrder(orderId: string, status: 'approved' | 'rejected', note = '') {
+  const { data, error } = await supabase.rpc('admin_review_reward_order', { p_order_id: orderId, p_status: status, p_note: note });
+  if (error) return { success: false, message: error.message };
+  if (status === 'approved') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  return data;
+}
+
 export async function createGroupChallenge(classId: string, title: string, description: string, target: number, endDate: string) {
   const { data, error } = await supabase.rpc('create_group_challenge', {
     p_class_id: classId,

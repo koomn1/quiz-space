@@ -44,7 +44,7 @@ function getDefaultAvatar(name: string): string {
   // Pick a random avatar from 1-6
   const randomNum = Math.floor(Math.random() * 6) + 1;
   const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-  return isFemale ? `${base}/avatars/girl-${randomNum}.png` : `${base}/avatars/boy-${randomNum}.png`;
+  return isFemale ? `${base}/avatars/girl-cartoon-${randomNum}.webp` : `${base}/avatars/boy-cartoon-${randomNum}.webp`;
 }
 
 async function fetchAppUser(authUser: User): Promise<AppUser> {

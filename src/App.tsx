@@ -46,6 +46,8 @@ const AIChat = React.lazy(() => import('./pages/AIChat'));
 import SplashScreen from './components/SplashScreen';
 import { ToastHost } from './components/Toast';
 const Classrooms = React.lazy(() => import('./components/Classrooms'));
+const MotivationHubPage = React.lazy(() => import('./pages/MotivationHubPage'));
+import type { MotivationSection } from './pages/MotivationHubPage';
 import { Sparkles, Edit, Compass, Info, XCircle, Award, Volume2, Globe, Bell, AlertTriangle, ExternalLink, User, Bot, Zap, MessageCircle } from 'lucide-react';
 
 import { getQuizzes, saveUserProfile, deleteQuiz, getUserProfileStats, getRecentCompletions } from './lib/db';
@@ -566,7 +568,7 @@ export default function App() {
               try {
                 new Notification(lang === 'ar' ? `رسالة جديدة من ${senderName} 💬` : `New message from ${senderName} 💬`, {
                   body: text.length > 70 ? text.substring(0, 70) + '...' : text,
-                  icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.png`
+                  icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.webp`
                 });
               } catch (err) {
                 console.warn('Native notification instantiation error:', err);
@@ -1041,7 +1043,7 @@ export default function App() {
 
     // Guest Auth Guard: User is a guest only if userId is missing or explicitly a guest ID AND not authenticated via AuthContext
     const isGuest = (!userId || userId.startsWith('user-guest') || userId === '') && !authContext.isAuthenticated;
-    if (!bypassAuth && isGuest && (tab === 'create' || (tab === 'profile' && !validOverrideId))) {
+    if (!bypassAuth && isGuest && (tab === 'create' || (tab === 'profile' && !validOverrideId) || tab.startsWith('motivation'))) {
       setLoginRedirectTab(tab);
       setAuthModalMode('register');
       setIsAuthModalOpen(true);
@@ -1444,6 +1446,17 @@ export default function App() {
               {activeTab === 'not-found' && (
                 <NotFound lang={lang} onGoHome={() => handleSetTab('landing')} />
               )}
+              {(['motivation', 'motivation-lucky', 'motivation-brain', 'motivation-store'] as string[]).includes(activeTab) && (
+                <MotivationHubPage
+                  userId={userId}
+                  userName={userName}
+                  isPremium={isUserPremium}
+                  planName={userPlanName}
+                  lang={lang}
+                  section={activeTab as MotivationSection}
+                  onNavigate={(section) => handleSetTab(section)}
+                />
+              )}
               {activeTab === 'landing' && (
                 <>
                   <LandingPage
@@ -1645,7 +1658,7 @@ export default function App() {
                   currentPage={activeTab}
                   siteStatus="QuizSpace يعمل بشكل طبيعي"
                   userPhoto={userPhoto || undefined}
-                  defaultAvatar="./avatars/boy-1.png"
+                  defaultAvatar="./avatars/boy-cartoon-1.webp"
                   onUpgradeClick={() => handleSetTab('billing')}
                   onOpenGeneratedQuiz={(quizId) => handleStartQuiz(quizId)}
                   onOpenAuthModal={(mode) => {
@@ -1679,7 +1692,7 @@ export default function App() {
               )}
 
               {activeTab === 'messages' && (
-                <MessageInbox lang={lang} userId={userId} userName={userName} userPhoto={userPhoto || undefined} defaultAvatar="./avatars/boy-1.png" />
+                <MessageInbox lang={lang} userId={userId} userName={userName} userPhoto={userPhoto || undefined} defaultAvatar="./avatars/boy-cartoon-1.webp" />
               )}
 
               {activeTab === 'classrooms' && (
