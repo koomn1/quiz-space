@@ -1227,24 +1227,20 @@ export default function UserProfile({
                   <label className="text-[10px] font-black text-slate-500 block">
                     {isAr ? "أو اختر صورة رمزية (أفاتار) جاهزة للشباب والبنات:" : "Or choose a preset avatar (Boys & Girls):"}
                   </label>
-                  <div className="grid grid-cols-4 sm:grid-cols-7 gap-2.5">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
                     {[
-                      './avatars/boy-1.png',
-                      './avatars/boy-2.png',
-                      './avatars/boy-3.png',
-                      './avatars/boy-4.png',
-                      './avatars/boy-5.png',
-                      './avatars/boy-6.png',
-                      './avatars/boy-7.png',
-                      './avatars/boy-8.png',
-                      './avatars/boy-9.png',
-                      './avatars/boy-10.png',
-                      './avatars/girl-1.png',
-                      './avatars/girl-2.png',
-                      './avatars/girl-3.png',
-                      './avatars/girl-4.png',
-                      './avatars/girl-5.png',
-                      './avatars/girl-6.png',
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-1.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-2.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-3.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-4.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-5.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/boy-6.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-1.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-2.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-3.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-4.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-5.png`,
+                      `${import.meta.env.BASE_URL.replace(/\\?\/$/, '/')}avatars/girl-6.png`,
                     ].map((url, idx) => (
                       <button
                         key={idx}
