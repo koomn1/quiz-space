@@ -41,6 +41,23 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
   const [brainResult, setBrainResult] = useState<{ is_correct: boolean; points: number } | null>(null);
   const [isOpeningBox, setIsOpeningBox] = useState(false);
   const [boxReward, setBoxReward] = useState<{ type: string; value: number } | null>(null);
+  const [activeFeature, setActiveFeature] = useState<{ title: string; description: string; image: string } | null>(null);
+
+  const openFeature = (title: string, description: string, image: string) => {
+    setActiveFeature({ title, description, image });
+  };
+
+  const handleFeatureKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    title: string,
+    description: string,
+    image: string,
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openFeature(title, description, image);
+    }
+  };
 
   useEffect(() => {
     if (!userId) return;
@@ -152,18 +169,30 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
         {/* 1. Lucky Spin */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-purple-500/30 transition-colors">
-          <img
-            src={IMAGES.lucky_wheel}
-            alt="Lucky Wheel"
-            className="w-20 h-20 rounded-xl object-cover mb-3"
-            style={{ transform: `rotate(${spinAngle}deg)`, transition: isSpinning ? 'none' : 'transform 0.3s' }}
-            loading="lazy"
-          />
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-purple-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'عجلة الحظ' : 'Lucky Spin', isAr ? 'أدر العجلة مرة يومياً واربح من 1 إلى 50 نقطة.' : 'Spin once a day and win between 1 and 50 points.', IMAGES.lucky_wheel)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'عجلة الحظ' : 'Lucky Spin', isAr ? 'أدر العجلة مرة يومياً واربح من 1 إلى 50 نقطة.' : 'Spin once a day and win between 1 and 50 points.', IMAGES.lucky_wheel)}
+        >
+          <div className="relative w-20 h-20 mb-3" aria-label={isAr ? 'مؤشر عجلة الحظ' : 'Lucky Wheel pointer'}>
+            <span
+              aria-hidden="true"
+              className="absolute -top-2 left-1/2 z-10 h-0 w-0 -translate-x-1/2 border-l-[7px] border-r-[7px] border-t-[12px] border-l-transparent border-r-transparent border-t-rose-500 drop-shadow-md"
+            />
+            <img
+              src={IMAGES.lucky_wheel}
+              alt="Lucky Wheel"
+              className="h-20 w-20 rounded-xl object-cover"
+              style={{ transform: `rotate(${spinAngle}deg)`, transition: isSpinning ? 'none' : 'transform 0.3s' }}
+              loading="lazy"
+            />
+          </div>
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'عجلة الحظ' : 'Lucky Spin'}</h4>
           <p className="text-[10px] text-slate-500 mb-2">{isAr ? '1× يومياً — اربح 1-50 نقطة' : '1×/day — Win 1-50 pts'}</p>
           <button
-            onClick={handleSpin}
+            onClick={(event) => { event.stopPropagation(); handleSpin(); }}
             disabled={isSpinning || status?.lucky_spin}
             className="px-4 py-1.5 rounded-xl text-xs font-black text-white cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
           >
@@ -172,7 +201,13 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
         </div>
 
         {/* 2. Streak */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-orange-500/30 transition-colors">
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-orange-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'سلسلة الأيام' : 'Daily Streak', isAr ? 'حافظ على تسجيل الدخول وحل الاختبارات لبناء سلسلة أيامك وفتح الشارات.' : 'Keep learning consistently to build your streak and unlock milestone badges.', IMAGES.streak_fire)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'سلسلة الأيام' : 'Daily Streak', isAr ? 'حافظ على تسجيل الدخول وحل الاختبارات لبناء سلسلة أيامك وفتح الشارات.' : 'Keep learning consistently to build your streak and unlock milestone badges.', IMAGES.streak_fire)}
+        >
           <img src={IMAGES.streak_fire} alt="Streak" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'سلسلة الأيام' : 'Daily Streak'}</h4>
           <div className="flex items-center gap-1 mb-2">
@@ -195,7 +230,13 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
         </div>
 
         {/* 3. Mystery Box */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-purple-500/30 transition-colors">
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-purple-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'صندوق الغموض' : 'Mystery Box', isAr ? 'افتح الصندوق كل ثلاثة أيام لتحصل على مفاجأة عشوائية.' : 'Open the box every three days to receive a random reward.', IMAGES.mystery_box)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'صندوق الغموض' : 'Mystery Box', isAr ? 'افتح الصندوق كل ثلاثة أيام لتحصل على مفاجأة عشوائية.' : 'Open the box every three days to receive a random reward.', IMAGES.mystery_box)}
+        >
           <img
             src={IMAGES.mystery_box}
             alt="Mystery Box"
@@ -211,7 +252,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
             </p>
           )}
           <button
-            onClick={handleOpenBox}
+            onClick={(event) => { event.stopPropagation(); handleOpenBox(); }}
             disabled={isOpeningBox || !status?.mystery_box}
             className="px-4 py-1.5 rounded-xl text-xs font-black text-white cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
           >
@@ -220,7 +261,13 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
         </div>
 
         {/* 4. Brain Challenge */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-cyan-500/30 transition-colors">
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-cyan-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'تحدي العقل' : 'Brain Challenge', isAr ? 'أجب عن السؤال اليومي واربح 20 نقطة.' : 'Answer the daily question and earn 20 points.', IMAGES.brain_challenge)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'تحدي العقل' : 'Brain Challenge', isAr ? 'أجب عن السؤال اليومي واربح 20 نقطة.' : 'Answer the daily question and earn 20 points.', IMAGES.brain_challenge)}
+        >
           <img src={IMAGES.brain_challenge} alt="Brain Challenge" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'تحدي العقل' : 'Brain Challenge'}</h4>
           <p className="text-[10px] text-slate-500 mb-2">{isAr ? 'سؤال يومي — 20 نقطة' : 'Daily question — 20 pts'}</p>
@@ -234,13 +281,17 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
             <input
               type="text"
               value={brainAnswer}
+              onClick={(event) => event.stopPropagation()}
               onChange={(e) => setBrainAnswer(e.target.value)}
               placeholder={isAr ? 'إجابتك...' : 'Your answer...'}
               className="flex-1 px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-[10px] placeholder-slate-600 focus:border-cyan-500 focus:outline-none"
-              onKeyDown={(e) => e.key === 'Enter' && handleBrainSubmit()}
+              onKeyDown={(event) => {
+                event.stopPropagation();
+                if (event.key === 'Enter') handleBrainSubmit();
+              }}
             />
             <button
-              onClick={handleBrainSubmit}
+              onClick={(event) => { event.stopPropagation(); handleBrainSubmit(); }}
               disabled={!brainAnswer.trim() || (status?.brain_challenge?.attempts_today || 0) >= 3}
               className="px-2.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold cursor-pointer disabled:opacity-40"
             >
@@ -255,7 +306,13 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
         </div>
 
         {/* 5. Referral */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-teal-500/30 transition-colors">
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-teal-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'دعوة صديق' : 'Refer a Friend', isAr ? 'انسخ رابط الدعوة وشاركه مع أصدقائك لتحصل على نقاط إضافية.' : 'Copy your invite link and share it with friends to earn extra points.', IMAGES.referral_friends)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'دعوة صديق' : 'Refer a Friend', isAr ? 'انسخ رابط الدعوة وشاركه مع أصدقائك لتحصل على نقاط إضافية.' : 'Copy your invite link and share it with friends to earn extra points.', IMAGES.referral_friends)}
+        >
           <img src={IMAGES.referral_friends} alt="Referral" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'دعوة صديق' : 'Refer a Friend'}</h4>
           <p className="text-[10px] text-slate-500 mb-2">{isAr ? '50 نقطة لكل صديق — 5 شهرياً' : '50 pts each — 5/month'}</p>
@@ -263,7 +320,8 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
             {isAr ? `${status?.referrals_used || 0}/5 هذا الشهر` : `${status?.referrals_used || 0}/5 this month`}
           </p>
           <button
-            onClick={() => {
+            onClick={(event) => {
+              event.stopPropagation();
               const link = `${window.location.origin}?ref=${userId}`;
               navigator.clipboard.writeText(link);
               triggerToast(isAr ? '📋 تم النسخ!' : '📋 Copied!', isAr ? 'شارك الرابط مع صديق' : 'Share the link with a friend', 'info');
@@ -276,7 +334,13 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
         </div>
 
         {/* 6. Weekly Achievement */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-amber-500/30 transition-colors">
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-amber-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'إنجاز أسبوعي' : 'Weekly Achievement', isAr ? 'حل خمسة اختبارات خلال الأسبوع لتحصل على شارة وثلاثين نقطة.' : 'Solve five quizzes this week to earn a badge and 30 points.', IMAGES.weekly_achievement)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'إنجاز أسبوعي' : 'Weekly Achievement', isAr ? 'حل خمسة اختبارات خلال الأسبوع لتحصل على شارة وثلاثين نقطة.' : 'Solve five quizzes this week to earn a badge and 30 points.', IMAGES.weekly_achievement)}
+        >
           <img src={IMAGES.weekly_achievement} alt="Weekly Achievement" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'إنجاز أسبوعي' : 'Weekly Achievement'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? 'حل 5 اختبارات = شارة + 30 نقطة' : 'Solve 5 quizzes = Badge + 30 pts'}</p>
@@ -287,7 +351,13 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
         </div>
 
         {/* 7. Happy Hour */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-amber-500/30 transition-colors">
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-amber-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'الساعة السعيدة' : 'Happy Hour', isAr ? 'خلال الساعة السعيدة تحصل على نقاط مضاعفة مرتين.' : 'During Happy Hour your points are doubled.', IMAGES.happy_hour)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'الساعة السعيدة' : 'Happy Hour', isAr ? 'خلال الساعة السعيدة تحصل على نقاط مضاعفة مرتين.' : 'During Happy Hour your points are doubled.', IMAGES.happy_hour)}
+        >
           <img src={IMAGES.happy_hour} alt="Happy Hour" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'الساعة السعيدة' : 'Happy Hour'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? '6-8 مساءً — نقاط مضاعفة 2x' : '6-8 PM — 2x Points'}</p>
@@ -299,7 +369,13 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
         </div>
 
         {/* 8. Group Challenge */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-green-500/30 transition-colors">
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-green-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'تحدي المجموعة' : 'Group Challenge', isAr ? 'انضم إلى فصل وشارك في التحدي الأسبوعي مع زملائك.' : 'Join a class and participate in the weekly challenge with your classmates.', IMAGES.group_challenge)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'تحدي المجموعة' : 'Group Challenge', isAr ? 'انضم إلى فصل وشارك في التحدي الأسبوعي مع زملائك.' : 'Join a class and participate in the weekly challenge with your classmates.', IMAGES.group_challenge)}
+        >
           <img src={IMAGES.group_challenge} alt="Group Challenge" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'تحدي المجموعة' : 'Group Challenge'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? 'تحدٍ أسبوعي مع فصلك' : 'Weekly class challenge'}</p>
@@ -310,7 +386,13 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
         </div>
 
         {/* 9. Leaderboard */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-yellow-500/30 transition-colors">
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-yellow-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-yellow-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'لوحة الصدارة' : 'Leaderboard', isAr ? 'تابع أفضل عشرة متعلمين كل أسبوع واجمع الشارات وامتيازات VIP المؤقتة.' : 'Follow the top ten learners each week and collect badges and temporary VIP perks.', IMAGES.leaderboard_trophy)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'لوحة الصدارة' : 'Leaderboard', isAr ? 'تابع أفضل عشرة متعلمين كل أسبوع واجمع الشارات وامتيازات VIP المؤقتة.' : 'Follow the top ten learners each week and collect badges and temporary VIP perks.', IMAGES.leaderboard_trophy)}
+        >
           <img src={IMAGES.leaderboard_trophy} alt="Leaderboard" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'لوحة الصدارة' : 'Leaderboard'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? 'أفضل 10 كل أسبوع' : 'Top 10 weekly'}</p>
@@ -318,13 +400,59 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
         </div>
 
         {/* 10. AI Quiz (existing) */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-blue-500/30 transition-colors">
+        <div
+          className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 flex flex-col items-center text-center hover:border-blue-500/30 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400/60"
+          role="button"
+          tabIndex={0}
+          onClick={() => openFeature(isAr ? 'كويز AI يومي' : 'Daily AI Quiz', isAr ? 'ولّد كويزاً من أي نص واستفد من ثلاث محاولات مجانية يومياً.' : 'Generate a quiz from any text with three free attempts each day.', IMAGES.brain_challenge)}
+          onKeyDown={(event) => handleFeatureKeyDown(event, isAr ? 'كويز AI يومي' : 'Daily AI Quiz', isAr ? 'ولّد كويزاً من أي نص واستفد من ثلاث محاولات مجانية يومياً.' : 'Generate a quiz from any text with three free attempts each day.', IMAGES.brain_challenge)}
+        >
           <img src={IMAGES.brain_challenge} alt="AI Quiz" className="w-20 h-20 rounded-xl object-cover mb-3" style={{ filter: 'hue-rotate(90deg)' }} loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'كويز AI يومي' : 'Daily AI Quiz'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? '3 محاولات مجانية يومياً' : '3 free tries/day'}</p>
           <p className="text-[9px] text-slate-600">{isAr ? 'توليد كويز من أي نص' : 'Generate quiz from any text'}</p>
         </div>
       </div>
+
+      {activeFeature && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(15, 23, 42, 0.62)' }}
+          role="presentation"
+          onClick={() => setActiveFeature(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="motivation-feature-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <img src={activeFeature.image} alt="" className="w-14 h-14 rounded-2xl object-cover" />
+                <h3 id="motivation-feature-title" className="text-base font-black text-slate-900 dark:text-white">{activeFeature.title}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveFeature(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black hover:bg-slate-200 dark:hover:bg-slate-700"
+                aria-label={isAr ? 'إغلاق' : 'Close'}
+              >
+                ×
+              </button>
+            </div>
+            <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">{activeFeature.description}</p>
+            <button
+              type="button"
+              onClick={() => setActiveFeature(null)}
+              className="mt-5 w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2.5 text-sm font-black text-white hover:from-purple-500 hover:to-indigo-500"
+            >
+              {isAr ? 'حسناً' : 'Got it'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
