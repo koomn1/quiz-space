@@ -12,6 +12,7 @@ import { AnimatedMenuIcon } from './AnimatedMenuIcon';
 import { AnimatedThemeIcon } from './AnimatedThemeIcon';
 import HeaderMessages from './HeaderMessages';
 import { UserBadge } from './UserBadge';
+import { NotificationDropdown } from './NotificationDropdown';
 import { getRewardsSummary } from '../lib/db';
 
 interface HeaderProps {
@@ -191,6 +192,9 @@ export default function Header({
                   <span className="hidden sm:inline sm:ml-1 sm:mt-[1px] rtl:sm:mr-1 rtl:sm:ml-0">{t.logout}</span>
                 </button>
               )}
+
+              {/* Notification Dropdown */}
+              {!isGuest && <NotificationDropdown userId={userId} lang={lang} />}
 
               {/* Language Switch Button */}
               <button
