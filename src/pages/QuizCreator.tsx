@@ -1643,7 +1643,7 @@ A computer is a digital electronic machine...
                 <input
                   type="file"
                   id="document-upload-input"
-                  accept="image/*, application/pdf"
+                  accept="image/*, application/pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-powerpoint, application/vnd.openxmlformats-officedocument.presentationml.presentation"
                   onChange={handleFileChange}
                   className="hidden"
                 />
