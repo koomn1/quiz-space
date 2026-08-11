@@ -109,10 +109,12 @@ export default function UserProfile({
   const [rewardPoints, setRewardPoints] = React.useState(0);
   const [rewardCoins, setRewardCoins] = React.useState(0);
   const [activeFrameClass, setActiveFrameClass] = React.useState('');
+  const [activeFrameUrl, setActiveFrameUrl] = React.useState('');
 
   const refreshActiveFrame = React.useCallback(async () => {
     if (!isOwnProfile || !currentUserId || currentUserId.startsWith('user-')) {
       setActiveFrameClass('');
+      setActiveFrameUrl('');
       return;
     }
     try {
@@ -121,7 +123,9 @@ export default function UserProfile({
       const selectedId = localStorage.getItem('quizspace_active_frame');
       const selected = (items || []).find((item: any) => item.id === selectedId && ownedIds.has(item.id))
         || (items || []).find((item: any) => item.item_type === 'frame' && ownedIds.has(item.id));
+      
       setActiveFrameClass(selected?.css_class || '');
+      setActiveFrameUrl(selected?.image_url ? `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${selected.image_url}` : '');
     } catch (error) {
       console.warn('Could not load profile frame:', error);
     }
@@ -914,18 +918,29 @@ export default function UserProfile({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20">
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
-              <div className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-white dark:border-slate-900 overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center" style={ACTIVE_FRAME_STYLES[activeFrameClass] || { boxShadow: '0 10px 24px rgba(15,23,42,.16)' }}>
-                {displayPhotoURL ? (
-                  <img
-                    src={displayPhotoURL}
-                    alt="Profile"
-                    className="w-[100%] h-[100%] object-cover rounded-full"
+              <div className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center" style={ACTIVE_FRAME_STYLES[activeFrameClass] || { boxShadow: '0 10px 24px rgba(15,23,42,.16)' }}>
+                {activeFrameUrl && (
+                  <img 
+                    src={activeFrameUrl} 
+                    alt="" 
+                    className="absolute inset-0 z-10 h-full w-full object-cover scale-110 pointer-events-none" 
                   />
-                ) : (
-                  <span className="text-4xl font-black text-primary uppercase">
-                    {(profileData?.name || currentUserName).charAt(0)}
-                  </span>
                 )}
+                <div className="w-full h-full rounded-full overflow-hidden relative">
+                  {displayPhotoURL ? (
+                    <img
+                      src={displayPhotoURL}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-4xl font-black text-primary uppercase">
+                        {(profileData?.name || currentUserName).charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div
