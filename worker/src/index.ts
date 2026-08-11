@@ -353,7 +353,9 @@ ${extraInstruction}`;
             // PDF Chunking Pipeline
             const pdfDoc = await PDFDocument.load(fileData);
             const pageCount = pdfDoc.getPageCount();
-            const chunkSize = 3;
+            // Keep fallback extraction fast as well: larger chunks mean fewer
+            // model round-trips, while bounded concurrency avoids rate spikes.
+            const chunkSize = 5;
             const chunks: string[] = [];
             
             for (let i = 0; i < pageCount; i += chunkSize) {
@@ -368,23 +370,25 @@ ${extraInstruction}`;
               chunks.push(btoa(binary));
             }
 
-            // Process chunks in batches of 2 to avoid timeouts and rate limits
+            // Process three chunks in parallel, preserving batch order in the
+            // merged result so numbering remains stable.
             const chunkResults: any[] = [];
-            const CONCURRENCY = 2;
+            const CONCURRENCY = 3;
             for (let i = 0; i < chunks.length; i += CONCURRENCY) {
               const batch = chunks.slice(i, i + CONCURRENCY);
               const batchResults = await Promise.all(batch.map(async (chunkBase64, idx) => {
+                const chunkIndex = i + idx;
                 try {
                   const text = await callOpenRouterWithFallback(env, [{
                     role: 'user',
                     content: [
                       { type: 'text', text: losslessPrompt },
-                      { type: 'file', file: { filename: `chunk_${i + idx}.pdf`, file_data: `data:application/pdf;base64,${chunkBase64}` } },
+                      { type: 'file', file: { filename: `chunk_${chunkIndex}.pdf`, file_data: `data:application/pdf;base64,${chunkBase64}` } },
                     ]
                   }], OPENROUTER_VISION_FALLBACKS, [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }]);
                   return extractJson(text) as any;
                 } catch (e) {
-                  console.error(`Chunk ${i + idx} failed:`, e);
+                  console.error(`Chunk ${chunkIndex} failed:`, e);
                   return { questions: [], error: String(e) };
                 }
               }));
@@ -435,15 +439,23 @@ ${extraInstruction}`;
           }
 
           if (textContent) {
-            // Process extracted text in chunks if it's very long
+            // Process extracted text in bounded batches. An unbounded
+            // Promise.all makes long Word/Excel files trigger rate limits,
+            // which is slower than controlled parallelism after retries.
             const textChunks = textContent.match(/[\s\S]{1,10000}/g) || [textContent];
-            const chunkResults = await Promise.all(textChunks.map(async (chunk) => {
-              const text = await callOpenRouterWithFallback(env, [{
-                role: 'user',
-                content: `Content:\n${chunk}\n\n${losslessPrompt}`
-              }], OPENROUTER_TEXT_FALLBACKS);
-              return extractJson(text) as any;
-            }));
+            const chunkResults: any[] = [];
+            const TEXT_CONCURRENCY = 4;
+            for (let i = 0; i < textChunks.length; i += TEXT_CONCURRENCY) {
+              const batch = textChunks.slice(i, i + TEXT_CONCURRENCY);
+              const batchResults = await Promise.all(batch.map(async (chunk) => {
+                const text = await callOpenRouterWithFallback(env, [{
+                  role: 'user',
+                  content: `Content:\n${chunk}\n\n${losslessPrompt}`
+                }], OPENROUTER_TEXT_FALLBACKS);
+                return extractJson(text) as any;
+              }));
+              chunkResults.push(...batchResults);
+            }
 
             const finalQuiz: any = {
               title: chunkResults.find(r => r?.title)?.title || "Generated Quiz",

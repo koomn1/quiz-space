@@ -121,7 +121,10 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
         const fileData = Uint8Array.from(atob(fileBase64), c => c.charCodeAt(0));
         const pdfDoc = await PDFDocument.load(fileData);
         const pageCount = pdfDoc.getPageCount();
-        const chunkSize = 3;
+        // Five pages per request reduces model round-trips while keeping each
+        // vision payload small enough for reliable extraction. Three requests
+        // are processed concurrently to avoid making long PDFs wait serially.
+        const chunkSize = 5;
         const chunks: string[] = [];
 
         // Create chunks
@@ -142,33 +145,43 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
           encoder.encode(`data: ${JSON.stringify({ type: 'init', totalChunks: chunks.length, totalPages: pageCount })}\n\n`)
         );
 
-        // Process chunks sequentially with progress updates
+        // Process three chunks in parallel. Results are appended in batch order
+        // so question numbering remains stable while the user gets frequent
+        // progress updates instead of waiting for the whole batch.
         const allQuestions: any[] = [];
         let processedChunks = 0;
+        const CONCURRENCY = 3;
 
-        for (let i = 0; i < chunks.length; i++) {
-          try {
-            const text = await callOpenRouterWithFallback(
-              env,
-              [
-                {
-                  role: 'user',
-                  content: [
-                    { type: 'text', text: losslessPrompt },
-                    { type: 'file', file: { filename: `chunk_${i}.pdf`, file_data: `data:application/pdf;base64,${chunks[i]}` } },
-                  ],
-                },
-              ],
-              OPENROUTER_VISION_FALLBACKS
-            );
+        for (let start = 0; start < chunks.length; start += CONCURRENCY) {
+          const batch = chunks.slice(start, start + CONCURRENCY);
+          const batchResults = await Promise.all(batch.map(async (chunkBase64, offset) => {
+            const chunkIndex = start + offset;
+            try {
+              const text = await callOpenRouterWithFallback(
+                env,
+                [
+                  {
+                    role: 'user',
+                    content: [
+                      { type: 'text', text: losslessPrompt },
+                      { type: 'file', file: { filename: `chunk_${chunkIndex}.pdf`, file_data: `data:application/pdf;base64,${chunkBase64}` } },
+                    ],
+                  },
+                ],
+                OPENROUTER_VISION_FALLBACKS
+              );
+              return { result: extractJson(text) as any, chunkIndex };
+            } catch (error) {
+              console.error(`Chunk ${chunkIndex} failed:`, error);
+              return { result: { questions: [], error: String(error) }, chunkIndex };
+            }
+          }));
 
-            const result = extractJson(text) as any;
-            if (result.questions && Array.isArray(result.questions)) {
+          for (const { result, chunkIndex } of batchResults) {
+            if (result?.questions && Array.isArray(result.questions)) {
               allQuestions.push(...result.questions);
             }
             processedChunks++;
-
-            // Send progress update
             controller.enqueue(
               encoder.encode(
                 `data: ${JSON.stringify({
@@ -177,21 +190,7 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
                   total: chunks.length,
                   questionsExtracted: allQuestions.length,
                   percentage: Math.round((processedChunks / chunks.length) * 100),
-                })}\n\n`
-              )
-            );
-          } catch (e) {
-            console.error(`Chunk ${i} failed:`, e);
-            processedChunks++;
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({
-                  type: 'progress',
-                  processed: processedChunks,
-                  total: chunks.length,
-                  questionsExtracted: allQuestions.length,
-                  percentage: Math.round((processedChunks / chunks.length) * 100),
-                  warning: `Chunk ${i} failed but continuing`,
+                  ...(result?.error ? { warning: `Chunk ${chunkIndex} failed but continuing` } : {}),
                 })}\n\n`
               )
             );

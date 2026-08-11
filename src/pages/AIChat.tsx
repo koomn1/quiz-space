@@ -678,16 +678,19 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
       if (!fullText) throw new Error('empty');
       setMessages(prev => [...prev, { id: aiMsgId, role: 'assistant', text: fullText, timestamp: userMsg.timestamp }]);
-      try {
-        const suggestionReply = await askAI(
-          `أنشئ 3 أو 4 اقتراحات قصيرة اختيارية للخطوة التالية بناءً على سؤال المستخدم وآخر رد للمساعد. الاقتراحات يجب أن تكون مرتبطة مباشرة بالموضوع، متنوعة بين التلخيص والشرح والتدريب وإنشاء اختبار عند الحاجة. أعد JSON فقط بهذا الشكل: {"suggestions":[{"label":"نص قصير للزر","prompt":"الطلب الكامل الذي سيرسل للمساعد"}]}. لا تكرر كلام الرد ولا تضف مقدمة.\n\nسؤال المستخدم:\n${userMsg.text}\n\nآخر رد للمساعد:\n${fullText}`,
-          { systemInstruction: 'أنت مولد اقتراحات واجهة لمساعد تعليمي. أعد JSON صالحًا فقط. اجعل النصوص قصيرة وواضحة وبنفس لغة المستخدم.' }
-        );
+      // Suggestions are useful polish, but they should never keep the main
+      // Cosmo reply in a loading state. Generate them in the background after
+      // the streamed answer has already been committed to the chat.
+      const suggestionPrompt = `أنشئ 3 أو 4 اقتراحات قصيرة اختيارية للخطوة التالية بناءً على سؤال المستخدم وآخر رد للمساعد. الاقتراحات يجب أن تكون مرتبطة مباشرة بالموضوع، متنوعة بين التلخيص والشرح والتدريب وإنشاء اختبار عند الحاجة. أعد JSON فقط بهذا الشكل: {"suggestions":[{"label":"نص قصير للزر","prompt":"الطلب الكامل الذي سيرسل للمساعد"}]}. لا تكرر كلام الرد ولا تضف مقدمة.\n\nسؤال المستخدم:\n${userMsg.text}\n\nآخر رد للمساعد:\n${fullText}`;
+      void askAI(
+        suggestionPrompt,
+        { systemInstruction: 'أنت مولد اقتراحات واجهة لمساعد تعليمي. أعد JSON صالحًا فقط. اجعل النصوص قصيرة وواضحة وبنفس لغة المستخدم.' }
+      ).then((suggestionReply) => {
         const aiSuggestions = parseAiSuggestions(suggestionReply.text, isAr);
         setQuickSuggestions(aiSuggestions.length ? aiSuggestions : buildDynamicSuggestions(userMsg.text, fullText, isAr));
-      } catch {
+      }).catch(() => {
         setQuickSuggestions(buildDynamicSuggestions(userMsg.text, fullText, isAr));
-      }
+      });
       setStreamingText('');
       if (currentConvId) {
         const updated = readLocalChatData(userId);

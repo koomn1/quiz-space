@@ -182,15 +182,17 @@ export function useQuizGenerator() {
           message: 'جاري تحليل المستند وتجهيز الـ Chunks...',
         });
 
-        let base64 = '';
-        if (sourceFile) {
+        // QuizCreator already converted the selected file to Base64. Reuse it
+        // instead of reading the full File object a second time. The FileReader
+        // fallback remains for callers that only provide sourceFile.
+        let base64 = fileUri?.split(',')[1] || fileUri || '';
+        if (!base64 && sourceFile) {
           const reader = new FileReader();
-          base64 = await new Promise((resolve) => {
-            reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          base64 = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => resolve((reader.result as string).split(',')[1] || '');
+            reader.onerror = () => reject(reader.error || new Error('تعذر قراءة الملف.'));
             reader.readAsDataURL(sourceFile);
           });
-        } else if (fileUri) {
-          base64 = fileUri.split(',')[1] || fileUri;
         }
 
         if (!base64) throw new Error('لم يتم العثور على محتوى المستند.');
@@ -217,7 +219,8 @@ export function useQuizGenerator() {
                   message: `معالجة المجموعة ${progress.processed}/${progress.total} - استخراج ${progress.questionsExtracted} سؤال (${progress.percentage}%)`,
                 });
               }
-            }
+            },
+            extractionMode || 'literal'
           );
         } catch (err) {
           console.warn('Streaming failed, falling back to standard extraction:', err);

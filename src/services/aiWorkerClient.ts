@@ -249,6 +249,7 @@ export async function generateQuizFromFileStreaming(
   mimeType: string,
   customInstruction?: string,
   onProgress?: (progress: StreamProgress) => void,
+  extractionMode: 'literal' | 'generate' = 'literal',
 ): Promise<GeneratedQuiz> {
   try {
     const response = await fetchWithAuth(getApiUrl('/api/ai/generate-file/stream'), {
@@ -258,7 +259,7 @@ export async function generateQuizFromFileStreaming(
         fileBase64,
         mimeType,
         customInstruction,
-        extractionMode: 'literal',
+        extractionMode,
       }),
     });
 
