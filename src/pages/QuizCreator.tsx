@@ -490,7 +490,7 @@ export default function QuizCreator({
   // Image Upload / OCR / PDF States
   const [uploadedFile, setUploadedFile] = React.useState<File | null>(null);
   const [uploadedFilePreview, setUploadedFilePreview] = React.useState<string | null>(null);
-  const [fileType, setFileType] = React.useState<'image' | 'pdf' | null>(null);
+  const [fileType, setFileType] = React.useState<'image' | 'pdf' | 'document' | null>(null);
   const [pdfCount, setPdfCount] = React.useState(5);
   
   const [isProcessingOcr, setIsProcessingOcr] = React.useState(false);
@@ -726,7 +726,8 @@ export default function QuizCreator({
       };
       reader.readAsDataURL(file);
     } else {
-      setFileType('pdf');
+      const isOfficeDocument = /wordprocessingml|msword|spreadsheetml|excel|presentationml|powerpoint/i.test(file.type) || /\.(docx?|xlsx?|pptx?)$/i.test(file.name);
+      setFileType(isOfficeDocument ? 'document' : 'pdf');
       setUploadedFilePreview(null);
     }
   };
@@ -1559,11 +1560,11 @@ A computer is a digital electronic machine...
               </div>
               <div className="space-y-1 flex-1 text-right">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <h3 className="font-display font-black text-xl text-slate-800 dark:text-slate-100 tracking-tight">استخراج الأسئلة من صورة أو ملف كورس PDF دراسي</h3>
+                  <h3 className="font-display font-black text-xl text-slate-800 dark:text-slate-100 tracking-tight">استخراج الأسئلة من صورة أو ملف PDF أو Word دراسي</h3>
                   {renderUsesIndicator(fileUses)}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  هل لديك صورة لورقة امتحان أو كشكول دراسي، أو كتاب الكتروني بصيغة PDF؟ ارفعها هنا، وسيقوم الذكاء الاصطناعي بقراءة واستخلاص كامل الأسئلة لتسوية مسوداتها فوراً.
+                  هل لديك صورة لورقة امتحان أو كشكول دراسي أو ملف PDF/Word؟ ارفعه هنا، وسيقوم الذكاء الاصطناعي بقراءة واستخلاص كامل الأسئلة لتسوية مسودتها فوراً.
                 </p>
               </div>
             </div>
@@ -1586,7 +1587,7 @@ A computer is a digital electronic machine...
                   <input
                     type="file"
                     id="document-upload-input"
-                    accept="image/*, application/pdf"
+                    accept="image/*, application/pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-powerpoint, application/vnd.openxmlformats-officedocument.presentationml.presentation"
                     onChange={handleFileChange}
                     className="hidden"
                   />
@@ -1596,7 +1597,7 @@ A computer is a digital electronic machine...
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{isAr ? 'اختر ملفاً من جهازك' : 'Choose file from device'}</p>
-                      <p className="text-[11px] text-slate-400 font-medium font-sans">{isAr ? 'اسحب وأسقط ملف PDF أو صورة هنا' : 'Drag & drop image or PDF here'}</p>
+                      <p className="text-[11px] text-slate-400 font-medium font-sans">{isAr ? 'اسحب وأسقط صورة أو ملف PDF/Word هنا' : 'Drag & drop an image, PDF, or Word file here'}</p>
                     </div>
                   </label>
                 </div>
@@ -1672,8 +1673,8 @@ A computer is a digital electronic machine...
                         <FileText className="w-6 h-6 text-primary" />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-755 dark:text-slate-300">{isAr ? 'اسحب صورة الامتحان أو ملف الـ PDF وألقه هنا' : 'Drag & drop exam image or PDF here'}</p>
-                        <p className="text-xs text-slate-400 font-medium font-sans">{isAr ? 'يدعم صيغ JPG, PNG أو ملفات PDF الأكاديمية متعددة الصفحات' : 'Supports JPG, PNG, or multi-page academic PDF files'}</p>
+                        <p className="text-sm font-semibold text-slate-755 dark:text-slate-300">{isAr ? 'اسحب صورة الامتحان أو ملف PDF/Word وألقه هنا' : 'Drag & drop exam image or PDF/Word here'}</p>
+                        <p className="text-xs text-slate-400 font-medium font-sans">{isAr ? 'يدعم JPG وPNG وPDF وWord وExcel وPowerPoint' : 'Supports JPG, PNG, PDF, Word, Excel, and PowerPoint files'}</p>
                       </div>
                     </div>
                   )}
@@ -1757,9 +1758,9 @@ A computer is a digital electronic machine...
               </div>
             )}
 
-            {uploadedFile && fileType === 'pdf' && (
+            {uploadedFile && (fileType === 'pdf' || fileType === 'document') && (
               <div className="space-y-3 p-4 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-2xl text-right animate-fade-in">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block pb-1">عدد الأسئلة المطلوب استخراجها من ملف الـ PDF الدراسي:</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block pb-1">عدد الأسئلة المطلوب استخراجها من الملف الدراسي:</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[280px] overflow-y-auto pr-1" dir="rtl">
                   {COUNT_OPTIONS_WITH_AUTO.map((opt) => {
                     const isSelected = pdfCount === opt.value;

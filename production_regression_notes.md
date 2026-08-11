@@ -71,3 +71,15 @@ The image-only PDF uploaded successfully in the published bundle and is displaye
 ## Scanned fallback diagnosis
 
 The scanned-PDF request reached `جاري معالجة 1 صفحة في 1 مجموعة` but remained at `0 / 1` on the current production bundle. Code review showed the vision fallback had no per-model timeout and accepted empty model content as a successful response. A follow-up source fix now adds a 20-second abort per vision provider and rejects empty responses so the fallback chain can continue and the UI can receive a deterministic error rather than hang indefinitely.
+
+## Vision-timeout deployment
+
+Commit `8ca30fd` was deployed successfully by GitHub Actions run `31537370566`; all three jobs passed. The cache-busted bundle loaded and account synchronization restored the previous two-question draft with explanations, confirming persistence of the successful text-PDF extraction across reloads. The scanned-PDF test must be re-entered after dismissing the synchronization overlay so that the new worker timeout can be observed independently.
+
+The synchronization overlay disappeared on its own; the stale `تخطي` click was harmless and did not alter the app. A fresh snapshot confirms the two-question extracted draft remains intact after the second deployment. The scanned fallback will now be re-run from a clean mode switch on this bundle.
+
+The clean post-deployment re-entry into the `صورة أو PDF` mode succeeded on `v=8ca30fd`; the mode selector and upload drop zone are available again. The scanned fixture will now be uploaded and processed once more to measure the timeout-safe fallback.
+
+## Scanned-PDF fallback passed
+
+On the redeployed bundle `v=8ca30fd`, the image-only PDF entered `جاري معالجة 1 صفحة في 1 مجموعة` at `0 / 1`, then completed after the provider fallback window. Quiz Creator returned to the manual editor with exactly **2 complete questions**, including the multiple-choice arithmetic question and the true/false water-freezing question, both marked `جاهز ومكتمل` with explanations. This confirms the scanned/image-only PDF path works after the timeout-safe vision fallback; it is slower than text PDFs but no longer hangs indefinitely.

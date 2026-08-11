@@ -198,38 +198,52 @@ export function useQuizGenerator() {
         if (!base64) throw new Error('لم يتم العثور على محتوى المستند.');
 
         let data;
-        try {
-          data = await generateQuizFromFileStreaming(
-            base64,
-            mimeType || 'application/pdf',
-            customInstruction,
-            (progress: StreamProgress) => {
-              if (progress.type === 'init') {
-                setProgress({
-                  current: 0,
-                  total: progress.totalChunks || 1,
-                  stage: 'generating',
-                  message: `جاري معالجة ${progress.totalPages} صفحة في ${progress.totalChunks} مجموعة...`,
-                });
-              } else if (progress.type === 'progress') {
-                setProgress({
-                  current: progress.processed || 0,
-                  total: progress.total || 1,
-                  stage: 'generating',
-                  message: `معالجة المجموعة ${progress.processed}/${progress.total} - استخراج ${progress.questionsExtracted} سؤال (${progress.percentage}%)`,
-                });
-              }
-            },
-            extractionMode || 'literal'
-          );
-        } catch (err) {
-          console.warn('Streaming failed, falling back to standard extraction:', err);
+        const resolvedMimeType = mimeType || 'application/pdf';
+        if (resolvedMimeType === 'application/pdf') {
           try {
-            data = await generateQuizFromFileWithFallback(base64, mimeType || 'application/pdf', totalQuestions, customInstruction, extractionMode);
-          } catch (fallbackErr) {
-            // If all providers fail, try the basic version once more (different error path)
-            data = await generateQuizFromFile(base64, mimeType || 'application/pdf', totalQuestions, customInstruction, extractionMode);
+            data = await generateQuizFromFileStreaming(
+              base64,
+              resolvedMimeType,
+              customInstruction,
+              (progress: StreamProgress) => {
+                if (progress.type === 'init') {
+                  setProgress({
+                    current: 0,
+                    total: progress.totalChunks || 1,
+                    stage: 'generating',
+                    message: `جاري معالجة ${progress.totalPages} صفحة في ${progress.totalChunks} مجموعة...`,
+                  });
+                } else if (progress.type === 'progress') {
+                  setProgress({
+                    current: progress.processed || 0,
+                    total: progress.total || 1,
+                    stage: 'generating',
+                    message: `معالجة المجموعة ${progress.processed}/${progress.total} - استخراج ${progress.questionsExtracted} سؤال (${progress.percentage}%)`,
+                  });
+                }
+              },
+              extractionMode || 'literal'
+            );
+          } catch (err) {
+            console.warn('Streaming failed, falling back to standard extraction:', err);
+            try {
+              data = await generateQuizFromFileWithFallback(base64, resolvedMimeType, totalQuestions, customInstruction, extractionMode);
+            } catch (fallbackErr) {
+              // If all providers fail, try the basic version once more (different error path)
+              data = await generateQuizFromFile(base64, resolvedMimeType, totalQuestions, customInstruction, extractionMode);
+            }
           }
+        } else {
+          // DOCX/XLSX/PPTX and image files use the non-streaming endpoint because
+          // the streaming route is intentionally PDF-only. The worker parses
+          // Office text locally (Mammoth/XLSX) before invoking Nemotron.
+          setProgress({
+            current: 0,
+            total: 1,
+            stage: 'generating',
+            message: 'جاري قراءة المستند واستخراج نصه عبر Nemotron...',
+          });
+          data = await generateQuizFromFile(base64, resolvedMimeType, totalQuestions, customInstruction, extractionMode);
         }
 
         if (data.questions && Array.isArray(data.questions)) {
