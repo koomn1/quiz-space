@@ -60,6 +60,10 @@ type StoreItem = {
   css_class?: string | null;
   min_plan: string;
   sort_order: number;
+  image_url?: string | null;
+  is_featured?: boolean;
+  discount_percent?: number;
+  badge_text?: string | null;
 };
 
 type Rewards = { points: number; coins: number; dailyStreak: number };
@@ -255,7 +259,9 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
   const buyFrame = async (item: StoreItem) => { if (busy) return; if (item.price_points > rewards.points) { setNotice({ ok: false, text: t.notEnough }); return; } setBusy(item.id); const response = await purchaseRewardItem(item.id); setBusy(null); if (response?.success) { setNotice({ ok: true, text: t.purchased }); setActiveFrameId(item.id); localStorage.setItem('quizspace_active_frame', item.id); window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); await load(); onRewardsChanged(); } else if (response?.already_owned) setNotice({ ok: false, text: t.owned }); else setNotice({ ok: false, text: response?.message || 'Purchase failed' }); };
   const sendOrder = async () => { if (!paymentItem || busy) return; setBusy(paymentItem.id); const response = await createRewardPointsOrder(paymentItem.id, paymentMethod, reference, receipt); setBusy(null); if (response?.success) { setPaymentItem(null); setReference(''); setReceipt(''); setNotice({ ok: true, text: t.orderSent }); } else setNotice({ ok: false, text: response?.message || 'Could not create order' }); };
   const uploadReceipt = (file?: File) => { if (!file) return; const reader = new FileReader(); reader.onload = () => setReceipt(String(reader.result || '')); reader.readAsDataURL(file); };
-  const frames = items.filter((item) => item.item_type === 'frame'); const bundles = items.filter((item) => item.item_type === 'points_bundle');
+  const offers = items.filter((item: any) => item.is_featured);
+  const frames = items.filter((item) => item.item_type === 'frame' && !item.is_featured); 
+  const bundles = items.filter((item) => item.item_type === 'points_bundle' && !item.is_featured);
   const planRank = (planName || '').toLowerCase().includes('diamond') || (planName || '').includes('الماس') ? 4 : (isPremium ? 2 : 1);
   const rankFor = (plan: string) => plan === 'diamond' ? 4 : plan === 'gold' ? 3 : plan === 'silver' ? 2 : 1;
   const renderCard = (item: StoreItem) => { 
@@ -290,7 +296,74 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
   };
   return <div className="space-y-8">{notice && <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm font-bold ${notice.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300'}`}><span>{notice.text}</span><button type="button" onClick={() => setNotice(null)}><X className="h-4 w-4" /></button></div>}
     <div className="flex flex-col gap-4 rounded-[2rem] border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-5 dark:border-amber-900/50 dark:from-amber-950/30 dark:to-orange-950/20 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white"><Store className="h-5 w-5 text-amber-600" />{t.store}</div><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{lang === 'ar' ? 'اجمع النقاط من الألعاب ثم استبدلها بإطاراتك المفضلة.' : 'Collect points from games and exchange them for your favorite frames.'}</p></div><RewardPill rewards={rewards} lang={lang} /></div>
-    {loading ? <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-violet-600" /></div> : <><section><h2 className="mb-4 flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white"><Crown className="h-5 w-5 text-amber-500" />{t.frames}</h2><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{frames.map(renderCard)}</div></section><section><h2 className="mb-4 flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white"><WalletCards className="h-5 w-5 text-emerald-500" />{t.bundles}</h2><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{bundles.map((item) => <div key={item.id} className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><Sparkles className="h-6 w-6" /></div><h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.reward_points.toLocaleString()} {t.points}</p><button type="button" onClick={() => setPaymentItem(item)} className="mt-5 w-full rounded-2xl bg-emerald-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700">{item.price_egp} EGP · {lang === 'ar' ? 'اطلب الآن' : 'Order now'}</button></div>)}</div></section></>}
+    {loading ? <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-violet-600" /></div> : <div className="space-y-10">
+      {offers.length > 0 && (
+        <section>
+          <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white">
+            <Sparkles className="h-5 w-5 text-rose-500" />
+            {lang === 'ar' ? '🔥 عروض وتخفيضات حصرية' : '🔥 Exclusive Flash Offers'}
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {offers.map((item: any) => (
+              <div key={item.id} className="relative flex flex-col rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-md dark:border-rose-900/50 dark:from-rose-950/30 dark:via-slate-900 dark:to-amber-950/20">
+                {item.badge_text && (
+                  <span className="absolute top-4 start-4 rounded-full bg-rose-600 px-3 py-1 text-[10px] font-black text-white shadow-sm">
+                    {item.badge_text}
+                  </span>
+                )}
+                <div className="mt-4 flex-1">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3>
+                  <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">{lang === 'ar' ? item.description_ar : item.description}</p>
+                </div>
+                <div className="mt-6 flex items-center justify-between gap-2 border-t border-rose-100 pt-4 dark:border-rose-900/30">
+                  <div>
+                    {item.price_egp > 0 ? (
+                      <span className="text-sm font-black text-rose-600 dark:text-rose-400">{item.price_egp} EGP</span>
+                    ) : (
+                      <span className="text-xs font-black text-amber-600 dark:text-amber-300">{item.price_points.toLocaleString()} {t.points}</span>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => item.price_egp > 0 ? setPaymentItem(item) : buyFrame(item)} className="rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 px-4 py-2 text-xs font-black text-white shadow-md transition hover:opacity-90">
+                    {item.price_egp > 0 ? (lang === 'ar' ? 'اطلب العرض' : 'Claim Offer') : t.buy}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white">
+          <Crown className="h-5 w-5 text-amber-500" />
+          {t.frames}
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {frames.map(renderCard)}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white">
+          <WalletCards className="h-5 w-5 text-emerald-500" />
+          {t.bundles}
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {bundles.map((item) => (
+            <div key={item.id} className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.reward_points.toLocaleString()} {t.points}</p>
+              <button type="button" onClick={() => setPaymentItem(item)} className="mt-5 w-full rounded-2xl bg-emerald-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700">
+                {item.price_egp} EGP · {lang === 'ar' ? 'اطلب الآن' : 'Order now'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>}
     {paymentItem && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onClick={() => setPaymentItem(null)}><div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900" onClick={(event) => event.stopPropagation()}><div className="flex items-start justify-between gap-4"><div><h3 className="text-lg font-black text-slate-900 dark:text-white">{t.paymentTitle}</h3><p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">{t.paymentHint}</p></div><button type="button" onClick={() => setPaymentItem(null)}><X className="h-5 w-5 text-slate-500" /></button></div><div className="mt-5 grid grid-cols-2 gap-2"><button type="button" onClick={() => setPaymentMethod('vodafone_cash')} className={`rounded-2xl border px-3 py-3 text-xs font-black ${paymentMethod === 'vodafone_cash' ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300' : 'border-slate-200 text-slate-500 dark:border-slate-700'}`}>{t.vodafone}<span className="mt-1 block text-[10px] font-bold">{settings?.vodafone_number || '—'}</span></button><button type="button" onClick={() => setPaymentMethod('instapay')} className={`rounded-2xl border px-3 py-3 text-xs font-black ${paymentMethod === 'instapay' ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300' : 'border-slate-200 text-slate-500 dark:border-slate-700'}`}>{t.instapay}<span className="mt-1 block text-[10px] font-bold">{settings?.instapay_handle || '—'}</span></button></div><input value={reference} onChange={(event) => setReference(event.target.value)} placeholder={t.reference} className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white" /><label className="mt-3 block cursor-pointer rounded-2xl border border-dashed border-slate-300 p-4 text-center text-xs font-bold text-slate-500 dark:border-slate-700">{receipt ? t.receipt + ' ✓' : t.receipt}<input type="file" accept="image/*" className="hidden" onChange={(event) => uploadReceipt(event.target.files?.[0])} /></label><button type="button" onClick={sendOrder} disabled={busy === paymentItem.id} className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-60">{busy === paymentItem.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />}{busy === paymentItem.id ? t.sending : t.sendOrder}</button><button type="button" onClick={() => setPaymentItem(null)} className="mt-2 w-full rounded-2xl px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">{t.cancel}</button></div></div>}
   </div>;
 }

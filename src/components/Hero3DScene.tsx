@@ -24,7 +24,7 @@ const Orb = () => {
 };
 
 const QuizCards = () => {
-  const group = useRef<THREE.Group>(null);
+  const group = useRef<any>(null);
   const cards = useMemo(() => {
     return Array.from({ length: 5 }).map((_, i) => ({
       position: [
