@@ -1,4 +1,5 @@
 import { PDFDocument } from 'pdf-lib';
+import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
 
 async function logAiPerformance(env: Env, authHeader: string, data: {
   user_id: string,
@@ -121,6 +122,33 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
         const fileData = Uint8Array.from(atob(fileBase64), c => c.charCodeAt(0));
         const pdfDoc = await PDFDocument.load(fileData);
         const pageCount = pdfDoc.getPageCount();
+
+        // Prefer fast text extraction plus Nemotron for text-based PDFs. If the
+        // PDF is scanned or the text route cannot find valid questions, keep
+        // the existing vision/OCR path below as a safe fallback.
+        try {
+          const pdfText = await extractPdfTextContent(fileData);
+          if (pdfText.trim().length > 40) {
+            const result = await extractQuestionsFromText(pdfText, env, customInstruction);
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'init', totalChunks: result.chunks, totalPages: pageCount })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', processed: result.chunks, total: result.chunks, questionsExtracted: result.questions.length, percentage: 100 })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'complete', quiz: { title: result.title, description: result.description, questions: result.questions } })}\n\n`));
+            await logAiPerformance(env, authHeader, {
+              user_id: userId,
+              operation: 'extraction_text_streaming',
+              provider: result.provider,
+              chunk_count: result.chunks,
+              total_pages: pageCount,
+              status: 'success',
+              latency_ms: Date.now() - startTime,
+            });
+            controller.close();
+            return;
+          }
+        } catch (textError) {
+          console.warn('Text extraction route failed; continuing with PDF vision fallback:', textError);
+        }
+
         // Five pages per request reduces model round-trips while keeping each
         // vision payload small enough for reliable extraction. Three requests
         // are processed concurrently to avoid making long PDFs wait serially.

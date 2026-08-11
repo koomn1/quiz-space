@@ -760,9 +760,9 @@ export default function QuizCreator({
       stage: 'analyzing',
       current: 1,
       total: 10,
-      message: isAr 
-        ? 'الخطوة 1: جاري قراءة هيكل المستند وتحديد عدد صفحاته الكلي بذكاء ومجهر جوجل...' 
-        : 'Step 1: Reading aggregate page count and structure with AI...'
+        message: isAr
+        ? 'الخطوة 1: جاري تجهيز النص واستخراج الأسئلة بدقة عبر Nemotron...'
+        : 'Step 1: Preparing document text for fast Nemotron extraction...'
     });
 
     try {

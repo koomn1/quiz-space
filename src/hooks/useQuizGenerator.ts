@@ -179,7 +179,7 @@ export function useQuizGenerator() {
           current: 0,
           total: 100,
           stage: 'generating',
-          message: 'جاري تحليل المستند وتجهيز الـ Chunks...',
+          message: 'جاري استخراج نص المستند وتجهيز Nemotron...',
         });
 
         // QuizCreator already converted the selected file to Base64. Reuse it

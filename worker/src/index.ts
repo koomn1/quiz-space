@@ -1,7 +1,7 @@
-import { PDFDocument } from 'pdf-lib';
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 import { handleStreamingExtraction } from './streaming';
+import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
 
 export interface Env {
   OPENROUTER_API_KEY: string;
@@ -123,7 +123,9 @@ async function logAiPerformance(env: Env, authHeader: string, data: {
 function extractJson(text: string): unknown {
   let cleaned = text.trim();
   const fenceIdx = cleaned.indexOf('{');
-  if (fenceIdx > 0) cleaned = cleaned.slice(fenceIdx);
+  const arrayIdx = cleaned.indexOf('[');
+  const jsonStart = fenceIdx >= 0 && arrayIdx >= 0 ? Math.min(fenceIdx, arrayIdx) : Math.max(fenceIdx, arrayIdx);
+  if (jsonStart > 0) cleaned = cleaned.slice(jsonStart);
   if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3).trimEnd();
   return JSON.parse(cleaned);
 }
@@ -144,7 +146,18 @@ function quizPrompt(topic: string, amount: number, previous: string[]): string {
 — تذكير أخير: ${amount} سؤال بالضبط، لا أقل، ثم أغلق JSON.`);
 }
 
-async function callOpenRouter(env: Env, messages: any[], model = OPENROUTER_TEXT_MODEL, plugins?: any[]): Promise<string> {
+interface OpenRouterRequestOptions {
+  max_tokens?: number;
+  temperature?: number;
+}
+
+async function callOpenRouter(
+  env: Env,
+  messages: any[],
+  model = OPENROUTER_TEXT_MODEL,
+  plugins?: any[],
+  options?: OpenRouterRequestOptions,
+): Promise<string> {
   const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -153,7 +166,12 @@ async function callOpenRouter(env: Env, messages: any[], model = OPENROUTER_TEXT
       'HTTP-Referer': OPENROUTER_SITE_URL,
       'X-Title': OPENROUTER_SITE_NAME,
     },
-    body: JSON.stringify({ model, messages, ...(plugins ? { plugins } : {}) }),
+    body: JSON.stringify({
+      model,
+      messages,
+      ...(plugins ? { plugins } : {}),
+      ...(options || {}),
+    }),
   });
   if (!r.ok) throw new Error(await r.text());
   const d: any = await r.json();
@@ -164,11 +182,17 @@ async function callOpenRouter(env: Env, messages: any[], model = OPENROUTER_TEXT
 // models get rate-limited hard during peak hours and rotate out without
 // warning, so a single hardcoded model with no fallback means the whole
 // feature goes down whenever that one model has an off day.
-async function callOpenRouterWithFallback(env: Env, messages: any[], models: string[], plugins?: any[]): Promise<string> {
+async function callOpenRouterWithFallback(
+  env: Env,
+  messages: any[],
+  models: string[],
+  plugins?: any[],
+  options?: OpenRouterRequestOptions,
+): Promise<string> {
   let lastError: any = null;
   for (const model of models) {
     try {
-      return await callOpenRouter(env, messages, model, plugins);
+      return await callOpenRouter(env, messages, model, plugins, options);
     } catch (err) {
       lastError = err;
       console.warn(`OpenRouter model ${model} failed, trying next:`, err);
@@ -350,71 +374,23 @@ ${extraInstruction}`;
           const fileData = Uint8Array.from(atob(body.fileBase64), c => c.charCodeAt(0));
 
           if (isPdf) {
-            // PDF Chunking Pipeline
-            const pdfDoc = await PDFDocument.load(fileData);
-            const pageCount = pdfDoc.getPageCount();
-            // Keep fallback extraction fast as well: larger chunks mean fewer
-            // model round-trips, while bounded concurrency avoids rate spikes.
-            const chunkSize = 5;
-            const chunks: string[] = [];
-            
-            for (let i = 0; i < pageCount; i += chunkSize) {
-              const newDoc = await PDFDocument.create();
-              const end = Math.min(i + chunkSize, pageCount);
-              const pages = await newDoc.copyPages(pdfDoc, Array.from({ length: end - i }, (_, k) => i + k));
-              pages.forEach(p => newDoc.addPage(p));
-              const pdfBytes = await newDoc.save();
-              let binary = '';
-              const bytes = new Uint8Array(pdfBytes);
-              for (let j = 0; j < bytes.byteLength; j++) binary += String.fromCharCode(bytes[j]);
-              chunks.push(btoa(binary));
+            // Text PDFs now use the fast text-only pipeline. Scanned PDFs
+            // produce little/no text and fall through to the existing vision
+            // fallback below, preserving OCR coverage.
+            const pdfText = await extractPdfTextContent(fileData);
+            if (pdfText.trim().length > 40) {
+              const result = await extractQuestionsFromText(pdfText, env, body.customInstruction);
+              await logAiPerformance(env, authHeader, {
+                user_id: userId,
+                operation: 'extraction_text',
+                provider: result.provider,
+                chunk_count: result.chunks,
+                status: 'success',
+                latency_ms: Date.now() - startTime,
+              });
+              return json({ title: result.title, description: result.description, questions: result.questions }, 200, headers);
             }
-
-            // Process three chunks in parallel, preserving batch order in the
-            // merged result so numbering remains stable.
-            const chunkResults: any[] = [];
-            const CONCURRENCY = 3;
-            for (let i = 0; i < chunks.length; i += CONCURRENCY) {
-              const batch = chunks.slice(i, i + CONCURRENCY);
-              const batchResults = await Promise.all(batch.map(async (chunkBase64, idx) => {
-                const chunkIndex = i + idx;
-                try {
-                  const text = await callOpenRouterWithFallback(env, [{
-                    role: 'user',
-                    content: [
-                      { type: 'text', text: losslessPrompt },
-                      { type: 'file', file: { filename: `chunk_${chunkIndex}.pdf`, file_data: `data:application/pdf;base64,${chunkBase64}` } },
-                    ]
-                  }], OPENROUTER_VISION_FALLBACKS, [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }]);
-                  return extractJson(text) as any;
-                } catch (e) {
-                  console.error(`Chunk ${chunkIndex} failed:`, e);
-                  return { questions: [], error: String(e) };
-                }
-              }));
-              chunkResults.push(...batchResults);
-            }
-
-            const finalQuiz: any = {
-              title: chunkResults.find(r => r?.title)?.title || "Generated Quiz",
-              description: chunkResults.find(r => r?.description)?.description || "",
-              questions: []
-            };
-            for (const res of chunkResults) {
-              if (res && Array.isArray(res.questions)) finalQuiz.questions.push(...res.questions);
-            }
-
-            await logAiPerformance(env, authHeader, {
-              user_id: userId,
-              operation: 'extraction',
-              provider: 'openrouter',
-              chunk_count: chunks.length,
-              total_pages: pageCount,
-              status: 'success',
-              latency_ms: Date.now() - startTime
-            });
-
-            return json(finalQuiz, 200, headers);
+            console.warn('PDF has no meaningful text; using vision fallback for scanned pages.');
           } else if (body.mimeType.includes('wordprocessingml') || body.mimeType.includes('msword')) {
             // Word Extraction
             const result = await mammoth.extractRawText({ arrayBuffer: fileData.buffer });
@@ -438,34 +414,17 @@ ${extraInstruction}`;
             return json(extractJson(text), 200, headers);
           }
 
-          if (textContent) {
-            // Process extracted text in bounded batches. An unbounded
-            // Promise.all makes long Word/Excel files trigger rate limits,
-            // which is slower than controlled parallelism after retries.
-            const textChunks = textContent.match(/[\s\S]{1,10000}/g) || [textContent];
-            const chunkResults: any[] = [];
-            const TEXT_CONCURRENCY = 4;
-            for (let i = 0; i < textChunks.length; i += TEXT_CONCURRENCY) {
-              const batch = textChunks.slice(i, i + TEXT_CONCURRENCY);
-              const batchResults = await Promise.all(batch.map(async (chunk) => {
-                const text = await callOpenRouterWithFallback(env, [{
-                  role: 'user',
-                  content: `Content:\n${chunk}\n\n${losslessPrompt}`
-                }], OPENROUTER_TEXT_FALLBACKS);
-                return extractJson(text) as any;
-              }));
-              chunkResults.push(...batchResults);
-            }
-
-            const finalQuiz: any = {
-              title: chunkResults.find(r => r?.title)?.title || "Generated Quiz",
-              description: chunkResults.find(r => r?.description)?.description || "",
-              questions: []
-            };
-            for (const res of chunkResults) {
-              if (res && Array.isArray(res.questions)) finalQuiz.questions.push(...res.questions);
-            }
-            return json(finalQuiz, 200, headers);
+          if (textContent.trim()) {
+            const result = await extractQuestionsFromText(textContent, env, body.customInstruction);
+            await logAiPerformance(env, authHeader, {
+              user_id: userId,
+              operation: 'extraction_text',
+              provider: result.provider,
+              chunk_count: result.chunks,
+              status: 'success',
+              latency_ms: Date.now() - startTime,
+            });
+            return json({ title: result.title, description: result.description, questions: result.questions }, 200, headers);
           }
         } catch (err) {
           console.error("Extraction failed:", err);
