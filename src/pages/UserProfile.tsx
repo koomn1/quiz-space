@@ -42,22 +42,22 @@ import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 
 const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
-  'frame-neon-orbit': { boxShadow: '0 0 0 5px #a855f7, 0 0 22px 8px rgba(168,85,247,.42)', animation: 'pulse-glow-purple 2s infinite' },
-  'frame-aurora': { boxShadow: '0 0 0 5px #22d3ee, 0 0 20px 7px rgba(34,211,238,.35)', animation: 'pulse-glow-cyan 2.5s infinite' },
-  'frame-fire': { boxShadow: '0 0 0 5px #f97316, 0 0 22px 8px rgba(239,68,68,.45)', animation: 'pulse-glow-orange 1.5s infinite' },
-  'frame-crystal-luxe': { boxShadow: '0 0 0 5px #67e8f9, 0 0 22px 8px rgba(99,102,241,.45)', animation: 'pulse-glow-blue 3s infinite' },
-  'frame-star-crown': { boxShadow: '0 0 0 5px #facc15, 0 0 22px 8px rgba(245,158,11,.45)', animation: 'pulse-glow-yellow 2s infinite' },
-  'frame-diamond-comet': { boxShadow: '0 0 0 5px #e0f2fe, 0 0 26px 10px rgba(56,189,248,.55)', animation: 'pulse-glow-white 2s infinite' },
-  'frame-diamond-crown': { boxShadow: '0 0 0 5px #c4b5fd, 0 0 28px 10px rgba(139,92,246,.6)', animation: 'pulse-glow-purple-light 2s infinite' },
-  'frame-royal-gold': { boxShadow: '0 0 0 5px #fbbf24, 0 0 30px 12px rgba(251,191,36,.5)', animation: 'pulse-glow-gold 2s infinite' },
-  'frame-cyber-punk': { boxShadow: '0 0 0 5px #ec4899, 0 0 25px 10px rgba(236,72,153,.45)', animation: 'pulse-glow-pink 1.8s infinite' },
-  'frame-nature-leaf': { boxShadow: '0 0 0 5px #22c55e, 0 0 20px 8px rgba(34,197,94,.35)', animation: 'pulse-glow-green 3s infinite' },
-  'frame-galaxy': { boxShadow: '0 0 0 5px #8b5cf6, 0 0 28px 10px rgba(139,92,246,.45)', animation: 'pulse-glow-violet 2.5s infinite' },
-  'frame-diamond-halo': { boxShadow: '0 0 0 5px #f8fafc, 0 0 32px 12px rgba(248,250,252,.55)', animation: 'pulse-glow-white-bright 2s infinite' },
-  'frame-ramadan-gold': { boxShadow: '0 0 0 5px #fbbf24, 0 0 25px 10px rgba(251,191,36,.4)', animation: 'pulse-glow-gold 2.5s infinite' },
-  'frame-ramadan-green': { boxShadow: '0 0 0 5px #10b981, 0 0 22px 8px rgba(16,185,129,.35)', animation: 'pulse-glow-green-light 2.5s infinite' },
-  'frame-school-stationary': { boxShadow: '0 0 0 5px #3b82f6, 0 0 20px 7px rgba(59,130,246,.3)', animation: 'pulse-glow-blue-light 3s infinite' },
-  'frame-school-bus': { boxShadow: '0 0 0 5px #eab308, 0 0 18px 6px rgba(234,179,8,.25)', animation: 'pulse-glow-yellow-light 3s infinite' },
+  'frame-neon-orbit': { border: '4px solid #a855f7', boxShadow: '0 0 20px 4px rgba(168,85,247,.6)', animation: 'pulse-glow-purple 2s infinite' },
+  'frame-aurora': { border: '4px solid #22d3ee', boxShadow: '0 0 20px 4px rgba(34,211,238,.5)', animation: 'pulse-glow-cyan 2.5s infinite' },
+  'frame-fire': { border: '4px solid #f97316', boxShadow: '0 0 20px 4px rgba(239,68,68,.6)', animation: 'pulse-glow-orange 1.5s infinite' },
+  'frame-crystal-luxe': { border: '4px solid #67e8f9', boxShadow: '0 0 20px 4px rgba(99,102,241,.6)', animation: 'pulse-glow-blue 3s infinite' },
+  'frame-star-crown': { border: '4px solid #facc15', boxShadow: '0 0 20px 4px rgba(245,158,11,.6)', animation: 'pulse-glow-yellow 2s infinite' },
+  'frame-diamond-comet': { border: '4px solid #e0f2fe', boxShadow: '0 0 24px 6px rgba(56,189,248,.7)', animation: 'pulse-glow-white 2s infinite' },
+  'frame-diamond-crown': { border: '4px solid #c4b5fd', boxShadow: '0 0 24px 6px rgba(139,92,246,.7)', animation: 'pulse-glow-purple-light 2s infinite' },
+  'frame-royal-gold': { border: '4px solid #fbbf24', boxShadow: '0 0 28px 8px rgba(251,191,36,.6)', animation: 'pulse-glow-gold 2s infinite' },
+  'frame-cyber-punk': { border: '4px solid #ec4899', boxShadow: '0 0 22px 6px rgba(236,72,153,.6)', animation: 'pulse-glow-pink 1.8s infinite' },
+  'frame-nature-leaf': { border: '4px solid #22c55e', boxShadow: '0 0 18px 4px rgba(34,197,94,.5)', animation: 'pulse-glow-green 3s infinite' },
+  'frame-galaxy': { border: '4px solid #8b5cf6', boxShadow: '0 0 24px 6px rgba(139,92,246,.6)', animation: 'pulse-glow-violet 2.5s infinite' },
+  'frame-diamond-halo': { border: '4px solid #f8fafc', boxShadow: '0 0 30px 10px rgba(248,250,252,.7)', animation: 'pulse-glow-white-bright 2s infinite' },
+  'frame-ramadan-gold': { border: '4px solid #fbbf24', boxShadow: '0 0 22px 6px rgba(251,191,36,.5)', animation: 'pulse-glow-gold 2.5s infinite' },
+  'frame-ramadan-green': { border: '4px solid #10b981', boxShadow: '0 0 20px 5px rgba(16,185,129,.5)', animation: 'pulse-glow-green-light 2.5s infinite' },
+  'frame-school-stationary': { border: '4px solid #3b82f6', boxShadow: '0 0 18px 4px rgba(59,130,246,.4)', animation: 'pulse-glow-blue-light 3s infinite' },
+  'frame-school-bus': { border: '4px solid #eab308', boxShadow: '0 0 16px 4px rgba(234,179,8,.4)', animation: 'pulse-glow-yellow-light 3s infinite' },
 };
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
@@ -141,8 +141,13 @@ export default function UserProfile({
       const dbActiveId = profileData?.activeFrameId;
       const selectedId = isOwnProfile ? (localStorage.getItem('quizspace_active_frame') || dbActiveId) : dbActiveId;
       
-      const selected = (items || []).find((item: any) => item.id === selectedId && ownedIds.has(item.id))
-        || (isOwnProfile ? (items || []).find((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)) : null);
+      let selected = (items || []).find((item: any) => item.id === selectedId);
+      
+      // If we found a frame but don't own it, it might be a free frame or an error. 
+      // For the owner, we fallback to any owned frame.
+      if (!selected || !ownedIds.has(selected.id)) {
+        selected = isOwnProfile ? (items || []).find((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)) : null;
+      }
       
       if (selected) {
         setActiveFrameClass(selected.css_class || '');
@@ -156,7 +161,7 @@ export default function UserProfile({
     } catch (error) {
       console.warn('Could not load profile frame:', error);
     }
-  }, [currentUserId, isOwnProfile]);
+  }, [profileId, isOwnProfile, profileData?.activeFrameId]);
 
   const refreshRewards = React.useCallback(async () => {
     if (!isOwnProfile || !currentUserId || currentUserId.startsWith('user-')) {
@@ -968,15 +973,18 @@ export default function UserProfile({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20">
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
-              <div className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center" style={ACTIVE_FRAME_STYLES[activeFrameClass] || { boxShadow: '0 10px 24px rgba(15,23,42,.16)' }}>
+              <div 
+                className={`w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center transition-all duration-500 ${!activeFrameClass ? 'border-4 border-white dark:border-slate-900 shadow-xl' : ''}`} 
+                style={activeFrameClass ? ACTIVE_FRAME_STYLES[activeFrameClass] : {}}
+              >
                 {activeFrameUrl && (
                   <img 
                     src={activeFrameUrl} 
                     alt="" 
-                    className="absolute inset-0 z-10 h-full w-full object-cover scale-110 pointer-events-none" 
+                    className="absolute inset-0 z-20 h-full w-full object-contain scale-[1.15] pointer-events-none drop-shadow-lg" 
                   />
                 )}
-                <div className="w-full h-full rounded-full overflow-hidden relative">
+                <div className="w-full h-full rounded-full overflow-hidden relative z-10">
                   {displayPhotoURL ? (
                     <img
                       src={displayPhotoURL}
