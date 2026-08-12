@@ -54,6 +54,10 @@ const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
   'frame-nature-leaf': { boxShadow: '0 0 0 5px #22c55e, 0 0 20px 8px rgba(34,197,94,.35)' },
   'frame-galaxy': { boxShadow: '0 0 0 5px #8b5cf6, 0 0 28px 10px rgba(139,92,246,.45)' },
   'frame-diamond-halo': { boxShadow: '0 0 0 5px #f8fafc, 0 0 32px 12px rgba(248,250,252,.55)' },
+  'frame-ramadan-gold': { boxShadow: '0 0 0 5px #fbbf24, 0 0 25px 10px rgba(251,191,36,.4)' },
+  'frame-ramadan-green': { boxShadow: '0 0 0 5px #10b981, 0 0 22px 8px rgba(16,185,129,.35)' },
+  'frame-school-stationary': { boxShadow: '0 0 0 5px #3b82f6, 0 0 20px 7px rgba(59,130,246,.3)' },
+  'frame-school-bus': { boxShadow: '0 0 0 5px #eab308, 0 0 18px 6px rgba(234,179,8,.25)' },
 };
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
