@@ -49,6 +49,11 @@ const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
   'frame-star-crown': { boxShadow: '0 0 0 5px #facc15, 0 0 22px 8px rgba(245,158,11,.45)' },
   'frame-diamond-comet': { boxShadow: '0 0 0 5px #e0f2fe, 0 0 26px 10px rgba(56,189,248,.55)' },
   'frame-diamond-crown': { boxShadow: '0 0 0 5px #c4b5fd, 0 0 28px 10px rgba(139,92,246,.6)' },
+  'frame-royal-gold': { boxShadow: '0 0 0 5px #fbbf24, 0 0 30px 12px rgba(251,191,36,.5)' },
+  'frame-cyber-punk': { boxShadow: '0 0 0 5px #ec4899, 0 0 25px 10px rgba(236,72,153,.45)' },
+  'frame-nature-leaf': { boxShadow: '0 0 0 5px #22c55e, 0 0 20px 8px rgba(34,197,94,.35)' },
+  'frame-galaxy': { boxShadow: '0 0 0 5px #8b5cf6, 0 0 28px 10px rgba(139,92,246,.45)' },
+  'frame-diamond-halo': { boxShadow: '0 0 0 5px #f8fafc, 0 0 32px 12px rgba(248,250,252,.55)' },
 };
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
@@ -1328,6 +1333,10 @@ export default function UserProfile({
                       `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-4.webp`,
                       `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-5.webp`,
                       `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-6.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/avatar-football-pro.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/avatar-studying-pro.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/avatar-music-pro.webp`,
+                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/avatar-skater-pro.webp`,
                     ].map((url, idx) => (
                       <button
                         key={idx}
