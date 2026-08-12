@@ -41,7 +41,11 @@ import { SocialSupportLinks } from "../components/SocialSupportLinks";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 
-const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {};
+const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
+  'frame-dragon-spirit': { animation: 'frame-rotate 10s linear infinite', filter: 'drop-shadow(0 0 12px rgba(239, 68, 68, 0.5))' },
+  'frame-galaxy': { animation: 'frame-pulse 4s ease-in-out infinite' },
+  'frame-crystal-luxe': { animation: 'frame-shimmer 3s linear infinite' },
+};
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
   cosmic: { background: 'radial-gradient(circle at 30% 30%, #4338ca 0%, #1e1b4b 60%, #09090b 100%)' },
@@ -964,7 +968,8 @@ export default function UserProfile({
                   <img 
                     src={activeFrameUrl} 
                     alt="" 
-                    className="absolute inset-0 z-20 h-full w-full object-contain scale-[1.35] md:scale-[1.4] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]" 
+                    className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.35] md:scale-[1.4] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`} 
+                    style={activeFrameClass ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
                   />
                 )}
                 <div className="w-full h-full rounded-full overflow-hidden relative z-10">
