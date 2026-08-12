@@ -277,6 +277,8 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
         setActiveFrameId(item.id); 
         localStorage.setItem('quizspace_active_frame', item.id); 
         window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); 
+      } else if (item.id.startsWith('pass_')) {
+        showToast('success', lang === 'ar' ? 'تم تفعيل العضوية الجديدة بنجاح! يرجى تحديث الصفحة.' : 'Membership activated successfully! Please refresh.');
       }
       await load(); 
       onRewardsChanged(); 
