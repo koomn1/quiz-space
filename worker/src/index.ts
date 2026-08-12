@@ -264,6 +264,13 @@ function hasCosmoAttachment(body: any): boolean {
 async function handler(request: Request, env: Env): Promise<Response> {
   const headers = cors(request, env);
   if (request.method === 'OPTIONS') return new Response(null, { headers });
+  
+  // Rate Limit check: max 40 AI requests per minute per IP
+  const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'anonymous';
+  if (!checkRateLimit(clientIp)) {
+    return json({ error: 'Rate limit exceeded. Please wait a moment before sending more requests.' }, 429, headers);
+  }
+
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, headers);
       // Cosmo is available to guests as a limited preview. Authenticated users
       // still receive their real user id for persistence/performance logging.
