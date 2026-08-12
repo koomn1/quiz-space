@@ -20,6 +20,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { showToast } from '../components/Toast';
 import { askAI } from '../services/aiWorkerClient';
 import {
   claimLuckySpin,
@@ -97,12 +98,14 @@ function RewardPill({ rewards, lang }: { rewards: Rewards; lang: 'ar' | 'en' }) 
   const t = labels[lang];
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="flex items-center gap-1.5 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300">
+      <div className="flex items-center gap-1.5 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300 shadow-sm">
         <Sparkles className="h-4 w-4" /> {rewards.points.toLocaleString()} {t.points}
       </div>
-      <div className="flex items-center gap-1.5 rounded-2xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-black text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300">
-        <Coins className="h-4 w-4" /> {rewards.coins.toLocaleString()} {t.coins}
-      </div>
+      {rewards.coins > 0 && (
+        <div className="flex items-center gap-1.5 rounded-2xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-black text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300 shadow-sm">
+          <Coins className="h-4 w-4" /> {rewards.coins.toLocaleString()} {t.coins}
+        </div>
+      )}
     </div>
   );
 }
@@ -247,17 +250,16 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
   const [settings, setSettings] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
   const [busy, setBusy] = React.useState<string | null>(null);
-  const [notice, setNotice] = React.useState<{ ok: boolean; text: string } | null>(null);
   const [paymentItem, setPaymentItem] = React.useState<StoreItem | null>(null);
   const [paymentMethod, setPaymentMethod] = React.useState<'vodafone_cash' | 'instapay'>('vodafone_cash');
   const [reference, setReference] = React.useState('');
   const [receipt, setReceipt] = React.useState('');
-  const load = React.useCallback(async () => { setLoading(true); try { const [storeItems, owned, paymentSettings] = await Promise.all([getRewardStoreItems(), getRewardInventory(userId), getRewardPaymentSettings()]); setItems(storeItems as StoreItem[]); setInventory(owned); setSettings(paymentSettings); } catch (error: any) { setNotice({ ok: false, text: error?.message || 'Store unavailable' }); } finally { setLoading(false); } }, [userId]);
+  const load = React.useCallback(async () => { setLoading(true); try { const [storeItems, owned, paymentSettings] = await Promise.all([getRewardStoreItems(), getRewardInventory(userId), getRewardPaymentSettings()]); setItems(storeItems as StoreItem[]); setInventory(owned); setSettings(paymentSettings); } catch (error: any) { showToast('error', error?.message || 'Store unavailable'); } finally { setLoading(false); } }, [userId]);
   React.useEffect(() => { load(); }, [load]);
   const owned = (itemId: string) => inventory.some((item) => item.item_id === itemId);
-  const useFrame = (item: StoreItem) => { setActiveFrameId(item.id); localStorage.setItem('quizspace_active_frame', item.id); window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); setNotice({ ok: true, text: lang === 'ar' ? 'تم تفعيل الإطار على ملفك الشخصي.' : 'Frame activated on your profile.' }); };
-  const buyFrame = async (item: StoreItem) => { if (busy) return; if (item.price_points > rewards.points) { setNotice({ ok: false, text: t.notEnough }); return; } setBusy(item.id); const response = await purchaseRewardItem(item.id); setBusy(null); if (response?.success) { setNotice({ ok: true, text: t.purchased }); setActiveFrameId(item.id); localStorage.setItem('quizspace_active_frame', item.id); window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); await load(); onRewardsChanged(); } else if (response?.already_owned) setNotice({ ok: false, text: t.owned }); else setNotice({ ok: false, text: response?.message || 'Purchase failed' }); };
-  const sendOrder = async () => { if (!paymentItem || busy) return; setBusy(paymentItem.id); const response = await createRewardPointsOrder(paymentItem.id, paymentMethod, reference, receipt); setBusy(null); if (response?.success) { setPaymentItem(null); setReference(''); setReceipt(''); setNotice({ ok: true, text: t.orderSent }); } else setNotice({ ok: false, text: response?.message || 'Could not create order' }); };
+  const useFrame = (item: StoreItem) => { setActiveFrameId(item.id); localStorage.setItem('quizspace_active_frame', item.id); window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); showToast('success', lang === 'ar' ? 'تم تفعيل الإطار على ملفك الشخصي.' : 'Frame activated on your profile.'); };
+  const buyFrame = async (item: StoreItem) => { if (busy) return; if (item.price_points > rewards.points) { showToast('error', t.notEnough); return; } setBusy(item.id); const response = await purchaseRewardItem(item.id); setBusy(null); if (response?.success) { showToast('success', t.purchased); setActiveFrameId(item.id); localStorage.setItem('quizspace_active_frame', item.id); window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); await load(); onRewardsChanged(); } else if (response?.already_owned) showToast('info', t.owned); else showToast('error', response?.message || 'Purchase failed'); };
+  const sendOrder = async () => { if (!paymentItem || busy) return; setBusy(paymentItem.id); const response = await createRewardPointsOrder(paymentItem.id, paymentMethod, reference, receipt); setBusy(null); if (response?.success) { setPaymentItem(null); setReference(''); setReceipt(''); showToast('success', t.orderSent); } else showToast('error', response?.message || 'Could not create order'); };
   const uploadReceipt = (file?: File) => { if (!file) return; const reader = new FileReader(); reader.onload = () => setReceipt(String(reader.result || '')); reader.readAsDataURL(file); };
   const offers = items.filter((item: any) => item.is_featured);
   const frames = items.filter((item) => item.item_type === 'frame' && !item.is_featured); 
@@ -294,7 +296,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
       </div>
     ); 
   };
-  return <div className="space-y-8">{notice && <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-sm font-bold ${notice.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300' : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300'}`}><span>{notice.text}</span><button type="button" onClick={() => setNotice(null)}><X className="h-4 w-4" /></button></div>}
+  return <div className="space-y-8">
     <div className="flex flex-col gap-4 rounded-[2rem] border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-5 dark:border-amber-900/50 dark:from-amber-950/30 dark:to-orange-950/20 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white"><Store className="h-5 w-5 text-amber-600" />{t.store}</div><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{lang === 'ar' ? 'اجمع النقاط من الألعاب ثم استبدلها بإطاراتك المفضلة.' : 'Collect points from games and exchange them for your favorite frames.'}</p></div><RewardPill rewards={rewards} lang={lang} /></div>
     {loading ? <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-violet-600" /></div> : <div className="space-y-10">
       {offers.length > 0 && (
