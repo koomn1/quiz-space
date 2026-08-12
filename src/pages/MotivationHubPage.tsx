@@ -56,8 +56,10 @@ type StoreItem = {
   description: string;
   description_ar: string;
   price_points: number;
+  price_coins?: number;
   price_egp: number;
   reward_points: number;
+  reward_coins?: number;
   css_class?: string | null;
   min_plan: string;
   sort_order: number;
@@ -258,7 +260,29 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
   React.useEffect(() => { load(); }, [load]);
   const owned = (itemId: string) => inventory.some((item) => item.item_id === itemId);
   const useFrame = (item: StoreItem) => { setActiveFrameId(item.id); localStorage.setItem('quizspace_active_frame', item.id); window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); showToast('success', lang === 'ar' ? 'تم تفعيل الإطار على ملفك الشخصي.' : 'Frame activated on your profile.'); };
-  const buyFrame = async (item: StoreItem) => { if (busy) return; if (item.price_points > rewards.points) { showToast('error', t.notEnough); return; } setBusy(item.id); const response = await purchaseRewardItem(item.id); setBusy(null); if (response?.success) { showToast('success', t.purchased); setActiveFrameId(item.id); localStorage.setItem('quizspace_active_frame', item.id); window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); await load(); onRewardsChanged(); } else if (response?.already_owned) showToast('info', t.owned); else showToast('error', response?.message || 'Purchase failed'); };
+  const buyFrame = async (item: StoreItem) => { 
+    if (busy) return; 
+    const priceCoins = item.price_coins || 0;
+    if (priceCoins > 0) {
+      if (priceCoins > rewards.coins) { showToast('error', lang === 'ar' ? 'رصيد العملات غير كافٍ.' : 'Not enough coins.'); return; }
+    } else if (item.price_points > rewards.points) { 
+      showToast('error', t.notEnough); return; 
+    } 
+    setBusy(item.id); 
+    const response = await purchaseRewardItem(item.id); 
+    setBusy(null); 
+    if (response?.success) { 
+      showToast('success', t.purchased); 
+      if (item.item_type === 'frame') {
+        setActiveFrameId(item.id); 
+        localStorage.setItem('quizspace_active_frame', item.id); 
+        window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); 
+      }
+      await load(); 
+      onRewardsChanged(); 
+    } else if (response?.already_owned) showToast('info', t.owned); 
+    else showToast('error', response?.message || 'Purchase failed'); 
+  };
   const sendOrder = async () => { if (!paymentItem || busy) return; setBusy(paymentItem.id); const response = await createRewardPointsOrder(paymentItem.id, paymentMethod, reference, receipt); setBusy(null); if (response?.success) { setPaymentItem(null); setReference(''); setReceipt(''); showToast('success', t.orderSent); } else showToast('error', response?.message || 'Could not create order'); };
   const uploadReceipt = (file?: File) => { if (!file) return; const reader = new FileReader(); reader.onload = () => setReceipt(String(reader.result || '')); reader.readAsDataURL(file); };
   const offers = items.filter((item: any) => item.is_featured);
@@ -288,9 +312,25 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
           <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{lang === 'ar' ? item.description_ar : item.description}</p>
         </div>
         <div className="mt-4 flex items-center justify-between gap-2">
-          <span className="text-xs font-black text-amber-600 dark:text-amber-300">{locked ? t.diamond : item.price_points === 0 ? t.owned : `${item.price_points.toLocaleString()} ${t.points}`}</span>
-          <button type="button" disabled={locked || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="rounded-xl bg-violet-600 px-3 py-2 text-[11px] font-black text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-45">
-            {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : t.buy}
+          <span className="text-xs font-black">
+            {locked ? (
+              <span className="text-amber-600 dark:text-amber-400">{t.diamond}</span>
+            ) : isOwned ? (
+              <span className="text-emerald-600 dark:text-emerald-400">{t.owned}</span>
+            ) : item.price_coins && item.price_coins > 0 ? (
+              <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400">
+                <Coins className="h-3 w-3" />
+                {item.price_coins.toLocaleString()}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                <Sparkles className="h-3 w-3" />
+                {item.price_points.toLocaleString()}
+              </span>
+            )}
+          </span>
+          <button type="button" disabled={locked || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="rounded-xl bg-violet-600 px-3 py-2 text-[11px] font-black text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-45 shadow-sm shadow-violet-600/20">
+            {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : (item.price_egp > 0 ? (lang === 'ar' ? 'شراء بالمال' : 'Buy') : t.buy)}
           </button>
         </div>
       </div>

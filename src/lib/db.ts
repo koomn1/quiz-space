@@ -2312,8 +2312,13 @@ export async function getRewardStoreOrders() {
   return data || [];
 }
 
-export async function adminGrantRewardPoints(userId: string, points: number, note = '') {
-  const { data, error } = await supabase.rpc('admin_grant_reward_points', { p_user_id: userId, p_points: points, p_note: note });
+export async function adminGrantRewardPoints(userId: string, amount: number, note = '', currency = 'points') {
+  const { data, error } = await supabase.rpc('admin_grant_reward_points', { 
+    p_user_id: userId, 
+    p_amount: amount, 
+    p_reason: note,
+    p_currency: currency
+  });
   if (error) return { success: false, message: error.message };
   return data;
 }

@@ -94,6 +94,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const [rewardOrders, setRewardOrders] = useState<any[]>([]);
   const [grantUserId, setGrantUserId] = useState('');
   const [grantPoints, setGrantPoints] = useState(100);
+  const [grantCurrency, setGrantCurrency] = useState<'points' | 'coins'>('points');
   const [grantNote, setGrantNote] = useState('');
   const [rewardNotice, setRewardNotice] = useState<{ ok: boolean; text: string } | null>(null);
   const [rewardBusy, setRewardBusy] = useState<string | null>(null);
@@ -610,14 +611,18 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                       <div className="rounded-2xl bg-amber-100 p-3 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Gift className="h-5 w-5" /></div>
                       <div><h3 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'منح نقاط يدوية' : 'Manual points grant'}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'امنح نقاطاً للمستخدم من خلال RPC محمي بصلاحية السوبر أدمن.' : 'Grant points through an RPC protected by the super-admin role.'}</p></div>
                     </div>
-                    <div className="grid gap-3 lg:grid-cols-[1.5fr_.7fr_1.5fr_auto]">
+                    <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_.7fr_1.5fr_auto]">
                       <select value={grantUserId} onChange={(event) => setGrantUserId(event.target.value)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
                         <option value="">{isAr ? 'اختر مستخدماً' : 'Select a user'}</option>
                         {allUsers.map((user) => { const id = user.userId || user.uid; return <option key={id} value={id}>{user.name || user.displayName || id} · {id}</option>; })}
                       </select>
-                      <input type="number" min={1} max={1000000} value={grantPoints} onChange={(event) => setGrantPoints(Number(event.target.value))} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder={isAr ? 'النقاط' : 'Points'} />
+                      <select value={grantCurrency} onChange={(event) => setGrantCurrency(event.target.value as any)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                        <option value="points">{isAr ? 'نقاط ✦' : 'Points ✦'}</option>
+                        <option value="coins">{isAr ? 'عملات ◈' : 'Coins ◈'}</option>
+                      </select>
+                      <input type="number" min={1} max={1000000} value={grantPoints} onChange={(event) => setGrantPoints(Number(event.target.value))} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder={isAr ? 'الكمية' : 'Amount'} />
                       <input value={grantNote} onChange={(event) => setGrantNote(event.target.value)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder={isAr ? 'ملاحظة المنح (اختياري)' : 'Grant note (optional)'} />
-                      <button type="button" disabled={!grantUserId || grantPoints <= 0 || rewardBusy === 'grant'} onClick={async () => { setRewardBusy('grant'); const result = await adminGrantRewardPoints(grantUserId, grantPoints, grantNote); setRewardBusy(null); if (result?.success) { setRewardNotice({ ok: true, text: isAr ? `تمت إضافة ${grantPoints} نقطة بنجاح.` : `${grantPoints} points granted successfully.` }); setRewardBalances((current) => ({ ...current, [grantUserId]: { ...(current[grantUserId] || {}), points: Number(current[grantUserId]?.points || 0) + grantPoints } })); setGrantNote(''); } else setRewardNotice({ ok: false, text: result?.message || 'Grant failed' }); }} className="flex items-center justify-center gap-2 rounded-2xl bg-amber-600 px-5 py-3 text-xs font-black text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50">{rewardBusy === 'grant' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />}{isAr ? 'إضافة النقاط' : 'Grant points'}</button>
+                      <button type="button" disabled={!grantUserId || grantPoints <= 0 || rewardBusy === 'grant'} onClick={async () => { setRewardBusy('grant'); const result = await adminGrantRewardPoints(grantUserId, grantPoints, grantNote, grantCurrency); setRewardBusy(null); if (result?.success) { setRewardNotice({ ok: true, text: isAr ? `تمت إضافة ${grantPoints} ${grantCurrency === 'points' ? 'نقطة' : 'عملة'} بنجاح.` : `${grantPoints} ${grantCurrency} granted successfully.` }); setRewardBalances((current) => ({ ...current, [grantUserId]: { ...(current[grantUserId] || {}), [grantCurrency]: Number(current[grantUserId]?.[grantCurrency] || 0) + grantPoints } })); setGrantNote(''); } else setRewardNotice({ ok: false, text: result?.message || 'Grant failed' }); }} className="flex items-center justify-center gap-2 rounded-2xl bg-amber-600 px-5 py-3 text-xs font-black text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50">{rewardBusy === 'grant' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />}{isAr ? 'إضافة المكافأة' : 'Grant reward'}</button>
                     </div>
                   </section>
 
