@@ -279,6 +279,7 @@ export interface UserStats {
   followingCount?: number;
   isFollowing?: boolean;
   phone?: string;
+  activeFrameId?: string;
   isAdmin?: boolean;
   badgeTier?: 'none' | 'verified' | 'pro' | 'premium' | 'team' | 'enterprise' | 'lifetime' | 'founder' | 'royal';
   nameColor?: 'default' | 'gold' | 'neon_green' | 'neon_pink' | 'neon_blue' | 'silver' | 'diamond';

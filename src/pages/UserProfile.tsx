@@ -123,22 +123,26 @@ export default function UserProfile({
   const [editFrameId, setEditFrameId] = React.useState('');
 
   const refreshActiveFrame = React.useCallback(async () => {
-    if (!isOwnProfile || !currentUserId || currentUserId.startsWith('user-')) {
+    if (!profileId || profileId.startsWith('user-')) {
       setActiveFrameClass('');
       setActiveFrameUrl('');
       return;
     }
     try {
-      const [inventory, items] = await Promise.all([getRewardInventory(currentUserId), getRewardStoreItems()]);
+      const [inventory, items] = await Promise.all([getRewardInventory(profileId), getRewardStoreItems()]);
       const ownedIds = new Set((inventory || []).map((row: any) => row.item_id));
       
-      // Update owned frames list for the edit modal
-      const frames = (items || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id));
-      setOwnedFrames(frames);
+      // Update owned frames list for the edit modal (only if it's our profile)
+      if (isOwnProfile) {
+        const frames = (items || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id));
+        setOwnedFrames(frames);
+      }
 
-      const selectedId = localStorage.getItem('quizspace_active_frame');
+      const dbActiveId = profileData?.activeFrameId;
+      const selectedId = isOwnProfile ? (localStorage.getItem('quizspace_active_frame') || dbActiveId) : dbActiveId;
+      
       const selected = (items || []).find((item: any) => item.id === selectedId && ownedIds.has(item.id))
-        || frames[0];
+        || (isOwnProfile ? (items || []).find((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)) : null);
       
       if (selected) {
         setActiveFrameClass(selected.css_class || '');
@@ -367,6 +371,9 @@ export default function UserProfile({
             const afterBg = locStr.split("||bg:")[1] || "";
             const bgChunks = afterBg.split("||");
             parsedBg = bgChunks[0] || "profile-cover-youth";
+            if (parsedBg === 'custom') {
+               // Force re-evaluation of customBgUrl if bg mode is custom
+            }
             bgChunks.forEach((chunk: string) => {
               if (chunk.startsWith("coverText:"))
                 parsedCoverText = chunk.substring(10);
@@ -436,7 +443,8 @@ export default function UserProfile({
 
           const availableCoverIds = new Set([
             "profile-cover-youth", "profile-cover-girl", "profile-cover-gaming", "profile-cover-education",
-            "profile-cover-sport", "profile-cover-coding", "profile-cover-music", "profile-cover-nature"
+            "profile-cover-sport", "profile-cover-coding", "profile-cover-music", "profile-cover-nature",
+            "custom"
           ]);
           setChosenBg(availableCoverIds.has(parsedBg) ? parsedBg : "profile-cover-youth");
           setCustomBgUrl(parsedCustomBgUrl);
@@ -563,6 +571,19 @@ export default function UserProfile({
         undefined, // badgeSymbol (deprecated - use updateBadgeAndNameColor)
         undefined, // badgeColor (deprecated - use updateBadgeAndNameColor)
         editCustomId || undefined,
+        undefined, // planId
+        undefined, // isPremium
+        undefined, // planName
+        undefined, // isLifetime
+        undefined, // isFounder
+        undefined, // isSuspended
+        undefined, // categoryId
+        undefined, // renewalDate
+        undefined, // phone
+        undefined, // gender
+        undefined, // birthdate
+        undefined, // onboarded
+        editFrameId || undefined,
       );
 
       // Save active frame choice

@@ -676,6 +676,7 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       bio: userRow?.bio || '',
       location: userRow?.location || '',
       phone: userRow?.phone || '',
+      activeFrameId: userRow?.active_frame_id || '',
       isAdmin: userRow?.is_admin || false,
       // Never surface a badge/color for a non-premium user, even if the row
       // still has a stale value from a lapsed subscription.
@@ -714,6 +715,7 @@ export async function saveUserProfile(
   gender?: 'male' | 'female',
   birthdate?: string,
   onboarded?: boolean,
+  activeFrameId?: string,
 ): Promise<void> {
   if (!userId) return;
   if (!isSupabaseConfigured) {
@@ -734,6 +736,7 @@ export async function saveUserProfile(
     badge_color: badgeColor !== undefined ? badgeColor : undefined,
     // Preserve existing username if caller doesn't provide one.
     custom_id: customId !== undefined ? customId : undefined,
+    active_frame_id: activeFrameId !== undefined ? activeFrameId : undefined,
     updated_at: new Date().toISOString(),
   };
 
