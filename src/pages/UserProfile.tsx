@@ -41,24 +41,7 @@ import { SocialSupportLinks } from "../components/SocialSupportLinks";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 
-const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
-  'frame-neon-orbit': { border: '3px solid #a855f7', boxShadow: '0 4px 12px rgba(168,85,247,.2)' },
-  'frame-aurora': { border: '3px solid #22d3ee', boxShadow: '0 4px 12px rgba(34,211,238,.2)' },
-  'frame-fire': { border: '3px solid #f97316', boxShadow: '0 4px 12px rgba(239,68,68,.2)' },
-  'frame-crystal-luxe': { border: '3px solid #67e8f9', boxShadow: '0 4px 12px rgba(99,102,241,.2)' },
-  'frame-star-crown': { border: '3px solid #facc15', boxShadow: '0 4px 12px rgba(245,158,11,.2)' },
-  'frame-diamond-comet': { border: '3px solid #e0f2fe', boxShadow: '0 4px 12px rgba(56,189,248,.2)' },
-  'frame-diamond-crown': { border: '3px solid #c4b5fd', boxShadow: '0 4px 12px rgba(139,92,246,.2)' },
-  'frame-royal-gold': { border: '3px solid #fbbf24', boxShadow: '0 4px 12px rgba(251,191,36,.2)' },
-  'frame-cyber-punk': { border: '3px solid #ec4899', boxShadow: '0 4px 12px rgba(236,72,153,.2)' },
-  'frame-nature-leaf': { border: '3px solid #22c55e', boxShadow: '0 4px 12px rgba(34,197,94,.2)' },
-  'frame-galaxy': { border: '3px solid #8b5cf6', boxShadow: '0 4px 12px rgba(139,92,246,.2)' },
-  'frame-diamond-halo': { border: '3px solid #f8fafc', boxShadow: '0 4px 12px rgba(248,250,252,.2)' },
-  'frame-ramadan-gold': { border: '3px solid #fbbf24', boxShadow: '0 4px 12px rgba(251,191,36,.2)' },
-  'frame-ramadan-green': { border: '3px solid #10b981', boxShadow: '0 4px 12px rgba(16,185,129,.2)' },
-  'frame-school-stationary': { border: '3px solid #3b82f6', boxShadow: '0 4px 12px rgba(59,130,246,.2)' },
-  'frame-school-bus': { border: '3px solid #eab308', boxShadow: '0 4px 12px rgba(234,179,8,.2)' },
-};
+const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {};
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
   cosmic: { background: 'radial-gradient(circle at 30% 30%, #4338ca 0%, #1e1b4b 60%, #09090b 100%)' },
@@ -974,14 +957,14 @@ export default function UserProfile({
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
               <div 
-                className={`w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center transition-all duration-500 ${!activeFrameClass ? 'border-4 border-white dark:border-slate-900 shadow-xl' : ''}`} 
-                style={activeFrameClass ? ACTIVE_FRAME_STYLES[activeFrameClass] : {}}
+                className={`w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center transition-all duration-500 ${!activeFrameClass ? 'border-4 border-white dark:border-slate-900 shadow-xl' : 'z-10'}`} 
+                style={activeFrameClass ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
               >
                 {activeFrameUrl && (
                   <img 
                     src={activeFrameUrl} 
                     alt="" 
-                    className="absolute inset-0 z-20 h-full w-full object-contain scale-[1.15] pointer-events-none drop-shadow-lg" 
+                    className="absolute inset-0 z-20 h-full w-full object-contain scale-[1.35] md:scale-[1.4] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]" 
                   />
                 )}
                 <div className="w-full h-full rounded-full overflow-hidden relative z-10">

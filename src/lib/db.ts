@@ -740,6 +740,15 @@ export async function saveUserProfile(
     updated_at: new Date().toISOString(),
   };
 
+  // Extract customBg from location if possible to ensure DB field stays in sync if needed,
+  // though location currently stores the full serialized string.
+  if (location && location.includes('||customBg:')) {
+    const match = location.match(/\|\|customBg:([^|]*)/);
+    if (match && match[1]) {
+      updatedUser.cover_url = match[1];
+    }
+  }
+
   if (onboarded !== undefined) updatedUser.onboarded = onboarded;
   if (planId !== undefined) updatedUser.plan_id = planId;
   if (isPremium !== undefined) updatedUser.is_premium = isPremium;
