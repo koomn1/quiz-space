@@ -463,6 +463,16 @@ ${extraInstruction}`;
       });
       if (!response.ok) throw new Error(await response.text());
       const data = await response.json() as any;
+      if (userId !== 'guest') {
+        await logAiPerformance(env, authHeader, {
+          user_id: userId,
+          operation: 'cosmo_chat',
+          provider: 'groq',
+          model: 'llama-3.3-70b-versatile',
+          status: 'success',
+          latency_ms: Date.now() - startTime,
+        });
+      }
       return json({ text: data.choices?.[0]?.message?.content || '' }, 200, headers);
     }
 
@@ -492,6 +502,16 @@ ${extraInstruction}`;
       // that word (google/gemma-4-31b-it:free, nvidia/nemotron-...), so
       // every image was being sent to a text-only model and failing.
       const text = await callOpenRouterWithFallback(env, messages, hasAttachment ? OPENROUTER_VISION_FALLBACKS : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS));
+      if (userId !== 'guest') {
+        await logAiPerformance(env, authHeader, {
+          user_id: userId,
+          operation: 'cosmo_chat',
+          provider: 'openrouter',
+          model: typeof body.model === 'string' ? body.model : OPENROUTER_TEXT_MODEL,
+          status: 'success',
+          latency_ms: Date.now() - startTime,
+        });
+      }
       return json({ text }, 200, headers);
     }
 
@@ -512,6 +532,7 @@ ${extraInstruction}`;
       // mid-stream failure isn't retried, same tradeoff every ChatGPT-style
       // streaming UI makes).
       let upstream: Response | null = null;
+      let selectedModel = '';
       let lastErr: any = null;
       for (const model of candidates) {
         try {
@@ -525,7 +546,7 @@ ${extraInstruction}`;
             },
             body: JSON.stringify({ model, messages, stream: true }),
           });
-          if (r.ok && r.body) { upstream = r; break; }
+          if (r.ok && r.body) { upstream = r; selectedModel = model; break; }
           lastErr = await r.text();
         } catch (err) {
           lastErr = err;
@@ -533,6 +554,17 @@ ${extraInstruction}`;
       }
       if (!upstream || !upstream.body) {
         return json({ error: `All streaming models failed: ${lastErr}` }, 502, headers);
+      }
+
+      if (userId !== 'guest') {
+        await logAiPerformance(env, authHeader, {
+          user_id: userId,
+          operation: 'cosmo_chat_stream',
+          provider: 'openrouter',
+          model: selectedModel || OPENROUTER_TEXT_MODEL,
+          status: 'success',
+          latency_ms: Date.now() - startTime,
+        });
       }
 
       // Proxy OpenRouter's raw SSE stream straight through to the browser.

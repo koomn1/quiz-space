@@ -161,14 +161,26 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
 
       try {
         const { data, error } = await supabase.from('classrooms').select('*');
-        if (!error && data) setAdminClassrooms(data);
+        if (!error && data) {
+          setAdminClassrooms(data.map((classroom: any) => ({
+            ...classroom,
+            createdAt: classroom.created_at || classroom.createdAt,
+            creatorName: classroom.creator_name || classroom.creatorName || classroom.created_by_name || (isAr ? 'غير محدد' : 'Unknown'),
+          })));
+        }
       } catch (e) {
         console.error('Error fetching admin classrooms:', e);
       }
 
       try {
         const { data, error } = await supabase.from('classroom_students').select('*');
-        if (!error && data) setAdminStudents(data);
+        if (!error && data) {
+          setAdminStudents(data.map((student: any) => ({
+            ...student,
+            classCode: student.class_code || student.classCode,
+            studentName: student.student_name || student.studentName || student.name || (isAr ? 'طالب' : 'Student'),
+          })));
+        }
       } catch (e) {
         console.error('Error fetching admin students:', e);
       }
