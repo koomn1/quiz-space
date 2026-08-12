@@ -42,7 +42,7 @@ import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 
 const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
-  'frame-dragon-spirit': { animation: 'frame-rotate 10s linear infinite', filter: 'drop-shadow(0 0 12px rgba(239, 68, 68, 0.5))' },
+  'frame-dragon-spirit': { animation: 'frame-rotate 10s linear infinite' },
   'frame-galaxy': { animation: 'frame-pulse 4s ease-in-out infinite' },
   'frame-crystal-luxe': { animation: 'frame-shimmer 3s linear infinite' },
 };

@@ -13,16 +13,16 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import LandingPage from './pages/LandingPage';
 import NotFound from './pages/NotFound';
-const QuizCreator = React.lazy(() => import('./pages/QuizCreator'));
+const QuizCreator = lazyWithRetry(() => import('./pages/QuizCreator'), 'quiz-creator');
 import QuizResolver from './components/QuizResolver';
-const UserProfile = React.lazy(() => import('./pages/UserProfile'));
-const Support = React.lazy(() => import('./pages/Support'));
+const UserProfile = lazyWithRetry(() => import('./pages/UserProfile'), 'user-profile');
+const Support = lazyWithRetry(() => import('./pages/Support'), 'support');
 import MessageInbox from './components/MessageInbox';
-const MyQuizzes = React.lazy(() => import('./pages/MyQuizzes').then(module => ({ default: module.MyQuizzes })));
+const MyQuizzes = lazyWithRetry(() => import('./pages/MyQuizzes').then(module => ({ default: module.MyQuizzes })), 'my-quizzes');
 import AdminGuard from './components/AdminGuard';
-const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
-const AnalyticsDashboard = React.lazy(() => import('./pages/AnalyticsDashboard').then(module => ({ default: module.AnalyticsDashboard })));
-const BillingSection = React.lazy(() => import('./components/BillingSection').then(module => ({ default: module.BillingSection })));
+const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'), 'admin-dashboard');
+const AnalyticsDashboard = lazyWithRetry(() => import('./pages/AnalyticsDashboard').then(module => ({ default: module.AnalyticsDashboard })), 'analytics-dashboard');
+const BillingSection = lazyWithRetry(() => import('./components/BillingSection').then(module => ({ default: module.BillingSection })), 'billing');
 import { 
   ExploreSection, 
   CategoriesSection, 
@@ -42,11 +42,11 @@ import NetworkFailedModal from './components/NetworkFailedModal';
 import { PremiumCursor } from './components/PremiumCursor';
 import { PostRegisterOnboardingModal } from './components/PostRegisterOnboardingModal';
 import DailyQuizCard from './components/DailyQuizCard';
-const AIChat = React.lazy(() => import('./pages/AIChat'));
+const AIChat = lazyWithRetry(() => import('./pages/AIChat'), 'ai-chat');
 import SplashScreen from './components/SplashScreen';
 import { ToastHost } from './components/Toast';
-const Classrooms = React.lazy(() => import('./components/Classrooms'));
-const MotivationHubPage = React.lazy(() => import('./pages/MotivationHubPage'));
+const Classrooms = lazyWithRetry(() => import('./components/Classrooms'), 'classrooms');
+const MotivationHubPage = lazyWithRetry(() => import('./pages/MotivationHubPage'), 'motivation-hub');
 import type { MotivationSection } from './pages/MotivationHubPage';
 import { Sparkles, Edit, Compass, Info, XCircle, Award, Volume2, Globe, Bell, AlertTriangle, ExternalLink, User, Bot, Zap, MessageCircle } from 'lucide-react';
 
@@ -62,6 +62,54 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  loader: () => Promise<{ default: T }>,
+  routeKey: string,
+) {
+  return React.lazy(async () => {
+    try {
+      const module = await loader();
+      window.sessionStorage.removeItem(`quizspace-lazy-retry:${routeKey}`);
+      return module;
+    } catch (error) {
+      const retryKey = `quizspace-lazy-retry:${routeKey}`;
+      if (!window.sessionStorage.getItem(retryKey)) {
+        window.sessionStorage.setItem(retryKey, '1');
+        const retryUrl = new URL(window.location.href);
+        retryUrl.searchParams.set('asset-retry', Date.now().toString());
+        window.location.replace(retryUrl.toString());
+        return new Promise<never>(() => undefined);
+      }
+      throw error;
+    }
+  });
+}
+
+class LazyRouteErrorBoundary extends React.Component<React.PropsWithChildren<{ lang: 'ar' | 'en' }>, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      const isAr = this.props.lang === 'ar';
+      return (
+        <section className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-6 text-center" role="alert">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500">
+            <AlertTriangle className="h-7 w-7" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white">{isAr ? 'تعذر فتح هذه الصفحة' : 'This page could not be opened'}</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{isAr ? 'حدث ذلك غالباً بعد تحديث المنصة. أعد تحميل الصفحة للحصول على الإصدار الأحدث.' : 'This usually happens after a platform update. Reload to get the latest version.'}</p>
+          <button type="button" onClick={() => window.location.reload()} className="mt-6 min-h-11 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-violet-500">{isAr ? 'إعادة التحميل' : 'Reload page'}</button>
+        </section>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const mainContainerRef = React.useRef<HTMLElement>(null);
@@ -1469,7 +1517,8 @@ export default function App() {
               className={`${isCosmoTab || isNotFoundTab ? 'h-full min-h-0' : (usesSharedFrame ? '' : 'min-h-[100dvh]')} will-change-transform transform-gpu gsap-tab-wrapper`}
               style={{ backfaceVisibility: 'hidden' }}
             >
-              <React.Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] w-full"><CosmicLoader /></div>}>
+              <LazyRouteErrorBoundary lang={lang}>
+                <React.Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] w-full"><CosmicLoader /></div>}>
               {activeTab === 'not-found' && (
                 <NotFound lang={lang} onGoHome={() => handleSetTab('landing')} />
               )}
@@ -1798,7 +1847,8 @@ export default function App() {
                   </React.Suspense>
                 </AdminGuard>
               )}
-              </React.Suspense>
+                </React.Suspense>
+              </LazyRouteErrorBoundary>
             </div>
           
         )}

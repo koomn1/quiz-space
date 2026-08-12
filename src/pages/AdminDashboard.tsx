@@ -870,14 +870,14 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                             <h4 className="font-bold text-slate-800 dark:text-white">{isAr ? 'وضع الصيانة' : 'Maintenance Mode'}</h4>
                             <p className="text-xs text-slate-500">{isAr ? 'إيقاف المنصة مؤقتاً للتحديثات' : 'Temporarily disable the platform for updates'}</p>
                          </div>
-                         <LiquidGlassSwitch checked={maintenanceMode} onChange={(checked) => void handlePlatformSettingsChange(checked, allowRegistrations)} size="sm" />
+                         <LiquidGlassSwitch checked={maintenanceMode} onChange={(checked) => void handlePlatformSettingsChange(checked, allowRegistrations)} size="sm" disabled={platformSettingsBusy} ariaLabel={isAr ? 'تبديل وضع الصيانة' : 'Toggle maintenance mode'} />
                       </div>
                       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                          <div>
                             <h4 className="font-bold text-slate-800 dark:text-white">{isAr ? 'السماح بتسجيل حسابات جديدة' : 'Allow New Registrations'}</h4>
                             <p className="text-xs text-slate-500">{isAr ? 'فتح باب التسجيل للمستخدمين الجدد' : 'Open registration for new users'}</p>
                          </div>
-                         <LiquidGlassSwitch checked={allowRegistrations} onChange={(checked) => void handlePlatformSettingsChange(maintenanceMode, checked)} size="sm" />
+                         <LiquidGlassSwitch checked={allowRegistrations} onChange={(checked) => void handlePlatformSettingsChange(maintenanceMode, checked)} size="sm" disabled={platformSettingsBusy} ariaLabel={isAr ? 'تبديل السماح بالتسجيلات الجديدة' : 'Toggle new registrations'} />
                       </div>
                    </div>
                  </div>

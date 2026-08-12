@@ -43,28 +43,9 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
     try {
       const split = new SplitText(headlineRef.current, { type: isAr ? 'words' : 'words,chars' });
       const staggerElements = isAr ? split.words : split.chars;
-      gsap.fromTo(staggerElements, 
-        { 
-          opacity: 0, 
-          y: 100, 
-          rotateX: -100,
-          rotateY: 20, 
-          scale: 0.5,
-          filter: 'blur(15px)',
-          transformOrigin: "50% 50% -50px"
-        },
-        { 
-          opacity: 1, 
-          y: 0, 
-          rotateX: 0, 
-          rotateY: 0,
-          scale: 1,
-          filter: 'blur(0px)',
-          duration: 1.8, 
-          stagger: 0.05, 
-          ease: 'elastic.out(1.2, 0.5)',
-          delay: 0.2
-        }
+      gsap.fromTo(staggerElements,
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.65, stagger: 0.045, ease: 'power3.out', delay: 0.05 }
       );
       
       // Note: this used to also run a continuous infinite "breathing" tween
@@ -78,33 +59,27 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
       );
     }
 
-    // Type/Erase with GSAP TextPlugin
     if (cosmoAITextRef.current) {
-      cosmoAITextRef.current.innerText = '';
-      const tl = gsap.timeline({ repeat: -1, delay: 1 });
+      const firstTopic = topicsToUse[0] || '';
+      const tl = gsap.timeline({ repeat: -1, delay: 0.4 });
+      tl.set(cosmoAITextRef.current, { text: firstTopic });
 
-      topicsToUse.forEach((topic) => {
-        tl.to(cosmoAITextRef.current, {
-          text: topic,
-          duration: topic.length * 0.1,
-          ease: "none",
-        })
-        .to({}, { duration: 3 })
-        .to(cosmoAITextRef.current, {
-          text: "",
-          duration: topic.length * 0.05,
-          ease: "none",
-        });
+      topicsToUse.forEach((topic, index) => {
+        tl.to({}, { duration: index === 0 ? 2.4 : 2.8 })
+          .to(cosmoAITextRef.current, { text: '', duration: Math.max(0.25, topic.length * 0.025), ease: 'none' });
+
+        const nextTopic = topicsToUse[(index + 1) % topicsToUse.length] || firstTopic;
+        tl.to(cosmoAITextRef.current, { text: nextTopic, duration: Math.max(0.35, nextTopic.length * 0.045), ease: 'none' });
       });
     }
 
     // Reveal Buttons
-    gsap.fromTo(btnsRef.current, 
-      { opacity: 0, y: 40, scale: 0.8 },
-      { opacity: 1, y: 0, scale: 1, duration: 1.2, ease: 'elastic.out(1, 0.4)', delay: 1.8 }
+    gsap.fromTo(btnsRef.current,
+      { opacity: 0, y: 12, scale: 0.98 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: 'power2.out', delay: 0.25 }
     );
 
-  }, { scope: containerRef, dependencies: [isAr, topicsToUse] });
+  }, { scope: containerRef, dependencies: [isAr, topicsToUse.join('|')] });
 
   return (
     <div ref={containerRef} className="light-hero relative w-full h-[80vh] min-h-[600px] bg-[#020617] overflow-hidden flex flex-col items-center justify-center rounded-[40px] shadow-[0_20px_60px_-15px_rgba(109,40,217,0.3)] border border-indigo-500/20">
@@ -133,19 +108,7 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
           <h1 
             ref={headlineRef} 
             className={`text-[10vw] sm:text-[7vw] md:text-[5rem] leading-[1.1] font-black text-transparent bg-clip-text bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')] bg-cover bg-center font-display ${isAr ? '' : 'tracking-tighter'}`}
-            style={{ 
-              textShadow: `
-                0 20px 40px rgba(0,0,0,0.6),
-                -2px -2px 0 rgba(255,255,255,1),
-                2px -2px 0 rgba(255,255,255,1),
-                -2px 2px 0 rgba(255,255,255,1),
-                2px 2px 0 rgba(255,255,255,1),
-                -2px 0 0 rgba(255,255,255,1),
-                2px 0 0 rgba(255,255,255,1),
-                0 -2px 0 rgba(255,255,255,1),
-                0 2px 0 rgba(255,255,255,1)
-              `
-            }}
+            style={{ textShadow: '0 10px 30px rgba(2, 6, 23, 0.55)' }}
           >
             {mainTitle}
           </h1>
@@ -158,18 +121,17 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
           <div className="flex items-center">
             <span 
               ref={cosmoAITextRef} 
-              className={`text-2xl md:text-5xl text-[#0ae448] font-black ${isAr ? "" : "tracking-wide"}`}
-              style={{ textShadow: '0 0 30px rgba(10,228,72,0.5)' }}
+              className={`text-2xl md:text-5xl text-emerald-300 font-black ${isAr ? "" : "tracking-wide"}`}
             >
             </span>
-            <span className="w-1 md:w-1.5 h-8 md:h-12 bg-[#0ae448] ml-1 animate-[pulse_0.8s_ease-in-out_infinite]" />
+            <span className="ml-1 h-8 w-1 md:h-12 md:w-1.5 bg-emerald-300 motion-reduce:hidden animate-[pulse_0.8s_ease-in-out_infinite]" />
           </div>
         </div>
 
         <div ref={btnsRef} className="mt-12 flex flex-col sm:flex-row justify-center items-center gap-6">
           <button
             onClick={onCreateQuizTab}
-            className="group relative px-10 py-5 rounded-2xl bg-gradient-to-r from-[#0ae448] via-emerald-400 to-cyan-400 text-slate-950 font-black text-xl tracking-wide transition-all duration-300 hover:scale-110 shadow-[0_0_50px_rgba(10,228,72,0.5)] overflow-hidden"
+            className="group relative min-h-12 rounded-2xl bg-gradient-to-r from-emerald-400 via-emerald-300 to-cyan-300 px-8 py-4 text-lg font-black tracking-wide text-slate-950 shadow-lg shadow-emerald-950/20 transition-transform duration-200 hover:scale-[1.02] overflow-hidden"
           >
             <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
             <span className="relative z-10 flex items-center gap-3">
@@ -179,7 +141,7 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
           </button>
           
           <button
-            className="group px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border-2 border-indigo-500/30 hover:border-indigo-400/60 text-white font-bold text-xl tracking-wide transition-all duration-300 hover:scale-105 backdrop-blur-xl shadow-[0_0_30px_rgba(99,102,241,0.2)] hover:shadow-[0_0_40px_rgba(99,102,241,0.4)]"
+            className="group min-h-12 rounded-2xl border border-white/25 bg-white/10 px-8 py-4 text-lg font-bold tracking-wide text-white backdrop-blur-sm transition-colors duration-200 hover:border-white/45 hover:bg-white/15"
             onClick={() => {
               document.getElementById('quizzes-catalog')?.scrollIntoView({ behavior: 'smooth' });
             }}

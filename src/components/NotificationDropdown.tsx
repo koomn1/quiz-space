@@ -5,7 +5,8 @@ import { supabase } from '../lib/supabaseClient';
 type Notification = {
   id: string;
   title: string;
-  message: string;
+  body?: string | null;
+  message?: string | null;
   type: string;
   is_read: boolean;
   created_at: string;
@@ -158,7 +159,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
                     </span>
                   </div>
                   <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
-                    {notif.message}
+                    {notif.body || notif.message || (isAr ? 'لا توجد تفاصيل إضافية.' : 'No additional details.')}
                   </p>
                 </div>
               ))
