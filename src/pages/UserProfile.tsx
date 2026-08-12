@@ -1375,43 +1375,65 @@ export default function UserProfile({
 	                </div>
 
                   {/* Owned Frames Selection Section */}
-                  {ownedFrames.length > 0 && (
-                    <div className="bg-white dark:bg-slate-950 p-5 rounded-3xl border border-slate-100 dark:border-slate-800/60 space-y-4 shadow-sm">
-                      <div className="flex items-center gap-2 mb-2 border-b border-slate-100 dark:border-slate-800/60 pb-2">
-                        <Award className="w-4 h-4 text-amber-500" />
-                        <h4 className="text-xs font-black text-slate-700 dark:text-slate-300">
-                          {isAr ? "إطاراتك المملوكة" : "Your Owned Frames"}
-                        </h4>
-                      </div>
-                      <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setEditFrameId('')}
-                          className={`relative aspect-square rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${!editFrameId ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
-                        >
-                          <span className="text-[10px] font-black text-slate-400">{isAr ? 'بدون' : 'None'}</span>
-                        </button>
-                        {ownedFrames.map((frame) => (
-                          <button
-                            key={frame.id}
-                            type="button"
-                            onClick={() => setEditFrameId(frame.id)}
-                            className={`relative aspect-square rounded-full border-2 transition-all cursor-pointer overflow-hidden ${editFrameId === frame.id ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
-                            title={isAr ? frame.name_ar : frame.name}
-                          >
-                            <img 
-                              src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${frame.image_url}`} 
-                              alt="" 
-                              className="w-full h-full object-cover" 
-                            />
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-[9px] font-bold text-slate-400">
-                        {isAr ? "💡 الإطارات المميزة تظهر بتأثيرات نبض وحركة في ملفك الشخصي." : "💡 Premium frames appear with pulse and glow effects on your profile."}
-                      </p>
+                  <div className="bg-white dark:bg-slate-950 p-5 rounded-3xl border border-slate-100 dark:border-slate-800/60 space-y-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2 border-b border-slate-100 dark:border-slate-800/60 pb-2">
+                      <Award className="w-4 h-4 text-amber-500" />
+                      <h4 className="text-xs font-black text-slate-700 dark:text-slate-300">
+                        {isAr ? "إطاراتك ومظهر البروفايل" : "Your Frames & Profile Look"}
+                      </h4>
                     </div>
-                  )}
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setEditFrameId('')}
+                        className={`relative aspect-square rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${!editFrameId ? 'border-primary bg-primary/5 shadow-inner' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
+                      >
+                        <span className="text-[10px] font-black text-slate-400">{isAr ? 'بدون' : 'None'}</span>
+                      </button>
+                      
+                      {/* Free Frames (Always Available) */}
+                      {[
+                        { id: 'frame_free_1', name: 'Basic', name_ar: 'أساسي', url: 'images/frame-free-1.webp' },
+                        { id: 'frame_free_2', name: 'Soft Glow', name_ar: 'توهج', url: 'images/frame-free-2.webp' }
+                      ].map(f => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setEditFrameId(f.id)}
+                          className={`relative aspect-square rounded-full border-2 transition-all cursor-pointer overflow-hidden ${editFrameId === f.id ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
+                          title={isAr ? f.name_ar : f.name}
+                        >
+                          <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[8px] font-black text-slate-400 uppercase tracking-tighter">FREE</div>
+                          <img 
+                            src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${f.url}`} 
+                            alt="" 
+                            className="relative z-10 w-full h-full object-cover" 
+                            onError={(e) => (e.currentTarget.style.display = 'none')}
+                          />
+                        </button>
+                      ))}
+
+                      {/* Purchased Frames */}
+                      {ownedFrames.filter(f => !f.id.startsWith('frame_free_')).map((frame) => (
+                        <button
+                          key={frame.id}
+                          type="button"
+                          onClick={() => setEditFrameId(frame.id)}
+                          className={`relative aspect-square rounded-full border-2 transition-all cursor-pointer overflow-hidden ${editFrameId === frame.id ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
+                          title={isAr ? frame.name_ar : frame.name}
+                        >
+                          <img 
+                            src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${frame.image_url}`} 
+                            alt="" 
+                            className="w-full h-full object-cover" 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[9px] font-bold text-slate-400">
+                      {isAr ? "💡 الإطارات المميزة تظهر بتأثيرات نبض وحركة جذابة في ملفك الشخصي." : "💡 Premium frames appear with beautiful pulse and glow effects on your profile."}
+                    </p>
+                  </div>
 	              </div>
 	            </div>
 
