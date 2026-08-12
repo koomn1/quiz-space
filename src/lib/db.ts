@@ -1942,6 +1942,63 @@ export async function redeemCouponForUser(
   return String(data);
 }
 
+export interface PlatformSettings {
+  maintenanceMode: boolean;
+  allowRegistrations: boolean;
+  updatedAt?: string;
+  updatedBy?: string | null;
+}
+
+export async function getPlatformSettings(): Promise<PlatformSettings> {
+  const defaults: PlatformSettings = { maintenanceMode: false, allowRegistrations: true };
+  if (!isSupabaseConfigured) return defaults;
+
+  const { data, error } = await supabase
+    .from('platform_settings')
+    .select('maintenance_mode, allow_registrations, updated_at, updated_by')
+    .eq('singleton', true)
+    .maybeSingle();
+
+  if (error || !data) {
+    if (error) console.error('Error fetching platform settings:', error.message);
+    return defaults;
+  }
+
+  return {
+    maintenanceMode: data.maintenance_mode === true,
+    allowRegistrations: data.allow_registrations !== false,
+    updatedAt: data.updated_at || undefined,
+    updatedBy: data.updated_by || null,
+  };
+}
+
+export async function updatePlatformSettings(
+  maintenanceMode: boolean,
+  allowRegistrations: boolean,
+): Promise<PlatformSettings> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured');
+
+  const { data, error } = await supabase.rpc('update_platform_settings', {
+    p_maintenance_mode: maintenanceMode,
+    p_allow_registrations: allowRegistrations,
+  });
+
+  if (error) {
+    console.error('Error updating platform settings:', error.message);
+    throw new Error('Unable to save platform settings.');
+  }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) throw new Error('Platform settings were not persisted.');
+
+  return {
+    maintenanceMode: row.maintenance_mode === true,
+    allowRegistrations: row.allow_registrations !== false,
+    updatedAt: row.updated_at || undefined,
+    updatedBy: row.updated_by || null,
+  };
+}
+
 export async function getAiPerformanceLogs(): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.rpc('get_ai_performance_logs');

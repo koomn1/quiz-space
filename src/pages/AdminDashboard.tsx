@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Quiz } from '../types';
-import { getAllProfiles, sendDirectMessage, createNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders } from '../lib/db';
+import { getAllProfiles, sendDirectMessage, createNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
 import { getApiUrl } from '../lib/origin';
 import { decryptMessage } from '../lib/encryption';
@@ -74,6 +74,8 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [allowRegistrations, setAllowRegistrations] = useState(true);
+  const [platformSettingsBusy, setPlatformSettingsBusy] = useState(false);
+  const [platformSettingsNotice, setPlatformSettingsNotice] = useState<{ ok: boolean; text: string } | null>(null);
 
   const [promoType, setPromoType] = useState('Promo Code');
   const [promoCode, setPromoCode] = useState('');
@@ -100,6 +102,37 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const [rewardBusy, setRewardBusy] = useState<string | null>(null);
   const [isUserListOpen, setIsUserListOpen] = useState(false);
   const userListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let active = true;
+    getPlatformSettings()
+      .then((settings) => {
+        if (!active) return;
+        setMaintenanceMode(settings.maintenanceMode);
+        setAllowRegistrations(settings.allowRegistrations);
+      })
+      .catch(() => {
+        if (active) setPlatformSettingsNotice({ ok: false, text: isAr ? 'تعذر تحميل إعدادات المنصة.' : 'Unable to load platform settings.' });
+      });
+    return () => { active = false; };
+  }, [isAr]);
+
+  const handlePlatformSettingsChange = async (nextMaintenanceMode: boolean, nextAllowRegistrations: boolean) => {
+    if (platformSettingsBusy) return;
+    setPlatformSettingsBusy(true);
+    setPlatformSettingsNotice(null);
+    try {
+      const saved = await updatePlatformSettings(nextMaintenanceMode, nextAllowRegistrations);
+      setMaintenanceMode(saved.maintenanceMode);
+      setAllowRegistrations(saved.allowRegistrations);
+      setPlatformSettingsNotice({ ok: true, text: isAr ? 'تم حفظ إعدادات المنصة وتطبيقها بنجاح.' : 'Platform settings were saved and applied.' });
+    } catch (error) {
+      console.error('Failed to save platform settings:', error);
+      setPlatformSettingsNotice({ ok: false, text: isAr ? 'تعذر حفظ إعدادات المنصة. حاول مرة أخرى.' : 'Unable to save platform settings. Please try again.' });
+    } finally {
+      setPlatformSettingsBusy(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -825,20 +858,26 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                          {isAr ? 'إعدادات المنصة' : 'Platform Settings'}
                       </h3>
                    </div>
+                   {platformSettingsNotice && (
+                     <div className={`flex items-center gap-2 rounded-2xl border px-4 py-3 text-xs font-bold ${platformSettingsNotice.ok ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300' : 'border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-300'}`}>
+                       {platformSettingsNotice.ok ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
+                       <span>{platformSettingsNotice.text}</span>
+                     </div>
+                   )}
                    <div className="glass-panel p-6 rounded-3xl border border-slate-200/50 dark:border-slate-700/50 space-y-6">
                       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                          <div>
                             <h4 className="font-bold text-slate-800 dark:text-white">{isAr ? 'وضع الصيانة' : 'Maintenance Mode'}</h4>
                             <p className="text-xs text-slate-500">{isAr ? 'إيقاف المنصة مؤقتاً للتحديثات' : 'Temporarily disable the platform for updates'}</p>
                          </div>
-                         <LiquidGlassSwitch checked={maintenanceMode} onChange={(checked) => setMaintenanceMode(checked)} size="sm" />
+                         <LiquidGlassSwitch checked={maintenanceMode} onChange={(checked) => void handlePlatformSettingsChange(checked, allowRegistrations)} size="sm" />
                       </div>
                       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                          <div>
                             <h4 className="font-bold text-slate-800 dark:text-white">{isAr ? 'السماح بتسجيل حسابات جديدة' : 'Allow New Registrations'}</h4>
                             <p className="text-xs text-slate-500">{isAr ? 'فتح باب التسجيل للمستخدمين الجدد' : 'Open registration for new users'}</p>
                          </div>
-                         <LiquidGlassSwitch checked={allowRegistrations} onChange={(checked) => setAllowRegistrations(checked)} size="sm" />
+                         <LiquidGlassSwitch checked={allowRegistrations} onChange={(checked) => void handlePlatformSettingsChange(maintenanceMode, checked)} size="sm" />
                       </div>
                    </div>
                  </div>

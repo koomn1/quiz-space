@@ -1345,8 +1345,8 @@ export function SettingsSection({
 }) {
   const isAr = lang === 'ar';
   
-  // Tab control state (1: البيانات الأساسية, 2: إدارة الأمان, 3: تخصيص الواجهة)
-  const [activeTab, setActiveTab] = useState<1 | 2 | 3>(1);
+  // Tab control state (1: البيانات الأساسية, 2: إدارة الأمان, 3: تخصيص الواجهة, 4: الإشعارات)
+  const [activeTab, setActiveTab] = useState<1 | 2 | 3 | 4>(1);
 
   // Profile fields state
   const [nameInput, setNameInput] = useState(userName);
@@ -1543,7 +1543,8 @@ export function SettingsSection({
   const tabsConfig = [
     { id: 1 as const, label: isAr ? 'البيانات الأساسية' : 'Basic Details', icon: '📝' },
     { id: 2 as const, label: isAr ? 'إدارة الأمان' : 'Security', icon: '🔒' },
-    { id: 3 as const, label: isAr ? 'تخصيص الواجهة' : 'Interface', icon: '🎨' }
+    { id: 3 as const, label: isAr ? 'تخصيص الواجهة' : 'Interface', icon: '🎨' },
+    { id: 4 as const, label: isAr ? 'الإشعارات' : 'Notifications', icon: '🔔' }
   ];
 
   return (
@@ -1907,6 +1908,22 @@ export function SettingsSection({
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB 4: الإشعارات */}
+        {activeTab === 4 && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <span className="text-xl">🔔</span>
+                <span>{isAr ? 'تفضيلات الإشعارات' : 'Notification Preferences'}</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                {isAr ? 'اختر التنبيهات التي تود استقبالها ثم احفظ تفضيلاتك.' : 'Choose the alerts you want to receive, then save your preferences.'}
+              </p>
+            </div>
+            <Notifications lang={lang} />
           </div>
         )}
 

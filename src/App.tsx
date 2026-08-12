@@ -50,7 +50,7 @@ const MotivationHubPage = React.lazy(() => import('./pages/MotivationHubPage'));
 import type { MotivationSection } from './pages/MotivationHubPage';
 import { Sparkles, Edit, Compass, Info, XCircle, Award, Volume2, Globe, Bell, AlertTriangle, ExternalLink, User, Bot, Zap, MessageCircle } from 'lucide-react';
 
-import { getQuizzes, saveUserProfile, deleteQuiz, getUserProfileStats, getRecentCompletions } from './lib/db';
+import { getQuizzes, saveUserProfile, deleteQuiz, getUserProfileStats, getRecentCompletions, getPlatformSettings } from './lib/db';
 import { playNotificationSound } from './lib/sound';
 import { pushNotificationsManager, PushNotificationPayload } from './lib/pushNotifications';
 import { translations } from './lib/i18n';
@@ -69,6 +69,7 @@ export default function App() {
   const authContext = useAuth();
   // Show splash only once per day — not on every page refresh
   const [splashActive, setSplashActive] = React.useState(true);
+  const [platformMaintenanceActive, setPlatformMaintenanceActive] = React.useState(false);
 
   const [isQuizLocked, setIsQuizLocked] = React.useState(false);
   const [userId, setUserId] = React.useState('');
@@ -414,6 +415,21 @@ export default function App() {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
   }, [lang]);
+
+  React.useEffect(() => {
+    let active = true;
+    const refreshPlatformSettings = async () => {
+      const settings = await getPlatformSettings();
+      if (active) setPlatformMaintenanceActive(settings.maintenanceMode);
+    };
+
+    void refreshPlatformSettings();
+    const interval = window.setInterval(() => { void refreshPlatformSettings(); }, 30000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
 
   // Show push banner only after login if permission is not granted and banner not dismissed for this session
   React.useEffect(() => {
@@ -1212,6 +1228,16 @@ export default function App() {
         />
       ) : (
         <>
+          {platformMaintenanceActive && !isAdminUser && (
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/95 px-6 text-center backdrop-blur-xl" role="alert" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+              <div className="max-w-md rounded-3xl border border-amber-400/30 bg-slate-900 p-8 shadow-2xl shadow-amber-500/10">
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300"><AlertTriangle className="h-7 w-7" /></div>
+                <h1 className="text-xl font-black text-white">{lang === 'ar' ? 'المنصة تحت الصيانة حالياً' : 'The platform is currently under maintenance'}</h1>
+                <p className="mt-3 text-sm leading-7 text-slate-300">{lang === 'ar' ? 'نعمل على تحسين QuizSpace. يرجى المحاولة مجدداً بعد قليل.' : 'We are improving QuizSpace. Please try again shortly.'}</p>
+                <button type="button" onClick={() => window.location.reload()} className="mt-6 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-black text-slate-950 transition hover:bg-amber-400">{lang === 'ar' ? 'إعادة المحاولة' : 'Try again'}</button>
+              </div>
+            </div>
+          )}
           {showAppHeader && <Header
             currentTab={activeTab}
             setTab={handleSetTab}
