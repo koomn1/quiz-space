@@ -196,7 +196,16 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
           .select('*')
           .eq('classroom_id', activeAdminClassroom.id)
           .order('created_at', { ascending: true });
-        if (!error && data) setAdminMessages(data);
+        if (!error && data) {
+          setAdminMessages(data.map((message: any) => ({
+            ...message,
+            senderId: message.sender_id || message.senderId,
+            senderName: message.sender_name || message.senderName || (isAr ? 'مستخدم' : 'User'),
+            senderPhoto: message.sender_photo || message.senderPhoto || null,
+            encryptedText: message.encrypted_text || message.encryptedText,
+            createdAt: message.created_at || message.createdAt,
+          })));
+        }
       } catch (e) {
         console.error('Error loading classroom messages for admin:', e);
       }

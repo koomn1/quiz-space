@@ -41,6 +41,24 @@ const json = (data: unknown, status = 200, headers: HeadersInit = {}) => new Res
   headers: { 'Content-Type': 'application/json; charset=utf-8', ...headers },
 });
 
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 40;
+
+function checkRateLimit(key: string): boolean {
+  const now = Date.now();
+  const current = rateLimitMap.get(key);
+
+  if (!current || current.resetAt <= now) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  if (current.count >= RATE_LIMIT_MAX_REQUESTS) return false;
+  current.count += 1;
+  return true;
+}
+
 function cors(request: Request, env: Env): HeadersInit {
   const origin = request.headers.get('Origin') || '';
   const allowed = env.ALLOWED_ORIGIN.split(',').map(value => value.trim());
