@@ -179,6 +179,8 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
             ...student,
             classCode: student.class_code || student.classCode,
             studentName: student.student_name || student.studentName || student.name || (isAr ? 'طالب' : 'Student'),
+            studentPhoto: student.student_photo || student.studentPhoto || null,
+            avgScore: Number(student.avg_score ?? student.avgScore ?? 0),
           })));
         }
       } catch (e) {
