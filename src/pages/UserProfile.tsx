@@ -42,22 +42,22 @@ import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 
 const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
-  'frame-neon-orbit': { boxShadow: '0 0 0 5px #a855f7, 0 0 22px 8px rgba(168,85,247,.42)' },
-  'frame-aurora': { boxShadow: '0 0 0 5px #22d3ee, 0 0 20px 7px rgba(34,211,238,.35)' },
-  'frame-fire': { boxShadow: '0 0 0 5px #f97316, 0 0 22px 8px rgba(239,68,68,.45)' },
-  'frame-crystal-luxe': { boxShadow: '0 0 0 5px #67e8f9, 0 0 22px 8px rgba(99,102,241,.45)' },
-  'frame-star-crown': { boxShadow: '0 0 0 5px #facc15, 0 0 22px 8px rgba(245,158,11,.45)' },
-  'frame-diamond-comet': { boxShadow: '0 0 0 5px #e0f2fe, 0 0 26px 10px rgba(56,189,248,.55)' },
-  'frame-diamond-crown': { boxShadow: '0 0 0 5px #c4b5fd, 0 0 28px 10px rgba(139,92,246,.6)' },
-  'frame-royal-gold': { boxShadow: '0 0 0 5px #fbbf24, 0 0 30px 12px rgba(251,191,36,.5)' },
-  'frame-cyber-punk': { boxShadow: '0 0 0 5px #ec4899, 0 0 25px 10px rgba(236,72,153,.45)' },
-  'frame-nature-leaf': { boxShadow: '0 0 0 5px #22c55e, 0 0 20px 8px rgba(34,197,94,.35)' },
-  'frame-galaxy': { boxShadow: '0 0 0 5px #8b5cf6, 0 0 28px 10px rgba(139,92,246,.45)' },
-  'frame-diamond-halo': { boxShadow: '0 0 0 5px #f8fafc, 0 0 32px 12px rgba(248,250,252,.55)' },
-  'frame-ramadan-gold': { boxShadow: '0 0 0 5px #fbbf24, 0 0 25px 10px rgba(251,191,36,.4)' },
-  'frame-ramadan-green': { boxShadow: '0 0 0 5px #10b981, 0 0 22px 8px rgba(16,185,129,.35)' },
-  'frame-school-stationary': { boxShadow: '0 0 0 5px #3b82f6, 0 0 20px 7px rgba(59,130,246,.3)' },
-  'frame-school-bus': { boxShadow: '0 0 0 5px #eab308, 0 0 18px 6px rgba(234,179,8,.25)' },
+  'frame-neon-orbit': { boxShadow: '0 0 0 5px #a855f7, 0 0 22px 8px rgba(168,85,247,.42)', animation: 'pulse-glow-purple 2s infinite' },
+  'frame-aurora': { boxShadow: '0 0 0 5px #22d3ee, 0 0 20px 7px rgba(34,211,238,.35)', animation: 'pulse-glow-cyan 2.5s infinite' },
+  'frame-fire': { boxShadow: '0 0 0 5px #f97316, 0 0 22px 8px rgba(239,68,68,.45)', animation: 'pulse-glow-orange 1.5s infinite' },
+  'frame-crystal-luxe': { boxShadow: '0 0 0 5px #67e8f9, 0 0 22px 8px rgba(99,102,241,.45)', animation: 'pulse-glow-blue 3s infinite' },
+  'frame-star-crown': { boxShadow: '0 0 0 5px #facc15, 0 0 22px 8px rgba(245,158,11,.45)', animation: 'pulse-glow-yellow 2s infinite' },
+  'frame-diamond-comet': { boxShadow: '0 0 0 5px #e0f2fe, 0 0 26px 10px rgba(56,189,248,.55)', animation: 'pulse-glow-white 2s infinite' },
+  'frame-diamond-crown': { boxShadow: '0 0 0 5px #c4b5fd, 0 0 28px 10px rgba(139,92,246,.6)', animation: 'pulse-glow-purple-light 2s infinite' },
+  'frame-royal-gold': { boxShadow: '0 0 0 5px #fbbf24, 0 0 30px 12px rgba(251,191,36,.5)', animation: 'pulse-glow-gold 2s infinite' },
+  'frame-cyber-punk': { boxShadow: '0 0 0 5px #ec4899, 0 0 25px 10px rgba(236,72,153,.45)', animation: 'pulse-glow-pink 1.8s infinite' },
+  'frame-nature-leaf': { boxShadow: '0 0 0 5px #22c55e, 0 0 20px 8px rgba(34,197,94,.35)', animation: 'pulse-glow-green 3s infinite' },
+  'frame-galaxy': { boxShadow: '0 0 0 5px #8b5cf6, 0 0 28px 10px rgba(139,92,246,.45)', animation: 'pulse-glow-violet 2.5s infinite' },
+  'frame-diamond-halo': { boxShadow: '0 0 0 5px #f8fafc, 0 0 32px 12px rgba(248,250,252,.55)', animation: 'pulse-glow-white-bright 2s infinite' },
+  'frame-ramadan-gold': { boxShadow: '0 0 0 5px #fbbf24, 0 0 25px 10px rgba(251,191,36,.4)', animation: 'pulse-glow-gold 2.5s infinite' },
+  'frame-ramadan-green': { boxShadow: '0 0 0 5px #10b981, 0 0 22px 8px rgba(16,185,129,.35)', animation: 'pulse-glow-green-light 2.5s infinite' },
+  'frame-school-stationary': { boxShadow: '0 0 0 5px #3b82f6, 0 0 20px 7px rgba(59,130,246,.3)', animation: 'pulse-glow-blue-light 3s infinite' },
+  'frame-school-bus': { boxShadow: '0 0 0 5px #eab308, 0 0 18px 6px rgba(234,179,8,.25)', animation: 'pulse-glow-yellow-light 3s infinite' },
 };
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
@@ -119,6 +119,8 @@ export default function UserProfile({
   const [rewardCoins, setRewardCoins] = React.useState(0);
   const [activeFrameClass, setActiveFrameClass] = React.useState('');
   const [activeFrameUrl, setActiveFrameUrl] = React.useState('');
+  const [ownedFrames, setOwnedFrames] = React.useState<any[]>([]);
+  const [editFrameId, setEditFrameId] = React.useState('');
 
   const refreshActiveFrame = React.useCallback(async () => {
     if (!isOwnProfile || !currentUserId || currentUserId.startsWith('user-')) {
@@ -129,12 +131,24 @@ export default function UserProfile({
     try {
       const [inventory, items] = await Promise.all([getRewardInventory(currentUserId), getRewardStoreItems()]);
       const ownedIds = new Set((inventory || []).map((row: any) => row.item_id));
+      
+      // Update owned frames list for the edit modal
+      const frames = (items || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id));
+      setOwnedFrames(frames);
+
       const selectedId = localStorage.getItem('quizspace_active_frame');
       const selected = (items || []).find((item: any) => item.id === selectedId && ownedIds.has(item.id))
-        || (items || []).find((item: any) => item.item_type === 'frame' && ownedIds.has(item.id));
+        || frames[0];
       
-      setActiveFrameClass(selected?.css_class || '');
-      setActiveFrameUrl(selected?.image_url ? `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${selected.image_url}` : '');
+      if (selected) {
+        setActiveFrameClass(selected.css_class || '');
+        setActiveFrameUrl(selected.image_url ? `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${selected.image_url}` : '');
+        setEditFrameId(selected.id);
+      } else {
+        setActiveFrameClass('');
+        setActiveFrameUrl('');
+        setEditFrameId('');
+      }
     } catch (error) {
       console.warn('Could not load profile frame:', error);
     }
@@ -550,6 +564,12 @@ export default function UserProfile({
         undefined, // badgeColor (deprecated - use updateBadgeAndNameColor)
         editCustomId || undefined,
       );
+
+      // Save active frame choice
+      if (editFrameId) {
+        localStorage.setItem('quizspace_active_frame', editFrameId);
+        window.dispatchEvent(new CustomEvent('quizspace-frame-updated'));
+      }
 
       let badgeSaveFailed = false;
       if (isPremium) {
@@ -1348,13 +1368,52 @@ export default function UserProfile({
                         onClick={() => setEditPhotoURL(url)}
                         className={`relative group aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${editPhotoURL === url ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
                       >
-                        <img src={url} alt="Avatar" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+	                        <img src={url} alt="Avatar" className="w-full h-full object-cover" />
+	                      </button>
+	                    ))}
+	                  </div>
+	                </div>
+
+                  {/* Owned Frames Selection Section */}
+                  {ownedFrames.length > 0 && (
+                    <div className="bg-white dark:bg-slate-950 p-5 rounded-3xl border border-slate-100 dark:border-slate-800/60 space-y-4 shadow-sm">
+                      <div className="flex items-center gap-2 mb-2 border-b border-slate-100 dark:border-slate-800/60 pb-2">
+                        <Award className="w-4 h-4 text-amber-500" />
+                        <h4 className="text-xs font-black text-slate-700 dark:text-slate-300">
+                          {isAr ? "إطاراتك المملوكة" : "Your Owned Frames"}
+                        </h4>
+                      </div>
+                      <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setEditFrameId('')}
+                          className={`relative aspect-square rounded-full border-2 flex items-center justify-center transition-all cursor-pointer ${!editFrameId ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
+                        >
+                          <span className="text-[10px] font-black text-slate-400">{isAr ? 'بدون' : 'None'}</span>
+                        </button>
+                        {ownedFrames.map((frame) => (
+                          <button
+                            key={frame.id}
+                            type="button"
+                            onClick={() => setEditFrameId(frame.id)}
+                            className={`relative aspect-square rounded-full border-2 transition-all cursor-pointer overflow-hidden ${editFrameId === frame.id ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
+                            title={isAr ? frame.name_ar : frame.name}
+                          >
+                            <img 
+                              src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${frame.image_url}`} 
+                              alt="" 
+                              className="w-full h-full object-cover" 
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[9px] font-bold text-slate-400">
+                        {isAr ? "💡 الإطارات المميزة تظهر بتأثيرات نبض وحركة في ملفك الشخصي." : "💡 Premium frames appear with pulse and glow effects on your profile."}
+                      </p>
+                    </div>
+                  )}
+	              </div>
+	            </div>
 
             <div className="space-y-6">
               {/* Custom User ID (Identifier used by Admin to activate plan manual) */}
