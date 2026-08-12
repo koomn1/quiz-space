@@ -375,7 +375,23 @@ export default function MotivationHubPage({ userId, userName, isPremium, planNam
   const [rewards, setRewards] = React.useState<Rewards>({ points: 0, coins: 0, dailyStreak: 0 });
   const [status, setStatus] = React.useState<any>(null);
   const [isCheckingIn, setIsCheckingIn] = React.useState(false);
-  const refresh = React.useCallback(async () => { const [summary, motivation] = await Promise.all([getRewardsSummary(userId), getMotivationStatus().catch(() => null)]); setRewards({ points: summary.points, coins: summary.coins, dailyStreak: summary.dailyStreak }); setStatus(motivation); }, [userId]);
+  const refresh = React.useCallback(async () => { 
+    if (!userId || userId.startsWith('user-')) return;
+    try {
+      const [summary, motivation] = await Promise.all([
+        getRewardsSummary(userId), 
+        getMotivationStatus().catch(() => null)
+      ]); 
+      setRewards({ 
+        points: summary?.points || 0, 
+        coins: summary?.coins || 0, 
+        dailyStreak: summary?.dailyStreak || 0 
+      }); 
+      setStatus(motivation); 
+    } catch (e) {
+      console.error('Refresh rewards error:', e);
+    }
+  }, [userId]);
   React.useEffect(() => { refresh(); }, [refresh]);
   const onRewardsChanged = () => { refresh(); window.dispatchEvent(new CustomEvent('quizspace-rewards-updated')); };
   const checkIn = async () => { if (isCheckingIn) return; setIsCheckingIn(true); await updateDailyStreak(); setIsCheckingIn(false); onRewardsChanged(); };
