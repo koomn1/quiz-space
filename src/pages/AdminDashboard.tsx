@@ -614,7 +614,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                     <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_.7fr_1.5fr_auto]">
                       <select value={grantUserId} onChange={(event) => setGrantUserId(event.target.value)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
                         <option value="">{isAr ? 'اختر مستخدماً' : 'Select a user'}</option>
-                        {allUsers.map((user) => { const id = user.userId || user.uid; return <option key={id} value={id}>{user.name || user.displayName || id} · {id}</option>; })}
+                        {[...allUsers].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((user) => { const id = user.userId || user.uid; return <option key={id} value={id}>{user.name || user.displayName || 'Unknown User'}</option>; })}
                       </select>
                       <select value={grantCurrency} onChange={(event) => setGrantCurrency(event.target.value as any)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
                         <option value="points">{isAr ? 'نقاط ✦' : 'Points ✦'}</option>
@@ -628,7 +628,29 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
 
                   <section className="rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
                     <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'أرصدة المستخدمين' : 'User reward balances'}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'الرصيد الموحد الذي يظهر في Header والملف الشخصي.' : 'The canonical balance shown in Header and Profile.'}</p></div><Coins className="h-6 w-6 text-sky-500" /></div>
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{allUsers.slice(0, 60).map((user) => { const id = user.userId || user.uid; const balance = rewardBalances[id] || {}; return <div key={id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50"><div className="flex items-center justify-between gap-2"><span className="truncate text-xs font-black text-slate-800 dark:text-white">{user.name || user.displayName || id}</span><span className="text-[10px] font-bold text-slate-400">Lv. {balance.level || 1}</span></div><div className="mt-3 flex items-center gap-4 text-xs font-black"><span className="text-amber-600 dark:text-amber-300">✦ {Number(balance.points || 0).toLocaleString()}</span><span className="text-sky-600 dark:text-sky-300">◈ {Number(balance.coins || 0).toLocaleString()}</span></div></div>; })}</div>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      {[...allUsers]
+                        .filter(u => rewardBalances[u.userId || u.uid])
+                        .sort((a, b) => (rewardBalances[b.userId || b.uid]?.points || 0) - (rewardBalances[a.userId || a.uid]?.points || 0))
+                        .slice(0, 60)
+                        .map((user) => { 
+                          const id = user.userId || user.uid; 
+                          const balance = rewardBalances[id] || {}; 
+                          return (
+                            <div key={id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="truncate text-xs font-black text-slate-800 dark:text-white">{user.name || user.displayName || 'User'}</span>
+                                <span className="text-[10px] font-bold text-slate-400">Lv. {balance.level || 1}</span>
+                              </div>
+                              <div className="mt-3 flex items-center gap-4 text-xs font-black">
+                                <span className="text-amber-600 dark:text-amber-300">✦ {Number(balance.points || 0).toLocaleString()}</span>
+                                <span className="text-sky-600 dark:text-sky-300">◈ {Number(balance.coins || 0).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          ); 
+                        })
+                      }
+                    </div>
                   </section>
 
                   <section className="rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
