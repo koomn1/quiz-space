@@ -98,6 +98,18 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const [grantNote, setGrantNote] = useState('');
   const [rewardNotice, setRewardNotice] = useState<{ ok: boolean; text: string } | null>(null);
   const [rewardBusy, setRewardBusy] = useState<string | null>(null);
+  const [isUserListOpen, setIsUserListOpen] = useState(false);
+  const userListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userListRef.current && !userListRef.current.contains(event.target as Node)) {
+        setIsUserListOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (activeAdminTab === 'rewards') {
@@ -198,10 +210,10 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   return (
     <div className="space-y-8" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-panel p-6 rounded-[24px]">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center p-3 animate-pulse border border-red-500/20">
-            <Shield className="w-full h-full" />
-          </div>
+	        <div className="flex items-center gap-4">
+	          <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center p-3 border border-slate-200 dark:border-slate-700">
+	            <Shield className="w-full h-full" />
+	          </div>
           <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
             <h2 className="font-display font-black text-2xl text-slate-800 dark:text-white">
               {isAr ? 'لوحة تحكم المسؤول' : 'Admin Dashboard'}
@@ -611,12 +623,62 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                       <div className="rounded-2xl bg-amber-100 p-3 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Gift className="h-5 w-5" /></div>
                       <div><h3 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'منح نقاط يدوية' : 'Manual points grant'}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'امنح نقاطاً للمستخدم من خلال RPC محمي بصلاحية السوبر أدمن.' : 'Grant points through an RPC protected by the super-admin role.'}</p></div>
                     </div>
-                    <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_.7fr_1.5fr_auto]">
-                      <select value={grantUserId} onChange={(event) => setGrantUserId(event.target.value)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
-                        <option value="">{isAr ? 'اختر مستخدماً' : 'Select a user'}</option>
-                        {[...allUsers].sort((a, b) => (a.name || '').localeCompare(b.name || '')).map((user) => { const id = user.userId || user.uid; return <option key={id} value={id}>{user.name || user.displayName || 'Unknown User'}</option>; })}
-                      </select>
-                      <select value={grantCurrency} onChange={(event) => setGrantCurrency(event.target.value as any)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+	                    <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr_.7fr_1.5fr_auto]">
+	                      {/* Custom Searchable User Dropdown */}
+	                      <div className="relative" ref={userListRef}>
+	                        <button
+	                          type="button"
+	                          onClick={() => setIsUserListOpen(!isUserListOpen)}
+	                          className="w-full flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white transition-all hover:border-amber-300"
+	                        >
+	                          <span className="truncate">
+	                            {grantUserId 
+	                              ? allUsers.find(u => (u.userId || u.uid) === grantUserId)?.name || 'Unknown User'
+	                              : (isAr ? 'اختر مستخدماً' : 'Select a user')}
+	                          </span>
+	                          <Search className={`h-4 w-4 transition-transform ${isUserListOpen ? 'rotate-180' : ''}`} />
+	                        </button>
+	                        
+	                        {isUserListOpen && (
+	                          <div className="absolute top-full left-0 right-0 z-[100] mt-2 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900 animate-in fade-in slide-in-from-top-2 duration-200">
+	                            <div className="sticky top-0 mb-2 bg-white dark:bg-slate-900 pb-2 border-b border-slate-100 dark:border-slate-800">
+	                              <input
+	                                type="text"
+	                                autoFocus
+	                                placeholder={isAr ? 'بحث عن مستخدم...' : 'Search users...'}
+	                                className="w-full rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs outline-none focus:border-amber-500 dark:border-slate-800 dark:bg-slate-950"
+	                                onChange={(e) => setUserSearchQuery(e.target.value)}
+	                                value={userSearchQuery}
+	                              />
+	                            </div>
+	                            <div className="space-y-1">
+	                              {[...allUsers]
+	                                .filter(u => (u.name || '').toLowerCase().includes(userSearchQuery.toLowerCase()))
+	                                .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+	                                .map((user) => {
+	                                  const id = user.userId || user.uid;
+	                                  return (
+	                                    <button
+	                                      key={id}
+	                                      type="button"
+	                                      onClick={() => {
+	                                        setGrantUserId(id);
+	                                        setIsUserListOpen(false);
+	                                        setUserSearchQuery('');
+	                                      }}
+	                                      className={`w-full flex flex-col items-start rounded-xl px-3 py-2 text-right transition-colors hover:bg-amber-50 dark:hover:bg-amber-900/20 ${grantUserId === id ? 'bg-amber-50 dark:bg-amber-900/30' : ''}`}
+	                                    >
+	                                      <span className="text-sm font-black text-slate-800 dark:text-white">{user.name || 'Unknown User'}</span>
+	                                      <span className="text-[10px] text-slate-400 font-mono truncate w-full">{id}</span>
+	                                    </button>
+	                                  );
+	                                })}
+	                            </div>
+	                          </div>
+	                        )}
+	                      </div>
+
+	                      <select value={grantCurrency} onChange={(event) => setGrantCurrency(event.target.value as any)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
                         <option value="points">{isAr ? 'نقاط ✦' : 'Points ✦'}</option>
                         <option value="coins">{isAr ? 'عملات ◈' : 'Coins ◈'}</option>
                       </select>

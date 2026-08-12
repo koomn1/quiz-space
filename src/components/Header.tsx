@@ -98,6 +98,16 @@ export default function Header({
 
   const t = translations[lang];
 
+  const formatLargeNumber = (num: number) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(2).replace(/\.00$/, '') + 'M';
+    }
+    if (num >= 10000) {
+      return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    return num.toLocaleString();
+  };
+
   const themes = [
     { id: 'indigo', name: t.themeIndigo, emoji: '🌌', color: 'from-indigo-500 to-purple-600' },
     { id: 'emerald', name: t.themeEmerald, emoji: '🌿', color: 'from-teal-500 to-emerald-600' },
@@ -145,34 +155,27 @@ export default function Header({
             </div>
           </div>
 
-          {/* User Profile Info, Theme Select & Dark Mode */}
-          {!isQuizLocked ? (
-            <div className="flex items-center gap-1 sm:gap-2.5">
-	              {!isGuest && (
-	                <div className="flex items-center gap-1.5 rounded-2xl border border-amber-200 bg-amber-50/50 px-2 py-1.5 dark:border-amber-900/40 dark:bg-amber-950/20 sm:gap-2.5 sm:px-3.5" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
-	                  <div className="flex items-center gap-1 text-[11px] font-black text-amber-600 dark:text-amber-400 sm:text-xs">
-	                    <Sparkles className="h-3.5 w-3.5" />
-	                    <span>{rewardPoints.toLocaleString()}</span>
-	                  </div>
-	                  {rewardCoins > 0 && (
-	                    <>
-	                      <span className="h-3.5 w-px bg-amber-200 dark:bg-amber-800" />
-	                      <div className="flex items-center gap-1 text-[11px] font-black text-sky-600 dark:text-sky-400 sm:text-xs">
-	                        <Coins className="h-3.5 w-3.5" />
-	                        <span>{rewardCoins.toLocaleString()}</span>
-	                      </div>
-	                    </>
-	                  )}
-	                </div>
-	              )}
-              {/* Real-time Interactive Communication Message Dropdown widget */}
-              {!isGuest && (
-                <HeaderMessages 
-                  userId={userId} 
-                  userName={userName} 
-                  lang={lang} 
-                />
-              )}
+	          {/* User Profile Info, Theme Select & Dark Mode */}
+	          {!isQuizLocked ? (
+	            <div className="flex items-center gap-1 sm:gap-2.5 min-w-0 flex-shrink-0">
+		              {!isGuest && (
+		                <div className="flex items-center gap-1 sm:gap-1.5 rounded-2xl border border-amber-200/60 bg-amber-50/40 px-2 py-1.5 dark:border-amber-900/30 dark:bg-amber-950/10 sm:px-3 sm:py-2 flex-shrink min-w-0" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
+		                  <div className="flex items-center gap-1 text-[10px] font-black text-amber-600 dark:text-amber-400 sm:text-xs whitespace-nowrap">
+		                    <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+		                    <span className="tabular-nums">{formatLargeNumber(rewardPoints)}</span>
+		                  </div>
+		                  {rewardCoins > 0 && (
+		                    <>
+		                      <span className="h-3 w-px bg-amber-200/80 dark:bg-amber-800/80" />
+		                      <div className="flex items-center gap-1 text-[10px] font-black text-sky-600 dark:text-sky-400 sm:text-xs whitespace-nowrap">
+		                        <Coins className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+		                        <span className="tabular-nums">{formatLargeNumber(rewardCoins)}</span>
+		                      </div>
+		                    </>
+		                  )}
+		                </div>
+		              )}
+
 
               {/* Authentication Triggers */}
               {isGuest ? (
@@ -200,14 +203,16 @@ export default function Header({
 
 
 
-               {/* Dark Mode Toggle Button */}
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded-2xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 border border-slate-200/50 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 shadow-sm transition-all duration-200 cursor-pointer hover:scale-105"
-                title={t.toggleTheme}
-              >
-                <AnimatedThemeIcon className="w-4 h-4" darkMode={darkMode} />
-              </button>
+	               {/* Dark Mode Toggle Button - Redesigned to be fancier */}
+	              <button
+	                onClick={() => setDarkMode(!darkMode)}
+	                className="group relative flex items-center justify-center w-9 sm:w-11 h-9 sm:h-11 rounded-[18px] bg-gradient-to-tr from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 hover:from-white hover:to-slate-50 dark:hover:from-slate-800 dark:hover:to-slate-700 border-2 border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_15px_rgba(0,0,0,0.3)] transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
+	                title={t.toggleTheme}
+	              >
+	                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+	                <AnimatedThemeIcon className="w-4.5 h-4.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-500 group-hover:rotate-12" darkMode={darkMode} />
+	                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+	              </button>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-mono font-bold tracking-wider text-amber-500 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-2xl animate-pulse">

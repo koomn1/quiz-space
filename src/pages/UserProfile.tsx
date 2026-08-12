@@ -42,22 +42,22 @@ import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 
 const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
-  'frame-neon-orbit': { border: '4px solid #a855f7', boxShadow: '0 0 20px 4px rgba(168,85,247,.6)', animation: 'pulse-glow-purple 2s infinite' },
-  'frame-aurora': { border: '4px solid #22d3ee', boxShadow: '0 0 20px 4px rgba(34,211,238,.5)', animation: 'pulse-glow-cyan 2.5s infinite' },
-  'frame-fire': { border: '4px solid #f97316', boxShadow: '0 0 20px 4px rgba(239,68,68,.6)', animation: 'pulse-glow-orange 1.5s infinite' },
-  'frame-crystal-luxe': { border: '4px solid #67e8f9', boxShadow: '0 0 20px 4px rgba(99,102,241,.6)', animation: 'pulse-glow-blue 3s infinite' },
-  'frame-star-crown': { border: '4px solid #facc15', boxShadow: '0 0 20px 4px rgba(245,158,11,.6)', animation: 'pulse-glow-yellow 2s infinite' },
-  'frame-diamond-comet': { border: '4px solid #e0f2fe', boxShadow: '0 0 24px 6px rgba(56,189,248,.7)', animation: 'pulse-glow-white 2s infinite' },
-  'frame-diamond-crown': { border: '4px solid #c4b5fd', boxShadow: '0 0 24px 6px rgba(139,92,246,.7)', animation: 'pulse-glow-purple-light 2s infinite' },
-  'frame-royal-gold': { border: '4px solid #fbbf24', boxShadow: '0 0 28px 8px rgba(251,191,36,.6)', animation: 'pulse-glow-gold 2s infinite' },
-  'frame-cyber-punk': { border: '4px solid #ec4899', boxShadow: '0 0 22px 6px rgba(236,72,153,.6)', animation: 'pulse-glow-pink 1.8s infinite' },
-  'frame-nature-leaf': { border: '4px solid #22c55e', boxShadow: '0 0 18px 4px rgba(34,197,94,.5)', animation: 'pulse-glow-green 3s infinite' },
-  'frame-galaxy': { border: '4px solid #8b5cf6', boxShadow: '0 0 24px 6px rgba(139,92,246,.6)', animation: 'pulse-glow-violet 2.5s infinite' },
-  'frame-diamond-halo': { border: '4px solid #f8fafc', boxShadow: '0 0 30px 10px rgba(248,250,252,.7)', animation: 'pulse-glow-white-bright 2s infinite' },
-  'frame-ramadan-gold': { border: '4px solid #fbbf24', boxShadow: '0 0 22px 6px rgba(251,191,36,.5)', animation: 'pulse-glow-gold 2.5s infinite' },
-  'frame-ramadan-green': { border: '4px solid #10b981', boxShadow: '0 0 20px 5px rgba(16,185,129,.5)', animation: 'pulse-glow-green-light 2.5s infinite' },
-  'frame-school-stationary': { border: '4px solid #3b82f6', boxShadow: '0 0 18px 4px rgba(59,130,246,.4)', animation: 'pulse-glow-blue-light 3s infinite' },
-  'frame-school-bus': { border: '4px solid #eab308', boxShadow: '0 0 16px 4px rgba(234,179,8,.4)', animation: 'pulse-glow-yellow-light 3s infinite' },
+  'frame-neon-orbit': { border: '3px solid #a855f7', boxShadow: '0 4px 12px rgba(168,85,247,.2)' },
+  'frame-aurora': { border: '3px solid #22d3ee', boxShadow: '0 4px 12px rgba(34,211,238,.2)' },
+  'frame-fire': { border: '3px solid #f97316', boxShadow: '0 4px 12px rgba(239,68,68,.2)' },
+  'frame-crystal-luxe': { border: '3px solid #67e8f9', boxShadow: '0 4px 12px rgba(99,102,241,.2)' },
+  'frame-star-crown': { border: '3px solid #facc15', boxShadow: '0 4px 12px rgba(245,158,11,.2)' },
+  'frame-diamond-comet': { border: '3px solid #e0f2fe', boxShadow: '0 4px 12px rgba(56,189,248,.2)' },
+  'frame-diamond-crown': { border: '3px solid #c4b5fd', boxShadow: '0 4px 12px rgba(139,92,246,.2)' },
+  'frame-royal-gold': { border: '3px solid #fbbf24', boxShadow: '0 4px 12px rgba(251,191,36,.2)' },
+  'frame-cyber-punk': { border: '3px solid #ec4899', boxShadow: '0 4px 12px rgba(236,72,153,.2)' },
+  'frame-nature-leaf': { border: '3px solid #22c55e', boxShadow: '0 4px 12px rgba(34,197,94,.2)' },
+  'frame-galaxy': { border: '3px solid #8b5cf6', boxShadow: '0 4px 12px rgba(139,92,246,.2)' },
+  'frame-diamond-halo': { border: '3px solid #f8fafc', boxShadow: '0 4px 12px rgba(248,250,252,.2)' },
+  'frame-ramadan-gold': { border: '3px solid #fbbf24', boxShadow: '0 4px 12px rgba(251,191,36,.2)' },
+  'frame-ramadan-green': { border: '3px solid #10b981', boxShadow: '0 4px 12px rgba(16,185,129,.2)' },
+  'frame-school-stationary': { border: '3px solid #3b82f6', boxShadow: '0 4px 12px rgba(59,130,246,.2)' },
+  'frame-school-bus': { border: '3px solid #eab308', boxShadow: '0 4px 12px rgba(234,179,8,.2)' },
 };
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
