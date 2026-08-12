@@ -527,6 +527,7 @@ export default function App() {
           const data = payload.new as any;
           if (data.created_at && data.created_at < sessionBootTime) return;
           if (data.sender_name && data.sender_name === userName) return;
+          if (localStorage.getItem('pref_pushEnabled') === 'false') return;
 
           pushNotificationsManager.trigger({
             title: data.title || (lang === 'ar' ? 'تنبيه جديد 🪐' : 'New Buzz 🪐'),
@@ -576,7 +577,7 @@ export default function App() {
           if (!msg.is_read) setUnreadMessagesCount((prev) => prev + 1);
 
           const isNew = msg.created_at && new Date(msg.created_at).getTime() > new Date(sessionBootTime).getTime();
-          if (isNew) {
+          if (isNew && localStorage.getItem('pref_pushEnabled') !== 'false') {
             const senderName = msg.sender_name || (lang === 'ar' ? 'مستخدم' : 'Scholar');
             const text = msg.text || '';
 
