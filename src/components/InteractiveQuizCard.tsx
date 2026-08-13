@@ -41,12 +41,7 @@ export function InteractiveQuizCard({
   isAdmin: isAdminProp = false
 }: InteractiveQuizCardProps) {
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
-  const canEdit = !isGuest && (
-    isAdminProp ||
-    currentUserEmail === 'yo01009950871@gmail.com' || 
-    currentUserEmail === 'adman777888999@gmail.com' || 
-    quiz.creatorId === currentUserId
-  );
+  const canEdit = !isGuest && (isAdminProp || quiz.creatorId === currentUserId);
   const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
   const [attemptsOpen, setAttemptsOpen] = useState(false);
   const [attemptsLoading, setAttemptsLoading] = useState(false);

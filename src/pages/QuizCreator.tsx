@@ -27,6 +27,7 @@ interface QuizCreatorProps {
   lang?: 'ar' | 'en';
   onOpenAuthModal?: (mode: 'login' | 'register') => void;
   userPlan?: 'Free' | 'Silver' | 'Gold' | 'Diamond';
+  isAdmin?: boolean;
 }
 
 // Function to load pdf.js from CDN dynamically
@@ -267,7 +268,8 @@ export default function QuizCreator({
   onCancelEdit,
   lang = 'ar',
   onOpenAuthModal,
-  userPlan = 'Free'
+  userPlan = 'Free',
+  isAdmin = false
 }: QuizCreatorProps) {
   const [searchParams] = useSearchParams();
   const t = translations[lang];
@@ -2282,8 +2284,7 @@ A computer is a digital electronic machine...
                       {(() => {
                         const myClassrooms = classrooms.filter((c: any) => {
                           const isOwner = c.createdBy === userId;
-                          const isSuperAdmin = userId === 'adman777888999' || userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com';
-                          return isOwner || isSuperAdmin;
+                          return isOwner || isAdmin;
                         });
 
                         return myClassrooms.length > 0 ? (

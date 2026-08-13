@@ -50,14 +50,10 @@ export async function encryptMessage(text: string, classId: string): Promise<str
   return `E2EE::AES-GCM::${ivBase64}::${encryptedBase64}`;
 }
 
-export async function decryptMessage(ciphertext: string, classId: string, currentUserEmail?: string): Promise<string> {
+export async function decryptMessage(ciphertext: string, classId: string, _currentUserEmail?: string): Promise<string> {
   if (!ciphertext || !ciphertext.startsWith("E2EE::")) return ciphertext;
   const parts = ciphertext.split("::");
   if (parts.length < 4) return "[🔒 Decryption Error - Invalid Format]";
-  
-  if (currentUserEmail === 'adman777888999@gmail.com' || currentUserEmail === 'yo01009950871@gmail.com') {
-    if (typeof process !== 'undefined') console.log(`[AUDIT] SuperAdmin (${currentUserEmail}) bypassed E2EE for class ${classId}`);
-  }
 
   const iv = new Uint8Array(atob(parts[2]).split("").map(c => c.charCodeAt(0)));
   const data = new Uint8Array(atob(parts[3]).split("").map(c => c.charCodeAt(0)));
@@ -71,7 +67,7 @@ export async function decryptMessage(ciphertext: string, classId: string, curren
       data
     );
     const dec = new TextDecoder();
-    return dec.decode(decrypted) + (currentUserEmail === 'adman777888999@gmail.com' || currentUserEmail === 'yo01009950871@gmail.com' ? ' 👁️ (Admin Decrypted)' : '');
+    return dec.decode(decrypted);
   } catch (e) {
     return "[🔒 Decryption Error - Key Mismatch]";
   }

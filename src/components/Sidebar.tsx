@@ -74,7 +74,7 @@ export default function Sidebar({
     { id: 'support', label: isAr ? 'الدعم الفني' : 'Support' }
   ];
 
-  if (isAdmin || userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com') {
+  if (isAdmin) {
     menuItems.push({ id: 'admin', label: isAr ? 'لوحة الإدارة' : 'Admin Panel' });
   }
 

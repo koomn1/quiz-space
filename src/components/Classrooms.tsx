@@ -235,9 +235,7 @@ export default function Classrooms({
   quizzes: allQuizzes = []
 }: ClassroomsProps) {
   const isAr = lang === 'ar';
-  // Prefer the server-verified flag passed down from App.tsx (userStats.isAdmin);
-  // fall back to the legacy email check only if the caller didn't provide one.
-  const isAdmin = isAdminProp !== undefined ? isAdminProp : (currentUserEmail === 'adman777888999@gmail.com' || currentUserEmail === 'yo01009950871@gmail.com' || currentUserId === 'adman777888999');
+  const isAdmin = isAdminProp === true;
   const guestBlockMessage = isAr ? 'سجل الدخول للاستمرار.' : 'Sign in to continue.';
 
   // Classrooms & students are loaded exclusively from Supabase (see fetchClassroomsData effect below).

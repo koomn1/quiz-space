@@ -602,7 +602,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
   const pendingReactionIds = useRef<Set<string>>(new Set());
 
   const handleOpenInsights = (post: CommunityPost) => {
-    const isAdmin = isAdminProp !== undefined ? isAdminProp : (userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com' || userRole === 'admin');
+    const isAdmin = isAdminProp === true;
     if (!isAdmin) {
       alert(isAr ? 'عذراً، هذه الإحصائيات التفصيلية للمشاهدات متاحة فقط للمشرف الإداري.' : 'Sorry, detailed viewer insights are only available to admins.');
       return;
@@ -834,7 +834,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
           </div>
         ) : (
           posts.map(post => {
-            const isAdmin = isAdminProp !== undefined ? isAdminProp : (userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com' || userRole === 'admin');
+            const isAdmin = isAdminProp === true;
             return (
               <CommunityPostCard
                 key={post.id}

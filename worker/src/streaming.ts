@@ -86,7 +86,8 @@ export async function handleStreamingExtraction(
   env: Env,
   userId: string,
   authHeader: string,
-  startTime: number
+  startTime: number,
+  requestOrigin: string
 ): Promise<Response> {
   const encoder = new TextEncoder();
   const isPdf = mimeType === 'application/pdf';
@@ -273,14 +274,15 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
     },
   });
 
-  const allowedOrigins = env.ALLOWED_ORIGIN.split(',').map(v => v.trim());
+  const allowedOrigins = env.ALLOWED_ORIGIN.split(',').map(value => value.trim());
   const responseHeaders: HeadersInit = {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
     'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': allowedOrigins[0],
+    'Access-Control-Allow-Origin': allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0],
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
     'X-Content-Type-Options': 'nosniff',
   };
 

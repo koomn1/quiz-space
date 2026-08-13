@@ -353,7 +353,16 @@ async function handler(request: Request, env: Env): Promise<Response> {
       if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 15_000_000 || typeof body.mimeType !== 'string') {
         return json({ error: 'Invalid file generation request' }, 400, headers);
       }
-      return handleStreamingExtraction(body.fileBase64, body.mimeType, body.customInstruction, env, userId, authHeader, startTime);
+      return handleStreamingExtraction(
+        body.fileBase64,
+        body.mimeType,
+        body.customInstruction,
+        env,
+        userId,
+        authHeader,
+        startTime,
+        request.headers.get('Origin') || ''
+      );
     }
 
     if (path === '/api/ai/generate-file') {

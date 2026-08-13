@@ -523,7 +523,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                                 await createNotification(
                                   promoType === 'Promo Code' ? (isAr ? '🎉 كود خصم جديد!' : '🎉 New Promo Code!') : (isAr ? '🎁 عرض خاص!' : '🎁 Special Offer!'),
                                   `${promoCode}: ${promoMessage}` + (isAr ? ' (متوفر الآن في صفحة الدفع)' : ' (Now available on checkout)'),
-                                  'adman777888999@gmail.com',
+                                  isAr ? 'إدارة QuizSpace' : 'QuizSpace Administration',
                                   'system'
                                 );
 

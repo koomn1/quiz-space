@@ -135,13 +135,9 @@ export default function App() {
   const [quizToEdit, setQuizToEdit] = React.useState<any | null>(null);
   const [isStatsLoaded, setIsStatsLoaded] = React.useState(false);
   const [userStats, setUserStats] = React.useState<UserStats | null>(null);
-  // Single source of truth for admin UI checks. Prefers the server-verified,
-  // non-self-editable is_admin column (see 20260726_lock_privileged_user_columns.sql);
-  // falls back to the legacy hardcoded email/uid check only until that migration
-  // has been run and userStats has loaded. This is a UI-visibility convenience only -
-  // actual admin-only writes are enforced by RLS + the privileged-columns trigger
-  // regardless of what this value says.
-  const isAdminUser = userStats?.isAdmin || userId === 'adman777888999' || userEmail === 'adman777888999@gmail.com' || userEmail === 'yo01009950871@gmail.com';
+  // The server-backed is_admin column is the only client-side signal used for
+  // administrative UI. Database policies independently enforce every privileged write.
+  const isAdminUser = userStats?.isAdmin === true;
 
   React.useEffect(() => {
     if (!authContext.user) return;
@@ -1679,6 +1675,7 @@ export default function App() {
                       setIsAuthModalOpen(true);
                     }}
                     userPlan={getUserRoleAndPlan(userStats || { userId: '', name: '', createdQuizzes: [], completions: [] }).plan}
+                    isAdmin={isAdminUser}
                   />
                 )
               )}
@@ -1836,7 +1833,7 @@ export default function App() {
               )}
 
               {activeTab === 'admin' && (
-                <AdminGuard userId={userId} userEmail={userEmail} lang={lang}>
+                <AdminGuard userId={userId}>
                   <React.Suspense fallback={
                     <div className="flex items-center justify-center min-h-[400px]">
                       <CosmicLoader />
