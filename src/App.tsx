@@ -35,7 +35,7 @@ import {
 } from './components/ExtraFeatures';
 import ShareModal from './components/ShareModal';
 import OnboardingTour from './components/OnboardingTour';
-import AuthModal from './components/AuthModal';
+import { AuthModal } from './components/AuthModal';
 import WelcomeAuthOverlay from './components/WelcomeAuthOverlay';
 import PopupBlockedModal from './components/PopupBlockedModal';
 import NetworkFailedModal from './components/NetworkFailedModal';
@@ -737,6 +737,11 @@ export default function App() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user as any;
+      if (user && !user.email_confirmed_at) {
+        await supabase.auth.signOut({ scope: 'local' });
+        setIsStatsLoaded(true);
+        return;
+      }
       if (user) {
         // Authenticated user
         setIsGuestSandbox(false);
@@ -1957,7 +1962,7 @@ export default function App() {
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
-        mode={authModalMode} 
+        initialMode={authModalMode} 
         onSuccess={(user, token) => {
           localStorage.setItem('local_auth_token', token);
           localStorage.setItem('quiz_userId', user.id);

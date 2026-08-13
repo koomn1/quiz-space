@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import type { Session, User } from '@supabase/supabase-js';
+import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
 
 export interface AppUser {
   uid: string;
@@ -21,6 +22,8 @@ interface AuthContextType {
   mfaRequired: boolean;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ status: 'SUCCESS' | 'MFA_REQUIRED' }>;
+  verifyEmailCode: (email: string, code: string) => Promise<void>;
+  resendEmailVerification: (email: string) => Promise<void>;
   verifyMfaCode: (code: string) => Promise<void>;
   enrollMfa: () => Promise<{ qrCode: string; secret: string; factorId: string }>;
   confirmMfaEnrollment: (factorId: string, code: string) => Promise<void>;
@@ -122,47 +125,108 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [mfaRequired, setMfaRequired] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) setUser(await fetchAppUser(session.user));
-      setLoading(false);
+    const syncSession = async (nextSession: Session | null) => {
+      const nextUser = nextSession?.user;
+      if (nextUser && !nextUser.email_confirmed_at) {
+        await supabase.auth.signOut({ scope: 'local' });
+        setSession(null);
+        setUser(null);
+        return;
+      }
+      setSession(nextSession);
+      setUser(nextUser ? await fetchAppUser(nextUser) : null);
+    };
+
+    const handleOAuthRedirectTokens = async () => {
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.replace(/^#/, ''));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        if (accessToken && refreshToken) {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          window.location.hash = '#/dashboard/landing';
+        }
+      }
+    };
+
+    handleOAuthRedirectTokens().then(() => {
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+        await syncSession(session);
+        setLoading(false);
+      });
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ? await fetchAppUser(session.user) : null);
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+      await syncSession(nextSession);
     });
 
     return () => listener.subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
+    if (!isStrongPassword(password)) {
+      throw new Error(passwordRequirementMessage('ar'));
+    }
+
+    const currentBase = window.location.origin + (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    const redirectTo = currentBase.endsWith('/quiz-space') ? currentBase + '/' : `${currentBase}/quiz-space/`;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: {
+        data: { name },
+        emailRedirectTo: redirectTo,
+      },
     });
-    if (error) throw new Error(error.message);
-    if (data.user) {
-      // Assign a default avatar for email/password users (Google sends avatar_url automatically)
-      // getDefaultAvatar already returns the full path with BASE_URL prefix
-      const avatarUrl = getDefaultAvatar(name);
-      
-      // Create the matching row in public.users (RLS policy allows insert where auth.uid() = uid).
-      await supabase.from('users').insert({ 
-        uid: data.user.id, 
-        email, 
-        name, 
-        photo_url: avatarUrl, 
-        plan_name: 'Free', 
-        is_premium: false
-      });
+
+    if (error) {
+      throw new Error('تعذر بدء التسجيل حالياً. تأكد من البيانات وحاول مرة أخرى.');
+    }
+
+    if (!data.user || data.session || data.user.email_confirmed_at) {
+      await supabase.auth.signOut({ scope: 'local' });
+      throw new Error('تعذر بدء تأكيد البريد حالياً. حاول مرة أخرى لاحقاً.');
+    }
+  };
+
+  const verifyEmailCode = async (email: string, code: string) => {
+    if (!/^\d{6}$/.test(code)) {
+      throw new Error('رمز التأكيد يجب أن يتكون من 6 أرقام.');
+    }
+
+    const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+    if (error || !data.user?.email_confirmed_at) {
+      throw new Error('الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزاً جديداً ثم حاول مرة أخرى.');
+    }
+  };
+
+  const resendEmailVerification = async (email: string) => {
+    const currentBase = window.location.origin + (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    const redirectTo = currentBase.endsWith('/quiz-space') ? currentBase + '/' : `${currentBase}/quiz-space/`;
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: redirectTo,
+      },
+    });
+    if (error) {
+      throw new Error('تعذر إرسال رمز جديد الآن. انتظر قليلاً ثم حاول مرة أخرى.');
     }
   };
 
   const signIn = async (email: string, password: string): Promise<{ status: 'SUCCESS' | 'MFA_REQUIRED' }> => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(error.message === 'Invalid login credentials' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' : error.message);
+    if (error) throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+    if (!data.user.email_confirmed_at) {
+      await supabase.auth.signOut({ scope: 'local' });
+      const unconfirmedError = new Error('أكد بريدك الإلكتروني بالكود المرسل قبل تسجيل الدخول.') as Error & { code?: string };
+      unconfirmedError.code = 'EMAIL_NOT_CONFIRMED';
+      throw unconfirmedError;
+    }
 
     // Check if this session needs a second MFA factor (Supabase's native AAL system).
     const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -217,6 +281,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         mfaRequired,
         signUp,
         signIn,
+        verifyEmailCode,
+        resendEmailVerification,
         verifyMfaCode,
         enrollMfa,
         confirmMfaEnrollment,

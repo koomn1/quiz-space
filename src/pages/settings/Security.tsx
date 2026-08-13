@@ -4,6 +4,7 @@ import { fetchWithAuth } from '../../lib/authFetch';
 import { getApiUrl } from '../../lib/origin';
 import { supabase } from '../../lib/supabaseClient';
 import { recordUserSession, getUserSessions, terminateUserSession } from '../../lib/db';
+import { isStrongPassword, passwordRequirementMessage } from '../../lib/passwordPolicy';
 
 interface SecurityProps {
   lang: 'ar' | 'en';
@@ -134,8 +135,8 @@ export default function Security({ lang }: SecurityProps) {
       setPasswordFeedback(isAr ? 'كلمة المرور الجديدة غير متطابقة.' : 'New passwords do not match.');
       return;
     }
-    if (newPassword.length < 6) {
-      setPasswordFeedback(isAr ? 'يجب أن تكون كلمة المرور مكونة من 6 أحرف على الأقل.' : 'Password must be at least 6 characters.');
+    if (!isStrongPassword(newPassword)) {
+      setPasswordFeedback(passwordRequirementMessage(lang));
       return;
     }
     
@@ -153,6 +154,7 @@ export default function Security({ lang }: SecurityProps) {
 
         const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
         if (updateError) throw updateError;
+        await supabase.auth.signOut({ scope: 'others' });
 
         setPasswordFeedback('success');
         setCurrentPassword('');
@@ -267,6 +269,7 @@ export default function Security({ lang }: SecurityProps) {
           await terminateUserSession(s.id, storedUid);
         }
       }
+      await supabase.auth.signOut({ scope: 'others' });
       setSessions(prev => prev.filter(s => s.current));
     } catch (err) {
       console.error('Failed to revoke other sessions:', err);

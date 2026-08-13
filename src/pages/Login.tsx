@@ -4,6 +4,8 @@ import { useGSAP } from '@gsap/react';
 import { Mail, Lock, ShieldCheck, ArrowRight, RefreshCw, Sparkles, User, LogIn, ChevronLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { EmailVerificationStep } from '../components/EmailVerificationStep';
+import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
 
 export default function Login() {
   const { signIn, signUp, verifyMfaCode, mfaRequired } = useAuth();
@@ -13,6 +15,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [otpCode, setOtpCode] = useState('');
+  const [authStep, setAuthStep] = useState<'form' | 'email'>('form');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<'ar' | 'en'>(() => {
@@ -61,10 +64,12 @@ export default function Login() {
           return;
         }
 
+        if (!isStrongPassword(password)) {
+          setError(passwordRequirementMessage(lang));
+          return;
+        }
         await signUp(cleanEmail, password, username.trim());
-        // Login immediately after register
-        await signIn(cleanEmail, password);
-        window.location.hash = '#/dashboard/landing';
+        setAuthStep('email');
       } else {
         // Handle login with Supabase simulator (checks and prompts for 2FA automatically)
         const result = await signIn(cleanEmail, password);
@@ -75,7 +80,11 @@ export default function Login() {
         // Scenario B (MFA Enabled) will automatically set isMfaChallenged = true in useAuth
       }
     } catch (err: any) {
-      setError(err.message || (isAr ? 'حدث خطأ غير متوقع أثناء الدخول.' : 'An error occurred during authentication.'));
+      if (err?.code === 'EMAIL_NOT_CONFIRMED') {
+        setAuthStep('email');
+      } else {
+        setError(err.message || (isAr ? 'حدث خطأ غير متوقع أثناء الدخول.' : 'An error occurred during authentication.'));
+      }
     } finally {
       setLoading(false);
     }
@@ -126,7 +135,19 @@ export default function Login() {
 
       <div className="w-full max-w-md relative z-10">
         
-          {!mfaRequired ? (
+          {authStep === 'email' ? (
+            <div className="bg-[#0c071e]/90 border border-white/10 rounded-[32px] p-8 shadow-[0_25px_60px_-15px_rgba(155,81,224,0.25)] relative overflow-hidden">
+              <EmailVerificationStep
+                email={email.trim().toLowerCase()}
+                lang={lang}
+                onVerified={() => { window.location.hash = '#/dashboard/landing'; }}
+                onBack={() => {
+                  setAuthStep('form');
+                  setError('');
+                }}
+              />
+            </div>
+          ) : !mfaRequired ? (
             /* Standard Auth form */
             <div
               
@@ -205,18 +226,22 @@ export default function Login() {
                     <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                       <Lock className="w-5 h-5" />
                     </div>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      placeholder="••••••••"
-                      className="w-full pl-4 pr-11 py-3.5 bg-slate-900/40 border border-white/10 rounded-2xl focus:ring-4 focus:ring-primary/15 focus:border-primary text-sm transition-all text-white outline-none"
-                    />
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={isRegister ? 10 : 1}
+                        autoComplete={isRegister ? 'new-password' : 'current-password'}
+                        aria-describedby={isRegister ? 'login-signup-password-help' : undefined}
+                        placeholder="••••••••"
+                        className="w-full pl-4 pr-11 py-3.5 bg-slate-900/40 border border-white/10 rounded-2xl focus:ring-4 focus:ring-primary/15 focus:border-primary text-sm transition-all text-white outline-none"
+                      />
+                    </div>
+                    {isRegister && <p id="login-signup-password-help" className="px-1 text-[11px] leading-5 text-slate-400">{passwordRequirementMessage(lang)}</p>}
                   </div>
-                </div>
 
-                {error && (
+                  {error && (
                   <div
                     
                     
@@ -271,6 +296,7 @@ export default function Login() {
                 <button
                   onClick={() => {
                     setIsRegister(!isRegister);
+                    setAuthStep('form');
                     setError('');
                   }}
                   className="text-xs text-primary font-black hover:underline cursor-pointer"
