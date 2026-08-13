@@ -948,3 +948,31 @@ html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-400"] {
   0%, 100% { filter: brightness(1) contrast(1); }
   50% { filter: brightness(1.12) contrast(1.04); }
 }
+
+
+/* Mobile UX Enhancements */
+@media (max-width: 768px) {
+  .hero-container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    min-height: 500px !important;
+  }
+  
+  /* Ensure touch targets are at least 44x44px for accessibility */
+  button, a, input, select {
+    min-height: 44px;
+  }
+
+  /* Prevent horizontal overflow on small screens */
+  body, html {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  /* Optimize modal paddings on mobile */
+  .modal-content-box {
+    padding: 1.25rem !important;
+    margin: 1rem !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+}
