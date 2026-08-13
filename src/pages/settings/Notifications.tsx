@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bell, Mail, ShieldAlert, Award, FileSpreadsheet, RefreshCw, CheckCircle2, Trophy, BellRing } from 'lucide-react';
 import { LiquidGlassSwitch } from '../../components/LiquidGlassSwitch';
 import { registerPushNotifications } from '../../lib/pushManager';
 import { supabase } from '../../lib/supabaseClient';
+import { getUserNotificationPreferences, updateUserNotificationPreferences } from '../../lib/db';
 
 interface NotificationsProps {
   lang: 'ar' | 'en';
@@ -11,30 +12,69 @@ interface NotificationsProps {
 export default function Notifications({ lang }: NotificationsProps) {
   const isAr = lang === 'ar';
 
-  // Toggle States (Persisted in localStorage)
-  const [emailAlerts, setEmailAlerts] = useState(() => localStorage.getItem('pref_emailAlerts') !== 'false');
-  const [rankUpdates, setRankUpdates] = useState(() => localStorage.getItem('pref_rankUpdates') !== 'false');
-  const [weeklyReports, setWeeklyReports] = useState(() => localStorage.getItem('pref_weeklyReports') === 'true');
-  const [pushEnabled, setPushEnabled] = useState(() => localStorage.getItem('pref_pushEnabled') !== 'false');
+  const [emailAlerts, setEmailAlerts] = useState(true);
+  const [rankUpdates, setRankUpdates] = useState(true);
+  const [weeklyReports, setWeeklyReports] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState('');
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [isActivatingPush, setIsActivatingPush] = useState(false);
   const [pushMessage, setPushMessage] = useState<'success' | 'error' | null>(null);
   const [isLeaderboardPushEnabled, setIsLeaderboardPushEnabled] = useState(false);
 
-  const handleSavePreferences = () => {
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPreferences = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id || cancelled) return;
+
+      setCurrentUserId(user.id);
+      const preferences = await getUserNotificationPreferences(user.id);
+      if (cancelled) return;
+      setEmailAlerts(preferences.emailAlerts);
+      setRankUpdates(preferences.rankUpdates);
+      setWeeklyReports(preferences.weeklyReports);
+      setPushEnabled(preferences.pushEnabled);
+      setIsLeaderboardPushEnabled(preferences.pushEnabled && Notification.permission === 'granted');
+    };
+
+    void loadPreferences();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleSavePreferences = async () => {
     setIsSaving(true);
     setSaveSuccess(false);
-    localStorage.setItem('pref_emailAlerts', String(emailAlerts));
-    localStorage.setItem('pref_rankUpdates', String(rankUpdates));
-    localStorage.setItem('pref_weeklyReports', String(weeklyReports));
-    localStorage.setItem('pref_pushEnabled', String(pushEnabled));
-    setTimeout(() => {
-      setIsSaving(false);
+    setSaveError(false);
+    try {
+      const userId = currentUserId || (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) throw new Error('No authenticated user');
+
+      await updateUserNotificationPreferences(userId, {
+        emailAlerts,
+        rankUpdates,
+        weeklyReports,
+        pushEnabled,
+      });
+
+      setCurrentUserId(userId);
+      localStorage.setItem('pref_emailAlerts', String(emailAlerts));
+      localStorage.setItem('pref_rankUpdates', String(rankUpdates));
+      localStorage.setItem('pref_weeklyReports', String(weeklyReports));
+      localStorage.setItem('pref_pushEnabled', String(pushEnabled));
+      window.dispatchEvent(new CustomEvent('quizspace:notification-preferences-updated', { detail: { pushEnabled } }));
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    }, 500);
+      window.setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error('Could not save notification preferences:', error);
+      setSaveError(true);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleActivateLeaderboardPush = async () => {
@@ -55,6 +95,14 @@ export default function Notifications({ lang }: NotificationsProps) {
         setIsLeaderboardPushEnabled(true);
         localStorage.setItem('pref_pushEnabled', 'true');
         localStorage.removeItem('quiz_push_banner_dismissed');
+        await updateUserNotificationPreferences(user.id, {
+          emailAlerts,
+          rankUpdates,
+          weeklyReports,
+          pushEnabled: true,
+        });
+        setCurrentUserId(user.id);
+        window.dispatchEvent(new CustomEvent('quizspace:notification-preferences-updated', { detail: { pushEnabled: true } }));
         setPushMessage('success');
       } else {
         setPushMessage('error');
@@ -218,6 +266,12 @@ export default function Notifications({ lang }: NotificationsProps) {
               <div className="flex items-center gap-1.5 text-emerald-500 text-xs font-bold animate-fade-in bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>{isAr ? 'تم حفظ التفضيلات بنجاح!' : 'Preferences saved successfully!'}</span>
+              </div>
+            )}
+            {saveError && (
+              <div className="mt-2 flex items-center gap-1.5 text-red-500 text-xs font-bold animate-fade-in bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/20">
+                <ShieldAlert className="w-4 h-4" />
+                <span>{isAr ? 'تعذّر حفظ التفضيلات. تحقق من الاتصال وحاول مجدداً.' : 'Preferences could not be saved. Check your connection and try again.'}</span>
               </div>
             )}
           </div>

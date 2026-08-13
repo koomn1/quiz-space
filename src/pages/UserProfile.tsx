@@ -31,7 +31,7 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-import { getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems } from "../lib/db";
+import { activateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
 import { getApiUrl } from "../lib/origin";
 import { supabase } from "../lib/supabaseClient";
@@ -126,7 +126,9 @@ export default function UserProfile({
       }
 
       const dbActiveId = profileData?.activeFrameId;
-      const selectedId = isOwnProfile ? (localStorage.getItem('quizspace_active_frame') || dbActiveId) : dbActiveId;
+      // The database is the source of truth. A stale localStorage value from
+      // a previous device/session must never override the persisted choice.
+      const selectedId = dbActiveId || (isOwnProfile ? localStorage.getItem('quizspace_active_frame') : null);
       
       let selected = (items || []).find((item: any) => item.id === selectedId);
       
@@ -575,11 +577,13 @@ export default function UserProfile({
         undefined, // gender
         undefined, // birthdate
         undefined, // onboarded
-        editFrameId || undefined,
       );
 
-      // Save active frame choice
-      if (editFrameId) {
+      // The active frame is a reward entitlement, so its ownership is verified
+      // by a dedicated server-side RPC rather than generic profile updates.
+      if (editFrameId && editFrameId !== profileData?.activeFrameId) {
+        const activation = await activateRewardFrame(editFrameId);
+        if (!activation?.success) throw new Error(activation?.message || 'Unable to activate the selected frame.');
         localStorage.setItem('quizspace_active_frame', editFrameId);
         window.dispatchEvent(new CustomEvent('quizspace-frame-updated'));
       }
@@ -622,6 +626,7 @@ export default function UserProfile({
               badgeColor: isPremium && !badgeSaveFailed ? badgeColor : prev.badgeColor,
               customId: editCustomId,
               location: serializedLocation,
+              activeFrameId: editFrameId || prev.activeFrameId,
             } as any)
           : null,
       );

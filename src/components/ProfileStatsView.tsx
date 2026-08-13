@@ -319,10 +319,17 @@ export default function ProfileStatsView({
     setCustomIdError('');
     setInfoBio(profileData?.bio || '');
     
-    // Parse location and custom background
-    const parts = (profileData?.location || '').split('||bg:');
-    setInfoLocation(parts[0] || '');
-    setInfoSelectedBgCode(parts[1] || 'cosmic');
+    // Keep profile text separate from the serialized customization payload so
+    // saving this lightweight editor never erases the selected cover, social
+    // links, animation settings, or custom cover URL.
+    const savedLocation = profileData?.location || '';
+    const backgroundMarker = savedLocation.indexOf('||bg:');
+    setInfoLocation(backgroundMarker >= 0 ? savedLocation.slice(0, backgroundMarker) : savedLocation);
+    setInfoSelectedBgCode(
+      backgroundMarker >= 0
+        ? savedLocation.slice(backgroundMarker + 5).split('||')[0] || 'cosmic'
+        : 'cosmic',
+    );
     
     setInfoEmail(profileData?.email || '');
     // Load the REAL badge selection (badge_tier/name_color/badge_color columns) —
@@ -356,8 +363,15 @@ export default function ProfileStatsView({
     setIsSavingInfo(true);
     setBadgeSaveError('');
     try {
-      // Serialize actual location and custom background code
-      const serializedLocation = infoLocation + "||bg:" + infoSelectedBgCode;
+      const savedLocation = profileData.location || '';
+      const backgroundMarker = savedLocation.indexOf('||bg:');
+      const existingCustomization = backgroundMarker >= 0
+        ? savedLocation.slice(backgroundMarker)
+        : '';
+      const updatedCustomization = existingCustomization
+        ? existingCustomization.replace(/^\|\|bg:[^|]*/, `||bg:${infoSelectedBgCode}`)
+        : `||bg:${infoSelectedBgCode}`;
+      const serializedLocation = `${infoLocation}${updatedCustomization}`;
 
       await saveUserProfile(
         profileData.userId,

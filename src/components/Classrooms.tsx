@@ -292,6 +292,7 @@ export default function Classrooms({
   const [newLessonTitle, setNewLessonTitle] = useState('');
   const [newLessonDesc, setNewLessonDesc] = useState('');
   const [isLessonLive, setIsLessonLive] = useState(false);
+  const [isSavingLesson, setIsSavingLesson] = useState(false);
   const [watchingVideo, setWatchingVideo] = useState<LessonVideo | null>(null);
 
   // Drag and drop state
@@ -2241,28 +2242,35 @@ export default function Classrooms({
                       <div className="flex gap-2">
                         <button
                           onClick={async () => {
-                            if (!newLessonUrl || !newLessonTitle) {
+                            const lessonUrl = newLessonUrl.trim();
+                            const lessonTitle = newLessonTitle.trim();
+                            if (!lessonUrl || !lessonTitle) {
                               triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'أدخل الرابط والعنوان' : 'Enter URL and title', 'info');
                               return;
                             }
-                            const videoId = extractYouTubeId(newLessonUrl);
+                            if (!currentUserId || currentUserId.startsWith('user-')) {
+                              triggerToast(isAr ? 'تسجيل الدخول مطلوب' : 'Sign-in required', isAr ? 'سجّل الدخول بحسابك الحقيقي قبل إضافة حصة.' : 'Sign in with your verified account before adding a lesson.', 'info');
+                              return;
+                            }
+                            const videoId = extractYouTubeId(lessonUrl);
                             // Allow non-YouTube links if marked as Live Stream, otherwise require YouTube ID
                             if (!videoId && !isLessonLive) {
                               triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'رابط YouTube غير صالح' : 'Invalid YouTube URL', 'info');
                               return;
                             }
-                            const teacherName = currentUserEmail || 'Teacher';
-                            const video = await addLessonVideo({
-                              classId: activeClassroomView.id,
-                              creatorId: currentUserId || '',
-                              creatorName: teacherName,
-                              title: newLessonTitle,
-                              description: newLessonDesc || undefined,
-                              videoUrl: newLessonUrl,
-                              videoType: isLessonLive ? 'live' : 'youtube',
-                              isLive: isLessonLive,
-                            });
-                            if (video) {
+                            setIsSavingLesson(true);
+                            try {
+                              const teacherName = currentUserEmail || 'Teacher';
+                              const video = await addLessonVideo({
+                                classId: activeClassroomView.id,
+                                creatorId: currentUserId,
+                                creatorName: teacherName,
+                                title: lessonTitle,
+                                description: newLessonDesc.trim() || undefined,
+                                videoUrl: lessonUrl,
+                                videoType: isLessonLive ? 'live' : 'youtube',
+                                isLive: isLessonLive,
+                              });
                               setLessonVideos(prev => [video, ...prev]);
                               setIsAddingLesson(false);
                               setNewLessonUrl('');
@@ -2270,13 +2278,25 @@ export default function Classrooms({
                               setNewLessonDesc('');
                               setIsLessonLive(false);
                               triggerToast(isAr ? 'تمت الإضافة' : 'Added', isAr ? 'الحصة تمت إضافتها بنجاح' : 'Lesson added successfully', 'info');
-                            } else {
-                              triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'فشل إضافة الحصة' : 'Failed to add lesson', 'info');
+                            } catch (error: any) {
+                              console.error('Lesson creation failed:', error);
+                              const message = String(error?.message || '');
+                              const isPermissionError = /permission|row-level|authorized|policy/i.test(message);
+                              triggerToast(
+                                isAr ? 'تعذرت إضافة الحصة' : 'Lesson could not be added',
+                                isPermissionError
+                                  ? (isAr ? 'تأكد أنك صاحب الفصل وأنك سجلت الدخول بالحساب نفسه.' : 'Make sure you are the classroom owner and signed in with the same account.')
+                                  : (isAr ? 'تحقق من الرابط واتصالك ثم حاول مرة أخرى.' : 'Check the link and your connection, then try again.'),
+                                'info',
+                              );
+                            } finally {
+                              setIsSavingLesson(false);
                             }
                           }}
+                          disabled={isSavingLesson}
                           className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black cursor-pointer transition-all"
                         >
-                          {isAr ? 'حفظ الحصة' : 'Save Lesson'}
+                          {isSavingLesson ? (isAr ? 'جارٍ الحفظ...' : 'Saving...') : (isAr ? 'حفظ الحصة' : 'Save Lesson')}
                         </button>
                         <button
                           onClick={() => { setIsAddingLesson(false); setNewLessonUrl(''); setNewLessonTitle(''); setNewLessonDesc(''); setIsLessonLive(false); }}

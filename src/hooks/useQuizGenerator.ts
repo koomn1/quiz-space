@@ -226,11 +226,28 @@ export function useQuizGenerator() {
             );
           } catch (err) {
             console.warn('Streaming failed, falling back to standard extraction:', err);
+            setProgress({
+              current: 0,
+              total: 1,
+              stage: 'generating',
+              message: 'تعذر إكمال المعالجة السريعة، جارٍ استخدام مسار استخراج بديل...',
+            });
             try {
               data = await generateQuizFromFileWithFallback(base64, resolvedMimeType, totalQuestions, customInstruction, extractionMode);
             } catch (fallbackErr) {
-              // If all providers fail, try the basic version once more (different error path)
-              data = await generateQuizFromFile(base64, resolvedMimeType, totalQuestions, customInstruction, extractionMode);
+              console.warn('Fallback extraction failed, trying the final compatible extractor:', fallbackErr);
+              setProgress({
+                current: 0,
+                total: 1,
+                stage: 'generating',
+                message: 'جارٍ تجربة مسار أخير متوافق مع ملفك...',
+              });
+              try {
+                data = await generateQuizFromFile(base64, resolvedMimeType, totalQuestions, customInstruction, extractionMode);
+              } catch (finalErr) {
+                console.error('All file extraction paths failed:', finalErr);
+                throw new Error('تعذر استخراج أسئلة من هذا الملف. تأكد أن الملف قابل للقراءة وليس محمياً بكلمة مرور ثم حاول مرة أخرى.');
+              }
             }
           }
         } else {
@@ -249,7 +266,7 @@ export function useQuizGenerator() {
         if (data.questions && Array.isArray(data.questions)) {
           if (!finalTitle && data.title) finalTitle = data.title;
           if (!finalDescription && data.description) finalDescription = data.description;
-          accumulatedQuestions = data.questions;
+          accumulatedQuestions = data.questions.filter((question: any) => String(question?.text || '').trim().length > 0);
 
           // Validation logic for sequential numbering
           const sorted = [...accumulatedQuestions].sort((a, b) => (a.number || 0) - (b.number || 0));
@@ -266,7 +283,12 @@ export function useQuizGenerator() {
 
           if (gaps.length > 0) {
             console.warn('Gaps detected in question numbering:', gaps);
-            // Optionally notify user or attempt a targeted recovery here
+            setProgress({
+              current: accumulatedQuestions.length,
+              total: Math.max(totalQuestions, accumulatedQuestions.length),
+              stage: 'generating',
+              message: `تم استخراج ${accumulatedQuestions.length} سؤالاً مع تصحيح ترقيم الأسئلة تلقائياً...`,
+            });
           }
         }
       }

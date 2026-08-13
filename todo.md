@@ -6,3 +6,17 @@
 - [x] Phase 4: Upgrade UI polish, store economics, and interactive components
 - [x] Phase 5: Test all buttons, settings, rewards, and responsive breakpoints
 - [x] Phase 6: Save checkpoint and deliver fully enhanced QuizSpace platform
+- [ ] Run a full button-and-route test inventory for rewards, store, profile, classrooms, admin, quiz creator, settings, and authentication
+- [ ] Repair reward-store purchases, wheel spins, item delivery, and duplicate action protection
+- [ ] Repair profile cover and frame persistence, owned-item selection, and large balance display
+- [ ] Repair classroom lesson creation, permissions, Ghost Mode messages, and administrative controls
+- [ ] Repair quiz creation/extraction feedback, settings persistence, and email-confirmation flows
+- [ ] Improve mobile responsiveness, navigation resilience, code-splitting, and deferred heavy-library loading
+- [ ] Run production build, type checks, live browser smoke tests, and publish only verified fixes
+- [ ] Deliver a transparent repair report with verified behavior and remaining external-integration requirements
+- [x] Replace client-side frame activation with server-verified ownership checks and block unsafe direct frame updates
+- [x] Persist notification preferences in user-scoped database records and apply changes without a page refresh
+- [x] Guard classroom lesson creation against guest writes and duplicate submissions with actionable errors
+- [x] Improve document-extraction fallback progress, validate empty generated questions, and surface a clear final failure message
+- [x] Add production chunk splitting for React, motion, icons, charts, PDF, and Supabase dependencies
+- [x] Eliminate header crowding from large balances on narrow screens and raise core navigation/catalog controls to 44px touch targets

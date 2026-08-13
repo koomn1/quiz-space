@@ -32,6 +32,14 @@ export default function Security({ lang }: SecurityProps) {
   // Active Sessions Data
   const [sessions, setSessions] = useState<any[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  const [authenticatedUserId, setAuthenticatedUserId] = useState('');
+
+  const getAuthenticatedUserId = async (): Promise<string | null> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id || '';
+    setAuthenticatedUserId(userId);
+    return userId || null;
+  };
 
   // Fetch initial state
   const parseUserAgent = (ua: string) => {
@@ -53,8 +61,8 @@ export default function Security({ lang }: SecurityProps) {
 
   const fetchSessions = async () => {
     try {
-      const storedUid = typeof localStorage !== 'undefined' ? localStorage.getItem('quiz_userId') : null;
-      if (!storedUid || storedUid.startsWith('user-')) {
+      const userId = await getAuthenticatedUserId();
+      if (!userId) {
         setIsLoadingSessions(false);
         return;
       }
@@ -70,10 +78,10 @@ export default function Security({ lang }: SecurityProps) {
       }
 
       // Record current session in Supabase database
-      const currentSessionId = await recordUserSession(storedUid, deviceFormatted, ua, 'الجلسة النشطة', userLocation);
+      const currentSessionId = await recordUserSession(userId, deviceFormatted, ua, 'الجلسة النشطة', userLocation);
 
       // Fetch all recorded user sessions for this user from Supabase database
-      const dbSessions = await getUserSessions(storedUid);
+      const dbSessions = await getUserSessions(userId);
 
       if (dbSessions.length > 0) {
         setSessions(dbSessions.map((s, idx) => ({
@@ -107,8 +115,8 @@ export default function Security({ lang }: SecurityProps) {
 
   const fetch2FAStatus = async () => {
     try {
-      const storedUid = typeof localStorage !== 'undefined' ? localStorage.getItem('quiz_userId') : null;
-      if (!storedUid || storedUid.startsWith('user-')) {
+      const userId = await getAuthenticatedUserId();
+      if (!userId) {
         return;
       }
       const { data, error } = await supabase.auth.mfa.listFactors();
@@ -246,9 +254,9 @@ export default function Security({ lang }: SecurityProps) {
 
   const handleRevokeSession = async (sessionId: string) => {
     try {
-      const storedUid = typeof localStorage !== 'undefined' ? localStorage.getItem('quiz_userId') : null;
-      if (storedUid) {
-        await terminateUserSession(sessionId, storedUid);
+      const userId = await getAuthenticatedUserId();
+      if (userId) {
+        await terminateUserSession(sessionId, userId);
       }
       if (sessions.find(s => s.id === sessionId && s.current)) {
         await supabase.auth.signOut();
@@ -262,11 +270,11 @@ export default function Security({ lang }: SecurityProps) {
 
   const handleLogOutAll = async () => {
     try {
-      const storedUid = typeof localStorage !== 'undefined' ? localStorage.getItem('quiz_userId') : null;
-      if (storedUid) {
+      const userId = await getAuthenticatedUserId();
+      if (userId) {
         const otherSessions = sessions.filter(s => !s.current);
         for (const s of otherSessions) {
-          await terminateUserSession(s.id, storedUid);
+          await terminateUserSession(s.id, userId);
         }
       }
       await supabase.auth.signOut({ scope: 'others' });
@@ -276,8 +284,7 @@ export default function Security({ lang }: SecurityProps) {
     }
   };
 
-  const storedUid = typeof localStorage !== 'undefined' ? localStorage.getItem('quiz_userId') : null;
-  const isGuest = !storedUid || storedUid.startsWith('user-');
+  const isGuest = !authenticatedUserId;
 
   if (isGuest) {
     return (

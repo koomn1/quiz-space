@@ -29,6 +29,20 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            react: ['react', 'react-dom', 'react/jsx-runtime'],
+            motion: ['gsap', '@gsap/react'],
+            icons: ['lucide-react'],
+            charts: ['recharts'],
+            pdf: ['jspdf', 'html2canvas'],
+            supabase: ['@supabase/supabase-js'],
+          },
+        },
+      },
+    },
     server: {
       // HMR is disabled via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during live edits.

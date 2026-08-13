@@ -348,7 +348,7 @@ export default function LandingPage({
               </div>
               <button
                 onClick={() => onStartQuiz(siteStats.featuredQuiz.id)}
-                className="shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-amber-500/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+                className="min-h-11 shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-amber-500/20 transition-all hover:-translate-y-0.5 cursor-pointer"
               >
                 {isAr ? 'ابدأ الآن' : 'Start Now'}
               </button>
@@ -387,7 +387,7 @@ export default function LandingPage({
             {onToggleViewMode && (
               <button 
                 onClick={onToggleViewMode}
-                className="flex items-center justify-center p-2 text-xs text-slate-500 hover:text-primary dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer h-9"
+                className="flex h-11 w-11 items-center justify-center text-xs text-slate-500 hover:text-primary dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
                 title={viewMode === 'grid' ? (isAr ? 'عرض القائمة' : 'Switch to List View') : (isAr ? 'عرض الشبكة' : 'Switch to Grid View')}
               >
                 {viewMode === 'grid' ? <List className="w-4.5 h-4.5" /> : <LayoutGrid className="w-4.5 h-4.5" />}
@@ -396,7 +396,7 @@ export default function LandingPage({
 
             <button 
               onClick={onRefresh}
-              className="flex items-center justify-center gap-1.5 text-xs text-primary bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-bold transition-all cursor-pointer h-9"
+              className="flex min-h-11 items-center justify-center gap-1.5 text-xs text-primary bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-bold transition-all cursor-pointer"
               disabled={isLoading}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />

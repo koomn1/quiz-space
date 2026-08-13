@@ -213,7 +213,6 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       window.clearInterval(pollId);
       window.removeEventListener('quizspace:daily-completed', onDailyCompleted);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tier, userId, isGuest]);
 
   useEffect(() => {

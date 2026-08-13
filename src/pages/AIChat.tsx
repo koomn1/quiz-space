@@ -536,7 +536,6 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       setConversations(merged);
       if (merged.length > 0 && !activeConversationId) setActiveConversationId(merged[0].id);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   /* Load the selected conversation from both remote and local storage. */
@@ -710,7 +709,6 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       setIsAnalyzing(false);
       setStreamingText('');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputText, selectedAttachment, isAnalyzing, userId, activeConversationId, isAr, cosmoSystemInstruction]);
 
   const confirmQuizGeneration = async () => {

@@ -23,6 +23,7 @@ import {
 import { showToast } from '../components/Toast';
 import { askAI } from '../services/aiWorkerClient';
 import {
+  activateRewardFrame,
   claimLuckySpin,
   createRewardPointsOrder,
   getDailyBrainChallenge,
@@ -350,7 +351,22 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
   const load = React.useCallback(async () => { setLoading(true); try { const [storeItems, owned, paymentSettings] = await Promise.all([getRewardStoreItems(), getRewardInventory(userId), getRewardPaymentSettings()]); setItems(storeItems as StoreItem[]); setInventory(owned); setSettings(paymentSettings); } catch (error: any) { showToast('error', error?.message || 'Store unavailable'); } finally { setLoading(false); } }, [userId]);
   React.useEffect(() => { load(); }, [load]);
   const owned = (itemId: string) => inventory.some((item) => item.item_id === itemId);
-  const useFrame = (item: StoreItem) => { setActiveFrameId(item.id); localStorage.setItem('quizspace_active_frame', item.id); window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); showToast('success', lang === 'ar' ? 'تم تفعيل الإطار على ملفك الشخصي.' : 'Frame activated on your profile.'); };
+  const useFrame = async (item: StoreItem) => {
+    if (busy || activeFrameId === item.id) return;
+    setBusy(item.id);
+    try {
+      const response = await activateRewardFrame(item.id);
+      if (!response?.success) throw new Error(response?.message || 'Frame activation failed');
+      setActiveFrameId(item.id);
+      localStorage.setItem('quizspace_active_frame', item.id);
+      window.dispatchEvent(new CustomEvent('quizspace-frame-updated'));
+      showToast('success', lang === 'ar' ? 'تم تفعيل الإطار على ملفك الشخصي.' : 'Frame activated on your profile.');
+    } catch (error: any) {
+      showToast('error', error?.message || (lang === 'ar' ? 'تعذر تفعيل الإطار.' : 'The frame could not be activated.'));
+    } finally {
+      setBusy(null);
+    }
+  };
   const buyFrame = async (item: StoreItem) => { 
     if (busy) return; 
     const priceCoins = item.price_coins || 0;
@@ -365,9 +381,12 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
     if (response?.success) { 
       showToast('success', t.purchased); 
       if (item.item_type === 'frame') {
-        setActiveFrameId(item.id); 
-        localStorage.setItem('quizspace_active_frame', item.id); 
-        window.dispatchEvent(new CustomEvent('quizspace-frame-updated')); 
+        const activation = await activateRewardFrame(item.id);
+        if (activation?.success) {
+          setActiveFrameId(item.id);
+          localStorage.setItem('quizspace_active_frame', item.id);
+          window.dispatchEvent(new CustomEvent('quizspace-frame-updated'));
+        }
       } else if (item.id.startsWith('pass_')) {
         showToast('success', lang === 'ar' ? 'تم تفعيل العضوية الجديدة بنجاح! يرجى تحديث الصفحة.' : 'Membership activated successfully! Please refresh.');
       }

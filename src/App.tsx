@@ -50,7 +50,7 @@ const MotivationHubPage = lazyWithRetry(() => import('./pages/MotivationHubPage'
 import type { MotivationSection } from './pages/MotivationHubPage';
 import { Sparkles, Edit, Compass, Info, XCircle, Award, Volume2, Globe, Bell, AlertTriangle, ExternalLink, User, Bot, Zap, MessageCircle } from 'lucide-react';
 
-import { getQuizzes, saveUserProfile, deleteQuiz, getUserProfileStats, getRecentCompletions, getPlatformSettings } from './lib/db';
+import { getQuizzes, saveUserProfile, deleteQuiz, getUserProfileStats, getRecentCompletions, getPlatformSettings, getUserNotificationPreferences } from './lib/db';
 import { playNotificationSound } from './lib/sound';
 import { pushNotificationsManager, PushNotificationPayload } from './lib/pushNotifications';
 import { translations } from './lib/i18n';
@@ -436,6 +436,7 @@ export default function App() {
     return (localStorage.getItem('quiz_language') as 'ar' | 'en') || 'ar';
   });
   const [activePush, setActivePush] = React.useState<PushNotificationPayload | null>(null);
+  const [pushNotificationsEnabled, setPushNotificationsEnabled] = React.useState(false);
   const [showPushBanner, setShowPushBanner] = React.useState(() => {
     const perm = pushNotificationsManager.getPermissionStatus();
     return perm !== 'granted' && localStorage.getItem('quiz_push_banner_dismissed') !== 'true';
@@ -488,6 +489,28 @@ export default function App() {
     if (!userId || userId.startsWith('user-guest')) {
       setShowPushBanner(false);
     }
+  }, [userId]);
+
+  React.useEffect(() => {
+    let active = true;
+    if (!userId || userId.startsWith('user-')) {
+      setPushNotificationsEnabled(false);
+      return () => { active = false; };
+    }
+
+    void getUserNotificationPreferences(userId).then((preferences) => {
+      if (active) setPushNotificationsEnabled(preferences.pushEnabled);
+    });
+
+    const handlePreferenceChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ pushEnabled?: boolean }>).detail;
+      if (typeof detail?.pushEnabled === 'boolean') setPushNotificationsEnabled(detail.pushEnabled);
+    };
+    window.addEventListener('quizspace:notification-preferences-updated', handlePreferenceChange);
+    return () => {
+      active = false;
+      window.removeEventListener('quizspace:notification-preferences-updated', handlePreferenceChange);
+    };
   }, [userId]);
 
   // A membership is active when the profile is marked premium or carries a paid plan.
@@ -571,7 +594,7 @@ export default function App() {
           const data = payload.new as any;
           if (data.created_at && data.created_at < sessionBootTime) return;
           if (data.sender_name && data.sender_name === userName) return;
-          if (localStorage.getItem('pref_pushEnabled') === 'false') return;
+          if (!pushNotificationsEnabled) return;
 
           pushNotificationsManager.trigger({
             title: data.title || (lang === 'ar' ? 'تنبيه جديد 🪐' : 'New Buzz 🪐'),
@@ -589,7 +612,7 @@ export default function App() {
       pushNotificationsManager.unsubscribe('app-root');
       void supabase.removeChannel(notifChannel);
     };
-  }, [userName, lang]);
+  }, [userName, lang, pushNotificationsEnabled]);
 
   // Request native browser desktop notifications permission on startup
 
@@ -621,7 +644,7 @@ export default function App() {
           if (!msg.is_read) setUnreadMessagesCount((prev) => prev + 1);
 
           const isNew = msg.created_at && new Date(msg.created_at).getTime() > new Date(sessionBootTime).getTime();
-          if (isNew && localStorage.getItem('pref_pushEnabled') !== 'false') {
+          if (isNew && pushNotificationsEnabled) {
             const senderName = msg.sender_name || (lang === 'ar' ? 'مستخدم' : 'Scholar');
             const text = msg.text || '';
 
@@ -651,7 +674,7 @@ export default function App() {
       .subscribe();
 
     return () => { void supabase.removeChannel(dmChannel); };
-  }, [userId, lang]);
+  }, [userId, lang, pushNotificationsEnabled]);
 
   // Bright cheerful theme presets helper configurations & syncing
   React.useEffect(() => {
@@ -694,9 +717,12 @@ export default function App() {
     const isLocalSandbox = localStorage.getItem('quiz_isLocalSandbox') === 'true';
     const localAuthToken = localStorage.getItem('local_auth_token');
 
-    if (localUserId && (isLocalSandbox || localAuthToken)) {
-      // Restore local sandbox or custom email/password session
-      setIsGuestSandbox(isLocalSandbox && !localAuthToken);
+    // Only the explicitly-marked read-only sandbox may restore local state.
+    // A legacy browser token is not a Supabase session and must never unlock
+    // server-backed features, balances, classrooms, or daily challenges.
+    if (localAuthToken) localStorage.removeItem('local_auth_token');
+    if (localUserId && isLocalSandbox && localUserId.startsWith('user-guest-')) {
+      setIsGuestSandbox(true);
       const savedName = localStorage.getItem('quiz_userName') || generateCoolStudentName(lang);
       const savedEmail = localStorage.getItem('quiz_userEmail') || 'local.student@spacequiz.local';
       setUserId(localUserId);
@@ -873,20 +899,15 @@ export default function App() {
           setIsStatsLoaded(true);
         }
       } else {
-        const localAuthToken = localStorage.getItem('local_auth_token');
-        if (localAuthToken) {
-          // Securely retain local custom email/password session
-          setIsStatsLoaded(true);
-          return;
-        }
-
         setIsUserPremium(false);
         setUserPlanName('');
         setUserPhoto(null);
-        // Guest user fallback - Keep anonymous state for lists browsing smoothly but do not prompt with welcome wizard
+        setIsGuestSandbox(true);
+        // Guest user fallback - do not reuse a real account id without an
+        // active Supabase session, otherwise writes can fail or look signed in.
         let storedUserId = localStorage.getItem('quiz_userId');
         let storedUserName = localStorage.getItem('quiz_userName');
-        if (!storedUserId) {
+        if (!storedUserId || !storedUserId.startsWith('user-guest-')) {
           storedUserId = 'user-guest-' + Math.random().toString(36).substring(2, 9);
           localStorage.setItem('quiz_userId', storedUserId);
         }

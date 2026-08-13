@@ -56,7 +56,6 @@ export default function StreamingText({ text, instant = false, onProgress, onDon
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, instant]);
 
   useEffect(() => {

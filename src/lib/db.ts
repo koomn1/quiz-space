@@ -1787,6 +1787,66 @@ export async function savePushSubscription(userId: string, subscription: { endpo
   if (error) console.warn('Could not save push subscription:', error.message);
 }
 
+export interface UserNotificationPreferences {
+  emailAlerts: boolean;
+  rankUpdates: boolean;
+  weeklyReports: boolean;
+  pushEnabled: boolean;
+}
+
+const DEFAULT_NOTIFICATION_PREFERENCES: UserNotificationPreferences = {
+  emailAlerts: true,
+  rankUpdates: true,
+  weeklyReports: false,
+  pushEnabled: true,
+};
+
+export async function getUserNotificationPreferences(userId: string): Promise<UserNotificationPreferences> {
+  if (!isSupabaseConfigured || !userId) return DEFAULT_NOTIFICATION_PREFERENCES;
+
+  const { data, error } = await supabase
+    .from('user_notification_preferences')
+    .select('email_alerts, rank_updates, weekly_reports, push_enabled')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('Could not load notification preferences:', error.message);
+    return DEFAULT_NOTIFICATION_PREFERENCES;
+  }
+
+  if (!data) return DEFAULT_NOTIFICATION_PREFERENCES;
+  return {
+    emailAlerts: data.email_alerts !== false,
+    rankUpdates: data.rank_updates !== false,
+    weeklyReports: data.weekly_reports === true,
+    pushEnabled: data.push_enabled !== false,
+  };
+}
+
+export async function updateUserNotificationPreferences(
+  userId: string,
+  preferences: UserNotificationPreferences,
+): Promise<void> {
+  if (!isSupabaseConfigured || !userId) {
+    throw new Error('Authentication is required to save notification preferences.');
+  }
+
+  const { error } = await supabase.from('user_notification_preferences').upsert({
+    user_id: userId,
+    email_alerts: preferences.emailAlerts,
+    rank_updates: preferences.rankUpdates,
+    weekly_reports: preferences.weeklyReports,
+    push_enabled: preferences.pushEnabled,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id' });
+
+  if (error) {
+    console.error('Could not save notification preferences:', error.message);
+    throw new Error('Unable to save notification preferences.');
+  }
+}
+
 export async function getNotifications(): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(30);
@@ -2214,7 +2274,7 @@ export async function addLessonVideo(params: {
       .single();
     if (error) {
       console.error('Error adding lesson video:', error.message, error.details, error.hint);
-      throw error;
+      throw new Error(error.message || 'Unable to save the lesson.');
     }
     return {
       id: data.id,
@@ -2232,12 +2292,7 @@ export async function addLessonVideo(params: {
     };
   } catch (e: any) {
     console.error('Error adding lesson video:', e);
-    if (typeof window !== 'undefined') {
-      const errorMsg = e.message || JSON.stringify(e);
-      // We'll let the UI handle the error display, but log it clearly
-      console.error('CRITICAL_ERROR_DETAILS:', errorMsg);
-    }
-    return null;
+    throw e instanceof Error ? e : new Error('Unable to save the lesson.');
   }
 }
 
@@ -2349,6 +2404,13 @@ export async function getRewardInventory(userId: string) {
   const { data, error } = await supabase.from('reward_inventory').select('item_id, quantity, source, is_active, purchased_at').eq('user_id', userId).eq('is_active', true);
   if (error) throw error;
   return data || [];
+}
+
+export async function activateRewardFrame(itemId: string) {
+  const { data, error } = await supabase.rpc('activate_reward_frame', { p_item_id: itemId });
+  if (error) return { success: false, message: error.message };
+  window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  return data;
 }
 
 export async function purchaseRewardItem(itemId: string) {
