@@ -185,21 +185,112 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
   const [spinning, setSpinning] = React.useState(false);
   const [result, setResult] = React.useState<any>(null);
   const [alreadyPlayed, setAlreadyPlayed] = React.useState(false);
+
+  const segments = [
+    { label: '5', color: 'bg-indigo-500' },
+    { label: '10', color: 'bg-purple-500' },
+    { label: '20', color: 'bg-fuchsia-500' },
+    { label: '50', color: 'bg-rose-500' },
+    { label: '1', color: 'bg-amber-500' },
+    { label: '15', color: 'bg-cyan-500' },
+    { label: '5', color: 'bg-indigo-500' },
+    { label: '10', color: 'bg-purple-500' },
+  ];
+
   const spin = async () => {
     if (spinning || alreadyPlayed) return;
-    setSpinning(true); setResult(null); setAngle(1080 + Math.floor(Math.random() * 360));
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    setSpinning(true);
+    setResult(null);
+    const extraSpins = 5 + Math.floor(Math.random() * 5);
+    const randomAngle = Math.floor(Math.random() * 360);
+    const totalAngle = extraSpins * 360 + randomAngle;
+    setAngle(totalAngle);
+
+    await new Promise((resolve) => setTimeout(resolve, 4000));
     const response = await claimLuckySpin();
-    setSpinning(false); setAngle(0); setResult(response);
-    if (response?.success) { setAlreadyPlayed(true); onRewardsChanged(); }
+    setSpinning(false);
+    // Keep the angle but normalize it for UI consistency if needed
+    // setAngle(totalAngle % 360); 
+    setResult(response);
+    if (response?.success) {
+      setAlreadyPlayed(true);
+      onRewardsChanged();
+    }
   };
+
   return (
-    <div className="mx-auto max-w-3xl rounded-[2rem] border border-fuchsia-200 bg-gradient-to-br from-fuchsia-50 via-white to-violet-50 p-6 text-center shadow-sm dark:border-fuchsia-900/50 dark:from-fuchsia-950/30 dark:via-slate-900 dark:to-violet-950/30 sm:p-10">
-      <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300"><Gift className="h-12 w-12" /></div>
-      <h2 className="text-2xl font-black text-slate-900 dark:text-white">{t.lucky}</h2><p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-slate-500 dark:text-slate-400">{t.spinHint}</p>
-      <div className="relative mx-auto my-8 h-64 w-64 sm:h-72 sm:w-72"><div className="absolute -top-4 left-1/2 z-10 -translate-x-1/2 border-x-[13px] border-t-[24px] border-x-transparent border-t-rose-500 drop-shadow-lg" /><img src={imageUrl('lucky_wheel')} alt="" className="h-full w-full rounded-full object-cover shadow-2xl shadow-fuchsia-500/20" style={{ transform: `rotate(${angle}deg)`, transition: spinning ? 'transform 3s cubic-bezier(.12,.72,.2,1)' : 'transform .3s' }} /></div>
-      <button type="button" onClick={spin} disabled={spinning || alreadyPlayed} className="mx-auto flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-violet-600 px-8 py-3.5 text-sm font-black text-white shadow-lg shadow-fuchsia-500/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">{spinning ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5" />}{spinning ? t.spinning : alreadyPlayed ? t.done : t.spin}</button>
-      {result && <div className={`mx-auto mt-5 max-w-md rounded-2xl p-4 text-sm font-black ${result.success ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'}`}>{result.success ? `+${result.points} ${t.points}` : result.message}</div>}
+    <div className="mx-auto max-w-3xl rounded-[2.5rem] border border-slate-200 bg-white/50 p-6 text-center shadow-2xl backdrop-blur-sm dark:border-white/10 dark:bg-[#0c071e]/50 sm:p-12">
+      <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary shadow-inner">
+        <Gift className="h-10 w-10 animate-pulse" />
+      </div>
+      <h2 className="text-3xl font-black bg-gradient-to-r from-primary via-purple-500 to-fuchsia-500 bg-clip-text text-transparent">
+        {t.lucky}
+      </h2>
+      <p className="mx-auto mt-3 max-w-lg text-sm font-bold text-slate-500 dark:text-slate-400">
+        {t.spinHint}
+      </p>
+
+      <div className="relative mx-auto my-12 h-72 w-72 sm:h-80 sm:w-80">
+        {/* Pointer */}
+        <div className="absolute -top-4 left-1/2 z-30 -translate-x-1/2 drop-shadow-[0_4px_10px_rgba(0,0,0,0.3)]">
+          <div className="h-0 w-0 border-x-[15px] border-t-[30px] border-x-transparent border-t-rose-600" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-white/50" />
+        </div>
+
+        {/* Wheel Container */}
+        <div 
+          className="relative h-full w-full rounded-full border-[8px] border-slate-800 bg-slate-900 shadow-[0_0_50px_-12px_rgba(139,92,246,0.5)] transition-transform duration-[4000ms] cubic-bezier(0.15, 0, 0.15, 1) overflow-hidden"
+          style={{ transform: `rotate(${angle}deg)` }}
+        >
+          {segments.map((seg, i) => (
+            <div
+              key={i}
+              className={`absolute top-0 left-1/2 h-1/2 w-1/2 origin-bottom-left ${seg.color}`}
+              style={{
+                transform: `rotate(${i * (360 / segments.length)}deg) skewY(-${90 - (360 / segments.length)}deg)`,
+              }}
+            >
+              <div 
+                className="absolute bottom-4 left-4 flex h-24 w-24 origin-center items-center justify-center font-black text-white"
+                style={{
+                  transform: `skewY(${90 - (360 / segments.length)}deg) rotate(${(360 / segments.length) / 2}deg) translateY(-20px)`,
+                }}
+              >
+                <span className="text-xl drop-shadow-md">{seg.label}</span>
+              </div>
+            </div>
+          ))}
+          
+          {/* Center Cap */}
+          <div className="absolute inset-0 m-auto h-12 w-12 rounded-full border-4 border-slate-800 bg-white shadow-lg flex items-center justify-center z-20">
+            <div className="h-3 w-3 rounded-full bg-primary animate-ping" />
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={spin}
+        disabled={spinning || alreadyPlayed}
+        className="group relative mx-auto flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-primary px-10 py-4 text-sm font-black text-white shadow-xl shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-2xl active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
+        {spinning ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5 fill-current" />}
+        {spinning ? t.spinning : alreadyPlayed ? t.done : t.spin}
+      </button>
+
+      {result && (
+        <div className={`mx-auto mt-8 max-w-md animate-in fade-in slide-in-from-top-4 rounded-2xl border p-5 text-sm font-black shadow-sm ${
+          result.success 
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/30 dark:text-emerald-400' 
+            : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/30 dark:bg-amber-950/30 dark:text-amber-400'
+        }`}>
+          <div className="flex items-center justify-center gap-2">
+            {result.success ? <Sparkles className="h-5 w-5" /> : <Loader2 className="h-5 w-5" />}
+            {result.success ? `+${result.points} ${t.points}` : result.message}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
