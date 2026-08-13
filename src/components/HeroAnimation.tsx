@@ -43,9 +43,11 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
     try {
       const split = new SplitText(headlineRef.current, { type: isAr ? 'words' : 'words,chars' });
       const staggerElements = isAr ? split.words : split.chars;
+      // Keep the title visible even if the animation/plugin fails or the page is
+      // opened on a slow connection. The entrance motion is only a subtle lift.
       gsap.fromTo(staggerElements,
-        { opacity: 0, y: 24 },
-        { opacity: 1, y: 0, duration: 0.65, stagger: 0.045, ease: 'power3.out', delay: 0.05 }
+        { opacity: 1, y: 12 },
+        { opacity: 1, y: 0, duration: 0.45, stagger: 0.035, ease: 'power3.out', delay: 0.02 }
       );
       
       // Note: this used to also run a continuous infinite "breathing" tween
@@ -53,9 +55,10 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
       // position scroll on the headline — both removed for the same reason
       // as the orbs/icons above. The one-time reveal above still plays.
     } catch (e) {
-      gsap.fromTo(headlineRef.current, 
-        { opacity: 0, y: 50, scale: 0.9 },
-        { opacity: 1, y: 0, scale: 1, duration: 1.5, ease: 'back.out(1.5)' }
+      gsap.set(headlineRef.current, { opacity: 1 });
+      gsap.fromTo(headlineRef.current,
+        { opacity: 1, y: 12, scale: 0.98 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: 'power3.out' }
       );
     }
 
@@ -107,8 +110,8 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
         <div className="perspective-[1000px] overflow-visible p-4 mb-2">
           <h1 
             ref={headlineRef} 
-            className={`text-[10vw] sm:text-[7vw] md:text-[5rem] leading-[1.1] font-black text-transparent bg-clip-text bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')] bg-cover bg-center font-display ${isAr ? '' : 'tracking-tighter'}`}
-            style={{ textShadow: '0 10px 30px rgba(2, 6, 23, 0.55)' }}
+            className={`text-[10vw] sm:text-[7vw] md:text-[5rem] leading-[1.1] font-black text-slate-50 dark:text-white font-display ${isAr ? '' : 'tracking-tighter'}`}
+            style={{ opacity: 1, textShadow: '0 10px 30px rgba(2, 6, 23, 0.55)' }}
           >
             {mainTitle}
           </h1>
