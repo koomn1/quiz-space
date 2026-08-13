@@ -73,7 +73,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
           return;
         }
         await signUp(cleanEmail, cleanPassword, cleanName);
-        setSuccess('تم إرسال رمز التأكيد إلى بريدك الإلكتروني بنجاح!');
+        setSuccess('تم إرسال رابط التأكيد إلى بريدك الإلكتروني! يرجى التحقق من بريدك والضغط على الرابط لتفعيل الحساب.');
         setStep('email');
       } else {
         const result = await signIn(cleanEmail, cleanPassword);
@@ -135,14 +135,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               </div>
               <h2 className="text-2xl font-black bg-gradient-to-r from-slate-900 via-primary to-violet-950 dark:from-white dark:via-purple-300 dark:to-slate-300 bg-clip-text text-transparent leading-none">
                 {step === 'email'
-                  ? 'تأكيد البريد الإلكتروني'
+                  ? 'تم إرسال رابط التأكيد'
                   : step === '2fa'
                     ? 'خطوة التحقق الإضافية'
                     : (mode === 'login' ? 'مرحباً بعودتك' : 'انضم إلينا الآن')}
               </h2>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-medium">
                 {step === 'email'
-                  ? 'أدخل الرمز المرسل إلى بريدك لتفعيل الحساب بأمان.'
+                  ? 'تم إرسال رابط التفعيل إلى بريدك الإلكتروني. اضغط على الرابط في رسالة البريد لتفعيل حسابك ثم عُد لتسجيل الدخول.'
                   : step === '2fa'
                     ? 'حسابك محمي بالمصادقة الثنائية. الرجاء إدخال الرمز السري من تطبيق التحقق.'
                     : (mode === 'login' ? 'سجل دخولك لمتابعة منجزاتك التعليمية فوراً' : 'أنشئ حساباً تفاعلياً جديداً لبدء المسيرة اليوم')}
@@ -157,19 +157,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
           </div>
 
           {step === 'email' ? (
-            <EmailVerificationStep
-              email={email.trim().toLowerCase()}
-              lang="ar"
-              onVerified={() => {
-                if (onSuccess) onSuccess(null);
-                onClose();
-              }}
-              onBack={() => {
-                setStep('form');
-                setError('');
-                setSuccess('');
-              }}
-            />
+            <div className="space-y-6 py-4 text-center">
+              <div className="w-16 h-16 bg-violet-500/10 border border-violet-500/20 rounded-full flex items-center justify-center mx-auto text-primary">
+                <Mail className="w-8 h-8 animate-bounce" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white">تفقد بريدك الإلكتروني</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                  لقد أرسلنا رابط تأكيد الحساب إلى <span className="font-bold text-primary">{email}</span>. يرجى فتح البريد والضغط على الرابط.
+                </p>
+              </div>
+              {success && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  {success}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('form');
+                  setSuccess('');
+                }}
+                className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3.5 rounded-2xl transition-all"
+              >
+                العودة لتسجيل الدخول
+              </button>
+            </div>
           ) : step === '2fa' ? (
             <form onSubmit={handleMfaVerify} className="space-y-6">
               <div className="space-y-4">

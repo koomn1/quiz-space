@@ -191,15 +191,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const verifyEmailCode = async (email: string, code: string) => {
-    if (!/^\d{6}$/.test(code)) {
-      throw new Error('رمز التأكيد يجب أن يتكون من 6 أرقام.');
-    }
-
-    const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
-    if (error || !data.user?.email_confirmed_at) {
-      throw new Error('الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزاً جديداً ثم حاول مرة أخرى.');
-    }
+  const verifyEmailCode = async (_email: string, _code: string) => {
+    // Deprecated in link-based flow
   };
 
   const resendEmailVerification = async (email: string) => {
@@ -223,7 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
     if (!data.user.email_confirmed_at) {
       await supabase.auth.signOut({ scope: 'local' });
-      const unconfirmedError = new Error('أكد بريدك الإلكتروني بالكود المرسل قبل تسجيل الدخول.') as Error & { code?: string };
+      const unconfirmedError = new Error('بريدك الإلكتروني غير مؤكد. يرجى الضغط على رابط التأكيد المرسل إلى بريدك.') as Error & { code?: string };
       unconfirmedError.code = 'EMAIL_NOT_CONFIRMED';
       throw unconfirmedError;
     }
