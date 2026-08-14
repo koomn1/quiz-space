@@ -41,3 +41,11 @@
 - [x] Verify live motivational feature flows and replace visible decorative emoji with lightweight polished visual elements
 - [x] Enhance the Motivation Hub visual hierarchy, progress feedback, and card interactions with lightweight responsive polish
 - [x] Audit, track, and report privacy-preserving usage metrics for the new Motivation Hub tabs
+- [ ] Inventory and safely test every interactive QuizSpace control, excluding logout and deferring destructive or financial actions for explicit approval
+- [ ] Complete user-authorized internal state-change checks while avoiding irreversible external payment, publication, or deletion completion steps
+- [x] Diagnose and repair the reproducible classroom lesson-save failure for valid YouTube lesson data, then cover it with regression testing
+- [ ] Diagnose and repair the weekly-task reward claim failure for completed tasks, then verify the balance and ledger update
+- [ ] Deferred by user: isolate learning-streak state per authenticated user and verify it cannot be shared across accounts
+- [ ] Deferred by user: repair reward collection and daily quiz-point accounting so balances update outside the current page
+- [ ] Deferred by user: prevent multiple attempts against the same daily brain-challenge question unless explicitly intended
+- [ ] Repair all visible zero-priced point-store offers and point packages so every purchasable item has a positive configured price

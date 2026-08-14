@@ -44,6 +44,7 @@ import {
   submitBrainChallenge,
   updateDailyStreak,
 } from '../lib/db';
+import { getStorePaymentMode } from '../lib/storePricing';
 
 export type MotivationSection = 'motivation' | 'motivation-lucky' | 'motivation-brain' | 'motivation-review' | 'motivation-season' | 'motivation-duel' | 'motivation-store';
 
@@ -413,6 +414,8 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
   const renderCard = (item: StoreItem) => { 
     const locked = planRank < rankFor(item.min_plan); 
     const isOwned = owned(item.id); 
+    const payment = getStorePaymentMode(item);
+    const isPurchasable = payment.mode !== 'unavailable';
     const itemImageUrl = item.image_url ? `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${item.image_url}` : null;
     
     return (
@@ -437,20 +440,22 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
               <span className="text-amber-600 dark:text-amber-400">{t.diamond}</span>
             ) : isOwned ? (
               <span className="text-emerald-600 dark:text-emerald-400">{t.owned}</span>
-            ) : item.price_coins && item.price_coins > 0 ? (
+            ) : payment.mode === 'coins' ? (
               <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400">
                 <Coins className="h-3 w-3" />
-                {item.price_coins.toLocaleString()}
+                {payment.amount.toLocaleString()}
               </span>
-            ) : (
+            ) : payment.mode === 'points' ? (
               <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                 <Sparkles className="h-3 w-3" />
-                {item.price_points.toLocaleString()}
+                {payment.amount.toLocaleString()}
               </span>
+            ) : (
+              <span className="text-slate-500 dark:text-slate-400">{lang === 'ar' ? 'غير متاح' : 'Unavailable'}</span>
             )}
           </span>
-          <button type="button" disabled={locked || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="rounded-xl bg-violet-600 px-3 py-2 text-[11px] font-black text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-45 shadow-sm shadow-violet-600/20">
-            {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : (item.price_egp > 0 ? (lang === 'ar' ? 'شراء بالمال' : 'Buy') : t.buy)}
+          <button type="button" disabled={locked || !isPurchasable || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="rounded-xl bg-violet-600 px-3 py-2 text-[11px] font-black text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-45 shadow-sm shadow-violet-600/20">
+            {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : payment.mode === 'cash' ? (lang === 'ar' ? 'شراء بالمال' : 'Buy') : payment.mode === 'unavailable' ? (lang === 'ar' ? 'غير متاح' : 'Unavailable') : t.buy}
           </button>
         </div>
       </div>
@@ -511,18 +516,27 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
           {t.bundles}
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {bundles.map((item) => (
-            <div key={item.id} className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900">
+          {bundles.map((item) => {
+            const payment = getStorePaymentMode(item);
+            const isPurchasable = payment.mode !== 'unavailable';
+            const paymentLabel = payment.mode === 'cash'
+              ? `${payment.amount.toLocaleString()} EGP · ${lang === 'ar' ? 'اطلب الآن' : 'Order now'}`
+              : payment.mode === 'coins'
+                ? `${payment.amount.toLocaleString()} ${t.coins} · ${t.buy}`
+                : payment.mode === 'points'
+                  ? `${payment.amount.toLocaleString()} ${t.points} · ${t.buy}`
+                  : (lang === 'ar' ? 'غير متاح' : 'Unavailable');
+            return <div key={item.id} className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                 <Sparkles className="h-6 w-6" />
               </div>
               <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.reward_points.toLocaleString()} {t.points}</p>
-              <button type="button" onClick={() => setPaymentItem(item)} className="mt-5 w-full rounded-2xl bg-emerald-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700">
-                {item.price_egp} EGP · {lang === 'ar' ? 'اطلب الآن' : 'Order now'}
+              <button type="button" disabled={!isPurchasable || busy === item.id} onClick={() => payment.mode === 'cash' ? setPaymentItem(item) : buyFrame(item)} className="mt-5 w-full rounded-2xl bg-emerald-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-45">
+                {paymentLabel}
               </button>
-            </div>
-          ))}
+            </div>;
+          })}
         </div>
       </section>
     </div>}
