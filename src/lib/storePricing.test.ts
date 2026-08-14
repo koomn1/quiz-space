@@ -23,9 +23,9 @@ describe('getStorePaymentMode', () => {
   });
 
   it('describes a monthly pass benefit instead of displaying a misleading zero-point reward', () => {
-    expect(getStoreBundleBenefitLabel({ id: 'pass_gold_monthly', reward_points: 0 }, 'ar'))
+    expect(getStoreBundleBenefitLabel({ id: 'pass_gold_30d', reward_points: 0 }, 'ar'))
       .toBe('عضوية ذهبية لمدة شهر');
-    expect(getStoreBundleBenefitLabel({ id: 'pass_diamond_monthly', reward_points: 0 }, 'en'))
+    expect(getStoreBundleBenefitLabel({ id: 'pass_diamond_30d', reward_points: 0 }, 'en'))
       .toBe('One-month Diamond membership');
   });
 

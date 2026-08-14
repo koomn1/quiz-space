@@ -33,10 +33,10 @@ export function getStoreBundleBenefitLabel(item: StoreBundleBenefitInput, lang: 
       : `+${rewardPoints.toLocaleString()} points`;
   }
 
-  if (item.id === 'pass_gold_monthly') {
+  if (item.id === 'pass_gold_30d') {
     return lang === 'ar' ? 'عضوية ذهبية لمدة شهر' : 'One-month Gold membership';
   }
-  if (item.id === 'pass_diamond_monthly') {
+  if (item.id === 'pass_diamond_30d') {
     return lang === 'ar' ? 'عضوية ماسية لمدة شهر' : 'One-month Diamond membership';
   }
 
