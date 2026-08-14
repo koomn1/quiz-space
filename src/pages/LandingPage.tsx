@@ -9,7 +9,7 @@ import { BookOpen, Star, Play, Share2, Search, ArrowLeft, RefreshCw, FileText, C
 import { translations } from '../lib/i18n';
 import { MainLogo } from '../components/MainLogo';
 import ThreeDIcon from '../components/ThreeDIcon';
-import { playChimeSound } from '../components/ExtraFeatures';
+import { playChimeSound } from '../lib/chime';
 import ParallaxTiltCard from '../components/ParallaxTiltCard';
 import { getApiUrl } from '../lib/origin';
 import { UserBadge } from '../components/UserBadge';

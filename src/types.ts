@@ -181,11 +181,34 @@ export interface RewardBadge {
 export interface RewardLedgerEntry {
   id: string;
   points: number;
+  coins?: number;
   eventType: string;
   eventKey: string;
   referenceId?: string;
   metadata?: Record<string, unknown>;
   createdAt: string;
+}
+
+export interface RewardLedgerPage {
+  entries: RewardLedgerEntry[];
+  hasMore: boolean;
+}
+
+export interface WeeklyTask {
+  id: string;
+  name: string;
+  nameAr: string;
+  description: string;
+  descriptionAr: string;
+  eventType: string;
+  target: number;
+  pointsReward: number;
+  coinsReward: number;
+  icon: string;
+  sortOrder: number;
+  progress: number;
+  completedAt?: string;
+  claimedAt?: string;
 }
 
 export interface VipTier {

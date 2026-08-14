@@ -37,6 +37,9 @@ import { TelegramBadge } from './ProfileStatsView';
 import ThreeDIcon from './ThreeDIcon';
 import ParallaxTiltCard from './ParallaxTiltCard';
 import { UserBadge } from './UserBadge';
+import { playChimeSound } from '../lib/chime';
+
+export { playChimeSound } from '../lib/chime';
 
 interface ExtraFeaturesProps {
   quizzes: Quiz[];
@@ -67,60 +70,6 @@ interface CommunityPost {
   authorNameColor?: NameColorKey;
   viewsCount?: number;
   viewers?: any[];
-}
-
-// Sound click/success effects generator
-export function playChimeSound(type: 'click' | 'correct' | 'wrong' | 'completion') {
-  try {
-    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = context.createOscillator();
-    const gain = context.createGain();
-    
-    osc.connect(gain);
-    gain.connect(context.destination);
-    
-    // Check local preferences
-    const mute = localStorage.getItem('quiz_sound_effects_muted') === 'true';
-    if (mute) return;
-
-    if (type === 'click') {
-      osc.frequency.setValueAtTime(600, context.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1200, context.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.1, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.1);
-      osc.start();
-      osc.stop(context.currentTime + 0.1);
-    } else if (type === 'correct') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(523.25, context.currentTime); // C5
-      osc.frequency.setValueAtTime(659.25, context.currentTime + 0.1); // E5
-      osc.frequency.setValueAtTime(783.99, context.currentTime + 0.2); // G5
-      gain.gain.setValueAtTime(0.15, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.35);
-      osc.start();
-      osc.stop(context.currentTime + 0.4);
-    } else if (type === 'wrong') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(220, context.currentTime); // A3
-      osc.frequency.linearRampToValueAtTime(110, context.currentTime + 0.25);
-      gain.gain.setValueAtTime(0.15, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.3);
-      osc.start();
-      osc.stop(context.currentTime + 0.3);
-    } else if (type === 'completion') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(392, context.currentTime); // G4
-      osc.frequency.setValueAtTime(523.25, context.currentTime + 0.15); // C5
-      osc.frequency.setValueAtTime(659.25, context.currentTime + 0.3); // E5
-      osc.frequency.setValueAtTime(1046.5, context.currentTime + 0.45); // C6
-      gain.gain.setValueAtTime(0.2, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.65);
-      osc.start();
-      osc.stop(context.currentTime + 0.7);
-    }
-  } catch (e) {
-    console.warn('Audio Context is locked or unsupported', e);
-  }
 }
 
 // ----------------------------------------------------

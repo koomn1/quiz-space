@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import { createQuiz } from '../lib/db';
+import { filterValidGeneratedQuestions } from '../lib/quizGenerationValidation';
 import { Question, GeneratedQuiz } from '../types';
 import { generateQuizWithFallback } from './useQuizzes';
 import { generateQuizFromFile, generateQuizFromFileWithFallback, generateQuizFromFileStreaming, StreamProgress } from '../services/aiWorkerClient';
@@ -266,7 +267,7 @@ export function useQuizGenerator() {
         if (data.questions && Array.isArray(data.questions)) {
           if (!finalTitle && data.title) finalTitle = data.title;
           if (!finalDescription && data.description) finalDescription = data.description;
-          accumulatedQuestions = data.questions.filter((question: any) => String(question?.text || '').trim().length > 0);
+          accumulatedQuestions = filterValidGeneratedQuestions(data.questions);
 
           // Validation logic for sequential numbering
           const sorted = [...accumulatedQuestions].sort((a, b) => (a.number || 0) - (b.number || 0));

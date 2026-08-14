@@ -4,7 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, VipTier, RewardChallenge, DailyGiftStatus, WeeklyVipLeaderboardEntry } from '../types';
+import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
@@ -579,7 +579,7 @@ export async function getRewardsSummary(userId: string): Promise<RewardsSummary>
       supabase.from('reward_levels').select('level, name, name_ar, min_points').order('level'),
       supabase.from('reward_badges').select('id, name, name_ar, description, description_ar, icon, sort_order').order('sort_order'),
       supabase.from('user_reward_badges').select('badge_id, earned_at').eq('user_id', userId).order('earned_at', { ascending: false }),
-      supabase.from('reward_points_ledger').select('id, points, event_type, event_key, reference_id, metadata, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(12),
+      supabase.from('reward_points_ledger').select('id, points, coins, event_type, event_key, reference_id, metadata, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(12),
       supabase.from('vip_tiers').select('id, name, name_ar, min_points, points_multiplier, daily_coin_bonus, challenge_slots, color, sort_order').order('min_points'),
       supabase.from('reward_challenge_templates').select('id, name, name_ar, description, description_ar, event_type, target, points_reward, coins_reward, icon, sort_order, is_active').eq('is_active', true).order('sort_order'),
       supabase.from('daily_gift_claims').select('claim_date, day_number, points_reward, coins_reward').eq('user_id', userId).eq('claim_date', today).maybeSingle(),
@@ -592,7 +592,7 @@ export async function getRewardsSummary(userId: string): Promise<RewardsSummary>
     const currentVip = vipTiers.find((v) => v.id === (balanceRes.data?.vip_tier || 'none')) || vipTiers.filter((v) => v.minPoints <= points).at(-1);
     const earnedMap = new Map((earnedRes.data || []).map((r: any) => [r.badge_id, r.earned_at]));
     const badges: RewardBadge[] = (badgesRes.data || []).map((r: any) => ({ id: r.id, name: r.name, nameAr: r.name_ar, description: r.description, descriptionAr: r.description_ar, icon: r.icon, sortOrder: r.sort_order, earnedAt: earnedMap.get(r.id) }));
-    const recentEntries: RewardLedgerEntry[] = (ledgerRes.data || []).map((r: any) => ({ id: r.id, points: r.points, eventType: r.event_type, eventKey: r.event_key, referenceId: r.reference_id, metadata: r.metadata, createdAt: r.created_at }));
+    const recentEntries: RewardLedgerEntry[] = (ledgerRes.data || []).map((r: any) => ({ id: r.id, points: r.points, coins: Number(r.coins || 0), eventType: r.event_type, eventKey: r.event_key, referenceId: r.reference_id, metadata: r.metadata, createdAt: r.created_at }));
     const claimedKeys = new Set(recentEntries.filter((e) => e.eventType === 'daily_challenge' && e.createdAt.slice(0, 10) === today).map((e) => e.referenceId));
     const dailyChallenges: RewardChallenge[] = (challengeRes.data || []).slice(0, currentVip?.challengeSlots || 3).map((r: any) => ({ id: r.id, name: r.name, nameAr: r.name_ar, description: r.description, descriptionAr: r.description_ar, eventType: r.event_type, target: Number(r.target), pointsReward: Number(r.points_reward), coinsReward: Number(r.coins_reward), icon: r.icon, sortOrder: Number(r.sort_order), isActive: r.is_active, claimed: claimedKeys.has(r.id) }));
     const dailyGift: DailyGiftStatus = { claimed: Boolean(giftRes.data), claimDate: giftRes.data?.claim_date, dayNumber: giftRes.data?.day_number, streak: Number(balanceRes.data?.daily_streak || 0), points: giftRes.data?.points_reward, coins: giftRes.data?.coins_reward };
@@ -601,6 +601,70 @@ export async function getRewardsSummary(userId: string): Promise<RewardsSummary>
     console.warn('Rewards are not available yet:', error);
     return empty;
   }
+}
+
+export async function getRewardLedger(userId: string, offset = 0, pageSize = 20): Promise<RewardLedgerPage> {
+  if (!userId || !isSupabaseConfigured) return { entries: [], hasMore: false };
+  const safeOffset = Math.max(0, offset);
+  const safePageSize = Math.min(50, Math.max(1, pageSize));
+  const { data, error } = await supabase
+    .from('reward_points_ledger')
+    .select('id, points, coins, event_type, event_key, reference_id, metadata, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .range(safeOffset, safeOffset + safePageSize);
+
+  if (error) throw error;
+  const rows = data || [];
+  return {
+    entries: rows.slice(0, safePageSize).map((row: any) => ({
+      id: row.id,
+      points: Number(row.points || 0),
+      coins: Number(row.coins || 0),
+      eventType: row.event_type,
+      eventKey: row.event_key,
+      referenceId: row.reference_id || undefined,
+      metadata: row.metadata || {},
+      createdAt: row.created_at,
+    })),
+    hasMore: rows.length > safePageSize,
+  };
+}
+
+export async function getCurrentWeeklyTasks(): Promise<WeeklyTask[]> {
+  const { data, error } = await supabase.rpc('get_current_weekly_tasks');
+  if (error) throw error;
+  return (data || []).map((row: any) => ({
+    id: String(row.id),
+    name: String(row.name || ''),
+    nameAr: String(row.name_ar || row.name || ''),
+    description: String(row.description || ''),
+    descriptionAr: String(row.description_ar || row.description || ''),
+    eventType: String(row.event_type || ''),
+    target: Number(row.target || 0),
+    pointsReward: Number(row.points_reward || 0),
+    coinsReward: Number(row.coins_reward || 0),
+    icon: String(row.icon || 'target'),
+    sortOrder: Number(row.sort_order || 0),
+    progress: Number(row.progress || 0),
+    completedAt: row.completed_at || undefined,
+    claimedAt: row.claimed_at || undefined,
+  }));
+}
+
+export async function claimWeeklyTask(taskId: string): Promise<{ claimed: boolean; reason?: string; points?: number; coins?: number; totalPoints?: number }> {
+  const { data, error } = await supabase.rpc('claim_weekly_task', { p_task_id: taskId });
+  if (error) throw error;
+  if (typeof window !== 'undefined' && data?.claimed) {
+    window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  }
+  return {
+    claimed: Boolean(data?.claimed),
+    reason: data?.reason || undefined,
+    points: Number(data?.points || 0),
+    coins: Number(data?.coins || 0),
+    totalPoints: Number(data?.total_points || 0),
+  };
 }
 
 export async function getWeeklyVipLeaderboard(): Promise<WeeklyVipLeaderboardEntry[]> {
@@ -1881,6 +1945,27 @@ export async function createNotification(
   return data;
 }
 
+export async function broadcastPlatformNotification(title: string, body: string): Promise<number> {
+  const { data, error } = await supabase.rpc('broadcast_platform_notification', {
+    p_title: title,
+    p_body: body,
+  });
+  if (error) {
+    throw new Error('Unable to send the platform notification.');
+  }
+  return Number(data || 0);
+}
+
+export async function recordWebVital(metricName: 'lcp' | 'fcp' | 'cls' | 'ttfb', metricValue: number, path: string, deviceClass: 'mobile' | 'tablet' | 'desktop'): Promise<void> {
+  const { error } = await supabase.rpc('record_web_vital', {
+    p_metric_name: metricName,
+    p_metric_value: metricValue,
+    p_path: path,
+    p_device_class: deviceClass,
+  });
+  if (error) throw error;
+}
+
 export async function getAllProfiles(): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
@@ -2409,14 +2494,18 @@ export async function getRewardInventory(userId: string) {
 export async function activateRewardFrame(itemId: string) {
   const { data, error } = await supabase.rpc('activate_reward_frame', { p_item_id: itemId });
   if (error) return { success: false, message: error.message };
-  window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  }
   return data;
 }
 
 export async function purchaseRewardItem(itemId: string) {
   const { data, error } = await supabase.rpc('purchase_reward_item', { p_item_id: itemId });
   if (error) return { success: false, message: error.message };
-  window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  }
   return data;
 }
 

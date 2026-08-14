@@ -10,7 +10,7 @@ import {
 } from '../lib/db';
 import { MessageSquare, Send, Search, Sparkles, User, RefreshCw, Star, ArrowRight, BellRing, Trash2 } from 'lucide-react';
 import { TelegramBadge } from './ProfileStatsView';
-import { playChimeSound } from './ExtraFeatures';
+import { playChimeSound } from '../lib/chime';
 import { UserBadge } from './UserBadge';
 
 interface MessageInboxProps {

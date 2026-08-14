@@ -23,16 +23,14 @@ import AdminGuard from './components/AdminGuard';
 const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'), 'admin-dashboard');
 const AnalyticsDashboard = lazyWithRetry(() => import('./pages/AnalyticsDashboard').then(module => ({ default: module.AnalyticsDashboard })), 'analytics-dashboard');
 const BillingSection = lazyWithRetry(() => import('./components/BillingSection').then(module => ({ default: module.BillingSection })), 'billing');
-import { 
-  ExploreSection, 
-  CategoriesSection, 
-  CommunitySection, 
-  BookmarksSection, 
-  AchievementsSection, 
-  SettingsSection,
-  LeaderboardSection,
-  playChimeSound 
-} from './components/ExtraFeatures';
+import { playChimeSound } from './lib/chime';
+const ExploreSection = lazyWithRetry(() => import('./components/ExtraFeatures').then(module => ({ default: module.ExploreSection })), 'explore');
+const CategoriesSection = lazyWithRetry(() => import('./components/ExtraFeatures').then(module => ({ default: module.CategoriesSection })), 'categories');
+const CommunitySection = lazyWithRetry(() => import('./components/ExtraFeatures').then(module => ({ default: module.CommunitySection })), 'community');
+const BookmarksSection = lazyWithRetry(() => import('./components/ExtraFeatures').then(module => ({ default: module.BookmarksSection })), 'bookmarks');
+const AchievementsSection = lazyWithRetry(() => import('./components/ExtraFeatures').then(module => ({ default: module.AchievementsSection })), 'achievements');
+const SettingsSection = lazyWithRetry(() => import('./components/ExtraFeatures').then(module => ({ default: module.SettingsSection })), 'settings');
+const LeaderboardSection = lazyWithRetry(() => import('./components/ExtraFeatures').then(module => ({ default: module.LeaderboardSection })), 'leaderboard');
 import ShareModal from './components/ShareModal';
 import OnboardingTour from './components/OnboardingTour';
 import { AuthModal } from './components/AuthModal';
@@ -56,6 +54,7 @@ import { pushNotificationsManager, PushNotificationPayload } from './lib/pushNot
 import { translations } from './lib/i18n';
 import { initAppOrigin, getApiUrl } from './lib/origin';
 import { generateCoolStudentName } from './lib/nameGenerator';
+import { startWebVitalsReporting } from './lib/performanceTelemetry';
 import { useAuth } from './context/AuthContext';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -150,6 +149,11 @@ export default function App() {
     setIsUserPremium(!!u.isPremium);
     setUserPlanName(u.planName || '');
   }, [authContext.user?.uid, authContext.user?.name, authContext.user?.photoURL, authContext.user?.customId, authContext.user?.isPremium, authContext.user?.planName]);
+
+  React.useEffect(() => {
+    if (!authContext.user?.uid) return;
+    startWebVitalsReporting();
+  }, [authContext.user?.uid]);
 
   // States for Forced Welcome-Login on Quiz
   const [authRedirectQuizId, setAuthRedirectQuizId] = React.useState<string | null>(null);

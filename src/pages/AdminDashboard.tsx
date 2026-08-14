@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Quiz } from '../types';
-import { getAllProfiles, sendDirectMessage, createNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings } from '../lib/db';
+import { getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
 import { getApiUrl } from '../lib/origin';
 import { decryptMessage } from '../lib/encryption';
@@ -520,11 +520,9 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                                   }
                                 }
 
-                                await createNotification(
+                                await broadcastPlatformNotification(
                                   promoType === 'Promo Code' ? (isAr ? '🎉 كود خصم جديد!' : '🎉 New Promo Code!') : (isAr ? '🎁 عرض خاص!' : '🎁 Special Offer!'),
-                                  `${promoCode}: ${promoMessage}` + (isAr ? ' (متوفر الآن في صفحة الدفع)' : ' (Now available on checkout)'),
-                                  isAr ? 'إدارة QuizSpace' : 'QuizSpace Administration',
-                                  'system'
+                                  `${promoCode}: ${promoMessage}` + (isAr ? ' (متوفر الآن في صفحة الدفع)' : ' (Now available on checkout)')
                                 );
 
                                 for (const user of allUsers) {

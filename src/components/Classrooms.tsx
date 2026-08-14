@@ -38,11 +38,12 @@ import {
   CheckCircle, BarChart2, Settings, Sliders, Play, Trash, FileUp, 
   ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle, Eye
 } from 'lucide-react';
-import { playChimeSound } from './ExtraFeatures';
+import { playChimeSound } from '../lib/chime';
 import { getApiUrl } from '../lib/origin';
 import { encryptMessage, decryptMessage } from '../lib/encryption';
 import { supabase } from '../lib/supabaseClient';
 import { sendPushEvent, getLessonVideos, addLessonVideo, deleteLessonVideo, incrementLessonVideoViews, extractYouTubeId } from '../lib/db';
+import { canPersistAuthenticatedData } from '../lib/userAccess';
 import { 
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, 
   XAxis, YAxis, Tooltip as ChartTooltip, Cell, PieChart, Pie 
@@ -2248,7 +2249,7 @@ export default function Classrooms({
                               triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'أدخل الرابط والعنوان' : 'Enter URL and title', 'info');
                               return;
                             }
-                            if (!currentUserId || currentUserId.startsWith('user-')) {
+                            if (!canPersistAuthenticatedData(currentUserId)) {
                               triggerToast(isAr ? 'تسجيل الدخول مطلوب' : 'Sign-in required', isAr ? 'سجّل الدخول بحسابك الحقيقي قبل إضافة حصة.' : 'Sign in with your verified account before adding a lesson.', 'info');
                               return;
                             }

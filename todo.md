@@ -20,3 +20,10 @@
 - [x] Improve document-extraction fallback progress, validate empty generated questions, and surface a clear final failure message
 - [x] Add production chunk splitting for React, motion, icons, charts, PDF, and Supabase dependencies
 - [x] Eliminate header crowding from large balances on narrow screens and raise core navigation/catalog controls to 44px touch targets
+- [x] Add automated tests for rewards, store ownership, classroom lesson permissions, notification preferences, and file-extraction failures
+- [x] Add an authenticated user-facing reward ledger showing each points and coins change with its source and timestamp
+- [x] Add secure weekly learning tasks with server-validated progress, one-time rewards, and visible completion state
+- [x] Extend the unified notification centre for rewards, weekly tasks, classroom lessons, and administrative updates
+- [x] Add client performance telemetry and improve deferred loading for noncritical features
+- [ ] Audit the authenticated mobile experience across profile, rewards, store, classrooms, motivation hub, and settings
+- [ ] Run authenticated regression tests with a designated test account and publish the verified release

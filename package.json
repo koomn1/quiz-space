@@ -9,6 +9,7 @@
     "preview": "npm run build && wrangler dev",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
+    "test": "vitest run",
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
@@ -54,6 +55,7 @@
     "typescript": "^5.9.3",
     "vite": "^6.2.3",
     "vite-plugin-compression": "^0.5.1",
+    "vitest": "^4.1.10",
     "wrangler": "^4.118.0"
   }
 }

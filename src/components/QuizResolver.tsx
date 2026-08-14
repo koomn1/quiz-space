@@ -17,7 +17,7 @@ import confetti from 'canvas-confetti';
 import { playNotificationSound } from '../lib/sound';
 import QuizDetailedReport from './QuizDetailedReport';
 import QuizCountdownTimer from './QuizCountdownTimer';
-import { playChimeSound } from './ExtraFeatures';
+import { playChimeSound } from '../lib/chime';
 
 import { translations } from '../lib/i18n';
 
