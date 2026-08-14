@@ -1,9 +1,8 @@
 import { GeneratedQuiz } from '../types';
 
 const ARABIC_LETTER = /[\u0621-\u064A]/u;
-const UNSUPPORTED_SCRIPT = /[\u0400-\u052F\u3040-\u30FF\u3400-\u9FFF\uAC00-\uD7AF]/u;
-const LOWERCASE_LATIN_WORD = /\b[a-z]{3,}\b/u;
-const FOREIGN_TEXT = /[\u0400-\u052F\u3040-\u30FF\u3400-\u9FFF\uAC00-\uD7AF]+(?:[\u064B-\u0652]|\u0627)?|\b[a-z]{3,}\b/gu;
+const FOREIGN_SCRIPT = /[\p{Script=Latin}\p{Script=Cyrillic}\p{Script=Han}\p{Script=Hangul}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Thai}]/u;
+const FOREIGN_TEXT = /[\p{Script=Latin}\p{Script=Cyrillic}\p{Script=Han}\p{Script=Hangul}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Thai}]+/gu;
 
 export function requiresArabicGeneration(topic: string): boolean {
   return ARABIC_LETTER.test(topic);
@@ -23,9 +22,7 @@ function contentFields(quiz: GeneratedQuiz): string[] {
 }
 
 export function hasUnexpectedForeignLanguage(quiz: GeneratedQuiz): boolean {
-  return contentFields(quiz).some((value) => (
-    UNSUPPORTED_SCRIPT.test(value) || LOWERCASE_LATIN_WORD.test(value)
-  ));
+  return contentFields(quiz).some((value) => FOREIGN_SCRIPT.test(value));
 }
 
 function cleanArabicField(value: string): string {

@@ -21,10 +21,10 @@ describe('Arabic quiz language validation', () => {
     expect(requiresArabicGeneration('Solar system')).toBe(false);
   });
 
-  it('rejects Korean and lowercase foreign-word leakage from a generated explanation', () => {
+  it('removes foreign-script leakage from a generated explanation', () => {
     const leaked = {
       ...arabicQuiz,
-      questions: [{ ...arabicQuiz.questions[0], explanation: 'تكوّن النظام الشمسي قبل 약 4.6 مليار سنة عبر proceso مستمر.' }],
+      questions: [{ ...arabicQuiz.questions[0], explanation: 'تكوّن النظام الشمسي قبل 약 4.6 مليار سنة عبر proceso Contains مستمر.' }],
     };
     expect(hasUnexpectedForeignLanguage(leaked)).toBe(true);
     const normalized = normalizeArabicGeneratedQuiz(leaked);
@@ -32,11 +32,11 @@ describe('Arabic quiz language validation', () => {
     expect(hasUnexpectedForeignLanguage(normalized)).toBe(false);
   });
 
-  it('accepts clean Arabic content and scientific uppercase abbreviations', () => {
-    const withAcronym = {
+  it('keeps clean Arabic content unchanged', () => {
+    const cleanArabic = {
       ...arabicQuiz,
-      questions: [{ ...arabicQuiz.questions[0], explanation: 'تساعد صور NASA على دراسة الكواكب.' }],
+      questions: [{ ...arabicQuiz.questions[0], explanation: 'تساعد الصور الفضائية على دراسة الكواكب.' }],
     };
-    expect(hasUnexpectedForeignLanguage(withAcronym)).toBe(false);
+    expect(normalizeArabicGeneratedQuiz(cleanArabic)).toEqual(cleanArabic);
   });
 });
