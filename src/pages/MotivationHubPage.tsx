@@ -224,31 +224,37 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
 
   const spin = async () => {
     if (spinning || alreadyPlayed || checkingAvailability) return;
-    setSpinning(true);
+    setCheckingAvailability(true);
     setResult(null);
+    const response = await claimLuckySpin();
+    if (!response?.success) {
+      setCheckingAvailability(false);
+      if (/already\s+spun/i.test(String(response?.message || ''))) {
+        setAlreadyPlayed(true);
+        setResult({
+          ...response,
+          message: lang === 'ar' ? 'لقد أدرت العجلة اليوم. عد غداً.' : 'Already spun today. Come back tomorrow.',
+        });
+      } else {
+        setResult(response);
+      }
+      return;
+    }
+
+    setCheckingAvailability(false);
+    setSpinning(true);
     const extraSpins = 5 + Math.floor(Math.random() * 5);
     const randomAngle = Math.floor(Math.random() * 360);
     const totalAngle = extraSpins * 360 + randomAngle;
     setAngle(totalAngle);
 
     await new Promise((resolve) => setTimeout(resolve, 4000));
-    const response = await claimLuckySpin();
     setSpinning(false);
     // Keep the angle but normalize it for UI consistency if needed
     // setAngle(totalAngle % 360); 
-    if (response?.success) {
-      setAlreadyPlayed(true);
-      onRewardsChanged();
-      setResult(response);
-    } else if (/already\s+spun/i.test(String(response?.message || ''))) {
-      setAlreadyPlayed(true);
-      setResult({
-        ...response,
-        message: lang === 'ar' ? 'لقد أدرت العجلة اليوم. عد غداً.' : 'Already spun today. Come back tomorrow.',
-      });
-    } else {
-      setResult(response);
-    }
+    setAlreadyPlayed(true);
+    onRewardsChanged();
+    setResult(response);
   };
 
   return (
