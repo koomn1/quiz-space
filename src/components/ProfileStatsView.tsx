@@ -799,7 +799,7 @@ export default function ProfileStatsView({
         </div>
       </div>
 
-      {profileData?.userId && (
+      {isOwnProfile && profileData?.userId && (
         <RewardsSection userId={profileData.userId} lang={lang} />
       )}
 

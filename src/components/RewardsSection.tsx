@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Award, BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Coins, Crown, Flame, Gift, History, Medal, Pencil, RefreshCw, Sparkles, Star, Target, Trophy } from 'lucide-react';
-import { claimDailyChallenge, claimDailyGift, claimWeeklyTask, getCurrentWeeklyTasks, getRewardLedger, getRewardsSummary } from '../lib/db';
+import { claimDailyChallenge, claimDailyGift, claimWeeklyTask, getCurrentWeeklyTasks, getLearningStreakStatus, getRewardLedger, getRewardsSummary } from '../lib/db';
 import { RewardBadge, RewardLedgerEntry, RewardsSummary, WeeklyTask } from '../types';
 import { getRewardEntryDetail, getRewardEventLabel } from '../lib/rewardPresentation';
+import { applyCanonicalLearningStreak } from '../lib/learningStreakPresentation';
 import WeeklyVipLeaderboard from './WeeklyVipLeaderboard';
 
 const iconMap: Record<string, typeof Award> = {
@@ -57,23 +58,26 @@ export default function RewardsSection({ userId, lang }: RewardsSectionProps) {
     }
   }, [isAr]);
 
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     setLoading(true);
-    const next = await getRewardsSummary(userId);
-    setSummary(next);
-    setLoading(false);
-  };
+    try {
+      const [next, streak] = await Promise.all([
+        getRewardsSummary(userId),
+        getLearningStreakStatus(),
+      ]);
+      setSummary(applyCanonicalLearningStreak(next, streak.currentStreak));
+    } catch {
+      setActionMessage(isAr ? 'تعذر تحميل سلسلة التعلم الآن' : 'Could not load your learning streak right now');
+    } finally {
+      setLoading(false);
+    }
+  }, [isAr, userId]);
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    getRewardsSummary(userId).then((next) => {
-      if (active) setSummary(next);
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
+    void loadSummary();
     return () => { active = false; };
-  }, [userId]);
+  }, [loadSummary]);
 
   useEffect(() => {
     void loadLedger(0);
