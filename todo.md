@@ -38,3 +38,4 @@
 - [x] Add a personal improvement dashboard that compares the learner with their own prior performance
 - [ ] Integrate the new motivation features with the rewards ledger, notification centre, permissions, tests, and responsive UI checks
 - [x] Prevent blank unauthenticated deep links to Motivation Hub sections and direct guests to the sign-in flow
+- [ ] Verify live motivational feature flows and replace visible decorative emoji with lightweight polished visual elements
