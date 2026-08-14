@@ -13,7 +13,7 @@ vi.mock('./supabaseClient', () => ({
   },
 }));
 
-import { activateRewardFrame, addLessonVideo, broadcastPlatformNotification, claimWeeklyTask, getCurrentWeeklyTasks, getRewardLedger, purchaseRewardItem, recordWebVital, updateUserNotificationPreferences } from './db';
+import { activateRewardFrame, addLessonVideo, broadcastPlatformNotification, claimWeeklyTask, getCurrentWeeklyTasks, getLearningStreakStatus, getRewardLedger, purchaseRewardItem, recordWebVital, updateDailyStreak, updateUserNotificationPreferences } from './db';
 
 describe('reward and persistence database helpers', () => {
   beforeEach(() => {
@@ -26,6 +26,34 @@ describe('reward and persistence database helpers', () => {
 
     await expect(activateRewardFrame('frame-gold')).resolves.toEqual({ success: true, active_frame_id: 'frame-gold' });
     expect(mocks.rpc).toHaveBeenCalledWith('activate_reward_frame', { p_item_id: 'frame-gold' });
+  });
+
+  it('reads the learning streak only from the authenticated server context', async () => {
+    mocks.rpc.mockResolvedValue({
+      data: {
+        current_streak: 4,
+        longest_streak: 8,
+        protection_days: 1,
+        checked_in_today: true,
+        last_login_date: '2026-08-14',
+      },
+      error: null,
+    });
+
+    await expect(getLearningStreakStatus()).resolves.toMatchObject({
+      currentStreak: 4,
+      longestStreak: 8,
+      protectionDays: 1,
+      checkedInToday: true,
+    });
+    expect(mocks.rpc).toHaveBeenCalledWith('get_learning_streak_status');
+  });
+
+  it('updates the learning streak through an identity-bound RPC without a client user id', async () => {
+    mocks.rpc.mockResolvedValue({ data: { success: true, streak: 4, points: 20 }, error: null });
+
+    await expect(updateDailyStreak()).resolves.toEqual({ success: true, streak: 4, points: 20 });
+    expect(mocks.rpc).toHaveBeenCalledWith('update_daily_streak');
   });
 
   it('purchases a store item only through the server-side purchase RPC', async () => {

@@ -11,7 +11,7 @@ import {
   CartesianGrid, Tooltip 
 } from 'recharts';
 import { Quiz, QuizCompletion, UserStats } from '../types';
-import { saveUserProfile, updateBadgeAndNameColor } from '../lib/db';
+import { getLearningStreakStatus, saveUserProfile, updateBadgeAndNameColor } from '../lib/db';
 import RewardsSection from './RewardsSection';
 import { UserBadge } from './UserBadge';
 import { ReputationBadge } from './ReputationBadge';
@@ -277,6 +277,7 @@ export default function ProfileStatsView({
 }: ProfileStatsViewProps) {
   const isAr = lang === 'ar';
   const [activeTab, setActiveTab] = React.useState<'overview' | 'quizzes' | 'achievements' | 'bookmarks' | 'activity'>('overview');
+  const [learningStreak, setLearningStreak] = React.useState(0);
 
   // Edit Info popup states
   const [isEditingInfo, setIsEditingInfo] = React.useState(false);
@@ -293,6 +294,22 @@ export default function ProfileStatsView({
   const [isSavingBadge, setIsSavingBadge] = React.useState(false);
   const [badgeSaveError, setBadgeSaveError] = React.useState('');
   const [isSavingInfo, setIsSavingInfo] = React.useState(false);
+
+  React.useEffect(() => {
+    let active = true;
+    if (!isOwnProfile || !profileData?.userId) {
+      setLearningStreak(0);
+      return () => { active = false; };
+    }
+    getLearningStreakStatus()
+      .then((status) => {
+        if (active) setLearningStreak(status.currentStreak);
+      })
+      .catch(() => {
+        if (active) setLearningStreak(0);
+      });
+    return () => { active = false; };
+  }, [isOwnProfile, profileData?.userId]);
 
   // Helper to copy student activation ID
   const handleCopyIdPopup = (idToCopy: string) => {
@@ -429,8 +446,7 @@ export default function ProfileStatsView({
     ? profileData.xp
     : completions.reduce((acc, c) => acc + (c.score * 10 + 10), 0);
 
-  // Calculate dynamic streak based on actual quizzes
-  const currentStreak = completions.length > 0 ? Math.min(32, completions.length + 1) : 0;
+  const currentStreak = isOwnProfile ? learningStreak : 0;
   
   // Level is derived from persisted XP: every 100 XP advances one level.
   const calculatedLevel = 1 + Math.floor(totalPoints / 100);
