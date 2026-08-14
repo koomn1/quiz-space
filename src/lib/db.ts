@@ -4,9 +4,9 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry } from '../types';
+import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
-import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
+import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
 // `users` is required to have a valid UUID `uid` — a trigger
@@ -2548,6 +2548,21 @@ export async function getPersonalLearningImprovement() {
   const { data, error } = await supabase.rpc('get_personal_learning_improvement');
   if (error) throw error;
   return normalizePersonalLearningImprovement(data);
+}
+
+const motivationUsageTabs: MotivationUsageTab[] = ['motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store'];
+
+export async function recordMotivationUsageEvent(tab: MotivationUsageTab, eventType: 'view' | 'engaged' = 'view'): Promise<void> {
+  if (!motivationUsageTabs.includes(tab)) return;
+  const { error } = await supabase.rpc('record_motivation_usage_event', { p_tab: tab, p_event_type: eventType });
+  if (error) throw error;
+}
+
+export async function getMotivationUsageSummary(days = 30): Promise<MotivationUsageSummary> {
+  const safeDays = Math.max(7, Math.min(90, Math.round(days)));
+  const { data, error } = await supabase.rpc('get_motivation_usage_summary', { p_days: safeDays });
+  if (error) throw error;
+  return normalizeMotivationUsageSummary(data);
 }
 
 export async function addReferral(referredUserId: string) {

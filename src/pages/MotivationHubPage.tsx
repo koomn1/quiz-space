@@ -40,6 +40,7 @@ import {
   getRewardStoreItems,
   getRewardsSummary,
   purchaseRewardItem,
+  recordMotivationUsageEvent,
   submitBrainChallenge,
   updateDailyStreak,
 } from '../lib/db';
@@ -552,8 +553,12 @@ export default function MotivationHubPage({ userId, userName, isPremium, planNam
     }
   }, [userId]);
   React.useEffect(() => { refresh(); }, [refresh]);
-  const onRewardsChanged = () => { refresh(); window.dispatchEvent(new CustomEvent('quizspace-rewards-updated')); };
-  const checkIn = async () => { if (isCheckingIn) return; setIsCheckingIn(true); await updateDailyStreak(); setIsCheckingIn(false); onRewardsChanged(); };
+  React.useEffect(() => {
+    if (!userId || userId.startsWith('user-')) return;
+    void recordMotivationUsageEvent(section, 'view').catch(() => undefined);
+  }, [section, userId]);
+  const onRewardsChanged = () => { refresh(); void recordMotivationUsageEvent(section, 'engaged').catch(() => undefined); window.dispatchEvent(new CustomEvent('quizspace-rewards-updated')); };
+  const checkIn = async () => { if (isCheckingIn) return; setIsCheckingIn(true); const result = await updateDailyStreak(); setIsCheckingIn(false); if (result?.success !== false) onRewardsChanged(); };
   const pageTitle = section === 'motivation-lucky' ? t.lucky : section === 'motivation-brain' ? t.brain : section === 'motivation-review' ? t.review : section === 'motivation-season' ? t.season : section === 'motivation-duel' ? t.duel : section === 'motivation-store' ? t.store : t.hub;
   return <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-4 sm:px-6 lg:px-10" dir={lang === 'ar' ? 'rtl' : 'ltr'}><div className="relative mb-6 overflow-hidden rounded-[2rem] border border-violet-300/40 bg-gradient-to-br from-violet-700 via-indigo-650 to-sky-700 p-6 text-white shadow-lg shadow-violet-500/10 sm:p-8"><div aria-hidden="true" className="absolute -top-16 -end-10 h-48 w-48 rounded-full border border-white/15 bg-white/10" /><div aria-hidden="true" className="absolute -bottom-24 start-1/3 h-52 w-52 rounded-full bg-sky-300/10 blur-3xl" /><div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between"><div><div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-white/75"><span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/15"><Sparkles className="h-3.5 w-3.5" /></span>QuizSpace Rewards</div><h1 className="text-3xl font-black tracking-tight sm:text-4xl">{pageTitle}</h1><p className="mt-2 max-w-2xl text-sm leading-7 text-white/80">{t.subtitle}{userName ? ` · ${userName}` : ''}</p></div><RewardPill rewards={rewards} lang={lang} /></div></div><SectionNav section={section} onNavigate={onNavigate} lang={lang} /><div className="mt-6">{section === 'motivation' && <div className="space-y-6"><Overview rewards={rewards} status={status} onNavigate={onNavigate} onCheckIn={checkIn} isCheckingIn={isCheckingIn} lang={lang} /><RewardsSection userId={userId} lang={lang} /></div>}{section === 'motivation-lucky' && <LuckyWheelPanel onRewardsChanged={onRewardsChanged} lang={lang} />}{section === 'motivation-brain' && <BrainChallengePanel onRewardsChanged={onRewardsChanged} lang={lang} />}{section === 'motivation-review' && <SmartReviewPanel lang={lang} />}{section === 'motivation-season' && <LearningSeasonPanel lang={lang} />}{section === 'motivation-duel' && <KnowledgeDuelPanel lang={lang} />}{section === 'motivation-store' && <StorePanel userId={userId} isPremium={isPremium} planName={planName} rewards={rewards} onRewardsChanged={onRewardsChanged} lang={lang} />}</div></main>;
 }

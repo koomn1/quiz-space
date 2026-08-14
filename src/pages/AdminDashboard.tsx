@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, BarChart3, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Quiz } from '../types';
 import { getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
@@ -10,6 +10,7 @@ import { getApiUrl } from '../lib/origin';
 import { decryptMessage } from '../lib/encryption';
 
 import AdminSubscriptions from '../components/AdminSubscriptions';
+import AdminMotivationUsagePanel from '../components/AdminMotivationUsagePanel';
 
 function DecryptedMessageItem({ msg, classId, isAr, currentUserEmail }: { msg: any; classId: string; isAr: boolean; currentUserEmail?: string }) {
   const [decrypted, setDecrypted] = useState<string>('...');
@@ -45,7 +46,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const isAr = lang === 'ar';
   const containerRef = React.useRef<HTMLDivElement>(null);
   
-  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards'>('overview');
+  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards' | 'motivation_usage'>('overview');
   useGSAP(() => {
     // Initial load animation for header and stats
     gsap.fromTo(
@@ -260,6 +261,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
     { id: 'coupons', name: isAr ? 'الكوبونات' : 'Coupons', icon: Ticket },
     { id: 'ai_monitoring', name: isAr ? 'مراقبة الذكاء الاصطناعي' : 'AI Monitoring', icon: Activity },
     { id: 'rewards', name: isAr ? 'النقاط والمتجر' : 'Rewards & Store', icon: Gift },
+    { id: 'motivation_usage', name: isAr ? 'استخدام التحفيز' : 'Motivation usage', icon: BarChart3 },
     { id: 'settings', name: isAr ? 'الإعدادات' : 'Settings', icon: Settings },
   ];
 
@@ -775,6 +777,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                   </section>
                 </div>
               )}
+              {activeAdminTab === 'motivation_usage' && <AdminMotivationUsagePanel lang={lang} />}
               {activeAdminTab === 'ai_monitoring' && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">

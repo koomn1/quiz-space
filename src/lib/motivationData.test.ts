@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
+import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
 
 describe('motivation recommendation payloads', () => {
   it('normalizes server cards and clamps an invalid accuracy value', () => {
@@ -41,6 +41,27 @@ describe('motivation recommendation payloads', () => {
       status: 'active', questionCount: 5, answeredCount: 0, opponentFinished: true,
       round: { sequence: 5, promptAr: '٢ + ٢', promptEn: '2 + 2', options: ['4', 'null'] },
       result: { myScore: 5, opponentScore: 0, outcome: 'tie' },
+    });
+  });
+
+  it('keeps only supported aggregated motivation tabs and clamps untrusted metrics', () => {
+    expect(normalizeMotivationUsageSummary({
+      window_days: 200,
+      total_unique_daily_opens: '-5',
+      total_unique_learners: '4',
+      total_unique_daily_engagements: 2,
+      tabs: [
+        { tab: 'motivation-review', unique_daily_opens: '3', unique_learners: 2, unique_daily_engagements: -1 },
+        { tab: 'unknown-tab', unique_daily_opens: 999 },
+      ],
+      daily: [{ date: '2026-08-14', unique_daily_opens: 3, unique_learners: '2' }, { unique_daily_opens: 6 }],
+    })).toEqual({
+      windowDays: 90,
+      totalUniqueDailyOpens: 0,
+      totalUniqueLearners: 4,
+      totalUniqueDailyEngagements: 2,
+      tabs: [{ tab: 'motivation-review', uniqueDailyOpens: 3, uniqueLearners: 2, uniqueDailyEngagements: 0 }],
+      daily: [{ date: '2026-08-14', uniqueDailyOpens: 3, uniqueLearners: 2 }],
     });
   });
 });

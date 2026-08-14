@@ -1,4 +1,4 @@
-import type { ActiveLearningSeason, KnowledgeDuelState, PersonalLearningImprovement, SmartReviewCard } from '../types';
+import type { ActiveLearningSeason, KnowledgeDuelState, MotivationUsageSummary, MotivationUsageTab, PersonalLearningImprovement, SmartReviewCard } from '../types';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -94,4 +94,40 @@ export function normalizeKnowledgeDuelPayload(payload: unknown): KnowledgeDuelSt
     outcome: String(rawResult.outcome) as 'win' | 'tie' | 'loss',
   } : undefined;
   return { status, questionCount, answeredCount, opponentFinished: Boolean(data.opponent_finished), round, result };
+}
+
+const motivationUsageTabs: MotivationUsageTab[] = ['motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store'];
+
+export function normalizeMotivationUsageSummary(payload: unknown): MotivationUsageSummary {
+  const data = record(payload);
+  const rawTabs = Array.isArray(data.tabs) ? data.tabs : [];
+  const tabs = rawTabs.map((candidate) => {
+    const item = record(candidate);
+    const tab = motivationUsageTabs.includes(String(item.tab) as MotivationUsageTab) ? String(item.tab) as MotivationUsageTab : null;
+    if (!tab) return null;
+    return {
+      tab,
+      uniqueDailyOpens: Math.max(0, number(item.unique_daily_opens)),
+      uniqueLearners: Math.max(0, number(item.unique_learners)),
+      uniqueDailyEngagements: Math.max(0, number(item.unique_daily_engagements)),
+    };
+  }).filter((item): item is NonNullable<typeof item> => item !== null);
+  const rawDaily = Array.isArray(data.daily) ? data.daily : [];
+  const daily = rawDaily.map((candidate) => {
+    const item = record(candidate);
+    const date = item.date ? String(item.date) : '';
+    return date ? {
+      date,
+      uniqueDailyOpens: Math.max(0, number(item.unique_daily_opens)),
+      uniqueLearners: Math.max(0, number(item.unique_learners)),
+    } : null;
+  }).filter((item): item is NonNullable<typeof item> => item !== null);
+  return {
+    windowDays: Math.max(7, Math.min(90, number(data.window_days, 30))),
+    totalUniqueDailyOpens: Math.max(0, number(data.total_unique_daily_opens)),
+    totalUniqueLearners: Math.max(0, number(data.total_unique_learners)),
+    totalUniqueDailyEngagements: Math.max(0, number(data.total_unique_daily_engagements)),
+    tabs,
+    daily,
+  };
 }

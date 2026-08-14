@@ -351,6 +351,30 @@ export interface KnowledgeDuelState {
   result?: { myScore: number; opponentScore: number; outcome: 'win' | 'tie' | 'loss' };
 }
 
+export type MotivationUsageTab = 'motivation' | 'motivation-lucky' | 'motivation-brain' | 'motivation-review' | 'motivation-season' | 'motivation-duel' | 'motivation-store';
+
+export interface MotivationUsageTabMetric {
+  tab: MotivationUsageTab;
+  uniqueDailyOpens: number;
+  uniqueLearners: number;
+  uniqueDailyEngagements: number;
+}
+
+export interface MotivationUsageDailyMetric {
+  date: string;
+  uniqueDailyOpens: number;
+  uniqueLearners: number;
+}
+
+export interface MotivationUsageSummary {
+  windowDays: number;
+  totalUniqueDailyOpens: number;
+  totalUniqueLearners: number;
+  totalUniqueDailyEngagements: number;
+  tabs: MotivationUsageTabMetric[];
+  daily: MotivationUsageDailyMetric[];
+}
+
 export interface UserStats {
   userId: string;
   name: string;
