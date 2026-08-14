@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import type { Session, User } from '@supabase/supabase-js';
 import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
+import { getAuthRedirectUrl } from '../lib/authRedirect';
 
 export interface AppUser {
   uid: string;
@@ -22,6 +23,7 @@ interface AuthContextType {
   mfaRequired: boolean;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ status: 'SUCCESS' | 'MFA_REQUIRED' }>;
+  signInWithGoogle: () => Promise<void>;
   verifyEmailCode: (email: string, code: string) => Promise<void>;
   resendEmailVerification: (email: string) => Promise<void>;
   verifyMfaCode: (code: string) => Promise<void>;
@@ -138,6 +140,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const handleOAuthRedirectTokens = async () => {
+      const callbackUrl = new URL(window.location.href);
+      const authorizationCode = callbackUrl.searchParams.get('code');
+      if (authorizationCode) {
+        const { error } = await supabase.auth.exchangeCodeForSession(authorizationCode);
+        callbackUrl.searchParams.delete('code');
+        window.history.replaceState({}, document.title, `${callbackUrl.pathname}${callbackUrl.search}${callbackUrl.hash}`);
+        if (error) return;
+      }
       const hash = window.location.hash;
       if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.replace(/^#/, ''));
@@ -169,8 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(passwordRequirementMessage('ar'));
     }
 
-    const currentBase = window.location.origin + (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-    const redirectTo = currentBase.endsWith('/quiz-space') ? currentBase + '/' : `${currentBase}/quiz-space/`;
+    const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -196,8 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resendEmailVerification = async (email: string) => {
-    const currentBase = window.location.origin + (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-    const redirectTo = currentBase.endsWith('/quiz-space') ? currentBase + '/' : `${currentBase}/quiz-space/`;
+    const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
 
     const { error } = await supabase.auth.resend({
       type: 'signup',
@@ -228,6 +236,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { status: 'MFA_REQUIRED' };
     }
     return { status: 'SUCCESS' };
+  };
+
+  const signInWithGoogle = async () => {
+    const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        queryParams: { prompt: 'select_account' },
+      },
+    });
+    if (error) {
+      throw new Error('تعذر فتح تسجيل الدخول بجوجل. تحقق من تفعيل مزود Google ثم حاول مرة أخرى.');
+    }
   };
 
   const verifyMfaCode = async (code: string) => {
@@ -274,6 +296,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         mfaRequired,
         signUp,
         signIn,
+        signInWithGoogle,
         verifyEmailCode,
         resendEmailVerification,
         verifyMfaCode,

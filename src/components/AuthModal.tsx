@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, User as UserIcon, Sparkles, ShieldCheck, ArrowRight, RefreshCw } from 'lucide-react';
+import { Chrome, X, Mail, Lock, User as UserIcon, Sparkles, ShieldCheck, ArrowRight, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { EmailVerificationStep } from './EmailVerificationStep';
@@ -13,7 +13,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login', onSuccess }) => {
-  const { signIn, signUp, verifyMfaCode } = useAuth();
+  const { signIn, signInWithGoogle, signUp, verifyMfaCode } = useAuth();
   
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [username, setUsername] = useState('');
@@ -22,6 +22,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // Sync mode when initialMode changes or modal reopens
   React.useEffect(() => {
@@ -108,6 +109,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
       setError(err.message || 'رمز التحقق غير صحيح.');
     } finally {
       setIsVerifying2FA(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      setError(err?.message || 'تعذر فتح تسجيل الدخول بجوجل. حاول مرة أخرى.');
+      setGoogleLoading(false);
     }
   };
 
@@ -299,6 +311,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 >
                   {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
                   <span>{mode === 'login' ? 'دخول سريع' : 'بدء التعلم الآن'}</span>
+                </button>
+                <div className="flex items-center gap-3 py-1" aria-hidden="true"><span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" /><span className="text-[10px] font-bold text-slate-400">أو</span><span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" /></div>
+                <button
+                  type="button"
+                  onClick={() => void handleGoogleSignIn()}
+                  disabled={loading || googleLoading}
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
+                >
+                  {googleLoading ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Chrome className="h-5 w-5 text-red-500" />}
+                  <span>{googleLoading ? 'جارٍ فتح Google...' : 'المتابعة باستخدام Google'}</span>
                 </button>
               </div>
 
