@@ -28,4 +28,5 @@
 - [ ] Audit the authenticated mobile experience across profile, rewards, store, classrooms, motivation hub, and settings
 - [ ] Run authenticated regression tests with a designated test account and publish the verified release
 - [x] Restore the Google OAuth option in the authentication modal and verify its configured redirect flow
-- [ ] Surface the reward ledger and weekly tasks from the authenticated Motivation Hub, not only the legacy profile statistics view
+- [x] Surface the reward ledger and weekly tasks from the authenticated Motivation Hub, not only the legacy profile statistics view
+- [x] Verify authenticated Google sign-in, Motivation Hub tasks and ledger, and notification filters without changing balances or purchase history
