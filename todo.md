@@ -40,4 +40,4 @@
 - [x] Prevent blank unauthenticated deep links to Motivation Hub sections and direct guests to the sign-in flow
 - [x] Verify live motivational feature flows and replace visible decorative emoji with lightweight polished visual elements
 - [x] Enhance the Motivation Hub visual hierarchy, progress feedback, and card interactions with lightweight responsive polish
-- [ ] Audit, track, and report privacy-preserving usage metrics for the new Motivation Hub tabs
+- [x] Audit, track, and report privacy-preserving usage metrics for the new Motivation Hub tabs
