@@ -39,3 +39,4 @@
 - [ ] Integrate the new motivation features with the rewards ledger, notification centre, permissions, tests, and responsive UI checks
 - [x] Prevent blank unauthenticated deep links to Motivation Hub sections and direct guests to the sign-in flow
 - [x] Verify live motivational feature flows and replace visible decorative emoji with lightweight polished visual elements
+- [ ] Enhance the Motivation Hub visual hierarchy, progress feedback, and card interactions with lightweight responsive polish
