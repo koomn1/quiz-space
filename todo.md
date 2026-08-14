@@ -27,4 +27,5 @@
 - [x] Add client performance telemetry and improve deferred loading for noncritical features
 - [ ] Audit the authenticated mobile experience across profile, rewards, store, classrooms, motivation hub, and settings
 - [ ] Run authenticated regression tests with a designated test account and publish the verified release
-- [ ] Restore the Google OAuth option in the authentication modal and verify its configured redirect flow
+- [x] Restore the Google OAuth option in the authentication modal and verify its configured redirect flow
+- [ ] Surface the reward ledger and weekly tasks from the authenticated Motivation Hub, not only the legacy profile statistics view
