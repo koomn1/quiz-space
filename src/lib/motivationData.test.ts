@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
+import { hasUsedLuckySpinToday, normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
 
 describe('motivation recommendation payloads', () => {
   it('normalizes server cards and clamps an invalid accuracy value', () => {
@@ -42,6 +42,12 @@ describe('motivation recommendation payloads', () => {
       round: { sequence: 5, promptAr: '٢ + ٢', promptEn: '2 + 2', options: ['4', 'null'] },
       result: { myScore: 5, opponentScore: 0, outcome: 'tie' },
     });
+  });
+
+  it('reads the daily lucky-spin flag without trusting malformed status payloads', () => {
+    expect(hasUsedLuckySpinToday({ lucky_spin: true })).toBe(true);
+    expect(hasUsedLuckySpinToday({ lucky_spin: false })).toBe(false);
+    expect(hasUsedLuckySpinToday(null)).toBe(false);
   });
 
   it('keeps only supported aggregated motivation tabs and clamps untrusted metrics', () => {

@@ -96,6 +96,10 @@ export function normalizeKnowledgeDuelPayload(payload: unknown): KnowledgeDuelSt
   return { status, questionCount, answeredCount, opponentFinished: Boolean(data.opponent_finished), round, result };
 }
 
+export function hasUsedLuckySpinToday(payload: unknown): boolean {
+  return Boolean(record(payload).lucky_spin);
+}
+
 const motivationUsageTabs: MotivationUsageTab[] = ['motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store'];
 
 export function normalizeMotivationUsageSummary(payload: unknown): MotivationUsageSummary {

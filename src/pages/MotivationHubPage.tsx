@@ -45,6 +45,7 @@ import {
   updateDailyStreak,
 } from '../lib/db';
 import { getStoreBundleBenefitLabel, getStorePaymentMode, isStoreItemActionAvailable } from '../lib/storePricing';
+import { hasUsedLuckySpinToday } from '../lib/motivationData';
 
 export type MotivationSection = 'motivation' | 'motivation-lucky' | 'motivation-brain' | 'motivation-review' | 'motivation-season' | 'motivation-duel' | 'motivation-store';
 
@@ -195,6 +196,7 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
   const [spinning, setSpinning] = React.useState(false);
   const [result, setResult] = React.useState<any>(null);
   const [alreadyPlayed, setAlreadyPlayed] = React.useState(false);
+  const [checkingAvailability, setCheckingAvailability] = React.useState(true);
 
   const segments = [
     { label: '5', color: 'bg-indigo-500' },
@@ -207,8 +209,21 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
     { label: '10', color: 'bg-purple-500' },
   ];
 
+  React.useEffect(() => {
+    let active = true;
+    getMotivationStatus()
+      .then((status) => {
+        if (active) setAlreadyPlayed(hasUsedLuckySpinToday(status));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setCheckingAvailability(false);
+      });
+    return () => { active = false; };
+  }, []);
+
   const spin = async () => {
-    if (spinning || alreadyPlayed) return;
+    if (spinning || alreadyPlayed || checkingAvailability) return;
     setSpinning(true);
     setResult(null);
     const extraSpins = 5 + Math.floor(Math.random() * 5);
@@ -221,10 +236,18 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
     setSpinning(false);
     // Keep the angle but normalize it for UI consistency if needed
     // setAngle(totalAngle % 360); 
-    setResult(response);
     if (response?.success) {
       setAlreadyPlayed(true);
       onRewardsChanged();
+      setResult(response);
+    } else if (/already\s+spun/i.test(String(response?.message || ''))) {
+      setAlreadyPlayed(true);
+      setResult({
+        ...response,
+        message: lang === 'ar' ? 'لقد أدرت العجلة اليوم. عد غداً.' : 'Already spun today. Come back tomorrow.',
+      });
+    } else {
+      setResult(response);
     }
   };
 
@@ -281,12 +304,12 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
       <button
         type="button"
         onClick={spin}
-        disabled={spinning || alreadyPlayed}
+        disabled={spinning || alreadyPlayed || checkingAvailability}
         className="group relative mx-auto flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-primary px-10 py-4 text-sm font-black text-white shadow-xl shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-2xl active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
         {spinning ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5 fill-current" />}
-        {spinning ? t.spinning : alreadyPlayed ? t.done : t.spin}
+        {checkingAvailability ? (lang === 'ar' ? 'جاري التحقق...' : 'Checking...') : spinning ? t.spinning : alreadyPlayed ? t.done : t.spin}
       </button>
 
       {result && (

@@ -53,4 +53,5 @@
 - [x] Prevent non-Arabic language leakage in Arabic AI-generated questions and explanations, then verify a short live generation
 - [x] Remove ambiguous zero-valued monthly-pass display from point-store bundles while retaining their positive point purchase cost
 - [x] Ensure completed onboarding is persisted per account across browser sessions and does not reappear after a new device login
-- [ ] Diagnose and repair activation of an owned profile frame from the point store, then verify the saved active frame after refresh
+- [x] Diagnose and repair activation of an owned profile frame from the point store, then verify the saved active frame after refresh
+- [ ] Prevent a completed daily lucky-spin attempt from replaying the wheel animation, and show localized completed-state feedback
