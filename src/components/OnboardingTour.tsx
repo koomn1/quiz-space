@@ -117,7 +117,6 @@ export default function OnboardingTour({
 
   const finishTour = () => {
     playNotificationSound('success');
-    localStorage.setItem('quiz_onboarding_shown', 'true');
     onClose();
   };
 

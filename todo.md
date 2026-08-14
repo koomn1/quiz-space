@@ -52,3 +52,4 @@
 - [x] Diagnose the GitHub Pages asset mismatch: a stale cached index referenced a retired hashed bundle, while a fresh index request loaded the deployed storefront code and corrected prices
 - [x] Prevent non-Arabic language leakage in Arabic AI-generated questions and explanations, then verify a short live generation
 - [ ] Remove ambiguous zero-valued monthly-pass display from point-store bundles while retaining their positive point purchase cost
+- [ ] Ensure completed onboarding is persisted per account across browser sessions and does not reappear after a new device login

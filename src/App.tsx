@@ -55,6 +55,7 @@ import { translations } from './lib/i18n';
 import { initAppOrigin, getApiUrl } from './lib/origin';
 import { generateCoolStudentName } from './lib/nameGenerator';
 import { startWebVitalsReporting } from './lib/performanceTelemetry';
+import { getOnboardingTourStorageKey, shouldShowOnboardingTour } from './lib/onboardingState';
 import { useAuth } from './context/AuthContext';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -702,18 +703,28 @@ export default function App() {
     root.style.setProperty('--theme-gradient-to', selected.gradientTo);
   }, [colorTheme]);
 
-  // Trigger Onboarding for new users on mount
+  // Trigger the tour only after the account-backed onboarding state has loaded.
+  // This prevents an already onboarded user from seeing it again on a new browser.
   React.useEffect(() => {
-    // Check both localStorage (for guest/speed) and server-side userStats
-    const tourShownLocal = localStorage.getItem('quiz_onboarding_shown');
-    const tourShownServer = userStats?.onboarded;
-    
-    if (!tourShownLocal && !tourShownServer && !isGuestSandbox) {
-      // Small delay on mount for transition smoothness
-      const timer = setTimeout(() => setShowOnboarding(true), 1200);
-      return () => clearTimeout(timer);
+    const tourCompletedLocally = userId
+      ? localStorage.getItem(getOnboardingTourStorageKey(userId)) === 'true'
+      : false;
+    const shouldShow = shouldShowOnboardingTour({
+      userId,
+      isGuestSandbox,
+      isStatsLoaded,
+      serverOnboarded: userStats?.onboarded,
+      tourCompletedLocally,
+    });
+
+    if (!shouldShow) {
+      setShowOnboarding(false);
+      return;
     }
-  }, [userStats?.onboarded, isGuestSandbox]);
+
+    const timer = window.setTimeout(() => setShowOnboarding(true), 1200);
+    return () => window.clearTimeout(timer);
+  }, [userId, userStats?.onboarded, isGuestSandbox, isStatsLoaded]);
 
   // Sync Google Auth State changes
   React.useEffect(() => {
@@ -1916,7 +1927,9 @@ export default function App() {
             setActiveTab={(tab) => handleSetTab(tab as any, true)}
             onClose={() => {
               setShowOnboarding(false);
-              localStorage.setItem('quiz_onboarding_shown', 'true');
+              if (userId) {
+                localStorage.setItem(getOnboardingTourStorageKey(userId), 'true');
+              }
               if (userId && !isGuestSandbox) {
                 saveUserProfile(userId, userName, undefined, userEmail || undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, true);
               }
