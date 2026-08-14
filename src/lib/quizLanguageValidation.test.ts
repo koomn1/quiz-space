@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { GeneratedQuiz } from '../types';
-import { hasUnexpectedForeignLanguage, requiresArabicGeneration } from './quizLanguageValidation';
+import { hasUnexpectedForeignLanguage, normalizeArabicGeneratedQuiz, requiresArabicGeneration } from './quizLanguageValidation';
 
 const arabicQuiz: GeneratedQuiz = {
   title: 'اختبار النظام الشمسي',
@@ -27,6 +27,9 @@ describe('Arabic quiz language validation', () => {
       questions: [{ ...arabicQuiz.questions[0], explanation: 'تكوّن النظام الشمسي قبل 약 4.6 مليار سنة عبر proceso مستمر.' }],
     };
     expect(hasUnexpectedForeignLanguage(leaked)).toBe(true);
+    const normalized = normalizeArabicGeneratedQuiz(leaked);
+    expect(normalized.questions[0].explanation).toBe('تكوّن النظام الشمسي قبل 4.6 مليار سنة عبر مستمر.');
+    expect(hasUnexpectedForeignLanguage(normalized)).toBe(false);
   });
 
   it('accepts clean Arabic content and scientific uppercase abbreviations', () => {
