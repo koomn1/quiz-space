@@ -5,6 +5,7 @@ import { generateWithOpenRouter } from '../services/openrouterService';
 import { generateWithGroq } from '../services/groqService';
 import { generateWithDeepSeek } from '../services/deepseekService';
 import { generateWithOpenAI } from '../services/openaiService';
+import { hasUnexpectedForeignLanguage, requiresArabicGeneration } from '../lib/quizLanguageValidation';
 
 // Helper for static schema validation
 export function validateAndCleanQuiz(data: any): GeneratedQuiz {
@@ -93,6 +94,7 @@ export async function generateQuizWithFallback(
   amount: number,
   alreadyGeneratedQuestions?: string[]
 ): Promise<GeneratedQuiz> {
+  const enforceArabic = requiresArabicGeneration(topic);
   const providers = [
     { key: 'groq', run: () => generateWithGroq(topic, amount, alreadyGeneratedQuestions) },
     { key: 'openrouter', run: () => generateWithOpenRouter(topic, amount, alreadyGeneratedQuestions) },
@@ -106,6 +108,9 @@ export async function generateQuizWithFallback(
       console.log(`Attempting Quiz generation with ${provider.key}...`);
       const result = await withTimeout(provider.run(), PROVIDER_TIMEOUT_MS, provider.key);
       const cleaned = validateAndCleanQuiz(result);
+      if (enforceArabic && hasUnexpectedForeignLanguage(cleaned)) {
+        throw new Error('Generated quiz contains unexpected foreign-language text');
+      }
       console.log(`${provider.key} Quiz Generation succeeded and passed schema validation!`);
       return cleaned;
     } catch (err: any) {

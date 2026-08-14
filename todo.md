@@ -48,4 +48,6 @@
 - [ ] Deferred by user: isolate learning-streak state per authenticated user and verify it cannot be shared across accounts
 - [ ] Deferred by user: repair reward collection and daily quiz-point accounting so balances update outside the current page
 - [ ] Deferred by user: prevent multiple attempts against the same daily brain-challenge question unless explicitly intended
-- [ ] Repair all visible zero-priced point-store offers and point packages so every purchasable item has a positive configured price
+- [x] Repair all visible zero-priced point-store offers and point packages so every purchasable item has a positive configured price
+- [x] Diagnose the GitHub Pages asset mismatch: a stale cached index referenced a retired hashed bundle, while a fresh index request loaded the deployed storefront code and corrected prices
+- [ ] Prevent non-Arabic language leakage in Arabic AI-generated questions and explanations, then verify a short live generation

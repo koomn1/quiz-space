@@ -150,10 +150,14 @@ function extractJson(text: string): unknown {
 
 function quizPrompt(topic: string, amount: number, previous: string[]): string {
   const exclusions = previous.length ? `\nلا تكرر هذه الأسئلة: ${previous.join(' | ')}` : '';
+  const requiresArabic = /[\u0621-\u064A]/u.test(topic);
+  const languageConstraint = requiresArabic
+    ? '\nتقييد اللغة: اكتب العنوان والوصف ونصوص الأسئلة والخيارات والإجابات والشروح بالعربية الفصحى فقط. لا تستخدم كلمات أو حروفاً من لغات أخرى. الاستثناء الوحيد هو الاختصارات العلمية اللاتينية الضرورية، وتكون بحروف كبيرة فقط مثل NASA أو DNA.'
+    : '';
   // esbuild 0.25+ refuses template literals containing three consecutive
   // backticks (code-fence markers), so build the prompt without fences.
   const fence = String.fromCharCode(96, 96, 96); // ```
-  return (`أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.` + exclusions + `
+  return (`أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.` + exclusions + languageConstraint + `
 نوّع أنواع الأسئلة: اختيار من متعدد (mcq) وصح/خطأ (tf) وأسئلة مقالية (essay) حسب الموضوع.
 أجب بـ JSON صالح فقط محاط بوسم ${fence}json ... ${fence} وفق الشكل التالي:
 {"title":"عنوان الاختبار","description":"وصف الاختبار","questions":[
