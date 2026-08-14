@@ -44,7 +44,7 @@ import {
   submitBrainChallenge,
   updateDailyStreak,
 } from '../lib/db';
-import { getStorePaymentMode } from '../lib/storePricing';
+import { getStoreBundleBenefitLabel, getStorePaymentMode } from '../lib/storePricing';
 
 export type MotivationSection = 'motivation' | 'motivation-lucky' | 'motivation-brain' | 'motivation-review' | 'motivation-season' | 'motivation-duel' | 'motivation-store';
 
@@ -531,7 +531,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
                 <Sparkles className="h-6 w-6" />
               </div>
               <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.reward_points.toLocaleString()} {t.points}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{getStoreBundleBenefitLabel(item, lang)}</p>
               <button type="button" disabled={!isPurchasable || busy === item.id} onClick={() => payment.mode === 'cash' ? setPaymentItem(item) : buyFrame(item)} className="mt-5 w-full rounded-2xl bg-emerald-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-45">
                 {paymentLabel}
               </button>
