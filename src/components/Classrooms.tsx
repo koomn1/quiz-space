@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Quiz } from '../types';
+import ClassroomChallengesPanel from './ClassroomChallengesPanel';
 
 // Derives an online/away/offline indicator purely from the existing
 // last_active timestamp — no realtime subscriptions/websockets needed.
@@ -36,7 +37,7 @@ import {
   Volume2, Bell, FileText, Image, Download, FolderOpen, Info, 
   MessageSquare, PlusCircle, Calendar, ClipboardList, Megaphone, 
   CheckCircle, BarChart2, Settings, Sliders, Play, Trash, FileUp, 
-  ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle, Eye
+  ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle, Eye, Target
 } from 'lucide-react';
 import { playChimeSound } from '../lib/chime';
 import { getApiUrl } from '../lib/origin';
@@ -263,7 +264,7 @@ export default function Classrooms({
   const [isSendingChat, setIsSendingChat] = useState(false);
 
   // Expanded 11 SaaS Workspace Tabs
-  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'overview' | 'discussion' | 'quizzes' | 'assignments' | 'files' | 'members' | 'announcements' | 'grades' | 'calendar' | 'analytics' | 'settings' | 'lessons'>('overview');
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'overview' | 'discussion' | 'quizzes' | 'assignments' | 'files' | 'members' | 'announcements' | 'grades' | 'calendar' | 'analytics' | 'settings' | 'lessons' | 'challenges'>('overview');
   
   // Custom Assignment Builder State
   const [isCreatingAssign, setIsCreatingAssign] = useState(false);
@@ -1196,6 +1197,7 @@ export default function Classrooms({
                 { id: 'discussion', label: isAr ? 'المناقشة والتواصل' : 'Discussion', icon: MessageSquare },
                 { id: 'quizzes', label: isAr ? 'الاختبارات' : 'Quizzes', icon: Sparkles },
                 { id: 'assignments', label: isAr ? 'التكليفات والواجبات' : 'Assignments', icon: ClipboardList },
+                { id: 'challenges', label: isAr ? 'تحديات الفصل' : 'Challenges', icon: Target },
                 { id: 'files', label: isAr ? 'حقيبة الملفات' : 'Files', icon: FolderOpen },
                 { id: 'members', label: isAr ? 'الأعضاء والطلاب' : 'Members', icon: Users2 },
                 { id: 'announcements', label: isAr ? 'لوحة النشرات' : 'Notices', icon: Megaphone },
@@ -1441,6 +1443,14 @@ export default function Classrooms({
                     </div>
                   </div>
                 </div>
+              )}
+
+              {activeWorkspaceTab === 'challenges' && (
+                <ClassroomChallengesPanel
+                  classId={activeClassroomView.id}
+                  canCreate={activeClassroomView.createdBy === currentUserId}
+                  lang={isAr ? 'ar' : 'en'}
+                />
               )}
 
               {/* TAB 2: DISCUSSION */}

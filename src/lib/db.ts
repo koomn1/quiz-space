@@ -6,6 +6,7 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
+import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
 // `users` is required to have a valid UUID `uid` — a trigger
@@ -2456,6 +2457,97 @@ export async function updateDailyStreak() {
   const { data, error } = await supabase.rpc('update_daily_streak');
   if (error) return { success: false, message: error.message };
   return data;
+}
+
+export async function getLearningStreakStatus() {
+  const { data, error } = await supabase.rpc('get_learning_streak_status');
+  if (error) throw error;
+  const status = data || {};
+  return {
+    currentStreak: Number(status.current_streak || 0),
+    longestStreak: Number(status.longest_streak || 0),
+    protectionDays: Math.max(0, Math.min(2, Number(status.protection_days || 0))),
+    checkedInToday: Boolean(status.checked_in_today),
+    lastLoginDate: status.last_login_date ? String(status.last_login_date) : undefined,
+    lastProtectionEarnedAt: status.last_protection_earned_at ? String(status.last_protection_earned_at) : undefined,
+    lastProtectionUsedFor: status.last_protection_used_for ? String(status.last_protection_used_for) : undefined,
+  };
+}
+
+export async function getLearningClassChallenges(classId: string) {
+  const { data, error } = await supabase.rpc('get_learning_class_challenges', { p_class_id: classId });
+  if (error) throw error;
+  const payload = data || {};
+  return (Array.isArray(payload.challenges) ? payload.challenges : []).map((challenge: any) => ({
+    id: String(challenge.id), title: String(challenge.title || ''), description: String(challenge.description || ''),
+    targetCount: Number(challenge.target_count || 0), currentCount: Number(challenge.current_count || 0),
+    endsAt: String(challenge.ends_at || ''), completedAt: challenge.completed_at ? String(challenge.completed_at) : undefined,
+    rewardPoints: Number(challenge.reward_points || 0), myContributions: Number(challenge.my_contributions || 0), claimed: Boolean(challenge.claimed),
+  }));
+}
+
+export async function createLearningClassChallenge(classId: string, title: string, description: string, targetCount: number, endsAt: string) {
+  const { data, error } = await supabase.rpc('create_learning_class_challenge', {
+    p_class_id: classId, p_title: title, p_description: description, p_target_count: targetCount, p_ends_at: endsAt,
+  });
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function claimLearningClassChallenge(challengeId: string) {
+  const { data, error } = await supabase.rpc('claim_learning_class_challenge', { p_challenge_id: challengeId });
+  if (error) return { claimed: false, message: error.message };
+  if (typeof window !== 'undefined' && data?.claimed) window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  return data;
+}
+
+export async function getActiveLearningSeason() {
+  const { data, error } = await supabase.rpc('get_active_learning_season');
+  if (error) throw error;
+  return normalizeLearningSeasonPayload(data);
+}
+
+export async function claimLearningSeasonReward(seasonId: string, choiceKey: string) {
+  const { data, error } = await supabase.rpc('claim_learning_season_reward', { p_season_id: seasonId, p_choice_key: choiceKey });
+  if (error) return { claimed: false, message: error.message };
+  if (typeof window !== 'undefined' && data?.claimed) window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  return data;
+}
+
+export async function createPrivateKnowledgeDuel() {
+  const { data, error } = await supabase.rpc('create_private_knowledge_duel');
+  if (error) return { message: error.message };
+  return { duelId: data?.duel_id ? String(data.duel_id) : '', inviteCode: data?.invite_code ? String(data.invite_code) : '' };
+}
+
+export async function joinPrivateKnowledgeDuel(inviteCode: string) {
+  const { data, error } = await supabase.rpc('join_private_knowledge_duel', { p_invite_code: inviteCode });
+  if (error) return { message: error.message };
+  return { duelId: data?.duel_id ? String(data.duel_id) : '' };
+}
+
+export async function getPrivateKnowledgeDuelState(duelId: string) {
+  const { data, error } = await supabase.rpc('get_private_knowledge_duel_state', { p_duel_id: duelId });
+  if (error) throw error;
+  return normalizeKnowledgeDuelPayload(data);
+}
+
+export async function submitPrivateKnowledgeDuelAnswer(duelId: string, sequence: number, answer: string) {
+  const { data, error } = await supabase.rpc('submit_private_knowledge_duel_answer', { p_duel_id: duelId, p_sequence: sequence, p_answer: answer });
+  if (error) return { accepted: false, message: error.message };
+  return data;
+}
+
+export async function getSmartReviewCards() {
+  const { data, error } = await supabase.rpc('get_smart_review_cards');
+  if (error) throw error;
+  return normalizeSmartReviewPayload(data);
+}
+
+export async function getPersonalLearningImprovement() {
+  const { data, error } = await supabase.rpc('get_personal_learning_improvement');
+  if (error) throw error;
+  return normalizePersonalLearningImprovement(data);
 }
 
 export async function addReferral(referredUserId: string) {

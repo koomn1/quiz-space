@@ -15,6 +15,8 @@ import {
   RefreshCw,
   Sparkles,
   Store,
+  Swords,
+  Target,
   Trophy,
   WalletCards,
   X,
@@ -22,6 +24,10 @@ import {
 } from 'lucide-react';
 import { showToast } from '../components/Toast';
 import RewardsSection from '../components/RewardsSection';
+import SmartReviewPanel from '../components/SmartReviewPanel';
+import StreakMomentumCard from '../components/StreakMomentumCard';
+import LearningSeasonPanel from '../components/LearningSeasonPanel';
+import KnowledgeDuelPanel from '../components/KnowledgeDuelPanel';
 import { askAI } from '../services/aiWorkerClient';
 import {
   activateRewardFrame,
@@ -38,7 +44,7 @@ import {
   updateDailyStreak,
 } from '../lib/db';
 
-export type MotivationSection = 'motivation' | 'motivation-lucky' | 'motivation-brain' | 'motivation-store';
+export type MotivationSection = 'motivation' | 'motivation-lucky' | 'motivation-brain' | 'motivation-review' | 'motivation-season' | 'motivation-duel' | 'motivation-store';
 
 type MotivationHubPageProps = {
   userId: string;
@@ -78,7 +84,7 @@ const imageUrl = (name: string) => `${(import.meta.env.BASE_URL || '/').replace(
 const labels = {
   ar: {
     hub: 'مركز التحفيز', subtitle: 'حوّل كل جلسة مذاكرة إلى تقدّم واضح ومكافآت حقيقية.', overview: 'نظرة عامة',
-    lucky: 'عجلة الحظ', brain: 'تحدي العقل', store: 'متجر النقاط', points: 'نقطة', coins: 'عملة',
+    lucky: 'عجلة الحظ', brain: 'تحدي العقل', review: 'مراجعة ذكية', season: 'موسم التعلّم', duel: 'مبارزة خاصة', store: 'متجر النقاط', points: 'نقطة', coins: 'عملة',
     streak: 'سلسلة الأيام', checkIn: 'سجّل حضور اليوم', checked: 'تم تسجيل اليوم',
     spinHint: 'أدر العجلة مرة واحدة يومياً واربح من 1 إلى 50 نقطة.', spin: 'أدر العجلة', spinning: 'العجلة تدور...', done: 'تم اللعب اليوم',
     todayQuestion: 'سؤال اليوم', attempts: 'محاولات اليوم', answer: 'اكتب إجابتك هنا', submit: 'تحليل الإجابة', analyzing: 'جاري التحليل...', correct: 'إجابة صحيحة', wrong: 'ليست الإجابة الصحيحة', tryAgain: 'لديك محاولة أخرى',
@@ -88,7 +94,7 @@ const labels = {
   },
   en: {
     hub: 'Motivation Hub', subtitle: 'Turn every study session into visible progress and meaningful rewards.', overview: 'Overview',
-    lucky: 'Lucky Wheel', brain: 'Brain Challenge', store: 'Points Store', points: 'points', coins: 'coins',
+    lucky: 'Lucky Wheel', brain: 'Brain Challenge', review: 'Smart review', season: 'Learning season', duel: 'Private duel', store: 'Points Store', points: 'points', coins: 'coins',
     streak: 'Daily Streak', checkIn: 'Check in today', checked: 'Checked in today',
     spinHint: 'Spin once a day and win between 1 and 50 points.', spin: 'Spin the wheel', spinning: 'Spinning...', done: 'Played today',
     todayQuestion: "Today's question", attempts: 'Attempts today', answer: 'Type your answer here', submit: 'Analyze answer', analyzing: 'Analyzing...', correct: 'Correct answer', wrong: 'Not quite right', tryAgain: 'You have another attempt',
@@ -120,6 +126,9 @@ function SectionNav({ section, onNavigate, lang }: Pick<MotivationHubPageProps, 
     { id: 'motivation', label: t.overview, icon: <Sparkles className="h-4 w-4" /> },
     { id: 'motivation-lucky', label: t.lucky, icon: <Gift className="h-4 w-4" /> },
     { id: 'motivation-brain', label: t.brain, icon: <Brain className="h-4 w-4" /> },
+    { id: 'motivation-review', label: t.review, icon: <Target className="h-4 w-4" /> },
+    { id: 'motivation-season', label: t.season, icon: <Trophy className="h-4 w-4" /> },
+    { id: 'motivation-duel', label: t.duel, icon: <Swords className="h-4 w-4" /> },
     { id: 'motivation-store', label: t.store, icon: <Store className="h-4 w-4" /> },
   ];
   return (
@@ -148,14 +157,7 @@ function Overview({ rewards, status, onNavigate, onCheckIn, isCheckingIn, lang }
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-100 p-5 dark:border-orange-900/50 dark:from-orange-950/30 dark:to-amber-950/20">
-          <div className="mb-4 flex items-center justify-between"><span className="rounded-2xl bg-white/80 p-3 text-2xl shadow-sm dark:bg-slate-900/50">🔥</span><span className="text-xs font-black text-orange-700 dark:text-orange-300">{t.streak}</span></div>
-          <div className="text-4xl font-black text-orange-700 dark:text-orange-300">{rewards.dailyStreak}</div>
-          <p className="mt-1 text-xs font-bold text-orange-700/70 dark:text-orange-300/70">{lang === 'ar' ? 'يوم متتالي' : 'consecutive days'}</p>
-          <button type="button" onClick={onCheckIn} disabled={isCheckingIn} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-orange-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-orange-700 disabled:opacity-60">
-            {isCheckingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{status?.streak?.last_login_date ? t.checked : t.checkIn}
-          </button>
-        </div>
+        <StreakMomentumCard lang={lang} onCheckIn={onCheckIn} isCheckingIn={isCheckingIn} />
         <div className="rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-100 p-5 dark:border-violet-900/50 dark:from-violet-950/30 dark:to-indigo-950/20">
           <div className="mb-4 flex items-center justify-between"><span className="rounded-2xl bg-white/80 p-3 text-2xl shadow-sm dark:bg-slate-900/50">🎁</span><span className="text-xs font-black text-violet-700 dark:text-violet-300">{lang === 'ar' ? 'مكافآت اليوم' : "Today's rewards"}</span></div>
           <div className="text-4xl font-black text-violet-700 dark:text-violet-300">+{status?.brain_challenge?.correct || 0}</div>
@@ -548,6 +550,6 @@ export default function MotivationHubPage({ userId, userName, isPremium, planNam
   React.useEffect(() => { refresh(); }, [refresh]);
   const onRewardsChanged = () => { refresh(); window.dispatchEvent(new CustomEvent('quizspace-rewards-updated')); };
   const checkIn = async () => { if (isCheckingIn) return; setIsCheckingIn(true); await updateDailyStreak(); setIsCheckingIn(false); onRewardsChanged(); };
-  const pageTitle = section === 'motivation-lucky' ? t.lucky : section === 'motivation-brain' ? t.brain : section === 'motivation-store' ? t.store : t.hub;
-  return <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-4 sm:px-6 lg:px-10" dir={lang === 'ar' ? 'rtl' : 'ltr'}><div className="mb-6 flex flex-col gap-4 rounded-[2rem] border border-violet-200 bg-gradient-to-br from-violet-600 via-indigo-600 to-sky-600 p-6 text-white shadow-xl shadow-violet-500/10 sm:flex-row sm:items-center sm:justify-between sm:p-8"><div><div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-white/70"><Sparkles className="h-4 w-4" />QuizSpace Rewards</div><h1 className="text-3xl font-black sm:text-4xl">{pageTitle}</h1><p className="mt-2 max-w-2xl text-sm leading-7 text-white/80">{t.subtitle}{userName ? ` · ${userName}` : ''}</p></div><RewardPill rewards={rewards} lang={lang} /></div><SectionNav section={section} onNavigate={onNavigate} lang={lang} /><div className="mt-6">{section === 'motivation' && <div className="space-y-6"><Overview rewards={rewards} status={status} onNavigate={onNavigate} onCheckIn={checkIn} isCheckingIn={isCheckingIn} lang={lang} /><RewardsSection userId={userId} lang={lang} /></div>}{section === 'motivation-lucky' && <LuckyWheelPanel onRewardsChanged={onRewardsChanged} lang={lang} />}{section === 'motivation-brain' && <BrainChallengePanel onRewardsChanged={onRewardsChanged} lang={lang} />}{section === 'motivation-store' && <StorePanel userId={userId} isPremium={isPremium} planName={planName} rewards={rewards} onRewardsChanged={onRewardsChanged} lang={lang} />}</div></main>;
+  const pageTitle = section === 'motivation-lucky' ? t.lucky : section === 'motivation-brain' ? t.brain : section === 'motivation-review' ? t.review : section === 'motivation-season' ? t.season : section === 'motivation-duel' ? t.duel : section === 'motivation-store' ? t.store : t.hub;
+  return <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-4 sm:px-6 lg:px-10" dir={lang === 'ar' ? 'rtl' : 'ltr'}><div className="mb-6 flex flex-col gap-4 rounded-[2rem] border border-violet-200 bg-gradient-to-br from-violet-600 via-indigo-600 to-sky-600 p-6 text-white shadow-xl shadow-violet-500/10 sm:flex-row sm:items-center sm:justify-between sm:p-8"><div><div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em] text-white/70"><Sparkles className="h-4 w-4" />QuizSpace Rewards</div><h1 className="text-3xl font-black sm:text-4xl">{pageTitle}</h1><p className="mt-2 max-w-2xl text-sm leading-7 text-white/80">{t.subtitle}{userName ? ` · ${userName}` : ''}</p></div><RewardPill rewards={rewards} lang={lang} /></div><SectionNav section={section} onNavigate={onNavigate} lang={lang} /><div className="mt-6">{section === 'motivation' && <div className="space-y-6"><Overview rewards={rewards} status={status} onNavigate={onNavigate} onCheckIn={checkIn} isCheckingIn={isCheckingIn} lang={lang} /><RewardsSection userId={userId} lang={lang} /></div>}{section === 'motivation-lucky' && <LuckyWheelPanel onRewardsChanged={onRewardsChanged} lang={lang} />}{section === 'motivation-brain' && <BrainChallengePanel onRewardsChanged={onRewardsChanged} lang={lang} />}{section === 'motivation-review' && <SmartReviewPanel lang={lang} />}{section === 'motivation-season' && <LearningSeasonPanel lang={lang} />}{section === 'motivation-duel' && <KnowledgeDuelPanel lang={lang} />}{section === 'motivation-store' && <StorePanel userId={userId} isPremium={isPremium} planName={planName} rewards={rewards} onRewardsChanged={onRewardsChanged} lang={lang} />}</div></main>;
 }

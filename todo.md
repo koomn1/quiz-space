@@ -30,3 +30,11 @@
 - [x] Restore the Google OAuth option in the authentication modal and verify its configured redirect flow
 - [x] Surface the reward ledger and weekly tasks from the authenticated Motivation Hub, not only the legacy profile statistics view
 - [x] Verify authenticated Google sign-in, Motivation Hub tasks and ledger, and notification filters without changing balances or purchase history
+- [x] Add smart review cards driven by the learner's real weak areas and recent quiz activity
+- [x] Add collaborative classroom challenges with privacy-preserving member contribution and progress
+- [x] Add a flexible learning streak with a limited protection-day mechanic
+- [x] Add a seasonal learning track with earned cosmetic rewards and a fair optional reward choice
+- [x] Add an opt-in knowledge duel with rate limits, equalized question selection, and no public grade exposure
+- [x] Add a personal improvement dashboard that compares the learner with their own prior performance
+- [ ] Integrate the new motivation features with the rewards ledger, notification centre, permissions, tests, and responsive UI checks
+- [x] Prevent blank unauthenticated deep links to Motivation Hub sections and direct guests to the sign-in flow

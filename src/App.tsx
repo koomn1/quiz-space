@@ -194,7 +194,7 @@ export default function App() {
       return 'landing';
     }
     if (pathParts[0]) {
-      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin']);
+      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store']);
       return knownTabs.has(pathParts[0]) ? pathParts[0] : 'not-found';
     }
 
@@ -219,7 +219,7 @@ export default function App() {
         return 'landing';
       }
       if (parts[0]) {
-        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin']);
+        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store']);
         return knownTabs.has(parts[0]) ? parts[0] : 'not-found';
       }
     }
@@ -1239,6 +1239,15 @@ export default function App() {
   // Direct links can bypass handleSetTab(), so protect the create route during initial render.
   // Rendering QuizCreator without an authenticated user previously left the app blank in this case.
   const isGuestCreateRoute = activeTab === 'create' && !authContext.loading && !authContext.isAuthenticated && !userId;
+  const motivationTabs = ['motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store'];
+  const isGuestMotivationRoute = motivationTabs.includes(activeTab) && !authContext.loading && !authContext.isAuthenticated && (!userId || userId.startsWith('user-guest'));
+
+  React.useEffect(() => {
+    if (!isGuestMotivationRoute) return;
+    setLoginRedirectTab(activeTab);
+    setAuthModalMode('register');
+    setIsAuthModalOpen(true);
+  }, [activeTab, isGuestMotivationRoute]);
 
   // Core sections keep the shared content frame, while independent screens
   // use their own full-screen surface. The global Header remains available
@@ -1548,7 +1557,14 @@ export default function App() {
               {activeTab === 'not-found' && (
                 <NotFound lang={lang} onGoHome={() => handleSetTab('landing')} />
               )}
-              {(['motivation', 'motivation-lucky', 'motivation-brain', 'motivation-store'] as string[]).includes(activeTab) && (
+              {motivationTabs.includes(activeTab) && (isGuestMotivationRoute ? (
+                <section className="mx-auto flex min-h-[54vh] max-w-xl flex-col items-center justify-center px-6 text-center" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-500/15 text-violet-600 dark:text-violet-300"><Sparkles className="h-8 w-8" /></div>
+                  <h1 className="mt-5 text-2xl font-black text-slate-900 dark:text-white">{lang === 'ar' ? 'سجّل الدخول لفتح مركز التحفيز' : 'Sign in to open Motivation Hub'}</h1>
+                  <p className="mt-3 max-w-md text-sm leading-7 text-slate-600 dark:text-slate-300">{lang === 'ar' ? 'المراجعة الذكية، المواسم، والتحديات الخاصة تحفظ تقدمك ومكافآتك على حسابك بشكل آمن.' : 'Smart review, seasons, and private challenges securely save your progress and rewards to your account.'}</p>
+                  <button type="button" onClick={() => { setLoginRedirectTab(activeTab); setAuthModalMode('register'); setIsAuthModalOpen(true); }} className="mt-7 min-h-11 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-black text-white transition hover:bg-violet-500">{lang === 'ar' ? 'التسجيل أو الدخول' : 'Sign in or register'}</button>
+                </section>
+              ) : (
                 <MotivationHubPage
                   userId={userId}
                   userName={userName}
@@ -1558,7 +1574,7 @@ export default function App() {
                   section={activeTab as MotivationSection}
                   onNavigate={(section) => handleSetTab(section)}
                 />
-              )}
+              ))}
               {activeTab === 'landing' && (
                 <>
                   <LandingPage

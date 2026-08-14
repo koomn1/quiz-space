@@ -276,6 +276,81 @@ export interface RewardsSummary {
   dailyChallenges?: RewardChallenge[];
 }
 
+export interface SmartReviewCard {
+  topic: string;
+  attempts: number;
+  accuracy: number;
+  lastAttemptAt?: string;
+  quizIds: string[];
+}
+
+export interface PersonalLearningPeriod {
+  days: number;
+  completed: number;
+  accuracy: number;
+}
+
+export interface PersonalLearningImprovement {
+  currentPeriod: PersonalLearningPeriod;
+  previousPeriod: PersonalLearningPeriod;
+  accuracyChange: number;
+  completionChange: number;
+}
+
+export interface LearningStreakStatus {
+  currentStreak: number;
+  longestStreak: number;
+  protectionDays: number;
+  checkedInToday: boolean;
+  lastLoginDate?: string;
+  lastProtectionEarnedAt?: string;
+  lastProtectionUsedFor?: string;
+}
+
+export interface LearningClassChallenge {
+  id: string;
+  title: string;
+  description: string;
+  targetCount: number;
+  currentCount: number;
+  endsAt: string;
+  completedAt?: string;
+  rewardPoints: number;
+  myContributions: number;
+  claimed: boolean;
+}
+
+export interface LearningSeasonRewardChoice {
+  key: string;
+  type: 'points' | 'coins' | 'badge';
+  amount: number;
+  badgeId?: string;
+  requiredQuizzes: number;
+}
+
+export interface ActiveLearningSeason {
+  season: { id: string; name: string; nameAr?: string; description?: string; descriptionAr?: string; endsAt: string } | null;
+  completedQuizzes: number;
+  choices: LearningSeasonRewardChoice[];
+  claimedChoice?: string;
+}
+
+export interface KnowledgeDuelRound {
+  sequence: number;
+  promptAr: string;
+  promptEn: string;
+  options: string[];
+}
+
+export interface KnowledgeDuelState {
+  status: 'waiting' | 'active' | 'completed' | 'expired' | 'cancelled';
+  questionCount: number;
+  answeredCount: number;
+  opponentFinished: boolean;
+  round?: KnowledgeDuelRound;
+  result?: { myScore: number; opponentScore: number; outcome: 'win' | 'tie' | 'loss' };
+}
+
 export interface UserStats {
   userId: string;
   name: string;
