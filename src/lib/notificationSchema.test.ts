@@ -7,11 +7,23 @@ const migrationPath = resolve(
   'supabase/migrations/20260831_notification_lesson_and_platform_settings_access.sql',
 );
 
+const weeklyTaskMigrationPath = resolve(
+  process.cwd(),
+  'supabase/migrations/20260834_weekly_task_notification_type.sql',
+);
+
 describe('notification and platform-settings schema repair', () => {
   it('allows the lesson notification emitted by the classroom lesson trigger', () => {
     const migration = readFileSync(migrationPath, 'utf8');
 
     expect(migration).toContain("'lesson'");
+    expect(migration).toContain('notifications_type_check');
+  });
+
+  it('allows the weekly-task notification emitted after a successful reward claim', () => {
+    const migration = readFileSync(weeklyTaskMigrationPath, 'utf8');
+
+    expect(migration).toContain("'weekly_task'");
     expect(migration).toContain('notifications_type_check');
   });
 
