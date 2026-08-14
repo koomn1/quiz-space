@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getStoreBundleBenefitLabel, getStorePaymentMode } from './storePricing';
+import { getStoreBundleBenefitLabel, getStorePaymentMode, isStoreItemActionAvailable } from './storePricing';
 
 describe('getStorePaymentMode', () => {
   it('uses a positive cash price for point packs sold through payment review', () => {
@@ -20,6 +20,15 @@ describe('getStorePaymentMode', () => {
   it('does not present an unpriced item as purchasable', () => {
     expect(getStorePaymentMode({ price_egp: 0, price_points: 0, price_coins: 0 }))
       .toEqual({ mode: 'unavailable', amount: 0 });
+  });
+
+  it('keeps an owned frame activatable even when it has no purchase price', () => {
+    expect(isStoreItemActionAvailable({ isOwned: true, isLocked: false, paymentMode: 'unavailable' }))
+      .toBe(true);
+    expect(isStoreItemActionAvailable({ isOwned: false, isLocked: false, paymentMode: 'unavailable' }))
+      .toBe(false);
+    expect(isStoreItemActionAvailable({ isOwned: true, isLocked: true, paymentMode: 'unavailable' }))
+      .toBe(false);
   });
 
   it('describes a monthly pass benefit instead of displaying a misleading zero-point reward', () => {

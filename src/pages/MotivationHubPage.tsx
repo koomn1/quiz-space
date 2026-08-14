@@ -44,7 +44,7 @@ import {
   submitBrainChallenge,
   updateDailyStreak,
 } from '../lib/db';
-import { getStoreBundleBenefitLabel, getStorePaymentMode } from '../lib/storePricing';
+import { getStoreBundleBenefitLabel, getStorePaymentMode, isStoreItemActionAvailable } from '../lib/storePricing';
 
 export type MotivationSection = 'motivation' | 'motivation-lucky' | 'motivation-brain' | 'motivation-review' | 'motivation-season' | 'motivation-duel' | 'motivation-store';
 
@@ -415,7 +415,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
     const locked = planRank < rankFor(item.min_plan); 
     const isOwned = owned(item.id); 
     const payment = getStorePaymentMode(item);
-    const isPurchasable = payment.mode !== 'unavailable';
+    const isActionAvailable = isStoreItemActionAvailable({ isOwned, isLocked: locked, paymentMode: payment.mode });
     const itemImageUrl = item.image_url ? `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${item.image_url}` : null;
     
     return (
@@ -454,7 +454,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
               <span className="text-slate-500 dark:text-slate-400">{lang === 'ar' ? 'غير متاح' : 'Unavailable'}</span>
             )}
           </span>
-          <button type="button" disabled={locked || !isPurchasable || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="rounded-xl bg-violet-600 px-3 py-2 text-[11px] font-black text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-45 shadow-sm shadow-violet-600/20">
+          <button type="button" disabled={!isActionAvailable || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="rounded-xl bg-violet-600 px-3 py-2 text-[11px] font-black text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-45 shadow-sm shadow-violet-600/20">
             {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : payment.mode === 'cash' ? (lang === 'ar' ? 'شراء بالمال' : 'Buy') : payment.mode === 'unavailable' ? (lang === 'ar' ? 'غير متاح' : 'Unavailable') : t.buy}
           </button>
         </div>

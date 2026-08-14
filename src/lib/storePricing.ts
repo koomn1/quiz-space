@@ -6,6 +6,12 @@ export type StorePriceInput = {
 
 export type StorePaymentMode = 'cash' | 'points' | 'coins' | 'unavailable';
 
+export type StoreActionAvailabilityInput = {
+  isOwned: boolean;
+  isLocked: boolean;
+  paymentMode: StorePaymentMode;
+};
+
 export type StoreBundleBenefitInput = {
   id: string;
   reward_points?: number | null;
@@ -23,6 +29,15 @@ export function getStorePaymentMode(item: StorePriceInput): {
   if (coins > 0) return { mode: 'coins', amount: coins };
   if (points > 0) return { mode: 'points', amount: points };
   return { mode: 'unavailable', amount: 0 };
+}
+
+export function isStoreItemActionAvailable({
+  isOwned,
+  isLocked,
+  paymentMode,
+}: StoreActionAvailabilityInput): boolean {
+  if (isLocked) return false;
+  return isOwned || paymentMode !== 'unavailable';
 }
 
 export function getStoreBundleBenefitLabel(item: StoreBundleBenefitInput, lang: 'ar' | 'en'): string {

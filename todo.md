@@ -51,5 +51,6 @@
 - [x] Repair all visible zero-priced point-store offers and point packages so every purchasable item has a positive configured price
 - [x] Diagnose the GitHub Pages asset mismatch: a stale cached index referenced a retired hashed bundle, while a fresh index request loaded the deployed storefront code and corrected prices
 - [x] Prevent non-Arabic language leakage in Arabic AI-generated questions and explanations, then verify a short live generation
-- [ ] Remove ambiguous zero-valued monthly-pass display from point-store bundles while retaining their positive point purchase cost
-- [ ] Ensure completed onboarding is persisted per account across browser sessions and does not reappear after a new device login
+- [x] Remove ambiguous zero-valued monthly-pass display from point-store bundles while retaining their positive point purchase cost
+- [x] Ensure completed onboarding is persisted per account across browser sessions and does not reappear after a new device login
+- [ ] Diagnose and repair activation of an owned profile frame from the point store, then verify the saved active frame after refresh
