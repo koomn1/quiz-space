@@ -13,6 +13,12 @@ export interface DocumentExtractionResult {
   provider: string;
 }
 
+export interface DocumentExtractionProgress {
+  processed: number;
+  total: number;
+  questionsExtracted: number;
+}
+
 const DOCUMENT_EXTRACTION_MODELS = [
   'nvidia/nemotron-3.5-lightning:free',
   'openai/gpt-oss-20b:free',
@@ -239,6 +245,7 @@ export async function extractQuestionsFromText(
   text: string,
   env: DocumentExtractionEnv,
   customInstruction?: string,
+  onProgress?: (progress: DocumentExtractionProgress) => Promise<void> | void,
 ): Promise<DocumentExtractionResult> {
   const chunks = splitText(text.trim());
   if (!chunks.length || !chunks[0]) throw new Error('No extractable text found in the document.');
@@ -247,6 +254,7 @@ export async function extractQuestionsFromText(
   const parsedResults: any[] = [];
   const modelsUsed = new Set<string>();
   const CONCURRENCY = chunks.length === 1 ? 1 : 2;
+  let processed = 0;
 
   for (let start = 0; start < chunks.length; start += CONCURRENCY) {
     const batch = chunks.slice(start, start + CONCURRENCY);
@@ -258,6 +266,11 @@ export async function extractQuestionsFromText(
         parsedResults.push(extractJson(result.raw));
       } catch (error) {
         console.error('Document extraction response was not valid JSON; trying the local literal parser.', error);
+      }
+      processed += 1;
+      if (onProgress) {
+        const currentQuestionCount = parsedResults.reduce((count, parsed) => count + normalizeQuestions(parsed).length, 0);
+        await onProgress({ processed, total: chunks.length, questionsExtracted: currentQuestionCount });
       }
     }
   }

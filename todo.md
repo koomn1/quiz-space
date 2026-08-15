@@ -62,3 +62,16 @@
 - [x] Run a guarded, read-only site load test with stepped concurrency and automatic error/latency stop conditions, then document the measured capacity range
 - [x] Perform an authorized non-destructive security assessment of data isolation, reward authorization, and tamper resistance without changing live user data
 - [x] Design a secure asynchronous file-extraction and quiz-generation workflow with progress status, structured results, and a measured latency improvement target
+- [x] Enable and verify the n8n integration with the minimum credentials and a safe health check — superseded by the selected internal architecture; no live n8n integration was connected
+- [x] Guide the user through connecting or creating an n8n account without exposing API keys in chat — superseded by the selected internal architecture
+- [x] Verify secure access to the provided n8n Cloud workspace before creating the extraction workflow — superseded after the authorization constraint; no live Quiz Space data was exposed
+- [x] Confirm the authenticated n8n session can list and create an isolated test workflow — superseded by the selected internal architecture
+- [x] Keep the n8n setup user-facing flow limited to a single explicit approval step with no API keys exchanged in chat — superseded by the selected internal architecture
+- [x] Close the temporary public webhook created during setup before connecting any live Quiz Space data
+- [x] Create an isolated n8n webhook workflow that validates a test extraction job without accessing live user files — superseded by the selected internal architecture
+- [x] Define signed job/callback contracts and job lifecycle persistence for asynchronous file extraction — implemented through user-scoped Supabase jobs and private Storage paths
+- [x] Build and test the n8n extraction workflow with authenticated callbacks and structured quiz results — superseded by the selected internal architecture
+- [x] Add a user-scoped internal extraction-job model with status, progress, idempotency, and safe error data
+- [x] Add protected worker endpoints to create, process, and fetch internal extraction jobs without exposing provider keys
+- [x] Update Quiz Creator to submit and resume internal extraction jobs with live progress and saved structured quiz results
+- [x] Add regression tests and verify an end-to-end internal extraction job without re-uploading the same file

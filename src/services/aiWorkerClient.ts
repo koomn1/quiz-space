@@ -1,6 +1,7 @@
 import { fetchWithAuth } from '../lib/authFetch';
 import { getApiUrl } from '../lib/origin';
 import { GeneratedQuiz } from '../types';
+import { supabase } from '../lib/supabaseClient';
 
 export type AiProvider = 'openrouter' | 'groq' | 'deepseek' | 'openai';
 
@@ -34,6 +35,141 @@ async function workerRequest<T>(path: string, body: unknown): Promise<T> {
       "Unable to reach the AI Worker. Please check VITE_AI_WORKER_URL, Cloudflare deployment, or CORS configuration."
     );
   }
+}
+
+async function workerGet<T>(path: string): Promise<T> {
+  try {
+    const response = await fetchWithAuth(getApiUrl(path), { method: 'GET' });
+    if (response.ok) return response.json() as Promise<T>;
+    const payload = await response.json().catch(() => ({})) as WorkerError;
+    throw new Error(payload.error || `AI service failed (${response.status}).`);
+  } catch (err: any) {
+    if (err?.message && !err.message.includes('Unable to reach')) throw err;
+    throw new Error('Unable to reach the AI Worker. Please check your connection and try again.');
+  }
+}
+
+export type ExtractionJobStatus = 'pending' | 'processing' | 'complete' | 'error';
+
+export interface ExtractionJob {
+  id: string;
+  status: ExtractionJobStatus;
+  progressPercentage: number;
+  processedChunks: number;
+  totalChunks: number | null;
+  progressMessage: string | null;
+  quiz: GeneratedQuiz | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateExtractionJobOptions {
+  file: File;
+  extractionMode: 'literal' | 'generate';
+  customInstruction?: string;
+  requestedQuestionCount: number;
+  idempotencyKey?: string;
+}
+
+const EXTRACTION_UPLOAD_BUCKET = 'quiz-extraction-uploads';
+const EXTRACTION_JOB_STORAGE_KEY = 'quizspace.pending-extraction-job';
+const EXTRACTION_IDEMPOTENCY_STORAGE_PREFIX = 'quizspace.extraction-job.';
+const MAX_EXTRACTION_FILE_BYTES = 12 * 1024 * 1024;
+
+function safeFileName(fileName: string): string {
+  const normalized = fileName.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+  return (normalized || 'source-document').slice(0, 120);
+}
+
+function createIdempotencyKey(): string {
+  return crypto.randomUUID().replace(/-/g, '');
+}
+
+function rememberPendingExtractionJob(job: ExtractionJob): void {
+  if (typeof window === 'undefined') return;
+  if (job.status === 'complete' || job.status === 'error') {
+    window.localStorage.removeItem(EXTRACTION_JOB_STORAGE_KEY);
+    return;
+  }
+  window.localStorage.setItem(EXTRACTION_JOB_STORAGE_KEY, JSON.stringify({ id: job.id, updatedAt: job.updatedAt }));
+}
+
+export function getRememberedExtractionJobId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const value = JSON.parse(window.localStorage.getItem(EXTRACTION_JOB_STORAGE_KEY) || 'null');
+    return typeof value?.id === 'string' ? value.id : null;
+  } catch {
+    return null;
+  }
+}
+
+function getCachedExtractionJobId(idempotencyKey?: string): string | null {
+  if (!idempotencyKey || typeof window === 'undefined') return null;
+  return window.localStorage.getItem(`${EXTRACTION_IDEMPOTENCY_STORAGE_PREFIX}${idempotencyKey}`);
+}
+
+function cacheExtractionJobId(idempotencyKey: string, jobId: string): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(`${EXTRACTION_IDEMPOTENCY_STORAGE_PREFIX}${idempotencyKey}`, jobId);
+}
+
+export async function createExtractionJob(options: CreateExtractionJobOptions): Promise<ExtractionJob> {
+  if (!options.file || options.file.size <= 0 || options.file.size > MAX_EXTRACTION_FILE_BYTES) {
+    throw new Error('حجم الملف يجب أن يكون أقل من 12 ميجابايت.');
+  }
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const user = sessionData.session?.user;
+  if (sessionError || !user) throw new Error('سجّل الدخول أولاً لرفع الملف ومعالجته بأمان.');
+
+  const idempotencyKey = options.idempotencyKey || createIdempotencyKey();
+  const cachedJobId = getCachedExtractionJobId(idempotencyKey);
+  if (cachedJobId) {
+    try {
+      const cachedJob = await getExtractionJob(cachedJobId);
+      if (cachedJob.status !== 'error') return cachedJob;
+    } catch {
+      // The server remains the authority for idempotency. Continue with a fresh
+      // upload only when an earlier local cache record is no longer reachable.
+    }
+  }
+
+  const mimeType = options.file.type || 'application/pdf';
+  const storagePath = `${user.id}/${crypto.randomUUID()}/${safeFileName(options.file.name)}`;
+  const { error: uploadError } = await supabase.storage
+    .from(EXTRACTION_UPLOAD_BUCKET)
+    .upload(storagePath, options.file, { contentType: mimeType, upsert: false });
+  if (uploadError) throw new Error('تعذر رفع الملف الخاص. أعد المحاولة بعد التأكد من الاتصال.');
+
+  try {
+    const response = await workerRequest<{ job: ExtractionJob }>('/api/ai/extraction-jobs', {
+      idempotencyKey,
+      fileStoragePath: storagePath,
+      mimeType,
+      extractionMode: options.extractionMode,
+      customInstruction: options.customInstruction,
+      requestedQuestionCount: options.requestedQuestionCount,
+    });
+    rememberPendingExtractionJob(response.job);
+    cacheExtractionJobId(idempotencyKey, response.job.id);
+    return response.job;
+  } catch (error) {
+    await supabase.storage.from(EXTRACTION_UPLOAD_BUCKET).remove([storagePath]);
+    throw error;
+  }
+}
+
+export async function getExtractionJob(jobId: string): Promise<ExtractionJob> {
+  const job = await workerGet<ExtractionJob>(`/api/ai/extraction-jobs/${encodeURIComponent(jobId)}`);
+  rememberPendingExtractionJob(job);
+  return job;
+}
+
+export async function listActiveExtractionJobs(): Promise<ExtractionJob[]> {
+  const response = await workerGet<{ jobs: ExtractionJob[] }>('/api/ai/extraction-jobs');
+  response.jobs.forEach(rememberPendingExtractionJob);
+  return response.jobs;
 }
 
 export async function generateQuizWithProvider(

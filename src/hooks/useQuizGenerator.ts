@@ -4,7 +4,7 @@ import { createQuiz } from '../lib/db';
 import { filterValidGeneratedQuestions } from '../lib/quizGenerationValidation';
 import { Question, GeneratedQuiz } from '../types';
 import { generateQuizWithFallback } from './useQuizzes';
-import { generateQuizFromFile, generateQuizFromFileWithFallback, generateQuizFromFileStreaming, StreamProgress } from '../services/aiWorkerClient';
+import { createExtractionJob, getExtractionJob } from '../services/aiWorkerClient';
 import { splitPdfIntoPageImages } from '../lib/pdfSplitter';
 
 
@@ -27,6 +27,7 @@ export function useQuizGenerator() {
       fileUri?: string;
       fileUploadName?: string;
       sourceFile?: File;
+      existingJobId?: string;
       mimeType?: string;
       totalPages?: number;
       extractionMode?: 'literal' | 'generate';
@@ -43,6 +44,7 @@ export function useQuizGenerator() {
         fileUri,
         fileUploadName,
         sourceFile,
+        existingJobId,
         mimeType,
         totalPages,
         extractionMode,
@@ -178,91 +180,48 @@ export function useQuizGenerator() {
       } else if (type === 'file_direct') {
         setProgress({
           current: 0,
-          total: 100,
+          total: 1,
           stage: 'generating',
-          message: 'جاري استخراج نص المستند وتجهيز Nemotron...',
+          message: existingJobId ? 'تم العثور على مهمة سابقة، جارٍ استئناف متابعة الاستخراج...' : 'تم رفع الملف بشكل خاص، وجارٍ بدء مهمة الاستخراج...',
         });
 
-        // QuizCreator already converted the selected file to Base64. Reuse it
-        // instead of reading the full File object a second time. The FileReader
-        // fallback remains for callers that only provide sourceFile.
-        let base64 = fileUri?.split(',')[1] || fileUri || '';
-        if (!base64 && sourceFile) {
-          const reader = new FileReader();
-          base64 = await new Promise<string>((resolve, reject) => {
-            reader.onload = () => resolve((reader.result as string).split(',')[1] || '');
-            reader.onerror = () => reject(reader.error || new Error('تعذر قراءة الملف.'));
-            reader.readAsDataURL(sourceFile);
-          });
-        }
-
-        if (!base64) throw new Error('لم يتم العثور على محتوى المستند.');
-
-        let data;
-        const resolvedMimeType = mimeType || 'application/pdf';
-        if (resolvedMimeType === 'application/pdf') {
-          try {
-            data = await generateQuizFromFileStreaming(
-              base64,
-              resolvedMimeType,
-              customInstruction,
-              (progress: StreamProgress) => {
-                if (progress.type === 'init') {
-                  setProgress({
-                    current: 0,
-                    total: progress.totalChunks || 1,
-                    stage: 'generating',
-                    message: `جاري معالجة ${progress.totalPages} صفحة في ${progress.totalChunks} مجموعة...`,
-                  });
-                } else if (progress.type === 'progress') {
-                  setProgress({
-                    current: progress.processed || 0,
-                    total: progress.total || 1,
-                    stage: 'generating',
-                    message: `معالجة المجموعة ${progress.processed}/${progress.total} - استخراج ${progress.questionsExtracted} سؤال (${progress.percentage}%)`,
-                  });
-                }
-              },
-              extractionMode || 'literal'
-            );
-          } catch (err) {
-            console.warn('Streaming failed, falling back to standard extraction:', err);
-            setProgress({
-              current: 0,
-              total: 1,
-              stage: 'generating',
-              message: 'تعذر إكمال المعالجة السريعة، جارٍ استخدام مسار استخراج بديل...',
-            });
-            try {
-              data = await generateQuizFromFileWithFallback(base64, resolvedMimeType, totalQuestions, customInstruction, extractionMode);
-            } catch (fallbackErr) {
-              console.warn('Fallback extraction failed, trying the final compatible extractor:', fallbackErr);
-              setProgress({
-                current: 0,
-                total: 1,
-                stage: 'generating',
-                message: 'جارٍ تجربة مسار أخير متوافق مع ملفك...',
-              });
-              try {
-                data = await generateQuizFromFile(base64, resolvedMimeType, totalQuestions, customInstruction, extractionMode);
-              } catch (finalErr) {
-                console.error('All file extraction paths failed:', finalErr);
-                throw new Error('تعذر استخراج أسئلة من هذا الملف. تأكد أن الملف قابل للقراءة وليس محمياً بكلمة مرور ثم حاول مرة أخرى.');
-              }
-            }
-          }
+        let job;
+        if (existingJobId) {
+          job = await getExtractionJob(existingJobId);
         } else {
-          // DOCX/XLSX/PPTX and image files use the non-streaming endpoint because
-          // the streaming route is intentionally PDF-only. The worker parses
-          // Office text locally (Mammoth/XLSX) before invoking Nemotron.
-          setProgress({
-            current: 0,
-            total: 1,
-            stage: 'generating',
-            message: 'جاري قراءة المستند واستخراج نصه عبر Nemotron...',
+          let fileForJob = sourceFile;
+          if (!fileForJob && fileUri) {
+            const dataUrl = fileUri.startsWith('data:') ? fileUri : `data:${mimeType || 'application/pdf'};base64,${fileUri}`;
+            const response = await fetch(dataUrl);
+            const blob = await response.blob();
+            fileForJob = new File([blob], fileUploadName || 'source-document', { type: mimeType || 'application/pdf' });
+          }
+          if (!fileForJob) throw new Error('لم يتم العثور على محتوى المستند.');
+          job = await createExtractionJob({
+            file: fileForJob,
+            extractionMode: extractionMode || 'literal',
+            customInstruction,
+            requestedQuestionCount: totalQuestions,
           });
-          data = await generateQuizFromFile(base64, resolvedMimeType, totalQuestions, customInstruction, extractionMode);
         }
+        let data: GeneratedQuiz | null = null;
+        const pollDeadline = Date.now() + 45 * 60 * 1000;
+        while (Date.now() < pollDeadline) {
+          if (job.status === 'complete' && job.quiz) {
+            data = job.quiz;
+            break;
+          }
+          if (job.status === 'error') throw new Error(job.errorMessage || 'تعذر استخراج أسئلة من هذا الملف.');
+          setProgress({
+            current: job.processedChunks,
+            total: job.totalChunks || 1,
+            stage: 'generating',
+            message: job.progressMessage || `جارٍ استخراج الأسئلة (${job.progressPercentage}%).`,
+          });
+          await new Promise(resolve => window.setTimeout(resolve, 2000));
+          job = await getExtractionJob(job.id);
+        }
+        if (!data) throw new Error('انتهت مهلة متابعة الاستخراج. افتح صفحة إنشاء الاختبار مجدداً لاستئناف المهمة.');
 
         if (data.questions && Array.isArray(data.questions)) {
           if (!finalTitle && data.title) finalTitle = data.title;
@@ -294,7 +253,7 @@ export function useQuizGenerator() {
         }
       }
 
-      if (totalQuestions > 0 && accumulatedQuestions.length > totalQuestions) {
+      if (type !== 'file_direct' && totalQuestions > 0 && accumulatedQuestions.length > totalQuestions) {
         accumulatedQuestions = accumulatedQuestions.slice(0, totalQuestions);
       }
 

@@ -2,6 +2,15 @@ import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 import { handleStreamingExtraction } from './streaming';
 import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
+import {
+  createOrGetExtractionJob,
+  getExtractionJob,
+  listActiveExtractionJobs,
+  processExtractionJob,
+  restartExpiredJob,
+  validateCreateExtractionJobInput,
+  type ExtractionJobRow,
+} from './extractionJobs';
 
 export interface Env {
   OPENROUTER_API_KEY: string;
@@ -11,6 +20,10 @@ export interface Env {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   ALLOWED_ORIGIN: string;
+}
+
+interface WorkerExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
 }
 
 type Provider = 'openrouter' | 'openai' | 'groq' | 'deepseek';
@@ -65,7 +78,7 @@ function cors(request: Request, env: Env): HeadersInit {
   return {
     'Access-Control-Allow-Origin': allowed.includes(origin) ? origin : allowed[0],
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Vary': 'Origin',
   };
 }
@@ -80,6 +93,27 @@ async function getUserId(request: Request, env: Env): Promise<string | null> {
   if (!response.ok) return null;
   const user = await response.json() as any;
   return user.id;
+}
+
+function publicExtractionJob(job: ExtractionJobRow) {
+  return {
+    id: job.id,
+    status: job.status,
+    progressPercentage: job.progress_percentage,
+    processedChunks: job.processed_chunks,
+    totalChunks: job.total_chunks,
+    progressMessage: job.progress_message,
+    quiz: job.status === 'complete' && Array.isArray(job.questions_json)
+      ? {
+          title: job.quiz_title || 'اختبار مستخرج',
+          description: job.quiz_description || '',
+          questions: job.questions_json,
+        }
+      : null,
+    errorMessage: job.status === 'error' ? job.error_message : null,
+    createdAt: job.created_at,
+    updatedAt: job.updated_at,
+  };
 }
 
 async function getCosmoAccountContext(request: Request, env: Env, userId: string | null): Promise<string> {
@@ -283,26 +317,67 @@ function hasCosmoAttachment(body: any): boolean {
   return Boolean((body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') || (data && mimeType && data.length <= 15_000_000));
 }
 
-async function handler(request: Request, env: Env): Promise<Response> {
+async function handler(request: Request, env: Env, ctx: WorkerExecutionContext): Promise<Response> {
   const headers = cors(request, env);
   if (request.method === 'OPTIONS') return new Response(null, { headers });
+  const path = new URL(request.url).pathname;
   
   // Rate Limit check: max 40 AI requests per minute per IP
   const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'anonymous';
-  if (!checkRateLimit(clientIp)) {
+  if (!checkRateLimit(`${request.method}:${clientIp}`)) {
     return json({ error: 'Rate limit exceeded. Please wait a moment before sending more requests.' }, 429, headers);
   }
 
-  if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, headers);
+  const isExtractionJobRead = request.method === 'GET' && (path === '/api/ai/extraction-jobs' || /^\/api\/ai\/extraction-jobs\/[0-9a-f-]{36}$/i.test(path));
+  if (request.method !== 'POST' && !isExtractionJobRead) return json({ error: 'Method not allowed' }, 405, headers);
       // Cosmo is available to guests as a limited preview. Authenticated users
       // still receive their real user id for persistence/performance logging.
       const userId = (await getUserId(request, env)) || 'guest';
-      const authHeader = request.headers.get('Authorization') || '';
+  const authHeader = request.headers.get('Authorization') || '';
 
   try {
+    if (isExtractionJobRead) {
+      if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);
+
+      if (path === '/api/ai/extraction-jobs') {
+        const jobs = await listActiveExtractionJobs(env, authHeader);
+        const resumable: ExtractionJobRow[] = [];
+        for (const job of jobs) {
+          const current = await restartExpiredJob(env, authHeader, job);
+          if (current.status === 'pending') ctx.waitUntil(processExtractionJob(env, authHeader, current.id));
+          resumable.push(current);
+        }
+        return json({ jobs: resumable.map(publicExtractionJob) }, 200, headers);
+      }
+
+      const jobId = path.split('/').pop() || '';
+      let job = await getExtractionJob(env, authHeader, jobId);
+      if (!job) return json({ error: 'Extraction job not found' }, 404, headers);
+      job = await restartExpiredJob(env, authHeader, job);
+      if (job.status === 'pending') ctx.waitUntil(processExtractionJob(env, authHeader, job.id));
+      return json(publicExtractionJob(job), 200, headers);
+    }
+
     const body = await request.json() as any;
-    const path = new URL(request.url).pathname;
     const startTime = Date.now();
+
+      if (path === '/api/ai/extraction-jobs') {
+        if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);
+        const input = {
+          idempotencyKey: typeof body.idempotencyKey === 'string' ? body.idempotencyKey : '',
+          fileStoragePath: typeof body.fileStoragePath === 'string' ? body.fileStoragePath : '',
+          mimeType: typeof body.mimeType === 'string' ? body.mimeType : '',
+          extractionMode: body.extractionMode === 'generate' ? 'generate' as const : 'literal' as const,
+          customInstruction: typeof body.customInstruction === 'string' ? body.customInstruction : undefined,
+          requestedQuestionCount: Number.isInteger(body.requestedQuestionCount) ? body.requestedQuestionCount : undefined,
+        };
+        const validationError = validateCreateExtractionJobInput(input, userId);
+        if (validationError) return json({ error: 'Invalid extraction job request' }, 400, headers);
+        let job = await createOrGetExtractionJob(env, authHeader, userId, input);
+        job = await restartExpiredJob(env, authHeader, job);
+        if (job.status === 'pending') ctx.waitUntil(processExtractionJob(env, authHeader, job.id));
+        return json({ job: publicExtractionJob(job) }, 202, headers);
+      }
 
       if (path === '/api/ai/generate') {
         const provider = body.provider as Provider;

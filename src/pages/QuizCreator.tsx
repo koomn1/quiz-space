@@ -13,6 +13,7 @@ import { getApiUrl, getAppOrigin } from '../lib/origin';
 import { supabase } from '../lib/supabaseClient';
 import { fetchWithAuth } from '../lib/authFetch';
 import { useQuizGenerator } from '../hooks/useQuizGenerator';
+import { getRememberedExtractionJobId } from '../services/aiWorkerClient';
 import DrivePicker from '../components/DrivePicker';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
@@ -557,6 +558,7 @@ export default function QuizCreator({
     generationError,
     resetGeneration,
   } = useQuizGenerator();
+  const hasCheckedPendingExtractionJob = React.useRef(false);
 
   // Synchronize ocrProgress with generationProgress
   React.useEffect(() => {
@@ -571,6 +573,54 @@ export default function QuizCreator({
       setOcrProgress(null);
     }
   }, [generationProgress, activeMode]);
+
+  React.useEffect(() => {
+    const jobId = getRememberedExtractionJobId();
+    if (!jobId || hasCheckedPendingExtractionJob.current || !userId || quizToEdit) return;
+    hasCheckedPendingExtractionJob.current = true;
+    let cancelled = false;
+
+    const resumePendingExtraction = async () => {
+      setActiveMode('ocr');
+      setIsProcessingOcr(true);
+      setOcrError(null);
+      setOcrProgress({
+        stage: 'analyzing',
+        current: 0,
+        total: 1,
+        message: isAr ? 'تم العثور على ملف قيد المعالجة، جارٍ استئناف التقدم...' : 'A pending document was found. Resuming its progress…',
+      });
+      try {
+        const result = await generateAndSaveQuiz({
+          type: 'file_direct',
+          existingJobId: jobId,
+          totalQuestions: pdfCount,
+          userId,
+          creatorName,
+          category: 'عام',
+        });
+        if (cancelled) return;
+        setTitle(result.title);
+        setDescription(result.description);
+        setQuestions(result.quiz.questions.map((question: any, index: number) => ({
+          ...question,
+          id: question.id || `q-resumed-${index}-${Date.now()}`,
+        })));
+        setAiSavedQuizId(result.quiz.id);
+        setActiveMode('manual');
+        setIsProcessingOcr(false);
+        setOcrProgress(null);
+      } catch (error: any) {
+        if (cancelled) return;
+        setOcrError(error?.message || (isAr ? 'تعذر استئناف مهمة استخراج الملف.' : 'Unable to resume the document extraction job.'));
+        setIsProcessingOcr(false);
+        setOcrProgress(null);
+      }
+    };
+
+    void resumePendingExtraction();
+    return () => { cancelled = true; };
+  }, [creatorName, generateAndSaveQuiz, isAr, pdfCount, quizToEdit, userId]);
 
   const renderErrorMsg = (errorStr: string | null) => {
     if (!errorStr) return null;
