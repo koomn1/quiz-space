@@ -843,6 +843,17 @@ export default function UserProfile({
     }
   };
 
+  const fallbackAvatarURL = AVATAR_PRESETS[0]?.url || '';
+  const handleProfileImageError = React.useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+    const image = event.currentTarget;
+    if (image.dataset.fallbackApplied === 'true') {
+      image.style.display = 'none';
+      return;
+    }
+    image.dataset.fallbackApplied = 'true';
+    image.src = fallbackAvatarURL;
+  }, [fallbackAvatarURL]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -858,16 +869,6 @@ export default function UserProfile({
       : "Educator & EdTech enthusiast spreading knowledge.");
   const rawDisplayPhotoURL = profileData?.photoURL || authUser?.photoURL || '';
   const displayPhotoURL = rawDisplayPhotoURL ? resolveProfileImageUrl(rawDisplayPhotoURL) : '';
-  const fallbackAvatarURL = AVATAR_PRESETS[0]?.url || '';
-  const handleProfileImageError = React.useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
-    const image = event.currentTarget;
-    if (image.dataset.fallbackApplied === 'true') {
-      image.style.display = 'none';
-      return;
-    }
-    image.dataset.fallbackApplied = 'true';
-    image.src = fallbackAvatarURL;
-  }, [fallbackAvatarURL]);
   const role = editRole || (isAr ? "طالب" : "Student");
   const country = editCountry || (isAr ? "مصر" : "Egypt");
   const joinDate = new Date(
