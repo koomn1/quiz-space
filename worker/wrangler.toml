@@ -5,3 +5,13 @@ compatibility_date = "2026-07-24"
 # Set secrets with `npx wrangler secret put <NAME>`; never add them here.
 # Required: OPENROUTER_API_KEY, OPENAI_API_KEY, GROQ_API_KEY, DEEPSEEK_API_KEY,
 # SUPABASE_URL, SUPABASE_ANON_KEY, ALLOWED_ORIGIN
+
+[[queues.producers]]
+queue = "quizspace-extraction-jobs"
+binding = "EXTRACTION_JOBS"
+
+[[queues.consumers]]
+queue = "quizspace-extraction-jobs"
+max_batch_size = 1
+max_batch_timeout = 1
+max_retries = 2

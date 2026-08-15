@@ -20,10 +20,18 @@ export interface Env {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   ALLOWED_ORIGIN: string;
+  EXTRACTION_JOBS: {
+    send(message: ExtractionQueueMessage): Promise<void>;
+  };
 }
 
 interface WorkerExecutionContext {
   waitUntil(promise: Promise<unknown>): void;
+}
+
+interface ExtractionQueueMessage {
+  jobId: string;
+  authHeader: string;
 }
 
 type Provider = 'openrouter' | 'openai' | 'groq' | 'deepseek';
@@ -114,6 +122,22 @@ function publicExtractionJob(job: ExtractionJobRow) {
     createdAt: job.created_at,
     updatedAt: job.updated_at,
   };
+}
+
+async function enqueueExtractionJob(env: Env, authHeader: string, jobId: string): Promise<void> {
+  if (!authHeader.startsWith('Bearer ')) throw new Error('Missing authenticated job token');
+  await env.EXTRACTION_JOBS.send({ jobId, authHeader });
+}
+
+async function scheduleExtractionJob(env: Env, authHeader: string, jobId: string): Promise<void> {
+  try {
+    await enqueueExtractionJob(env, authHeader, jobId);
+  } catch (error) {
+    // The job stays pending and its private source remains in Storage. A later
+    // authenticated poll will submit it again, which is safer than losing work
+    // after a transient queue binding or delivery failure.
+    console.error('Unable to schedule extraction job; it will be retried on polling.', { jobId, error });
+  }
 }
 
 async function getCosmoAccountContext(request: Request, env: Env, userId: string | null): Promise<string> {
@@ -317,7 +341,7 @@ function hasCosmoAttachment(body: any): boolean {
   return Boolean((body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') || (data && mimeType && data.length <= 15_000_000));
 }
 
-async function handler(request: Request, env: Env, ctx: WorkerExecutionContext): Promise<Response> {
+async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext): Promise<Response> {
   const headers = cors(request, env);
   if (request.method === 'OPTIONS') return new Response(null, { headers });
   const path = new URL(request.url).pathname;
@@ -344,7 +368,7 @@ async function handler(request: Request, env: Env, ctx: WorkerExecutionContext):
         const resumable: ExtractionJobRow[] = [];
         for (const job of jobs) {
           const current = await restartExpiredJob(env, authHeader, job);
-          if (current.status === 'pending') ctx.waitUntil(processExtractionJob(env, authHeader, current.id));
+          if (current.status === 'pending') await scheduleExtractionJob(env, authHeader, current.id);
           resumable.push(current);
         }
         return json({ jobs: resumable.map(publicExtractionJob) }, 200, headers);
@@ -354,7 +378,7 @@ async function handler(request: Request, env: Env, ctx: WorkerExecutionContext):
       let job = await getExtractionJob(env, authHeader, jobId);
       if (!job) return json({ error: 'Extraction job not found' }, 404, headers);
       job = await restartExpiredJob(env, authHeader, job);
-      if (job.status === 'pending') ctx.waitUntil(processExtractionJob(env, authHeader, job.id));
+      if (job.status === 'pending') await scheduleExtractionJob(env, authHeader, job.id);
       return json(publicExtractionJob(job), 200, headers);
     }
 
@@ -375,7 +399,7 @@ async function handler(request: Request, env: Env, ctx: WorkerExecutionContext):
         if (validationError) return json({ error: 'Invalid extraction job request' }, 400, headers);
         let job = await createOrGetExtractionJob(env, authHeader, userId, input);
         job = await restartExpiredJob(env, authHeader, job);
-        if (job.status === 'pending') ctx.waitUntil(processExtractionJob(env, authHeader, job.id));
+        if (job.status === 'pending') await scheduleExtractionJob(env, authHeader, job.id);
         return json({ job: publicExtractionJob(job) }, 202, headers);
       }
 
@@ -694,4 +718,18 @@ ${extraInstruction}`;
   }
 }
 
-export default { fetch: handler };
+export default {
+  fetch: handler,
+  async queue(batch: { messages: Array<{ body: ExtractionQueueMessage; ack: () => void }> }, env: Env): Promise<void> {
+    for (const message of batch.messages) {
+      const { jobId, authHeader } = message.body || {} as ExtractionQueueMessage;
+      if (!jobId || !authHeader?.startsWith('Bearer ')) {
+        console.warn('Discarding malformed extraction queue message.');
+        message.ack();
+        continue;
+      }
+      await processExtractionJob(env, authHeader, jobId);
+      message.ack();
+    }
+  },
+};

@@ -74,4 +74,5 @@
 - [x] Add a user-scoped internal extraction-job model with status, progress, idempotency, and safe error data
 - [x] Add protected worker endpoints to create, process, and fetch internal extraction jobs without exposing provider keys
 - [x] Update Quiz Creator to submit and resume internal extraction jobs with live progress and saved structured quiz results
-- [x] Add regression tests and verify an end-to-end internal extraction job without re-uploading the same file
+- [ ] Verify the published end-to-end internal extraction job, including durable queue delivery and resumption without re-uploading the same file
+- [ ] Replace short-lived background execution with a durable Cloudflare Queue consumer and verify delivery from the published worker
