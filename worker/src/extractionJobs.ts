@@ -47,8 +47,8 @@ const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
 const LEASE_MS = 2 * 60 * 1000;
 const VISION_MODEL_TIMEOUT_MS = 20_000;
 const TEXT_MODEL_FALLBACKS = [
-  'qwen/qwen3-235b-a22b:free',
   'openai/gpt-oss-20b:free',
+  'qwen/qwen3-235b-a22b:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
 ];
 const VISION_MODEL_FALLBACKS = [
@@ -191,7 +191,12 @@ function normalizeQuestions(value: unknown): any[] {
   return questions;
 }
 
-async function callOpenRouterWithFallback(env: ExtractionJobEnv, messages: any[], models: string[]): Promise<{ text: string; model: string }> {
+async function callOpenRouterWithFallback(
+  env: ExtractionJobEnv,
+  messages: any[],
+  models: string[],
+  options?: { maxTokens?: number; temperature?: number },
+): Promise<{ text: string; model: string }> {
   let lastError: unknown;
   for (const model of models) {
     let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -207,7 +212,12 @@ async function callOpenRouterWithFallback(env: ExtractionJobEnv, messages: any[]
           'HTTP-Referer': 'https://koomn1.github.io/quiz-space/',
           'X-Title': 'QuizSpace',
         },
-        body: JSON.stringify({ model, messages }),
+        body: JSON.stringify({
+          model,
+          messages,
+          ...(options?.maxTokens ? { max_tokens: options.maxTokens } : {}),
+          ...(options?.temperature != null ? { temperature: options.temperature } : {}),
+        }),
       });
       if (!response.ok) throw new Error(`OpenRouter ${model} failed: ${response.status}`);
       const data = await response.json() as any;
@@ -380,7 +390,7 @@ export async function extractJobQuiz(
     const response = await callOpenRouterWithFallback(env, [{
       role: 'user',
       content: `${generatePrompt(job.requested_question_count || 20, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`,
-    }], TEXT_MODEL_FALLBACKS);
+    }], TEXT_MODEL_FALLBACKS, { maxTokens: 4_000, temperature: 0.2 });
     const quiz = parseJson(response.text);
     const questions = normalizeQuestions(quiz);
     if (!questions.length) throw new Error('The document did not contain any valid questions.');
