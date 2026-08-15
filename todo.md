@@ -78,5 +78,6 @@
 - [x] Replace short-lived background execution with a durable Cloudflare Queue consumer and verify delivery from the published worker
 - [x] Add a strict local fast path for fully structured literal-question files before any external model fallback
 - [x] Generate questions from narrative text files through a text model instead of إرسالها كصورة إلى نموذج الرؤية
-- [ ] Run and document a large-PDF extraction load test through Cloudflare Queue, including queue delay, processing time, progress persistence, and result integrity
-- [ ] Avoid full sequential text scanning for large scanned PDFs and keep their processing lease valid through vision chunk preparation
+- [x] Run and document a large-PDF extraction load test through Cloudflare Queue, including queue delay, processing time, progress persistence, and result integrity
+- [x] Avoid full sequential text scanning for large scanned PDFs and keep their processing lease valid through vision chunk preparation
+- [ ] Re-architect scanned-PDF vision extraction as persisted per-chunk queue work so each completed chunk saves progress and retries independently
