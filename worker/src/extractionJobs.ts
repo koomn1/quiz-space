@@ -44,8 +44,10 @@ export interface CreateExtractionJobInput {
 
 const BUCKET = 'quiz-extraction-uploads';
 const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
-const LEASE_MS = 2 * 60 * 1000;
+const LEASE_MS = 5 * 60 * 1000;
 const VISION_MODEL_TIMEOUT_MS = 20_000;
+const LARGE_PDF_PAGE_THRESHOLD = 20;
+const PDF_TEXT_SAMPLE_PAGES = 3;
 const TEXT_MODEL_FALLBACKS = [
   'openai/gpt-oss-20b:free',
   'qwen/qwen3-235b-a22b:free',
@@ -346,6 +348,19 @@ async function extractPdfVision(
   return { title: 'Extracted Quiz', description: 'Questions extracted from the uploaded document.', questions: normalizeQuestions(questions), provider: [...providers].join(', '), chunks: chunks.length };
 }
 
+export function shouldUseVisionForLargeScannedPdf(pageCount: number, sampledText: string): boolean {
+  return pageCount >= LARGE_PDF_PAGE_THRESHOLD && sampledText.trim().length <= 40;
+}
+
+async function samplePdfText(source: Uint8Array, pageCount: number): Promise<string> {
+  const sourcePdf = await PDFDocument.load(source);
+  const samplePdf = await PDFDocument.create();
+  const sampleCount = Math.min(PDF_TEXT_SAMPLE_PAGES, pageCount);
+  const pages = await samplePdf.copyPages(sourcePdf, Array.from({ length: sampleCount }, (_, index) => index));
+  pages.forEach(page => samplePdf.addPage(page));
+  return extractPdfTextContent(new Uint8Array(await samplePdf.save()));
+}
+
 export async function extractJobQuiz(
   source: Uint8Array,
   job: ExtractionJobRow,
@@ -357,6 +372,14 @@ export async function extractJobQuiz(
   let text = '';
 
   if (isLiteral && mimeType === 'application/pdf') {
+    const pageCount = (await PDFDocument.load(source)).getPageCount();
+    if (pageCount >= LARGE_PDF_PAGE_THRESHOLD) {
+      const sampledText = await samplePdfText(source, pageCount);
+      if (shouldUseVisionForLargeScannedPdf(pageCount, sampledText)) {
+        await onProgress(0, Math.ceil(pageCount / 5), 0);
+        return extractPdfVision(source, job, env, onProgress);
+      }
+    }
     text = await extractPdfTextContent(source);
     if (text.trim().length > 40) {
       const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
