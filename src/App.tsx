@@ -94,6 +94,10 @@ class LazyRouteErrorBoundary extends React.Component<React.PropsWithChildren<{ l
     return { hasError: true };
   }
 
+  componentDidCatch(error: unknown, info: React.ErrorInfo) {
+    console.error('[QuizSpace] lazy route render failed', error, info.componentStack);
+  }
+
   render() {
     if (this.state.hasError) {
       const isAr = this.props.lang === 'ar';
