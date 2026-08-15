@@ -13,12 +13,33 @@ vi.mock('./supabaseClient', () => ({
   },
 }));
 
-import { activateRewardFrame, addLessonVideo, broadcastPlatformNotification, claimWeeklyTask, getCurrentWeeklyTasks, getLearningStreakStatus, getRewardLedger, purchaseRewardItem, recordWebVital, updateDailyStreak, updateUserNotificationPreferences } from './db';
+import { activateRewardFrame, addLessonVideo, broadcastPlatformNotification, claimWeeklyTask, getCurrentWeeklyTasks, getLearningStreakStatus, getRewardLedger, purchaseRewardItem, recordWebVital, submitQuizAttempt, updateDailyStreak, updateUserNotificationPreferences } from './db';
 
 describe('reward and persistence database helpers', () => {
   beforeEach(() => {
     mocks.rpc.mockReset();
     mocks.from.mockReset();
+    vi.unstubAllGlobals();
+  });
+
+  it('refreshes shared reward views after a daily quiz reward is recorded', async () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('window', { dispatchEvent });
+    vi.stubGlobal('CustomEvent', class {
+      type: string;
+      constructor(type: string) { this.type = type; }
+    });
+    mocks.rpc
+      .mockResolvedValueOnce({ data: [{ id: 'daily-completion-1' }], error: null })
+      .mockResolvedValueOnce({ data: { points_awarded: 35, total_points: 235 }, error: null });
+
+    await expect(submitQuizAttempt('daily-demo', {
+      takerId: 'student-1', takerName: 'Student', score: 3, totalQuestions: 3,
+    })).resolves.toEqual([{ id: 'daily-completion-1' }]);
+
+    expect(mocks.rpc).toHaveBeenNthCalledWith(1, 'submit_user_daily_quiz_attempt', expect.objectContaining({ p_quiz_id: 'daily-demo' }));
+    expect(mocks.rpc).toHaveBeenNthCalledWith(2, 'award_quiz_completion_rewards', { p_completion_id: 'daily-completion-1' });
+    expect(dispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: 'quizspace-rewards-updated' }));
   });
 
   it('activates a frame only through the ownership-verifying RPC', async () => {

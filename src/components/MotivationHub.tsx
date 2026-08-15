@@ -273,7 +273,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           <p className="text-[10px] text-slate-500 mb-2">{isAr ? 'سؤال يومي — 20 نقطة' : 'Daily question — 20 pts'}</p>
           {status?.brain_challenge?.attempts_today !== undefined && (
             <p className="text-[9px] text-slate-600 mb-1">
-              {isAr ? `${status.brain_challenge.attempts_today}/3 محاولات` : `${status.brain_challenge.attempts_today}/3 attempts`}
+              {isAr ? `${Math.min(1, status.brain_challenge.attempts_today)}/1 محاولة` : `${Math.min(1, status.brain_challenge.attempts_today)}/1 attempt`}
               {status.brain_challenge.correct > 0 && ` • ✅ ${status.brain_challenge.correct}`}
             </p>
           )}
@@ -292,7 +292,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
             />
             <button
               onClick={(event) => { event.stopPropagation(); handleBrainSubmit(); }}
-              disabled={!brainAnswer.trim() || (status?.brain_challenge?.attempts_today || 0) >= 3}
+              disabled={!brainAnswer.trim() || (status?.brain_challenge?.attempts_today || 0) >= 1}
               className="px-2.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold cursor-pointer disabled:opacity-40"
             >
               {isAr ? 'أرسل' : 'Go'}
@@ -300,7 +300,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           </div>
           {brainResult && (
             <p className={`text-[9px] mt-1 font-bold ${brainResult.is_correct ? 'text-green-400' : 'text-red-400'}`}>
-              {brainResult.is_correct ? `✅ +${brainResult.points}` : '❌ Try again'}
+              {brainResult.is_correct ? `✅ +${brainResult.points}` : (isAr ? '❌ اكتملت محاولة اليوم' : '❌ Today’s attempt is complete')}
             </p>
           )}
         </div>

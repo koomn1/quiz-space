@@ -508,6 +508,7 @@ export async function submitQuizAttempt(
     if (dailyRow?.id) {
       const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: dailyRow.id });
       if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
+      else if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
     }
     return dailyResult;
   }
@@ -525,6 +526,7 @@ export async function submitQuizAttempt(
     if (completionRow?.id) {
       const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: completionRow.id });
       if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
+      else if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
     }
     return result;
   }
@@ -567,6 +569,7 @@ export async function submitQuizAttempt(
   }
   const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: completionId });
   if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
+  else if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
   return { success: true, fallback: true, xp_awarded: xpAwarded, id: completionId, attempt_number: attemptNumber, is_best: isBest };
 }
 
@@ -2450,6 +2453,9 @@ export async function claimMysteryBox() {
 export async function submitBrainChallenge(answer: string) {
   const { data, error } = await supabase.rpc('submit_brain_challenge', { p_answer: answer });
   if (error) return { success: false, message: error.message };
+  if (typeof window !== 'undefined' && data?.success && Number(data?.points || 0) > 0) {
+    window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  }
   return data;
 }
 

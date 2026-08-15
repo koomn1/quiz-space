@@ -47,8 +47,8 @@
 - [x] Diagnose and repair the weekly-task reward claim failure for completed tasks, enforce a single user-scoped claim, then verify the balance, ledger, and notification update
 - [x] Isolate learning-streak state per authenticated user, enforce it in database reads and writes, and verify it cannot be shared across accounts
 - [x] Unify the daily-gift streak display with the canonical per-user learning-streak source and verify it matches the momentum card
-- [ ] Deferred by user: repair reward collection and daily quiz-point accounting so balances update outside the current page
-- [ ] Deferred by user: prevent multiple attempts against the same daily brain-challenge question unless explicitly intended
+- [ ] Repair daily quiz-point accounting so the canonical balance, header, profile, ledger, and relevant reward views update consistently after completion
+- [ ] Enforce a user-scoped one-attempt policy for each daily brain-challenge question and show the saved result or clear completed state after reload
 - [x] Repair all visible zero-priced point-store offers and point packages so every purchasable item has a positive configured price
 - [x] Diagnose the GitHub Pages asset mismatch: a stale cached index referenced a retired hashed bundle, while a fresh index request loaded the deployed storefront code and corrected prices
 - [x] Prevent non-Arabic language leakage in Arabic AI-generated questions and explanations, then verify a short live generation
