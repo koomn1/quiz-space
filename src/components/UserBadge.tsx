@@ -195,10 +195,11 @@ function RoyalIcon({ size }: { size: number }) {
 export function UserBadge({ tier, className = '', size = 'md', showTooltip = true, badgeColor = 'blue' }: UserBadgeProps) {
   const px = size === 'sm' ? 18 : size === 'md' ? 22 : 28;
   const iconPx = Math.round(px * 0.55);
-  const meta = TIER_META[tier];
-  const colors = BADGE_COLOR_PRESETS[badgeColor];
+  const safeTier: SubscriptionTier = Object.prototype.hasOwnProperty.call(TIER_META, tier) ? tier : 'free';
+  const meta = TIER_META[safeTier];
+  const colors = BADGE_COLOR_PRESETS[badgeColor] || BADGE_COLOR_PRESETS.blue;
 
-  if (tier === 'free') return null;
+  if (safeTier === 'free') return null;
 
   const tooltip = showTooltip ? (
     <div className="
@@ -213,14 +214,14 @@ export function UserBadge({ tier, className = '', size = 'md', showTooltip = tru
     </div>
   ) : null;
 
-  if (tier === 'verified') return <VerifiedBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
-  if (tier === 'pro') return <ProBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} colors={colors} />;
-  if (tier === 'premium') return <PremiumBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} colors={colors} />;
-  if (tier === 'team') return <TeamBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
-  if (tier === 'enterprise') return <EnterpriseBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
-  if (tier === 'lifetime') return <LifetimeBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
-  if (tier === 'founder') return <FounderBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
-  if (tier === 'royal') return <RoyalBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
+  if (safeTier === 'verified') return <VerifiedBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
+  if (safeTier === 'pro') return <ProBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} colors={colors} />;
+  if (safeTier === 'premium') return <PremiumBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} colors={colors} />;
+  if (safeTier === 'team') return <TeamBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
+  if (safeTier === 'enterprise') return <EnterpriseBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
+  if (safeTier === 'lifetime') return <LifetimeBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
+  if (safeTier === 'founder') return <FounderBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
+  if (safeTier === 'royal') return <RoyalBadge px={px} iconPx={iconPx} tooltip={tooltip} className={className} />;
 
   return null;
 }

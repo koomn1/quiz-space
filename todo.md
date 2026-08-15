@@ -128,4 +128,4 @@
 - [x] 128. Remove refresh-time legacy avatar fallback paths and cover them with regression tests
 - [ ] 129. Run authenticated profile avatar/frame select-save-refresh smoke test and document any session limitation
 
-- [ ] 130. Diagnose and fix the published profile-route recovery boundary after deterministic asset deployment
+- [x] 130. Diagnose and fix the published profile-route recovery boundary after deterministic asset deployment

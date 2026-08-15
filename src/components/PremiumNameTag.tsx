@@ -165,6 +165,24 @@ const BADGE_LABELS: Record<BadgeTier, { labelAr: string; labelEn: string }> = {
 };
 export { BADGE_LABELS };
 
+export function normalizeNameColor(value: unknown): NameColorKey {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(NAME_COLOR_PRESETS, value)
+    ? value as NameColorKey
+    : 'default';
+}
+
+export function normalizeBadgeTier(value: unknown): BadgeTier {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(BADGE_LABELS, value)
+    ? value as BadgeTier
+    : 'none';
+}
+
+export function normalizeBadgeColor(value: unknown): BadgeColorKey {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(BADGE_COLOR_PRESETS, value)
+    ? value as BadgeColorKey
+    : 'blue';
+}
+
 /**
  * Renders a display name with the user's chosen color and verified badge.
  * This is what should be used at every place a username is shown next to
@@ -189,9 +207,9 @@ export function PremiumNameTag({
   badgeSize?: 'sm' | 'md' | 'lg';
   className?: string;
 }) {
-  const effectiveColor: NameColorKey = isPremium ? nameColor : 'default';
-  const effectiveTier: BadgeTier     = isPremium ? badgeTier : 'none';
-  const effectiveBadgeColor: BadgeColorKey = isPremium ? badgeColor : 'blue';
+  const effectiveColor = isPremium ? normalizeNameColor(nameColor) : 'default';
+  const effectiveTier = isPremium ? normalizeBadgeTier(badgeTier) : 'none';
+  const effectiveBadgeColor = isPremium ? normalizeBadgeColor(badgeColor) : 'blue';
 
   const preset = NAME_COLOR_PRESETS[effectiveColor];
 
