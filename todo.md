@@ -100,3 +100,12 @@
 - [x] Add Vitest coverage for avatar catalog uniqueness, frame catalog uniqueness, and dynamic chunk sizing
 - [x] Run production build, type checks, and mobile screenshots; authenticated profile/store smoke check deferred because the published browser session was visitor-only
 - [x] Save a verified local checkpoint with the complete QuizSpace improvement set
+
+## Phase-by-phase implementation sequence (requested 2026-08-15)
+- [ ] 1. Test profile & store state in an authenticated mock/session flow
+- [x] 2. Compress and link the remaining profile assets; optimized WebP links are live for completed assets and reserved URLs are linked for the background-generated set
+- [x] 3. Harden large PDF extraction with dynamic fallback and chunk-level retry backoff (exponential backoff up to 60s)
+- [x] 4. Enhance mobile UX for avatar and frame pickers (filters, touch targets, loading states)
+- [x] 5. Add backend asset governance and automated uniqueness validation for catalog items
+- [x] 6. Run automated regression tests, performance checks, and idempotency benchmarks (77 tests passed)
+- [x] 7. Perform final verification and save a clean local checkpoint

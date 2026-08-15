@@ -30,6 +30,8 @@ import {
   User as UserIcon,
   ChevronDown,
   Check,
+  Search,
+  Loader2,
 } from "lucide-react";
 import { activateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
@@ -109,9 +111,16 @@ export default function UserProfile({
   const [activeFrameUrl, setActiveFrameUrl] = React.useState('');
   const [ownedFrames, setOwnedFrames] = React.useState<any[]>([]);
   const [editFrameId, setEditFrameId] = React.useState('');
+  const [isFramesLoading, setIsFramesLoading] = React.useState(false);
+  const [isAvatarUploading, setIsAvatarUploading] = React.useState(false);
+  const [avatarFilter, setAvatarFilter] = React.useState<'all' | 'boy' | 'girl'>('all');
+  const [avatarSearch, setAvatarSearch] = React.useState('');
+  const [frameSearch, setFrameSearch] = React.useState('');
 
   const refreshActiveFrame = React.useCallback(async () => {
+    setIsFramesLoading(true);
     if (!profileId || profileId.startsWith('user-')) {
+      setIsFramesLoading(false);
       setActiveFrameClass('');
       setActiveFrameUrl('');
       return;
@@ -156,8 +165,27 @@ export default function UserProfile({
       }
     } catch (error) {
       console.warn('Could not load profile frame:', error);
+    } finally {
+      setIsFramesLoading(false);
     }
   }, [profileId, isOwnProfile, profileData?.activeFrameId]);
+
+  const filteredAvatars = React.useMemo(() => {
+    const query = avatarSearch.trim().toLowerCase();
+    return AVATAR_PRESETS.filter((avatar) => {
+      const matchesGender = avatarFilter === 'all' || avatar.gender === avatarFilter;
+      const matchesSearch = !query || `${avatar.label} ${avatar.labelAr}`.toLowerCase().includes(query);
+      return matchesGender && matchesSearch;
+    });
+  }, [avatarFilter, avatarSearch]);
+
+  const filteredOwnedFrames = React.useMemo(() => {
+    const query = frameSearch.trim().toLowerCase();
+    return uniqueProfileFrames(ownedFrames).filter((frame) => {
+      if (!query) return true;
+      return `${frame.name || ''} ${frame.name_ar || ''}`.toLowerCase().includes(query);
+    });
+  }, [ownedFrames, frameSearch]);
 
   const refreshRewards = React.useCallback(async () => {
     if (!isOwnProfile || !currentUserId || currentUserId.startsWith('user-')) {
@@ -1312,26 +1340,32 @@ export default function UserProfile({
                                 );
                                 return;
                               }
-                              const uploadedUrl = await uploadAvatar(profileId, file);
-                              if (uploadedUrl) {
-                                setEditPhotoURL(uploadedUrl);
-                              } else {
+                              setIsAvatarUploading(true);
+                              try {
+                                const uploadedUrl = await uploadAvatar(profileId, file);
+                                if (uploadedUrl) {
+                                  setEditPhotoURL(uploadedUrl);
+                                } else {
                                 const reader = new FileReader();
                                 reader.onload = (evt) => {
                                   if (evt.target?.result) {
                                     setEditPhotoURL(evt.target.result as string);
                                   }
                                 };
-                                reader.readAsDataURL(file);
+                                  reader.readAsDataURL(file);
+                                }
+                              } finally {
+                                setIsAvatarUploading(false);
                               }
                             }
                           }}
                         />
                         <label
                           htmlFor="local-avatar-upload"
-                          className="px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-xl text-[11px] font-black cursor-pointer transition-colors shadow-sm"
+                          aria-disabled={isAvatarUploading}
+                          className="min-h-11 px-3 py-1.5 bg-primary hover:bg-primary/95 text-white rounded-xl text-[11px] font-black cursor-pointer transition-colors shadow-sm inline-flex items-center justify-center gap-1.5"
                         >
-                          {isAr ? "اختر ملف صورة 📁" : "Choose File 📁"}
+                          {isAvatarUploading ? (isAr ? "جارٍ الرفع..." : "Uploading...") : (isAr ? "اختر ملف صورة" : "Choose File")}
                         </label>
                         {editPhotoURL && (
                           <button
@@ -1369,23 +1403,61 @@ export default function UserProfile({
 
                 {/* Preset Avatars Selector for Boys & Girls */}
                 <div className="space-y-3 pt-3">
-                  <label className="text-[10px] font-black text-slate-500 block">
-                    {isAr ? "أو اختر صورة رمزية (أفاتار) جاهزة للشباب والبنات:" : "Or choose a preset avatar (Boys & Girls):"}
-                  </label>
-                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
-                    {AVATAR_PRESETS.map((avatar) => (
-                      <button
-                        key={avatar.id}
-                        type="button"
-                        aria-label={isAr ? `اختيار أفاتار ${avatar.labelAr}` : `Choose ${avatar.label}`}
-                        onClick={() => setEditPhotoURL(avatar.url)}
-                        className={`relative group aspect-square min-h-11 min-w-11 rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${editPhotoURL === avatar.url ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
-                      >
-                        <img src={avatar.url} alt={isAr ? avatar.labelAr : avatar.label} loading="lazy" decoding="async" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-	                  </div>
-	                </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="text-[10px] font-black text-slate-500 block">
+                      {isAr ? "اختر صورتك الرمزية" : "Choose your avatar"}
+                    </label>
+                    <span className="text-[10px] font-bold text-slate-400">{filteredAvatars.length}/{AVATAR_PRESETS.length}</span>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <label className="relative flex-1">
+                      <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden="true" />
+                      <input
+                        type="search"
+                        value={avatarSearch}
+                        onChange={(event) => setAvatarSearch(event.target.value)}
+                        className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 ps-9 pe-3 text-xs outline-none transition focus:ring-2 focus:ring-primary dark:border-slate-800 dark:bg-slate-900"
+                        placeholder={isAr ? "ابحث عن نشاط..." : "Search activity..."}
+                        aria-label={isAr ? "البحث في الافتارات" : "Search avatars"}
+                      />
+                    </label>
+                    <div className="flex gap-2" role="group" aria-label={isAr ? "تصفية الافتارات" : "Avatar filters"}>
+                      {([
+                        ['all', isAr ? 'الكل' : 'All'],
+                        ['boy', isAr ? 'شباب' : 'Boys'],
+                        ['girl', isAr ? 'بنات' : 'Girls'],
+                      ] as const).map(([value, label]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={avatarFilter === value}
+                          onClick={() => setAvatarFilter(value)}
+                          className={`min-h-11 rounded-xl px-3 text-[10px] font-black transition ${avatarFilter === value ? 'bg-primary text-white shadow-sm' : 'border border-slate-200 text-slate-600 dark:border-slate-800 dark:text-slate-300'}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {filteredAvatars.length ? (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
+                      {filteredAvatars.map((avatar) => (
+                        <button
+                          key={avatar.id}
+                          type="button"
+                          aria-label={isAr ? `اختيار أفاتار ${avatar.labelAr}` : `Choose ${avatar.label}`}
+                          onClick={() => setEditPhotoURL(avatar.url)}
+                          className={`relative group aspect-square min-h-11 min-w-11 rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${editPhotoURL === avatar.url ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
+                        >
+                          <img src={avatar.url} alt={isAr ? avatar.labelAr : avatar.label} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                          <span className="absolute inset-x-0 bottom-0 truncate bg-slate-950/70 px-1 py-1 text-[8px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">{isAr ? avatar.labelAr : avatar.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs font-bold text-slate-400 dark:border-slate-800">{isAr ? "لا يوجد أفاتار مطابق للبحث." : "No matching avatar found."}</p>
+                  )}
+                </div>
 
                   {/* Owned Frames Selection Section */}
                   <div className="bg-white dark:bg-slate-950 p-5 rounded-3xl border border-slate-100 dark:border-slate-800/60 space-y-4 shadow-sm">
@@ -1395,6 +1467,23 @@ export default function UserProfile({
                         {isAr ? "إطاراتك ومظهر البروفايل" : "Your Frames & Profile Look"}
                       </h4>
                     </div>
+                    <label className="relative block">
+                      <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden="true" />
+                      <input
+                        type="search"
+                        value={frameSearch}
+                        onChange={(event) => setFrameSearch(event.target.value)}
+                        className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 ps-9 pe-3 text-xs outline-none transition focus:ring-2 focus:ring-primary dark:border-slate-800 dark:bg-slate-900"
+                        placeholder={isAr ? "ابحث في إطاراتك..." : "Search your frames..."}
+                        aria-label={isAr ? "البحث في الإطارات" : "Search frames"}
+                      />
+                    </label>
+                    {isFramesLoading ? (
+                      <div className="flex min-h-24 items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 text-xs font-bold text-slate-400 dark:border-slate-800">
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        {isAr ? "جارٍ تحميل إطاراتك..." : "Loading your frames..."}
+                      </div>
+                    ) : (
                     <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
                       <button
                         type="button"
@@ -1404,7 +1493,7 @@ export default function UserProfile({
                         <span className="text-[10px] font-black text-slate-400">{isAr ? 'بدون' : 'None'}</span>
                       </button>
                       
-                      {uniqueProfileFrames(ownedFrames).map((frame) => (
+                      {filteredOwnedFrames.map((frame) => (
                         <button
                           key={frame.id}
                           type="button"
@@ -1424,8 +1513,12 @@ export default function UserProfile({
                         </button>
                       ))}
                     </div>
+                    )}
+                    {!isFramesLoading && filteredOwnedFrames.length === 0 && (
+                      <p className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs font-bold text-slate-400 dark:border-slate-800">{isAr ? "لا توجد إطارات مطابقة. يمكنك شراء المزيد من مركز التحفيز." : "No matching frames. Visit Motivation Hub to get more."}</p>
+                    )}
                     <p className="text-[9px] font-bold text-slate-400">
-                      {isAr ? "💡 الإطارات المميزة تظهر بتأثيرات نبض وحركة جذابة في ملفك الشخصي." : "💡 Premium frames appear with beautiful pulse and glow effects on your profile."}
+                      {isAr ? "الإطارات المميزة تظهر بتأثيرات نبض وحركة جذابة في ملفك الشخصي." : "Premium frames can show subtle pulse and glow effects on your profile."}
                     </p>
                   </div>
 	              </div>

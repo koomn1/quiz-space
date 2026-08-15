@@ -929,13 +929,14 @@ export async function processExtractionJobChunk(
   } catch (error) {
     console.error('Extraction job chunk failed.', { jobId, chunkId, error });
     if (deliveryAttempts < MAX_VISION_CHUNK_DELIVERY_ATTEMPTS) {
+      const backoffSeconds = Math.min(60, Math.pow(2, deliveryAttempts) * 5);
       await updateClaimedChunk(env, authHeader, jobId, chunk.id, token, {
         status: 'pending',
         processing_token: null,
         error_message: cleanMessage(error),
       });
       await updateClaimedJob(env, authHeader, parent.id, parent.processing_token, {
-        progress_message: `تعذر إتمام جزء من الملف، ستتم إعادة محاولته تلقائياً (${deliveryAttempts}/${MAX_VISION_CHUNK_DELIVERY_ATTEMPTS}).`,
+        progress_message: `تعذر إتمام جزء من الملف، ستتم إعادة المحاولة بعد ${backoffSeconds} ثانية (${deliveryAttempts}/${MAX_VISION_CHUNK_DELIVERY_ATTEMPTS}).`,
       });
       return 'retry';
     }

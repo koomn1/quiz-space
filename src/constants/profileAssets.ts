@@ -16,10 +16,10 @@ export function profileAssetUrl(path: string): string {
 
 export const AVATAR_PRESETS: AvatarPreset[] = [
   { id: 'boy-football', label: 'Football', labelAr: 'كرة القدم', gender: 'boy', url: '/manus-storage/quizspace-avatar-football-boy_b1a08620.webp' },
-  { id: 'girl-studying', label: 'Study mode', labelAr: 'وقت المذاكرة', gender: 'girl', url: '/manus-storage/quizspace-avatar-girl-studying_7e01faf5.png' },
-  { id: 'boy-music', label: 'Music', labelAr: 'الموسيقى', gender: 'boy', url: '/manus-storage/quizspace-avatar-boy-music_f732e6f5.png' },
-  { id: 'girl-walking', label: 'School walk', labelAr: 'مشوار المدرسة', gender: 'girl', url: '/manus-storage/quizspace-avatar-girl-walking_568560e0.png' },
-  { id: 'boy-cap-glasses', label: 'Cap & glasses', labelAr: 'كاب ونظارات', gender: 'boy', url: '/manus-storage/quizspace-avatar-boy-cap-glasses_41060d7e.png' },
+  { id: 'girl-studying', label: 'Study mode', labelAr: 'وقت المذاكرة', gender: 'girl', url: '/manus-storage/quizspace-avatar-girl-studying_1a84f92d.png' },
+  { id: 'boy-music', label: 'Music', labelAr: 'الموسيقى', gender: 'boy', url: '/manus-storage/quizspace-avatar-boy-music_a54c3b66.png' },
+  { id: 'girl-walking', label: 'School walk', labelAr: 'مشوار المدرسة', gender: 'girl', url: '/manus-storage/quizspace-avatar-girl-walking_ac4fa679.png' },
+  { id: 'boy-cap-glasses', label: 'Cap & glasses', labelAr: 'كاب ونظارات', gender: 'boy', url: '/manus-storage/quizspace-avatar-boy-cap-glasses_e2b39067.png' },
   { id: 'girl-active', label: 'Active girl', labelAr: 'بنت رياضية', gender: 'girl', url: profileAssetUrl('avatars/avatar-skater-pro.webp') },
   { id: 'boy-studying', label: 'Focused study', labelAr: 'مذاكرة وتركيز', gender: 'boy', url: profileAssetUrl('avatars/avatar-studying-pro.webp') },
   { id: 'girl-music', label: 'Music girl', labelAr: 'بنت بتحب الموسيقى', gender: 'girl', url: profileAssetUrl('avatars/avatar-music-pro.webp') },

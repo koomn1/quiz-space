@@ -27,3 +27,14 @@ describe('profile asset catalog', () => {
     expect(source).toHaveLength(4);
   });
 });
+
+  it('ensures every preset avatar has a valid label, gender, and unique id', () => {
+    const ids = AVATAR_PRESETS.map((a) => a.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const avatar of AVATAR_PRESETS) {
+      expect(avatar.id).toBeTruthy();
+      expect(avatar.url).toBeTruthy();
+      expect(['boy', 'girl']).toContain(avatar.gender);
+      expect(avatar.labelAr).toBeTruthy();
+    }
+  });

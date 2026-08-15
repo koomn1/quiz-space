@@ -738,9 +738,11 @@ export default {
         continue;
       }
       if (chunkId) {
-        const outcome = await processExtractionJobChunk(env, authHeader, jobId, chunkId, message.attempts || 1);
+        const attempts = message.attempts || 1;
+        const outcome = await processExtractionJobChunk(env, authHeader, jobId, chunkId, attempts);
         if (outcome === 'retry') {
-          message.retry({ delaySeconds: Math.min(30, 5 * (message.attempts || 1)) });
+          const delaySeconds = Math.min(60, Math.pow(2, attempts) * 5);
+          message.retry({ delaySeconds });
           continue;
         }
         message.ack();
