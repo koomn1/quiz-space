@@ -69,9 +69,9 @@ const PDF_TEXT_SAMPLE_PAGES = 3;
 export const VISION_CHUNK_PAGE_COUNT = 5;
 export const MAX_VISION_CHUNK_DELIVERY_ATTEMPTS = 3;
 const TEXT_MODEL_FALLBACKS = [
+  'nvidia/nemotron-3-super-120b-a12b:free',
   'openai/gpt-oss-20b:free',
   'qwen/qwen3-235b-a22b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
 ];
 const VISION_MODEL_FALLBACKS = [
   'google/gemma-4-31b-it:free',
@@ -567,21 +567,36 @@ async function generateQuestionsFromText(
   env: ExtractionJobEnv,
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
-  const response = await callOpenRouterWithFallback(env, [{
+  const messages = [{
     role: 'user',
     content: `${generatePrompt(job.requested_question_count || 20, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`,
-  }], TEXT_MODEL_FALLBACKS, { maxTokens: 4_000, temperature: 0.2 });
-  const quiz = parseJson(response.text);
-  const questions = normalizeQuestions(quiz);
-  if (!questions.length) throw new Error('The document did not contain any valid questions.');
-  await onProgress(1, 1, questions.length);
-  return {
-    title: typeof quiz?.title === 'string' ? quiz.title : 'Extracted Quiz',
-    description: typeof quiz?.description === 'string' ? quiz.description : 'Questions generated from the uploaded document.',
-    questions,
-    provider: response.model,
-    chunks: 1,
-  };
+  }];
+  let lastError: unknown;
+
+  // A provider can return HTTP 200 with prose or malformed JSON. That is not a
+  // successful extraction, so treat parsing and validation as part of the
+  // fallback boundary instead of failing the whole job after one response.
+  for (const model of TEXT_MODEL_FALLBACKS) {
+    try {
+      const response = await callOpenRouterWithFallback(env, messages, [model], { maxTokens: 4_000, temperature: 0.2 });
+      const quiz = parseJson(response.text);
+      const questions = normalizeQuestions(quiz);
+      if (!questions.length) throw new Error('The document did not contain any valid questions.');
+      await onProgress(1, 1, questions.length);
+      return {
+        title: typeof quiz?.title === 'string' ? quiz.title : 'Extracted Quiz',
+        description: typeof quiz?.description === 'string' ? quiz.description : 'Questions generated from the uploaded document.',
+        questions,
+        provider: response.model,
+        chunks: 1,
+      };
+    } catch (error) {
+      lastError = error;
+      console.warn(`Text extraction model ${model} did not return a usable quiz; trying fallback.`, error);
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('All text extraction models failed.');
 }
 
 export async function extractJobQuiz(
