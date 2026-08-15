@@ -5,7 +5,7 @@
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab } from '../types';
-import { availableBadgeTiers, availableBadgeColors, availableNameColors, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
+import { availableBadgeTiers, availableBadgeColors, availableNameColors, normalizeBadgeColor, normalizeBadgeTier, normalizeNameColor, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
@@ -747,9 +747,9 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       isAdmin: userRow?.is_admin || false,
       // Never surface a badge/color for a non-premium user, even if the row
       // still has a stale value from a lapsed subscription.
-      badgeTier: userRow?.is_premium ? (userRow?.badge_tier || 'none') : 'none',
-      nameColor: userRow?.is_premium ? (userRow?.name_color || 'default') : 'default',
-      badgeColor: userRow?.is_premium ? (userRow?.badge_color || 'blue') : 'blue',
+      badgeTier: userRow?.is_premium ? normalizeBadgeTier(userRow?.badge_tier) : 'none',
+      nameColor: userRow?.is_premium ? normalizeNameColor(userRow?.name_color) : 'default',
+      badgeColor: userRow?.is_premium ? normalizeBadgeColor(userRow?.badge_color) : 'blue',
       xp: userRow?.xp || 0,
       createdQuizzes: (createdQuizzes || []).map(mapQuizRow),
       completions: completions || [],
