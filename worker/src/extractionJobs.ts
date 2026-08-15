@@ -527,7 +527,11 @@ async function extractPdfVision(
 }
 
 export function shouldUseVisionForLargeScannedPdf(pageCount: number, sampledText: string): boolean {
-  return pageCount >= LARGE_PDF_PAGE_THRESHOLD && sampledText.trim().length <= 40;
+  return pageCount >= LARGE_PDF_PAGE_THRESHOLD && shouldUseVisionForScannedPdf(pageCount, sampledText);
+}
+
+export function shouldUseVisionForScannedPdf(pageCount: number, sampledText: string): boolean {
+  return pageCount > 0 && sampledText.trim().length <= 40;
 }
 
 async function samplePdfText(source: Uint8Array, pageCount: number): Promise<string> {
@@ -539,12 +543,11 @@ async function samplePdfText(source: Uint8Array, pageCount: number): Promise<str
   return extractPdfTextContent(new Uint8Array(await samplePdf.save()));
 }
 
-async function getLargeScannedPdfPageCount(source: Uint8Array, job: ExtractionJobRow): Promise<number | null> {
+async function getScannedPdfPageCount(source: Uint8Array, job: ExtractionJobRow): Promise<number | null> {
   if (job.file_mime_type !== 'application/pdf') return null;
   const pageCount = (await PDFDocument.load(source)).getPageCount();
-  if (pageCount < LARGE_PDF_PAGE_THRESHOLD) return null;
   const sampledText = await samplePdfText(source, pageCount);
-  return shouldUseVisionForLargeScannedPdf(pageCount, sampledText) ? pageCount : null;
+  return shouldUseVisionForScannedPdf(pageCount, sampledText) ? pageCount : null;
 }
 
 async function restartExpiredVisionChunks(env: ExtractionJobEnv, authHeader: string, jobId: string): Promise<void> {
@@ -782,7 +785,7 @@ export async function processExtractionJob(
       progress_percentage: 5,
       progress_message: 'تم فتح الملف، جارٍ قراءة المحتوى.',
     });
-    const scannedPageCount = await getLargeScannedPdfPageCount(source, job);
+    const scannedPageCount = await getScannedPdfPageCount(source, job);
     if (scannedPageCount) {
       await restartExpiredVisionChunks(env, authHeader, job.id);
       const existingChunks = await fetchJobChunks(env, authHeader, job.id);

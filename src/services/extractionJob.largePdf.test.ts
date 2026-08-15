@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildVisionChunkRanges, shouldUseVisionForLargeScannedPdf, VISION_CHUNK_PAGE_COUNT } from '../../worker/src/extractionJobs';
+import { buildVisionChunkRanges, shouldUseVisionForLargeScannedPdf, shouldUseVisionForScannedPdf, VISION_CHUNK_PAGE_COUNT } from '../../worker/src/extractionJobs';
 
 describe('large scanned PDF routing', () => {
   it('routes a large PDF with no sampled text to the chunked vision path', () => {
@@ -12,6 +12,15 @@ describe('large scanned PDF routing', () => {
 
   it('does not apply the sampled-text shortcut to short PDFs', () => {
     expect(shouldUseVisionForLargeScannedPdf(8, '')).toBe(false);
+  });
+
+  it('routes a short scanned PDF with no text sample to persisted vision chunks', () => {
+    expect(shouldUseVisionForScannedPdf(9, '')).toBe(true);
+    expect(shouldUseVisionForScannedPdf(9, 'Question 1. Which statement is correct? Choose the best answer from the available options below.')).toBe(false);
+    expect(buildVisionChunkRanges(9)).toEqual([
+      { chunkIndex: 0, pageStart: 1, pageEnd: 5 },
+      { chunkIndex: 1, pageStart: 6, pageEnd: 9 },
+    ]);
   });
 
   it('creates independently retryable five-page ranges for a 37-page scanned PDF', () => {

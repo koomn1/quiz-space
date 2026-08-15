@@ -87,3 +87,4 @@
 - [x] Run production-safe regression and load tests across text, generated-text, native-text PDF, and scanned-PDF extraction paths, then document measured results
 - [ ] Create a nine-page PDF with a deterministic question inventory and verify live extraction count and question-content fidelity without publishing the draft
 - [ ] Repair automatic file-extraction request validation so the UI's automatic question-count option produces a valid authenticated Worker job
+- [ ] Route short scanned PDFs with no extractable text sample into the persisted vision-chunk pipeline instead of failing on the text-only path
