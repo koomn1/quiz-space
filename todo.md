@@ -60,3 +60,4 @@
 - [x] Prevent a completed daily lucky-spin attempt from replaying the wheel animation, and show localized completed-state feedback
 - [x] Benchmark daily-quiz reward RPC latency and controlled concurrency, then verify reward-ledger idempotency and database responsiveness under load
 - [x] Run a guarded, read-only site load test with stepped concurrency and automatic error/latency stop conditions, then document the measured capacity range
+- [x] Perform an authorized non-destructive security assessment of data isolation, reward authorization, and tamper resistance without changing live user data
