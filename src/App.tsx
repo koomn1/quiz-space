@@ -95,7 +95,19 @@ class LazyRouteErrorBoundary extends React.Component<React.PropsWithChildren<{ l
   }
 
   componentDidCatch(error: unknown, info: React.ErrorInfo) {
-    console.error('[QuizSpace] lazy route render failed', error, info.componentStack);
+    const diagnostic = {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack || '' : '',
+      componentStack: info.componentStack,
+      href: window.location.href,
+      timestamp: new Date().toISOString(),
+    };
+    try {
+      window.sessionStorage.setItem('quizspace-route-error', JSON.stringify(diagnostic));
+    } catch (_) {
+      // Diagnostics must never affect the recovery UI.
+    }
+    console.error('[QuizSpace] lazy route render failed', diagnostic);
   }
 
   render() {
