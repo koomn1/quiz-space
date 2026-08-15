@@ -5,7 +5,6 @@ import { filterValidGeneratedQuestions } from '../lib/quizGenerationValidation';
 import { Question, GeneratedQuiz } from '../types';
 import { generateQuizWithFallback } from './useQuizzes';
 import { createExtractionJob, getExtractionJob } from '../services/aiWorkerClient';
-import { splitPdfIntoPageImages } from '../lib/pdfSplitter';
 
 
 export interface ProgressState {
@@ -13,6 +12,16 @@ export interface ProgressState {
   total: number;
   stage: 'scanning' | 'generating' | 'saving' | 'complete';
   message: string;
+}
+
+export function formatExtractionEta(createdAt: string, processedChunks: number, totalChunks: number | null): string | null {
+  if (!totalChunks || processedChunks < 1 || processedChunks >= totalChunks) return null;
+  const startedAt = new Date(createdAt).getTime();
+  if (!Number.isFinite(startedAt)) return null;
+  const elapsedSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+  const remainingSeconds = Math.max(1, Math.round((elapsedSeconds / processedChunks) * (totalChunks - processedChunks)));
+  if (remainingSeconds < 60) return `الوقت المتبقي التقريبي: أقل من دقيقة.`;
+  return `الوقت المتبقي التقريبي: نحو ${Math.ceil(remainingSeconds / 60)} دقيقة.`;
 }
 
 export function useQuizGenerator() {
@@ -212,11 +221,12 @@ export function useQuizGenerator() {
             break;
           }
           if (job.status === 'error') throw new Error(job.errorMessage || 'تعذر استخراج أسئلة من هذا الملف.');
+          const eta = formatExtractionEta(job.createdAt, job.processedChunks, job.totalChunks);
           setProgress({
             current: job.processedChunks,
             total: job.totalChunks || 1,
             stage: 'generating',
-            message: job.progressMessage || `جارٍ استخراج الأسئلة (${job.progressPercentage}%).`,
+            message: [job.progressMessage || `جارٍ استخراج الأسئلة (${job.progressPercentage}%).`, eta].filter(Boolean).join(' '),
           });
           await new Promise(resolve => window.setTimeout(resolve, 2000));
           job = await getExtractionJob(job.id);

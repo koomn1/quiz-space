@@ -7,6 +7,7 @@ import {
   getExtractionJob,
   listActiveExtractionJobs,
   processExtractionJob,
+  processExtractionJobChunk,
   restartExpiredJob,
   validateCreateExtractionJobInput,
   type ExtractionJobRow,
@@ -32,6 +33,7 @@ interface WorkerExecutionContext {
 interface ExtractionQueueMessage {
   jobId: string;
   authHeader: string;
+  chunkId?: string;
 }
 
 type Provider = 'openrouter' | 'openai' | 'groq' | 'deepseek';
@@ -720,15 +722,31 @@ ${extraInstruction}`;
 
 export default {
   fetch: handler,
-  async queue(batch: { messages: Array<{ body: ExtractionQueueMessage; ack: () => void }> }, env: Env): Promise<void> {
+  async queue(batch: { messages: Array<{
+    body: ExtractionQueueMessage;
+    attempts?: number;
+    ack: () => void;
+    retry: (options?: { delaySeconds?: number }) => void;
+  }> }, env: Env): Promise<void> {
     for (const message of batch.messages) {
-      const { jobId, authHeader } = message.body || {} as ExtractionQueueMessage;
+      const { jobId, authHeader, chunkId } = message.body || {} as ExtractionQueueMessage;
       if (!jobId || !authHeader?.startsWith('Bearer ')) {
         console.warn('Discarding malformed extraction queue message.');
         message.ack();
         continue;
       }
-      await processExtractionJob(env, authHeader, jobId);
+      if (chunkId) {
+        const outcome = await processExtractionJobChunk(env, authHeader, jobId, chunkId, message.attempts || 1);
+        if (outcome === 'retry') {
+          message.retry({ delaySeconds: Math.min(30, 5 * (message.attempts || 1)) });
+          continue;
+        }
+        message.ack();
+        continue;
+      }
+      await processExtractionJob(env, authHeader, jobId, async (parentJobId, chunkIds) => {
+        await Promise.all(chunkIds.map(id => env.EXTRACTION_JOBS.send({ jobId: parentJobId, chunkId: id, authHeader })));
+      });
       message.ack();
     }
   },

@@ -28,9 +28,27 @@ export interface ExtractionJobRow {
   quiz_description: string | null;
   provider: string | null;
   error_message: string | null;
+  processing_token: string | null;
   processing_lease_expires_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ExtractionJobChunkRow {
+  id: string;
+  parent_job_id: string;
+  chunk_index: number;
+  page_start: number;
+  page_end: number;
+  status: 'pending' | 'processing' | 'complete' | 'error';
+  processing_token: string | null;
+  processing_lease_expires_at: string | null;
+  questions_json: unknown[] | null;
+  provider: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
 }
 
 export interface CreateExtractionJobInput {
@@ -48,6 +66,8 @@ const LEASE_MS = 5 * 60 * 1000;
 const VISION_MODEL_TIMEOUT_MS = 20_000;
 const LARGE_PDF_PAGE_THRESHOLD = 20;
 const PDF_TEXT_SAMPLE_PAGES = 3;
+export const VISION_CHUNK_PAGE_COUNT = 5;
+export const MAX_VISION_CHUNK_DELIVERY_ATTEMPTS = 3;
 const TEXT_MODEL_FALLBACKS = [
   'openai/gpt-oss-20b:free',
   'qwen/qwen3-235b-a22b:free',
@@ -245,6 +265,66 @@ async function fetchJob(env: ExtractionJobEnv, authHeader: string, jobId: string
   return rows[0] || null;
 }
 
+async function fetchJobChunks(env: ExtractionJobEnv, authHeader: string, jobId: string): Promise<ExtractionJobChunkRow[]> {
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_job_chunks?parent_job_id=eq.${encodeURIComponent(jobId)}&order=chunk_index.asc&select=*`), {
+    headers: databaseHeaders(env, authHeader),
+  });
+  if (!response.ok) throw new Error(`Chunk read failed: ${response.status}`);
+  return response.json() as Promise<ExtractionJobChunkRow[]>;
+}
+
+export function buildVisionChunkRanges(pageCount: number): Array<{ chunkIndex: number; pageStart: number; pageEnd: number }> {
+  if (!Number.isInteger(pageCount) || pageCount < 1) return [];
+  return Array.from({ length: Math.ceil(pageCount / VISION_CHUNK_PAGE_COUNT) }, (_, chunkIndex) => ({
+    chunkIndex,
+    pageStart: chunkIndex * VISION_CHUNK_PAGE_COUNT + 1,
+    pageEnd: Math.min((chunkIndex + 1) * VISION_CHUNK_PAGE_COUNT, pageCount),
+  }));
+}
+
+async function createVisionChunks(env: ExtractionJobEnv, authHeader: string, jobId: string, pageCount: number): Promise<ExtractionJobChunkRow[]> {
+  const chunks = buildVisionChunkRanges(pageCount).map(({ chunkIndex, pageStart, pageEnd }) => ({
+    parent_job_id: jobId,
+    chunk_index: chunkIndex,
+    page_start: pageStart,
+    page_end: pageEnd,
+  }));
+  if (!chunks.length) throw new Error('The PDF did not contain any pages.');
+  const response = await fetch(apiUrl(env, '/rest/v1/extraction_job_chunks'), {
+    method: 'POST',
+    headers: databaseHeaders(env, authHeader, {
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=ignore-duplicates,return=representation',
+    }),
+    body: JSON.stringify(chunks),
+  });
+  if (!response.ok) throw new Error(`Chunk creation failed: ${response.status}`);
+  const created = await response.json() as ExtractionJobChunkRow[];
+  return created.length ? created : fetchJobChunks(env, authHeader, jobId);
+}
+
+async function claimPendingChunk(
+  env: ExtractionJobEnv,
+  authHeader: string,
+  jobId: string,
+  chunkId: string,
+): Promise<{ chunk: ExtractionJobChunkRow; token: string } | null> {
+  const token = crypto.randomUUID();
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_job_chunks?id=eq.${encodeURIComponent(chunkId)}&parent_job_id=eq.${encodeURIComponent(jobId)}&status=eq.pending`), {
+    method: 'PATCH',
+    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+    body: JSON.stringify({
+      status: 'processing',
+      processing_token: token,
+      processing_lease_expires_at: new Date(Date.now() + LEASE_MS).toISOString(),
+      error_message: null,
+    }),
+  });
+  if (!response.ok) throw new Error(`Chunk claim failed: ${response.status}`);
+  const rows = await response.json() as ExtractionJobChunkRow[];
+  return rows[0] ? { chunk: rows[0], token } : null;
+}
+
 async function updateClaimedJob(
   env: ExtractionJobEnv,
   authHeader: string,
@@ -257,11 +337,109 @@ async function updateClaimedJob(
     headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
     body: JSON.stringify({
       ...payload,
-      processing_lease_expires_at: new Date(Date.now() + LEASE_MS).toISOString(),
+      processing_lease_expires_at: payload.status === 'complete' || payload.status === 'error'
+        ? null
+        : new Date(Date.now() + LEASE_MS).toISOString(),
     }),
   });
   if (!response.ok) throw new Error(`Job update failed: ${response.status}`);
   return true;
+}
+
+async function updateClaimedChunk(
+  env: ExtractionJobEnv,
+  authHeader: string,
+  jobId: string,
+  chunkId: string,
+  token: string,
+  payload: Record<string, unknown>,
+): Promise<boolean> {
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_job_chunks?id=eq.${encodeURIComponent(chunkId)}&parent_job_id=eq.${encodeURIComponent(jobId)}&processing_token=eq.${encodeURIComponent(token)}`), {
+    method: 'PATCH',
+    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+    body: JSON.stringify({
+      ...payload,
+      processing_lease_expires_at: payload.status === 'complete' || payload.status === 'error' || payload.status === 'pending'
+        ? null
+        : new Date(Date.now() + LEASE_MS).toISOString(),
+    }),
+  });
+  if (!response.ok) throw new Error(`Chunk update failed: ${response.status}`);
+  return true;
+}
+
+async function reconcileVisionParentJob(
+  env: ExtractionJobEnv,
+  authHeader: string,
+  parent: ExtractionJobRow,
+  parentToken: string,
+  startedAt: number,
+): Promise<void> {
+  const chunks = await fetchJobChunks(env, authHeader, parent.id);
+  const completed = chunks.filter(chunk => chunk.status === 'complete');
+  const failed = chunks.filter(chunk => chunk.status === 'error');
+  const total = chunks.length;
+  if (!total) throw new Error('No persisted PDF chunks were found.');
+
+  if (failed.length) {
+    await updateClaimedJob(env, authHeader, parent.id, parentToken, {
+      status: 'error',
+      processed_chunks: completed.length,
+      total_chunks: total,
+      progress_percentage: Math.max(8, Math.round(5 + (completed.length / total) * 90)),
+      progress_message: 'تعذر استخراج أحد أجزاء الملف الممسوح.',
+      error_message: cleanMessage(failed[0].error_message),
+      processing_token: null,
+      processing_lease_expires_at: null,
+    });
+    await logExtractionPerformance(env, authHeader, parent, 'openrouter', 'error', Date.now() - startedAt, total);
+    return;
+  }
+
+  if (completed.length < total) {
+    const extractedCount = completed.reduce((count, chunk) => count + normalizeQuestions(chunk.questions_json).length, 0);
+    const percentage = Math.max(8, Math.min(95, Math.round(5 + (completed.length / total) * 90)));
+    await updateClaimedJob(env, authHeader, parent.id, parentToken, {
+      processed_chunks: completed.length,
+      total_chunks: total,
+      progress_percentage: percentage,
+      progress_message: `معالجة الجزء ${completed.length}/${total} واستخراج ${extractedCount} سؤالاً.`,
+    });
+    return;
+  }
+
+  const questions = normalizeQuestions(completed.flatMap(chunk => normalizeQuestions(chunk.questions_json)));
+  if (!questions.length) {
+    await updateClaimedJob(env, authHeader, parent.id, parentToken, {
+      status: 'error',
+      processed_chunks: total,
+      total_chunks: total,
+      progress_message: 'لم تُستخرج أسئلة صالحة من الملف الممسوح.',
+      error_message: 'لم يتم العثور على أسئلة واضحة في الملف المرفوع.',
+      processing_token: null,
+      processing_lease_expires_at: null,
+    });
+    await logExtractionPerformance(env, authHeader, parent, 'openrouter', 'error', Date.now() - startedAt, total);
+    return;
+  }
+
+  const providers = [...new Set(completed.map(chunk => chunk.provider).filter(Boolean))].join(', ') || 'openrouter';
+  await updateClaimedJob(env, authHeader, parent.id, parentToken, {
+    status: 'complete',
+    progress_percentage: 100,
+    processed_chunks: total,
+    total_chunks: total,
+    progress_message: `اكتمل الاستخراج: ${questions.length} سؤالاً جاهزاً للمراجعة.`,
+    questions_json: questions,
+    quiz_title: 'اختبار مستخرج',
+    quiz_description: 'أسئلة مستخرجة من ملف PDF ممسوح ضوئياً.',
+    provider: providers,
+    completed_at: new Date().toISOString(),
+    processing_token: null,
+    processing_lease_expires_at: null,
+  });
+  await logExtractionPerformance(env, authHeader, parent, providers, 'success', Date.now() - startedAt, total);
+  await deleteSourceFile(env, authHeader, parent.file_storage_path);
 }
 
 async function downloadSourceFile(env: ExtractionJobEnv, authHeader: string, path: string): Promise<Uint8Array> {
@@ -361,6 +539,51 @@ async function samplePdfText(source: Uint8Array, pageCount: number): Promise<str
   return extractPdfTextContent(new Uint8Array(await samplePdf.save()));
 }
 
+async function getLargeScannedPdfPageCount(source: Uint8Array, job: ExtractionJobRow): Promise<number | null> {
+  if (job.file_mime_type !== 'application/pdf') return null;
+  const pageCount = (await PDFDocument.load(source)).getPageCount();
+  if (pageCount < LARGE_PDF_PAGE_THRESHOLD) return null;
+  const sampledText = await samplePdfText(source, pageCount);
+  return shouldUseVisionForLargeScannedPdf(pageCount, sampledText) ? pageCount : null;
+}
+
+async function restartExpiredVisionChunks(env: ExtractionJobEnv, authHeader: string, jobId: string): Promise<void> {
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_job_chunks?parent_job_id=eq.${encodeURIComponent(jobId)}&status=eq.processing&processing_lease_expires_at=lt.${encodeURIComponent(new Date().toISOString())}`), {
+    method: 'PATCH',
+    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+    body: JSON.stringify({
+      status: 'pending',
+      processing_token: null,
+      processing_lease_expires_at: null,
+      error_message: null,
+    }),
+  });
+  if (!response.ok) throw new Error(`Expired chunk recovery failed: ${response.status}`);
+}
+
+async function generateQuestionsFromText(
+  text: string,
+  job: ExtractionJobRow,
+  env: ExtractionJobEnv,
+  onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
+): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
+  const response = await callOpenRouterWithFallback(env, [{
+    role: 'user',
+    content: `${generatePrompt(job.requested_question_count || 20, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`,
+  }], TEXT_MODEL_FALLBACKS, { maxTokens: 4_000, temperature: 0.2 });
+  const quiz = parseJson(response.text);
+  const questions = normalizeQuestions(quiz);
+  if (!questions.length) throw new Error('The document did not contain any valid questions.');
+  await onProgress(1, 1, questions.length);
+  return {
+    title: typeof quiz?.title === 'string' ? quiz.title : 'Extracted Quiz',
+    description: typeof quiz?.description === 'string' ? quiz.description : 'Questions generated from the uploaded document.',
+    questions,
+    provider: response.model,
+    chunks: 1,
+  };
+}
+
 export async function extractJobQuiz(
   source: Uint8Array,
   job: ExtractionJobRow,
@@ -371,7 +594,7 @@ export async function extractJobQuiz(
   const isLiteral = job.extraction_mode === 'literal';
   let text = '';
 
-  if (isLiteral && mimeType === 'application/pdf') {
+  if (mimeType === 'application/pdf') {
     const pageCount = (await PDFDocument.load(source)).getPageCount();
     if (pageCount >= LARGE_PDF_PAGE_THRESHOLD) {
       const sampledText = await samplePdfText(source, pageCount);
@@ -382,10 +605,12 @@ export async function extractJobQuiz(
     }
     text = await extractPdfTextContent(source);
     if (text.trim().length > 40) {
-      const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
-        await onProgress(progress.processed, progress.total, progress.questionsExtracted);
-      });
-      return result;
+      if (isLiteral) {
+        return extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
+          await onProgress(progress.processed, progress.total, progress.questionsExtracted);
+        });
+      }
+      return generateQuestionsFromText(text, job, env, onProgress);
     }
     return extractPdfVision(source, job, env, onProgress);
   }
@@ -410,21 +635,7 @@ export async function extractJobQuiz(
       return result;
     }
 
-    const response = await callOpenRouterWithFallback(env, [{
-      role: 'user',
-      content: `${generatePrompt(job.requested_question_count || 20, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`,
-    }], TEXT_MODEL_FALLBACKS, { maxTokens: 4_000, temperature: 0.2 });
-    const quiz = parseJson(response.text);
-    const questions = normalizeQuestions(quiz);
-    if (!questions.length) throw new Error('The document did not contain any valid questions.');
-    await onProgress(1, 1, questions.length);
-    return {
-      title: typeof quiz?.title === 'string' ? quiz.title : 'Extracted Quiz',
-      description: typeof quiz?.description === 'string' ? quiz.description : 'Questions generated from the uploaded document.',
-      questions,
-      provider: response.model,
-      chunks: 1,
-    };
+    return generateQuestionsFromText(text, job, env, onProgress);
   }
 
   const prompt = isLiteral
@@ -538,7 +749,12 @@ export async function restartExpiredJob(env: ExtractionJobEnv, authHeader: strin
   return rows[0] || job;
 }
 
-export async function processExtractionJob(env: ExtractionJobEnv, authHeader: string, jobId: string): Promise<void> {
+export async function processExtractionJob(
+  env: ExtractionJobEnv,
+  authHeader: string,
+  jobId: string,
+  enqueueVisionChunks: (jobId: string, chunkIds: string[]) => Promise<void>,
+): Promise<void> {
   const claimed = await claimPendingJob(env, authHeader, jobId);
   if (!claimed) return;
   const { job, token } = claimed;
@@ -551,6 +767,23 @@ export async function processExtractionJob(env: ExtractionJobEnv, authHeader: st
       progress_percentage: 5,
       progress_message: 'تم فتح الملف، جارٍ قراءة المحتوى.',
     });
+    const scannedPageCount = await getLargeScannedPdfPageCount(source, job);
+    if (scannedPageCount) {
+      await restartExpiredVisionChunks(env, authHeader, job.id);
+      const existingChunks = await fetchJobChunks(env, authHeader, job.id);
+      const visionChunks = existingChunks.length
+        ? existingChunks
+        : await createVisionChunks(env, authHeader, job.id, scannedPageCount);
+      const pendingChunkIds = visionChunks.filter(chunk => chunk.status === 'pending').map(chunk => chunk.id);
+      await updateClaimedJob(env, authHeader, job.id, token, {
+        processed_chunks: visionChunks.filter(chunk => chunk.status === 'complete').length,
+        total_chunks: visionChunks.length,
+        progress_percentage: 5,
+        progress_message: `تم تجهيز ${visionChunks.length} أجزاء من الملف. تبدأ المعالجة الآن.`,
+      });
+      if (pendingChunkIds.length) await enqueueVisionChunks(job.id, pendingChunkIds);
+      return;
+    }
     const result = await extractJobQuiz(source, job, env, async (processed, total, questionCount) => {
       chunks = total;
       const percentage = Math.max(8, Math.min(95, Math.round(5 + (processed / Math.max(total, 1)) * 90)));
@@ -594,6 +827,77 @@ export async function processExtractionJob(env: ExtractionJobEnv, authHeader: st
       console.error('Extraction job error state update failed.', { jobId: job.id, updateError });
     }
     await logExtractionPerformance(env, authHeader, job, provider, 'error', Date.now() - startedAt, chunks);
+  }
+}
+
+export async function processExtractionJobChunk(
+  env: ExtractionJobEnv,
+  authHeader: string,
+  jobId: string,
+  chunkId: string,
+  deliveryAttempts: number,
+): Promise<'complete' | 'retry'> {
+  const parent = await fetchJob(env, authHeader, jobId);
+  if (!parent || parent.status !== 'processing' || !parent.processing_token) return 'complete';
+  const claimed = await claimPendingChunk(env, authHeader, jobId, chunkId);
+  if (!claimed) return 'complete';
+  const { chunk, token } = claimed;
+  const startedAt = Date.now();
+  try {
+    const source = await downloadSourceFile(env, authHeader, parent.file_storage_path);
+    if (parent.file_mime_type !== 'application/pdf') throw new Error('Vision chunks are supported only for PDF uploads.');
+    const sourcePdf = await PDFDocument.load(source);
+    if (chunk.page_end > sourcePdf.getPageCount()) throw new Error('The PDF page range is invalid.');
+    const chunkPdf = await PDFDocument.create();
+    const pages = await chunkPdf.copyPages(sourcePdf, Array.from(
+      { length: chunk.page_end - chunk.page_start + 1 },
+      (_, offset) => chunk.page_start - 1 + offset,
+    ));
+    pages.forEach(page => chunkPdf.addPage(page));
+    const request = await callOpenRouterWithFallback(env, [{
+      role: 'user',
+      content: [
+        { type: 'text', text: extractionPrompt(parent.custom_instruction) },
+        {
+          type: 'file',
+          file: {
+            filename: `pages-${chunk.page_start}-${chunk.page_end}.pdf`,
+            file_data: `data:application/pdf;base64,${base64FromBytes(new Uint8Array(await chunkPdf.save()))}`,
+          },
+        },
+      ],
+    }], VISION_MODEL_FALLBACKS);
+    const questions = normalizeQuestions(parseJson(request.text));
+    if (!questions.length) throw new Error('The document did not contain any valid questions.');
+    await updateClaimedChunk(env, authHeader, jobId, chunk.id, token, {
+      status: 'complete',
+      questions_json: questions,
+      provider: request.model,
+      completed_at: new Date().toISOString(),
+      processing_token: null,
+    });
+    await reconcileVisionParentJob(env, authHeader, parent, parent.processing_token, startedAt);
+    return 'complete';
+  } catch (error) {
+    console.error('Extraction job chunk failed.', { jobId, chunkId, error });
+    if (deliveryAttempts < MAX_VISION_CHUNK_DELIVERY_ATTEMPTS) {
+      await updateClaimedChunk(env, authHeader, jobId, chunk.id, token, {
+        status: 'pending',
+        processing_token: null,
+        error_message: cleanMessage(error),
+      });
+      await updateClaimedJob(env, authHeader, parent.id, parent.processing_token, {
+        progress_message: `تعذر إتمام جزء من الملف، ستتم إعادة محاولته تلقائياً (${deliveryAttempts}/${MAX_VISION_CHUNK_DELIVERY_ATTEMPTS}).`,
+      });
+      return 'retry';
+    }
+    await updateClaimedChunk(env, authHeader, jobId, chunk.id, token, {
+      status: 'error',
+      processing_token: null,
+      error_message: cleanMessage(error),
+    });
+    await reconcileVisionParentJob(env, authHeader, parent, parent.processing_token, startedAt);
+    return 'complete';
   }
 }
 
