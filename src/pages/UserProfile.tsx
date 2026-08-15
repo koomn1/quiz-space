@@ -33,7 +33,7 @@ import {
   Search,
   Loader2,
 } from "lucide-react";
-import { activateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems } from "../lib/db";
+import { activateRewardFrame, deactivateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
 import { getApiUrl } from "../lib/origin";
 import { supabase } from "../lib/supabaseClient";
@@ -42,7 +42,7 @@ import { GsapCoverBackground } from "../components/GsapCoverBackground";
 import { SocialSupportLinks } from "../components/SocialSupportLinks";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
-import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, uniqueProfileFrames } from "../constants/profileAssets";
+import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, resolveProfileImageUrl, uniqueProfileFrames } from "../constants/profileAssets";
 
 const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
   'frame-dragon-spirit': { animation: 'frame-rotate 10s linear infinite' },
@@ -138,20 +138,26 @@ export default function UserProfile({
         setOwnedFrames(frames);
       }
 
-      const dbActiveId = profileData?.activeFrameId;
-      // The database is the source of truth. A stale localStorage value from
-      // a previous device/session must never override the persisted choice.
-      const selectedId = dbActiveId || (isOwnProfile ? localStorage.getItem('quizspace_active_frame') : null);
+      const dbActiveId = profileData?.activeFrameId || '';
+      const localFrameSelection = isOwnProfile ? localStorage.getItem('quizspace_active_frame') : null;
+      const hasExplicitLocalSelection = isOwnProfile && localFrameSelection !== null;
+      // The database is the source of truth. localStorage is only used for the
+      // explicit legacy/no-frame state while older profiles migrate to the RPC.
+      const selectedId = dbActiveId || (hasExplicitLocalSelection ? localFrameSelection : null);
       
       let selected = (items || []).find((item: any) => item.id === selectedId);
       
-      // If we found a frame but don't own it, it might be a free frame or an error. 
-      // For the owner, we fallback to any owned frame.
+      // A blank local selection means the user explicitly chose no frame; do not
+      // silently reselect the first owned frame after a page refresh.
+      const isExplicitlyNoFrame = hasExplicitLocalSelection && !localFrameSelection && !dbActiveId;
       const isFreeFrame = (id?: string | null) => FREE_PROFILE_FRAMES.some((frame) => frame.id === id);
-      if (!selected || (!ownedIds.has(selected.id) && !isFreeFrame(selected.id))) {
+      if (!selected && !isExplicitlyNoFrame) {
         selected = isOwnProfile
           ? [...FREE_PROFILE_FRAMES, ...(items || [])].find((item: any) => item.item_type === 'frame' && (ownedIds.has(item.id) || isFreeFrame(item.id)))
           : null;
+      }
+      if (selected && !ownedIds.has(selected.id) && !isFreeFrame(selected.id)) {
+        selected = null;
       }
       
       if (selected) {
@@ -616,9 +622,12 @@ export default function UserProfile({
 
       // The active frame is a reward entitlement, so its ownership is verified
       // by a dedicated server-side RPC rather than generic profile updates.
-      if (editFrameId && editFrameId !== profileData?.activeFrameId) {
-        const activation = await activateRewardFrame(editFrameId);
-        if (!activation?.success) throw new Error(activation?.message || 'Unable to activate the selected frame.');
+      const previousFrameId = profileData?.activeFrameId || '';
+      if (editFrameId !== previousFrameId) {
+        const frameResponse = editFrameId
+          ? await activateRewardFrame(editFrameId)
+          : await deactivateRewardFrame();
+        if (!frameResponse?.success) throw new Error(frameResponse?.message || 'Unable to save the selected frame.');
         localStorage.setItem('quizspace_active_frame', editFrameId);
         window.dispatchEvent(new CustomEvent('quizspace-frame-updated'));
       }
@@ -655,13 +664,13 @@ export default function UserProfile({
               ...prev,
               name: editName,
               bio: editBio,
-              photoURL: editPhotoURL,
+              photoURL: editPhotoURL || null,
               badgeTier: isPremium && !badgeSaveFailed ? badgeTier : prev.badgeTier,
               nameColor: isPremium && !badgeSaveFailed ? nameColor : prev.nameColor,
               badgeColor: isPremium && !badgeSaveFailed ? badgeColor : prev.badgeColor,
               customId: editCustomId,
               location: serializedLocation,
-              activeFrameId: editFrameId || prev.activeFrameId,
+              activeFrameId: editFrameId || null,
             } as any)
           : null,
       );
@@ -847,7 +856,18 @@ export default function UserProfile({
     (isAr
       ? "معلم ومهتم بتقنيات التعليم الحديثة ونشر المعرفة."
       : "Educator & EdTech enthusiast spreading knowledge.");
-  const displayPhotoURL = profileData?.photoURL || authUser?.photoURL;
+  const rawDisplayPhotoURL = profileData?.photoURL || authUser?.photoURL || '';
+  const displayPhotoURL = rawDisplayPhotoURL ? resolveProfileImageUrl(rawDisplayPhotoURL) : '';
+  const fallbackAvatarURL = AVATAR_PRESETS[0]?.url || '';
+  const handleProfileImageError = React.useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+    const image = event.currentTarget;
+    if (image.dataset.fallbackApplied === 'true') {
+      image.style.display = 'none';
+      return;
+    }
+    image.dataset.fallbackApplied = 'true';
+    image.src = fallbackAvatarURL;
+  }, [fallbackAvatarURL]);
   const role = editRole || (isAr ? "طالب" : "Student");
   const country = editCountry || (isAr ? "مصر" : "Egypt");
   const joinDate = new Date(
@@ -1008,6 +1028,7 @@ export default function UserProfile({
                   <img 
                     src={activeFrameUrl} 
                     alt="" 
+                    onError={(event) => { event.currentTarget.style.display = 'none'; }}
                     className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.08] md:scale-[1.1] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`} 
                     style={activeFrameClass ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
                   />
@@ -1017,6 +1038,7 @@ export default function UserProfile({
                     <img
                       src={displayPhotoURL}
                       alt="Profile"
+                      onError={handleProfileImageError}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -1449,7 +1471,7 @@ export default function UserProfile({
                           onClick={() => setEditPhotoURL(avatar.url)}
                           className={`relative group aspect-square min-h-11 min-w-11 rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${editPhotoURL === avatar.url ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
                         >
-                          <img src={avatar.url} alt={isAr ? avatar.labelAr : avatar.label} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                          <img src={avatar.url} alt={isAr ? avatar.labelAr : avatar.label} loading="lazy" decoding="async" onError={handleProfileImageError} className="w-full h-full object-cover" />
                           <span className="absolute inset-x-0 bottom-0 truncate bg-slate-950/70 px-1 py-1 text-[8px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">{isAr ? avatar.labelAr : avatar.label}</span>
                         </button>
                       ))}
@@ -1506,6 +1528,7 @@ export default function UserProfile({
                           <img
                             src={resolveFrameAsset(frame)}
                             alt={isAr ? frame.name_ar : frame.name}
+                            onError={(event) => { event.currentTarget.style.display = 'none'; }}
                             loading="lazy"
                             decoding="async"
                             className="relative z-10 h-full w-full object-contain p-0.5"

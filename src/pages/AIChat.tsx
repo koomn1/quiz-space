@@ -6,7 +6,8 @@ import { generateQuizWithFallback } from '../hooks/useQuizzes';
 import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
 import { Image as ImageIcon, FileText, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
-const COSMO_AVATAR = `${(import.meta as any).env?.BASE_URL || '/'}avatars/cosmo-cartoon.webp`;
+import { profileAssetUrl } from '../constants/profileAssets';
+const COSMO_AVATAR = profileAssetUrl('avatars/cosmo-cartoon.webp');
 
 /* ═══════════════════════════════════════════════════════════
    ✦ "Spark" — the new AI assistant (replaces Cosmo) ✦
@@ -478,7 +479,7 @@ function groupLabel(conv: AIChatConversation): string {
 export default function AIChat({ lang, darkMode, isPremium, planName, userId, userName, currentPage = 'aichat', siteStatus = 'QuizSpace يعمل بشكل طبيعي', userPhoto, defaultAvatar, onUpgradeClick, onOpenAuthModal, onOpenGeneratedQuiz }: AIChatProps) {
   const isAr = lang === 'ar';
   const theme = usePalette(darkMode);
-  const FALLBACK_AVATAR = defaultAvatar || './avatars/boy-1.png';
+  const FALLBACK_AVATAR = defaultAvatar || profileAssetUrl('avatars/avatar-football-pro.webp');
   const cosmoContext = `
 سياق التطبيق المسموح لك باستخدامه:
 - اسم التطبيق: SpaceQuiz / QuizSpace

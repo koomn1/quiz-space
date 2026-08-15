@@ -12,6 +12,7 @@ import { MessageSquare, Send, Search, Sparkles, User, RefreshCw, Star, ArrowRigh
 import { TelegramBadge } from './ProfileStatsView';
 import { playChimeSound } from '../lib/chime';
 import { UserBadge } from './UserBadge';
+import { profileAssetUrl } from '../constants/profileAssets';
 
 interface MessageInboxProps {
   lang: 'ar' | 'en';
@@ -45,7 +46,7 @@ interface Member {
 
 export default function MessageInbox({ lang, userId, userName, userPhoto, defaultAvatar }: MessageInboxProps) {
   const isAr = lang === 'ar';
-  const FALLBACK_AVATAR = defaultAvatar || './avatars/boy-1.png';
+  const FALLBACK_AVATAR = defaultAvatar || profileAssetUrl('avatars/avatar-football-pro.webp');
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [selectedRecipient, setSelectedRecipient] = useState<Member | null>(null);

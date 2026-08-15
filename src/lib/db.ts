@@ -2612,6 +2612,15 @@ export async function activateRewardFrame(itemId: string) {
   return data;
 }
 
+export async function deactivateRewardFrame() {
+  const { data, error } = await supabase.rpc('deactivate_reward_frame');
+  if (error) return { success: false, message: error.message };
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  }
+  return data;
+}
+
 export async function purchaseRewardItem(itemId: string) {
   const { data, error } = await supabase.rpc('purchase_reward_item', { p_item_id: itemId });
   if (error) return { success: false, message: error.message };

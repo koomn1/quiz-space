@@ -117,3 +117,13 @@
 - [x] Verify profile asset URLs, generated-image status, and frame catalog uniqueness in Supabase; corrected broken GitHub Pages paths
 - [x] Run local asset and mobile-shell smoke checks; browser navigation did not reach an authenticated profile route, documented as an environment limitation
 - [x] Record findings, correct confirmed issues, and save a clean verification checkpoint
+
+## User Feedback Fixes (2026-08-15 - Broken images and refresh state loss)
+- [x] 1. Debug why profile asset images fail to load and show broken image icons on mobile
+- [x] 2. Fix profile selection persistence so avatar and frame choices do not revert after page refresh
+- [x] 3. Regenerate and clean profile frames to ensure true transparent background and correct circular fit
+- [x] 4. Run full production verification and build with clean local assets
+
+- [x] 127. Synchronize all curated avatar/frame catalog and reward-store rows with audited deterministic transparent WebP assets
+- [x] 128. Remove refresh-time legacy avatar fallback paths and cover them with regression tests
+- [ ] 129. Run authenticated profile avatar/frame select-save-refresh smoke test and document any session limitation

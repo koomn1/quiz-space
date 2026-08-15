@@ -454,7 +454,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
         <div className={`relative mb-4 flex h-28 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br ${item.css_class === 'frame-fire' ? 'from-orange-500 to-rose-600' : item.css_class === 'frame-crystal-luxe' ? 'from-cyan-400 to-indigo-600' : item.css_class === 'frame-star-crown' ? 'from-amber-400 to-yellow-600' : item.css_class === 'frame-diamond-comet' || item.css_class === 'frame-diamond-crown' ? 'from-sky-400 to-violet-700' : 'from-violet-500 to-fuchsia-600'}`}>
           <div className="relative z-10 h-16 w-16 rounded-full border-4 border-white/90 bg-slate-900/35 shadow-[0_0_0_5px_rgba(255,255,255,.22)] flex items-center justify-center overflow-hidden">
             {itemImageUrl ? (
-              <img src={itemImageUrl} alt="" className="absolute inset-0 h-full w-full object-cover scale-110" />
+              <img src={itemImageUrl} alt="" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="absolute inset-0 h-full w-full object-cover scale-110" />
             ) : (
               <Sparkles className="h-6 w-6 text-white/50" />
             )}

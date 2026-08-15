@@ -7,6 +7,7 @@ import CosmicLoader from "./components/CosmicLoader";
 import React from 'react';
 import { useSearchParams } from './hooks/useSearchParams';
 import { Quiz, UserStats, getUserRoleAndPlan } from './types';
+import { AVATAR_PRESETS, getDefaultAvatar } from './constants/profileAssets';
 import { supabase } from './lib/supabaseClient';
 import { registerPushNotifications } from './lib/pushManager';
 import Header from './components/Header';
@@ -885,13 +886,8 @@ export default function App() {
             setUserPhoto(user.user_metadata.avatar_url);
             localStorage.setItem('quiz_userPhoto', user.user_metadata.avatar_url);
           } else {
-            // Fallback: assign a default avatar for email/password users
-            const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-            // Simple gender heuristic: girl names get girl avatars
-            const nameLower = (finalName || '').toLowerCase();
-            const isFemale = ['fatima','aisha','maryam','noor','sara','sarah','hala','reem','lujain','نور','سارة','مريم','فاطم','عائش','هند','ريم','ياسمين'].some(ind => nameLower.includes(ind));
-            const avatarNum = Math.floor(Math.random() * 6) + 1;
-            const defaultAvatar = `${baseUrl}avatars/${isFemale ? 'girl' : 'boy'}-${avatarNum}.png`;
+            // Fallback: assign a default avatar using the curated catalog helper
+            const defaultAvatar = getDefaultAvatar(finalName);
             setUserPhoto(defaultAvatar);
             localStorage.setItem('quiz_userPhoto', defaultAvatar);
           }
@@ -1788,7 +1784,7 @@ export default function App() {
                   currentPage={activeTab}
                   siteStatus="QuizSpace يعمل بشكل طبيعي"
                   userPhoto={userPhoto || undefined}
-                  defaultAvatar="./avatars/boy-cartoon-1.webp"
+                  defaultAvatar={AVATAR_PRESETS[0].url}
                   onUpgradeClick={() => handleSetTab('billing')}
                   onOpenGeneratedQuiz={(quizId) => handleStartQuiz(quizId)}
                   onOpenAuthModal={(mode) => {
@@ -1822,7 +1818,7 @@ export default function App() {
               )}
 
               {activeTab === 'messages' && (
-                <MessageInbox lang={lang} userId={userId} userName={userName} userPhoto={userPhoto || undefined} defaultAvatar="./avatars/boy-cartoon-1.webp" />
+                <MessageInbox lang={lang} userId={userId} userName={userName} userPhoto={userPhoto || undefined} defaultAvatar={AVATAR_PRESETS[0].url} />
               )}
 
               {activeTab === 'classrooms' && (

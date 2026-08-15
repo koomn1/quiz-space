@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AVATAR_PRESETS, FRAME_ASSET_OVERRIDES, FREE_PROFILE_FRAMES, uniqueProfileFrames } from './profileAssets';
+import { AVATAR_PRESETS, FRAME_ASSET_OVERRIDES, FREE_PROFILE_FRAMES, profileAssetUrl, resolveProfileImageUrl, uniqueProfileFrames } from './profileAssets';
 
 describe('profile asset catalog', () => {
   it('does not expose the removed legacy cartoon avatar IDs', () => {
@@ -34,6 +34,45 @@ describe('profile asset catalog', () => {
       expect(avatar.url).toBeTruthy();
       expect(['boy', 'girl']).toContain(avatar.gender);
       expect(avatar.labelAr).toBeTruthy();
+    }
+  });
+
+  it('maps legacy storage paths to project-served frame assets', () => {
+    expect(profileAssetUrl('/manus-storage/frame-diamond-comet_596fd1b8.webp')).toContain('/clean-assets-deterministic/frame-diamond-comet-quizspace-transparent.webp');
+    expect(profileAssetUrl('/manus-storage/unknown-frame.webp')).toContain('/images/frame-free-2.webp');
+  });
+
+  it('falls back removed legacy avatar URLs to the first curated avatar', () => {
+    expect(resolveProfileImageUrl('./avatars/boy-cartoon-1.webp')).toBe(AVATAR_PRESETS[0].url);
+    expect(resolveProfileImageUrl('/quiz-space/avatars/girl-6.webp')).toBe(AVATAR_PRESETS[0].url);
+    expect(resolveProfileImageUrl('data:image/webp;base64,abc')).toBe('data:image/webp;base64,abc');
+  });
+
+  it('rewrites old curated avatar URLs to the transparent production assets', () => {
+    expect(profileAssetUrl('avatars/avatar-football-pro.webp')).toContain('/clean-assets-deterministic/avatar-football-pro-transparent.webp');
+    expect(profileAssetUrl('https://koomn1.github.io/quiz-space/avatars/avatar-music-pro.webp')).toContain('/clean-assets-deterministic/avatar-music-pro-transparent.webp');
+  });
+
+  it('maps the curated catalog to audited transparent WebP assets', () => {
+    const expectedTransparentAssets = [
+      'avatar-football-pro-transparent.webp',
+      'girl-studying-activity-transparent.webp',
+      'avatar-music-pro-transparent.webp',
+      'girl-school-walk-transparent.webp',
+      'avatar-skater-pro-transparent.webp',
+      'new_girl_avatar-transparent.webp',
+      'frame-diamond-comet-quizspace-transparent.webp',
+      'frame-diamond-crown-quizspace-transparent.webp',
+      'frame-ramadan-lantern-quizspace-transparent.webp',
+      'frame-back-to-school-quizspace-transparent.webp',
+    ];
+    const catalogAssets = [
+      ...AVATAR_PRESETS.map((avatar) => avatar.url),
+      ...Object.values(FRAME_ASSET_OVERRIDES),
+    ];
+    expect(catalogAssets).toHaveLength(expectedTransparentAssets.length);
+    for (const filename of expectedTransparentAssets) {
+      expect(catalogAssets.some((asset) => asset.endsWith(`/clean-assets-deterministic/${filename}`))).toBe(true);
     }
   });
 

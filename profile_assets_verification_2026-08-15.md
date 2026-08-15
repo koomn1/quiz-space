@@ -19,3 +19,7 @@ A 375×812 Chromium capture loaded the Arabic mobile shell without horizontal ov
 ## Published smoke check
 
 The published QuizSpace homepage loaded after its synchronization screen completed and rendered the RTL navigation, catalog, and owned-quiz labels. The current browser session displayed the visitor state and the “التسجيل / الدخول” control, so an authenticated profile/store smoke test was not performed; no login or sensitive input was attempted during this pass.
+
+## Authenticated published smoke check
+
+After the user signed in, the live GitHub Pages bundle opened the profile editor for the authenticated account. The live picker still rendered retired boy-cartoon-1..6 and girl-cartoon-1..6 entries, plus old avatar and frame paths. This confirms the local catalog and fallback fixes had not yet been pushed or published at the time of inspection; it is a deployment-state finding rather than a local-code regression.
