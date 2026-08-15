@@ -88,3 +88,4 @@
 - [x] Create a nine-page PDF with a deterministic question inventory and verify live extraction count and question-content fidelity without publishing the draft
 - [x] Repair automatic file-extraction request validation so the UI's automatic question-count option produces a valid authenticated Worker job
 - [x] Route short scanned PDFs with no extractable text sample into the persisted vision-chunk pipeline instead of failing on the text-only path
+- [x] Run a production-safe 50-page scanned-PDF load test with queue-admission, per-chunk, latency, result-fidelity, and resource-proxy measurements
