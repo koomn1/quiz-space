@@ -336,7 +336,7 @@ async function extractPdfVision(
   return { title: 'Extracted Quiz', description: 'Questions extracted from the uploaded document.', questions: normalizeQuestions(questions), provider: [...providers].join(', '), chunks: chunks.length };
 }
 
-async function extractJobQuiz(
+export async function extractJobQuiz(
   source: Uint8Array,
   job: ExtractionJobRow,
   env: ExtractionJobEnv,
@@ -357,23 +357,41 @@ async function extractJobQuiz(
     return extractPdfVision(source, job, env, onProgress);
   }
 
-  if (isLiteral && (mimeType.includes('wordprocessingml') || mimeType.includes('msword'))) {
+  if (mimeType.includes('wordprocessingml') || mimeType.includes('msword')) {
     const wordDocument = new Uint8Array(source.byteLength);
     wordDocument.set(source);
     const result = await mammoth.extractRawText({ arrayBuffer: wordDocument.buffer });
     text = result.value;
-  } else if (isLiteral && (mimeType.includes('spreadsheetml') || mimeType.includes('ms-excel'))) {
+  } else if (mimeType.includes('spreadsheetml') || mimeType.includes('ms-excel')) {
     const workbook = XLSX.read(source, { type: 'array' });
     text = workbook.SheetNames.map(name => `Sheet: ${name}\n${XLSX.utils.sheet_to_txt(workbook.Sheets[name])}`).join('\n\n');
-  } else if (isLiteral && (mimeType === 'text/plain' || mimeType === 'text/markdown')) {
+  } else if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
     text = new TextDecoder().decode(source);
   }
 
   if (text.trim()) {
-    const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
-      await onProgress(progress.processed, progress.total, progress.questionsExtracted);
-    });
-    return result;
+    if (isLiteral) {
+      const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
+        await onProgress(progress.processed, progress.total, progress.questionsExtracted);
+      });
+      return result;
+    }
+
+    const response = await callOpenRouterWithFallback(env, [{
+      role: 'user',
+      content: `${generatePrompt(job.requested_question_count || 20, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`,
+    }], TEXT_MODEL_FALLBACKS);
+    const quiz = parseJson(response.text);
+    const questions = normalizeQuestions(quiz);
+    if (!questions.length) throw new Error('The document did not contain any valid questions.');
+    await onProgress(1, 1, questions.length);
+    return {
+      title: typeof quiz?.title === 'string' ? quiz.title : 'Extracted Quiz',
+      description: typeof quiz?.description === 'string' ? quiz.description : 'Questions generated from the uploaded document.',
+      questions,
+      provider: response.model,
+      chunks: 1,
+    };
   }
 
   const prompt = isLiteral

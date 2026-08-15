@@ -77,3 +77,4 @@
 - [ ] Verify the published end-to-end internal extraction job, including durable queue delivery and resumption without re-uploading the same file
 - [ ] Replace short-lived background execution with a durable Cloudflare Queue consumer and verify delivery from the published worker
 - [ ] Add a strict local fast path for fully structured literal-question files before any external model fallback
+- [ ] Generate questions from narrative text files through a text model instead of إرسالها كصورة إلى نموذج الرؤية
