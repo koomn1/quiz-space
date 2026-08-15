@@ -80,8 +80,8 @@
 - [x] Generate questions from narrative text files through a text model instead of إرسالها كصورة إلى نموذج الرؤية
 - [x] Run and document a large-PDF extraction load test through Cloudflare Queue, including queue delay, processing time, progress persistence, and result integrity
 - [x] Avoid full sequential text scanning for large scanned PDFs and keep their processing lease valid through vision chunk preparation
-- [ ] Re-architect scanned-PDF vision extraction as persisted per-chunk queue work so each completed chunk saves progress and retries independently
-- [ ] Define measurable extraction latency budgets and record end-to-end timings for text, generated-text, text-PDF, and scanned-PDF routes
-- [ ] Implement persisted per-chunk queue processing for scanned PDFs, including safe aggregation, idempotent retries, and parent-job finalization
-- [ ] Show truthful per-chunk progress and a non-binding time estimate in Quiz Creator without blocking upload or resume behavior
-- [ ] Run production-safe regression and load tests across text, generated-text, native-text PDF, and scanned-PDF extraction paths, then document measured results
+- [x] Re-architect scanned-PDF vision extraction as persisted per-chunk queue work so each completed chunk saves progress and retries independently
+- [x] Define measurable extraction latency budgets and record end-to-end timings for text, generated-text, text-PDF, and scanned-PDF routes
+- [x] Implement persisted per-chunk queue processing for scanned PDFs, including safe aggregation, idempotent retries, and parent-job finalization
+- [x] Show truthful per-chunk progress and a non-binding time estimate in Quiz Creator without blocking upload or resume behavior
+- [x] Run production-safe regression and load tests across text, generated-text, native-text PDF, and scanned-PDF extraction paths, then document measured results
