@@ -67,7 +67,15 @@ const VISION_MODEL_TIMEOUT_MS = 20_000;
 const LARGE_PDF_PAGE_THRESHOLD = 20;
 const PDF_TEXT_SAMPLE_PAGES = 3;
 export const VISION_CHUNK_PAGE_COUNT = 5;
+export const MIN_VISION_CHUNK_PAGE_COUNT = 3;
 export const MAX_VISION_CHUNK_DELIVERY_ATTEMPTS = 3;
+
+export interface VisionChunkPlan {
+  pageCountPerChunk: number;
+  concurrency: number;
+  estimatedChunkCount: number;
+  reason: 'standard' | 'large-document' | 'raster-heavy';
+}
 const TEXT_MODEL_FALLBACKS = [
   'nvidia/nemotron-3-super-120b-a12b:free',
   'openai/gpt-oss-20b:free',
@@ -273,17 +281,37 @@ async function fetchJobChunks(env: ExtractionJobEnv, authHeader: string, jobId: 
   return response.json() as Promise<ExtractionJobChunkRow[]>;
 }
 
-export function buildVisionChunkRanges(pageCount: number): Array<{ chunkIndex: number; pageStart: number; pageEnd: number }> {
-  if (!Number.isInteger(pageCount) || pageCount < 1) return [];
-  return Array.from({ length: Math.ceil(pageCount / VISION_CHUNK_PAGE_COUNT) }, (_, chunkIndex) => ({
+export function selectVisionChunkPlan(pageCount: number, sourceBytes = 0): VisionChunkPlan {
+  if (!Number.isInteger(pageCount) || pageCount < 1) {
+    return { pageCountPerChunk: VISION_CHUNK_PAGE_COUNT, concurrency: 3, estimatedChunkCount: 0, reason: 'standard' };
+  }
+
+  const averagePageBytes = sourceBytes > 0 ? sourceBytes / pageCount : 0;
+  const rasterHeavy = averagePageBytes >= 800 * 1024;
+  const largeDocument = pageCount >= 50 || averagePageBytes >= 450 * 1024;
+  const pageCountPerChunk = rasterHeavy ? MIN_VISION_CHUNK_PAGE_COUNT : largeDocument ? 4 : VISION_CHUNK_PAGE_COUNT;
+  const concurrency = rasterHeavy ? 3 : largeDocument ? 4 : 3;
+  const reason = rasterHeavy ? 'raster-heavy' : largeDocument ? 'large-document' : 'standard';
+
+  return {
+    pageCountPerChunk,
+    concurrency,
+    estimatedChunkCount: Math.ceil(pageCount / pageCountPerChunk),
+    reason,
+  };
+}
+
+export function buildVisionChunkRanges(pageCount: number, pageCountPerChunk = VISION_CHUNK_PAGE_COUNT): Array<{ chunkIndex: number; pageStart: number; pageEnd: number }> {
+  if (!Number.isInteger(pageCount) || pageCount < 1 || !Number.isInteger(pageCountPerChunk) || pageCountPerChunk < MIN_VISION_CHUNK_PAGE_COUNT || pageCountPerChunk > VISION_CHUNK_PAGE_COUNT) return [];
+  return Array.from({ length: Math.ceil(pageCount / pageCountPerChunk) }, (_, chunkIndex) => ({
     chunkIndex,
-    pageStart: chunkIndex * VISION_CHUNK_PAGE_COUNT + 1,
-    pageEnd: Math.min((chunkIndex + 1) * VISION_CHUNK_PAGE_COUNT, pageCount),
+    pageStart: chunkIndex * pageCountPerChunk + 1,
+    pageEnd: Math.min((chunkIndex + 1) * pageCountPerChunk, pageCount),
   }));
 }
 
-async function createVisionChunks(env: ExtractionJobEnv, authHeader: string, jobId: string, pageCount: number): Promise<ExtractionJobChunkRow[]> {
-  const chunks = buildVisionChunkRanges(pageCount).map(({ chunkIndex, pageStart, pageEnd }) => ({
+async function createVisionChunks(env: ExtractionJobEnv, authHeader: string, jobId: string, pageCount: number, pageCountPerChunk = VISION_CHUNK_PAGE_COUNT): Promise<ExtractionJobChunkRow[]> {
+  const chunks = buildVisionChunkRanges(pageCount, pageCountPerChunk).map(({ chunkIndex, pageStart, pageEnd }) => ({
     parent_job_id: jobId,
     chunk_index: chunkIndex,
     page_start: pageStart,
@@ -489,7 +517,8 @@ async function extractPdfVision(
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
   const pdf = await PDFDocument.load(source);
-  const chunkSize = 5;
+  const plan = selectVisionChunkPlan(pdf.getPageCount(), source.byteLength);
+  const chunkSize = plan.pageCountPerChunk;
   const chunks: string[] = [];
   for (let start = 0; start < pdf.getPageCount(); start += chunkSize) {
     const chunkDocument = await PDFDocument.create();
@@ -501,7 +530,7 @@ async function extractPdfVision(
 
   const questions: any[] = [];
   const providers = new Set<string>();
-  const concurrency = 3;
+  const concurrency = plan.concurrency;
   let processed = 0;
   for (let start = 0; start < chunks.length; start += concurrency) {
     const batch = chunks.slice(start, start + concurrency);
@@ -789,15 +818,16 @@ export async function processExtractionJob(
     if (scannedPageCount) {
       await restartExpiredVisionChunks(env, authHeader, job.id);
       const existingChunks = await fetchJobChunks(env, authHeader, job.id);
+      const plan = selectVisionChunkPlan(scannedPageCount, source.byteLength);
       const visionChunks = existingChunks.length
         ? existingChunks
-        : await createVisionChunks(env, authHeader, job.id, scannedPageCount);
+        : await createVisionChunks(env, authHeader, job.id, scannedPageCount, plan.pageCountPerChunk);
       const pendingChunkIds = visionChunks.filter(chunk => chunk.status === 'pending').map(chunk => chunk.id);
       await updateClaimedJob(env, authHeader, job.id, token, {
         processed_chunks: visionChunks.filter(chunk => chunk.status === 'complete').length,
         total_chunks: visionChunks.length,
         progress_percentage: 5,
-        progress_message: `تم تجهيز ${visionChunks.length} أجزاء من الملف. تبدأ المعالجة الآن.`,
+        progress_message: `تم تجهيز ${visionChunks.length} أجزاء (${plan.pageCountPerChunk} صفحات للجزء، توازي ${plan.concurrency}). تبدأ المعالجة الآن.`,
       });
       if (pendingChunkIds.length) await enqueueVisionChunks(job.id, pendingChunkIds);
       return;

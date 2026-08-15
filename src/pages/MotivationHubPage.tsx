@@ -23,6 +23,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { showToast } from '../components/Toast';
+import { resolveFrameAsset, uniqueProfileFrames } from '../constants/profileAssets';
 import RewardsSection from '../components/RewardsSection';
 import SmartReviewPanel from '../components/SmartReviewPanel';
 import StreakMomentumCard from '../components/StreakMomentumCard';
@@ -437,7 +438,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
   const sendOrder = async () => { if (!paymentItem || busy) return; setBusy(paymentItem.id); const response = await createRewardPointsOrder(paymentItem.id, paymentMethod, reference, receipt); setBusy(null); if (response?.success) { setPaymentItem(null); setReference(''); setReceipt(''); showToast('success', t.orderSent); } else showToast('error', response?.message || 'Could not create order'); };
   const uploadReceipt = (file?: File) => { if (!file) return; const reader = new FileReader(); reader.onload = () => setReceipt(String(reader.result || '')); reader.readAsDataURL(file); };
   const offers = items.filter((item: any) => item.is_featured);
-  const frames = items.filter((item) => item.item_type === 'frame' && !item.is_featured); 
+  const frames = uniqueProfileFrames(items.filter((item) => item.item_type === 'frame' && !item.is_featured));
   const bundles = items.filter((item) => item.item_type === 'points_bundle' && !item.is_featured);
   const planRank = (planName || '').toLowerCase().includes('diamond') || (planName || '').includes('الماس') ? 4 : (isPremium ? 2 : 1);
   const rankFor = (plan: string) => plan === 'diamond' ? 4 : plan === 'gold' ? 3 : plan === 'silver' ? 2 : 1;
@@ -446,7 +447,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
     const isOwned = owned(item.id); 
     const payment = getStorePaymentMode(item);
     const isActionAvailable = isStoreItemActionAvailable({ isOwned, isLocked: locked, paymentMode: payment.mode });
-    const itemImageUrl = item.image_url ? `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${item.image_url}` : null;
+    const itemImageUrl = item.image_url ? resolveFrameAsset(item) : null;
     
     return (
       <div key={item.id} className="flex flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">

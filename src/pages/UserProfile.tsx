@@ -40,6 +40,7 @@ import { GsapCoverBackground } from "../components/GsapCoverBackground";
 import { SocialSupportLinks } from "../components/SocialSupportLinks";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
+import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, uniqueProfileFrames } from "../constants/profileAssets";
 
 const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
   'frame-dragon-spirit': { animation: 'frame-rotate 10s linear infinite' },
@@ -121,7 +122,10 @@ export default function UserProfile({
       
       // Update owned frames list for the edit modal (only if it's our profile)
       if (isOwnProfile) {
-        const frames = (items || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id));
+        const frames = uniqueProfileFrames([
+          ...FREE_PROFILE_FRAMES,
+          ...(items || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)),
+        ]);
         setOwnedFrames(frames);
       }
 
@@ -134,13 +138,16 @@ export default function UserProfile({
       
       // If we found a frame but don't own it, it might be a free frame or an error. 
       // For the owner, we fallback to any owned frame.
-      if (!selected || !ownedIds.has(selected.id)) {
-        selected = isOwnProfile ? (items || []).find((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)) : null;
+      const isFreeFrame = (id?: string | null) => FREE_PROFILE_FRAMES.some((frame) => frame.id === id);
+      if (!selected || (!ownedIds.has(selected.id) && !isFreeFrame(selected.id))) {
+        selected = isOwnProfile
+          ? [...FREE_PROFILE_FRAMES, ...(items || [])].find((item: any) => item.item_type === 'frame' && (ownedIds.has(item.id) || isFreeFrame(item.id)))
+          : null;
       }
       
       if (selected) {
         setActiveFrameClass(selected.css_class || '');
-        setActiveFrameUrl(selected.image_url ? `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${selected.image_url}` : '');
+        setActiveFrameUrl(resolveFrameAsset(selected));
         setEditFrameId(selected.id);
       } else {
         setActiveFrameClass('');
@@ -973,7 +980,7 @@ export default function UserProfile({
                   <img 
                     src={activeFrameUrl} 
                     alt="" 
-                    className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.35] md:scale-[1.4] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`} 
+                    className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.08] md:scale-[1.1] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`} 
                     style={activeFrameClass ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
                   />
                 )}
@@ -1366,33 +1373,17 @@ export default function UserProfile({
                     {isAr ? "أو اختر صورة رمزية (أفاتار) جاهزة للشباب والبنات:" : "Or choose a preset avatar (Boys & Girls):"}
                   </label>
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5">
-                    {[
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-1.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-2.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-3.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-4.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-5.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/boy-cartoon-6.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-1.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-2.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-3.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-4.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-5.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/girl-cartoon-6.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/avatar-football-pro.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/avatar-studying-pro.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/avatar-music-pro.webp`,
-                      `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}avatars/avatar-skater-pro.webp`,
-                    ].map((url, idx) => (
+                    {AVATAR_PRESETS.map((avatar) => (
                       <button
-                        key={idx}
+                        key={avatar.id}
                         type="button"
-                        onClick={() => setEditPhotoURL(url)}
-                        className={`relative group aspect-square rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${editPhotoURL === url ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
+                        aria-label={isAr ? `اختيار أفاتار ${avatar.labelAr}` : `Choose ${avatar.label}`}
+                        onClick={() => setEditPhotoURL(avatar.url)}
+                        className={`relative group aspect-square min-h-11 min-w-11 rounded-2xl overflow-hidden border-2 transition-all cursor-pointer ${editPhotoURL === avatar.url ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/50'}`}
                       >
-	                        <img src={url} alt="Avatar" className="w-full h-full object-cover" />
-	                      </button>
-	                    ))}
+                        <img src={avatar.url} alt={isAr ? avatar.labelAr : avatar.label} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
 	                  </div>
 	                </div>
 
@@ -1413,41 +1404,22 @@ export default function UserProfile({
                         <span className="text-[10px] font-black text-slate-400">{isAr ? 'بدون' : 'None'}</span>
                       </button>
                       
-                      {/* Free Frames (Always Available) */}
-                      {[
-                        { id: 'frame_free_1', name: 'Basic', name_ar: 'أساسي', url: 'images/frame-free-1.webp' },
-                        { id: 'frame_free_2', name: 'Soft Glow', name_ar: 'توهج', url: 'images/frame-free-2.webp' }
-                      ].map(f => (
-                        <button
-                          key={f.id}
-                          type="button"
-                          onClick={() => setEditFrameId(f.id)}
-                          className={`relative aspect-square rounded-full border-2 transition-all cursor-pointer overflow-hidden ${editFrameId === f.id ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
-                          title={isAr ? f.name_ar : f.name}
-                        >
-                          <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[8px] font-black text-slate-400 uppercase tracking-tighter">FREE</div>
-                          <img 
-                            src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${f.url}`} 
-                            alt="" 
-                            className="relative z-10 w-full h-full object-cover" 
-                            onError={(e) => (e.currentTarget.style.display = 'none')}
-                          />
-                        </button>
-                      ))}
-
-                      {/* Purchased Frames */}
-                      {ownedFrames.filter(f => !f.id.startsWith('frame_free_')).map((frame) => (
+                      {uniqueProfileFrames(ownedFrames).map((frame) => (
                         <button
                           key={frame.id}
                           type="button"
+                          aria-label={isAr ? `اختيار إطار ${frame.name_ar || frame.name}` : `Choose ${frame.name || 'frame'}`}
                           onClick={() => setEditFrameId(frame.id)}
-                          className={`relative aspect-square rounded-full border-2 transition-all cursor-pointer overflow-hidden ${editFrameId === frame.id ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
+                          className={`relative aspect-square min-h-11 min-w-11 rounded-full border-2 transition-all cursor-pointer overflow-hidden ${editFrameId === frame.id ? 'border-primary scale-105 shadow-md ring-2 ring-primary/30' : 'border-slate-200 dark:border-slate-800 hover:border-primary/40'}`}
                           title={isAr ? frame.name_ar : frame.name}
                         >
-                          <img 
-                            src={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/${frame.image_url}`} 
-                            alt="" 
-                            className="w-full h-full object-cover" 
+                          {frame.is_free && <span className="absolute top-1 start-1 z-20 rounded-full bg-emerald-600 px-1.5 py-0.5 text-[8px] font-black text-white">FREE</span>}
+                          <img
+                            src={resolveFrameAsset(frame)}
+                            alt={isAr ? frame.name_ar : frame.name}
+                            loading="lazy"
+                            decoding="async"
+                            className="relative z-10 h-full w-full object-contain p-0.5"
                           />
                         </button>
                       ))}

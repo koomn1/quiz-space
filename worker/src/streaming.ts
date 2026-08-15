@@ -1,5 +1,6 @@
 import { PDFDocument } from 'pdf-lib';
 import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
+import { selectVisionChunkPlan } from './extractionJobs';
 
 async function logAiPerformance(env: Env, authHeader: string, data: {
   user_id: string,
@@ -161,10 +162,10 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
           console.warn('Text extraction route failed; continuing with PDF vision fallback:', textError);
         }
 
-        // Five pages per request reduces model round-trips while keeping each
-        // vision payload small enough for reliable extraction. Three requests
-        // are processed concurrently to avoid making long PDFs wait serially.
-        const chunkSize = 5;
+        // Keep each vision payload bounded, but adapt the page count for large
+        // raster PDFs so a single queue invocation cannot exhaust its budget.
+        const plan = selectVisionChunkPlan(pageCount, fileData.byteLength);
+        const chunkSize = plan.pageCountPerChunk;
         const chunks: string[] = [];
 
         // Create chunks
@@ -182,15 +183,15 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
 
         // Send initial metadata
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: 'init', totalChunks: chunks.length, totalPages: pageCount })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify({ type: 'init', totalChunks: chunks.length, totalPages: pageCount, pagesPerChunk: plan.pageCountPerChunk, concurrency: plan.concurrency })}\n\n`)
         );
 
-        // Process three chunks in parallel. Results are appended in batch order
-        // so question numbering remains stable while the user gets frequent
-        // progress updates instead of waiting for the whole batch.
+        // Process the planned number of chunks in parallel. Results are appended
+        // in batch order so question numbering remains stable while the user
+        // gets frequent progress updates instead of waiting for the whole batch.
         const allQuestions: any[] = [];
         let processedChunks = 0;
-        const CONCURRENCY = 3;
+        const CONCURRENCY = plan.concurrency;
 
         for (let start = 0; start < chunks.length; start += CONCURRENCY) {
           const batch = chunks.slice(start, start + CONCURRENCY);

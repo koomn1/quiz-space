@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { getDefaultAvatar } from '../constants/profileAssets';
 import type { Session, User } from '@supabase/supabase-js';
 import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
 import { getAuthRedirectUrl } from '../lib/authRedirect';
@@ -33,24 +34,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Assign a default avatar based on user's name (try to detect gender, fallback to boy)
-function getDefaultAvatar(name: string): string {
-  // Simple heuristic: check for common female names in Arabic/English
-  const femaleIndicators = [
-    'فاطم', 'عائش', 'مريم', 'نور', 'سارة', 'هند', 'ريم', 'دانة', 'لجين', 'تالا',
-    'جوري', 'جنى', 'لمى', 'رنا', 'منى', 'هدى', 'سلمى', 'ياسمين', 'ندى', 'أمل',
-    'fatima', 'aisha', 'maryam', 'noor', 'sara', 'sarah', 'hala', 'reem', 'lujain',
-    'fat', 'mar', 'sal', 'nur', 'hin', 'dan', 'ama', 'han', 'yasm', 'lay', 'jul',
-  ];
-  const lowerName = name.toLowerCase();
-  const isFemale = femaleIndicators.some(indicator => lowerName.includes(indicator));
-  
-  // Pick a random avatar from 1-6
-  const randomNum = Math.floor(Math.random() * 6) + 1;
-  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-  return isFemale ? `${base}/avatars/girl-cartoon-${randomNum}.webp` : `${base}/avatars/boy-cartoon-${randomNum}.webp`;
-}
 
 async function fetchAppUser(authUser: User): Promise<AppUser> {
   const metaName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.user_metadata?.preferred_username || (authUser.email ? authUser.email.split('@')[0] : '') || 'طالب متميز';

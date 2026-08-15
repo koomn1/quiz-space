@@ -89,3 +89,14 @@
 - [x] Repair automatic file-extraction request validation so the UI's automatic question-count option produces a valid authenticated Worker job
 - [x] Route short scanned PDFs with no extractable text sample into the persisted vision-chunk pipeline instead of failing on the text-only path
 - [x] Run a production-safe 50-page scanned-PDF load test with queue-admission, per-chunk, latency, result-fidelity, and resource-proxy measurements
+
+- [x] Implement dynamic PDF chunk sizing and chunk-level fallback/retry for large scanned files
+- [x] Remove the legacy first 12 avatar presets and replace them with a curated cartoon avatar catalog
+- [x] Add new QuizSpace avatar assets for football, studying, music, walking, cap, glasses, and varied activities
+- [x] Replace duplicate frame image assignments with unique frame assets and enforce catalog de-duplication
+- [x] Update profile frame rendering to use a centered circular overlay with correct fit and no duplicate items
+- [x] Update default avatar selection so new users never receive removed legacy avatar IDs
+- [x] Add mobile-first avatar/frame picker accessibility, loading states, and 44px touch targets
+- [x] Add Vitest coverage for avatar catalog uniqueness, frame catalog uniqueness, and dynamic chunk sizing
+- [x] Run production build, type checks, and mobile screenshots; authenticated profile/store smoke check deferred because the published browser session was visitor-only
+- [x] Save a verified local checkpoint with the complete QuizSpace improvement set
