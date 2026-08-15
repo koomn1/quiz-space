@@ -10,6 +10,7 @@ import {
   DailyQuizTier,
 } from '../lib/db';
 import { DAILY_QUIZ_BANK } from '../data/dailyQuizBank';
+import { shouldRecoverStalledDailyQuizRefresh } from '../lib/dailyQuizRecovery';
 
 // In-memory cache of the latest private daily payload so the start click can
 // guarantee the sessionStorage snapshot exists before navigation.
@@ -61,6 +62,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState(false);
   const generatingRef = useRef(false);
+  const stalledRecoveryRef = useRef(false);
 
   const generate = async () => {
     if (!userId || generatingRef.current) return;
@@ -180,7 +182,20 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       setGenerationError(false);
       // A private quiz without an answer is always pinned, regardless of age.
       if (hasPrivatePayload) { setIsGenerating(false); return; }
-      if (slot.refreshing) { setIsGenerating(!activeQuizId); return; }
+      if (slot.refreshing) {
+        if (shouldRecoverStalledDailyQuizRefresh(slot) && !stalledRecoveryRef.current) {
+          stalledRecoveryRef.current = true;
+          try {
+            const won = await claimUserDailyQuizRefresh(userId, tier);
+            if (won) await generate();
+          } finally {
+            stalledRecoveryRef.current = false;
+          }
+          return;
+        }
+        setIsGenerating(!activeQuizId);
+        return;
+      }
       if (!activeQuizId) {
         const won = await claimUserDailyQuizRefresh(userId, tier);
         if (won) await generate();
