@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildVisionChunkRanges, selectVisionChunkPlan } from './extractionJobs';
+import { buildVisionChunkRanges, selectVisionChunkPlan, visionChunkRetryDelaySeconds } from './extractionJobs';
 
 describe('dynamic vision chunk planning', () => {
   it('keeps the default five-page split for a normal scanned document', () => {
@@ -34,5 +34,13 @@ describe('dynamic vision chunk planning', () => {
     expect(buildVisionChunkRanges(0)).toEqual([]);
     expect(buildVisionChunkRanges(10, 2)).toEqual([]);
     expect(buildVisionChunkRanges(10, 6)).toEqual([]);
+  });
+
+  it('uses bounded exponential queue retry delays for failed chunks', () => {
+    expect(visionChunkRetryDelaySeconds(0)).toBe(10);
+    expect(visionChunkRetryDelaySeconds(1)).toBe(10);
+    expect(visionChunkRetryDelaySeconds(2)).toBe(20);
+    expect(visionChunkRetryDelaySeconds(3)).toBe(40);
+    expect(visionChunkRetryDelaySeconds(10)).toBe(60);
   });
 });

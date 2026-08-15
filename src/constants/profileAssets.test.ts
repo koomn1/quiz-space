@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, uniqueProfileFrames } from './profileAssets';
+import { AVATAR_PRESETS, FRAME_ASSET_OVERRIDES, FREE_PROFILE_FRAMES, uniqueProfileFrames } from './profileAssets';
 
 describe('profile asset catalog', () => {
   it('does not expose the removed legacy cartoon avatar IDs', () => {
-    expect(AVATAR_PRESETS).toHaveLength(8);
+    expect(AVATAR_PRESETS).toHaveLength(6);
     expect(AVATAR_PRESETS.every((avatar) => !/boy-cartoon|girl-cartoon/.test(avatar.url))).toBe(true);
     expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.url)).size).toBe(AVATAR_PRESETS.length);
   });
@@ -26,8 +26,6 @@ describe('profile asset catalog', () => {
     ]);
     expect(source).toHaveLength(4);
   });
-});
-
   it('ensures every preset avatar has a valid label, gender, and unique id', () => {
     const ids = AVATAR_PRESETS.map((a) => a.id);
     expect(new Set(ids).size).toBe(ids.length);
@@ -38,3 +36,14 @@ describe('profile asset catalog', () => {
       expect(avatar.labelAr).toBeTruthy();
     }
   });
+
+  it('uses project-served assets rather than inaccessible manus-storage paths', () => {
+    const allProfileAssets = [
+      ...AVATAR_PRESETS.map((avatar) => avatar.url),
+      ...FREE_PROFILE_FRAMES.map((frame) => frame.image_url),
+      ...Object.values(FRAME_ASSET_OVERRIDES),
+    ];
+    expect(allProfileAssets.every((asset) => !asset.startsWith('/manus-storage/'))).toBe(true);
+    expect(allProfileAssets.every((asset) => asset.endsWith('.webp'))).toBe(true);
+  });
+});

@@ -70,6 +70,11 @@ export const VISION_CHUNK_PAGE_COUNT = 5;
 export const MIN_VISION_CHUNK_PAGE_COUNT = 3;
 export const MAX_VISION_CHUNK_DELIVERY_ATTEMPTS = 3;
 
+export function visionChunkRetryDelaySeconds(deliveryAttempts: number): number {
+  const attempts = Number.isInteger(deliveryAttempts) && deliveryAttempts > 0 ? deliveryAttempts : 1;
+  return Math.min(60, Math.pow(2, attempts) * 5);
+}
+
 export interface VisionChunkPlan {
   pageCountPerChunk: number;
   concurrency: number;
@@ -929,7 +934,7 @@ export async function processExtractionJobChunk(
   } catch (error) {
     console.error('Extraction job chunk failed.', { jobId, chunkId, error });
     if (deliveryAttempts < MAX_VISION_CHUNK_DELIVERY_ATTEMPTS) {
-      const backoffSeconds = Math.min(60, Math.pow(2, deliveryAttempts) * 5);
+      const backoffSeconds = visionChunkRetryDelaySeconds(deliveryAttempts);
       await updateClaimedChunk(env, authHeader, jobId, chunk.id, token, {
         status: 'pending',
         processing_token: null,

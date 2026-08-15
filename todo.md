@@ -109,3 +109,11 @@
 - [x] 5. Add backend asset governance and automated uniqueness validation for catalog items
 - [x] 6. Run automated regression tests, performance checks, and idempotency benchmarks (77 tests passed)
 - [x] 7. Perform final verification and save a clean local checkpoint
+
+## Second independent audit (requested 2026-08-15)
+- [x] Verify working tree, commits, and migration ordering against the actual repository state; corrected a duplicate, destructive migration and timestamp collision
+- [x] Re-run type checks, production build, full Vitest suite, and Worker TypeScript checks (83 tests passed)
+- [x] Inspect PDF retry/backoff behavior and extend tests for the queue delay calculation
+- [x] Verify profile asset URLs, generated-image status, and frame catalog uniqueness in Supabase; corrected broken GitHub Pages paths
+- [x] Run local asset and mobile-shell smoke checks; browser navigation did not reach an authenticated profile route, documented as an environment limitation
+- [x] Record findings, correct confirmed issues, and save a clean verification checkpoint

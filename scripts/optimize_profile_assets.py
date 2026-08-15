@@ -4,14 +4,14 @@ from PIL import Image
 ASSET_DIR = Path('/home/ubuntu/webdev-static-assets')
 NAMES = [
     'quizspace-avatar-football-boy',
-    'quizspace-avatar-girl-studying',
+    'quizspace-avatar-girl-studying-clean',
     'quizspace-avatar-boy-music',
-    'quizspace-avatar-girl-walking',
+    'quizspace-avatar-girl-walking-clean',
     'quizspace-avatar-boy-cap-glasses',
-    'frame-diamond-comet',
-    'frame-diamond-crown',
-    'frame-ramadan-crescent',
-    'frame-back-school',
+    'frame-diamond-comet-clean',
+    'frame-diamond-crown-clean',
+    'frame-ramadan-crescent-clean',
+    'frame-back-school-clean',
 ]
 
 for name in NAMES:

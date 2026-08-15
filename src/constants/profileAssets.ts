@@ -15,14 +15,12 @@ export function profileAssetUrl(path: string): string {
 }
 
 export const AVATAR_PRESETS: AvatarPreset[] = [
-  { id: 'boy-football', label: 'Football', labelAr: 'كرة القدم', gender: 'boy', url: '/manus-storage/quizspace-avatar-football-boy_b1a08620.webp' },
-  { id: 'girl-studying', label: 'Study mode', labelAr: 'وقت المذاكرة', gender: 'girl', url: '/manus-storage/quizspace-avatar-girl-studying_1a84f92d.png' },
-  { id: 'boy-music', label: 'Music', labelAr: 'الموسيقى', gender: 'boy', url: '/manus-storage/quizspace-avatar-boy-music_a54c3b66.png' },
-  { id: 'girl-walking', label: 'School walk', labelAr: 'مشوار المدرسة', gender: 'girl', url: '/manus-storage/quizspace-avatar-girl-walking_ac4fa679.png' },
-  { id: 'boy-cap-glasses', label: 'Cap & glasses', labelAr: 'كاب ونظارات', gender: 'boy', url: '/manus-storage/quizspace-avatar-boy-cap-glasses_e2b39067.png' },
-  { id: 'girl-active', label: 'Active girl', labelAr: 'بنت رياضية', gender: 'girl', url: profileAssetUrl('avatars/avatar-skater-pro.webp') },
-  { id: 'boy-studying', label: 'Focused study', labelAr: 'مذاكرة وتركيز', gender: 'boy', url: profileAssetUrl('avatars/avatar-studying-pro.webp') },
-  { id: 'girl-music', label: 'Music girl', labelAr: 'بنت بتحب الموسيقى', gender: 'girl', url: profileAssetUrl('avatars/avatar-music-pro.webp') },
+  { id: 'boy-football', label: 'Football', labelAr: 'كرة القدم', gender: 'boy', url: profileAssetUrl('avatars/avatar-football-pro.webp') },
+  { id: 'girl-studying', label: 'Study mode', labelAr: 'وقت المذاكرة', gender: 'girl', url: profileAssetUrl('avatars/girl-studying-activity.webp') },
+  { id: 'boy-music', label: 'Music', labelAr: 'الموسيقى', gender: 'boy', url: profileAssetUrl('avatars/avatar-music-pro.webp') },
+  { id: 'girl-walking', label: 'School walk', labelAr: 'مشوار المدرسة', gender: 'girl', url: profileAssetUrl('avatars/girl-school-walk.webp') },
+  { id: 'boy-cap-glasses', label: 'Cap & glasses', labelAr: 'كاب ونظارات', gender: 'boy', url: profileAssetUrl('avatars/avatar-skater-pro.webp') },
+  { id: 'girl-explorer', label: 'Explorer', labelAr: 'مستكشفة الفضاء', gender: 'girl', url: profileAssetUrl('avatars/new_girl_avatar.webp') },
 ];
 
 export const AVATAR_PRESET_URLS = AVATAR_PRESETS.map((avatar) => avatar.url);
@@ -70,10 +68,10 @@ export const FREE_PROFILE_FRAMES: ProfileFrame[] = [
 ];
 
 export const FRAME_ASSET_OVERRIDES: Record<string, string> = {
-  frame_diamond_comet: '/manus-storage/frame-diamond-comet_596fd1b8.webp',
-  frame_diamond_crown: '/manus-storage/frame-diamond-crown_c3f3f17c.webp',
-  frame_ramadan_lantern: '/manus-storage/frame-ramadan-crescent_1c3d1be8.webp',
-  frame_back_to_school: '/manus-storage/frame-back-school_68d31549.webp',
+  frame_diamond_comet: profileAssetUrl('images/frame-diamond-comet-quizspace.webp'),
+  frame_diamond_crown: profileAssetUrl('images/frame-diamond-crown-quizspace.webp'),
+  frame_ramadan_lantern: profileAssetUrl('images/frame-ramadan-lantern-quizspace.webp'),
+  frame_back_to_school: profileAssetUrl('images/frame-back-to-school-quizspace.webp'),
 };
 
 export function uniqueProfileFrames<T extends { id?: string | null; image_url?: string | null }>(frames: T[]): T[] {

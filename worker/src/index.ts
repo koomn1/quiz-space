@@ -10,6 +10,7 @@ import {
   processExtractionJobChunk,
   restartExpiredJob,
   validateCreateExtractionJobInput,
+  visionChunkRetryDelaySeconds,
   type ExtractionJobRow,
 } from './extractionJobs';
 
@@ -741,7 +742,7 @@ export default {
         const attempts = message.attempts || 1;
         const outcome = await processExtractionJobChunk(env, authHeader, jobId, chunkId, attempts);
         if (outcome === 'retry') {
-          const delaySeconds = Math.min(60, Math.pow(2, attempts) * 5);
+          const delaySeconds = visionChunkRetryDelaySeconds(attempts);
           message.retry({ delaySeconds });
           continue;
         }
