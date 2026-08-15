@@ -61,3 +61,4 @@
 - [x] Benchmark daily-quiz reward RPC latency and controlled concurrency, then verify reward-ledger idempotency and database responsiveness under load
 - [x] Run a guarded, read-only site load test with stepped concurrency and automatic error/latency stop conditions, then document the measured capacity range
 - [x] Perform an authorized non-destructive security assessment of data isolation, reward authorization, and tamper resistance without changing live user data
+- [x] Design a secure asynchronous file-extraction and quiz-generation workflow with progress status, structured results, and a measured latency improvement target
