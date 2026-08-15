@@ -247,7 +247,21 @@ export async function extractQuestionsFromText(
   customInstruction?: string,
   onProgress?: (progress: DocumentExtractionProgress) => Promise<void> | void,
 ): Promise<DocumentExtractionResult> {
-  const chunks = splitText(text.trim());
+  const normalizedText = text.trim();
+  const localFastPath = normalizeQuestions(parseLiteralQuestions(normalizedText));
+  if (localFastPath.length > 0) {
+    if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: localFastPath.length });
+    return {
+      title: 'Extracted Quiz',
+      description: 'Questions extracted from the uploaded document.',
+      questions: localFastPath.map((question, index) => ({ ...question, number: question.number || index + 1 })),
+      rawResponses: [],
+      chunks: 1,
+      provider: 'local-format-parser',
+    };
+  }
+
+  const chunks = splitText(normalizedText);
   if (!chunks.length || !chunks[0]) throw new Error('No extractable text found in the document.');
 
   const rawResponses: string[] = [];

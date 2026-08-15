@@ -76,3 +76,4 @@
 - [x] Update Quiz Creator to submit and resume internal extraction jobs with live progress and saved structured quiz results
 - [ ] Verify the published end-to-end internal extraction job, including durable queue delivery and resumption without re-uploading the same file
 - [ ] Replace short-lived background execution with a durable Cloudflare Queue consumer and verify delivery from the published worker
+- [ ] Add a strict local fast path for fully structured literal-question files before any external model fallback
