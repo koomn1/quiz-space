@@ -58,3 +58,4 @@
 - [x] Ensure completed onboarding is persisted per account across browser sessions and does not reappear after a new device login
 - [x] Diagnose and repair activation of an owned profile frame from the point store, then verify the saved active frame after refresh
 - [x] Prevent a completed daily lucky-spin attempt from replaying the wheel animation, and show localized completed-state feedback
+- [x] Benchmark daily-quiz reward RPC latency and controlled concurrency, then verify reward-ledger idempotency and database responsiveness under load
