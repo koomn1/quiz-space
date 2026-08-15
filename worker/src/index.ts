@@ -395,7 +395,9 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
           mimeType: typeof body.mimeType === 'string' ? body.mimeType : '',
           extractionMode: body.extractionMode === 'generate' ? 'generate' as const : 'literal' as const,
           customInstruction: typeof body.customInstruction === 'string' ? body.customInstruction : undefined,
-          requestedQuestionCount: Number.isInteger(body.requestedQuestionCount) ? body.requestedQuestionCount : undefined,
+          requestedQuestionCount: Number.isInteger(body.requestedQuestionCount) && body.requestedQuestionCount > 0
+            ? body.requestedQuestionCount
+            : undefined,
         };
         const validationError = validateCreateExtractionJobInput(input, userId);
         if (validationError) return json({ error: 'Invalid extraction job request' }, 400, headers);

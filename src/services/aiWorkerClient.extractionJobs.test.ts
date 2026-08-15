@@ -79,6 +79,15 @@ describe('internal extraction-job client', () => {
     );
   });
 
+  it('omits the automatic-count sentinel instead of posting an invalid zero count', async () => {
+    mocks.fetchWithAuth.mockResolvedValueOnce(jsonResponse({ job: pendingJob }, 202));
+
+    await createExtractionJob({ file: testFile(), extractionMode: 'literal', requestedQuestionCount: 0 });
+
+    const requestInit = mocks.fetchWithAuth.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(String(requestInit.body))).not.toHaveProperty('requestedQuestionCount');
+  });
+
   it('returns persisted progress updates while a job is processing', async () => {
     mocks.fetchWithAuth.mockResolvedValueOnce(jsonResponse({
       ...pendingJob,

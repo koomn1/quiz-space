@@ -149,7 +149,10 @@ export async function createExtractionJob(options: CreateExtractionJobOptions): 
       mimeType,
       extractionMode: options.extractionMode,
       customInstruction: options.customInstruction,
-      requestedQuestionCount: options.requestedQuestionCount,
+      // Zero is the UI sentinel for "automatic". Omitting the field keeps the
+      // database's positive-count constraint intact and lets literal extraction
+      // recover every source question.
+      requestedQuestionCount: options.requestedQuestionCount > 0 ? options.requestedQuestionCount : undefined,
     });
     rememberPendingExtractionJob(response.job);
     cacheExtractionJobId(idempotencyKey, response.job.id);
