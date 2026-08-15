@@ -30,3 +30,15 @@ On the first settled attempt the app showed its built-in “تعذر فتح هذ
 
 
 Root cause isolated on 2026-08-15: the persisted boundary payload contained minified React error #310, with the component stack pointing to UserProfile. `handleProfileImageError` was declared with `useCallback` after the `isLoading` early return, so the hook order changed when profile data finished loading. The callback is now declared before the guard; the temporary sessionStorage diagnostic was removed; and `src/pages/UserProfile.hooks.test.ts` protects the ordering. The full suite passed with 27 test files and 91 tests, followed by a clean TypeScript check.
+
+
+Final route diagnosis verification: after deploying the hook-order fix, the authenticated profile route completed synchronization and rendered the real profile UI. The live page displayed the deterministic WebP avatar `avatar-skater-pro-transparent.webp` and the active frame `frame-free-2.webp`; the recovery boundary did not appear. The next step is the actual select-save-refresh smoke test.
+
+
+Authenticated picker smoke test: after opening the live editor, the curated catalog showed six new avatar entries with deterministic transparent WebP URLs. Selecting “كرة القدم” changed the preview input to `/quiz-space/clean-assets-deterministic/avatar-football-pro-transparent.webp`; selecting “مذنب ماسي” highlighted the deterministic comet frame entry. No purchase or logout action was performed. The save button is the next action, followed by a full reload and comparison.
+
+
+Save smoke test result: the save action completed and returned to the profile view. The live profile displayed `/quiz-space/clean-assets-deterministic/avatar-football-pro-transparent.webp` and `/quiz-space/clean-assets-deterministic/frame-diamond-comet-quizspace-transparent.webp` around the account photo. No error or recovery state appeared after the save.
+
+
+Refresh persistence result: after a full cache-busted reload and synchronization, the authenticated profile reopened without recovery and still displayed both the football avatar and deterministic diamond-comet frame. The selected values survived the refresh exactly as saved. This completes the select → save → refresh smoke test without buying, changing points, or logging out.
