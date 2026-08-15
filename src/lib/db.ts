@@ -505,11 +505,10 @@ export async function submitQuizAttempt(
     });
     if (dailyError) throw dailyError;
     const dailyRow = Array.isArray(dailyResult) ? dailyResult[0] : dailyResult;
-    if (dailyRow?.id) {
-      const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: dailyRow.id });
-      if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
-      else if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
-    }
+    if (!dailyRow?.id) throw new Error('Daily quiz completion was not recorded.');
+    // The daily RPC writes the private completion, ledger, balance, and slot
+    // atomically because daily quiz IDs do not exist in public.quizzes.
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
     return dailyResult;
   }
 

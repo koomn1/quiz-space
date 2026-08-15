@@ -48,6 +48,7 @@
 - [x] Isolate learning-streak state per authenticated user, enforce it in database reads and writes, and verify it cannot be shared across accounts
 - [x] Unify the daily-gift streak display with the canonical per-user learning-streak source and verify it matches the momentum card
 - [ ] Repair daily quiz-point accounting so the canonical balance, header, profile, ledger, and relevant reward views update consistently after completion
+- [ ] Prevent a daily-quiz result from exiting or clearing its recovery state unless completion and reward persistence succeed
 - [ ] Repair daily-quiz slot recovery when a user has no private payload, so the fixed question bank is generated instead of leaving the card in a perpetual preparing state
 - [ ] Enforce a user-scoped one-attempt policy for each daily brain-challenge question and show the saved result or clear completed state after reload
 - [x] Repair all visible zero-priced point-store offers and point packages so every purchasable item has a positive configured price

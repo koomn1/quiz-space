@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, rateQuestion, getBestScoreByQuizId, completeUserDailyQuiz, getUserDailyQuizSlot, planNameToDailyQuizTier } from '../lib/db';
+import { getQuizById, submitQuizAttempt, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { getApiUrl } from '../lib/origin';
@@ -138,6 +138,8 @@ export default function QuizResolver({
   const [selectedRating, setSelectedRating] = React.useState<number>(0);
   const [feedbackText, setFeedbackText] = React.useState<string>('');
   const [hasRatedQuiz, setHasRatedQuiz] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
+  const isDailyQuiz = quizId.startsWith('daily-');
 
   // Question ratings states
   const [questionRatings, setQuestionRatings] = React.useState<Record<string, 'like' | 'dislike'>>({});
@@ -209,11 +211,13 @@ export default function QuizResolver({
     let active = true;
     setHasRatedQuiz(false);
     if (!userId || !quizId) return () => { active = false; };
-    supabase.from('completions').select('id').eq('quiz_id', quizId).eq('taker_id', userId)
+    const source = isDailyQuiz ? 'daily_quiz_completions' : 'completions';
+    const userColumn = isDailyQuiz ? 'user_id' : 'taker_id';
+    supabase.from(source).select('id').eq('quiz_id', quizId).eq(userColumn, userId)
       .not('rating', 'is', null).limit(1).maybeSingle()
       .then(({ data, error }) => { if (active && !error) setHasRatedQuiz(!!data); });
     return () => { active = false; };
-  }, [quizId, userId]);
+  }, [quizId, userId, isDailyQuiz]);
 
   React.useEffect(() => {
     if (onQuizLockChange) onQuizLockChange(isQuizCompleted && !hasRatedQuiz);
@@ -249,12 +253,9 @@ export default function QuizResolver({
             setSavedCompletionId(savedRow.id);
             console.log('Quiz auto-saved successfully, completion ID:', savedRow.id, 'XP:', savedRow.xp_awarded ?? 0);
           }
-          if (userId) {
-            const completedDaily = await completeUserDailyQuiz(userId, quizId);
-            if (completedDaily) {
-              try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}
-              window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
-            }
+          if (isDailyQuiz) {
+            try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}
+            window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
           }
           window.dispatchEvent(new CustomEvent('quizspace:xp-updated', { detail: { userId, xpAwarded: savedRow?.xp_awarded ?? 0 } }));
         } catch (e) {
@@ -267,7 +268,7 @@ export default function QuizResolver({
         onQuizLockChange(false);
       }
     }
-  }, [isQuizCompleted, quizId, userId, takerName, userName, score, hasRatedQuiz]);
+  }, [isQuizCompleted, quizId, userId, takerName, userName, score, hasRatedQuiz, isDailyQuiz]);
 
   // Intercept and block all navigation popstate, back gestures, and close actions when in results overlay
   React.useEffect(() => {
@@ -543,7 +544,7 @@ export default function QuizResolver({
       const previousBestScore = await getBestScoreByQuizId(quizId);
       
       // Prevent duplicate insert if already saved (e.g. from autoSave or handleFinalSubmitAndExit)
-      if (savedCompletionId) {
+      if (savedCompletionId && !isDailyQuiz) {
         const { error: updateError } = await supabase.from('completions').update({
           rating,
           feedback: feedback.trim(),
@@ -563,11 +564,9 @@ export default function QuizResolver({
           feedback: feedback.trim()
         });
       }
-      if (userId) {
-        const completedDaily = await completeUserDailyQuiz(userId, quizId);
-        if (completedDaily) {
-          window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
-        }
+      if (isDailyQuiz) {
+        try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}
+        window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
       }
       if (previousBestScore > 0 && score > previousBestScore) {
         const body = lang === 'ar' 
@@ -594,33 +593,33 @@ export default function QuizResolver({
       return;
     }
     if (selectedRating === 0) return;
+    setSaveError(null);
     setIsSubmittingReview(true);
 
     try {
       const finalName = takerName.trim() || userName.trim() || 'طالب متميز';
       
       // Save rating attempt to Supabase
-      if (savedCompletionId) {
+      if (savedCompletionId && !isDailyQuiz) {
         const { error } = await supabase.from('completions').update({
           rating: selectedRating,
           feedback: feedbackText.trim()
         }).eq('id', savedCompletionId);
-        if (error) console.error('Failed to save quiz rating:', error);
-        else setHasRatedQuiz(true);
+        if (error) throw error;
+        setHasRatedQuiz(true);
       } else {
-        try {
-          await submitQuizAttempt(quizId, {
-            takerId: userId || 'anonymous',
-            takerName: finalName,
-            score,
-            rating: selectedRating,
-            feedback: feedbackText.trim(),
-            totalQuestions: quiz.questions.length
-          });
-          setHasRatedQuiz(true);
-        } catch (e) {
-          console.error('Failed to submit quiz attempt with rating:', e);
-        }
+        const result = await submitQuizAttempt(quizId, {
+          takerId: userId || 'anonymous',
+          takerName: finalName,
+          score,
+          rating: selectedRating,
+          feedback: feedbackText.trim(),
+          totalQuestions: quiz.questions.length
+        });
+        const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
+        if (!completionRow?.id) throw new Error('Quiz completion was not recorded.');
+        setSavedCompletionId(completionRow.id);
+        setHasRatedQuiz(true);
       }
 
       try {
@@ -636,8 +635,9 @@ export default function QuizResolver({
       onGoHome();
     } catch (err) {
       console.error('Quiz exit error:', err);
-      if (onQuizLockChange) onQuizLockChange(false);
-      onGoHome();
+      setSaveError(isAr
+        ? 'تعذر حفظ نتيجتك الآن. لم نغلق الجلسة حتى لا تفقد تقدمك؛ حاول مرة أخرى.'
+        : 'Your result could not be saved. The session remains open so you can try again.');
     } finally {
       setIsSubmittingReview(false);
     }
@@ -1537,6 +1537,7 @@ export default function QuizResolver({
                     
                     onClick={() => {
                       playChimeSound('click');
+                      setSaveError(null);
                       setSelectedRating(star);
                     }}
                     className="transform transition-all duration-150 hover:scale-130 active:scale-95 cursor-pointer relative group"
@@ -1569,6 +1570,11 @@ export default function QuizResolver({
                 className="w-full bg-[#0a0518] border border-[#3d1d6d]/50 rounded-2xl p-3 text-xs text-slate-100 outline-none focus:border-[#b175ff] focus:ring-1 focus:ring-[#b175ff]/30 transition-all placeholder:text-slate-500"
                 style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
               />
+              {saveError && (
+                <p role="alert" className="rounded-xl border border-rose-400/45 bg-rose-500/10 px-3 py-2 text-xs font-semibold leading-6 text-rose-100">
+                  {saveError}
+                </p>
+              )}
             </div>
 
             {/* Retake is always available: each run is saved as a separate improvement attempt. */}

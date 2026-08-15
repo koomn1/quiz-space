@@ -22,24 +22,42 @@ describe('reward and persistence database helpers', () => {
     vi.unstubAllGlobals();
   });
 
-  it('refreshes shared reward views after a daily quiz reward is recorded', async () => {
+  it('refreshes shared reward views after the atomic daily quiz reward is recorded', async () => {
     const dispatchEvent = vi.fn();
     vi.stubGlobal('window', { dispatchEvent });
     vi.stubGlobal('CustomEvent', class {
       type: string;
       constructor(type: string) { this.type = type; }
     });
-    mocks.rpc
-      .mockResolvedValueOnce({ data: [{ id: 'daily-completion-1' }], error: null })
-      .mockResolvedValueOnce({ data: { points_awarded: 35, total_points: 235 }, error: null });
+    mocks.rpc.mockResolvedValueOnce({
+      data: [{ id: 'daily-completion-1', points_awarded: 35, total_points: 235, daily_completed: true }],
+      error: null,
+    });
 
     await expect(submitQuizAttempt('daily-demo', {
       takerId: 'student-1', takerName: 'Student', score: 3, totalQuestions: 3,
-    })).resolves.toEqual([{ id: 'daily-completion-1' }]);
+    })).resolves.toEqual([{ id: 'daily-completion-1', points_awarded: 35, total_points: 235, daily_completed: true }]);
 
     expect(mocks.rpc).toHaveBeenNthCalledWith(1, 'submit_user_daily_quiz_attempt', expect.objectContaining({ p_quiz_id: 'daily-demo' }));
-    expect(mocks.rpc).toHaveBeenNthCalledWith(2, 'award_quiz_completion_rewards', { p_completion_id: 'daily-completion-1' });
+    expect(mocks.rpc).toHaveBeenCalledTimes(1);
+    expect(mocks.rpc).not.toHaveBeenCalledWith('award_quiz_completion_rewards', expect.anything());
     expect(dispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: 'quizspace-rewards-updated' }));
+  });
+
+  it('does not refresh reward views when the atomic daily completion fails', async () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('window', { dispatchEvent });
+    vi.stubGlobal('CustomEvent', class {
+      type: string;
+      constructor(type: string) { this.type = type; }
+    });
+    mocks.rpc.mockResolvedValueOnce({ data: null, error: new Error('Daily quiz is unavailable') });
+
+    await expect(submitQuizAttempt('daily-demo', {
+      takerId: 'student-1', takerName: 'Student', score: 3, totalQuestions: 3,
+    })).rejects.toThrow('Daily quiz is unavailable');
+
+    expect(dispatchEvent).not.toHaveBeenCalled();
   });
 
   it('activates a frame only through the ownership-verifying RPC', async () => {
