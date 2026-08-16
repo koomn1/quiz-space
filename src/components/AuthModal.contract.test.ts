@@ -40,6 +40,13 @@ describe('Quiz Space AuthModal UI contract', () => {
     expect(source).toContain('لن نوضح ما إذا كان البريد مسجلاً');
   });
 
+  it('does not pass a nullable user payload to the app after auth success', () => {
+    expect(source).not.toContain('onSuccess');
+    expect(source).toContain('await signIn(cleanEmail, password)');
+    expect(source).toContain('await verifyMfaCode(verificationCode)');
+    expect(source).toContain('onClose();');
+  });
+
   it('keeps reduced-motion and keyboard-friendly interaction affordances', () => {
     expect(source).toContain('motion-safe:');
     expect(source).toContain('focus-visible:ring');

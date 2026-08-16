@@ -8,10 +8,9 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'login' | 'register';
-  onSuccess?: (user: any, token?: any) => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login', onSuccess }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login' }) => {
   const { signIn, signInWithGoogle, signUp, verifyMfaCode, passwordRecovery, clearPasswordRecovery, requestPasswordReset, updatePassword } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
@@ -89,7 +88,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
           setLoading(false);
           return;
         }
-        onSuccess?.(null);
         onClose();
       }
     } catch (err: any) {
@@ -161,7 +159,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
     setError('');
     try {
       await verifyMfaCode(verificationCode);
-      onSuccess?.(null);
       onClose();
     } catch (err: any) {
       setError(err.message || 'رمز التحقق غير صحيح أو منتهي الصلاحية.');
@@ -228,7 +225,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
             </div>
             <div>
               <p className="text-sm font-black">Quiz Space</p>
-              <p className="text-[10px] font-bold text-cyan-100/60">تعلم أذكى، خطوة بخطوة</p>
+              <p className="text-[10px] font-bold text-cyan-100/85">تعلم أذكى، خطوة بخطوة</p>
             </div>
           </div>
 
@@ -240,7 +237,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
             <h3 className="mt-5 text-4xl font-black leading-[1.25] tracking-tight">
               كل سؤال يقرّبك من <span className="bg-gradient-to-l from-cyan-200 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">هدفك.</span>
             </h3>
-            <p className="mt-5 text-sm leading-7 text-slate-300/75">
+            <p className="mt-5 text-sm leading-7 text-slate-200/90">
               احفظ اختباراتك، تابع تقدمك، وخلي أدوات الذكاء الاصطناعي تساعدك تذاكر بوضوح أكبر.
             </p>
           </div>
@@ -253,7 +250,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.055] p-3">
                 <Icon className="h-4 w-4 text-cyan-200" aria-hidden="true" />
-                <p className="mt-2 text-[10px] font-bold text-white/75">{label}</p>
+                <p className="mt-2 text-[10px] font-bold text-white/90">{label}</p>
               </div>
             ))}
           </div>
@@ -277,7 +274,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                         ? 'اختر كلمة مرور جديدة'
                         : (isRegister ? 'أنشئ حسابك' : 'أهلاً بعودتك')}
               </h2>
-              <p className="mt-2 max-w-md text-xs leading-6 text-slate-500 sm:text-sm dark:text-slate-400">
+              <p className="mt-2 max-w-md text-xs leading-6 text-slate-600 sm:text-sm dark:text-slate-300">
                 {step === 'email'
                   ? 'أرسلنا رابط التفعيل إلى بريدك. افتح الرسالة لتأكيد الحساب ثم عد إلى المنصة.'
                   : step === '2fa'
@@ -306,7 +303,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">تفعيل الحساب</h3>
-                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-500 dark:text-slate-400">
+                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-600 dark:text-slate-300">
                   أرسلنا رابط تأكيد الحساب إلى <span className="break-all font-black text-violet-700 dark:text-violet-300" dir="ltr">{email}</span>.
                 </p>
               </div>
@@ -337,7 +334,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                   dir="ltr"
                 />
               </AuthField>
-              <p id="auth-reset-help" className="-mt-1 px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">لن نوضح ما إذا كان البريد مسجلاً حفاظاً على خصوصية الحسابات.</p>
+              <p id="auth-reset-help" className="-mt-1 px-1 text-xs leading-5 text-slate-600 dark:text-slate-300">لن نوضح ما إذا كان البريد مسجلاً حفاظاً على خصوصية الحسابات.</p>
               {error && <AuthError message={error} />}
               <button
                 type="submit"
@@ -362,7 +359,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">راجع بريدك الإلكتروني</h3>
-                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-500 dark:text-slate-400">إذا كان البريد مرتبطاً بحساب، ستجد رسالة الاستعادة على <span className="break-all font-black text-violet-700 dark:text-violet-300" dir="ltr">{email}</span>.</p>
+                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-600 dark:text-slate-300">إذا كان البريد مرتبطاً بحساب، ستجد رسالة الاستعادة على <span className="break-all font-black text-violet-700 dark:text-violet-300" dir="ltr">{email}</span>.</p>
               </div>
               {success && <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">{success}</div>}
               <div className="space-y-2">
@@ -401,7 +398,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                   dir="ltr"
                 />
               </AuthField>
-              <p id="auth-new-password-help" className="-mt-1 px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">{passwordRequirementMessage('ar')}</p>
+              <p id="auth-new-password-help" className="-mt-1 px-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{passwordRequirementMessage('ar')}</p>
               <AuthField label="تأكيد كلمة المرور الجديدة" htmlFor="auth-confirm-password" icon={<ShieldCheck className="h-4.5 w-4.5" aria-hidden="true" />}>
                 <input
                   id="auth-confirm-password"
@@ -435,7 +432,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">تم تحديث كلمة المرور</h3>
-                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-500 dark:text-slate-400">أصبح حسابك جاهزاً. استخدم كلمة المرور الجديدة لتسجيل الدخول إلى QuizSpace.</p>
+                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-600 dark:text-slate-300">أصبح حسابك جاهزاً. استخدم كلمة المرور الجديدة لتسجيل الدخول إلى QuizSpace.</p>
               </div>
               {success && <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">{success}</div>}
               <button
@@ -526,7 +523,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                   dir="ltr"
                 />
               </AuthField>
-              {isRegister && <p id="auth-password-help" className="-mt-1 px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">{passwordRequirementMessage('ar')}</p>}
+              {isRegister && <p id="auth-password-help" className="-mt-1 px-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{passwordRequirementMessage('ar')}</p>}
               {!isRegister && (
                 <div className="flex justify-start">
                   <button
@@ -584,7 +581,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   );
 };
 
-const fieldClassName = 'min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-4 pr-11 text-sm font-medium text-slate-950 outline-none transition duration-200 placeholder:text-slate-400 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500';
+const fieldClassName = 'min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-4 pr-11 text-sm font-medium text-slate-950 outline-none transition duration-200 placeholder:text-slate-500 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-300';
 
 function AuthField({ label, htmlFor, icon, children }: { label: string; htmlFor: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (

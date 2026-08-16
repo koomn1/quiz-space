@@ -2032,44 +2032,7 @@ export default function App() {
           authContext.clearPasswordRecovery();
           setIsAuthModalOpen(false);
         }}
-        initialMode={authModalMode} 
-        onSuccess={(user, token) => {
-          localStorage.setItem('local_auth_token', token);
-          localStorage.setItem('quiz_userId', user.id);
-          localStorage.setItem('quiz_userName', user.name);
-          localStorage.setItem('quiz_userEmail', user.email);
-          if (user.user_metadata?.avatar_url) {
-            localStorage.setItem('quiz_userPhoto', user.user_metadata?.avatar_url);
-            setUserPhoto(user.user_metadata?.avatar_url);
-          } else {
-            setUserPhoto(null);
-          }
-          setUserId(user.id);
-          setUserName(user.name);
-          setUserEmail(user.email);
-          setIsUserPremium(!!user.isPremium);
-          setUserPlanName(user.planName || '');
-          if (user.customId) {
-            setUserCustomId(user.customId);
-          } else {
-            setUserCustomId(null);
-          }
-
-          // Note: manual session sync removed - the real @supabase/supabase-js client
-          // (see AuthContext.tsx) manages session persistence and the onAuthStateChange
-          // listener automatically, so this hand-rolled sync is no longer needed.
-
-          playNotificationSound('chime');
-          setIsAuthModalOpen(false);
-          
-          const pendingQuizId = authRedirectQuizIdRef.current;
-          if (pendingQuizId && pendingQuizId !== 'login-trigger') {
-            authRedirectQuizIdRef.current = null;
-            setAuthRedirectQuizId(null);
-            setActiveQuizId(pendingQuizId);
-            window.history.pushState(null, '', `${getAppBasePath()}#/quiz/${pendingQuizId}`);
-          }
-        }}
+        initialMode={authModalMode}
       />
 
       

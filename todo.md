@@ -176,3 +176,8 @@
 - [x] 165. Detect recovery sessions and support a dedicated password-update state without weakening existing OAuth/MFA flows
 - [x] 166. Add coordinated forgot-password and reset-password screens inside the real QuizSpace AuthModal
 - [x] 167. Test recovery request states, redirect contract, validation, accessibility, responsive layout, and auth regression coverage (live email submission and token exchange were not executed in the local placeholder environment)
+
+- [x] 168. Fix the email/password login success contract so App never reads id from a null user payload
+- [x] 169. Reconcile email login, Google OAuth, MFA, and recovery success handling without regressing existing auth flows
+- [x] 170. Improve AuthModal light/dark contrast and visual clarity using the supplied login-signup reference without reducing readability
+- [x] 171. Regression-test email login error handling, auth success paths, theme contrast, and responsive login UI
