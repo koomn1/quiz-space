@@ -140,4 +140,4 @@
 
 - [x] 137. Add Playwright E2E coverage for authenticated profile avatar and frame rendering, image load failures, alpha-safe replacement URLs, and refresh persistence
 - [x] 138. Add responsive Playwright coverage for avatar/frame picker touch targets and desktop/mobile layout
-- [ ] 139. Run Playwright locally and in CI with a safe authenticated-session strategy, then document any environment limitation
+- [x] 139. Run Playwright locally and in CI with a safe authenticated-session strategy, then document any environment limitation
