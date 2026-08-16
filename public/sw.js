@@ -26,20 +26,26 @@ const PROFILE_ASSETS_TO_PRECACHE = [
   'clean-assets-replacement/star-crown-transparent.webp',
 ];
 
+async function cacheProfileAssets() {
+  const cache = await caches.open(PROFILE_ASSET_CACHE);
+  await Promise.all(PROFILE_ASSETS_TO_PRECACHE.map(async (assetPath) => {
+    try {
+      const assetUrl = new URL(assetPath, self.registration.scope).toString();
+      if (!(await cache.match(assetUrl))) {
+        await cache.add(assetUrl);
+      }
+    } catch {
+      // Keep the worker installable if one optional asset is unavailable.
+    }
+  }));
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(Promise.all([
     caches.open(VIDEO_CACHE).then((cache) =>
       cache.addAll(VIDEOS_TO_PRECACHE).catch(() => {/* non-fatal */})
     ),
-    caches.open(PROFILE_ASSET_CACHE).then(async (cache) => {
-      await Promise.all(PROFILE_ASSETS_TO_PRECACHE.map(async (assetPath) => {
-        try {
-          await cache.add(new URL(assetPath, self.registration.scope).toString());
-        } catch {
-          // Keep the worker installable if one optional asset is unavailable.
-        }
-      }));
-    }),
+    cacheProfileAssets(),
   ]));
   self.skipWaiting();
 });
@@ -76,6 +82,16 @@ self.addEventListener('fetch', (event) => {
       return response;
     })
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type !== 'PRECACHE_PROFILE_ASSETS') return;
+  const completion = cacheProfileAssets().then(() => ({ type: 'PROFILE_ASSETS_CACHED' }));
+  if (event.ports?.[0]) {
+    event.waitUntil(completion.then((message) => event.ports[0].postMessage(message)));
+  } else {
+    event.waitUntil(completion);
+  }
 });
 
 self.addEventListener('push', (event) => {
