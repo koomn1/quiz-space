@@ -162,6 +162,12 @@ export default function App() {
     startWebVitalsReporting();
   }, [authContext.user?.uid]);
 
+  React.useEffect(() => {
+    if (!authContext.passwordRecovery) return;
+    setAuthModalMode('login');
+    setIsAuthModalOpen(true);
+  }, [authContext.passwordRecovery]);
+
   // States for Forced Welcome-Login on Quiz
   const [authRedirectQuizId, setAuthRedirectQuizId] = React.useState<string | null>(null);
   const authRedirectQuizIdRef = React.useRef<string | null>(null);
@@ -1876,7 +1882,7 @@ export default function App() {
                   onUpdateName={(name) => {
                     setUserName(name);
                     localStorage.setItem('quiz_userName', name);
-                  }} 
+                  }}
                   colorTheme={colorTheme} 
                   setColorTheme={setColorTheme} 
                   darkMode={darkMode} 
@@ -2022,7 +2028,10 @@ export default function App() {
 
       <AuthModal 
         isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
+        onClose={() => {
+          authContext.clearPasswordRecovery();
+          setIsAuthModalOpen(false);
+        }}
         initialMode={authModalMode} 
         onSuccess={(user, token) => {
           localStorage.setItem('local_auth_token', token);

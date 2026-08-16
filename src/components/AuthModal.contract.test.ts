@@ -25,6 +25,21 @@ describe('Quiz Space AuthModal UI contract', () => {
     expect(source).toContain('لديك حساب بالفعل؟ سجّل دخولك');
   });
 
+  it('keeps the password-recovery states and privacy-safe copy', () => {
+    expect(source).toContain("setStep('forgot')");
+    expect(source).toContain("setStep('forgot-sent')");
+    expect(source).toContain("passwordRecovery ? 'reset' : 'form'");
+    expect(source).toContain("setStep('reset-success')");
+    expect(source).toContain('requestPasswordReset(');
+    expect(source).toContain('updatePassword(');
+    expect(source).toContain('نسيت كلمة المرور؟');
+    expect(source).toContain('إرسال رابط الاستعادة');
+    expect(source).toContain('auth-reset-email');
+    expect(source).toContain('auth-new-password');
+    expect(source).toContain('auth-confirm-password');
+    expect(source).toContain('لن نوضح ما إذا كان البريد مسجلاً');
+  });
+
   it('keeps reduced-motion and keyboard-friendly interaction affordances', () => {
     expect(source).toContain('motion-safe:');
     expect(source).toContain('focus-visible:ring');

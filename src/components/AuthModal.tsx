@@ -12,7 +12,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login', onSuccess }) => {
-  const { signIn, signInWithGoogle, signUp, verifyMfaCode } = useAuth();
+  const { signIn, signInWithGoogle, signUp, verifyMfaCode, passwordRecovery, clearPasswordRecovery, requestPasswordReset, updatePassword } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [username, setUsername] = useState('');
@@ -22,8 +22,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [step, setStep] = useState<'form' | 'email' | '2fa'>('form');
+  const [step, setStep] = useState<'form' | 'email' | '2fa' | 'forgot' | 'forgot-sent' | 'reset' | 'reset-success'>('form');
   const [verificationCode, setVerificationCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isVerifying2FA, setIsVerifying2FA] = useState(false);
 
   useEffect(() => {
@@ -31,15 +33,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
     setMode(initialMode);
     setError('');
     setSuccess('');
-    setStep('form');
+    setStep(passwordRecovery ? 'reset' : 'form');
     setVerificationCode('');
+    setNewPassword('');
+    setConfirmPassword('');
   }, [isOpen, initialMode]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        clearPasswordRecovery();
+        onClose();
+      }
     };
     document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
@@ -96,6 +103,53 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
     }
   };
 
+  const handlePasswordResetRequest = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await requestPasswordReset(email.trim().toLowerCase());
+      setSuccess('إذا كان البريد مرتبطاً بحساب، ستصلك رسالة تحتوي على رابط آمن لاستعادة كلمة المرور.');
+      setStep('forgot-sent');
+    } catch (err: any) {
+      setError(err?.message || 'تعذر إرسال رابط الاستعادة حالياً. حاول مرة أخرى بعد قليل.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (newPassword !== confirmPassword) {
+      setError('كلمتا المرور غير متطابقتين.');
+      return;
+    }
+    if (!isStrongPassword(newPassword)) {
+      setError(passwordRequirementMessage('ar'));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await updatePassword(newPassword);
+      clearPasswordRecovery();
+      setSuccess('تم تحديث كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بأمان.');
+      setStep('reset-success');
+      setPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setError(err?.message || 'تعذر تحديث كلمة المرور حالياً. أعد فتح الرابط وحاول مرة أخرى.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleMfaVerify = async (event: React.FormEvent) => {
     event.preventDefault();
     if (verificationCode.length !== 6) {
@@ -131,8 +185,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
     setMode((current) => current === 'login' ? 'register' : 'login');
     setError('');
     setSuccess('');
+    clearPasswordRecovery();
     setStep('form');
     setVerificationCode('');
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
+  const handleClose = () => {
+    clearPasswordRecovery();
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -146,7 +208,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
         type="button"
         aria-label="إغلاق نافذة تسجيل الدخول"
         className="absolute inset-0 cursor-default bg-slate-950/60 backdrop-blur-md motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       <div
@@ -202,26 +264,34 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-[10px] font-black text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                {step === 'email' ? 'تأكيد البريد' : step === '2fa' ? 'حماية الحساب' : 'أهلاً بك في Quiz Space'}
+                {step === 'email' ? 'تأكيد البريد' : step === '2fa' ? 'حماية الحساب' : step === 'forgot' || step === 'forgot-sent' ? 'استعادة الوصول' : step === 'reset' || step === 'reset-success' ? 'تعيين كلمة المرور' : 'أهلاً بك في Quiz Space'}
               </div>
               <h2 id="auth-dialog-title" className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl dark:text-white">
                 {step === 'email'
                   ? 'تفقد بريدك الإلكتروني'
                   : step === '2fa'
                     ? 'تأكيد إضافي للحساب'
-                    : (isRegister ? 'أنشئ حسابك' : 'أهلاً بعودتك')}
+                    : step === 'forgot' || step === 'forgot-sent'
+                      ? 'استعد حسابك بسهولة'
+                      : step === 'reset' || step === 'reset-success'
+                        ? 'اختر كلمة مرور جديدة'
+                        : (isRegister ? 'أنشئ حسابك' : 'أهلاً بعودتك')}
               </h2>
               <p className="mt-2 max-w-md text-xs leading-6 text-slate-500 sm:text-sm dark:text-slate-400">
                 {step === 'email'
                   ? 'أرسلنا رابط التفعيل إلى بريدك. افتح الرسالة لتأكيد الحساب ثم عد إلى المنصة.'
                   : step === '2fa'
                     ? 'أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة للمتابعة بأمان.'
-                    : (isRegister ? 'ابدأ مساحة تعلمك واحفظ تقدمك من أول اختبار.' : 'سجّل الدخول لمتابعة اختباراتك وتقدمك.')}
+                    : step === 'forgot' || step === 'forgot-sent'
+                      ? 'أدخل بريدك وسنرسل لك رابطاً آمناً للعودة إلى حسابك.'
+                      : step === 'reset' || step === 'reset-success'
+                        ? 'استخدم كلمة مرور قوية جديدة لحماية اختباراتك وتقدمك.'
+                        : (isRegister ? 'ابدأ مساحة تعلمك واحفظ تقدمك من أول اختبار.' : 'سجّل الدخول لمتابعة اختباراتك وتقدمك.')}
               </p>
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-slate-400 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 dark:hover:bg-slate-800 dark:hover:text-white"
               aria-label="إغلاق"
             >
@@ -247,6 +317,133 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
               >
                 العودة لتسجيل الدخول
+              </button>
+            </div>
+          ) : step === 'forgot' ? (
+            <form onSubmit={handlePasswordResetRequest} className="space-y-5" noValidate>
+              <AuthField label="البريد الإلكتروني" htmlFor="auth-reset-email" icon={<Mail className="h-4.5 w-4.5" aria-hidden="true" />}>
+                <input
+                  id="auth-reset-email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                  autoFocus
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'auth-error' : 'auth-reset-help'}
+                  className={fieldClassName}
+                  dir="ltr"
+                />
+              </AuthField>
+              <p id="auth-reset-help" className="-mt-1 px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">لن نوضح ما إذا كان البريد مسجلاً حفاظاً على خصوصية الحسابات.</p>
+              {error && <AuthError message={error} />}
+              <button
+                type="submit"
+                disabled={isBusy || !email.trim()}
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+              >
+                {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <Mail className="h-4 w-4" aria-hidden="true" />}
+                إرسال رابط الاستعادة
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStep('form'); setError(''); setSuccess(''); }}
+                className="min-h-11 w-full rounded-2xl px-4 text-xs font-black text-violet-700 transition-colors duration-200 hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30 dark:text-violet-300 dark:hover:bg-violet-500/10"
+              >
+                العودة لتسجيل الدخول
+              </button>
+            </form>
+          ) : step === 'forgot-sent' ? (
+            <div className="space-y-6 py-3 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                <Mail className="h-8 w-8" aria-hidden="true" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">راجع بريدك الإلكتروني</h3>
+                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-500 dark:text-slate-400">إذا كان البريد مرتبطاً بحساب، ستجد رسالة الاستعادة على <span className="break-all font-black text-violet-700 dark:text-violet-300" dir="ltr">{email}</span>.</p>
+              </div>
+              {success && <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">{success}</div>}
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => { setStep('forgot'); setSuccess(''); setError(''); }}
+                  className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-800 transition-all duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20 dark:border-slate-700 dark:text-white dark:hover:bg-slate-900"
+                >
+                  إرسال الرابط مرة أخرى
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStep('form'); setSuccess(''); setError(''); }}
+                  className="min-h-11 w-full rounded-2xl px-4 text-xs font-black text-violet-700 transition-colors duration-200 hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30 dark:text-violet-300 dark:hover:bg-violet-500/10"
+                >
+                  العودة لتسجيل الدخول
+                </button>
+              </div>
+            </div>
+          ) : step === 'reset' ? (
+            <form onSubmit={handlePasswordUpdate} className="space-y-4" noValidate>
+              <AuthField label="كلمة المرور الجديدة" htmlFor="auth-new-password" icon={<Lock className="h-4.5 w-4.5" aria-hidden="true" />}>
+                <input
+                  id="auth-new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  required
+                  autoFocus
+                  autoComplete="new-password"
+                  minLength={10}
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'auth-error' : 'auth-new-password-help'}
+                  placeholder="••••••••"
+                  className={fieldClassName}
+                  dir="ltr"
+                />
+              </AuthField>
+              <p id="auth-new-password-help" className="-mt-1 px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">{passwordRequirementMessage('ar')}</p>
+              <AuthField label="تأكيد كلمة المرور الجديدة" htmlFor="auth-confirm-password" icon={<ShieldCheck className="h-4.5 w-4.5" aria-hidden="true" />}>
+                <input
+                  id="auth-confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  required
+                  autoComplete="new-password"
+                  minLength={10}
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'auth-error' : undefined}
+                  placeholder="••••••••"
+                  className={fieldClassName}
+                  dir="ltr"
+                />
+              </AuthField>
+              {error && <AuthError message={error} />}
+              <button
+                type="submit"
+                disabled={loading || !newPassword || !confirmPassword}
+                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+              >
+                {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <ShieldCheck className="h-4 w-4" aria-hidden="true" />}
+                تحديث كلمة المرور
+              </button>
+            </form>
+          ) : step === 'reset-success' ? (
+            <div className="space-y-6 py-3 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                <Check className="h-8 w-8" aria-hidden="true" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">تم تحديث كلمة المرور</h3>
+                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-500 dark:text-slate-400">أصبح حسابك جاهزاً. استخدم كلمة المرور الجديدة لتسجيل الدخول إلى QuizSpace.</p>
+              </div>
+              {success && <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">{success}</div>}
+              <button
+                type="button"
+                onClick={() => { setStep('form'); setSuccess(''); setError(''); }}
+                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+              >
+                تسجيل الدخول الآن
               </button>
             </div>
           ) : step === '2fa' ? (
@@ -330,6 +527,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 />
               </AuthField>
               {isRegister && <p id="auth-password-help" className="-mt-1 px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">{passwordRequirementMessage('ar')}</p>}
+              {!isRegister && (
+                <div className="flex justify-start">
+                  <button
+                    type="button"
+                    onClick={() => { setStep('forgot'); setError(''); setSuccess(''); }}
+                    className="min-h-11 px-1 text-xs font-black text-violet-700 transition-colors duration-200 hover:text-violet-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30 dark:text-violet-300 dark:hover:text-violet-200"
+                  >
+                    نسيت كلمة المرور؟
+                  </button>
+                </div>
+              )}
 
               {error && <AuthError message={error} />}
               {success && <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">{success}</div>}

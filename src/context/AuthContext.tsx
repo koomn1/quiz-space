@@ -22,11 +22,15 @@ interface AuthContextType {
   loading: boolean;
   // MFA (2FA) - uses Supabase's built-in TOTP MFA, not a hand-rolled implementation.
   mfaRequired: boolean;
+  passwordRecovery: boolean;
+  clearPasswordRecovery: () => void;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ status: 'SUCCESS' | 'MFA_REQUIRED' }>;
   signInWithGoogle: () => Promise<void>;
   verifyEmailCode: (email: string, code: string) => Promise<void>;
   resendEmailVerification: (email: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   verifyMfaCode: (code: string) => Promise<void>;
   enrollMfa: () => Promise<{ qrCode: string; secret: string; factorId: string }>;
   confirmMfaEnrollment: (factorId: string, code: string) => Promise<void>;
@@ -108,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [mfaRequired, setMfaRequired] = useState(false);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   useEffect(() => {
     const syncSession = async (nextSession: Session | null) => {
@@ -137,8 +142,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const accessToken = params.get('access_token');
         const refreshToken = params.get('refresh_token');
         if (accessToken && refreshToken) {
+          const isRecovery = params.get('type') === 'recovery';
           await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-          window.location.hash = '#/dashboard/landing';
+          if (isRecovery) {
+            setPasswordRecovery(true);
+            window.history.replaceState({}, document.title, `${callbackUrl.pathname}${callbackUrl.search}`);
+          } else {
+            window.location.hash = '#/dashboard/landing';
+          }
         }
       }
     };
@@ -150,7 +161,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
+      if (event === 'SIGNED_OUT') setPasswordRecovery(false);
       await syncSession(nextSession);
     });
 
@@ -199,6 +212,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     if (error) {
       throw new Error('تعذر إرسال رمز جديد الآن. انتظر قليلاً ثم حاول مرة أخرى.');
+    }
+  };
+
+  const requestPasswordReset = async (email: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) throw new Error('أدخل بريدك الإلكتروني أولاً.');
+
+    const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo });
+    if (error) {
+      throw new Error('تعذر إرسال رابط الاستعادة حالياً. حاول مرة أخرى بعد قليل.');
+    }
+  };
+
+  const clearPasswordRecovery = () => setPasswordRecovery(false);
+
+  const updatePassword = async (password: string) => {
+    if (!isStrongPassword(password)) {
+      throw new Error(passwordRequirementMessage('ar'));
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      throw new Error('تعذر تحديث كلمة المرور حالياً. أعد فتح الرابط وحاول مرة أخرى.');
     }
   };
 
@@ -275,6 +312,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         session,
         isAuthenticated: !!user && !mfaRequired,
+        passwordRecovery,
+        clearPasswordRecovery,
         loading,
         mfaRequired,
         signUp,
@@ -282,6 +321,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithGoogle,
         verifyEmailCode,
         resendEmailVerification,
+        requestPasswordReset,
+        updatePassword,
         verifyMfaCode,
         enrollMfa,
         confirmMfaEnrollment,

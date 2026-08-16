@@ -171,3 +171,8 @@
 - [x] 161. Audit the existing Quiz Space authentication modal and preserve all current auth flows
 - [x] 162. Redesign the Quiz Space login/register experience with a cleaner Arabic RTL visual system and responsive states
 - [x] 163. Verify login, Google OAuth wiring, registration, MFA, theme contrast, focus states, and mobile layout (password reset is not exposed by the existing auth contract)
+
+- [x] 164. Add a secure Supabase password-recovery request method and reuse QuizSpace auth redirect normalization
+- [x] 165. Detect recovery sessions and support a dedicated password-update state without weakening existing OAuth/MFA flows
+- [x] 166. Add coordinated forgot-password and reset-password screens inside the real QuizSpace AuthModal
+- [x] 167. Test recovery request states, redirect contract, validation, accessibility, responsive layout, and auth regression coverage (live email submission and token exchange were not executed in the local placeholder environment)
