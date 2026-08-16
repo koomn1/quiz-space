@@ -880,12 +880,14 @@ export default function QuizCreator({
       return;
     }
     if (isGenerating) return;
-    if (userPlan !== 'Gold' && userPlan !== 'Diamond' && sentenceUses <= 0) {
+    
+    // Enforce strict tier-based limits
+    const isPaidPlan = userPlan === 'Gold' || userPlan === 'Diamond' || userPlan === 'Silver';
+    if (!isPaidPlan && sentenceUses <= 0) {
       setShowPaywallSentence(true);
       return;
     }
-    // Decrement counter
-    if (userPlan !== 'Gold' && userPlan !== 'Diamond') {
+    if (!isPaidPlan) {
       const nextVal = Math.max(0, sentenceUses - 1);
       setSentenceUses(nextVal);
       localStorage.setItem('cosmo_limit_sentence_ai', nextVal.toString());
@@ -930,12 +932,13 @@ export default function QuizCreator({
       return;
     }
     if (isGenerating) return;
-    if (userPlan !== 'Gold' && userPlan !== 'Diamond' && bookUses <= 0) {
+
+    const isPaidPlan = userPlan === 'Gold' || userPlan === 'Diamond' || userPlan === 'Silver';
+    if (!isPaidPlan && bookUses <= 0) {
       setShowPaywallBook(true);
       return;
     }
-    // Decrement counter
-    if (userPlan !== 'Gold' && userPlan !== 'Diamond') {
+    if (!isPaidPlan) {
       const nextVal = Math.max(0, bookUses - 1);
       setBookUses(nextVal);
       localStorage.setItem('cosmo_limit_book_paste', nextVal.toString());

@@ -145,3 +145,15 @@
 - [x] 140. Add versioned long-lived caching for replacement avatars and frames without serving stale assets after future redesigns
 - [x] 141. Add safe avatar/frame preload and cache-reuse assertions without blocking first paint
 - [x] 142. Run regression, Playwright network-cache checks, and production verification for avatar/frame caching
+
+- [x] 143. Measure current exported quiz PDF size and generation time across text-only and image-heavy quizzes
+- [x] 144. Optimize quiz PDF export size and verify readable output, page count, and generation speed
+- [x] 145. Define Free, Plus, Pro, and School subscription plans with explicit features, quotas, and upgrade messaging
+- [x] 146. Enforce subscription entitlements in frontend and backend paths without trusting client-only plan Werte/values
+- [x] 147. Add tests for PDF export optimization and subscription entitlement enforcement, then verify production behavior
+
+- [x] 148. Add institution, institution member, and auditable seat-allocation tables with secure RLS and seat-limit enforcement
+- [x] 149. Add SECURITY DEFINER RPCs for Diamond activation, institution creation, invitation, seat assignment, revocation, and manager-only access checks
+- [x] 150. Build a responsive Arabic Institution Workspace for owners to manage identity, teachers, seats, and institution status
+- [x] 151. Add an admin activation flow that converts an approved Diamond request into an active institution owner workspace
+- [ ] 152. Add unit and integration coverage for institution authorization, seat limits, and member lifecycle; verify published workflow

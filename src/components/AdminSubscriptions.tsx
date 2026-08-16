@@ -32,6 +32,7 @@ import {
   createCommunityPost,
   COSMO_ADMIN_UID
 } from "../lib/db";
+import { activateDiamondInstitution } from "../lib/institutions";
 
 interface AdminSubscriptionsProps {
   lang: "ar" | "en";
@@ -349,6 +350,30 @@ export default function AdminSubscriptions({
     const targetIsPremium = !!plan;
 
     try {
+      if (plan?.id === "diamond") {
+        const proposedName = `${selectedUser.name || "QuizSpace"} ${isAr ? "للتعليم" : "Education"}`;
+        const institutionName = window.prompt(
+          isAr ? "اكتب اسم المدرسة أو المؤسسة:" : "Enter the school or institution name:",
+          proposedName,
+        )?.trim();
+        if (!institutionName) return;
+
+        const seatInput = window.prompt(
+          isAr ? "عدد المقاعد (من 1 إلى 100، الافتراضي 15):" : "Seat count (1–100, default 15):",
+          "15",
+        );
+        const seatLimit = Number.parseInt(seatInput || "15", 10);
+        if (!Number.isInteger(seatLimit) || seatLimit < 1 || seatLimit > 100) {
+          alert(isAr ? "عدد المقاعد يجب أن يكون بين 1 و100." : "Seat count must be between 1 and 100.");
+          return;
+        }
+
+        await activateDiamondInstitution(selectedUser.userId, institutionName, seatLimit);
+        alert(isAr ? "تم تفعيل المؤسسة والمقاعد. يمكن للمالك الآن إدارة الفريق من مساحة المؤسسة." : "Institution and seats activated. The owner can now manage the team from Institution Workspace.");
+        await loadRealData();
+        return;
+      }
+
       const { error } = await updateUserSubscription(selectedUser.userId, targetIsPremium, targetPlanName);
 
       if (!error) {

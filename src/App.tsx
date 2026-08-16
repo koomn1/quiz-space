@@ -24,6 +24,7 @@ import AdminGuard from './components/AdminGuard';
 const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'), 'admin-dashboard');
 const AnalyticsDashboard = lazyWithRetry(() => import('./pages/AnalyticsDashboard').then(module => ({ default: module.AnalyticsDashboard })), 'analytics-dashboard');
 const BillingSection = lazyWithRetry(() => import('./components/BillingSection').then(module => ({ default: module.BillingSection })), 'billing');
+const InstitutionWorkspace = lazyWithRetry(() => import('./components/InstitutionWorkspace'), 'institution-workspace');
 import { playChimeSound } from './lib/chime';
 const ExploreSection = lazyWithRetry(() => import('./components/ExtraFeatures').then(module => ({ default: module.ExploreSection })), 'explore');
 const CategoriesSection = lazyWithRetry(() => import('./components/ExtraFeatures').then(module => ({ default: module.CategoriesSection })), 'categories');
@@ -200,7 +201,7 @@ export default function App() {
       return 'landing';
     }
     if (pathParts[0]) {
-      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store']);
+      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store']);
       return knownTabs.has(pathParts[0]) ? pathParts[0] : 'not-found';
     }
 
@@ -225,7 +226,7 @@ export default function App() {
         return 'landing';
       }
       if (parts[0]) {
-        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store']);
+        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'messages', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store']);
         return knownTabs.has(parts[0]) ? parts[0] : 'not-found';
       }
     }
@@ -1274,6 +1275,7 @@ export default function App() {
       'settings',
       'my-quizzes',
       'billing',
+      'institution',
     ]);
     return sharedTabs.has(activeTab) && !activeQuizId;
   }, [activeTab, activeQuizId]);
@@ -1838,6 +1840,14 @@ export default function App() {
                   isGuest={isGuestSandbox}
                   isAdmin={isAdminUser}
                   quizzes={quizzes}
+                />
+              )}
+
+              {activeTab === 'institution' && (
+                <InstitutionWorkspace
+                  userId={userId}
+                  lang={lang}
+                  onOpenBilling={() => handleSetTab('billing')}
                 />
               )}
 

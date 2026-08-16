@@ -727,7 +727,7 @@ export default function QuizResolver({
       document.body.appendChild(renderElement);
 
       const canvas = await html2canvas(renderElement, {
-        scale: Math.min(2, window.devicePixelRatio || 1.5),
+        scale: 1.35,
         useCORS: true,
         allowTaint: false,
         backgroundColor: '#ffffff',
@@ -736,19 +736,19 @@ export default function QuizResolver({
         logging: false,
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.78);
       const imgWidth = 595.28;
       const pageHeight = 841.89;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       const pdf = new JsPDF('p', 'pt', 'a4');
       let heightLeft = imgHeight;
       let position = 0;
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pageHeight;
       while (heightLeft > 0) {
         position = -(imgHeight - heightLeft);
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
       }
 

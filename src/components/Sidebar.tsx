@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Crown, Gem, Bot, Medal, Home, Compass, Sparkles, BookOpen, Gift,
-  Users, CreditCard, Settings, LogOut, ShieldAlert, User, Check, GraduationCap, MessageCircle, Lock
+  Users, CreditCard, Settings, LogOut, ShieldAlert, User, Check, GraduationCap, MessageCircle, Lock, Building2
 } from 'lucide-react';
 import { translations } from '../lib/i18n';
 import { AnimatedSidebarIcon } from './AnimatedSidebarIcon';
@@ -66,6 +66,7 @@ export default function Sidebar({
     { id: 'create', label: isAr ? 'إنشاء اختبار' : 'Create Quiz' },
     { id: 'my-quizzes', label: isAr ? 'اختباراتي' : 'My Quizzes' },
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms' },
+    { id: 'institution', label: isAr ? 'مساحة المؤسسة' : 'Institution Workspace' },
     { id: 'motivation', label: isAr ? 'مركز التحفيز' : 'Motivation Hub' },
     { id: 'aichat', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant' },
     { id: 'community', label: isAr ? 'المجتمع' : 'Community' },
@@ -99,6 +100,8 @@ export default function Sidebar({
         return <BookOpen size={size} className={colorClass} />;
       case 'classrooms':
         return <GraduationCap size={size} className={colorClass} />;
+      case 'institution':
+        return <Building2 size={size} className={colorClass} />;
       case 'motivation':
         return <Gift size={size} className={colorClass} />;
       case 'aichat':

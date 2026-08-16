@@ -38,6 +38,27 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
   // Available Plans
   const plans = [
     {
+      id: 'free',
+      name: isAr ? 'الباقة المجانية (Free)' : 'Free Tier',
+      price: isAr ? 'مجاناً' : 'Free',
+      priceNum: 0,
+      duration: isAr ? 'دائماً' : 'Forever',
+      color: 'from-slate-500 to-slate-700',
+      tagColor: 'bg-slate-600 text-white',
+      badge: isAr ? 'البداية الذكية' : 'Starter',
+      features: isAr ? [
+        'حل الاختبارات العامة والعامة والمشاركة في التحديات',
+        'توليد 3 اختبارات بالذكاء الاصطناعي أسبوعياً',
+        'طباعة وتصدير ورقة الأسئلة PDF (بضغط عالي السرعة)',
+        'الوصول لعجلة الحظ ومركز التحفيز اليومي'
+      ] : [
+        'Take public quizzes and community challenges',
+        'Generate 3 AI quizzes per week',
+        'High-speed compressed PDF export',
+        'Daily motivation center & lucky spin'
+      ]
+    },
+    {
       id: 'silver',
       name: isAr ? 'الباقة الفضية (Silver)' : 'Silver Scholar',
       price: isAr ? '150 ج.م' : '150 EGP',
@@ -47,17 +68,17 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       tagColor: 'bg-slate-500 text-white',
       badge: isAr ? 'طالب متميز' : 'Student Pro',
       features: isAr ? [
-        'المساعد كوزمو الشخصي (AI AI)',
-        'اختبارات تفاعلية لا محدودة',
-        'توليد 10 اختبارات بالذكاء الاصطناعي شهرياً',
-        'تحميل تقارير حلول الاختبارات بصيغة PDF',
-        'دعم فني متميز عبر البريد الإلكتروني'
+        'المساعد كوزمو الشخصي (AI Assistant) بلا حدود',
+        'اختبارات تفاعلية لا محدودة وصلاحيات متقدمة',
+        'توليد 15 اختباراً بالذكاء الاصطناعي شهرياً',
+        'تحميل تقارير حلول الاختبارات المفصلة بصيغة PDF',
+        'إطار بروفايل فضي حصري وخصم 10% في متجر النقاط'
       ] : [
-        'AI Personal Assistant (AI)',
-        'Unlimited interactive quizzes',
-        'Generating 10 quizzes by AI per month',
-        'Download student results as PDF documents',
-        'Standard customer support email response'
+        'Unlimited AI Personal Assistant access',
+        'Unlimited interactive quizzes and advanced features',
+        'Generate 15 AI quizzes per month',
+        'Download student Q&A detailed PDF reports',
+        'Exclusive Silver profile frame & 10% store discount'
       ]
     },
     {
@@ -70,17 +91,17 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       tagColor: 'bg-amber-500 text-white',
       badge: isAr ? 'الأكثر شيوعاً' : 'Most Popular',
       features: isAr ? [
-        'كل مميزات الخطة الفضية',
-        'توليد لا محدود بالذكاء الاصطناعي',
-        'لوحات متصدرين مخصصة لفصولك الطلابية',
-        'التحكم الكامل في زمن الاختبارات وإصدار شهادات مخصصة',
-        'إصدار تقارير مخصصة لكل صف وشعبة'
+        'توليد لا محدود بالذكاء الاصطناعي لكل أنواع الملفات',
+        'لوحات متصدرين مخصصة لفصولك وحصصك الدراسية',
+        'تحكم كامل بزمن الاختبارات وإصدار شهادات معتمدة',
+        'تقارير تفصيلية لكل صف وشعبة مع تحليل الإجابات',
+        'إطار بروفايل ذهبي متحرك وشارة معلم معتمد'
       ] : [
-        'All Silver properties included',
-        'Unlimited AI generative creation',
-        'Custom private Class Leaderboards',
-        'Full countdown timer customization with badges',
-        'Detailed score reports per student & section'
+        'Unlimited AI generation across all file formats',
+        'Custom private Class Leaderboards for your students',
+        'Full countdown timer customization with certified badges',
+        'Detailed score reports per student and section',
+        'Animated Gold profile frame & verified educator badge'
       ]
     },
     {
@@ -93,19 +114,17 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       tagColor: 'bg-indigo-600 text-white',
       badge: isAr ? 'مؤسسات مدارس' : 'Schools & VIP',
       features: isAr ? [
-        'كل مميزات الخطة الذهبية الفائقة',
-        'وصول كامل لمؤسستك أو لـ 15 معلماً معاً',
-        'تصدير درجات الطلاب فورا بصيغة Microsoft Excel',
-        'تقارير تحليل ذكاء اصطناعي تفصيلية لكل طالب',
-        'إمكانية إخفاء شعار المنصة وتخصيص ثيم الألوان للعلامة التجارية',
-        'دعم فني خاص على مدار الساعة عبر الواتساب والهاتف'
+        'وصول كامل لمؤسستك أو لـ 15 معلماً معاً في حساب موحد',
+        'تصدير درجات ومستويات الطلاب فوراً بصيغة Excel وPDF',
+        'تحليل ذكاء اصطناعي متقدم لفجوات التعلم لكل طالب',
+        'إمكانية تخصيص ثيم الألوان وإزالة الشعار (White-label)',
+        'إطار بروفايل ماسي نابض ودعم فني خاص 24/7'
       ] : [
-        'All Gold VIP properties included',
         'Multi-user login seats (Up to 15 teachers combined)',
-        'Direct bulk Excel spreadsheet scores export',
-        'AI detailed learning insights for schools',
-        'White-labeled branding options for quizzes',
-        '24/7 dedicated telephone and WhatsApp VIP support'
+        'Direct bulk Excel and PDF spreadsheet scores export',
+        'AI detailed learning gap analytics for schools',
+        'White-labeled branding options for quizzes and reports',
+        'Pulsing Diamond profile frame & 24/7 dedicated support'
       ]
     }
   ];
