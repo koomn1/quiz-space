@@ -144,4 +144,4 @@
 
 - [x] 140. Add versioned long-lived caching for replacement avatars and frames without serving stale assets after future redesigns
 - [x] 141. Add safe avatar/frame preload and cache-reuse assertions without blocking first paint
-- [ ] 142. Run regression, Playwright network-cache checks, and production verification for avatar/frame caching
+- [x] 142. Run regression, Playwright network-cache checks, and production verification for avatar/frame caching
