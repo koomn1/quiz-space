@@ -135,3 +135,5 @@
 - [ ] 133. Generate a distinct multi-pose cartoon avatar set and new transparent circular frame set
 - [ ] 134. Audit alpha transparency, circular fit, uniqueness, and loadable URLs for every replacement asset
 - [ ] 135. Update profile asset mappings, fallbacks, tests, and production verification for the replacement set
+
+- [x] 136. Remap direct clean-assets-deterministic avatar URLs already stored on profiles to the new replacement avatar set

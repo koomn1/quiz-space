@@ -67,6 +67,7 @@ describe('profile asset catalog', () => {
   it('rewrites old curated avatar URLs to the new replacement set', () => {
     expect(profileAssetUrl('avatars/avatar-football-pro.webp')).toContain('/clean-assets-replacement/boy-robotics-transparent.webp');
     expect(profileAssetUrl('https://koomn1.github.io/quiz-space/avatars/avatar-music-pro.webp')).toContain('/clean-assets-replacement/boy-chef-transparent.webp');
+    expect(profileAssetUrl('/quiz-space/clean-assets-deterministic/avatar-skater-pro-transparent.webp')).toContain('/clean-assets-replacement/girl-dance-transparent.webp');
   });
 
   it('contains no legacy deterministic catalog URLs or inaccessible manus-storage URLs', () => {
