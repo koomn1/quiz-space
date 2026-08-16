@@ -134,7 +134,7 @@ jobs:
 
       - name: Run Public Profile Asset E2E
         env:
-          PLAYWRIGHT_BASE_URL: ${{ needs.deploy-pages.outputs.page_url }}
+          PLAYWRIGHT_BASE_URL: https://koomn1.github.io/quiz-space/
         run: npm run e2e -- --grep "published profile asset delivery"
 
   deploy-worker:
