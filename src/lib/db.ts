@@ -4,7 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab } from '../types';
+import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, PdfExportRecord, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, normalizeBadgeColor, normalizeBadgeTier, normalizeNameColor, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
 
@@ -61,6 +61,85 @@ export async function uploadAvatar(userId: string, file: File): Promise<string |
     console.error('Avatar upload exception:', e);
     return null;
   }
+}
+
+const PDF_EXPORT_BUCKET = 'quiz-pdf-exports';
+const PDF_EXPORT_MAX_BYTES = 5 * 1024 * 1024;
+
+function mapPdfExportRecord(row: any): PdfExportRecord {
+  return {
+    id: String(row.id),
+    quizId: row.quiz_id ? String(row.quiz_id) : undefined,
+    quizTitle: String(row.quiz_title || 'اختبار Quiz Space'),
+    questionCount: Number(row.question_count || 0),
+    fileName: String(row.file_name || 'quiz.pdf'),
+    storagePath: String(row.storage_path),
+    fileSizeBytes: Number(row.file_size_bytes || 0),
+    createdAt: String(row.created_at),
+  };
+}
+
+export async function savePdfExport(
+  userId: string,
+  quiz: Quiz,
+  bytes: Uint8Array,
+  fileName: string,
+): Promise<PdfExportRecord> {
+  if (!userId || !isSupabaseConfigured) throw new Error('PDF export history is unavailable.');
+  if (!bytes.byteLength || bytes.byteLength > PDF_EXPORT_MAX_BYTES) {
+    throw new Error('PDF export must be smaller than 5 MB to be saved.');
+  }
+
+  const exportId = crypto.randomUUID();
+  const storagePath = `${userId}/${exportId}.pdf`;
+  const safeFileName = fileName.replace(/[\\/:*?"<>|\n\r]+/g, '_').slice(0, 180) || 'quiz.pdf';
+  const pdfBuffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(pdfBuffer).set(bytes);
+  const { error: uploadError } = await supabase.storage.from(PDF_EXPORT_BUCKET).upload(
+    storagePath,
+    new Blob([pdfBuffer], { type: 'application/pdf' }),
+    { contentType: 'application/pdf', cacheControl: '31536000', upsert: false },
+  );
+  if (uploadError) throw uploadError;
+
+  const { data, error } = await supabase.from('pdf_export_history').insert({
+    id: exportId,
+    user_id: userId,
+    quiz_id: quiz.id || null,
+    quiz_title: String(quiz.title || 'اختبار Quiz Space').slice(0, 500),
+    question_count: quiz.questions.length,
+    file_name: safeFileName,
+    storage_path: storagePath,
+    file_size_bytes: bytes.byteLength,
+  }).select('id, quiz_id, quiz_title, question_count, file_name, storage_path, file_size_bytes, created_at').single();
+
+  if (error) {
+    await supabase.storage.from(PDF_EXPORT_BUCKET).remove([storagePath]);
+    throw error;
+  }
+  return mapPdfExportRecord(data);
+}
+
+export async function getPdfExportHistory(userId: string, limit = 30): Promise<PdfExportRecord[]> {
+  if (!userId || !isSupabaseConfigured) return [];
+  const safeLimit = Math.min(50, Math.max(1, limit));
+  const { data, error } = await supabase
+    .from('pdf_export_history')
+    .select('id, quiz_id, quiz_title, question_count, file_name, storage_path, file_size_bytes, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(safeLimit);
+  if (error) throw error;
+  return (data || []).map(mapPdfExportRecord);
+}
+
+export async function getPdfExportSignedUrl(userId: string, record: PdfExportRecord): Promise<string> {
+  if (!userId || !isSupabaseConfigured || !record.storagePath.startsWith(`${userId}/`)) {
+    throw new Error('This PDF download is not available for the current account.');
+  }
+  const { data, error } = await supabase.storage.from(PDF_EXPORT_BUCKET).createSignedUrl(record.storagePath, 120);
+  if (error || !data?.signedUrl) throw error || new Error('PDF download link could not be created.');
+  return data.signedUrl;
 }
 
 // ---------------- LOCAL STORAGE FALLBACK HELPERS ----------------

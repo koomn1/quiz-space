@@ -157,3 +157,17 @@
 - [x] 150. Build a responsive Arabic Institution Workspace for owners to manage identity, teachers, seats, and institution status
 - [x] 151. Add an admin activation flow that converts an approved Diamond request into an active institution owner workspace
 - [x] 152. Add unit and integration coverage for institution authorization, seat limits, and member lifecycle; verify published workflow
+
+- [x] 153. Diagnose the 32.82MB PDF export issue caused by image-based rendering of text-only quizzes
+- [x] 154. Implement true vector/text PDF export for text-only quizzes to reduce file size below 5MB
+- [x] 155. Optimize image compression and resolution for quizzes that actually contain images
+- [x] 156. Verify PDF export size, text readability, and mobile download compatibility
+
+- [x] 157. Add a user-scoped export-history record and private PDF storage flow with strict ownership checks
+- [x] 158. Record successful PDF exports and preserve the generated vector PDF for later download
+- [x] 159. Add an authenticated Export History section to the user dashboard with responsive download actions
+- [x] 160. Add regression coverage for export-history ownership, persistence, redownload behavior, and mobile layout
+
+- [x] 161. Audit the existing Quiz Space authentication modal and preserve all current auth flows
+- [x] 162. Redesign the Quiz Space login/register experience with a cleaner Arabic RTL visual system and responsive states
+- [x] 163. Verify login, Google OAuth wiring, registration, MFA, theme contrast, focus states, and mobile layout (password reset is not exposed by the existing auth contract)

@@ -194,6 +194,17 @@ export interface RewardLedgerPage {
   hasMore: boolean;
 }
 
+export interface PdfExportRecord {
+  id: string;
+  quizId?: string;
+  quizTitle: string;
+  questionCount: number;
+  fileName: string;
+  storagePath: string;
+  fileSizeBytes: number;
+  createdAt: string;
+}
+
 export interface WeeklyTask {
   id: string;
   name: string;

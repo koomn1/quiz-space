@@ -1,6 +1,6 @@
 import CosmicLoader from "../components/CosmicLoader";
 import React from "react";
-import { Quiz, QuizCompletion, UserStats, getUserRoleAndPlan } from "../types";
+import { PdfExportRecord, Quiz, QuizCompletion, UserStats, getUserRoleAndPlan } from "../types";
 import {
   Award,
   Globe,
@@ -32,8 +32,9 @@ import {
   Check,
   Search,
   Loader2,
+  Download,
 } from "lucide-react";
-import { activateRewardFrame, deactivateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems } from "../lib/db";
+import { activateRewardFrame, deactivateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems, getPdfExportHistory, getPdfExportSignedUrl } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
 import { getApiUrl } from "../lib/origin";
 import { supabase } from "../lib/supabaseClient";
@@ -63,6 +64,24 @@ const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
   'profile-cover-2': { background: '#09090b' },
   'profile-cover-3': { background: '#09090b' },
 };
+
+function formatPdfSize(bytes: number, lang: "ar" | "en") {
+  if (!bytes) return lang === "ar" ? "غير معروف" : "Unknown size";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function formatPdfDate(value: string, lang: "ar" | "en") {
+  try {
+    return new Intl.DateTimeFormat(lang === "ar" ? "ar-EG" : "en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(value));
+  } catch {
+    return value;
+  }
+}
 
 interface UserProfileProps {
   profileId: string;
@@ -283,8 +302,12 @@ export default function UserProfile({
   const [coverText, setCoverText] = React.useState("");
 
   const [activeTab, setActiveTab] = React.useState<
-    "overview" | "quizzes" | "achievements"
+    "overview" | "quizzes" | "achievements" | "exports"
   >("overview");
+  const [pdfExports, setPdfExports] = React.useState<PdfExportRecord[]>([]);
+  const [isPdfExportsLoading, setIsPdfExportsLoading] = React.useState(false);
+  const [pdfExportsError, setPdfExportsError] = React.useState("");
+  const [activePdfDownloadId, setActivePdfDownloadId] = React.useState<string | null>(null);
 
   // Trigger follow / followers queries
   const fetchFollowStats = async () => {
@@ -373,6 +396,64 @@ export default function UserProfile({
   React.useEffect(() => {
     fetchFollowStats();
   }, [profileId, currentUserId]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    if (!isOwnProfile || !currentUserId) {
+      setPdfExports([]);
+      setPdfExportsError("");
+      setIsPdfExportsLoading(false);
+      if (activeTab === "exports") setActiveTab("overview");
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setIsPdfExportsLoading(true);
+    setPdfExportsError("");
+    getPdfExportHistory(currentUserId)
+      .then((records) => {
+        if (!cancelled) setPdfExports(records);
+      })
+      .catch((error) => {
+        console.error("Error fetching PDF export history", error);
+        if (!cancelled) {
+          setPdfExportsError(isAr ? "تعذر تحميل سجل التصدير حالياً." : "Export history could not be loaded right now.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsPdfExportsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId, isAr, isOwnProfile]);
+
+  const handleDownloadPdfExport = async (record: PdfExportRecord) => {
+    if (!isOwnProfile || !currentUserId) return;
+    setActivePdfDownloadId(record.id);
+    try {
+      const signedUrl = await getPdfExportSignedUrl(currentUserId, record);
+      const response = await fetch(signedUrl);
+      if (!response.ok) throw new Error(`Download failed with status ${response.status}`);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = record.fileName;
+      anchor.rel = "noopener";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (error) {
+      console.error("Error downloading exported PDF", error);
+      showToast("error", isAr ? "تعذر إعادة تنزيل الاختبار حالياً." : "This exported quiz could not be downloaded right now.");
+    } finally {
+      setActivePdfDownloadId(null);
+    }
+  };
 
   React.useEffect(() => {
     async function loadStats() {
@@ -1954,10 +2035,10 @@ export default function UserProfile({
         {/* Right Column (Overview, Quizzes, Achievements Tabs) */}
         <div className="lg:col-span-8 space-y-8">
           {/* Navigation Profile Tabs */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800 p-1 gap-2">
+          <div className="flex overflow-x-auto border-b border-slate-200 dark:border-slate-800 p-1 gap-2 scrollbar-hide">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors ${
+              className={`min-w-max px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors ${
                 activeTab === "overview"
                   ? "bg-primary text-white shadow-md shadow-primary/10"
                   : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50"
@@ -1967,7 +2048,7 @@ export default function UserProfile({
             </button>
             <button
               onClick={() => setActiveTab("quizzes")}
-              className={`px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors ${
+              className={`min-w-max px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors ${
                 activeTab === "quizzes"
                   ? "bg-primary text-white shadow-md shadow-primary/10"
                   : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50"
@@ -1977,7 +2058,7 @@ export default function UserProfile({
             </button>
             <button
               onClick={() => setActiveTab("achievements")}
-              className={`px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors ${
+              className={`min-w-max px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors ${
                 activeTab === "achievements"
                   ? "bg-primary text-white shadow-md shadow-primary/10"
                   : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50"
@@ -1985,6 +2066,19 @@ export default function UserProfile({
             >
               {isAr ? "لوحة شارات التوثيق" : "Verification Badges"}
             </button>
+            {isOwnProfile && (
+              <button
+                onClick={() => setActiveTab("exports")}
+                className={`min-w-max px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors flex items-center gap-1.5 ${
+                  activeTab === "exports"
+                    ? "bg-primary text-white shadow-md shadow-primary/10"
+                    : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                {isAr ? "سجل التصدير" : "Export History"}
+              </button>
+            )}
           </div>
 
           {activeTab === "overview" && (
@@ -2180,6 +2274,99 @@ export default function UserProfile({
                     {isAr
                       ? "هذا المستخدم لم يقم بصياغة أو نشر أي اختبارات علمية مميزة حتى اللحظة."
                       : "This user has not authored or published any educational quizzes yet."}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "exports" && isOwnProfile && (
+            <div className="space-y-6 animate-fade-in">
+              <section className="relative overflow-hidden rounded-3xl border border-indigo-200/70 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-5 shadow-sm dark:border-indigo-500/20 dark:from-indigo-950/50 dark:via-slate-900 dark:to-violet-950/40 md:p-7">
+                <div className="pointer-events-none absolute -left-10 -top-12 h-36 w-36 rounded-full bg-violet-400/20 blur-3xl" />
+                <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
+                      <FileText className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                        {isAr ? "ملفات الاختبارات المصدّرة" : "Exported Quiz Files"}
+                      </h3>
+                      <p className="mt-1 max-w-xl text-xs font-medium leading-6 text-slate-500 dark:text-slate-400">
+                        {isAr
+                          ? "كل ملف PDF تصدّره من حسابك يُحفظ هنا بشكل خاص لتعيد تنزيله بسهولة من أي جهاز."
+                          : "Every PDF exported from your account is stored privately so you can download it again from any device."}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-fit rounded-full border border-primary/15 bg-white/80 px-3 py-1.5 text-xs font-black text-primary dark:bg-slate-950/40">
+                    {pdfExports.length} {isAr ? "ملف محفوظ" : "saved files"}
+                  </div>
+                </div>
+              </section>
+
+              {isPdfExportsLoading ? (
+                <div className="space-y-3" aria-live="polite" aria-busy="true">
+                  {[1, 2, 3].map((item) => (
+                    <div key={item} className="h-24 animate-pulse rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900/70" />
+                  ))}
+                </div>
+              ) : pdfExportsError ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center dark:border-rose-900/50 dark:bg-rose-950/20">
+                  <FileText className="mx-auto mb-3 h-8 w-8 text-rose-500" />
+                  <p className="text-sm font-bold text-rose-700 dark:text-rose-300">{pdfExportsError}</p>
+                </div>
+              ) : pdfExports.length > 0 ? (
+                <div className="space-y-3">
+                  {pdfExports.map((record) => {
+                    const isDownloading = activePdfDownloadId === record.id;
+                    return (
+                      <article key={record.id} className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-primary/30 dark:border-slate-800 dark:bg-slate-900/80 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/15">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="truncate text-sm font-black text-slate-900 dark:text-white" title={record.quizTitle}>
+                              {record.quizTitle}
+                            </h4>
+                            <p className="mt-1 truncate text-[11px] font-medium text-slate-500 dark:text-slate-400" title={record.fileName}>
+                              {record.fileName}
+                            </p>
+                            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-bold text-slate-400">
+                              <span>{formatPdfSize(record.fileSizeBytes, lang)}</span>
+                              <span aria-hidden="true">•</span>
+                              <span>{record.questionCount} {isAr ? "سؤال" : "questions"}</span>
+                              <span aria-hidden="true">•</span>
+                              <span>{formatPdfDate(record.createdAt, lang)}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadPdfExport(record)}
+                          disabled={isDownloading}
+                          aria-label={isAr ? `إعادة تنزيل ${record.quizTitle}` : `Download ${record.quizTitle} again`}
+                          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-white shadow-md shadow-primary/15 transition-all hover:bg-primary-hover active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 sm:w-auto"
+                        >
+                          {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                          {isDownloading ? (isAr ? "جاري التجهيز..." : "Preparing...") : (isAr ? "إعادة التنزيل" : "Download again")}
+                        </button>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50/70 p-10 text-center dark:border-slate-700 dark:bg-slate-900/40">
+                  <FileText className="mx-auto mb-4 h-10 w-10 text-slate-300 dark:text-slate-600" />
+                  <h4 className="text-sm font-black text-slate-800 dark:text-white">
+                    {isAr ? "لا توجد ملفات PDF محفوظة بعد" : "No saved PDF exports yet"}
+                  </h4>
+                  <p className="mx-auto mt-2 max-w-md text-xs font-medium leading-6 text-slate-500 dark:text-slate-400">
+                    {isAr
+                      ? "بعد تصدير أي اختبار، سيظهر هنا تلقائياً مع زر إعادة التنزيل."
+                      : "After you export a quiz, it will appear here with a quick download button."}
                   </p>
                 </div>
               )}

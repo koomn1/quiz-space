@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { Chrome, X, Mail, Lock, User as UserIcon, Sparkles, ShieldCheck, ArrowRight, RefreshCw } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { AlertCircle, ArrowRight, Check, Chrome, Lock, Mail, RefreshCw, ShieldCheck, Sparkles, User as UserIcon, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabaseClient';
 import { EmailVerificationStep } from './EmailVerificationStep';
 import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
 
@@ -14,7 +13,7 @@ interface AuthModalProps {
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login', onSuccess }) => {
   const { signIn, signInWithGoogle, signUp, verifyMfaCode } = useAuth();
-  
+
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -23,90 +22,95 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-
-  // Sync mode when initialMode changes or modal reopens
-  React.useEffect(() => {
-    if (isOpen) {
-      setMode(initialMode);
-      setError('');
-      setSuccess('');
-      setStep('form');
-    }
-  }, [isOpen, initialMode]);
-
-  // Lock background scroll when AuthModal is open
-  React.useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
-
-  // Two-Step Login MFA state
   const [step, setStep] = useState<'form' | 'email' | '2fa'>('form');
   const [verificationCode, setVerificationCode] = useState('');
   const [isVerifying2FA, setIsVerifying2FA] = useState(false);
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!isOpen) return;
+    setMode(initialMode);
+    setError('');
+    setSuccess('');
+    setStep('form');
+    setVerificationCode('');
+  }, [isOpen, initialMode]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  const handleAuth = async (event: React.FormEvent) => {
+    event.preventDefault();
     setLoading(true);
     setError('');
     setSuccess('');
 
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPassword = password;
     const cleanName = username.trim();
 
     try {
       if (mode === 'register') {
         if (!cleanName) {
-          setError('عذراً! يرجى إدخال اسم مستخدم مميز للبدء.');
+          setError('أدخل اسم المستخدم للبدء.');
           setLoading(false);
           return;
         }
-        if (!isStrongPassword(cleanPassword)) {
+        if (!isStrongPassword(password)) {
           setError(passwordRequirementMessage('ar'));
           setLoading(false);
           return;
         }
-        await signUp(cleanEmail, cleanPassword, cleanName);
-        setSuccess('تم إرسال رابط التأكيد إلى بريدك الإلكتروني! يرجى التحقق من بريدك والضغط على الرابط لتفعيل الحساب.');
+
+        await signUp(cleanEmail, password, cleanName);
+        setSuccess('تم إرسال رابط التأكيد إلى بريدك الإلكتروني. افتح الرسالة لتفعيل حسابك.');
         setStep('email');
       } else {
-        const result = await signIn(cleanEmail, cleanPassword);
+        const result = await signIn(cleanEmail, password);
         if (result.status === 'MFA_REQUIRED') {
           setStep('2fa');
           setLoading(false);
           return;
         }
-        if (onSuccess) onSuccess(null);
+        onSuccess?.(null);
         onClose();
       }
     } catch (err: any) {
       if (err?.code === 'EMAIL_NOT_CONFIRMED') {
         setStep('email');
       } else {
-        setError(err.message || 'حدث خطأ غير متوقع أثناء عملية الدخول');
+        setError(err.message || 'حدث خطأ غير متوقع أثناء تسجيل الدخول.');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMfaVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleMfaVerify = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (verificationCode.length !== 6) {
+      setError('أدخل رمز التحقق المكوّن من 6 أرقام.');
+      return;
+    }
+
     setIsVerifying2FA(true);
     setError('');
     try {
       await verifyMfaCode(verificationCode);
-      if (onSuccess) onSuccess(null);
+      onSuccess?.(null);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'رمز التحقق غير صحيح.');
+      setError(err.message || 'رمز التحقق غير صحيح أو منتهي الصلاحية.');
     } finally {
       setIsVerifying2FA(false);
     }
@@ -123,224 +127,274 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
     }
   };
 
+  const switchMode = () => {
+    setMode((current) => current === 'login' ? 'register' : 'login');
+    setError('');
+    setSuccess('');
+    setStep('form');
+    setVerificationCode('');
+  };
+
   if (!isOpen) return null;
 
+  const isRegister = mode === 'register';
+  const isBusy = loading || googleLoading;
+
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 md:p-8">
-      {/* Animated Backdrop */}
-      <div 
-        className="absolute inset-0 bg-slate-950/40 backdrop-blur-xl transition-opacity animate-in fade-in duration-500"
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-3 sm:p-6" dir="rtl">
+      <button
+        type="button"
+        aria-label="إغلاق نافذة تسجيل الدخول"
+        className="absolute inset-0 cursor-default bg-slate-950/60 backdrop-blur-md motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200"
         onClick={onClose}
       />
-      
-      {/* Modal Container */}
-      <div 
-        className="relative w-full max-w-md bg-white dark:bg-[#0c071e]/95 border border-slate-200 dark:border-white/10 rounded-[32px] shadow-[0_30px_70px_-20px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-15px_rgba(155,81,224,0.25)] overflow-hidden animate-in zoom-in-95 fade-in duration-300"
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-dialog-title"
+        className="relative my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-white/80 bg-white shadow-[0_30px_100px_-35px_rgba(15,23,42,0.75)] motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200 dark:border-slate-700 dark:bg-slate-950 sm:max-h-[calc(100dvh-3rem)]"
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="relative p-8">
-          {/* Top Bar with Logo and Close */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 mb-1 px-2 py-1 bg-violet-500/10 rounded-full w-fit border border-violet-500/20">
-                <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-                <span className="text-[10px] font-bold text-violet-600 dark:text-violet-300 uppercase tracking-wider">كوزمو كويز • AIQuiz</span>
+        <section className="relative hidden w-[42%] shrink-0 overflow-hidden bg-[#0a1022] p-8 text-white lg:flex lg:flex-col lg:justify-between">
+          <div className="pointer-events-none absolute -left-24 top-12 h-64 w-64 rounded-full border border-cyan-200/10" />
+          <div className="pointer-events-none absolute -left-10 top-28 h-44 w-44 rounded-full border border-violet-200/15" />
+          <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-600/20 blur-[90px]" />
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 shadow-lg shadow-violet-950/40">
+              <Sparkles className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm font-black">Quiz Space</p>
+              <p className="text-[10px] font-bold text-cyan-100/60">تعلم أذكى، خطوة بخطوة</p>
+            </div>
+          </div>
+
+          <div className="relative z-10 py-10">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black text-cyan-100/80">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" aria-hidden="true" />
+              مساحة تعلم شخصية
+            </span>
+            <h3 className="mt-5 text-4xl font-black leading-[1.25] tracking-tight">
+              كل سؤال يقرّبك من <span className="bg-gradient-to-l from-cyan-200 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">هدفك.</span>
+            </h3>
+            <p className="mt-5 text-sm leading-7 text-slate-300/75">
+              احفظ اختباراتك، تابع تقدمك، وخلي أدوات الذكاء الاصطناعي تساعدك تذاكر بوضوح أكبر.
+            </p>
+          </div>
+
+          <div className="relative z-10 grid grid-cols-3 gap-2.5">
+            {[
+              { icon: Sparkles, label: 'توليد ذكي' },
+              { icon: ShieldCheck, label: 'تقدم محفوظ' },
+              { icon: Check, label: 'نتائج واضحة' },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.055] p-3">
+                <Icon className="h-4 w-4 text-cyan-200" aria-hidden="true" />
+                <p className="mt-2 text-[10px] font-bold text-white/75">{label}</p>
               </div>
-              <h2 className="text-2xl font-black bg-gradient-to-r from-slate-900 via-primary to-violet-950 dark:from-white dark:via-purple-300 dark:to-slate-300 bg-clip-text text-transparent leading-none">
+            ))}
+          </div>
+        </section>
+
+        <section className="min-w-0 flex-1 bg-white p-5 sm:p-8 dark:bg-slate-950">
+          <div className="mb-7 flex items-start justify-between gap-4">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-[10px] font-black text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                {step === 'email' ? 'تأكيد البريد' : step === '2fa' ? 'حماية الحساب' : 'أهلاً بك في Quiz Space'}
+              </div>
+              <h2 id="auth-dialog-title" className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl dark:text-white">
                 {step === 'email'
-                  ? 'تم إرسال رابط التأكيد'
+                  ? 'تفقد بريدك الإلكتروني'
                   : step === '2fa'
-                    ? 'خطوة التحقق الإضافية'
-                    : (mode === 'login' ? 'مرحباً بعودتك' : 'انضم إلينا الآن')}
+                    ? 'تأكيد إضافي للحساب'
+                    : (isRegister ? 'أنشئ حسابك' : 'أهلاً بعودتك')}
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-medium">
+              <p className="mt-2 max-w-md text-xs leading-6 text-slate-500 sm:text-sm dark:text-slate-400">
                 {step === 'email'
-                  ? 'تم إرسال رابط التفعيل إلى بريدك الإلكتروني. اضغط على الرابط في رسالة البريد لتفعيل حسابك ثم عُد لتسجيل الدخول.'
+                  ? 'أرسلنا رابط التفعيل إلى بريدك. افتح الرسالة لتأكيد الحساب ثم عد إلى المنصة.'
                   : step === '2fa'
-                    ? 'حسابك محمي بالمصادقة الثنائية. الرجاء إدخال الرمز السري من تطبيق التحقق.'
-                    : (mode === 'login' ? 'سجل دخولك لمتابعة منجزاتك التعليمية فوراً' : 'أنشئ حساباً تفاعلياً جديداً لبدء المسيرة اليوم')}
+                    ? 'أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة للمتابعة بأمان.'
+                    : (isRegister ? 'ابدأ مساحة تعلمك واحفظ تقدمك من أول اختبار.' : 'سجّل الدخول لمتابعة اختباراتك وتقدمك.')}
               </p>
             </div>
-            <button 
-              onClick={onClose} 
-              className="p-2.5 hover:bg-slate-100 dark:hover:bg-white/5 rounded-2xl transition-colors text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-slate-400 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 dark:hover:bg-slate-800 dark:hover:text-white"
+              aria-label="إغلاق"
             >
-              <X className="w-4 h-4" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
 
           {step === 'email' ? (
-            <div className="space-y-6 py-4 text-center">
-              <div className="w-16 h-16 bg-violet-500/10 border border-violet-500/20 rounded-full flex items-center justify-center mx-auto text-primary">
-                <Mail className="w-8 h-8 animate-bounce" />
+            <div className="space-y-6 py-3 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                <Mail className="h-8 w-8 motion-safe:animate-pulse" aria-hidden="true" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white">تفقد بريدك الإلكتروني</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-                  لقد أرسلنا رابط تأكيد الحساب إلى <span className="font-bold text-primary">{email}</span>. يرجى فتح البريد والضغط على الرابط.
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">تفعيل الحساب</h3>
+                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-500 dark:text-slate-400">
+                  أرسلنا رابط تأكيد الحساب إلى <span className="break-all font-black text-violet-700 dark:text-violet-300" dir="ltr">{email}</span>.
                 </p>
               </div>
-              {success && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                  {success}
-                </div>
-              )}
+              {success && <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">{success}</div>}
               <button
                 type="button"
-                onClick={() => {
-                  setStep('form');
-                  setSuccess('');
-                }}
-                className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3.5 rounded-2xl transition-all"
+                onClick={() => { setStep('form'); setSuccess(''); }}
+                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
               >
                 العودة لتسجيل الدخول
               </button>
             </div>
           ) : step === '2fa' ? (
-            <form onSubmit={handleMfaVerify} className="space-y-6">
-              <div className="space-y-4">
-                <div className="relative group">
-                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <input
-                    type="text"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
-                    maxLength={6}
-                    required
-                    placeholder="000000"
-                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 text-center text-lg font-mono font-black tracking-[0.5em] text-slate-800 dark:text-white outline-none focus:ring-4 focus:ring-primary/15 focus:border-primary transition-all"
-                  />
-                </div>
-
-                {error && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-2xl text-xs font-bold text-red-400 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 shrink-0 text-red-400" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isVerifying2FA || verificationCode.length !== 6}
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isVerifying2FA ? <RefreshCw className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-                  <span>تأكيد الرمز</span>
-                </button>
+            <form onSubmit={handleMfaVerify} className="space-y-5" noValidate>
+              <label htmlFor="auth-mfa-code" className="sr-only">رمز المصادقة الثنائية</label>
+              <div className="relative">
+                <ShieldCheck className="pointer-events-none absolute inset-y-0 right-4 my-auto h-5 w-5 text-slate-400" aria-hidden="true" />
+                <input
+                  id="auth-mfa-code"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  value={verificationCode}
+                  onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, ''))}
+                  maxLength={6}
+                  required
+                  autoFocus
+                  placeholder="000000"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'auth-error' : undefined}
+                  className="min-h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pr-12 text-center font-mono text-2xl font-black tracking-[0.4em] text-slate-950 outline-none transition duration-200 placeholder:text-slate-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  dir="ltr"
+                />
               </div>
+              {error && <AuthError message={error} />}
+              <button
+                type="submit"
+                disabled={isVerifying2FA || verificationCode.length !== 6}
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+              >
+                {isVerifying2FA ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <ShieldCheck className="h-4 w-4" aria-hidden="true" />}
+                تأكيد الرمز والمتابعة
+              </button>
             </form>
           ) : (
-            <form onSubmit={handleAuth} className="space-y-5">
-              <div className="space-y-4">
-                {mode === 'register' && (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">الاسم الكامل</label>
-                    <div className="relative group">
-                      <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                        <UserIcon className="w-5 h-5" />
-                      </div>
-                      <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                        placeholder="أحمد محمد..."
-                        className="w-full pl-4 pr-11 py-3.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-primary/15 focus:border-primary text-sm transition-all dark:text-white outline-none font-medium placeholder:text-slate-400/80"
-                      />
-                    </div>
-                  </div>
-                )}
+            <form onSubmit={handleAuth} className="space-y-4" noValidate>
+              {isRegister && (
+                <AuthField label="الاسم الكامل" htmlFor="auth-username" icon={<UserIcon className="h-4.5 w-4.5" aria-hidden="true" />}>
+                  <input
+                    id="auth-username"
+                    type="text"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    required
+                    autoComplete="name"
+                    placeholder="أحمد محمد"
+                    className={fieldClassName}
+                  />
+                </AuthField>
+              )}
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">البريد الإلكتروني</label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                      <Mail className="w-5 h-5" />
-                    </div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      placeholder="you@example.com"
-                      className="w-full pl-4 pr-11 py-3.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-primary/15 focus:border-primary text-sm transition-all dark:text-white outline-none font-medium placeholder:text-slate-400/80"
-                    />
-                  </div>
-                </div>
+              <AuthField label="البريد الإلكتروني" htmlFor="auth-email" icon={<Mail className="h-4.5 w-4.5" aria-hidden="true" />}>
+                <input
+                  id="auth-email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'auth-error' : undefined}
+                  className={fieldClassName}
+                  dir="ltr"
+                />
+              </AuthField>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">كلمة المرور</label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                      <Lock className="w-5 h-5" />
-                    </div>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      placeholder="••••••••"
-                      autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                      minLength={mode === 'register' ? 10 : 1}
-                      aria-describedby={mode === 'register' ? 'signup-password-help' : undefined}
-                      className="w-full pl-4 pr-11 py-3.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-primary/15 focus:border-primary text-sm transition-all dark:text-white outline-none font-medium placeholder:text-slate-400/80"
-                    />
-                  </div>
-                  {mode === 'register' && <p id="signup-password-help" className="px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">استخدم 10 أحرف على الأقل، مع حرف صغير وحرف كبير ورقم واحد.</p>}
-                </div>
+              <AuthField label="كلمة المرور" htmlFor="auth-password" icon={<Lock className="h-4.5 w-4.5" aria-hidden="true" />}>
+                <input
+                  id="auth-password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  autoComplete={isRegister ? 'new-password' : 'current-password'}
+                  minLength={isRegister ? 10 : 1}
+                  aria-describedby={isRegister ? 'auth-password-help' : error ? 'auth-error' : undefined}
+                  placeholder="••••••••"
+                  className={fieldClassName}
+                  dir="ltr"
+                />
+              </AuthField>
+              {isRegister && <p id="auth-password-help" className="-mt-1 px-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">{passwordRequirementMessage('ar')}</p>}
 
-                {error && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-2xl text-xs font-bold text-red-400 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 shrink-0 text-red-400" />
-                    <span>{error}</span>
-                  </div>
-                )}
+              {error && <AuthError message={error} />}
+              {success && <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">{success}</div>}
 
-                {success && (
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs font-bold text-emerald-400 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400" />
-                    <span>{success}</span>
-                  </div>
-                )}
+              <button
+                type="submit"
+                disabled={isBusy}
+                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-950/15 transition-all duration-200 hover:bg-violet-700 hover:shadow-violet-700/20 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+              >
+                {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />}
+                {isRegister ? 'إنشاء الحساب' : 'تسجيل الدخول'}
+              </button>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
-                  <span>{mode === 'login' ? 'دخول سريع' : 'بدء التعلم الآن'}</span>
-                </button>
-                <div className="flex items-center gap-3 py-1" aria-hidden="true"><span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" /><span className="text-[10px] font-bold text-slate-400">أو</span><span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" /></div>
-                <button
-                  type="button"
-                  onClick={() => void handleGoogleSignIn()}
-                  disabled={loading || googleLoading}
-                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
-                >
-                  {googleLoading ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Chrome className="h-5 w-5 text-red-500" />}
-                  <span>{googleLoading ? 'جارٍ فتح Google...' : 'المتابعة باستخدام Google'}</span>
-                </button>
+              <div className="flex items-center gap-3 py-1" aria-hidden="true">
+                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                <span className="text-[10px] font-black text-slate-400">أو</span>
+                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
               </div>
 
-              <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => void handleGoogleSignIn()}
+                disabled={isBusy}
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
+              >
+                {googleLoading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <Chrome className="h-5 w-5 text-red-500" aria-hidden="true" />}
+                {googleLoading ? 'جارٍ فتح Google...' : 'المتابعة باستخدام Google'}
+              </button>
+
+              <div className="mt-3 border-t border-slate-100 pt-4 text-center dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode(mode === 'login' ? 'register' : 'login');
-                    setError('');
-                    setSuccess('');
-                  }}
-                  className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-primary transition-colors"
+                  onClick={switchMode}
+                  className="min-h-11 px-3 text-xs font-black text-violet-700 transition-colors duration-200 hover:text-violet-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30 dark:text-violet-300 dark:hover:text-violet-200"
                 >
-                  {mode === 'login' ? 'ليس لديك حساب؟ سجل الآن مجاناً' : 'لديك حساب بالفعل؟ سجل دخولك'}
+                  {isRegister ? 'لديك حساب بالفعل؟ سجّل دخولك' : 'مستخدم جديد؟ أنشئ حسابك الآن'}
                 </button>
               </div>
             </form>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );
 };
+
+const fieldClassName = 'min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-4 pr-11 text-sm font-medium text-slate-950 outline-none transition duration-200 placeholder:text-slate-400 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500';
+
+function AuthField({ label, htmlFor, icon, children }: { label: string; htmlFor: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <label htmlFor={htmlFor} className="block px-1 text-xs font-black text-slate-700 dark:text-slate-300">{label}</label>
+      <div className="relative">
+        <span className="pointer-events-none absolute inset-y-0 right-3.5 my-auto flex h-5 items-center text-slate-400">{icon}</span>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function AuthError({ message }: { message: string }) {
+  return (
+    <div id="auth-error" role="alert" aria-live="assertive" className="flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold leading-5 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <span>{message}</span>
+    </div>
+  );
+}

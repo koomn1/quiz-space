@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier } from '../lib/db';
+import { getQuizById, submitQuizAttempt, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { getApiUrl } from '../lib/origin';
@@ -18,6 +18,7 @@ import { playNotificationSound } from '../lib/sound';
 import QuizDetailedReport from './QuizDetailedReport';
 import QuizCountdownTimer from './QuizCountdownTimer';
 import { playChimeSound } from '../lib/chime';
+import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
 
 import { translations } from '../lib/i18n';
 
@@ -679,86 +680,29 @@ export default function QuizResolver({
   // Export a clean question sheet: answers, scores, explanations, and review state are never included.
   const handleExportPDF = async () => {
     setIsGeneratingPdf(true);
-    let renderElement: HTMLElement | null = null;
     try {
-      const { default: html2canvas } = await import('html2canvas');
-      const jspdfModule = await import('jspdf');
-      const JsPDF = jspdfModule.jsPDF;
+      const bytes = await createQuizPdfBytes(quiz);
+      const fileName = getQuizPdfFileName(quiz);
+      const shouldPersist = Boolean(userId && userId !== 'guest' && userId !== 'anonymous');
+      let historySaved = false;
 
-      const escapeHtml = (value: unknown) => String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-
-      const optionMarkup = (q: typeof quiz.questions[number]) => {
-        if (q.type === 'essay') {
-          return '<div style="margin-top:12px;border:1px solid #cbd5e1;border-radius:8px;min-height:92px;padding:12px;color:#64748b;font-size:12px">مساحة الإجابة:</div>';
+      if (shouldPersist) {
+        try {
+          await savePdfExport(userId, quiz, bytes, fileName);
+          historySaved = true;
+        } catch (historyError) {
+          console.warn('PDF was generated but export history could not be saved:', historyError);
         }
-        const options = q.type === 'mcq' ? q.options : ['صح', 'خطأ'];
-        return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px">${options.map((option) => `
-          <div style="display:flex;align-items:center;gap:8px;border:1px solid #cbd5e1;border-radius:8px;padding:10px;color:#334155;font-size:12px;min-height:18px">
-            <span style="display:inline-block;width:13px;height:13px;border:1.5px solid #64748b;border-radius:50%;flex:0 0 auto"></span>
-            <span>${escapeHtml(option)}</span>
-          </div>`).join('')}</div>`;
-      };
-
-      const questionsMarkup = quiz.questions.map((q, index) => `
-        <section style="border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:14px;break-inside:avoid">
-          <h2 style="font-size:14px;line-height:1.8;margin:0;color:#0f172a;font-weight:700">س ${index + 1}: ${escapeHtml(q.text)}</h2>
-          ${optionMarkup(q)}
-        </section>`).join('');
-
-      renderElement = document.createElement('div');
-      renderElement.setAttribute('dir', 'rtl');
-      renderElement.style.cssText = 'position:fixed;top:0;left:0;width:794px;background:#ffffff;color:#0f172a;padding:42px;box-sizing:border-box;font-family:Arial,Tahoma,sans-serif;z-index:-1000;pointer-events:none;';
-      renderElement.innerHTML = `
-        <header style="border-bottom:2px solid #7c3aed;padding-bottom:18px;margin-bottom:24px;text-align:right">
-          <h1 style="font-size:24px;margin:0 0 6px;color:#6d28d9">منصة Quiz Space</h1>
-          <p style="font-size:11px;color:#64748b;margin:0">ورقة أسئلة للاختبار — بدون حلول أو إجابات</p>
-        </header>
-        <div style="border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;padding:18px;margin-bottom:24px">
-          <h2 style="font-size:19px;margin:0 0 8px;color:#0f172a">${escapeHtml(quiz.title)}</h2>
-          <p style="font-size:12px;line-height:1.8;color:#475569;margin:0">${escapeHtml(quiz.description || '')}</p>
-          <p style="font-size:11px;color:#64748b;margin:12px 0 0">عدد الأسئلة: ${quiz.questions.length} | الاسم: ____________________</p>
-        </div>
-        <main>${questionsMarkup}</main>`;
-      document.body.appendChild(renderElement);
-
-      const canvas = await html2canvas(renderElement, {
-        scale: 1.35,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        width: renderElement.scrollWidth,
-        height: renderElement.scrollHeight,
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.78);
-      const imgWidth = 595.28;
-      const pageHeight = 841.89;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const pdf = new JsPDF('p', 'pt', 'a4');
-      let heightLeft = imgHeight;
-      let position = 0;
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pageHeight;
-      while (heightLeft > 0) {
-        position = -(imgHeight - heightLeft);
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
       }
 
-      const cleanTitle = quiz.title.replace(/[\s\W]+/g, '_') || 'quiz';
-      pdf.save(`اختبار_${cleanTitle}.pdf`);
+      downloadQuizPdfBytes(bytes, fileName);
+      if (shouldPersist && !historySaved) {
+        alert('تم تنزيل ملف PDF، لكن تعذر حفظه في سجل التصدير حالياً. يمكنك المحاولة مرة أخرى لاحقاً.');
+      }
     } catch (err: any) {
       console.error('Error generating clean quiz PDF:', err);
       alert(`حدث خطأ أثناء تصدير الاختبار. يرجى المحاولة مرة أخرى.${err?.message ? `\n(${err.message})` : ''}`);
     } finally {
-      renderElement?.remove();
       setIsGeneratingPdf(false);
     }
   };
