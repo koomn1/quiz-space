@@ -141,3 +141,7 @@
 - [x] 137. Add Playwright E2E coverage for authenticated profile avatar and frame rendering, image load failures, alpha-safe replacement URLs, and refresh persistence
 - [x] 138. Add responsive Playwright coverage for avatar/frame picker touch targets and desktop/mobile layout
 - [x] 139. Run Playwright locally and in CI with a safe authenticated-session strategy, then document any environment limitation
+
+- [x] 140. Add versioned long-lived caching for replacement avatars and frames without serving stale assets after future redesigns
+- [x] 141. Add safe avatar/frame preload and cache-reuse assertions without blocking first paint
+- [ ] 142. Run regression, Playwright network-cache checks, and production verification for avatar/frame caching

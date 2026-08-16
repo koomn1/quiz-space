@@ -15,6 +15,12 @@ const assetNames = [
   'cyber-orbit-transparent.webp',
   'ramadan-green-transparent.webp',
   'school-bus-transparent.webp',
+  'school-stationary-transparent.webp',
+  'star-crown-transparent.webp',
+  'crystal-luxe-transparent.webp',
+  'fire-trail-transparent.webp',
+  'neon-orbit-transparent.webp',
+  'royal-gold-transparent.webp',
 ];
 
 async function expectLoadedImage(page: import('@playwright/test').Page, source: string) {
@@ -38,6 +44,24 @@ test.describe('published profile asset delivery', () => {
     for (const assetName of assetNames) {
       await expectLoadedImage(page, assetName);
     }
+  });
+
+  test('pre-caches every replacement avatar and frame in Cache Storage', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(async () => {
+      if (!('serviceWorker' in navigator)) return;
+      await navigator.serviceWorker.ready;
+    });
+
+    const cachedPaths = await page.evaluate(async () => {
+      if (!('caches' in window)) return [];
+      const cache = await caches.open('quiz-space-profile-assets-v1');
+      const requests = await cache.keys();
+      return requests.map((request) => new URL(request.url).pathname);
+    });
+
+    expect(cachedPaths).toHaveLength(assetNames.length);
+    expect(cachedPaths.every((path) => path.includes('/clean-assets-replacement/'))).toBe(true);
   });
 
 });

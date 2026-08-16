@@ -1,4 +1,5 @@
 import { savePushSubscription } from './db';
+import { registerQuizSpaceServiceWorker } from './serviceWorker';
 
 export async function registerPushNotifications(userId: string): Promise<'granted' | 'denied' | 'default'> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('Notification' in window)) {
@@ -6,9 +7,8 @@ export async function registerPushNotifications(userId: string): Promise<'grante
   }
 
   try {
-    const baseUrl = (import.meta as any).env?.BASE_URL || '/';
-    const serviceWorkerUrl = `${baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`}sw.js`;
-    const registration = await navigator.serviceWorker.register(serviceWorkerUrl, { scope: baseUrl });
+    const registration = await registerQuizSpaceServiceWorker();
+    if (!registration) return 'default';
 
     let permission = Notification.permission;
 
