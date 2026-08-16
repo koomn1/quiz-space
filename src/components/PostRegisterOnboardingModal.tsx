@@ -83,8 +83,8 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
         {/* Top Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-tr from-primary to-purple-500 text-white shadow-lg shadow-primary/20">
-              <Sparkles className="w-6 h-6 animate-pulse" />
+            <div className="p-2.5 w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary/20 to-purple-500/20 text-white shadow-lg shadow-primary/20 border border-white/10 flex items-center justify-center">
+              <img src={`${import.meta.env.BASE_URL || '/'}brand/quizspace-logo-512.webp`} alt="QuizSpace" className="w-full h-full object-contain" />
             </div>
             <div>
               <h2 className="text-xl font-black text-white font-display">
