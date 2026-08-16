@@ -46,22 +46,36 @@ test.describe('published profile asset delivery', () => {
     }
   });
 
-  test('pre-caches every replacement avatar and frame in Cache Storage', async ({ page }) => {
+  test('stores every replacement avatar and frame in Cache Storage for reuse', async ({ page }) => {
     test.setTimeout(180_000);
     await page.goto('/');
 
     await expect.poll(
       () => page.evaluate(async () => {
-        const registrations = 'serviceWorker' in navigator
-          ? await navigator.serviceWorker.getRegistrations()
-          : [];
-        const active = registrations.some((registration) => registration.active?.scriptURL.endsWith('/sw.js'));
-        const cache = 'caches' in window ? await caches.open('quiz-space-profile-assets-v1') : null;
-        const count = cache ? (await cache.keys()).length : 0;
-        return { active, count };
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        return registrations.some((registration) => registration.active?.scriptURL.endsWith('/sw.js'));
       }),
       { timeout: 120_000, intervals: [1_000, 2_000, 5_000] },
-    ).toEqual({ active: true, count: assetNames.length });
+    ).toBe(true);
+
+    await page.reload({ waitUntil: 'networkidle' });
+    await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+
+    const fetchResults = await page.evaluate(async (names) => {
+      return Promise.all(names.map(async (name) => {
+        const response = await fetch(new URL(`clean-assets-replacement/${name}`, location.href), { cache: 'reload' });
+        return response.ok;
+      }));
+    }, assetNames);
+    expect(fetchResults.every(Boolean)).toBe(true);
+
+    await expect.poll(
+      () => page.evaluate(async () => {
+        const cache = await caches.open('quiz-space-profile-assets-v1');
+        return (await cache.keys()).length;
+      }),
+      { timeout: 60_000, intervals: [1_000, 2_000, 5_000] },
+    ).toBe(assetNames.length);
 
     const cachedPaths = await page.evaluate(async () => {
       const cache = await caches.open('quiz-space-profile-assets-v1');
