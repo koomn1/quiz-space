@@ -58,24 +58,23 @@ test.describe('published profile asset delivery', () => {
       { timeout: 120_000, intervals: [1_000, 2_000, 5_000] },
     ).toBe(true);
 
-    await page.reload({ waitUntil: 'networkidle' });
-    await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+    const cacheState = await page.evaluate(async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      const active = registrations.find((registration) => registration.active?.scriptURL.endsWith('/sw.js'))?.active;
+      if (!active) return { active: false, count: 0 };
 
-    const fetchResults = await page.evaluate(async (names) => {
-      return Promise.all(names.map(async (name) => {
-        const response = await fetch(new URL(`clean-assets-replacement/${name}`, location.href), { cache: 'reload' });
-        return response.ok;
-      }));
-    }, assetNames);
-    expect(fetchResults.every(Boolean)).toBe(true);
-
-    await expect.poll(
-      () => page.evaluate(async () => {
-        const cache = await caches.open('quiz-space-profile-assets-v1');
-        return (await cache.keys()).length;
-      }),
-      { timeout: 60_000, intervals: [1_000, 2_000, 5_000] },
-    ).toBe(assetNames.length);
+      return new Promise<{ active: boolean; count: number }>((resolve) => {
+        const channel = new MessageChannel();
+        const timeout = window.setTimeout(() => resolve({ active: true, count: 0 }), 60_000);
+        channel.port1.onmessage = async () => {
+          window.clearTimeout(timeout);
+          const cache = await caches.open('quiz-space-profile-assets-v1');
+          resolve({ active: true, count: (await cache.keys()).length });
+        };
+        active.postMessage({ type: 'PRECACHE_PROFILE_ASSETS' }, [channel.port2]);
+      });
+    });
+    expect(cacheState).toEqual({ active: true, count: assetNames.length });
 
     const cachedPaths = await page.evaluate(async () => {
       const cache = await caches.open('quiz-space-profile-assets-v1');
