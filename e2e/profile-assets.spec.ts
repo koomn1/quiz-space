@@ -40,7 +40,7 @@ async function expectLoadedImage(page: import('@playwright/test').Page, source: 
 
 test.describe('published profile asset delivery', () => {
   test('serves every replacement avatar and frame as a loadable WebP', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('./');
     for (const assetName of assetNames) {
       await expectLoadedImage(page, assetName);
     }
@@ -48,7 +48,7 @@ test.describe('published profile asset delivery', () => {
 
   test('stores every replacement avatar and frame in Cache Storage for reuse', async ({ page }) => {
     test.setTimeout(180_000);
-    await page.goto('/');
+    await page.goto('./');
 
     await expect.poll(
       () => page.evaluate(async () => {
@@ -91,7 +91,7 @@ test.describe('authenticated profile asset persistence', () => {
   test.skip(!profileId, 'Set E2E_PROFILE_ID and PLAYWRIGHT_STORAGE_STATE for the state-changing authenticated profile test.');
 
   test('renders, saves, and restores a selected avatar and frame', async ({ page }) => {
-    await page.goto(`/#/profile/${profileId}`);
+    await page.goto(`./#/profile/${profileId}`);
     await expect(page.getByRole('button', { name: 'تعديل الملف الشامل' })).toBeVisible();
     await page.getByRole('button', { name: 'تعديل الملف الشامل' }).click();
 
@@ -136,7 +136,7 @@ test.describe('mobile profile picker ergonomics', () => {
 
   test('keeps avatar and frame choices at or above the 44px touch target', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`/#/profile/${profileId}`);
+    await page.goto(`./#/profile/${profileId}`);
     await page.getByRole('button', { name: 'تعديل الملف الشامل' }).click();
 
     const avatarButtons = page.getByRole('button', { name: /اختيار أفاتار/ });

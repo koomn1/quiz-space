@@ -21,6 +21,7 @@ export default defineConfig({
     storageState,
     locale: 'ar-EG',
     colorScheme: 'light',
+    serviceWorkers: 'allow',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
