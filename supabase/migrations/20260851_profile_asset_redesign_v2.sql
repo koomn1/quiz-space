@@ -1,15 +1,9 @@
--- Safely update store frame image URLs with unique replacement assets.
--- We temporarily drop or bypass any strict unique constraint on image_url if present, then assign distinct transparent WebPs.
-
+-- Replace broken/latest frame visuals without deleting reward rows or changing ownership.
+-- Only affected frame rows are updated, and every new image_url is unique among active rows.
 UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/nature-leaf-transparent.webp' WHERE id = 'frame_free_1';
 UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/aurora-glass-transparent.webp' WHERE id = 'frame_free_2';
-UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/neon-orbit-transparent.webp' WHERE id = 'frame_neon_orbit';
-UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/nature-leaf-transparent.webp' WHERE id = 'frame_aurora';
-UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/fire-trail-transparent.webp' WHERE id = 'frame_fire';
-UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/crystal-luxe-transparent.webp' WHERE id = 'frame_crystal_luxe';
-UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/star-crown-transparent.webp' WHERE id = 'frame_star_crown';
 UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/galaxy-ring-transparent.webp' WHERE id = 'frame_diamond_comet';
 UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/cyber-orbit-transparent.webp' WHERE id = 'frame_diamond_crown';
 UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/ramadan-green-transparent.webp' WHERE id = 'frame_ramadan_lantern';
 UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/school-bus-transparent.webp' WHERE id = 'frame_back_to_school';
-UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/fire-trail-transparent.webp' WHERE id = 'frame_dragon_spirit';
+UPDATE public.reward_store_items SET image_url = 'clean-assets-replacement/fire-trail-transparent.webp' WHERE id = 'frame_legendary_dragon';

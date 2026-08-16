@@ -124,11 +124,23 @@ export const FRAME_ASSET_OVERRIDES: Record<string, string> = {
   frame_fire: profileAssetUrl('clean-assets-replacement/fire-trail-transparent.webp'),
   frame_crystal_luxe: profileAssetUrl('clean-assets-replacement/crystal-luxe-transparent.webp'),
   frame_star_crown: profileAssetUrl('clean-assets-replacement/star-crown-transparent.webp'),
+  offer_vip_combo: profileAssetUrl('clean-assets-replacement/star-crown-transparent.webp'),
   frame_diamond_comet: profileAssetUrl('clean-assets-replacement/galaxy-ring-transparent.webp'),
   frame_diamond_crown: profileAssetUrl('clean-assets-replacement/cyber-orbit-transparent.webp'),
+  frame_diamond_halo: profileAssetUrl('clean-assets-replacement/galaxy-ring-transparent.webp'),
+  frame_royal_gold: profileAssetUrl('clean-assets-replacement/royal-gold-transparent.webp'),
+  frame_cyber_punk: profileAssetUrl('clean-assets-replacement/cyber-orbit-transparent.webp'),
+  frame_nature_leaf: profileAssetUrl('clean-assets-replacement/nature-leaf-transparent.webp'),
+  frame_galaxy: profileAssetUrl('clean-assets-replacement/galaxy-ring-transparent.webp'),
+  frame_ramadan_gold: profileAssetUrl('clean-assets-replacement/ramadan-green-transparent.webp'),
+  frame_ramadan_green: profileAssetUrl('clean-assets-replacement/ramadan-green-transparent.webp'),
   frame_ramadan_lantern: profileAssetUrl('clean-assets-replacement/ramadan-green-transparent.webp'),
+  frame_school_stationary: profileAssetUrl('clean-assets-replacement/school-stationary-transparent.webp'),
+  frame_school_bus: profileAssetUrl('clean-assets-replacement/school-bus-transparent.webp'),
+  frame_matrix: profileAssetUrl('clean-assets-replacement/cyber-orbit-transparent.webp'),
   frame_back_to_school: profileAssetUrl('clean-assets-replacement/school-bus-transparent.webp'),
   frame_dragon_spirit: profileAssetUrl('clean-assets-replacement/fire-trail-transparent.webp'),
+  frame_legendary_dragon: profileAssetUrl('clean-assets-replacement/fire-trail-transparent.webp'),
 };
 
 export function uniqueProfileFrames<T extends { id?: string | null; image_url?: string | null }>(frames: T[]): T[] {
