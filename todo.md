@@ -13,7 +13,7 @@
 - [ ] Repair quiz creation/extraction feedback, settings persistence, and email-confirmation flows
 - [ ] Improve mobile responsiveness, navigation resilience, code-splitting, and deferred heavy-library loading
 - [x] Run production build, type checks, live browser smoke tests, and publish only verified fixes
-- [ ] Deliver a transparent repair report with verified behavior and remaining external-integration requirements
+- [x] Deliver a transparent repair report with verified behavior and remaining external-integration requirements
 - [x] Replace client-side frame activation with server-verified ownership checks and block unsafe direct frame updates
 - [x] Persist notification preferences in user-scoped database records and apply changes without a page refresh
 - [x] Guard classroom lesson creation against guest writes and duplicate submissions with actionable errors
@@ -129,3 +129,9 @@
 - [x] 129. Run authenticated profile avatar/frame select-save-refresh smoke test and document any session limitation
 
 - [x] 130. Diagnose and fix the published profile-route recovery boundary after deterministic asset deployment
+
+- [ ] 131. Roll back only the latest avatar/frame visual rollout while preserving PDF extraction, persistence, and React stability fixes
+- [ ] 132. Remove duplicate-looking avatar entries and the broken/white-square frame assets from the production catalog
+- [ ] 133. Generate a distinct multi-pose cartoon avatar set and new transparent circular frame set
+- [ ] 134. Audit alpha transparency, circular fit, uniqueness, and loadable URLs for every replacement asset
+- [ ] 135. Update profile asset mappings, fallbacks, tests, and production verification for the replacement set

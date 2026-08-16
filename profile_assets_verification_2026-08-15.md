@@ -42,3 +42,24 @@ Save smoke test result: the save action completed and returned to the profile vi
 
 
 Refresh persistence result: after a full cache-busted reload and synchronization, the authenticated profile reopened without recovery and still displayed both the football avatar and deterministic diamond-comet frame. The selected values survived the refresh exactly as saved. This completes the select → save → refresh smoke test without buying, changing points, or logging out.
+
+
+Follow-up visual review on 2026-08-16: the authenticated profile route opened successfully, but the first two observations were still inside the account synchronization screen (68% progress), so the active frame was not yet visually judged. No profile data was changed during this review.
+
+
+Follow-up frame review: after synchronization, the live profile currently showed `frame-diamond-halo.webp` around the avatar, with a visibly circular fit and no broken-image icon. The editor catalog exposes 14 frame choices, including two free frames, legacy-looking catalog entries, and the two deterministic diamond assets. A deeper viewport inspection of the frame grid is still needed before judging consistency across all choices.
+
+
+Frame grid inspection on 2026-08-16: the active `frame-diamond-halo.webp` loads at 158×158 in the profile overlay, uses `object-fit: contain`, and fits as a circular ring without a broken icon. The grid contains 14 unique frame URLs, including the deterministic comet and crown WebPs. However, `frame-dragon.webp` reports natural dimensions 0×0 in the live DOM, indicating a broken/missing production asset. The two free frames are 1920×1920 WebPs, while most legacy frames are 400–512px; the catalog is therefore visually mixed and still needs a broken-dragon replacement plus asset-size normalization if the user wants the entire frame catalog hardened.
+
+
+Replacement avatar review: `girl-pottery-transparent.webp` and `boy-chef-transparent.webp` are visibly distinct from the previous sports/music/study set, with different seated and stepping poses. Both are 512×512 WebPs under 50KB and show clean transparent margins with full silhouettes preserved; no white square or obvious colored background was observed in the rendered previews.
+
+
+Replacement frame review: the existing `frame-galaxy.webp` and `frame-cyber-punk.webp` are visually distinct circular designs. Galaxy has an obvious green square-like background in the source preview and must be cut by an explicit radial alpha mask; Cyber Punk is a usable ring but still needs controlled alpha cleanup around the outer corners and inner opening. These motifs can replace the latest comet/crown assets without introducing a broken image URL.
+
+
+Replacement frame preview note: the cleaned Galaxy and Cyber Orbit previews still show green/black areas in the generic image viewer, so visual inspection alone is inconclusive about alpha. I am running a pixel-level alpha audit before accepting either frame; no frame will enter the catalog until corner and center transparency are numerically confirmed.
+
+
+Checkerboard alpha validation: `galaxy-ring-transparent.webp` and `cyber-orbit-transparent.webp` both render as ring-only overlays with a fully transparent circular center and transparent corners. The checkerboard is visible consistently through the center and outside area, confirming the earlier green/black viewer appearance was not a baked-in square background.

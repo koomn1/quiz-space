@@ -9,16 +9,31 @@ export interface AvatarPreset {
 }
 
 const LEGACY_PROFILE_ASSET_ALIASES: Record<string, string> = {
-  'avatars/avatar-football-pro.webp': 'clean-assets-deterministic/avatar-football-pro-transparent.webp',
-  'avatars/girl-studying-activity.webp': 'clean-assets-deterministic/girl-studying-activity-transparent.webp',
-  'avatars/avatar-music-pro.webp': 'clean-assets-deterministic/avatar-music-pro-transparent.webp',
-  'avatars/girl-school-walk.webp': 'clean-assets-deterministic/girl-school-walk-transparent.webp',
-  'avatars/avatar-skater-pro.webp': 'clean-assets-deterministic/avatar-skater-pro-transparent.webp',
-  'avatars/new_girl_avatar.webp': 'clean-assets-deterministic/new_girl_avatar-transparent.webp',
-  'frame-diamond-comet_596fd1b8.webp': 'clean-assets-deterministic/frame-diamond-comet-quizspace-transparent.webp',
-  'frame-diamond-crown_c3f3f17c.webp': 'clean-assets-deterministic/frame-diamond-crown-quizspace-transparent.webp',
-  'frame-ramadan-crescent_1c3d1be8.webp': 'clean-assets-deterministic/frame-ramadan-lantern-quizspace-transparent.webp',
-  'frame-back-school_68d31549.webp': 'clean-assets-deterministic/frame-back-to-school-quizspace-transparent.webp',
+  'avatars/avatar-football-pro.webp': 'clean-assets-replacement/boy-robotics-transparent.webp',
+  'avatars/girl-studying-activity.webp': 'clean-assets-replacement/girl-pottery-transparent.webp',
+  'avatars/avatar-music-pro.webp': 'clean-assets-replacement/boy-chef-transparent.webp',
+  'avatars/girl-school-walk.webp': 'clean-assets-replacement/girl-cycling-transparent.webp',
+  'avatars/avatar-skater-pro.webp': 'clean-assets-replacement/girl-dance-transparent.webp',
+  'avatars/new_girl_avatar.webp': 'clean-assets-replacement/girl-pottery-transparent.webp',
+  'frame-diamond-comet_596fd1b8.webp': 'clean-assets-replacement/galaxy-ring-transparent.webp',
+  'frame-diamond-crown_c3f3f17c.webp': 'clean-assets-replacement/cyber-orbit-transparent.webp',
+  'frame-ramadan-crescent_1c3d1be8.webp': 'clean-assets-replacement/ramadan-green-transparent.webp',
+  'frame-back-school_68d31549.webp': 'clean-assets-replacement/school-bus-transparent.webp',
+  'images/frame-free-1.webp': 'clean-assets-replacement/nature-leaf-transparent.webp',
+  'images/frame-free-2.webp': 'clean-assets-replacement/aurora-glass-transparent.webp',
+  'images/frame-diamond-halo.webp': 'clean-assets-replacement/galaxy-ring-transparent.webp',
+  'images/frame-dragon.webp': 'clean-assets-replacement/fire-trail-transparent.webp',
+  'images/frame-neon-orbit.webp': 'clean-assets-replacement/neon-orbit-transparent.webp',
+  'images/frame-aurora.webp': 'clean-assets-replacement/aurora-glass-transparent.webp',
+  'images/frame-fire.webp': 'clean-assets-replacement/fire-trail-transparent.webp',
+  'images/frame-crystal-luxe.webp': 'clean-assets-replacement/crystal-luxe-transparent.webp',
+  'images/frame-star-crown.webp': 'clean-assets-replacement/star-crown-transparent.webp',
+  'images/frame-nature-leaf.webp': 'clean-assets-replacement/nature-leaf-transparent.webp',
+  'images/frame-galaxy.webp': 'clean-assets-replacement/galaxy-ring-transparent.webp',
+  'images/frame-cyber-punk.webp': 'clean-assets-replacement/cyber-orbit-transparent.webp',
+  'images/frame-ramadan-green.webp': 'clean-assets-replacement/ramadan-green-transparent.webp',
+  'images/frame-school-bus.webp': 'clean-assets-replacement/school-bus-transparent.webp',
+  'images/frame-school-stationary.webp': 'clean-assets-replacement/school-stationary-transparent.webp',
 };
 
 export function profileAssetUrl(path: string): string {
@@ -34,17 +49,17 @@ export function profileAssetUrl(path: string): string {
     .replace(/^\//, '');
   const aliased = LEGACY_PROFILE_ASSET_ALIASES[normalized];
   if (aliased) return `${base}${aliased}`;
-  if (localPath.startsWith('/manus-storage/')) return `${base}images/frame-free-2.webp`;
+  if (localPath.startsWith('/manus-storage/')) return `${base}clean-assets-replacement/aurora-glass-transparent.webp`;
   return `${base}${normalized}`;
 }
 
 export const AVATAR_PRESETS: AvatarPreset[] = [
-  { id: 'boy-football', label: 'Football', labelAr: 'كرة القدم', gender: 'boy', url: profileAssetUrl('clean-assets-deterministic/avatar-football-pro-transparent.webp') },
-  { id: 'girl-studying', label: 'Study mode', labelAr: 'وقت المذاكرة', gender: 'girl', url: profileAssetUrl('clean-assets-deterministic/girl-studying-activity-transparent.webp') },
-  { id: 'boy-music', label: 'Music', labelAr: 'الموسيقى', gender: 'boy', url: profileAssetUrl('clean-assets-deterministic/avatar-music-pro-transparent.webp') },
-  { id: 'girl-walking', label: 'School walk', labelAr: 'مشوار المدرسة', gender: 'girl', url: profileAssetUrl('clean-assets-deterministic/girl-school-walk-transparent.webp') },
-  { id: 'boy-cap-glasses', label: 'Cap & glasses', labelAr: 'كاب ونظارات', gender: 'boy', url: profileAssetUrl('clean-assets-deterministic/avatar-skater-pro-transparent.webp') },
-  { id: 'girl-explorer', label: 'Explorer', labelAr: 'مستكشفة الفضاء', gender: 'girl', url: profileAssetUrl('clean-assets-deterministic/new_girl_avatar-transparent.webp') },
+  { id: 'boy-robotics', label: 'Robotics', labelAr: 'الروبوتات', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/boy-robotics-transparent.webp') },
+  { id: 'girl-pottery', label: 'Pottery', labelAr: 'الفخار', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/girl-pottery-transparent.webp') },
+  { id: 'boy-chef', label: 'Cooking', labelAr: 'الطبخ', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/boy-chef-transparent.webp') },
+  { id: 'girl-dance', label: 'Dance', labelAr: 'الرقص', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/girl-dance-transparent.webp') },
+  { id: 'boy-photography', label: 'Photography', labelAr: 'التصوير', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/boy-photography-transparent.webp') },
+  { id: 'girl-cycling', label: 'Cycling', labelAr: 'ركوب الدراجة', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/girl-cycling-transparent.webp') },
 ];
 
 export const AVATAR_PRESET_URLS = AVATAR_PRESETS.map((avatar) => avatar.url);
@@ -87,25 +102,33 @@ export const FREE_PROFILE_FRAMES: ProfileFrame[] = [
     id: 'frame_free_1',
     name: 'Soft Halo',
     name_ar: 'هالة ناعمة',
-    image_url: profileAssetUrl('images/frame-free-1.webp'),
-    css_class: 'frame-free-soft-halo',
+    image_url: profileAssetUrl('clean-assets-replacement/nature-leaf-transparent.webp'),
+    css_class: 'frame-nature-leaf',
     is_free: true,
   },
   {
     id: 'frame_free_2',
     name: 'Clean Mint',
     name_ar: 'نعناع هادئ',
-    image_url: profileAssetUrl('images/frame-free-2.webp'),
-    css_class: 'frame-free-clean-mint',
+    image_url: profileAssetUrl('clean-assets-replacement/aurora-glass-transparent.webp'),
+    css_class: 'frame-aurora-glass',
     is_free: true,
   },
 ];
 
 export const FRAME_ASSET_OVERRIDES: Record<string, string> = {
-  frame_diamond_comet: profileAssetUrl('clean-assets-deterministic/frame-diamond-comet-quizspace-transparent.webp'),
-  frame_diamond_crown: profileAssetUrl('clean-assets-deterministic/frame-diamond-crown-quizspace-transparent.webp'),
-  frame_ramadan_lantern: profileAssetUrl('clean-assets-deterministic/frame-ramadan-lantern-quizspace-transparent.webp'),
-  frame_back_to_school: profileAssetUrl('clean-assets-deterministic/frame-back-to-school-quizspace-transparent.webp'),
+  frame_free_1: profileAssetUrl('clean-assets-replacement/nature-leaf-transparent.webp'),
+  frame_free_2: profileAssetUrl('clean-assets-replacement/aurora-glass-transparent.webp'),
+  frame_neon_orbit: profileAssetUrl('clean-assets-replacement/neon-orbit-transparent.webp'),
+  frame_aurora: profileAssetUrl('clean-assets-replacement/aurora-glass-transparent.webp'),
+  frame_fire: profileAssetUrl('clean-assets-replacement/fire-trail-transparent.webp'),
+  frame_crystal_luxe: profileAssetUrl('clean-assets-replacement/crystal-luxe-transparent.webp'),
+  frame_star_crown: profileAssetUrl('clean-assets-replacement/star-crown-transparent.webp'),
+  frame_diamond_comet: profileAssetUrl('clean-assets-replacement/galaxy-ring-transparent.webp'),
+  frame_diamond_crown: profileAssetUrl('clean-assets-replacement/cyber-orbit-transparent.webp'),
+  frame_ramadan_lantern: profileAssetUrl('clean-assets-replacement/ramadan-green-transparent.webp'),
+  frame_back_to_school: profileAssetUrl('clean-assets-replacement/school-bus-transparent.webp'),
+  frame_dragon_spirit: profileAssetUrl('clean-assets-replacement/fire-trail-transparent.webp'),
 };
 
 export function uniqueProfileFrames<T extends { id?: string | null; image_url?: string | null }>(frames: T[]): T[] {
@@ -114,9 +137,10 @@ export function uniqueProfileFrames<T extends { id?: string | null; image_url?: 
   return frames.filter((frame) => {
     const id = String(frame.id || '').trim();
     const image = String(frame.image_url || '').trim();
-    if (!id || seenIds.has(id) || (image && seenImages.has(image))) return false;
+    const resolvedImage = id && FRAME_ASSET_OVERRIDES[id] ? FRAME_ASSET_OVERRIDES[id] : image ? profileAssetUrl(image) : '';
+    if (!id || seenIds.has(id) || (resolvedImage && seenImages.has(resolvedImage))) return false;
     seenIds.add(id);
-    if (image) seenImages.add(image);
+    if (resolvedImage) seenImages.add(resolvedImage);
     return true;
   });
 }
