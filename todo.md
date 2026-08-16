@@ -156,4 +156,4 @@
 - [x] 149. Add SECURITY DEFINER RPCs for Diamond activation, institution creation, invitation, seat assignment, revocation, and manager-only access checks
 - [x] 150. Build a responsive Arabic Institution Workspace for owners to manage identity, teachers, seats, and institution status
 - [x] 151. Add an admin activation flow that converts an approved Diamond request into an active institution owner workspace
-- [ ] 152. Add unit and integration coverage for institution authorization, seat limits, and member lifecycle; verify published workflow
+- [x] 152. Add unit and integration coverage for institution authorization, seat limits, and member lifecycle; verify published workflow
