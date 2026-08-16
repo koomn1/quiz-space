@@ -137,3 +137,7 @@
 - [ ] 135. Update profile asset mappings, fallbacks, tests, and production verification for the replacement set
 
 - [x] 136. Remap direct clean-assets-deterministic avatar URLs already stored on profiles to the new replacement avatar set
+
+- [x] 137. Add Playwright E2E coverage for authenticated profile avatar and frame rendering, image load failures, alpha-safe replacement URLs, and refresh persistence
+- [x] 138. Add responsive Playwright coverage for avatar/frame picker touch targets and desktop/mobile layout
+- [ ] 139. Run Playwright locally and in CI with a safe authenticated-session strategy, then document any environment limitation

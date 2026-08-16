@@ -52,3 +52,9 @@ supabase/functions/.env
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# Playwright output and authenticated session state
+playwright-report
+playwright/.cache
+test-results
+playwright/.auth
