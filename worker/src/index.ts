@@ -42,18 +42,23 @@ type Provider = 'openrouter' | 'openai' | 'groq' | 'deepseek';
 // Default text + vision models used when calling OpenRouter. OpenRouter is
 // a single API that proxies many underlying models — change these two
 // constants to switch models without touching any other code.
-// NOTE: OpenRouter's free-tier catalog changes often — Meta's free Llama
-// endpoints (including the ones previously used here) were delisted mid-2026.
-// These are confirmed live on the free tier as of Aug 2026; double-check at
-// https://openrouter.ai/models?max_price=0 if generation starts failing again.
-// qwen3 is the strongest free OpenRouter model for Arabic text; gpt-oss
-// (very fast) and nemotron-3-super (very fast, 120B) sit in the fallbacks.
-const OPENROUTER_TEXT_MODEL = 'qwen/qwen3-235b-a22b:free';
+// Qwen 3.7 Flash is the default for Cosmo: it supports Arabic, starts quickly,
+// and is inexpensive enough for frequent educational chat. The previous free
+// Qwen 235B identifier is no longer listed by OpenRouter, so it was replaced
+// with a live production model and a quality-focused Qwen fallback sequence.
+const OPENROUTER_TEXT_MODEL = 'qwen/qwen3.7-flash';
 const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
-// Free models on OpenRouter get rate-limited hard during peak hours and can
-// disappear without warning — if the primary model fails, try these next
-// instead of just erroring out.
-const OPENROUTER_TEXT_FALLBACKS = ['qwen/qwen3-235b-a22b:free', 'openai/gpt-oss-20b:free', 'nvidia/nemotron-3-super-120b-a12b:free', 'meta-llama/llama-3.3-70b-instruct:free', 'deepseek/deepseek-v3-0324:free'];
+// Keep Arabic-oriented Qwen models first. The faster option serves everyday
+// conversation, while the larger 122B model provides a strong recovery path
+// for more demanding quiz construction before zero-cost emergency fallbacks.
+const OPENROUTER_TEXT_FALLBACKS = [
+  'qwen/qwen3.7-flash',
+  'qwen/qwen3-32b',
+  'qwen/qwen3.5-122b-a10b',
+  'nvidia/nemotron-3.5-lightning:free',
+  'openai/gpt-oss-20b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+];
 const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'google/gemma-4-26b-a4b-it:free'];
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';

@@ -5,6 +5,11 @@ import { describe, expect, it } from 'vitest';
 const workerSource = readFileSync(resolve(process.cwd(), 'worker/src/index.ts'), 'utf8');
 
 describe('Cosmo generation recovery contract', () => {
+  it('uses Qwen 3.7 Flash as the fast Arabic-capable primary Cosmo route', () => {
+    expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'qwen/qwen3.7-flash'");
+    expect(workerSource).toContain("'qwen/qwen3.5-122b-a10b'");
+  });
+
   it('uses the resilient OpenRouter model sequence for quiz generation', () => {
     expect(workerSource).toContain('callOpenRouterWithFallback(env, [{ role: \'user\', content: prompt }], OPENROUTER_TEXT_FALLBACKS');
     expect(workerSource).toContain('max_tokens: 8_000');

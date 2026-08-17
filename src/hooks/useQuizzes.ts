@@ -96,8 +96,8 @@ export async function generateQuizWithFallback(
 ): Promise<GeneratedQuiz> {
   const enforceArabic = requiresArabicGeneration(topic);
   const providers = [
-    { key: 'groq', run: () => generateWithGroq(topic, amount, alreadyGeneratedQuestions) },
     { key: 'openrouter', run: () => generateWithOpenRouter(topic, amount, alreadyGeneratedQuestions) },
+    { key: 'groq', run: () => generateWithGroq(topic, amount, alreadyGeneratedQuestions) },
     { key: 'deepseek', run: () => generateWithDeepSeek(topic, amount, alreadyGeneratedQuestions) },
     { key: 'openai', run: () => generateWithOpenAI(topic, amount, alreadyGeneratedQuestions) },
   ];
