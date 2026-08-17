@@ -33,6 +33,7 @@ import {
   Search,
   Loader2,
   Download,
+  Clock,
 } from "lucide-react";
 import { activateRewardFrame, deactivateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems, getPdfExportHistory, getPdfExportSignedUrl } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
@@ -101,6 +102,7 @@ interface UserProfileProps {
   colorTheme?: string;
   setColorTheme?: (theme: string) => void;
   onPremiumStatusChange?: (isPremium: boolean, planName?: string) => void;
+  onOpenBilling?: () => void;
 }
 
 export default function UserProfile({
@@ -117,6 +119,7 @@ export default function UserProfile({
   colorTheme = "indigo",
   setColorTheme,
   onPremiumStatusChange = () => {},
+  onOpenBilling,
 }: UserProfileProps) {
   const isAr = lang === "ar";
   const isOwnProfile = profileId === currentUserId;
@@ -1134,9 +1137,71 @@ export default function UserProfile({
               </div>
 
               <div
-                className="mb-2 w-full text-right"
+                className="mb-2 w-full text-right space-y-3"
                 style={{ textAlign: isAr ? "right" : "left" }}
               >
+                {/* Dynamic Trial Progress Bar & In-App Expiration Alert for Active Trial Members */}
+                {profileData?.isPremium && (profileData as any)?.renewalDate && (() => {
+                  const now = Date.now();
+                  const renewal = new Date((profileData as any).renewalDate).getTime();
+                  const diffDays = Math.ceil((renewal - now) / (1000 * 60 * 60 * 24));
+                  if (diffDays <= 0) return null;
+                  const totalDays = diffDays <= 7 ? 7 : (diffDays <= 14 ? 14 : 30);
+                  const elapsedDays = Math.max(0, totalDays - diffDays);
+                  const percent = Math.min(100, Math.max(0, Math.round((elapsedDays / totalDays) * 100)));
+                  const isUrgent = diffDays <= 3;
+                  return (
+                    <div className="space-y-2 mb-3 max-w-md">
+                      {/* In-App Urgent Notification Banner for <= 3 days */}
+                      {isUrgent && (
+                        <div className="w-full bg-gradient-to-r from-red-950/90 via-rose-950/85 to-slate-950/90 border border-red-500/50 rounded-2xl p-3 text-white shadow-lg flex items-center justify-between gap-3 animate-pulse">
+                          <div className="flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
+                              <Clock className="w-3.5 h-3.5 text-red-400" />
+                            </span>
+                            <div>
+                              <p className="text-[11px] font-black text-red-300">
+                                {isAr ? `تنبيه: الفترة التجريبية ستنتهي خلال ${diffDays} أيام!` : `Urgent: Trial expires in ${diffDays} days!`}
+                              </p>
+                            </div>
+                          </div>
+                          {onOpenBilling && (
+                            <button
+                              onClick={onOpenBilling}
+                              className="px-2.5 py-1 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-[10px] transition-all shadow-md shrink-0 cursor-pointer"
+                            >
+                              {isAr ? 'ترقية' : 'Upgrade'}
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Progress Bar Card */}
+                      <div className={`w-full bg-slate-900/90 border rounded-2xl p-3 text-white shadow-md transition-all ${isUrgent ? 'border-red-500/50 shadow-red-500/10' : 'border-indigo-500/30'}`}>
+                        <div className="flex items-center justify-between text-xs font-black mb-1.5">
+                          <span className={`flex items-center gap-1.5 ${isUrgent ? 'text-red-400' : 'text-indigo-300'}`}>
+                            <Sparkles className={`w-3.5 h-3.5 ${isUrgent ? 'text-red-500 animate-bounce' : 'text-amber-400 animate-pulse'}`} />
+                            <span>{isAr ? (isUrgent ? `⚠️ تنبيه: ينتهي العرض قريباً (${totalDays} يوم)` : `فترة تجريبية نشطة (${totalDays} يوم)`) : `Active Trial (${totalDays} Days)`}</span>
+                          </span>
+                          <span className={`${isUrgent ? 'text-red-400 bg-red-500/10 border-red-500/40 animate-pulse' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'} border px-2 py-0.5 rounded-full text-[10px]`}>
+                            {isAr ? `متبقي ${diffDays} يوم فقط` : `${diffDays} days left`}
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700/60">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${isUrgent ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 animate-pulse' : 'bg-gradient-to-r from-indigo-500 via-primary to-emerald-400'}`} 
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between items-center text-[9px] text-slate-400 mt-1 font-medium">
+                          <span>{isAr ? `منقضي: ${percent}%` : `Elapsed: ${percent}%`}</span>
+                          <span className={isUrgent ? 'text-red-400 font-bold' : ''}>{isAr ? `ينتهي في: ${new Date(renewal).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}` : `Expires: ${new Date(renewal).toLocaleDateString()}`}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
                   <h1 className="text-2xl md:text-3xl font-black font-display drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] flex items-center">
                     <PremiumNameTag
