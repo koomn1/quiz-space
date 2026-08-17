@@ -224,80 +224,112 @@ export default function LandingPage({
   return (
     <div ref={containerRef} className="space-y-12 pb-16" dir={isAr ? 'rtl' : 'ltr'}>
       
-      {/* Massive GSAP Hero Section */}
-      <HeroAnimation t={t} isAr={isAr} onCreateQuizTab={onCreateQuizTab} cosmoAITopics={currentCosmoAITopics} />
+      {/* Professional Marketing Landing Hero for Unauthenticated Visitors */}
+      <div className="relative overflow-hidden rounded-[36px] bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 p-8 sm:p-14 text-white border border-indigo-500/20 shadow-2xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/25 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-violet-600/20 rounded-full blur-[120px] pointer-events-none"></div>
 
-      {/* Statistics Banner / Interactive counters */}
-      <div className="gsap-stats-container grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-12 relative z-10">
-        <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10 blur-[100px] -z-10 rounded-full"></div>
-        {[
-          { 
-            label: t.activeQuizzes, 
-            val: `${quizzes.length}`, 
-            color: 'from-emerald-400 to-cyan-400',
-            bg: 'bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_30px_-10px_rgba(16,185,129,0.3)]'
-          },
-          { 
-            label: t.totalPlays, 
-            val: `${quizzes.reduce((acc, q) => acc + (q.totalPlays || 0), 0)}`, 
-            color: 'from-indigo-400 to-violet-500',
-            bg: 'bg-indigo-500/10 border-indigo-500/20 shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)]'
-          },
-          { 
-            label: t.aiEngines, 
-            val: 'OpenRouter AI', 
-            color: 'from-purple-400 to-pink-500',
-            bg: 'bg-purple-500/10 border-purple-500/20 shadow-[0_0_30px_-10px_rgba(168,85,247,0.3)]'
-          },
-          { 
-            label: t.avgRating, 
-            val: '4.9 ★', 
-            color: 'from-amber-400 to-orange-500',
-            bg: 'bg-amber-500/10 border-amber-500/20 shadow-[0_0_30px_-10px_rgba(245,158,11,0.3)]'
-          }
-        ].map((stat, i) => (
-          <div 
-            key={i} 
-            className={`gsap-stat-card ${stat.bg} backdrop-blur-xl border p-6 sm:p-8 rounded-[32px] flex flex-col items-center justify-center text-center transition-all duration-500 select-none group hover:-translate-y-2 hover:scale-[1.02] relative overflow-hidden`}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay"></div>
-            <span className={`text-4xl sm:text-5xl font-black font-display tracking-tighter bg-gradient-to-br ${stat.color} bg-clip-text text-transparent block mb-2 group-hover:scale-110 transition-transform duration-500 drop-shadow-sm`}>{stat.val}</span>
-            <span className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 font-bold uppercase tracking-[0.2em]">{stat.label}</span>
+        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-black tracking-wide text-indigo-200">
+            <MainLogo size="sm" showText={false} />
+            <span>{isAr ? 'المنصة التعليمية الأولى للذكاء الاصطناعي والتحديات' : 'The #1 AI Educational & Quiz Platform'}</span>
           </div>
-        ))}
-      </div>
 
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black font-display tracking-tight leading-tight">
+            {isAr ? 'ارتقِ بمسيرتك التعليمية والاختبارات الذكية مع ' : 'Elevate Your Learning & Quizzes With '}
+            <span className="bg-gradient-to-r from-violet-400 via-primary to-cyan-400 bg-clip-text text-transparent">QuizSpace</span>
+          </h1>
 
+          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            {isAr 
+              ? 'أنشئ اختباراتك فوراً بالذكاء الاصطناعي، شارك في التحديات اليومية، احصل على جوائز ومكافآت، وتابع أداء طلابك ومجموعاتك بكل احترافية.'
+              : 'Create instant AI quizzes, participate in daily challenges, earn rewards, and track your students with absolute precision.'}
+          </p>
 
-      {/* Guest Welcome Board / Login CTA */}
-      {isGuest && (
-        <div
-          className="gsap-fade-section overflow-hidden py-4 px-6 rounded-2xl bg-indigo-50/50 dark:bg-[#111827]/40 border border-indigo-100 dark:border-indigo-900/30 flex flex-col sm:flex-row items-center justify-between gap-4 mt-8"
-        >
-          <div className="flex items-center gap-3 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-            <div className="bg-indigo-100 dark:bg-indigo-900/40 p-2 rounded-xl hidden sm:block">
-              <Rocket className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-indigo-950 dark:text-indigo-200">
-                {isAr ? 'أنت تتصفح كزائر' : 'Browsing as Guest'}
-              </h4>
-              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {isAr 
-                  ? 'سجل دخولك لحفظ إجاباتك والمنافسة في لوحة المتصدرين'
-                  : 'Sign in to save your progress and compete on leaderboards'}
-              </p>
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+            <button
+              onClick={onLoginClick}
+              className="px-8 py-4 rounded-2xl bg-primary hover:bg-primary-hover text-white font-black text-sm sm:text-base transition-all shadow-lg shadow-primary/30 cursor-pointer active:scale-95 flex items-center gap-2"
+            >
+              <span>{isAr ? 'ابدأ الآن وتصفح المنصة' : 'Get Started Now'}</span>
+              <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+            </button>
+            <a
+              href="#features"
+              className="px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/15 backdrop-blur-md text-white font-bold text-sm sm:text-base border border-white/15 transition-all cursor-pointer"
+            >
+              {isAr ? 'استكشف المميزات' : 'Explore Features'}
+            </a>
           </div>
-          
-          <button
-            onClick={onLoginClick}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm shadow-indigo-600/20 transition-all cursor-pointer whitespace-nowrap"
-          >
-            {isAr ? 'تفعيل الحساب' : 'Sign In'}
-          </button>
         </div>
-      )}
+
+        {/* Product Showcase Mockup Grid (Quizzes, Challenges, Rewards) */}
+        <div id="features" className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+          {[
+            {
+              titleAr: 'إنشاء الاختبارات الذكية',
+              titleEn: 'Instant AI Quiz Creator',
+              descAr: 'توليد اختبارات شاملة من النصوص والملفات والروابط بضغطة زر واحدة.',
+              descEn: 'Generate comprehensive quizzes from texts and files instantly.',
+              icon: BrainCircuit,
+              badge: isAr ? 'توليد ذكي' : 'AI Gen'
+            },
+            {
+              titleAr: 'التحديات والمنافسة اليومية',
+              titleEn: 'Daily Challenges & Streaks',
+              descAr: 'تنافس مع زملائك، تصدر لوحة المتصدرين، واكسب النقاط والعملات.',
+              descEn: 'Compete with peers, top the leaderboard, and earn coins.',
+              icon: Trophy,
+              badge: isAr ? 'تحديات حية' : 'Live'
+            },
+            {
+              titleAr: 'متجر الجوائز والإطارات',
+              titleEn: 'Rewards & Custom Frames',
+              descAr: 'استبدل نقاطك بإطارات بروفايل مميزة وتفعيل باقات النخبة الحصرية.',
+              descEn: 'Redeem points for custom profile frames and elite tiers.',
+              icon: Star,
+              badge: isAr ? 'مكافآت حصرية' : 'VIP'
+            }
+          ].map((card, idx) => {
+            const IconComp = card.icon;
+            return (
+              <div key={idx} className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 backdrop-blur-xl flex flex-col justify-between hover:border-violet-500/50 transition-all group">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 rounded-2xl bg-violet-600/20 text-violet-400 border border-violet-500/30 group-hover:scale-110 transition-transform">
+                      <IconComp className="w-6 h-6" />
+                    </div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      {card.badge}
+                    </span>
+                  </div>
+                  <h3 className="font-extrabold text-base text-white mb-2">{isAr ? card.titleAr : card.titleEn}</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">{isAr ? card.descAr : card.descEn}</p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-violet-400">
+                  <span>{isAr ? 'معاينة مباشرة' : 'Live Preview'}</span>
+                  <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-180 group-hover:-translate-x-1 transition-transform" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Contact & Professional Footer Links inside Landing */}
+        <div className="mt-12 pt-8 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs font-bold text-slate-400">
+          <div className="flex items-center gap-2">
+            <MainLogo size="sm" />
+            <span>© 2026 QuizSpace Platform. All rights reserved.</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="mailto:support@quizspace.app" className="hover:text-white transition-colors">support@quizspace.app</a>
+            <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center gap-1 text-emerald-400">
+              <MessageCircle className="w-4 h-4" />
+              <span>WhatsApp Support</span>
+            </a>
+          </div>
+        </div>
+      </div>
 
       {/* Live site stats */}
       {siteStats && (
