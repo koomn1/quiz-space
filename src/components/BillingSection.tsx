@@ -535,80 +535,104 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         </div>
       </div>
 
-      {/* Free Trial Offers Quick Request Section (7, 14, 30 Days) */}
-      <div className="w-full bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 border border-indigo-500/30 rounded-3xl p-6 text-white shadow-lg">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-            <Gift className="w-6 h-6 animate-pulse" />
-          </div>
-          <div>
-            <h3 className="font-extrabold text-lg">
-              {isAr ? 'طلب الفترات التجريبية المجانية (عروض الإدارة)' : 'Request Free Trial Periods (Admin Promos)'}
-            </h3>
-            <p className="text-xs text-indigo-200/80 mt-0.5">
-              {isAr ? 'اختر الفترة التجريبية المتاحة وأرسل طلب تفعيل فوري للإدارة للحصول على موافقة السوبر أدمن' : 'Select a trial period and submit an instant approval request to the super admin'}
-            </p>
-          </div>
-        </div>
+      {/* Dynamic Active Trial Offers Section (Only rendered when super admin activates one or more trial offers) */}
+      {(() => {
+        const [activeOffers, setActiveOffers] = React.useState<number[]>(() => {
+          if (typeof window === 'undefined') return [];
+          return [7, 14, 30].filter(d => localStorage.getItem(`quizspace_active_trial_${d}d`) === 'true');
+        });
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
-          {[
-            { days: 7, titleAr: 'باقة تجريبية ٧ أيام', titleEn: '7-Day Free Trial', desc: isAr ? 'وصول كامل لكل مزايا النخبة لمدة أسبوع' : 'Full elite access for 1 week' },
-            { days: 14, titleAr: 'باقة تجريبية ١٤ يوماً', titleEn: '14-Day Free Trial', desc: isAr ? 'أسبوعين من تفعيل التوليد المتقدم والذكاء الاصطناعي' : 'Two weeks of advanced AI generation' },
-            { days: 30, titleAr: 'باقة تجريبية شهرية (٣٠ يوم)', titleEn: '30-Day Elite Trial', desc: isAr ? 'شهر كامل من العضوية الماسية والميزات الكاملة' : 'Full month of diamond tier and elite features' },
-          ].map((offer) => (
-            <div key={offer.days} className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                  {isAr ? `عرض ${offer.days} يوم` : `${offer.days}-Day Trial`}
-                </span>
-                <h4 className="font-black text-sm text-white mt-3">{isAr ? offer.titleAr : offer.titleEn}</h4>
-                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{offer.desc}</p>
+        React.useEffect(() => {
+          const handleUpdate = () => {
+            setActiveOffers([7, 14, 30].filter(d => localStorage.getItem(`quizspace_active_trial_${d}d`) === 'true'));
+          };
+          window.addEventListener('quizspace-trials-updated', handleUpdate);
+          return () => window.removeEventListener('quizspace-trials-updated', handleUpdate);
+        }, []);
+
+        if (activeOffers.length === 0) return null;
+
+        const allOffersMeta: Record<number, { titleAr: string; titleEn: string; descAr: string; descEn: string }> = {
+          7: { titleAr: 'باقة تجريبية ٧ أيام', titleEn: '7-Day Free Trial', descAr: 'وصول كامل لكل مزايا النخبة لمدة أسبوع بموافقة السوبر أدمن', descEn: 'Full elite access for 1 week upon super admin approval' },
+          14: { titleAr: 'باقة تجريبية ١٤ يوماً', titleEn: '14-Day Free Trial', descAr: 'أسبوعين من التوليد المتقدم والذكاء الاصطناعي', descEn: 'Two weeks of advanced AI generation' },
+          30: { titleAr: 'باقة تجريبية شهرية (٣٠ يوم)', titleEn: '30-Day Elite Trial', descAr: 'شهر كامل من العضوية الماسية والميزات الكاملة', descEn: 'Full month of diamond tier and elite features' },
+        };
+
+        return (
+          <div className="w-full bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 border border-indigo-500/30 rounded-3xl p-6 text-white shadow-lg">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <Gift className="w-6 h-6 animate-pulse" />
               </div>
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={async () => {
-                  if (!subscriberName.trim() || !subscriberEmail.trim()) {
-                    alert(isAr ? 'يرجى كتابة اسمك وبريدك الإلكتروني في أسفل نموذج التفعيل أولاً.' : 'Please enter your name and email in the activation form below first.');
-                    return;
-                  }
-                  try {
-                    setIsSubmitting(true);
-                    const reqId = `trial_${offer.days}d_${Date.now()}`;
-                    await createPremiumRequest(reqId, {
-                      userId,
-                      name: subscriberName,
-                      email: subscriberEmail,
-                      userEmail: subscriberEmail,
-                      planName: isAr ? `باقة تجريبية ${offer.days} يوماً` : `${offer.days}-Day Free Trial`,
-                      planPrice: 'FREE TRIAL (Pending Admin Approval)',
-                      paymentScreenshot: `TRIAL_OFFER_${offer.days}_DAYS`,
-                      promoCodeUsed: `TRIAL_${offer.days}D`,
-                      status: 'pending',
-                      createdAt: new Date().toISOString()
-                    });
-                    alert(isAr 
-                      ? `تم إرسال طلب العرض التجريبي (${offer.days} يوماً) بنجاح! سيقوم السوبر أدمن بمراجعة الطلب وسيصلك إشعار فور التفعيل.` 
-                      : `Trial request (${offer.days} days) submitted successfully! Super admin will review and notify you upon approval.`
-                    );
-                    await fetchMyRequests();
-                  } catch (err) {
-                    console.error('Failed trial request:', err);
-                    alert(isAr ? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.' : 'Error sending trial request. Try again.');
-                  } finally {
-                    setIsSubmitting(false);
-                  }
-                }}
-                className="mt-4 w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-md shadow-indigo-600/30 flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                {isAr ? `طلب تفعيل عرض الـ ${offer.days} يوماً` : `Request ${offer.days}-Day Trial`}
-              </button>
+              <div>
+                <h3 className="font-extrabold text-lg">
+                  {isAr ? 'عروض الفترات التجريبية النشطة (مقدمة من الإدارة)' : 'Active Trial Offers (Admin Promos)'}
+                </h3>
+                <p className="text-xs text-indigo-200/80 mt-0.5">
+                  {isAr ? 'عروض تجريبية فعّالة حالياً — اختر العرض وأرسل طلب تفعيل فوري للمراجعة' : 'Currently active trial offers — select and submit for super admin approval'}
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
+              {activeOffers.map((days) => {
+                const meta = allOffersMeta[days];
+                return (
+                  <div key={days} className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        {isAr ? `عرض ${days} يوم` : `${days}-Day Trial`}
+                      </span>
+                      <h4 className="font-black text-sm text-white mt-3">{isAr ? meta.titleAr : meta.titleEn}</h4>
+                      <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{isAr ? meta.descAr : meta.descEn}</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={async () => {
+                        if (!subscriberName.trim() || !subscriberEmail.trim()) {
+                          alert(isAr ? 'يرجى كتابة اسمك وبريدك الإلكتروني في أسفل نموذج التفعيل أولاً.' : 'Please enter your name and email in the activation form below first.');
+                          return;
+                        }
+                        try {
+                          setIsSubmitting(true);
+                          const reqId = `trial_${days}d_${Date.now()}`;
+                          await createPremiumRequest(reqId, {
+                            userId,
+                            name: subscriberName,
+                            email: subscriberEmail,
+                            userEmail: subscriberEmail,
+                            planName: isAr ? `باقة تجريبية ${days} يوماً` : `${days}-Day Free Trial`,
+                            planPrice: 'FREE TRIAL (Pending Admin Approval)',
+                            paymentScreenshot: `TRIAL_OFFER_${days}_DAYS`,
+                            promoCodeUsed: `TRIAL_${days}D`,
+                            status: 'pending',
+                            createdAt: new Date().toISOString()
+                          });
+                          alert(isAr 
+                            ? `تم إرسال طلب العرض التجريبي (${days} يوماً) بنجاح! سيقوم السوبر أدمن بمراجعة الطلب وسيصلك إشعار فور التفعيل.` 
+                            : `Trial request (${days} days) submitted successfully! Super admin will review and notify you upon approval.`
+                          );
+                          await fetchMyRequests();
+                        } catch (err) {
+                          console.error('Failed trial request:', err);
+                          alert(isAr ? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.' : 'Error sending trial request. Try again.');
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }}
+                      className="mt-4 w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-md shadow-indigo-600/30 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {isAr ? `طلب تفعيل عرض الـ ${days} يوماً` : `Request ${days}-Day Trial`}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Global Promo Code Section */}
       <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm mx-auto sm:mx-0">

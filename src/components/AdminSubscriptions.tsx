@@ -1067,38 +1067,44 @@ export default function AdminSubscriptions({
               </h3>
             </div>
 
-            {/* Quick Trial Offers Builder (7, 14, 30 Days) */}
+            {/* Quick Trial Offers Builder (7, 14, 30 Days) managed exclusively by Super Admin */}
             <div className="mb-6 bg-slate-950/80 p-5 rounded-2xl border border-indigo-500/30">
               <p className="text-xs font-extrabold text-indigo-300 mb-3 flex items-center gap-2">
                 <Crown className="w-4 h-4 text-amber-400" />
-                {isAr ? "إطلاق عرض تجريبي سريع (عروض 7، 14، أو 30 يوم لجميع المستخدمين عبر الإشعارات)" : "Launch Quick Trial Offer (7, 14, or 30 days broadcast to all users)"}
+                {isAr ? "إدارة العروض التجريبية النشطة (7، 14، أو 30 يوماً)" : "Manage Active Trial Offers (7, 14, or 30 days)"}
               </p>
-              <div className="flex flex-wrap gap-2.5">
-                {[7, 14, 30].map((days) => (
-                  <button
-                    key={days}
-                    type="button"
-                    onClick={() => {
-                      const code = `TRIAL${days}D_${Date.now().toString().slice(-4)}`;
-                      setNewPromoCode(code);
-                      setNewDiscountPercent(100);
-                      setNewMaxUses(999);
-                      const expiry = new Date(Date.now() + (days + 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                      setNewExpiryDate(expiry);
-                      setNewApplicablePlans(['silver', 'gold', 'diamond']);
-                      setAiPromoMsg(
-                        isAr
-                          ? `🎉 عرض تجريبي حصري لفترة ${days} يوماً! تم فتح باقات النخبة مجاناً لجميع طلاب المنصة. بادر بطلب تفعيل عرضك التجريبي الآن من صفحة باقات الاشتراك!`
-                          : `🎉 Exclusive ${days}-Day Free Trial Offer! Elite plans unlocked for all students. Claim your trial now from the subscription plans page!`
-                      );
-                      showToast('success', isAr ? `تم تحضير عرض الـ ${days} يوم بنجاح!` : `${days}-Day trial offer prepared!`);
-                    }}
-                    className="px-4 py-2 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
-                  >
-                    <Calendar className="w-3.5 h-3.5 text-cyan-400" />
-                    {isAr ? `عروض تجريبية ${days} يوماً` : `${days}-Day Trial`}
-                  </button>
-                ))}
+              <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">
+                {isAr 
+                  ? "عند تفعيل أحد العروض التجريبية أدناه، سيظهر للمستخدمين المسجلين حصراً في صفحة باقات الاشتراك لإرسال طلب تفعيل فوري يراجعه السوبر أدمن." 
+                  : "When active, trial offers appear exclusively for registered members on the subscription plans page to request super-admin activation."}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {[7, 14, 30].map((days) => {
+                  const storageKey = `quizspace_active_trial_${days}d`;
+                  const [isLive, setIsLive] = useState(() => localStorage.getItem(storageKey) === 'true');
+                  return (
+                    <div key={days} className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl">
+                      <span className="text-xs font-black text-white">{isAr ? `عرض ${days} يوماً` : `${days}-Day Trial`}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextState = !isLive;
+                          setIsLive(nextState);
+                          localStorage.setItem(storageKey, nextState ? 'true' : 'false');
+                          window.dispatchEvent(new CustomEvent('quizspace-trials-updated'));
+                          showToast('success', isAr ? (nextState ? `تم إطلاق عرض الـ ${days} يوم بنجاح!` : `تم إيقاف عرض الـ ${days} يوم`) : (nextState ? `${days}-Day trial activated!` : `${days}-Day trial deactivated`));
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                          isLive 
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        }`}
+                      >
+                        {isLive ? (isAr ? 'نشط (يعمل)' : 'Active') : (isAr ? 'معطل (مخفي)' : 'Inactive')}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

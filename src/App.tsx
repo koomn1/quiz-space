@@ -1150,11 +1150,12 @@ export default function App() {
 
     const validOverrideId = overrideProfileId && overrideProfileId.trim() !== '';
 
-    // Guest Auth Guard: User is a guest only if userId is missing or explicitly a guest ID AND not authenticated via AuthContext
+    // Strict Guest Auth Guard: Guests can ONLY view landing, explore, or support. Any other direct link or tab forces AuthModal.
     const isGuest = (!userId || userId.startsWith('user-guest') || userId === '') && !authContext.isAuthenticated;
-    if (!bypassAuth && isGuest && (tab === 'create' || (tab === 'profile' && !validOverrideId) || tab.startsWith('motivation'))) {
-      setLoginRedirectTab(tab);
-      setAuthModalMode('register');
+    const allowedGuestTabs = ['landing', 'explore', 'support'];
+    if (!bypassAuth && isGuest && !allowedGuestTabs.includes(tab)) {
+      setLoginRedirectTab('landing');
+      setAuthModalMode('login');
       setIsAuthModalOpen(true);
       return;
     }
