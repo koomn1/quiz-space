@@ -16,4 +16,8 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('error_message: safeAiErrorMessage(error)');
     expect(workerSource).toContain('Quiz generation providers are temporarily unavailable. Please retry shortly.');
   });
+
+  it('does not silently ignore a rejected Supabase telemetry insert', () => {
+    expect(workerSource).toContain("console.error('AI performance logging rejected', response.status, details)");
+  });
 });

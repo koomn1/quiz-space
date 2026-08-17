@@ -207,3 +207,5 @@
 - [x] 194. Diagnose and repair the Cosmo quiz-generation failure shown on Android, including worker request, entitlement, and actionable error handling.
 - [x] 195. Restore trustworthy AI Monitoring data flow and Super Admin rendering from live generation logs.
 - [x] 196. Add regression coverage and verify Diamond institutions, Cosmo generation, AI monitoring, mobile layout, and production deployment.
+- [x] 197. Diagnose and repair the AI worker telemetry insert path so authenticated Cosmo requests persist success and error records in Supabase.
+- [ ] 198. Add telemetry write-response validation and verify a real authenticated generation appears in Super Admin AI Monitoring.

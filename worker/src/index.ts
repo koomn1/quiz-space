@@ -183,7 +183,7 @@ async function logAiPerformance(env: Env, authHeader: string, data: {
 }) {
   if (env.SUPABASE_URL.includes('placeholder')) return;
   try {
-    await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/ai_performance_logs`, {
+    const response = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/ai_performance_logs`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -192,6 +192,10 @@ async function logAiPerformance(env: Env, authHeader: string, data: {
       },
       body: JSON.stringify(data)
     });
+    if (!response.ok) {
+      const details = (await response.text()).slice(0, 280);
+      console.error('AI performance logging rejected', response.status, details);
+    }
   } catch (e) {
     console.error('Logging failed', e);
   }
