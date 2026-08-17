@@ -7,6 +7,8 @@ const workerSource = readFileSync(resolve(process.cwd(), 'worker/src/index.ts'),
 describe('Cosmo generation recovery contract', () => {
   it('uses Qwen 3.7 Flash as the fast Arabic-capable primary Cosmo route', () => {
     expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'qwen/qwen3.7-flash'");
+    expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
+    expect(workerSource).toContain("'nvidia/nemotron-3.5-lightning:free'");
     expect(workerSource).toContain("'mistralai/mistral-small-3.1-24b-instruct'");
     expect(workerSource).toContain("'qwen/qwen3.5-122b-a10b'");
   });

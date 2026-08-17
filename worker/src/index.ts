@@ -60,6 +60,13 @@ const OPENROUTER_TEXT_FALLBACKS = [
   'openai/gpt-oss-20b:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
 ];
+// Streaming needs to show a first token quickly. Nemotron 3.5 Lightning
+// returned an Arabic first chunk in production in about 1.5 seconds, while
+// Qwen remains the quality-first default for structured and non-stream work.
+const OPENROUTER_STREAM_TEXT_MODELS = [
+  'nvidia/nemotron-3.5-lightning:free',
+  ...OPENROUTER_TEXT_FALLBACKS,
+];
 const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'google/gemma-4-26b-a4b-it:free'];
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
@@ -692,7 +699,7 @@ ${extraInstruction}`;
       const hasAttachment = hasCosmoAttachment(body);
       messages.push({ role: 'user', content: buildCosmoUserContent(body) });
 
-      const candidates = hasAttachment ? OPENROUTER_VISION_FALLBACKS : OPENROUTER_TEXT_FALLBACKS;
+      const candidates = hasAttachment ? OPENROUTER_VISION_FALLBACKS : OPENROUTER_STREAM_TEXT_MODELS;
       // Fallback only applies to picking which model actually starts
       // streaming — once a model accepts the connection and starts sending
       // tokens, we commit to it and pipe the rest straight through (a
