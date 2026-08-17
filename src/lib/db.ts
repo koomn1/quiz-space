@@ -2291,11 +2291,11 @@ export async function updatePlatformSettings(
 }
 
 export async function getAiPerformanceLogs(): Promise<any[]> {
-  if (!isSupabaseConfigured) return [];
+  if (!isSupabaseConfigured) throw new Error('قاعدة البيانات غير متاحة حالياً.');
   const { data, error } = await supabase.rpc('get_ai_performance_logs');
   if (error) {
     console.error('Error fetching AI logs:', error.message);
-    return [];
+    throw new Error('تعذر تحميل سجلات مراقبة الذكاء الاصطناعي.');
   }
   return Array.isArray(data) ? data : [];
 }

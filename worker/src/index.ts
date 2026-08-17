@@ -286,18 +286,15 @@ async function callOpenRouterWithFallback(
 
 async function providerText(provider: Provider, prompt: string, env: Env): Promise<string> {
   const order: Provider[] = provider === 'groq'
-    ? ['groq', 'openai', 'deepseek', 'openrouter']
+    ? ['groq', 'openai', 'deepseek']
     : provider === 'openai'
-      ? ['openai', 'deepseek', 'openrouter']
+      ? ['openai', 'deepseek']
       : provider === 'deepseek'
-        ? ['deepseek', 'openrouter']
-        : ['openrouter'];
+        ? ['deepseek']
+        : [];
   let lastError: any;
   for (const current of order) {
     try {
-      if (current === 'openrouter') {
-        return await callOpenRouter(env, [{ role: 'user', content: prompt }]);
-      }
       const s = current === 'openai' ? ['https://api.openai.com/v1/chat/completions', env.OPENAI_API_KEY, 'gpt-4o-mini']
         : current === 'groq' ? ['https://api.groq.com/openai/v1/chat/completions', env.GROQ_API_KEY, 'llama-3.3-70b-versatile']
         : ['https://api.deepseek.com/chat/completions', env.DEEPSEEK_API_KEY, 'deepseek-chat'];
@@ -306,7 +303,21 @@ async function providerText(provider: Provider, prompt: string, env: Env): Promi
       const d: any = await r.json(); return d.choices?.[0]?.message?.content || '';
     } catch (e) { console.error('Provider failed', current, e); lastError = e; }
   }
-  throw lastError ?? new Error('All providers failed');
+  try {
+    return await callOpenRouterWithFallback(env, [{ role: 'user', content: prompt }], OPENROUTER_TEXT_FALLBACKS, undefined, { max_tokens: 8_000, temperature: 0.35 });
+  } catch (openRouterError) {
+    console.error('OpenRouter quiz fallback failed', openRouterError);
+    throw lastError ?? openRouterError ?? new Error('All quiz generation providers failed');
+  }
+}
+
+function safeAiErrorMessage(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error || 'Unknown AI worker error');
+  return raw
+    .replace(/Bearer\s+[^\s"']+/gi, 'Bearer [redacted]')
+    .replace(/sk-[A-Za-z0-9_-]+/g, '[redacted]')
+    .replace(/\s+/g, ' ')
+    .slice(0, 480);
 }
 
 function decodeBase64Utf8(value: string): string {
@@ -361,6 +372,9 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
       // still receive their real user id for persistence/performance logging.
       const userId = (await getUserId(request, env)) || 'guest';
   const authHeader = request.headers.get('Authorization') || '';
+  const startTime = Date.now();
+  let aiOperation = 'request';
+  let aiProvider = 'unknown';
 
   try {
     if (isExtractionJobRead) {
@@ -386,7 +400,6 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
     }
 
     const body = await request.json() as any;
-    const startTime = Date.now();
 
       if (path === '/api/ai/extraction-jobs') {
         if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);
@@ -409,6 +422,8 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
       }
 
       if (path === '/api/ai/generate') {
+        aiOperation = 'generation';
+        aiProvider = typeof body.provider === 'string' ? body.provider : 'unknown';
         const provider = body.provider as Provider;
         if (!['openrouter', 'openai', 'groq', 'deepseek'].includes(provider) || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
           return json({ error: 'Invalid generation request' }, 400, headers);
@@ -719,7 +734,20 @@ ${extraInstruction}`;
     return json({ error: 'Not found' }, 404, headers);
   } catch (error) {
     console.error(error);
-    return json({ error: 'AI provider request failed. Try another provider.' }, 502, headers);
+    if (userId !== 'guest' && userId !== 'placeholder-user') {
+      await logAiPerformance(env, authHeader, {
+        user_id: userId,
+        operation: aiOperation,
+        provider: aiProvider,
+        status: 'error',
+        latency_ms: Date.now() - startTime,
+        error_message: safeAiErrorMessage(error),
+      });
+    }
+    const message = aiOperation === 'generation'
+      ? 'Quiz generation providers are temporarily unavailable. Please retry shortly.'
+      : 'AI provider request failed. Please retry shortly.';
+    return json({ error: message }, 502, headers);
   }
 }
 

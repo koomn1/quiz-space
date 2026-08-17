@@ -203,3 +203,7 @@
 - [x] 190. Add regression coverage and verify direct navigation, Android-sized rendering, type-check, and production build for the repaired paths.
 - [x] 191. Move trial-offer activation from browser localStorage to a centrally managed Supabase configuration with super-admin-only writes.
 - [x] 192. Add secure database migration, RLS/RPC contracts, client synchronization, and regression coverage for 7/14/30-day offers.
+- [x] 193. Diagnose and repair Diamond subscription entitlement so eligible members can open and activate their Institution Workspace.
+- [x] 194. Diagnose and repair the Cosmo quiz-generation failure shown on Android, including worker request, entitlement, and actionable error handling.
+- [x] 195. Restore trustworthy AI Monitoring data flow and Super Admin rendering from live generation logs.
+- [ ] 196. Add regression coverage and verify Diamond institutions, Cosmo generation, AI monitoring, mobile layout, and production deployment.

@@ -95,6 +95,16 @@ export async function activateDiamondInstitution(ownerUserId: string, institutio
   return data as string;
 }
 
+export async function provisionMyDiamondInstitution(): Promise<string | null> {
+  ensureConfigured();
+  const { data, error } = await supabase.rpc('provision_my_diamond_institution');
+  if (!error && data) return data as string;
+
+  const message = error?.message || '';
+  if (message.includes('الباقة الماسية النشطة فقط')) return null;
+  throw new Error(message || 'تعذر تفعيل مساحة المؤسسة.');
+}
+
 export async function assignInstitutionMember(institutionId: string, email: string, role: Exclude<InstitutionMemberRole, 'owner'>): Promise<void> {
   ensureConfigured();
   const { error } = await supabase.rpc('assign_institution_member', {

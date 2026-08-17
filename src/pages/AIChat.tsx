@@ -555,6 +555,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const [lastError, setLastError] = useState<string | null>(null);
   const [pendingQuiz, setPendingQuiz] = useState<{ topic: string; amount: number; difficulty: string } | null>(null);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [isQuizGenerationError, setIsQuizGenerationError] = useState(false);
   const [quickSuggestions, setQuickSuggestions] = useState<QuickSuggestion[]>([]);
 
   // Sidebar & Conversations
@@ -744,6 +745,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       }
       if (userId && currentConvId) await saveAIChatMessage(userId, 'cosmo', fullText, false, currentConvId);
       setLastError(null);
+      setIsQuizGenerationError(false);
     } catch (err) {
       console.error(err);
       setLastError(isAr ? 'للأسف حصل خطأ في الاتصال. اضغط على الزرار عشان نعيد المحاولة.' : 'Connection failed — tap the button to retry.');
@@ -758,6 +760,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     if (!pendingQuiz || isGeneratingQuiz) return;
     setIsGeneratingQuiz(true);
     setLastError(null);
+    setIsQuizGenerationError(false);
     try {
       const generated = await generateCosmoQuizInBatches(pendingQuiz.topic, pendingQuiz.amount);
       const saved = await createQuiz({
@@ -784,7 +787,12 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       onOpenGeneratedQuiz?.(saved.id);
     } catch (error) {
       console.error('Cosmo quiz generation failed', error);
-      setLastError(isAr ? 'تعذر إنشاء الاختبار الآن. تأكد من اتصالك ثم أعد المحاولة؛ سيحافظ Cosmo على إعداداتك الحالية.' : 'The quiz could not be created right now. Check your connection and retry; your settings will remain unchanged.');
+      const details = error instanceof Error ? error.message : '';
+      const providerUnavailable = /provider|AI service|مزود|temporarily unavailable/i.test(details);
+      setLastError(isAr
+        ? (providerUnavailable ? 'مزود التوليد مشغول مؤقتاً. أعد المحاولة بعد لحظات؛ إعدادات الاختبار محفوظة كما هي.' : 'تعذر إنشاء الاختبار الآن. أعد المحاولة؛ إعدادات الاختبار محفوظة كما هي.')
+        : (providerUnavailable ? 'The quiz provider is temporarily busy. Retry shortly; your quiz settings are preserved.' : 'The quiz could not be created right now. Retry; your quiz settings are preserved.'));
+      setIsQuizGenerationError(true);
     } finally {
       setIsGeneratingQuiz(false);
     }
@@ -1140,7 +1148,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                 <div className="flex flex-col items-center gap-2 py-3">
                   <p className="text-sm text-center max-w-md" style={{ color: '#ef4444' }}>{lastError}</p>
                   <button
-                    onClick={retryLastMessage}
+                    onClick={isQuizGenerationError ? confirmQuizGeneration : retryLastMessage}
                     disabled={isAnalyzing}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-transform active:scale-95"
                     style={{ background: ACCENT, color: 'white' }}

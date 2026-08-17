@@ -830,22 +830,24 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                   </div>
 
                   <div className="glass-panel rounded-3xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50 overflow-x-auto">
-                    <table className="w-full text-sm text-left" dir={isAr ? 'rtl' : 'ltr'}>
+                    <table className="min-w-[760px] w-full text-sm text-left" dir={isAr ? 'rtl' : 'ltr'}>
                       <thead className="text-xs text-slate-500 uppercase bg-slate-50/50 dark:bg-slate-800/50">
                         <tr>
                           <th className="px-4 py-3">{isAr ? 'العملية' : 'Operation'}</th>
                           <th className="px-4 py-3">{isAr ? 'المزود' : 'Provider'}</th>
                           <th className="px-4 py-3">{isAr ? 'الـ Chunks' : 'Chunks'}</th>
                           <th className="px-4 py-3">{isAr ? 'الصفحات' : 'Pages'}</th>
+                          <th className="px-4 py-3">{isAr ? 'الحالة' : 'Status'}</th>
                           <th className="px-4 py-3">{isAr ? 'الزمن' : 'Latency'}</th>
+                          <th className="px-4 py-3">{isAr ? 'التفاصيل' : 'Details'}</th>
                           <th className="px-4 py-3">{isAr ? 'التاريخ' : 'Date'}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {isLoadingLogs ? (
-                          <tr><td colSpan={6} className="text-center py-10 text-slate-400">{isAr ? 'جاري التحميل...' : 'Loading...'}</td></tr>
+                          <tr><td colSpan={8} className="text-center py-10 text-slate-400">{isAr ? 'جاري التحميل...' : 'Loading...'}</td></tr>
                         ) : aiLogs.length === 0 ? (
-                          <tr><td colSpan={6} className="text-center py-10 text-slate-400">{isAr ? 'لا توجد سجلات حالياً' : 'No logs found'}</td></tr>
+                          <tr><td colSpan={8} className="text-center py-10 text-slate-400">{isAr ? 'لا توجد طلبات ذكاء اصطناعي مسجلة بعد. ستظهر محاولات النجاح والفشل هنا تلقائياً.' : 'No AI requests are recorded yet. Both successful and failed attempts will appear here automatically.'}</td></tr>
                         ) : aiLogs.map((log, i) => (
                           <tr key={log.id || i} className="border-b border-slate-200/50 dark:border-slate-700/50 hover:bg-slate-50/30 dark:hover:bg-slate-800/30">
                             <td className="px-4 py-3 font-bold text-slate-700 dark:text-slate-200">
@@ -856,7 +858,9 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                             <td className="px-4 py-3 text-slate-500">{log.provider}</td>
                             <td className="px-4 py-3 text-slate-500">{log.chunk_count || 1}</td>
                             <td className="px-4 py-3 text-slate-500">{log.total_pages || 1}</td>
+                            <td className="px-4 py-3"><span className={`rounded-full px-2 py-1 text-[10px] font-black ${log.status === 'success' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-600 dark:text-rose-300'}`}>{log.status === 'success' ? (isAr ? 'نجاح' : 'Success') : (isAr ? 'فشل' : 'Error')}</span></td>
                             <td className="px-4 py-3 font-mono text-xs">{log.latency_ms}ms</td>
+                            <td className="max-w-56 truncate px-4 py-3 text-xs text-slate-500" title={log.error_message || ''}>{log.error_message || '—'}</td>
                             <td className="px-4 py-3 text-slate-400 text-[10px]">{new Date(log.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-US')}</td>
                           </tr>
                         ))}

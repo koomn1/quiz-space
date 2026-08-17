@@ -14,6 +14,10 @@ const hardeningMigration = readFileSync(
   resolve(process.cwd(), 'supabase/migrations/20260818_harden_institution_function_surface.sql'),
   'utf8',
 );
+const entitlementRecoveryMigration = readFileSync(
+  resolve(process.cwd(), 'supabase/migrations/20260817_diamond_workspace_entitlement_recovery.sql'),
+  'utf8',
+);
 
 describe('institutional Diamond security contract', () => {
   it('enables RLS for institution records, seats, and audit events', () => {
@@ -50,5 +54,14 @@ describe('institutional Diamond security contract', () => {
     expect(hardeningMigration).toContain('REVOKE ALL ON FUNCTION is_institution_manager(UUID) FROM PUBLIC, anon');
     expect(hardeningMigration).toContain('REVOKE ALL ON FUNCTION is_institution_member(UUID) FROM PUBLIC, anon');
     expect(hardeningMigration).toContain('GRANT EXECUTE ON FUNCTION is_institution_manager(UUID) TO authenticated');
+  });
+
+  it('lets only an active Diamond owner provision their own missing workspace', () => {
+    expect(entitlementRecoveryMigration).toContain('CREATE OR REPLACE FUNCTION public.provision_my_diamond_institution()');
+    expect(entitlementRecoveryMigration).toContain("lower(COALESCE(plan_id, '')) = 'diamond'");
+    expect(entitlementRecoveryMigration).toContain('is_premium = true');
+    expect(entitlementRecoveryMigration).toContain('ON CONFLICT (institution_id, user_id)');
+    expect(entitlementRecoveryMigration).toContain('REVOKE ALL ON FUNCTION public.provision_my_diamond_institution() FROM PUBLIC, anon');
+    expect(entitlementRecoveryMigration).toContain('GRANT EXECUTE ON FUNCTION public.provision_my_diamond_institution() TO authenticated');
   });
 });

@@ -87,7 +87,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
-const PROVIDER_TIMEOUT_MS = 20_000;
+const PROVIDER_TIMEOUT_MS = 35_000;
 
 export async function generateQuizWithFallback(
   topic: string,

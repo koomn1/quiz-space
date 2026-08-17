@@ -7,6 +7,7 @@ import {
   Institution,
   InstitutionMember,
   InstitutionMemberRole,
+  provisionMyDiamondInstitution,
   revokeInstitutionMember,
   saveInstitutionBranding,
 } from '../lib/institutions';
@@ -43,8 +44,15 @@ export default function InstitutionWorkspace({ userId, lang, onOpenBilling }: In
     setLoading(true);
     setError(null);
     try {
-      const institutions = await getMyInstitutions();
-      const active = institutions.find((item) => item.status === 'active') || null;
+      let institutions = await getMyInstitutions();
+      let active = institutions.find((item) => item.status === 'active') || null;
+      if (!active) {
+        const provisionedInstitutionId = await provisionMyDiamondInstitution();
+        if (provisionedInstitutionId) {
+          institutions = await getMyInstitutions();
+          active = institutions.find((item) => item.id === provisionedInstitutionId && item.status === 'active') || null;
+        }
+      }
       setInstitution(active);
       if (!active) {
         setMembers([]);
