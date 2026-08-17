@@ -16,9 +16,10 @@ describe('admin and Cosmo recovery contracts', () => {
   });
 
   it('keeps trial offer state outside the coupons map callback', () => {
-    expect(subscriptionsSource).toContain('const [trialOffers, setTrialOffers] = useState<Record<number, boolean>>');
-    expect(subscriptionsSource).toContain('const toggleTrialOffer = (days: number)');
-    expect(subscriptionsSource).toContain('onClick={() => toggleTrialOffer(days)}');
+    expect(subscriptionsSource).toContain('const [trialOffers, setTrialOffers] = useState<Record<TrialOfferDuration, boolean>>');
+    expect(subscriptionsSource).toContain('const toggleTrialOffer = async (days: TrialOfferDuration)');
+    expect(subscriptionsSource).toContain('onClick={() => void toggleTrialOffer(days)}');
+    expect(subscriptionsSource).toContain('updateTrialOfferState(days, nextState)');
     expect(subscriptionsSource).not.toContain('const [isLive, setIsLive] = useState');
   });
 

@@ -2176,6 +2176,70 @@ export interface PlatformSettings {
   updatedBy?: string | null;
 }
 
+export const TRIAL_OFFER_DURATIONS = [7, 14, 30] as const;
+export type TrialOfferDuration = typeof TRIAL_OFFER_DURATIONS[number];
+
+export interface TrialOffer {
+  durationDays: TrialOfferDuration;
+  isActive: boolean;
+  updatedAt?: string;
+  updatedBy?: string | null;
+}
+
+function normalizeTrialOffer(row: any): TrialOffer | null {
+  const durationDays = Number(row?.duration_days ?? row?.durationDays);
+  if (!TRIAL_OFFER_DURATIONS.includes(durationDays as TrialOfferDuration)) return null;
+
+  return {
+    durationDays: durationDays as TrialOfferDuration,
+    isActive: row?.is_active === true || row?.isActive === true,
+    updatedAt: row?.updated_at || row?.updatedAt || undefined,
+    updatedBy: row?.updated_by || row?.updatedBy || null,
+  };
+}
+
+export async function getTrialOffers(): Promise<TrialOffer[]> {
+  if (!isSupabaseConfigured) return [];
+
+  const { data, error } = await supabase
+    .from('trial_offers')
+    .select('duration_days, is_active, updated_at, updated_by')
+    .order('duration_days', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching trial offers:', error.message);
+    throw new Error('Unable to load trial offers.');
+  }
+
+  return (data || [])
+    .map(normalizeTrialOffer)
+    .filter((offer): offer is TrialOffer => offer !== null);
+}
+
+export async function updateTrialOfferState(
+  durationDays: TrialOfferDuration,
+  isActive: boolean,
+): Promise<TrialOffer> {
+  if (!TRIAL_OFFER_DURATIONS.includes(durationDays)) {
+    throw new Error('Unsupported trial duration.');
+  }
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured');
+
+  const { data, error } = await supabase.rpc('set_trial_offer_state', {
+    p_duration_days: durationDays,
+    p_is_active: isActive,
+  });
+
+  if (error) {
+    console.error('Error updating trial offer:', error.message);
+    throw new Error('Unable to update trial offer.');
+  }
+
+  const offer = normalizeTrialOffer(Array.isArray(data) ? data[0] : data);
+  if (!offer) throw new Error('Trial offer was not persisted.');
+  return offer;
+}
+
 export async function getPlatformSettings(): Promise<PlatformSettings> {
   const defaults: PlatformSettings = { maintenanceMode: false, allowRegistrations: true };
   if (!isSupabaseConfigured) return defaults;

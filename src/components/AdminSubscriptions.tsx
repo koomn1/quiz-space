@@ -30,7 +30,11 @@ import {
   updateUserSubscription,
   createNotification,
   createCommunityPost,
-  COSMO_ADMIN_UID
+  COSMO_ADMIN_UID,
+  getTrialOffers,
+  TRIAL_OFFER_DURATIONS,
+  TrialOfferDuration,
+  updateTrialOfferState,
 } from "../lib/db";
 import { activateDiamondInstitution } from "../lib/institutions";
 
@@ -97,20 +101,40 @@ export default function AdminSubscriptions({
   const [aiPromoMsg, setAiPromoMsg] = useState("");
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [trialOffers, setTrialOffers] = useState<Record<number, boolean>>(() => {
-    if (typeof window === 'undefined') return { 7: false, 14: false, 30: false };
-    return [7, 14, 30].reduce<Record<number, boolean>>((offers, days) => {
-      offers[days] = localStorage.getItem(`quizspace_active_trial_${days}d`) === 'true';
-      return offers;
-    }, {});
-  });
+  const [trialOffers, setTrialOffers] = useState<Record<TrialOfferDuration, boolean>>({ 7: false, 14: false, 30: false });
+  const [isTrialOffersLoading, setIsTrialOffersLoading] = useState(false);
+  const [trialOfferBusyDays, setTrialOfferBusyDays] = useState<TrialOfferDuration | null>(null);
 
-  const toggleTrialOffer = (days: number) => {
+  const loadTrialOffers = async () => {
+    setIsTrialOffersLoading(true);
+    try {
+      const offers = await getTrialOffers();
+      setTrialOffers(offers.reduce<Record<TrialOfferDuration, boolean>>((state, offer) => {
+        state[offer.durationDays] = offer.isActive;
+        return state;
+      }, { 7: false, 14: false, 30: false }));
+    } catch (error) {
+      console.error('Failed to load trial offers:', error);
+      showToast('error', isAr ? 'تعذر تحميل حالة العروض التجريبية من المنصة.' : 'Unable to load trial offer status from the platform.');
+    } finally {
+      setIsTrialOffersLoading(false);
+    }
+  };
+
+  const toggleTrialOffer = async (days: TrialOfferDuration) => {
+    if (trialOfferBusyDays !== null) return;
     const nextState = !trialOffers[days];
-    setTrialOffers((offers) => ({ ...offers, [days]: nextState }));
-    localStorage.setItem(`quizspace_active_trial_${days}d`, nextState ? 'true' : 'false');
-    window.dispatchEvent(new CustomEvent('quizspace-trials-updated'));
-    showToast('success', isAr ? (nextState ? `تم إطلاق عرض الـ ${days} يوم بنجاح!` : `تم إيقاف عرض الـ ${days} يوم`) : (nextState ? `${days}-Day trial activated!` : `${days}-Day trial deactivated`));
+    setTrialOfferBusyDays(days);
+    try {
+      const savedOffer = await updateTrialOfferState(days, nextState);
+      setTrialOffers((offers) => ({ ...offers, [savedOffer.durationDays]: savedOffer.isActive }));
+      showToast('success', isAr ? (savedOffer.isActive ? `تم إطلاق عرض الـ ${days} يوم بنجاح!` : `تم إيقاف عرض الـ ${days} يوم`) : (savedOffer.isActive ? `${days}-Day trial activated!` : `${days}-Day trial deactivated`));
+    } catch (error) {
+      console.error('Failed to update trial offer:', error);
+      showToast('error', isAr ? 'تعذر تحديث العرض التجريبي. تحقق من صلاحية السوبر أدمن وحاول مجدداً.' : 'Unable to update trial offer. Verify super-admin access and try again.');
+    } finally {
+      setTrialOfferBusyDays(null);
+    }
   };
 
   const loadRealData = async () => {
@@ -151,6 +175,7 @@ export default function AdminSubscriptions({
 
   useEffect(() => {
     loadRealData();
+    void loadTrialOffers();
   }, []);
 
   const loadCoupons = async () => {
@@ -1166,21 +1191,23 @@ export default function AdminSubscriptions({
                   : "When active, trial offers appear exclusively for registered members on the subscription plans page to request super-admin activation."}
               </p>
               <div className="flex flex-wrap gap-3">
-                {[7, 14, 30].map((days) => {
+                {TRIAL_OFFER_DURATIONS.map((days) => {
                   const isLive = Boolean(trialOffers[days]);
+                  const isBusy = isTrialOffersLoading || trialOfferBusyDays === days;
                   return (
                     <div key={days} className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl">
                       <span className="text-xs font-black text-white">{isAr ? `عرض ${days} يوماً` : `${days}-Day Trial`}</span>
                       <button
                         type="button"
-                        onClick={() => toggleTrialOffer(days)}
-                        className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                        onClick={() => void toggleTrialOffer(days)}
+                        disabled={isBusy}
+                        className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer disabled:cursor-wait disabled:opacity-60 ${
                           isLive 
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
                             : 'bg-slate-800 text-slate-400 border border-slate-700'
                         }`}
                       >
-                        {isLive ? (isAr ? 'نشط (يعمل)' : 'Active') : (isAr ? 'معطل (مخفي)' : 'Inactive')}
+                        {isBusy ? (isAr ? 'جارٍ الحفظ...' : 'Saving...') : isLive ? (isAr ? 'نشط (يعمل)' : 'Active') : (isAr ? 'معطل (مخفي)' : 'Inactive')}
                       </button>
                     </div>
                   );

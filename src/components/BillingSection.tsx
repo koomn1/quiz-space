@@ -21,7 +21,7 @@ import {
   PartyPopper,
   Gift
 } from 'lucide-react';
-import { createPremiumRequest, getPremiumRequests, getCouponByCode, redeemCouponForUser } from '../lib/db';
+import { createPremiumRequest, getPremiumRequests, getCouponByCode, redeemCouponForUser, getTrialOffers } from '../lib/db';
 import { getApiUrl } from '../lib/origin';
 import { supabase } from '../lib/supabaseClient';
 
@@ -169,6 +169,9 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
   const [appliedCouponId, setAppliedCouponId] = useState<string | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+  const [activeTrialOffers, setActiveTrialOffers] = useState<number[]>([]);
+  const [isLoadingTrialOffers, setIsLoadingTrialOffers] = useState(true);
+  const [trialOffersLoadError, setTrialOffersLoadError] = useState(false);
 
   // Helper to compress image to max width 800px and jpeg quality 0.7
   const compressAndResizeImage = (file: File): Promise<string> => {
@@ -235,6 +238,30 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
   useEffect(() => {
     fetchMyRequests();
+  }, [userId]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadTrialOffers = async () => {
+      setIsLoadingTrialOffers(true);
+      setTrialOffersLoadError(false);
+      try {
+        const offers = await getTrialOffers();
+        if (active) setActiveTrialOffers(offers.filter((offer) => offer.isActive).map((offer) => offer.durationDays));
+      } catch (error) {
+        console.error('Failed to load active trial offers:', error);
+        if (active) {
+          setActiveTrialOffers([]);
+          setTrialOffersLoadError(true);
+        }
+      } finally {
+        if (active) setIsLoadingTrialOffers(false);
+      }
+    };
+
+    void loadTrialOffers();
+    return () => { active = false; };
   }, [userId]);
 
   // Reactive verification of applied coupon when selectedPlan is changed
@@ -536,21 +563,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       </div>
 
       {/* Dynamic Active Trial Offers Section (Only rendered when super admin activates one or more trial offers) */}
-      {(() => {
-        const [activeOffers, setActiveOffers] = React.useState<number[]>(() => {
-          if (typeof window === 'undefined') return [];
-          return [7, 14, 30].filter(d => localStorage.getItem(`quizspace_active_trial_${d}d`) === 'true');
-        });
-
-        React.useEffect(() => {
-          const handleUpdate = () => {
-            setActiveOffers([7, 14, 30].filter(d => localStorage.getItem(`quizspace_active_trial_${d}d`) === 'true'));
-          };
-          window.addEventListener('quizspace-trials-updated', handleUpdate);
-          return () => window.removeEventListener('quizspace-trials-updated', handleUpdate);
-        }, []);
-
-        if (activeOffers.length === 0) return null;
+      {trialOffersLoadError && (
+        <p role="alert" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold text-amber-700 dark:text-amber-300">
+          {isAr ? 'تعذر تحميل عروض التجربة حالياً. أعد فتح الصفحة لاحقاً.' : 'Trial offers could not be loaded right now. Please reopen this page later.'}
+        </p>
+      )}
+      {!isLoadingTrialOffers && activeTrialOffers.length > 0 && (() => {
 
         const allOffersMeta: Record<number, { titleAr: string; titleEn: string; descAr: string; descEn: string }> = {
           7: { titleAr: 'باقة تجريبية ٧ أيام', titleEn: '7-Day Free Trial', descAr: 'وصول كامل لكل مزايا النخبة لمدة أسبوع بموافقة السوبر أدمن', descEn: 'Full elite access for 1 week upon super admin approval' },
@@ -575,7 +593,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
-              {activeOffers.map((days) => {
+              {activeTrialOffers.map((days) => {
                 const meta = allOffersMeta[days];
                 return (
                   <div key={days} className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
