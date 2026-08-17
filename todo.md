@@ -211,3 +211,4 @@
 - [x] 198. Add telemetry write-response validation and verify a real authenticated generation appears in Super Admin AI Monitoring.
 - [x] 199. Benchmark currently available Arabic-capable AI models for Cosmo and select a fast, high-quality primary model with reliable fallbacks.
 - [x] 200. Deploy the selected Arabic model order, verify a real Arabic quiz generation, and record the production model decision.
+- [ ] 201. Add a low-latency Arabic-capable streaming fallback ahead of generic emergency models and verify first-response time in production.

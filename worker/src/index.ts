@@ -48,11 +48,12 @@ type Provider = 'openrouter' | 'openai' | 'groq' | 'deepseek';
 // with a live production model and a quality-focused Qwen fallback sequence.
 const OPENROUTER_TEXT_MODEL = 'qwen/qwen3.7-flash';
 const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
-// Keep Arabic-oriented Qwen models first. The faster option serves everyday
-// conversation, while the larger 122B model provides a strong recovery path
-// for more demanding quiz construction before zero-cost emergency fallbacks.
+// Keep Arabic-oriented Qwen models first. Mistral Small 3.1 is a multilingual,
+// low-latency bridge for streamed answers when a Qwen route cannot begin a
+// stream, before the system reaches generic emergency fallbacks.
 const OPENROUTER_TEXT_FALLBACKS = [
   'qwen/qwen3.7-flash',
+  'mistralai/mistral-small-3.1-24b-instruct',
   'qwen/qwen3-32b',
   'qwen/qwen3.5-122b-a10b',
   'nvidia/nemotron-3.5-lightning:free',
