@@ -206,4 +206,4 @@
 - [x] 193. Diagnose and repair Diamond subscription entitlement so eligible members can open and activate their Institution Workspace.
 - [x] 194. Diagnose and repair the Cosmo quiz-generation failure shown on Android, including worker request, entitlement, and actionable error handling.
 - [x] 195. Restore trustworthy AI Monitoring data flow and Super Admin rendering from live generation logs.
-- [ ] 196. Add regression coverage and verify Diamond institutions, Cosmo generation, AI monitoring, mobile layout, and production deployment.
+- [x] 196. Add regression coverage and verify Diamond institutions, Cosmo generation, AI monitoring, mobile layout, and production deployment.
