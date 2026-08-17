@@ -610,7 +610,41 @@ export default function ProfileStatsView({
               </div>
             </div>
 
-            {/* Profile Identity Text */}
+              {/* Dynamic Trial Progress Bar for Active Trial Members */}
+              {profileData?.isPremium && profileData?.renewalDate && (() => {
+                const now = Date.now();
+                const renewal = new Date(profileData.renewalDate).getTime();
+                const diffDays = Math.ceil((renewal - now) / (1000 * 60 * 60 * 24));
+                if (diffDays <= 0) return null;
+                const totalDays = diffDays <= 7 ? 7 : (diffDays <= 14 ? 14 : 30);
+                const elapsedDays = Math.max(0, totalDays - diffDays);
+                const percent = Math.min(100, Math.max(0, Math.round((elapsedDays / totalDays) * 100)));
+                return (
+                  <div className="w-full bg-slate-900/90 border border-indigo-500/30 rounded-2xl p-3.5 mb-3 text-white shadow-md">
+                    <div className="flex items-center justify-between text-xs font-black mb-2">
+                      <span className="flex items-center gap-1.5 text-indigo-300">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                        <span>{isAr ? `فترة تجريبية نشطة (${totalDays} يوم)` : `Active Trial (${totalDays} Days)`}</span>
+                      </span>
+                      <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[11px]">
+                        {isAr ? `متبقي ${diffDays} يوم` : `${diffDays} days remaining`}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/60">
+                      <div 
+                        className="bg-gradient-to-r from-indigo-500 via-primary to-emerald-400 h-full rounded-full transition-all duration-500" 
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1.5 font-medium">
+                      <span>{isAr ? `منقضي: ${percent}%` : `Elapsed: ${percent}%`}</span>
+                      <span>{isAr ? `ينتهي في: ${new Date(renewal).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}` : `Expires: ${new Date(renewal).toLocaleDateString()}`}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Profile Identity Text */}
             <div className="space-y-2 text-center md:text-right flex-1">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                 {isOwnProfile && (
