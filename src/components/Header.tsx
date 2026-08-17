@@ -158,10 +158,10 @@ export default function Header({
 	          {/* User Profile Info, Theme Select & Dark Mode */}
 	          {!isQuizLocked ? (
 	            <div className="flex items-center gap-1 sm:gap-2.5 min-w-0 flex-shrink-0">
-		              {!isGuest && (
-		                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 rounded-2xl border border-amber-200/60 bg-amber-50/40 px-2 py-1.5 dark:border-amber-900/30 dark:bg-amber-950/10 sm:px-3 sm:py-2 flex-shrink min-w-0" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
+	              {!isGuest && (
+	                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 rounded-2xl border border-amber-200/60 bg-amber-50/40 px-2 py-1.5 dark:border-amber-900/30 dark:bg-amber-950/10 sm:px-3 sm:py-2 flex-shrink min-w-0" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
 		                  <div className="flex items-center gap-1 text-[10px] font-black text-amber-600 dark:text-amber-400 sm:text-xs whitespace-nowrap">
-		                    <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+		                  <Award className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
 		                    <span className="tabular-nums">{formatLargeNumber(rewardPoints)}</span>
 		                  </div>
 		                  {rewardCoins > 0 && (
@@ -173,11 +173,27 @@ export default function Header({
 		                      </div>
 		                    </>
 		                  )}
-		                </div>
-		              )}
+	                </div>
+	              )}
+
+	              {!isGuest && (
+	                <button
+	                  type="button"
+	                  onClick={() => setTab('profile')}
+	                  className="hidden min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-right shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 sm:flex"
+	                  aria-label={lang === 'ar' ? 'فتح الملف الشخصي' : 'Open profile'}
+	                >
+	                  {photoURL ? (
+	                    <img src={photoURL} alt="" className="h-7 w-7 rounded-lg object-cover" />
+	                  ) : (
+	                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary"><User className="h-4 w-4" /></span>
+	                  )}
+	                  <span className="max-w-24 truncate text-xs font-black text-slate-700 dark:text-slate-100">{userName || (lang === 'ar' ? 'حسابي' : 'My account')}</span>
+	                </button>
+	              )}
 
 
-              {/* Authentication Triggers */}
+	              {/* Authentication Triggers */}
               {isGuest ? (
                 <button
                   onClick={onLogin}

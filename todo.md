@@ -181,3 +181,8 @@
 - [x] 169. Reconcile email login, Google OAuth, MFA, and recovery success handling without regressing existing auth flows
 - [x] 170. Improve AuthModal light/dark contrast and visual clarity using the supplied login-signup reference without reducing readability
 - [x] 171. Regression-test email login error handling, auth success paths, theme contrast, and responsive login UI
+
+- [x] 172. Create a standalone guest-only marketing landing page using the official QuizSpace logo and real in-product screenshots
+- [x] 173. Capture and optimize authentic home, quiz-creation, challenges, and rewards visuals for the guest landing page
+- [x] 174. Route authenticated users straight to the current member home and show account controls when they revisit the informational landing page
+- [x] 175. Verify guest/member routing, responsive landing visuals, contact actions, and the production build

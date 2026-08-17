@@ -13,6 +13,7 @@ import { registerPushNotifications } from './lib/pushManager';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import LandingPage from './pages/LandingPage';
+import GuestLandingPage from './pages/GuestLandingPage';
 import NotFound from './pages/NotFound';
 const QuizCreator = lazyWithRetry(() => import('./pages/QuizCreator'), 'quiz-creator');
 import QuizResolver from './components/QuizResolver';
@@ -1596,7 +1597,7 @@ export default function App() {
                 />
               ))}
               {activeTab === 'landing' && (
-                <>
+                authContext.isAuthenticated && userId && !userId.startsWith('user-guest') ? (
                   <LandingPage
                   quizzes={quizzes}
                   isLoading={isLoadingQuizzes}
@@ -1639,7 +1640,14 @@ export default function App() {
                     onLoginClick: () => setIsAuthModalOpen(true),
                   }}
                 />
-                </>
+                ) : (
+                  <GuestLandingPage
+                    lang={lang}
+                    onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
+                    onExplore={() => handleSetTab('explore', true)}
+                    onSupport={() => handleSetTab('support', true)}
+                  />
+                )
               )}
 
               {activeTab === 'my-quizzes' && (
