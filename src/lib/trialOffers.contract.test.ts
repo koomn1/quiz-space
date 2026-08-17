@@ -4,7 +4,9 @@ import { readFileSync } from 'node:fs';
 const adminSource = readFileSync(new URL('../components/AdminSubscriptions.tsx', import.meta.url), 'utf8');
 const billingSource = readFileSync(new URL('../components/BillingSection.tsx', import.meta.url), 'utf8');
 const dbSource = readFileSync(new URL('./db.ts', import.meta.url), 'utf8');
+const profileSource = readFileSync(new URL('../pages/UserProfile.tsx', import.meta.url), 'utf8');
 const migrationSource = readFileSync(new URL('../../supabase/migrations/20260817_trial_offers_persistence.sql', import.meta.url), 'utf8');
+const approvalMigrationSource = readFileSync(new URL('../../supabase/migrations/20260817_secure_premium_request_approval.sql', import.meta.url), 'utf8');
 
 describe('central trial-offer configuration contract', () => {
   it('stores fixed trial durations in a protected Supabase table and RPC', () => {
@@ -29,5 +31,16 @@ describe('central trial-offer configuration contract', () => {
     expect(billingSource).toContain('const offers = await getTrialOffers()');
     expect(adminSource).not.toContain('quizspace_active_trial_');
     expect(billingSource).not.toContain('quizspace_active_trial_');
+  });
+
+  it('keeps trial approval, offer visibility, and trial-only progress guarded by the shared contract', () => {
+    expect(dbSource).toContain('getTrialOfferDurationFromMarker');
+    expect(dbSource).toContain("supabase.rpc('approve_premium_request'");
+    expect(approvalMigrationSource).toContain('A trial cannot replace an active paid subscription.');
+    expect(approvalMigrationSource).toContain("make_interval(days => v_trial_duration)");
+    expect(adminSource).toContain('await updatePremiumRequest(');
+    expect(billingSource).toContain('!isPremium && !isLoadingTrialOffers');
+    expect(profileSource).toContain('const hasTrialSubscription = isTrialSubscription(');
+    expect(profileSource).toContain('profileData?.isPremium && hasTrialSubscription');
   });
 });

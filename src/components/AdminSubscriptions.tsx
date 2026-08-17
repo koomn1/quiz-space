@@ -35,6 +35,7 @@ import {
   TRIAL_OFFER_DURATIONS,
   TrialOfferDuration,
   updateTrialOfferState,
+  updatePremiumRequest,
 } from "../lib/db";
 import { activateDiamondInstitution } from "../lib/institutions";
 
@@ -489,20 +490,13 @@ export default function AdminSubscriptions({
       const payInfo = mockPayments.find((p) => p.id === payId);
       if (!payInfo) return;
 
-      const { error: requestErr } = await supabase.from('premium_requests').update({
-        status: 'approved',
-        updated_at: new Date().toISOString()
-      }).eq('id', payId);
-
-      if (requestErr) throw requestErr;
-
-      const { error: userErr } = await supabase.from('users').update({
-        is_premium: true,
-        plan_name: payInfo.planName,
-        renewal_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      }).eq('uid', payInfo.userId);
-
-      if (userErr) throw userErr;
+      await updatePremiumRequest(
+        payId,
+        'approved',
+        payInfo.userId,
+        undefined,
+        payInfo.planName,
+      );
 
       setMockPayments((prev) => prev.filter((p) => p.id !== payId));
       alert(

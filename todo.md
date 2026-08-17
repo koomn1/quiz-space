@@ -212,3 +212,10 @@
 - [x] 199. Benchmark currently available Arabic-capable AI models for Cosmo and select a fast, high-quality primary model with reliable fallbacks.
 - [x] 200. Deploy the selected Arabic model order, verify a real Arabic quiz generation, and record the production model decision.
 - [x] 201. Add a low-latency Arabic-capable streaming fallback ahead of generic emergency models and verify first-response time in production.
+- [x] 202. Diagnose and remove any unapproved trial state from the reported account without affecting its legitimate paid subscription.
+- [x] 203. Fix centralized trial-offer visibility so disabled offers disappear from Billing and only super-admin activation can publish 7/14/30-day trials.
+- [ ] 204. Add regression coverage and verify role-scoped offer activation, profile status, mobile rendering, and production synchronization.
+- [x] 205. Derive approved trial expiry from the persisted `TRIAL_OFFER_<days>_DAYS` marker and prevent paid memberships from being overwritten by a trial request.
+- [x] 206. Hide active trial offers from accounts that already hold an active paid membership.
+- [x] 207. Render trial expiry progress only for genuine trial plans, never for paid Diamond or Gold memberships.
+- [x] 208. Restore the reported account to its legitimate Diamond membership and disable the accidental public 7-day offer.

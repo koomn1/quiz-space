@@ -11,7 +11,7 @@ import {
   CartesianGrid, Tooltip 
 } from 'recharts';
 import { Quiz, QuizCompletion, UserStats } from '../types';
-import { getLearningStreakStatus, saveUserProfile, updateBadgeAndNameColor } from '../lib/db';
+import { getLearningStreakStatus, isTrialSubscription, saveUserProfile, updateBadgeAndNameColor } from '../lib/db';
 import RewardsSection from './RewardsSection';
 import { UserBadge } from './UserBadge';
 import { ReputationBadge } from './ReputationBadge';
@@ -613,7 +613,7 @@ export default function ProfileStatsView({
             </div>
 
               {/* Dynamic Trial Progress Bar & In-App Expiration Alert for Active Trial Members */}
-              {profileData?.isPremium && profileData?.renewalDate && (() => {
+              {profileData?.isPremium && isTrialSubscription(profileData?.planName, profileData?.planId) && profileData?.renewalDate && (() => {
                 const now = Date.now();
                 const renewal = new Date(profileData.renewalDate).getTime();
                 const diffDays = Math.ceil((renewal - now) / (1000 * 60 * 60 * 24));

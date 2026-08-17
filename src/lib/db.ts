@@ -1363,6 +1363,18 @@ export async function updatePremiumRequest(
     throw new Error('Supabase is not configured; cannot update premium request.');
   }
 
+  if (status === 'approved') {
+    const { error } = await supabase.rpc('approve_premium_request', {
+      p_request_id: requestId,
+      p_user_id: userId,
+    });
+    if (error) {
+      console.error('Error approving premium request:', error.message);
+      throw new Error('Unable to approve the subscription request.');
+    }
+    return;
+  }
+
   const { error: reqError } = await supabase.from('premium_requests').update({
     status, reject_reason: rejectReason, updated_at: new Date().toISOString(),
   }).eq('id', requestId);
@@ -1371,29 +1383,6 @@ export async function updatePremiumRequest(
     throw reqError;
   }
 
-  const userUpdate = status === 'approved'
-    ? {
-        is_premium: true,
-        plan_name: planName || 'الباقة الذهبية لمعلمي المستقبل (مفعّلة)',
-        plan_id: planId || null,
-        is_lifetime: planId === 'lifetime',
-        is_founder: planId === 'diamond',
-        renewal_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      }
-    : {
-        is_premium: false,
-        plan_name: 'Free',
-        plan_id: null,
-        is_lifetime: false,
-        is_founder: false,
-        renewal_date: null,
-      };
-
-  const { error: userError } = await supabase.from('users').update(userUpdate).eq('uid', userId);
-  if (userError) {
-    console.error('Error updating user premium status:', userError.message);
-    throw userError;
-  }
 }
 
 // ---------------- CLASSIFIED QUESTION RATINGS HANDLERS (SUPABASE DIRECT) ----------------
@@ -2178,6 +2167,31 @@ export interface PlatformSettings {
 
 export const TRIAL_OFFER_DURATIONS = [7, 14, 30] as const;
 export type TrialOfferDuration = typeof TRIAL_OFFER_DURATIONS[number];
+
+export function getTrialOfferDurationFromMarker(
+  paymentScreenshot?: string | null,
+): TrialOfferDuration | null {
+  const match = paymentScreenshot?.trim().match(/^TRIAL_OFFER_(\d+)_DAYS$/);
+  const durationDays = Number(match?.[1]);
+  return TRIAL_OFFER_DURATIONS.includes(durationDays as TrialOfferDuration)
+    ? (durationDays as TrialOfferDuration)
+    : null;
+}
+
+export function isTrialSubscription(
+  planName?: string | null,
+  planId?: string | null,
+): boolean {
+  const normalizedPlan = `${planName || ''} ${planId || ''}`.toLowerCase();
+  return normalizedPlan.includes('تجريب') || normalizedPlan.includes('trial');
+}
+
+export function getTrialRenewalDate(
+  durationDays: TrialOfferDuration,
+  from = Date.now(),
+): string {
+  return new Date(from + durationDays * 24 * 60 * 60 * 1000).toISOString();
+}
 
 export interface TrialOffer {
   durationDays: TrialOfferDuration;

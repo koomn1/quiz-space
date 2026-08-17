@@ -35,7 +35,7 @@ import {
   Download,
   Clock,
 } from "lucide-react";
-import { activateRewardFrame, deactivateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems, getPdfExportHistory, getPdfExportSignedUrl } from "../lib/db";
+import { activateRewardFrame, deactivateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems, getPdfExportHistory, getPdfExportSignedUrl, isTrialSubscription } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
 import { getApiUrl } from "../lib/origin";
 import { supabase } from "../lib/supabaseClient";
@@ -968,6 +968,10 @@ export default function UserProfile({
   // Using the raw string here silently fell through to the 'none'-only
   // default case for every non-English plan name.
   const planName = getUserRoleAndPlan(profileData).plan;
+  const hasTrialSubscription = isTrialSubscription(
+    profileData?.planName,
+    (profileData as any)?.planId,
+  );
 
   // 100% Genuine Dynamic Statistics Calculation
   const completionsCount = profileData?.completions?.length || 0;
@@ -1141,7 +1145,7 @@ export default function UserProfile({
                 style={{ textAlign: isAr ? "right" : "left" }}
               >
                 {/* Dynamic Trial Progress Bar & In-App Expiration Alert for Active Trial Members */}
-                {profileData?.isPremium && (profileData as any)?.renewalDate && (() => {
+                {profileData?.isPremium && hasTrialSubscription && (profileData as any)?.renewalDate && (() => {
                   const now = Date.now();
                   const renewal = new Date((profileData as any).renewalDate).getTime();
                   const diffDays = Math.ceil((renewal - now) / (1000 * 60 * 60 * 24));

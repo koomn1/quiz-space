@@ -568,7 +568,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
           {isAr ? 'تعذر تحميل عروض التجربة حالياً. أعد فتح الصفحة لاحقاً.' : 'Trial offers could not be loaded right now. Please reopen this page later.'}
         </p>
       )}
-      {!isLoadingTrialOffers && activeTrialOffers.length > 0 && (() => {
+      {!isPremium && !isLoadingTrialOffers && activeTrialOffers.length > 0 && (() => {
 
         const allOffersMeta: Record<number, { titleAr: string; titleEn: string; descAr: string; descEn: string }> = {
           7: { titleAr: 'باقة تجريبية ٧ أيام', titleEn: '7-Day Free Trial', descAr: 'وصول كامل لكل مزايا النخبة لمدة أسبوع بموافقة السوبر أدمن', descEn: 'Full elite access for 1 week upon super admin approval' },
