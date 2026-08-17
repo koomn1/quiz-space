@@ -210,4 +210,4 @@
 - [x] 197. Diagnose and repair the AI worker telemetry insert path so authenticated Cosmo requests persist success and error records in Supabase.
 - [x] 198. Add telemetry write-response validation and verify a real authenticated generation appears in Super Admin AI Monitoring.
 - [x] 199. Benchmark currently available Arabic-capable AI models for Cosmo and select a fast, high-quality primary model with reliable fallbacks.
-- [ ] 200. Deploy the selected Arabic model order, verify a real Arabic quiz generation, and record the production model decision.
+- [x] 200. Deploy the selected Arabic model order, verify a real Arabic quiz generation, and record the production model decision.
