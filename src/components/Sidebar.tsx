@@ -60,7 +60,13 @@ export default function Sidebar({
     }
   }
 
-  const menuItems: Array<{ id: string; label: string; isPremiumOnly?: boolean; showBadge?: string | number; isLink?: boolean; href?: string }> = [
+  const isGuest = !userEmail;
+
+  let menuItems: Array<{ id: string; label: string; isPremiumOnly?: boolean; showBadge?: string | number; isLink?: boolean; href?: string }> = isGuest ? [
+    { id: 'landing', label: isAr ? 'الرئيسية' : 'Home' },
+    { id: 'explore', label: isAr ? 'استكشاف' : 'Explore' },
+    { id: 'support', label: isAr ? 'الدعم الفني' : 'Support' }
+  ] : [
     { id: 'landing', label: isAr ? 'الرئيسية' : 'Home' },
     { id: 'explore', label: isAr ? 'استكشاف' : 'Explore' },
     { id: 'create', label: isAr ? 'إنشاء اختبار' : 'Create Quiz' },
@@ -78,8 +84,6 @@ export default function Sidebar({
   if (isAdmin) {
     menuItems.push({ id: 'admin', label: isAr ? 'لوحة الإدارة' : 'Admin Panel' });
   }
-
-  const isGuest = !userEmail;
   const hasActiveMembership = isPremium || ['gold', 'diamond', 'premium'].includes(planClean);
 
   // Minimalist Line-Art Icon Mapper

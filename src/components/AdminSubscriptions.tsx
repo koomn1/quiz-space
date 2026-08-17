@@ -1067,6 +1067,41 @@ export default function AdminSubscriptions({
               </h3>
             </div>
 
+            {/* Quick Trial Offers Builder (7, 14, 30 Days) */}
+            <div className="mb-6 bg-slate-950/80 p-5 rounded-2xl border border-indigo-500/30">
+              <p className="text-xs font-extrabold text-indigo-300 mb-3 flex items-center gap-2">
+                <Crown className="w-4 h-4 text-amber-400" />
+                {isAr ? "إطلاق عرض تجريبي سريع (عروض 7، 14، أو 30 يوم لجميع المستخدمين عبر الإشعارات)" : "Launch Quick Trial Offer (7, 14, or 30 days broadcast to all users)"}
+              </p>
+              <div className="flex flex-wrap gap-2.5">
+                {[7, 14, 30].map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() => {
+                      const code = `TRIAL${days}D_${Date.now().toString().slice(-4)}`;
+                      setNewPromoCode(code);
+                      setNewDiscountPercent(100);
+                      setNewMaxUses(999);
+                      const expiry = new Date(Date.now() + (days + 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                      setNewExpiryDate(expiry);
+                      setNewApplicablePlans(['silver', 'gold', 'diamond']);
+                      setAiPromoMsg(
+                        isAr
+                          ? `🎉 عرض تجريبي حصري لفترة ${days} يوماً! تم فتح باقات النخبة مجاناً لجميع طلاب المنصة. بادر بطلب تفعيل عرضك التجريبي الآن من صفحة باقات الاشتراك!`
+                          : `🎉 Exclusive ${days}-Day Free Trial Offer! Elite plans unlocked for all students. Claim your trial now from the subscription plans page!`
+                      );
+                      showToast('success', isAr ? `تم تحضير عرض الـ ${days} يوم بنجاح!` : `${days}-Day trial offer prepared!`);
+                    }}
+                    className="px-4 py-2 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                    {isAr ? `عروض تجريبية ${days} يوماً` : `${days}-Day Trial`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-300 flex items-center gap-1">
