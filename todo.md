@@ -186,3 +186,18 @@
 - [x] 173. Capture and optimize authentic home, quiz-creation, challenges, and rewards visuals for the guest landing page
 - [x] 174. Route authenticated users straight to the current member home and show account controls when they revisit the informational landing page
 - [x] 175. Verify guest/member routing, responsive landing visuals, contact actions, and the production build
+- [x] 176. Implement dynamic trial duration parsing (7, 14, 30 days) on super-admin approval and calculate exact renewal/expiry timestamps
+- [x] 177. Persist trial start and expiration dates in user subscription records and enforce automatic expiration checks
+- [x] 178. Verify dynamic trial approval, duration persistence, and test coverage
+- [x] 179. Add visual trial progress bar component in the user dashboard showing remaining days, percentage elapsed, and expiry countdown
+- [x] 180. Verify trial progress bar rendering, responsive design, and production build
+- [x] 181. Make trial progress bar color dynamically shift to red when remaining days are less than 3 days
+- [x] 182. Verify red alert threshold styling, responsiveness, and final production build
+- [x] 183. Implement in-app alert banner & notification system for trials expiring in 3 days or less without spamming
+- [x] 184. Verify trial expiration alert notification, action link to billing, and production build
+- [ ] 185. Add Super Admin Trial Analytics section showing active trial counts and members approaching expiration (<= 3 days)
+- [ ] 186. Verify Super Admin trial stats rendering, real-time metrics, responsive design, and production build
+- [x] 187. Raise the quiz generation question-count options and enforce the new cap safely across generator inputs.
+- [x] 188. Diagnose and fix the AI Monitoring tab/page failure with guarded data loading and mobile-safe rendering.
+- [x] 189. Diagnose and fix the Admin Subscriptions coupons tab failure, including React hook correctness and safe coupon state handling.
+- [x] 190. Add regression coverage and verify direct navigation, Android-sized rendering, type-check, and production build for the repaired paths.

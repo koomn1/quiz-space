@@ -97,6 +97,21 @@ export default function AdminSubscriptions({
   const [aiPromoMsg, setAiPromoMsg] = useState("");
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [trialOffers, setTrialOffers] = useState<Record<number, boolean>>(() => {
+    if (typeof window === 'undefined') return { 7: false, 14: false, 30: false };
+    return [7, 14, 30].reduce<Record<number, boolean>>((offers, days) => {
+      offers[days] = localStorage.getItem(`quizspace_active_trial_${days}d`) === 'true';
+      return offers;
+    }, {});
+  });
+
+  const toggleTrialOffer = (days: number) => {
+    const nextState = !trialOffers[days];
+    setTrialOffers((offers) => ({ ...offers, [days]: nextState }));
+    localStorage.setItem(`quizspace_active_trial_${days}d`, nextState ? 'true' : 'false');
+    window.dispatchEvent(new CustomEvent('quizspace-trials-updated'));
+    showToast('success', isAr ? (nextState ? `تم إطلاق عرض الـ ${days} يوم بنجاح!` : `تم إيقاف عرض الـ ${days} يوم`) : (nextState ? `${days}-Day trial activated!` : `${days}-Day trial deactivated`));
+  };
 
   const loadRealData = async () => {
     try {
@@ -541,7 +556,79 @@ export default function AdminSubscriptions({
 
       {/* Users Tab */}
       {subTab === "users" && !selectedUser && (
-        <div className="space-y-4 text-sm">
+        <div className="space-y-6 text-sm">
+          {/* Trial Analytics Dashboard Card */}
+          {(() => {
+            const now = Date.now();
+            const activeTrials = mockUsers.filter(u => u.isPremium);
+            const expiringSoon = activeTrials.filter(u => {
+              const renewal = (u as any).renewalDate ? new Date((u as any).renewalDate).getTime() : 0;
+              if (!renewal) return false;
+              const diffDays = Math.ceil((renewal - now) / (1000 * 60 * 60 * 24));
+              return diffDays > 0 && diffDays <= 3;
+            });
+            return (
+              <div className="bg-gradient-to-br from-indigo-950/80 via-slate-900 to-slate-950 p-6 rounded-3xl border border-indigo-500/30 text-white shadow-xl space-y-4">
+                <div className="flex items-center justify-between border-b border-indigo-500/20 pb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-black">
+                      📊
+                    </span>
+                    <div>
+                      <h3 className="text-base font-black">
+                        {isAr ? "إحصائيات الفترات التجريبية والاشتراكات" : "Trial & Subscription Analytics"}
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        {isAr ? "متابعة حية للاشتراكات النشطة والحسابات القريبة من انتهاء الفترة التجريبية" : "Live tracking of active subscriptions and expiring trials"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-black">
+                      {isAr ? `إجمالي النشطين: ${activeTrials.length}` : `Active Total: ${activeTrials.length}`}
+                    </span>
+                    <span className="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/35 text-rose-300 text-xs font-black animate-pulse">
+                      {isAr ? `ينتهي قريباً (≤3 أيام): ${expiringSoon.length}` : `Expiring Soon (≤3d): ${expiringSoon.length}`}
+                    </span>
+                  </div>
+                </div>
+
+                {expiringSoon.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-black text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>⚠️</span>
+                      <span>{isAr ? "حسابات تجريبية تقترب من انتهاء الصلاحية:" : "Trials expiring in 3 days or less:"}</span>
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {expiringSoon.map((u) => {
+                        const renewal = new Date((u as any).renewalDate).getTime();
+                        const daysLeft = Math.ceil((renewal - now) / (1000 * 60 * 60 * 24));
+                        return (
+                          <div key={u.userId} className="bg-slate-900/90 border border-rose-500/40 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-md">
+                            <div className="min-w-0">
+                              <p className="font-bold text-xs truncate text-white">{u.name}</p>
+                              <p className="text-[10px] text-slate-400 truncate">{u.email || u.userId}</p>
+                              <p className="text-[10px] text-rose-400 font-extrabold mt-0.5">
+                                {isAr ? `متبقي ${daysLeft} أيام فقط` : `${daysLeft} days left`}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedUser(u)}
+                              className="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] transition-all shrink-0 cursor-pointer"
+                            >
+                              {isAr ? "إدارة" : "Manage"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-4 gap-4">
             <div className="flex-1">
               <h3 className="font-bold text-slate-800 dark:text-white mb-2">
@@ -1080,20 +1167,13 @@ export default function AdminSubscriptions({
               </p>
               <div className="flex flex-wrap gap-3">
                 {[7, 14, 30].map((days) => {
-                  const storageKey = `quizspace_active_trial_${days}d`;
-                  const [isLive, setIsLive] = useState(() => localStorage.getItem(storageKey) === 'true');
+                  const isLive = Boolean(trialOffers[days]);
                   return (
                     <div key={days} className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl">
                       <span className="text-xs font-black text-white">{isAr ? `عرض ${days} يوماً` : `${days}-Day Trial`}</span>
                       <button
                         type="button"
-                        onClick={() => {
-                          const nextState = !isLive;
-                          setIsLive(nextState);
-                          localStorage.setItem(storageKey, nextState ? 'true' : 'false');
-                          window.dispatchEvent(new CustomEvent('quizspace-trials-updated'));
-                          showToast('success', isAr ? (nextState ? `تم إطلاق عرض الـ ${days} يوم بنجاح!` : `تم إيقاف عرض الـ ${days} يوم`) : (nextState ? `${days}-Day trial activated!` : `${days}-Day trial deactivated`));
-                        }}
+                        onClick={() => toggleTrialOffer(days)}
                         className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                           isLive 
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 

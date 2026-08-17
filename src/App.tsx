@@ -1782,6 +1782,7 @@ export default function App() {
                       if (plan !== undefined) setUserPlanName(plan);
                     }
                   }}
+                  onOpenBilling={() => handleSetTab('billing')}
                 />
               )}
 

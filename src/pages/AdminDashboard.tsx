@@ -93,6 +93,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const [newAdminMsgText, setNewAdminMsgText] = useState('');
   const [aiLogs, setAiLogs] = useState<any[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [aiMonitoringError, setAiMonitoringError] = useState<string | null>(null);
   const [rewardBalances, setRewardBalances] = useState<Record<string, any>>({});
   const [rewardOrders, setRewardOrders] = useState<any[]>([]);
   const [grantUserId, setGrantUserId] = useState('');
@@ -103,6 +104,21 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const [rewardBusy, setRewardBusy] = useState<string | null>(null);
   const [isUserListOpen, setIsUserListOpen] = useState(false);
   const userListRef = useRef<HTMLDivElement>(null);
+
+  const loadAiMonitoringLogs = async () => {
+    setIsLoadingLogs(true);
+    setAiMonitoringError(null);
+    try {
+      const logs = await getAiPerformanceLogs();
+      setAiLogs(Array.isArray(logs) ? logs.filter((log) => log && typeof log === 'object') : []);
+    } catch (error) {
+      console.error('Failed to load AI performance logs:', error);
+      setAiLogs([]);
+      setAiMonitoringError(isAr ? 'تعذر تحميل سجلات مراقبة الذكاء الاصطناعي. أعد المحاولة لاحقاً.' : 'AI monitoring logs could not be loaded. Please try again later.');
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -166,12 +182,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
 
   useEffect(() => {
     if (activeAdminTab === 'ai_monitoring') {
-      (async () => {
-        setIsLoadingLogs(true);
-        const logs = await getAiPerformanceLogs();
-        setAiLogs(logs);
-        setIsLoadingLogs(false);
-      })();
+      void loadAiMonitoringLogs();
     }
   }, [activeAdminTab]);
 
@@ -785,16 +796,19 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                       {isAr ? 'مراقبة أداء محرك الذكاء الاصطناعي' : 'AI Engine Performance Monitoring'}
                     </h3>
                     <button 
-                      onClick={async () => {
-                        setIsLoadingLogs(true);
-                        setAiLogs(await getAiPerformanceLogs());
-                        setIsLoadingLogs(false);
-                      }}
-                      className="text-xs font-bold text-primary hover:underline"
+                      onClick={() => void loadAiMonitoringLogs()}
+                      disabled={isLoadingLogs}
+                      className="text-xs font-bold text-primary hover:underline disabled:cursor-wait disabled:opacity-60"
                     >
                       {isAr ? 'تحديث البيانات' : 'Refresh Data'}
                     </button>
                   </div>
+
+                  {aiMonitoringError && (
+                    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold text-amber-700 dark:text-amber-300">
+                      {aiMonitoringError}
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="glass-panel p-4 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">

@@ -41,6 +41,7 @@ interface ProfileStatsViewProps {
   handleAvatarClick: () => void;
   isUploadingPhoto: boolean;
   onRefresh?: () => void;
+  onOpenBilling?: () => void;
 }
 
 export function TelegramBadge({ className = "w-5 h-5", colorClass = "text-sky-400" }: { className?: string; colorClass?: string }) {
@@ -273,7 +274,8 @@ export default function ProfileStatsView({
   onShareQuiz,
   handleAvatarClick,
   isUploadingPhoto,
-  onRefresh
+  onRefresh,
+  onOpenBilling
 }: ProfileStatsViewProps) {
   const isAr = lang === 'ar';
   const [activeTab, setActiveTab] = React.useState<'overview' | 'quizzes' | 'achievements' | 'bookmarks' | 'activity'>('overview');
@@ -610,7 +612,7 @@ export default function ProfileStatsView({
               </div>
             </div>
 
-              {/* Dynamic Trial Progress Bar for Active Trial Members */}
+              {/* Dynamic Trial Progress Bar & In-App Expiration Alert for Active Trial Members */}
               {profileData?.isPremium && profileData?.renewalDate && (() => {
                 const now = Date.now();
                 const renewal = new Date(profileData.renewalDate).getTime();
@@ -621,25 +623,59 @@ export default function ProfileStatsView({
                 const percent = Math.min(100, Math.max(0, Math.round((elapsedDays / totalDays) * 100)));
                 const isUrgent = diffDays <= 3;
                 return (
-                  <div className={`w-full bg-slate-900/90 border rounded-2xl p-3.5 mb-3 text-white shadow-md transition-all ${isUrgent ? 'border-red-500/50 shadow-red-500/10' : 'border-indigo-500/30'}`}>
-                    <div className="flex items-center justify-between text-xs font-black mb-2">
-                      <span className={`flex items-center gap-1.5 ${isUrgent ? 'text-red-400' : 'text-indigo-300'}`}>
-                        <Sparkles className={`w-3.5 h-3.5 ${isUrgent ? 'text-red-500 animate-bounce' : 'text-amber-400 animate-pulse'}`} />
-                        <span>{isAr ? (isUrgent ? `⚠️ تنبيه: ينتهي العرض قريباً (${totalDays} يوم)` : `فترة تجريبية نشطة (${totalDays} يوم)`) : `Active Trial (${totalDays} Days)`}</span>
-                      </span>
-                      <span className={`${isUrgent ? 'text-red-400 bg-red-500/10 border-red-500/40 animate-pulse' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'} border px-2.5 py-0.5 rounded-full text-[11px]`}>
-                        {isAr ? `متبقي ${diffDays} يوم فقط` : `${diffDays} days remaining`}
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/60">
-                      <div 
-                        className={`h-full rounded-full transition-all duration-500 ${isUrgent ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 animate-pulse' : 'bg-gradient-to-r from-indigo-500 via-primary to-emerald-400'}`} 
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1.5 font-medium">
-                      <span>{isAr ? `منقضي: ${percent}%` : `Elapsed: ${percent}%`}</span>
-                      <span className={isUrgent ? 'text-red-400 font-bold' : ''}>{isAr ? `ينتهي في: ${new Date(renewal).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}` : `Expires: ${new Date(renewal).toLocaleDateString()}`}</span>
+                  <div className="space-y-3 mb-4">
+                    {/* In-App Urgent Notification Banner for <= 3 days */}
+                    {isUrgent && (
+                      <div className="w-full bg-gradient-to-r from-red-950/90 via-rose-950/85 to-slate-950/90 border border-red-500/50 rounded-2xl p-3.5 text-white shadow-lg flex items-center justify-between gap-3 animate-pulse">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-8 h-8 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
+                            <Clock className="w-4 h-4 text-red-400" />
+                          </span>
+                          <div>
+                            <p className="text-xs font-black text-red-300">
+                              {isAr ? `تنبيه هام: الفترة التجريبية ستنتهي خلال ${diffDays} أيام!` : `Urgent: Your trial expires in ${diffDays} days!`}
+                            </p>
+                            <p className="text-[11px] text-slate-300 mt-0.5">
+                              {isAr ? 'قم بترقية حسابك الآن لتجنب فقدان المزايا المتقدمة.' : 'Upgrade your account now to keep premium benefits.'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (onOpenBilling) {
+                              onOpenBilling();
+                            } else {
+                              window.location.hash = '#billing';
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-[11px] transition-all shadow-md shrink-0 cursor-pointer"
+                        >
+                          {isAr ? 'ترقية الآن' : 'Upgrade'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Progress Bar Card */}
+                    <div className={`w-full bg-slate-900/90 border rounded-2xl p-3.5 text-white shadow-md transition-all ${isUrgent ? 'border-red-500/50 shadow-red-500/10' : 'border-indigo-500/30'}`}>
+                      <div className="flex items-center justify-between text-xs font-black mb-2">
+                        <span className={`flex items-center gap-1.5 ${isUrgent ? 'text-red-400' : 'text-indigo-300'}`}>
+                          <Sparkles className={`w-3.5 h-3.5 ${isUrgent ? 'text-red-500 animate-bounce' : 'text-amber-400 animate-pulse'}`} />
+                          <span>{isAr ? (isUrgent ? `⚠️ تنبيه: ينتهي العرض قريباً (${totalDays} يوم)` : `فترة تجريبية نشطة (${totalDays} يوم)`) : `Active Trial (${totalDays} Days)`}</span>
+                        </span>
+                        <span className={`${isUrgent ? 'text-red-400 bg-red-500/10 border-red-500/40 animate-pulse' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'} border px-2.5 py-0.5 rounded-full text-[11px]`}>
+                          {isAr ? `متبقي ${diffDays} يوم فقط` : `${diffDays} days remaining`}
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/60">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${isUrgent ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 animate-pulse' : 'bg-gradient-to-r from-indigo-500 via-primary to-emerald-400'}`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1.5 font-medium">
+                        <span>{isAr ? `منقضي: ${percent}%` : `Elapsed: ${percent}%`}</span>
+                        <span className={isUrgent ? 'text-red-400 font-bold' : ''}>{isAr ? `ينتهي في: ${new Date(renewal).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}` : `Expires: ${new Date(renewal).toLocaleDateString()}`}</span>
+                      </div>
                     </div>
                   </div>
                 );
