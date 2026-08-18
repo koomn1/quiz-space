@@ -155,7 +155,8 @@ export default function AdminSubscriptions({
       setMockUsers(mappedUsers);
 
       const requests = await getPremiumRequests();
-      const payments = requests.map((r) => ({
+      const pendingRequests = requests.filter((r) => (r.status || "pending") === "pending");
+      const payments = pendingRequests.map((r) => ({
         id: r.id,
         userId: r.userId,
         userName: r.userName || r.userEmail,
