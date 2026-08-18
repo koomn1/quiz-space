@@ -219,7 +219,7 @@
 - [x] 206. Hide active trial offers from accounts that already hold an active paid membership.
 - [x] 207. Render trial expiry progress only for genuine trial plans, never for paid Diamond or Gold memberships.
 - [x] 208. Restore the reported account to its legitimate Diamond membership and disable the accidental public 7-day offer.
-- [ ] 209. Perform a live authenticated smoke check of the Diamond account profile, Billing page, and navigation after the trial-subscription fix.
-- [ ] 210. Verify live database state, rejected-trial audit history, and inactive trial-offer configuration against the published behaviour.
-- [ ] 211. Document all verified live paths and remediate any discrepancy found during the review.
+- [x] 209. Perform a live authenticated smoke check of the Diamond account profile, Billing page, and navigation after the trial-subscription fix.
+- [x] 210. Verify live database state, rejected-trial audit history, and inactive trial-offer configuration against the published behaviour.
+- [x] 211. Document all verified live paths and remediate any discrepancy found during the review.
 - [x] 212. Exclude approved and rejected subscription requests from the actionable admin payment-review queue so only pending requests show approval controls.
