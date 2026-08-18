@@ -64,6 +64,9 @@ const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
   'profile-cover-1': { background: '#09090b' },
   'profile-cover-2': { background: '#09090b' },
   'profile-cover-3': { background: '#09090b' },
+  'profile-cover-4': { background: '#09090b' },
+  'profile-cover-5': { background: '#09090b' },
+  'profile-cover-6': { background: '#09090b' },
 };
 
 function formatPdfSize(bytes: number, lang: "ar" | "en") {
@@ -573,7 +576,7 @@ export default function UserProfile({
           const availableCoverIds = new Set([
             "profile-cover-youth", "profile-cover-girl", "profile-cover-gaming", "profile-cover-education",
             "profile-cover-sport", "profile-cover-coding", "profile-cover-music", "profile-cover-nature",
-            "profile-cover-1", "profile-cover-2", "profile-cover-3",
+            "profile-cover-1", "profile-cover-2", "profile-cover-3", "profile-cover-4", "profile-cover-5", "profile-cover-6",
             "custom"
           ]);
           setChosenBg(availableCoverIds.has(parsedBg) ? parsedBg : "profile-cover-youth");
@@ -1940,23 +1943,25 @@ export default function UserProfile({
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  ['profile-cover-youth', '🎧', 'شاب التقنية', 'Tech Student'],
-                  ['profile-cover-girl', '📚', 'فتاة مبدعة', 'Creative Student'],
-                  ['profile-cover-gaming', '🎮', 'عالم الألعاب', 'Gaming Zone'],
-                  ['profile-cover-education', '✏️', 'مكتب التعليم', 'Study Desk'],
-                  ['profile-cover-sport', '🏃', 'الطاقة الرياضية', 'Sports Energy'],
-                  ['profile-cover-coding', '💻', 'مطور الذكاء الاصطناعي', 'AI Coder'],
-                  ['profile-cover-music', '🎵', 'استوديو الموسيقى', 'Music Studio'],
-                  ['profile-cover-nature', '🏔️', 'مغامرة الطبيعة', 'Nature Explorer'],
-                  ['profile-cover-1', '🌌', 'الفضاء الكوني', 'Cosmic Space'],
-                  ['profile-cover-2', '🏛️', 'مكتبة المستقبل', 'Future Library'],
-                  ['profile-cover-3', '🕸️', 'الشبكة العصبية', 'Neural Network'],
-                ].map(([id, icon, ar, en]) => (
+                  ['profile-cover-youth', 'شاب التقنية', 'Tech Student'],
+                  ['profile-cover-girl', 'فتاة مبدعة', 'Creative Student'],
+                  ['profile-cover-gaming', 'عالم الألعاب', 'Gaming Zone'],
+                  ['profile-cover-education', 'مكتب التعليم', 'Study Desk'],
+                  ['profile-cover-sport', 'الطاقة الرياضية', 'Sports Energy'],
+                  ['profile-cover-coding', 'مطور الذكاء الاصطناعي', 'AI Coder'],
+                  ['profile-cover-music', 'استوديو الموسيقى', 'Music Studio'],
+                  ['profile-cover-nature', 'مغامرة الطبيعة', 'Nature Explorer'],
+                  ['profile-cover-1', 'الفضاء الكوني', 'Cosmic Space'],
+                  ['profile-cover-2', 'مكتبة المستقبل', 'Future Library'],
+                  ['profile-cover-3', 'الشبكة العصبية', 'Neural Network'],
+                  ['profile-cover-4', 'مرصد التعلّم', 'Learning Observatory'],
+                  ['profile-cover-5', 'مختبر الإبداع', 'Creative Lab'],
+                  ['profile-cover-6', 'أكاديمية الغد', 'Future Academy'],
+                ].map(([id, ar, en]) => (
                   <button key={id} type="button" onClick={() => setChosenBg(id)} className={`relative overflow-hidden p-3 rounded-2xl border-2 text-center transition-all cursor-pointer ${chosenBg === id ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20 scale-[1.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-primary/50'}`}>
-                    <div className="absolute inset-0 bg-cover bg-center opacity-55" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}covers/${id}.png)` }} />
+                    <div className="absolute inset-0 bg-cover bg-center opacity-55" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}covers/${id}.webp)` }} />
                     <div className="absolute inset-0 bg-slate-950/35" />
-                    <div className="relative z-10 text-lg leading-none mb-1">{icon}</div>
-                    <div className="relative z-10 text-[10px] font-black text-white drop-shadow-md">{isAr ? ar : en}</div>
+                    <div className="relative z-10 flex min-h-9 items-end justify-center text-[10px] font-black text-white drop-shadow-md">{isAr ? ar : en}</div>
                   </button>
                 ))}
               </div>

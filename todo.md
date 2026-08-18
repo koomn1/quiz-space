@@ -236,3 +236,4 @@
 - [x] 223. Complete super-admin store controls for profile frames, including creating inventory records and toggling individual products between visible and hidden.
 - [x] 224. Produce a validated security report that distinguishes confirmed critical vulnerabilities from generic advisories and prioritises remediation.
 - [x] 225. Preserve all selectable built-in cover identifiers on profile reload, including the cosmic, library, and neural presets currently omitted from validation.
+- [x] 226. Repair built-in cover picker previews to use the deployed WebP assets and extend the safe preset catalog with three compressed modern cover choices.

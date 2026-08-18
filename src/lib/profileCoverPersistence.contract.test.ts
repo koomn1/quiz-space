@@ -19,5 +19,7 @@ describe('profile cover persistence contract', () => {
 
   it('keeps every visible built-in cover valid after a reload', () => {
     expect(profileSource).toContain('"profile-cover-1", "profile-cover-2", "profile-cover-3"');
+    expect(profileSource).toContain('"profile-cover-4", "profile-cover-5", "profile-cover-6"');
+    expect(profileSource).toContain('covers/${id}.webp');
   });
 });
