@@ -523,6 +523,16 @@ export default function UserProfile({
             });
           }
 
+          // Older sessions could lose the serialized location payload during
+          // auth synchronization. Recover an uploaded cover from its dedicated
+          // database column so it survives refreshes and new-device sign-ins.
+          if (parsedBg === 'custom' && !parsedCustomBgUrl && stats.coverUrl) {
+            parsedCustomBgUrl = stats.coverUrl;
+          } else if (!locStr.includes('||bg:') && stats.coverUrl) {
+            parsedBg = 'custom';
+            parsedCustomBgUrl = stats.coverUrl;
+          }
+
           let parsedBgSpeed = 1.0;
           let parsedBgBrightness = 100;
           let parsedBgGlow = 1.0;
@@ -563,6 +573,7 @@ export default function UserProfile({
           const availableCoverIds = new Set([
             "profile-cover-youth", "profile-cover-girl", "profile-cover-gaming", "profile-cover-education",
             "profile-cover-sport", "profile-cover-coding", "profile-cover-music", "profile-cover-nature",
+            "profile-cover-1", "profile-cover-2", "profile-cover-3",
             "custom"
           ]);
           setChosenBg(availableCoverIds.has(parsedBg) ? parsedBg : "profile-cover-youth");

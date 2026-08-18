@@ -821,6 +821,7 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       categoryId: userRow?.category_id || undefined,
       bio: userRow?.bio || '',
       location: userRow?.location || '',
+      coverUrl: userRow?.cover_url || '',
       phone: userRow?.phone || '',
       activeFrameId: userRow?.active_frame_id || '',
       isAdmin: userRow?.is_admin || false,
@@ -872,9 +873,6 @@ export async function saveUserProfile(
     uid: userId,
     id: userId,
     name,
-    email: email || '',
-    bio: bio || '',
-    location: location || '',
     // Guarded like custom_id: only touch these when the caller explicitly
     // provides them, so an unrelated name/bio save can't wipe out the badge
     // color that update_badge_and_name_color() set separately.
@@ -886,13 +884,17 @@ export async function saveUserProfile(
     updated_at: new Date().toISOString(),
   };
 
-  // Extract customBg from location if possible to ensure DB field stays in sync if needed,
-  // though location currently stores the full serialized string.
-  if (location && location.includes('||customBg:')) {
+  // The sign-in synchronizer only knows identity fields. Leaving profile
+  // fields out of its partial update preserves a user's bio and custom cover.
+  if (email !== undefined) updatedUser.email = email;
+  if (bio !== undefined) updatedUser.bio = bio;
+  if (location !== undefined) updatedUser.location = location;
+
+  // Keep a dedicated, recoverable copy of the custom cover in sync with the
+  // serialized profile settings. Explicit removal clears the fallback value.
+  if (location !== undefined && location.includes('||customBg:')) {
     const match = location.match(/\|\|customBg:([^|]*)/);
-    if (match && match[1]) {
-      updatedUser.cover_url = match[1];
-    }
+    updatedUser.cover_url = match?.[1]?.trim() || null;
   }
 
   if (onboarded !== undefined) updatedUser.onboarded = onboarded;
@@ -2752,6 +2754,57 @@ export async function getRewardStoreItems() {
   const { data, error } = await supabase.from('reward_store_items').select('*').eq('is_active', true).order('sort_order', { ascending: true });
   if (error) throw error;
   return data || [];
+}
+
+export async function getAdminRewardStoreItems() {
+  const { data, error } = await supabase.from('reward_store_items').select('*').eq('item_type', 'frame').order('sort_order', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export interface AdminRewardFrameInput {
+  id: string;
+  name: string;
+  nameAr: string;
+  description?: string;
+  descriptionAr?: string;
+  pricePoints: number;
+  priceEgp?: number;
+  imageUrl: string;
+  cssClass?: string;
+  minPlan: 'free' | 'silver' | 'gold' | 'diamond';
+  sortOrder: number;
+  isFeatured?: boolean;
+  isActive?: boolean;
+}
+
+export async function adminSaveRewardFrame(frame: AdminRewardFrameInput) {
+  const { data, error } = await supabase.rpc('admin_upsert_reward_store_item', {
+    p_id: frame.id,
+    p_name: frame.name,
+    p_name_ar: frame.nameAr,
+    p_description: frame.description || '',
+    p_description_ar: frame.descriptionAr || '',
+    p_price_points: frame.pricePoints,
+    p_price_egp: frame.priceEgp || 0,
+    p_image_url: frame.imageUrl,
+    p_css_class: frame.cssClass || null,
+    p_min_plan: frame.minPlan,
+    p_sort_order: frame.sortOrder,
+    p_is_featured: Boolean(frame.isFeatured),
+    p_is_active: frame.isActive !== false,
+  });
+  if (error) return { success: false, message: error.message };
+  return data;
+}
+
+export async function adminSetRewardFrameVisibility(itemId: string, isActive: boolean) {
+  const { data, error } = await supabase.rpc('admin_set_reward_store_item_visibility', {
+    p_item_id: itemId,
+    p_is_active: isActive,
+  });
+  if (error) return { success: false, message: error.message };
+  return data;
 }
 
 export async function getRewardInventory(userId: string) {

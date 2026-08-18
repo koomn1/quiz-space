@@ -6,6 +6,7 @@ import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle,
 import { Quiz } from '../types';
 import { getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
+import AdminRewardCatalogPanel from '../components/AdminRewardCatalogPanel';
 import { getApiUrl } from '../lib/origin';
 import { decryptMessage } from '../lib/encryption';
 
@@ -684,6 +685,8 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                       <button type="button" onClick={() => setRewardNotice(null)}><XCircle className="h-4 w-4" /></button>
                     </div>
                   )}
+
+                  <AdminRewardCatalogPanel lang={lang} />
 
                   <section className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5 dark:border-amber-900/50 dark:from-amber-950/20 dark:to-orange-950/20">
                     <div className="mb-5 flex items-center gap-3">

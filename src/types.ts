@@ -403,6 +403,7 @@ export interface UserStats {
   ratedQuestions?: QuestionRating[];
   bio?: string;
   location?: string;
+  coverUrl?: string;
   email?: string;
   joinedDate?: string;
   badgeSymbol?: string;

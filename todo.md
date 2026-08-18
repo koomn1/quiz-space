@@ -227,3 +227,12 @@
 - [x] 214. Add regression coverage and verify the repaired institution workspace in the live mobile layout.
 - [x] 215. Repair the institution auto-provision audit action so its database constraint cannot roll back eligible Diamond workspace creation.
 - [x] 216. Grant authenticated read access to institution tables so their RLS policies can return the active owner workspace instead of a 403 response.
+- [x] 217. Audit the active Elite/Diamond entitlement contract and verify each institution, AI, export, classroom, and premium-only capability for the account.
+- [x] 218. Review live permission errors and remediate any verified Elite entitlement regression before reporting the final status.
+- [ ] 219. Implement school-level AI learning-gap analytics per student, which is advertised for Diamond but has no current functional implementation.
+- [ ] 220. Implement genuine white-label quiz and report exports, including removal of QuizSpace branding, rather than only institution name and color customization.
+- [x] 221. Diagnose and repair persistent profile-cover storage so the selected cover remains after refresh and new-device login.
+- [ ] 222. Replace the current repetitive or generic profile avatars and covers with a distinctive, performant QuizSpace visual collection.
+- [x] 223. Complete super-admin store controls for profile frames, including creating inventory records and toggling individual products between visible and hidden.
+- [x] 224. Produce a validated security report that distinguishes confirmed critical vulnerabilities from generic advisories and prioritises remediation.
+- [x] 225. Preserve all selectable built-in cover identifiers on profile reload, including the cosmic, library, and neural presets currently omitted from validation.

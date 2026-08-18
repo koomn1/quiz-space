@@ -60,9 +60,9 @@ export function profileAssetUrl(path: string): string {
 }
 
 export const AVATAR_PRESETS: AvatarPreset[] = [
-  { id: 'boy-robotics', label: 'Robotics', labelAr: 'الروبوتات', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/boy-robotics-transparent.webp') },
+  { id: 'boy-robotics', label: 'Robotics', labelAr: 'مختبر الروبوتات', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/avatar-robotics-student.webp') },
   { id: 'girl-pottery', label: 'Pottery', labelAr: 'الفخار', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/girl-pottery-transparent.webp') },
-  { id: 'boy-chef', label: 'Cooking', labelAr: 'الطبخ', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/boy-chef-transparent.webp') },
+  { id: 'boy-music-student', label: 'Music Producer', labelAr: 'منتج موسيقي', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/avatar-music-student.webp') },
   { id: 'girl-dance', label: 'Dance', labelAr: 'الرقص', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/girl-dance-transparent.webp') },
   { id: 'boy-photography', label: 'Photography', labelAr: 'التصوير', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/boy-photography-transparent.webp') },
   { id: 'girl-cycling', label: 'Cycling', labelAr: 'ركوب الدراجة', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/girl-cycling-transparent.webp') },

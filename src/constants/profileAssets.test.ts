@@ -13,7 +13,7 @@ describe('profile asset catalog', () => {
     expect(AVATAR_PRESETS.map((avatar) => avatar.id)).toEqual([
       'boy-robotics',
       'girl-pottery',
-      'boy-chef',
+      'boy-music-student',
       'girl-dance',
       'boy-photography',
       'girl-cycling',
