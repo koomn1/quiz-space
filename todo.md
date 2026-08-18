@@ -223,3 +223,6 @@
 - [x] 210. Verify live database state, rejected-trial audit history, and inactive trial-offer configuration against the published behaviour.
 - [x] 211. Document all verified live paths and remediate any discrepancy found during the review.
 - [x] 212. Exclude approved and rejected subscription requests from the actionable admin payment-review queue so only pending requests show approval controls.
+- [x] 213. Diagnose and repair the institution-workspace entitlement so an active Elite/Diamond account is provisioned and granted access instead of seeing the inactive-institution state.
+- [ ] 214. Add regression coverage and verify the repaired institution workspace in the live mobile layout.
+- [x] 215. Repair the institution auto-provision audit action so its database constraint cannot roll back eligible Diamond workspace creation.
