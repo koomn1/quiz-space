@@ -9,6 +9,15 @@ const assetNames = [
   'girl-dance-transparent.webp',
   'boy-photography-transparent.webp',
   'girl-cycling-transparent.webp',
+  'avatar-girl-robotics-v2.webp',
+  'avatar-boy-football-analyst-v2.webp',
+  'avatar-girl-design-artist-v2.webp',
+  'avatar-boy-music-walker-v2.webp',
+  'avatar-girl-astronomy-v2.webp',
+  'avatar-boy-chess-strategist-v3.webp',
+  'avatar-girl-basketball-scientist-v3.webp',
+  'avatar-boy-photo-journalist-v3.webp',
+  'avatar-girl-cyclist-coder-v3.webp',
   'nature-leaf-transparent.webp',
   'aurora-glass-transparent.webp',
   'galaxy-ring-transparent.webp',
@@ -68,7 +77,7 @@ test.describe('published profile asset delivery', () => {
         const timeout = window.setTimeout(() => resolve({ active: true, count: 0 }), 60_000);
         channel.port1.onmessage = async () => {
           window.clearTimeout(timeout);
-          const cache = await caches.open('quiz-space-profile-assets-v1');
+          const cache = await caches.open('quiz-space-profile-assets-v3');
           resolve({ active: true, count: (await cache.keys()).length });
         };
         active.postMessage({ type: 'PRECACHE_PROFILE_ASSETS' }, [channel.port2]);
@@ -77,7 +86,7 @@ test.describe('published profile asset delivery', () => {
     expect(cacheState).toEqual({ active: true, count: assetNames.length });
 
     const cachedPaths = await page.evaluate(async () => {
-      const cache = await caches.open('quiz-space-profile-assets-v1');
+      const cache = await caches.open('quiz-space-profile-assets-v3');
       const requests = await cache.keys();
       return requests.map((request) => new URL(request.url).pathname);
     });
