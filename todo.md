@@ -239,3 +239,9 @@
 - [x] 226. Repair built-in cover picker previews to use the deployed WebP assets and extend the safe preset catalog with three compressed modern cover choices.
 - [x] 227. Add and verify the missing users.cover_url schema migration so profile saves cannot fail on the live Supabase schema cache.
 - [x] 228. Curate and ship a new quality-controlled set of distinct youthful male and female cartoon avatar activities with true transparent backgrounds.
+- [ ] 229. Replace fixed profile-asset service-worker caching with versioned update handling that prevents stale bundles and exposes an in-app refresh action.
+- [ ] 230. Add Diamond learning-gap analytics per student with institution-scoped authorization, aggregate insight data, and a teacher-facing view.
+- [ ] 231. Implement true institution white-label PDF export using the approved institution name and branding without QuizSpace attribution.
+- [ ] 232. Refine the mobile profile-settings experience through progressive disclosure, safe touch targets, and compact controls.
+- [ ] 233. Produce and integrate an additional quality-checked set of distinct premium cartoon avatar activities.
+- [ ] 234. Reduce unnecessary execution exposure for sensitive database functions and add authorization regression coverage.

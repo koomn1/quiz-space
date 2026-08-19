@@ -1,5 +1,6 @@
-const VIDEO_CACHE = 'quiz-space-videos-v2';
-const PROFILE_ASSET_CACHE = 'quiz-space-profile-assets-v1';
+const CACHE_VERSION = 'v3';
+const VIDEO_CACHE = `quiz-space-videos-${CACHE_VERSION}`;
+const PROFILE_ASSET_CACHE = `quiz-space-profile-assets-${CACHE_VERSION}`;
 const VIDEOS_TO_PRECACHE = [
   '/quiz-space/videos/splash-intro.mp4',
   '/quiz-space/videos/splash-desktop.mp4',
@@ -12,6 +13,11 @@ const PROFILE_ASSETS_TO_PRECACHE = [
   'clean-assets-replacement/girl-dance-transparent.webp',
   'clean-assets-replacement/boy-photography-transparent.webp',
   'clean-assets-replacement/girl-cycling-transparent.webp',
+  'clean-assets-replacement/avatar-girl-robotics-v2.webp',
+  'clean-assets-replacement/avatar-boy-football-analyst-v2.webp',
+  'clean-assets-replacement/avatar-girl-design-artist-v2.webp',
+  'clean-assets-replacement/avatar-boy-music-walker-v2.webp',
+  'clean-assets-replacement/avatar-girl-astronomy-v2.webp',
   'clean-assets-replacement/aurora-glass-transparent.webp',
   'clean-assets-replacement/crystal-luxe-transparent.webp',
   'clean-assets-replacement/cyber-orbit-transparent.webp',
@@ -47,7 +53,6 @@ self.addEventListener('install', (event) => {
     ),
     cacheProfileAssets(),
   ]));
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -85,6 +90,10 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
   if (event.data?.type !== 'PRECACHE_PROFILE_ASSETS') return;
   const completion = cacheProfileAssets().then(() => ({ type: 'PROFILE_ASSETS_CACHED' }));
   if (event.ports?.[0]) {

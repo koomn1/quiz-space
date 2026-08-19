@@ -1406,11 +1406,17 @@ export default function UserProfile({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <nav className="grid grid-cols-3 gap-2 sm:hidden" aria-label={isAr ? "التنقل داخل إعدادات الملف" : "Profile settings navigation"}>
+            <a href="#profile-basics" className="flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-center text-[10px] font-black text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">{isAr ? "الملف" : "Profile"}</a>
+            <a href="#profile-style" className="flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-center text-[10px] font-black text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">{isAr ? "المظهر" : "Style"}</a>
+            <a href="#profile-cover-settings" className="flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-center text-[10px] font-black text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">{isAr ? "الغلاف" : "Cover"}</a>
+          </nav>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-8">
             {/* Input Details */}
             <div className="space-y-6">
               {/* Profile Card Styling */}
-              <div className="bg-white dark:bg-slate-950 p-5 rounded-3xl border border-slate-100 dark:border-slate-800/60 space-y-4 shadow-sm">
+              <div id="profile-basics" className="scroll-mt-24 bg-white dark:bg-slate-950 p-5 rounded-3xl border border-slate-100 dark:border-slate-800/60 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-2 border-b border-slate-100 dark:border-slate-800/60 pb-2">
                   <UserIcon className="w-4 h-4 text-slate-400" />
                   <h4 className="text-xs font-black text-slate-700 dark:text-slate-300">
@@ -1712,7 +1718,7 @@ export default function UserProfile({
 	              </div>
 	            </div>
 
-            <div className="space-y-6">
+            <div id="profile-style" className="scroll-mt-24 space-y-6">
               {/* Custom User ID (Identifier used by Admin to activate plan manual) */}
               <div>
                 <label className="text-xs font-black text-slate-500 block mb-1">
@@ -1936,7 +1942,7 @@ export default function UserProfile({
             </div>
 
             {/* GSAP Cover Background Selection */}
-            <div className="border-t border-slate-200 dark:border-slate-800 pt-5 space-y-6">
+            <div id="profile-cover-settings" className="scroll-mt-24 border-t border-slate-200 dark:border-slate-800 pt-5 space-y-6">
               <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 {isAr ? "خلفية غلاف الملف الشخصي" : "Profile Cover Background"}
               </h4>
@@ -1976,11 +1982,10 @@ export default function UserProfile({
               {/* Cover Slogan block */}
               <div className="bg-slate-900/10 dark:bg-slate-950/20 p-5 rounded-3xl border border-slate-200 dark:border-slate-850 space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-4 h-4 text-primary animate-pulse">✨</span>
                   <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">
                     {isAr
-                      ? "عبارة الغلاف المكتوبة (Slogan) ✍️"
-                      : "Cover Slogan Text ✍️"}
+                      ? "عبارة الغلاف المكتوبة"
+                      : "Cover Slogan Text"}
                   </h4>
                 </div>
                 <input
@@ -1991,19 +1996,19 @@ export default function UserProfile({
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-2xl p-3.5 text-xs outline-none focus:ring-2 focus:ring-primary font-bold"
                   placeholder={
                     isAr
-                      ? "مثال: أهلاً بكم في صفي التعليمي الرقمي! 🚀"
-                      : "e.g. Welcome to my elite digital learning space! 🚀"
+                      ? "مثال: أهلاً بكم في صفي التعليمي الرقمي"
+                      : "e.g. Welcome to my digital learning space"
                   }
                 />
               </div>
             </div>
           </div>
           {/* Quick Buttons */}
-          <div className="flex gap-2 justify-end border-t border-slate-200 dark:border-slate-800 pt-4">
+          <div className="sticky bottom-3 z-10 flex flex-col gap-2 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 sm:static sm:flex-row sm:justify-end sm:bg-transparent sm:pt-4 sm:backdrop-blur-none">
             <button
               onClick={handleSaveProfile}
               disabled={isSaving}
-              className="px-6 py-2.5 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary-hover transition-colors flex items-center gap-1.5 cursor-pointer shadow-md shadow-primary/10"
+              className="min-h-11 w-full px-6 py-2.5 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary-hover transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-primary/10 sm:w-auto"
             >
               {isSaving
                 ? isAr
@@ -2015,7 +2020,7 @@ export default function UserProfile({
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className="px-6 py-2.5 bg-slate-200 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-300 transition-colors cursor-pointer"
+              className="min-h-11 w-full px-6 py-2.5 bg-slate-200 dark:bg-slate-850 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-300 transition-colors cursor-pointer sm:w-auto"
             >
               {isAr ? "تراجع" : "Discard"}
             </button>

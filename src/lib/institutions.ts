@@ -32,6 +32,30 @@ export interface InstitutionMember {
   } | null;
 }
 
+export interface InstitutionLearningGapStudent {
+  studentId: string;
+  studentName: string | null;
+  studentPhotoUrl: string | null;
+}
+
+export interface InstitutionLearningGap {
+  studentId: string;
+  studentName: string | null;
+  studentPhotoUrl: string | null;
+  category: string;
+  quizzesTaken: number;
+  averageScore: number;
+  masteryPercent: number;
+  gapLevel: 'priority' | 'watch' | 'strong';
+  latestCompletionAt: string | null;
+}
+
+export interface InstitutionExportBrand {
+  institutionId: string;
+  institutionName: string;
+  primaryColor: string | null;
+}
+
 const mapInstitution = (row: any): Institution => ({
   id: row.id,
   name: row.name,
@@ -132,4 +156,56 @@ export async function saveInstitutionBranding(institutionId: string, name: strin
     p_branding: branding,
   });
   if (error) throw new Error(error.message || 'تعذر حفظ بيانات المؤسسة.');
+}
+
+export async function getInstitutionLearningGapStudents(institutionId: string): Promise<InstitutionLearningGapStudent[]> {
+  ensureConfigured();
+  const { data, error } = await supabase.rpc('get_institution_learning_gap_students', {
+    p_institution_id: institutionId,
+  });
+  if (error) throw new Error(error.message || 'تعذر تحميل طلاب التحليل.');
+  return (data || []).map((row: any) => ({
+    studentId: row.student_id,
+    studentName: row.student_name || null,
+    studentPhotoUrl: row.student_photo_url || null,
+  }));
+}
+
+export async function getInstitutionLearningGaps(
+  institutionId: string,
+  studentId?: string | null,
+): Promise<InstitutionLearningGap[]> {
+  ensureConfigured();
+  const { data, error } = await supabase.rpc('get_institution_learning_gaps', {
+    p_institution_id: institutionId,
+    p_student_id: studentId || null,
+  });
+  if (error) throw new Error(error.message || 'تعذر تحميل تحليلات الفجوات.');
+  return (data || []).map((row: any) => ({
+    studentId: row.student_id,
+    studentName: row.student_name || null,
+    studentPhotoUrl: row.student_photo_url || null,
+    category: row.category || 'غير مصنف',
+    quizzesTaken: Number(row.quizzes_taken || 0),
+    averageScore: Number(row.average_score || 0),
+    masteryPercent: Math.max(0, Math.min(100, Number(row.mastery_percent || 0))),
+    gapLevel: row.gap_level === 'priority' || row.gap_level === 'watch' ? row.gap_level : 'strong',
+    latestCompletionAt: row.latest_completion_at || null,
+  }));
+}
+
+export async function getInstitutionExportBrandForQuiz(quizId: string): Promise<InstitutionExportBrand | null> {
+  ensureConfigured();
+  const { data, error } = await supabase.rpc('get_institution_export_brand_for_quiz', {
+    p_quiz_id: quizId,
+  });
+  if (error) throw new Error(error.message || 'تعذر تحميل هوية التصدير المؤسسي.');
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.institution_id || !row?.institution_name) return null;
+  const configuredColor = typeof row.branding?.primaryColor === 'string' ? row.branding.primaryColor : null;
+  return {
+    institutionId: row.institution_id,
+    institutionName: row.institution_name,
+    primaryColor: configuredColor && /^#[0-9a-fA-F]{6}$/.test(configuredColor) ? configuredColor : null,
+  };
 }

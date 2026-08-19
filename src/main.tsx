@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext.tsx';
 import App from './App.tsx';
 import { recordPushNotificationOpen } from './lib/db';
-import { precacheQuizSpaceProfileAssets, registerQuizSpaceServiceWorker } from './lib/serviceWorker';
+import { ServiceWorkerUpdatePrompt } from './components/ServiceWorkerUpdatePrompt.tsx';
 import './index.css';
 
 // Instantiate the global Query Client with real-time defaults
@@ -21,15 +21,12 @@ const pushQuery = window.location.search.slice(1) || window.location.hash.split(
 const pushEventId = new URLSearchParams(pushQuery).get('pushEventId');
 if (pushEventId) void recordPushNotificationOpen(pushEventId);
 
-void registerQuizSpaceServiceWorker().then((registration) => {
-  if (registration) void precacheQuizSpaceProfileAssets(registration);
-});
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <App />
+        <ServiceWorkerUpdatePrompt />
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,

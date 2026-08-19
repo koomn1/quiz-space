@@ -9,7 +9,7 @@ import {
 } from './profileAssets';
 
 describe('profile asset catalog', () => {
-  it('exposes eleven distinct replacement avatars with distinct IDs and URLs', () => {
+  it('exposes fifteen distinct replacement avatars with distinct IDs and URLs', () => {
     expect(AVATAR_PRESETS.map((avatar) => avatar.id)).toEqual([
       'boy-robotics',
       'girl-pottery',
@@ -22,12 +22,16 @@ describe('profile asset catalog', () => {
       'girl-design-v2',
       'boy-music-walker-v2',
       'girl-astronomy-v2',
+      'boy-chess-strategist-v3',
+      'girl-basketball-science-v3',
+      'boy-photo-journalist-v3',
+      'girl-cyclist-coder-v3',
     ]);
-    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.id)).size).toBe(11);
-    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.url)).size).toBe(11);
+    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.id)).size).toBe(15);
+    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.url)).size).toBe(15);
     expect(AVATAR_PRESETS.every((avatar) => avatar.url.includes('/clean-assets-replacement/'))).toBe(true);
-    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'boy')).toHaveLength(5);
-    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'girl')).toHaveLength(6);
+    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'boy')).toHaveLength(7);
+    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'girl')).toHaveLength(8);
   });
 
   it('keeps two free frames available and maps them to replacement WebPs', () => {

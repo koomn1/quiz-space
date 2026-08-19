@@ -71,6 +71,10 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
   { id: 'girl-design-v2', label: 'Digital Designer', labelAr: 'مصممة رقمية', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/avatar-girl-design-artist-v2.webp') },
   { id: 'boy-music-walker-v2', label: 'Music Walk', labelAr: 'موسيقى ومشوار', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/avatar-boy-music-walker-v2.webp') },
   { id: 'girl-astronomy-v2', label: 'Astronomy', labelAr: 'فلك ومراصد', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/avatar-girl-astronomy-v2.webp') },
+  { id: 'boy-chess-strategist-v3', label: 'Chess Strategist', labelAr: 'استراتيجي الشطرنج', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/avatar-boy-chess-strategist-v3.webp') },
+  { id: 'girl-basketball-science-v3', label: 'Basketball & Science', labelAr: 'كرة سلة وعلوم', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/avatar-girl-basketball-scientist-v3.webp') },
+  { id: 'boy-photo-journalist-v3', label: 'Student Photographer', labelAr: 'مصور المدرسة', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/avatar-boy-photo-journalist-v3.webp') },
+  { id: 'girl-cyclist-coder-v3', label: 'Cyclist Coder', labelAr: 'مستكشفة البرمجة', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/avatar-girl-cyclist-coder-v3.webp') },
 ];
 
 export const AVATAR_PRESET_URLS = AVATAR_PRESETS.map((avatar) => avatar.url);

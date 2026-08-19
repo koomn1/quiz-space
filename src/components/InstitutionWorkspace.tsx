@@ -11,6 +11,7 @@ import {
   revokeInstitutionMember,
   saveInstitutionBranding,
 } from '../lib/institutions';
+import InstitutionLearningGapsPanel from './InstitutionLearningGapsPanel';
 
 interface InstitutionWorkspaceProps {
   userId: string;
@@ -178,6 +179,7 @@ export default function InstitutionWorkspace({ userId, lang, onOpenBilling }: In
           {canManage && <form onSubmit={handleSaveBranding} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950"><div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-blue-700 dark:text-blue-300" /><h2 className="font-black text-slate-950 dark:text-white">{isAr ? 'هوية المؤسسة' : 'Institution identity'}</h2></div><label className="mt-4 block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'اسم المؤسسة' : 'Institution name'}</label><input required minLength={2} maxLength={120} value={nameDraft} onChange={(event) => setNameDraft(event.target.value)} className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:ring-blue-900" /><label className="mt-3 flex items-center justify-between text-xs font-black text-slate-700 dark:text-slate-200"><span>{isAr ? 'لون الهوية' : 'Brand colour'}</span><input aria-label={isAr ? 'لون الهوية' : 'Brand colour'} type="color" value={colorDraft} onChange={(event) => setColorDraft(event.target.value)} className="h-8 w-10 cursor-pointer rounded border-0 bg-transparent" /></label><button type="submit" disabled={busy} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-black text-blue-800 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-200 dark:hover:bg-blue-950/50"><CheckCircle2 className="h-4 w-4" />{isAr ? 'حفظ الهوية' : 'Save identity'}</button></form>}
         </div>
       </div>
+      <InstitutionLearningGapsPanel institutionId={institution.id} lang={lang} />
     </section>
   );
 }

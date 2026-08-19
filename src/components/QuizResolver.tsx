@@ -19,6 +19,7 @@ import QuizDetailedReport from './QuizDetailedReport';
 import QuizCountdownTimer from './QuizCountdownTimer';
 import { playChimeSound } from '../lib/chime';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
+import { getInstitutionExportBrandForQuiz } from '../lib/institutions';
 
 import { translations } from '../lib/i18n';
 
@@ -681,9 +682,21 @@ export default function QuizResolver({
   const handleExportPDF = async () => {
     setIsGeneratingPdf(true);
     try {
-      const bytes = await createQuizPdfBytes(quiz);
-      const fileName = getQuizPdfFileName(quiz);
       const shouldPersist = Boolean(userId && userId !== 'guest' && userId !== 'anonymous');
+      let institutionalBrand = null;
+      if (shouldPersist) {
+        try {
+          institutionalBrand = await getInstitutionExportBrandForQuiz(quiz.id);
+        } catch (brandError) {
+          console.warn('Institutional PDF branding was unavailable; using standard export.', brandError);
+        }
+      }
+      const pdfBranding = institutionalBrand ? {
+        institutionName: institutionalBrand.institutionName,
+        primaryColor: institutionalBrand.primaryColor,
+      } : null;
+      const bytes = await createQuizPdfBytes(quiz, pdfBranding);
+      const fileName = getQuizPdfFileName(quiz, pdfBranding);
       let historySaved = false;
 
       if (shouldPersist) {

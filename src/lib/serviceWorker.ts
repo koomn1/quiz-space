@@ -1,13 +1,51 @@
-export async function registerQuizSpaceServiceWorker(): Promise<ServiceWorkerRegistration | null> {
+export interface ServiceWorkerRegistrationOptions {
+  onUpdateReady?: (registration: ServiceWorkerRegistration) => void;
+}
+
+function observeWorkerUpdate(
+  registration: ServiceWorkerRegistration,
+  onUpdateReady?: (registration: ServiceWorkerRegistration) => void,
+) {
+  if (!onUpdateReady) return;
+
+  const notifyIfWaiting = () => {
+    if (registration.waiting && navigator.serviceWorker.controller) onUpdateReady(registration);
+  };
+
+  registration.addEventListener('updatefound', () => {
+    const installing = registration.installing;
+    if (!installing) return;
+    installing.addEventListener('statechange', () => {
+      if (installing.state === 'installed') notifyIfWaiting();
+    });
+  });
+  notifyIfWaiting();
+}
+
+export async function registerQuizSpaceServiceWorker(
+  options: ServiceWorkerRegistrationOptions = {},
+): Promise<ServiceWorkerRegistration | null> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return null;
 
   try {
     const baseUrl = ((import.meta as any).env?.BASE_URL || '/').replace(/\/?$/, '/');
-    return await navigator.serviceWorker.register(`${baseUrl}sw.js`, { scope: baseUrl });
+    const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, {
+      scope: baseUrl,
+      updateViaCache: 'none',
+    });
+    observeWorkerUpdate(registration, options.onUpdateReady);
+    void registration.update();
+    return registration;
   } catch (error) {
     console.warn('Service worker registration failed:', error);
     return null;
   }
+}
+
+export function activateQuizSpaceServiceWorkerUpdate(registration: ServiceWorkerRegistration): boolean {
+  if (!registration.waiting) return false;
+  registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+  return true;
 }
 
 export async function precacheQuizSpaceProfileAssets(registration: ServiceWorkerRegistration): Promise<boolean> {

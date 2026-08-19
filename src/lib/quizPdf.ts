@@ -21,6 +21,11 @@ type EmbeddedImage = {
 
 type PdfDocument = jsPDF;
 
+export interface QuizPdfBranding {
+  institutionName: string;
+  primaryColor?: string | null;
+}
+
 function registerArabicFont(pdf: PdfDocument) {
   pdf.addFileToVFS('Cairo-Regular.ttf', cairoArabicFonts.regular);
   pdf.addFont('Cairo-Regular.ttf', 'Cairo', 'normal');
@@ -34,8 +39,9 @@ function sanitizeFilePart(value: string) {
   return value.replace(/[\\/:*?"<>|\n\r]+/g, '_').replace(/\s+/g, '_').slice(0, 90) || 'quiz';
 }
 
-export function getQuizPdfFileName(quiz: Quiz) {
-  return `اختبار_${sanitizeFilePart(quiz.title)}.pdf`;
+export function getQuizPdfFileName(quiz: Quiz, branding?: QuizPdfBranding | null) {
+  const prefix = branding?.institutionName ? sanitizeFilePart(branding.institutionName) : 'اختبار';
+  return `${prefix}_${sanitizeFilePart(quiz.title)}.pdf`;
 }
 
 function normaliseText(value: unknown) {
@@ -48,11 +54,18 @@ function getOptions(question: Question) {
   return question.options || [];
 }
 
-function addPageHeader(pdf: PdfDocument, pageNumber: number) {
+function getBrandColor(branding?: QuizPdfBranding | null): [number, number, number] {
+  const value = branding?.primaryColor;
+  if (!value || !/^#[0-9a-fA-F]{6}$/.test(value)) return [109, 40, 217];
+  return [parseInt(value.slice(1, 3), 16), parseInt(value.slice(3, 5), 16), parseInt(value.slice(5, 7), 16)];
+}
+
+function addPageHeader(pdf: PdfDocument, pageNumber: number, branding?: QuizPdfBranding | null) {
   pdf.setFont('Cairo', 'bold');
   pdf.setFontSize(9);
   pdf.setTextColor(100, 116, 139);
-  pdf.text(`Quiz Space  •  ${pageNumber}`, CONTENT_RIGHT, 24, {
+  const publisher = branding?.institutionName || 'Quiz Space';
+  pdf.text(`${publisher}  •  ${pageNumber}`, CONTENT_RIGHT, 24, {
     align: 'right',
     isInputRtl: true,
     isOutputRtl: true,
@@ -139,7 +152,7 @@ async function loadQuestionImages(questions: Question[]) {
   return new Map(entries);
 }
 
-export async function createQuizPdfDocument(quiz: Quiz): Promise<PdfDocument> {
+export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBranding | null): Promise<PdfDocument> {
   const pdf = new jsPDF({
     orientation: 'p',
     unit: 'pt',
@@ -156,7 +169,7 @@ export async function createQuizPdfDocument(quiz: Quiz): Promise<PdfDocument> {
   const newPage = () => {
     pdf.addPage();
     pageNumber += 1;
-    addPageHeader(pdf, pageNumber);
+    addPageHeader(pdf, pageNumber, branding);
     y = MARGIN + 24;
   };
 
@@ -164,19 +177,20 @@ export async function createQuizPdfDocument(quiz: Quiz): Promise<PdfDocument> {
     if (y + height > PAGE_BOTTOM) newPage();
   };
 
-  addPageHeader(pdf, pageNumber);
+  const brandColor = getBrandColor(branding);
+  addPageHeader(pdf, pageNumber, branding);
   pdf.setFont('Cairo', 'bold');
   pdf.setFontSize(22);
-  pdf.setTextColor(109, 40, 217);
-  pdf.text('منصة Quiz Space', CONTENT_RIGHT, y, {
+  pdf.setTextColor(...brandColor);
+  pdf.text(branding?.institutionName || 'منصة Quiz Space', CONTENT_RIGHT, y, {
     align: 'right',
     isInputRtl: true,
     isOutputRtl: true,
   });
   y += 14;
   pdf.setFont('Cairo', 'normal');
-  y = addWrappedText(pdf, 'ورقة أسئلة للاختبار — بدون حلول أو إجابات', CONTENT_RIGHT, y + 4, CONTENT_WIDTH, 10, [100, 116, 139], 14);
-  pdf.setDrawColor(124, 58, 237);
+  y = addWrappedText(pdf, branding?.institutionName ? 'ورقة أسئلة مؤسسية — بدون حلول أو إجابات' : 'ورقة أسئلة للاختبار — بدون حلول أو إجابات', CONTENT_RIGHT, y + 4, CONTENT_WIDTH, 10, [100, 116, 139], 14);
+  pdf.setDrawColor(...brandColor);
   pdf.setLineWidth(1.5);
   pdf.line(MARGIN, y + 8, CONTENT_RIGHT, y + 8);
   y += 28;
@@ -344,12 +358,12 @@ export function downloadQuizPdfBytes(bytes: Uint8Array, fileName: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export async function downloadQuizPdf(quiz: Quiz) {
-  const bytes = await createQuizPdfBytes(quiz);
-  downloadQuizPdfBytes(bytes, getQuizPdfFileName(quiz));
+export async function downloadQuizPdf(quiz: Quiz, branding?: QuizPdfBranding | null) {
+  const bytes = await createQuizPdfBytes(quiz, branding);
+  downloadQuizPdfBytes(bytes, getQuizPdfFileName(quiz, branding));
 }
 
-export async function createQuizPdfBytes(quiz: Quiz) {
-  const pdf = await createQuizPdfDocument(quiz);
+export async function createQuizPdfBytes(quiz: Quiz, branding?: QuizPdfBranding | null) {
+  const pdf = await createQuizPdfDocument(quiz, branding);
   return new Uint8Array(pdf.output('arraybuffer'));
 }
