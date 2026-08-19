@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const dbSource = readFileSync(new URL('./db.ts', import.meta.url), 'utf8');
 const profileSource = readFileSync(new URL('../pages/UserProfile.tsx', import.meta.url), 'utf8');
+const migrationSource = readFileSync(new URL('../../supabase/migrations/20260819_add_users_cover_url.sql', import.meta.url), 'utf8');
 
 describe('profile cover persistence contract', () => {
   it('keeps partial sign-in profile synchronization from overwriting profile customization', () => {
@@ -15,6 +16,11 @@ describe('profile cover persistence contract', () => {
     expect(dbSource).toContain("coverUrl: userRow?.cover_url || ''");
     expect(profileSource).toContain("parsedCustomBgUrl = stats.coverUrl;");
     expect(profileSource).toContain("parsedBg = 'custom';");
+  });
+
+  it('ships the schema migration required by the cover persistence contract', () => {
+    expect(migrationSource).toContain('ADD COLUMN IF NOT EXISTS cover_url TEXT');
+    expect(migrationSource).toContain("NOTIFY pgrst, 'reload schema'");
   });
 
   it('keeps every visible built-in cover valid after a reload', () => {

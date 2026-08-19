@@ -66,6 +66,11 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
   { id: 'girl-dance', label: 'Dance', labelAr: 'الرقص', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/girl-dance-transparent.webp') },
   { id: 'boy-photography', label: 'Photography', labelAr: 'التصوير', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/boy-photography-transparent.webp') },
   { id: 'girl-cycling', label: 'Cycling', labelAr: 'ركوب الدراجة', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/girl-cycling-transparent.webp') },
+  { id: 'girl-robotics-v2', label: 'Robotics Explorer', labelAr: 'مستكشفة الروبوتات', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/avatar-girl-robotics-v2.webp') },
+  { id: 'boy-football-science-v2', label: 'Football & Science', labelAr: 'كرة وعلوم', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/avatar-boy-football-analyst-v2.webp') },
+  { id: 'girl-design-v2', label: 'Digital Designer', labelAr: 'مصممة رقمية', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/avatar-girl-design-artist-v2.webp') },
+  { id: 'boy-music-walker-v2', label: 'Music Walk', labelAr: 'موسيقى ومشوار', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/avatar-boy-music-walker-v2.webp') },
+  { id: 'girl-astronomy-v2', label: 'Astronomy', labelAr: 'فلك ومراصد', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/avatar-girl-astronomy-v2.webp') },
 ];
 
 export const AVATAR_PRESET_URLS = AVATAR_PRESETS.map((avatar) => avatar.url);

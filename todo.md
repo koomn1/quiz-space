@@ -237,3 +237,5 @@
 - [x] 224. Produce a validated security report that distinguishes confirmed critical vulnerabilities from generic advisories and prioritises remediation.
 - [x] 225. Preserve all selectable built-in cover identifiers on profile reload, including the cosmic, library, and neural presets currently omitted from validation.
 - [x] 226. Repair built-in cover picker previews to use the deployed WebP assets and extend the safe preset catalog with three compressed modern cover choices.
+- [x] 227. Add and verify the missing users.cover_url schema migration so profile saves cannot fail on the live Supabase schema cache.
+- [ ] 228. Curate and ship a new quality-controlled set of distinct youthful male and female cartoon avatar activities with true transparent backgrounds.

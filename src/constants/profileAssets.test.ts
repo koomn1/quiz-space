@@ -9,7 +9,7 @@ import {
 } from './profileAssets';
 
 describe('profile asset catalog', () => {
-  it('exposes six distinct replacement avatars with distinct IDs and URLs', () => {
+  it('exposes eleven distinct replacement avatars with distinct IDs and URLs', () => {
     expect(AVATAR_PRESETS.map((avatar) => avatar.id)).toEqual([
       'boy-robotics',
       'girl-pottery',
@@ -17,10 +17,17 @@ describe('profile asset catalog', () => {
       'girl-dance',
       'boy-photography',
       'girl-cycling',
+      'girl-robotics-v2',
+      'boy-football-science-v2',
+      'girl-design-v2',
+      'boy-music-walker-v2',
+      'girl-astronomy-v2',
     ]);
-    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.id)).size).toBe(6);
-    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.url)).size).toBe(6);
+    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.id)).size).toBe(11);
+    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.url)).size).toBe(11);
     expect(AVATAR_PRESETS.every((avatar) => avatar.url.includes('/clean-assets-replacement/'))).toBe(true);
+    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'boy')).toHaveLength(5);
+    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'girl')).toHaveLength(6);
   });
 
   it('keeps two free frames available and maps them to replacement WebPs', () => {
