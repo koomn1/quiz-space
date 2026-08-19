@@ -229,19 +229,19 @@
 - [x] 216. Grant authenticated read access to institution tables so their RLS policies can return the active owner workspace instead of a 403 response.
 - [x] 217. Audit the active Elite/Diamond entitlement contract and verify each institution, AI, export, classroom, and premium-only capability for the account.
 - [x] 218. Review live permission errors and remediate any verified Elite entitlement regression before reporting the final status.
-- [ ] 219. Implement school-level AI learning-gap analytics per student, which is advertised for Diamond but has no current functional implementation.
-- [ ] 220. Implement genuine white-label quiz and report exports, including removal of QuizSpace branding, rather than only institution name and color customization.
+- [x] 219. Implement school-level AI learning-gap analytics per student, which is advertised for Diamond but has no current functional implementation.
+- [x] 220. Implement genuine white-label quiz and report exports, including removal of QuizSpace branding, rather than only institution name and color customization.
 - [x] 221. Diagnose and repair persistent profile-cover storage so the selected cover remains after refresh and new-device login.
-- [ ] 222. Replace the current repetitive or generic profile avatars and covers with a distinctive, performant QuizSpace visual collection.
+- [x] 222. Replace the current repetitive or generic profile avatars and covers with a distinctive, performant QuizSpace visual collection.
 - [x] 223. Complete super-admin store controls for profile frames, including creating inventory records and toggling individual products between visible and hidden.
 - [x] 224. Produce a validated security report that distinguishes confirmed critical vulnerabilities from generic advisories and prioritises remediation.
 - [x] 225. Preserve all selectable built-in cover identifiers on profile reload, including the cosmic, library, and neural presets currently omitted from validation.
 - [x] 226. Repair built-in cover picker previews to use the deployed WebP assets and extend the safe preset catalog with three compressed modern cover choices.
 - [x] 227. Add and verify the missing users.cover_url schema migration so profile saves cannot fail on the live Supabase schema cache.
 - [x] 228. Curate and ship a new quality-controlled set of distinct youthful male and female cartoon avatar activities with true transparent backgrounds.
-- [ ] 229. Replace fixed profile-asset service-worker caching with versioned update handling that prevents stale bundles and exposes an in-app refresh action.
-- [ ] 230. Add Diamond learning-gap analytics per student with institution-scoped authorization, aggregate insight data, and a teacher-facing view.
-- [ ] 231. Implement true institution white-label PDF export using the approved institution name and branding without QuizSpace attribution.
-- [ ] 232. Refine the mobile profile-settings experience through progressive disclosure, safe touch targets, and compact controls.
-- [ ] 233. Produce and integrate an additional quality-checked set of distinct premium cartoon avatar activities.
-- [ ] 234. Reduce unnecessary execution exposure for sensitive database functions and add authorization regression coverage.
+- [x] 229. Replace fixed profile-asset service-worker caching with versioned update handling that prevents stale bundles and exposes an in-app refresh action.
+- [x] 230. Add Diamond learning-gap analytics per student with institution-scoped authorization, aggregate insight data, and a teacher-facing view.
+- [x] 231. Implement true institution white-label PDF export using the approved institution name and branding without QuizSpace attribution.
+- [x] 232. Refine the mobile profile-settings experience through progressive disclosure, safe touch targets, and compact controls.
+- [x] 233. Produce and integrate an additional quality-checked set of distinct premium cartoon avatar activities.
+- [x] 234. Reduce unnecessary execution exposure for sensitive database functions and add authorization regression coverage.
