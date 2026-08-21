@@ -296,4 +296,4 @@
 - [x] Remove obsolete Android-specific dependencies and scripts without breaking the web application
 - [x] Refactor the classroom tab navigation into a focused reusable hook while retaining the documented desktop and touch behavior
 - [x] Run regression tests and production build after cleanup
-- [ ] Publish the web-only cleanup and verify the deployment workflow
+- [x] Publish the web-only cleanup and verify the deployment workflow
