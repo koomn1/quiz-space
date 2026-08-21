@@ -31,18 +31,18 @@ function generateClassroomCode(): string {
   return Array.from(values, value => alphabet[value % alphabet.length]).join('');
 }
 import { 
-  GraduationCap, Plus, Code, Users, Copy, Check, ShieldAlert,
-  ArrowRight, Award, Clock, Star, BookOpen, Trash2, ShieldCheck, 
-  ExternalLink, UserPlus, Sparkles, Lock, Shield, Send, Paperclip,
-  Volume2, Bell, FileText, Image, Download, FolderOpen, Info, 
+  GraduationCap, Plus, Users, Copy, Check,
+  Award, Clock, Star, BookOpen, ShieldCheck,
+  Sparkles, Lock,
+  Bell, FileText, Download, FolderOpen,
   MessageSquare, PlusCircle, Calendar, ClipboardList, Megaphone, 
-  CheckCircle, BarChart2, Settings, Sliders, Play, Trash, FileUp,
+  CheckCircle, BarChart2, Settings, Play, Trash,
   ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle, Eye, Target, ClipboardCheck, CircleX
 } from 'lucide-react';
 import { playChimeSound } from '../lib/chime';
-import { getApiUrl } from '../lib/origin';
 import { encryptMessage, decryptMessage } from '../lib/encryption';
 import { supabase } from '../lib/supabaseClient';
+import { useHorizontalDragScroll } from '../hooks/useHorizontalDragScroll';
 import {
   type ClassroomAttendanceRecord,
   type ClassroomAttendanceStatus,
@@ -58,7 +58,7 @@ import {
 import { canPersistAuthenticatedData } from '../lib/userAccess';
 import { 
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, 
-  XAxis, YAxis, Tooltip as ChartTooltip, Cell, PieChart, Pie 
+  XAxis, YAxis, Tooltip as ChartTooltip, Cell
 } from 'recharts';
 
 function getLocalDateInputValue(): string {
@@ -231,7 +231,6 @@ interface ClassroomsProps {
   currentUserId: string;
   currentUserName: string;
   currentUserPhoto?: string;
-  userRole: 'student' | 'teacher';
   userPlan?: 'Free' | 'Silver' | 'Gold' | 'Diamond';
   currentUserEmail?: string | null;
   onStartQuiz?: (quizId: string) => void;
@@ -245,7 +244,6 @@ export default function Classrooms({
   currentUserId,
   currentUserName,
   currentUserPhoto,
-  userRole,
   userPlan = 'Free',
   currentUserEmail,
   onStartQuiz,
@@ -264,7 +262,6 @@ export default function Classrooms({
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [isLoadingClassroomWorkspace, setIsLoadingClassroomWorkspace] = useState(false);
 
   // Local state managers
   const [classCodeInput, setClassCodeInput] = useState('');
@@ -326,17 +323,13 @@ export default function Classrooms({
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const classroomTabsRailRef = useRef<HTMLDivElement>(null);
-  const classroomTabsDragRef = useRef({ pointerId: -1, lastX: 0, didDrag: false });
+  const classroomTabsScroll = useHorizontalDragScroll();
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // AI Generator Prompt Modal
   const [isAiQuizOpen, setIsAiQuizOpen] = useState(false);
   const [aiQuizTopic, setAiQuizTopic] = useState('');
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-
-  // Video player overlay state
-  const [videoOverlayVisible, setVideoOverlayVisible] = useState(false);
 
   // Data now lives exclusively in Supabase; classrooms/students are loaded via
   // fetchClassroomsData below, and per-classroom data (assignments, submissions,
@@ -347,44 +340,6 @@ export default function Classrooms({
     const id = Math.random().toString(36).substring(2, 9);
     setToasts(prev => [...prev, { id, title, body, type }]);
     setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, 5000);
-  };
-
-  const handleClassroomTabsWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    const rail = classroomTabsRailRef.current;
-    const usesFinePointer = typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches;
-    if (!rail || !usesFinePointer || rail.scrollWidth <= rail.clientWidth) return;
-
-    const delta = event.deltaX || event.deltaY;
-    if (!delta) return;
-    event.preventDefault();
-    rail.scrollBy({ left: delta, behavior: 'auto' });
-  };
-
-  const handleClassroomTabsPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'touch') return;
-    classroomTabsDragRef.current = { pointerId: event.pointerId, lastX: event.clientX, didDrag: false };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handleClassroomTabsPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const rail = classroomTabsRailRef.current;
-    const drag = classroomTabsDragRef.current;
-    if (!rail || drag.pointerId !== event.pointerId) return;
-
-    const delta = drag.lastX - event.clientX;
-    if (Math.abs(delta) > 1) {
-      drag.didDrag = true;
-      rail.scrollBy({ left: delta, behavior: 'auto' });
-      drag.lastX = event.clientX;
-    }
-  };
-
-  const handleClassroomTabsPointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = classroomTabsDragRef.current;
-    if (drag.pointerId !== event.pointerId) return;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-    drag.pointerId = -1;
-    window.setTimeout(() => { drag.didDrag = false; }, 0);
   };
 
   // Fetch PostgreSQL Classrooms & Students
@@ -500,7 +455,6 @@ export default function Classrooms({
     }
     let isMounted = true;
     const loadClassroomWorkspace = async () => {
-      setIsLoadingClassroomWorkspace(true);
       try {
         const [assignRes, annRes, fileRes] = await Promise.all([
           supabase.from('classroom_assignments').select('*').eq('class_id', activeClassroomView.id).order('created_at', { ascending: false }),
@@ -554,7 +508,6 @@ export default function Classrooms({
       } catch (err) {
         console.error('Error loading classroom workspace:', err);
       } finally {
-        if (isMounted) setIsLoadingClassroomWorkspace(false);
       }
     };
     loadClassroomWorkspace();
@@ -1363,14 +1316,14 @@ export default function Classrooms({
 
             {/* Premium Dock Navigation */}
             <div
-              ref={classroomTabsRailRef}
+              ref={classroomTabsScroll.scrollRef}
               role="tablist"
               aria-label={isAr ? 'تبويبات الفصل الدراسي' : 'Classroom workspace tabs'}
-              onWheel={handleClassroomTabsWheel}
-              onPointerDown={handleClassroomTabsPointerDown}
-              onPointerMove={handleClassroomTabsPointerMove}
-              onPointerUp={handleClassroomTabsPointerEnd}
-              onPointerCancel={handleClassroomTabsPointerEnd}
+              onWheel={classroomTabsScroll.onWheel}
+              onPointerDown={classroomTabsScroll.onPointerDown}
+              onPointerMove={classroomTabsScroll.onPointerMove}
+              onPointerUp={classroomTabsScroll.onPointerEnd}
+              onPointerCancel={classroomTabsScroll.onPointerEnd}
               className="flex shrink-0 cursor-grab touch-pan-x select-none gap-1 overflow-x-auto border-b border-slate-800 bg-slate-900/40 px-6 py-2 scrollbar-none active:cursor-grabbing"
             >
               {[
@@ -1397,7 +1350,7 @@ export default function Classrooms({
                     role="tab"
                     aria-selected={isSelected}
                     onClick={() => {
-                      if (classroomTabsDragRef.current.didDrag) return;
+                      if (classroomTabsScroll.shouldSuppressClick()) return;
                       playChimeSound('click');
                       setActiveWorkspaceTab(tab.id as any);
                     }}
@@ -1646,7 +1599,7 @@ export default function Classrooms({
                 <div className="flex-1 flex flex-col justify-between overflow-hidden min-h-0 bg-slate-950/20 border border-slate-800/40 rounded-2xl">
                   {/* Messages list feed */}
                   <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 no-scrollbar flex flex-col" ref={chatContainerRef}>
-                    {activeClassroomMessages.map((msg, idx) => {
+                    {activeClassroomMessages.map((msg) => {
                       const isOwn = msg.senderId === currentUserId;
                       return (
                         <div 

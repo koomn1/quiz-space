@@ -1,7 +1,4 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { App } from '@capacitor/app';
-import { Browser } from '@capacitor/browser';
-import { Capacitor } from '@capacitor/core';
 import { supabase } from '../lib/supabaseClient';
 import { getDefaultAvatar } from '../constants/profileAssets';
 import type { Session, User } from '@supabase/supabase-js';
@@ -151,9 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        if (Capacitor.isNativePlatform()) {
-          await Browser.close().catch(() => undefined);
-        } else if (authorizationCode || hash.includes('access_token')) {
+        if (authorizationCode || hash.includes('access_token')) {
           window.history.replaceState({}, document.title, `${callbackUrl.pathname}${callbackUrl.search}`);
           if (!callbackUrl.hash.includes('type=recovery')) window.location.hash = '#/dashboard/landing';
         }
@@ -176,16 +171,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await syncSession(nextSession);
     });
 
-    let nativeUrlListenerPromise: Promise<{ remove: () => Promise<void> }> | undefined;
-    if (Capacitor.isNativePlatform()) {
-      nativeUrlListenerPromise = App.addListener('appUrlOpen', ({ url }) => {
-        void handleOAuthRedirectTokens(url);
-      });
-    }
-
     return () => {
       void listener.subscription.unsubscribe();
-      void nativeUrlListenerPromise?.then((handle) => handle.remove());
     };
   }, []);
 
@@ -279,19 +266,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo,
-        skipBrowserRedirect: Capacitor.isNativePlatform(),
         queryParams: { prompt: 'select_account', access_type: 'offline', response_type: 'code' },
       },
     });
     if (error) {
       throw new Error('تعذر فتح تسجيل الدخول بجوجل. تحقق من تفعيل مزود Google ثم حاول مرة أخرى.');
-    }
-    if (Capacitor.isNativePlatform() && data.url) {
-      await Browser.open({ url: data.url, presentationStyle: 'popover' });
     }
   };
 

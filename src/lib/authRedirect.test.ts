@@ -1,12 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('@capacitor/core', () => ({
-  Capacitor: {
-    isNativePlatform: () => false,
-  },
-}));
-
-import { getAuthRedirectUrl, NATIVE_AUTH_CALLBACK } from './authRedirect';
+import { describe, expect, it } from 'vitest';
+import { getAuthRedirectUrl } from './authRedirect';
 
 describe('auth redirect targets', () => {
   it('keeps the public web base path for GitHub Pages', () => {
@@ -17,9 +10,5 @@ describe('auth redirect targets', () => {
 
   it('uses the stable web fallback when no base path is provided', () => {
     expect(getAuthRedirectUrl('http://localhost:5173', '/')).toBe('http://localhost:5173/quiz-space/');
-  });
-
-  it('defines a native callback independent of the website URL', () => {
-    expect(NATIVE_AUTH_CALLBACK).toBe('com.koomn1.quizspace://auth/callback');
   });
 });

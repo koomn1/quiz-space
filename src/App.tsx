@@ -1854,7 +1854,6 @@ export default function App() {
                   currentUserId={userId} 
                   currentUserName={userName} 
                   currentUserPhoto={userPhoto} 
-                  userRole={getUserRoleAndPlan(userStats).role} 
                   userPlan={getUserRoleAndPlan(userStats).plan}
                   currentUserEmail={userEmail}
                   onStartQuiz={handleStartQuiz}

@@ -34,8 +34,6 @@ dist-ssr
 # Build output
 dist
 build
-*.apk
-*.idsig
 
 # OS generated files
 .DS_Store

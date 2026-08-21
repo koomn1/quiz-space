@@ -6,26 +6,15 @@ import { defineConfig } from 'vite';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import viteCompression from 'vite-plugin-compression';
 
-export default defineConfig(({ mode }) => {
-  const isCapacitorBuild = mode === 'capacitor' || process.env.CAPACITOR_BUILD === 'true';
-  const compressionPlugins = isCapacitorBuild
-    ? []
-    : [
-        viteCompression({
-          algorithm: 'gzip',
-          ext: '.gz',
-        }),
-        viteCompression({
-          algorithm: 'brotliCompress',
-          ext: '.br',
-        }),
-      ];
-
-  return {
-    // Android resolves every asset from the packaged app. The public GitHub
-    // Pages build keeps its existing /quiz-space/ prefix.
-    base: isCapacitorBuild ? './' : '/quiz-space/',
-    plugins: [react(), tailwindcss(), cloudflare(), ...compressionPlugins],
+export default defineConfig({
+    base: '/quiz-space/',
+    plugins: [
+      react(),
+      tailwindcss(),
+      cloudflare(),
+      viteCompression({ algorithm: 'gzip', ext: '.gz' }),
+      viteCompression({ algorithm: 'brotliCompress', ext: '.br' }),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -60,5 +49,4 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-  };
 });

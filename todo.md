@@ -245,28 +245,6 @@
 - [x] 232. Refine the mobile profile-settings experience through progressive disclosure, safe touch targets, and compact controls.
 - [x] 233. Produce and integrate an additional quality-checked set of distinct premium cartoon avatar activities.
 - [x] 234. Reduce unnecessary execution exposure for sensitive database functions and add authorization regression coverage.
-
-
-## Android full-app build and security (2026-08-19)
-- [x] Bundle the complete Quiz Space web application and local assets inside the Android APK without Capacitor server.url
-- [x] Configure production Supabase URL and publishable client key for the Android build
-- [x] Configure the production Cloudflare AI Worker URL for generation and extraction from Android
-- [x] Store native Supabase sessions through Android secure storage backed by the OS keystore instead of WebView localStorage
-- [x] Add Android OAuth deep link com.koomn1.quizspace://auth/callback and Browser/App callback handling
-- [x] Disable cleartext traffic, restrict Network Security Config to system certificates, and disable Android backup/data extraction
-- [x] Enable screenshot/screen-capture protection and disable WebView debugging in MainActivity
-- [x] Enable R8/ProGuard, resource shrinking, ZIP alignment, and no JavaScript source maps for release output
-- [x] Add OAuth redirect Vitest coverage and make the secure storage adapter safe in Node test environments
-- [x] Run TypeScript checks and the full Vitest suite: 43 files and 138 tests passed
-- [x] Build Debug and Release Android variants with JDK 21 and Android SDK 36
-- [x] Sign and verify the hardened APK with Quiz Space release certificate SHA-256 3fcaf47c8ed10046eafd339611c19d907ccbd2a1ad56da57ab3bcca5030ab8c6
-- [x] Verify Supabase and AI Worker production endpoints are reachable from the build environment
-- [ ] Install the signed APK on a physical Android device and complete authenticated Google/Supabase, quiz-generation, institution, reward-store, and offline/resume smoke tests
-- [ ] Transfer the private release keystore and password into the owner's secure password manager before publishing to Google Play
-
-- [x] Enable Google Workspace connector, upload QuizSpace-hardened-release.apk to Google Drive, and create an anyone-with-the-link reader permission
-
-
 ## Classrooms and Dialogs UI/UX Redesign (2026-08-21)
 - [x] Review Classrooms page components and dialog structures
 - [x] Test classroom creation, session additions, student management, and tabs
@@ -307,8 +285,15 @@
 - [x] Implement and verify the AnalyticsDashboard UI improvements with responsive insights, loading states, empty states, and theme-safe contrast
 - [x] Add regression tests for lesson persistence failures, attendance register behavior, and dashboard rendering contracts
 - [x] Restrict attendance visibility so teachers can review the classroom register while learners can view only their own attendance record
-- [x] Rebuild, sign, and distribute Android version 1.1.3 with the latest lessons, attendance, and dashboard improvements
 
 ## Classroom Tabs Desktop Accessibility (2026-08-21)
 - [x] Make the classroom tab rail horizontally accessible with mouse wheel and drag gestures on desktop while keeping the scrollbar visually unobtrusive
 - [x] Add regression coverage and verify that the Online Lessons tab remains reachable on desktop and mobile layouts
+
+## Web-Only Cleanup & Refactoring (2026-08-21)
+- [x] Inventory Android-specific source, release artifacts, and unused documentation while preserving web deployment files
+- [x] Remove Android-specific project code and stale release artifacts from the repository and clean the web-only repository state
+- [x] Remove obsolete Android-specific dependencies and scripts without breaking the web application
+- [x] Refactor the classroom tab navigation into a focused reusable hook while retaining the documented desktop and touch behavior
+- [x] Run regression tests and production build after cleanup
+- [ ] Publish the web-only cleanup and verify the deployment workflow

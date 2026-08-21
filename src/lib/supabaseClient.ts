@@ -1,6 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { supabaseSessionStorage } from './secureSessionStorage';
-
 // These values are public client configuration. Authorization is enforced by
 // Supabase Auth + RLS; no service-role or server secret is bundled in the app.
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
@@ -12,7 +10,6 @@ if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KE
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: supabaseSessionStorage,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,

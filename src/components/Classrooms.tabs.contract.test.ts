@@ -6,10 +6,9 @@ describe('Classrooms tab rail accessibility contract', () => {
     const source = await readFile(new URL('./Classrooms.tsx', import.meta.url), 'utf8');
 
     expect(source).toContain("id: 'lessons'");
-    expect(source).toContain('handleClassroomTabsWheel');
-    expect(source).toContain('handleClassroomTabsPointerDown');
-    expect(source).toContain('onWheel={handleClassroomTabsWheel}');
-    expect(source).toContain('onPointerMove={handleClassroomTabsPointerMove}');
+    expect(source).toContain('useHorizontalDragScroll');
+    expect(source).toContain('onWheel={classroomTabsScroll.onWheel}');
+    expect(source).toContain('onPointerMove={classroomTabsScroll.onPointerMove}');
     expect(source).toContain('role="tablist"');
     expect(source).toContain('aria-selected={isSelected}');
   });
