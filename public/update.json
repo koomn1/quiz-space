@@ -1,11 +1,11 @@
 {
-  "version": "1.1.1",
+  "version": "1.1.2",
   "minSupportedVersion": "1.1.0",
   "title": "تحديث Quiz Space الرسمي",
   "releaseNotes": [
     "إصلاح عودة تسجيل الدخول عبر Google مباشرة داخل التطبيق",
-    "تحديث الأيقونة الرسمية وتفعيل التخزين المشفر للجلساة",
-    "تحسين سرعة الاستجابة والتنقل في الهاتف"
+    "استبدال أيقونة Android القديمة بشعار Quiz Space الرسمي",
+    "تفعيل نافذة فحص وتحديث الإصدار داخل التطبيق"
   ],
   "apkUrl": "https://drive.google.com/uc?id=1eVQld4RwdV_Zs4litw1XkvyuDNKg8E_c&export=download",
   "forceUpdate": false,
