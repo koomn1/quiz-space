@@ -326,6 +326,8 @@ export default function Classrooms({
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const classroomTabsRailRef = useRef<HTMLDivElement>(null);
+  const classroomTabsDragRef = useRef({ pointerId: -1, lastX: 0, didDrag: false });
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // AI Generator Prompt Modal
@@ -345,6 +347,44 @@ export default function Classrooms({
     const id = Math.random().toString(36).substring(2, 9);
     setToasts(prev => [...prev, { id, title, body, type }]);
     setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, 5000);
+  };
+
+  const handleClassroomTabsWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    const rail = classroomTabsRailRef.current;
+    const usesFinePointer = typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches;
+    if (!rail || !usesFinePointer || rail.scrollWidth <= rail.clientWidth) return;
+
+    const delta = event.deltaX || event.deltaY;
+    if (!delta) return;
+    event.preventDefault();
+    rail.scrollBy({ left: delta, behavior: 'auto' });
+  };
+
+  const handleClassroomTabsPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'touch') return;
+    classroomTabsDragRef.current = { pointerId: event.pointerId, lastX: event.clientX, didDrag: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleClassroomTabsPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rail = classroomTabsRailRef.current;
+    const drag = classroomTabsDragRef.current;
+    if (!rail || drag.pointerId !== event.pointerId) return;
+
+    const delta = drag.lastX - event.clientX;
+    if (Math.abs(delta) > 1) {
+      drag.didDrag = true;
+      rail.scrollBy({ left: delta, behavior: 'auto' });
+      drag.lastX = event.clientX;
+    }
+  };
+
+  const handleClassroomTabsPointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = classroomTabsDragRef.current;
+    if (drag.pointerId !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    drag.pointerId = -1;
+    window.setTimeout(() => { drag.didDrag = false; }, 0);
   };
 
   // Fetch PostgreSQL Classrooms & Students
@@ -1322,7 +1362,17 @@ export default function Classrooms({
             </div>
 
             {/* Premium Dock Navigation */}
-            <div className="flex overflow-x-auto border-b border-slate-800 bg-slate-900/40 px-6 py-2 gap-1 scrollbar-none shrink-0">
+            <div
+              ref={classroomTabsRailRef}
+              role="tablist"
+              aria-label={isAr ? 'تبويبات الفصل الدراسي' : 'Classroom workspace tabs'}
+              onWheel={handleClassroomTabsWheel}
+              onPointerDown={handleClassroomTabsPointerDown}
+              onPointerMove={handleClassroomTabsPointerMove}
+              onPointerUp={handleClassroomTabsPointerEnd}
+              onPointerCancel={handleClassroomTabsPointerEnd}
+              className="flex shrink-0 cursor-grab touch-pan-x select-none gap-1 overflow-x-auto border-b border-slate-800 bg-slate-900/40 px-6 py-2 scrollbar-none active:cursor-grabbing"
+            >
               {[
                 { id: 'overview', label: isAr ? 'نظرة عامة' : 'Overview', icon: BookOpen },
                 { id: 'discussion', label: isAr ? 'المناقشة والتواصل' : 'Discussion', icon: MessageSquare },
@@ -1343,8 +1393,14 @@ export default function Classrooms({
                 const isSelected = activeWorkspaceTab === tab.id;
                 return (
                   <button
-                    
-                    onClick={() => { playChimeSound('click'); setActiveWorkspaceTab(tab.id as any); }}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => {
+                      if (classroomTabsDragRef.current.didDrag) return;
+                      playChimeSound('click');
+                      setActiveWorkspaceTab(tab.id as any);
+                    }}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
                       isSelected 
                         ? 'bg-purple-600 text-white shadow-md shadow-purple-600/15' 

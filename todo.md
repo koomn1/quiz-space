@@ -308,3 +308,7 @@
 - [x] Add regression tests for lesson persistence failures, attendance register behavior, and dashboard rendering contracts
 - [x] Restrict attendance visibility so teachers can review the classroom register while learners can view only their own attendance record
 - [x] Rebuild, sign, and distribute Android version 1.1.3 with the latest lessons, attendance, and dashboard improvements
+
+## Classroom Tabs Desktop Accessibility (2026-08-21)
+- [x] Make the classroom tab rail horizontally accessible with mouse wheel and drag gestures on desktop while keeping the scrollbar visually unobtrusive
+- [x] Add regression coverage and verify that the Online Lessons tab remains reachable on desktop and mobile layouts
