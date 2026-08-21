@@ -306,3 +306,4 @@
 - [x] Implement and verify the AdminDashboard UI improvements with responsive metric cards, loading states, empty states, and theme-safe contrast
 - [x] Implement and verify the AnalyticsDashboard UI improvements with responsive insights, loading states, empty states, and theme-safe contrast
 - [x] Add regression tests for lesson persistence failures, attendance register behavior, and dashboard rendering contracts
+- [x] Restrict attendance visibility so teachers can review the classroom register while learners can view only their own attendance record

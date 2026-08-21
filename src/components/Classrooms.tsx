@@ -996,6 +996,12 @@ export default function Classrooms({
   });
 
   const canManageAttendance = Boolean(activeClassroomView && activeClassroomView.createdBy === currentUserId);
+  const classroomAttendanceStudents = activeClassroomView
+    ? classroomStudents.filter((student) => student.classCode === activeClassroomView.code)
+    : [];
+  const attendanceVisibleStudents = canManageAttendance
+    ? classroomAttendanceStudents
+    : classroomAttendanceStudents.filter((student) => student.studentId === currentUserId);
   const attendanceStatusOptions: Array<{
     id: ClassroomAttendanceStatus;
     label: string;
@@ -2108,7 +2114,7 @@ export default function Classrooms({
                           </div>
                         ))}
                       </div>
-                    ) : classroomStudents.filter((student) => student.classCode === activeClassroomView.code).length === 0 ? (
+                    ) : attendanceVisibleStudents.length === 0 ? (
                       <div className="px-6 py-14 text-center">
                         <Users2 className="mx-auto h-9 w-9 text-slate-300 dark:text-slate-700" />
                         <h5 className="mt-3 text-sm font-black text-slate-800 dark:text-white">{isAr ? 'لا يوجد طلاب للحضور اليوم' : 'No learners to mark today'}</h5>
@@ -2116,7 +2122,7 @@ export default function Classrooms({
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {classroomStudents.filter((student) => student.classCode === activeClassroomView.code).map((student) => {
+                        {attendanceVisibleStudents.map((student) => {
                           const record = attendanceRecords.find((item) => item.studentId === student.studentId);
                           const currentStatus = record?.status;
                           const currentStatusLabel = attendanceStatusOptions.find((option) => option.id === currentStatus)?.label;

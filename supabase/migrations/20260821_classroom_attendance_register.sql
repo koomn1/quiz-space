@@ -37,11 +37,14 @@ using (
     where classroom.id = classroom_attendance_records.class_id
       and (
         classroom.created_by = (select auth.uid())::text
-        or exists (
-          select 1
-          from public.classroom_students membership
-          where membership.class_id = classroom_attendance_records.class_id
-            and membership.student_id = (select auth.uid())::text
+        or (
+          classroom_attendance_records.student_id = (select auth.uid())::text
+          and exists (
+            select 1
+            from public.classroom_students membership
+            where membership.class_id = classroom_attendance_records.class_id
+              and membership.student_id = (select auth.uid())::text
+          )
         )
       )
   )
