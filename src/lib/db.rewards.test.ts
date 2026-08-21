@@ -13,7 +13,7 @@ vi.mock('./supabaseClient', () => ({
   },
 }));
 
-import { activateRewardFrame, addLessonVideo, broadcastPlatformNotification, claimWeeklyTask, getCurrentWeeklyTasks, getLearningStreakStatus, getRewardLedger, purchaseRewardItem, recordWebVital, submitQuizAttempt, updateDailyStreak, updateUserNotificationPreferences } from './db';
+import { activateRewardFrame, addLessonVideo, broadcastPlatformNotification, claimWeeklyTask, deleteLessonVideo, getCurrentWeeklyTasks, getLearningStreakStatus, getRewardLedger, markClassroomAttendance, purchaseRewardItem, recordWebVital, submitQuizAttempt, updateDailyStreak, updateUserNotificationPreferences } from './db';
 
 describe('reward and persistence database helpers', () => {
   beforeEach(() => {
@@ -205,6 +205,53 @@ describe('reward and persistence database helpers', () => {
       title: 'Revision session', videoUrl: 'https://youtu.be/abcdefghijk',
     })).resolves.toMatchObject({
       id: 'lesson-1', classId: 'class-1', creatorId: 'teacher-1', title: 'Revision session',
+    });
+  });
+
+  it('rejects lesson creation when Supabase does not return a saved record', async () => {
+    const single = vi.fn().mockResolvedValue({ data: null, error: null });
+    const select = vi.fn().mockReturnValue({ single });
+    const insert = vi.fn().mockReturnValue({ select });
+    mocks.from.mockReturnValue({ insert });
+
+    await expect(addLessonVideo({
+      classId: 'class-1', creatorId: 'teacher-1', creatorName: 'Teacher',
+      title: 'Revision session', videoUrl: 'https://youtu.be/abcdefghijk',
+    })).rejects.toThrow('did not return a saved record');
+  });
+
+  it('rejects lesson deletion when Supabase deletes no row', async () => {
+    const select = vi.fn().mockResolvedValue({ data: [], error: null });
+    const classFilter = vi.fn().mockReturnValue({ select });
+    const lessonFilter = vi.fn().mockReturnValue({ eq: classFilter });
+    const remove = vi.fn().mockReturnValue({ eq: lessonFilter });
+    mocks.from.mockReturnValue({ delete: remove });
+
+    await expect(deleteLessonVideo('lesson-1', 'class-1')).rejects.toThrow('not found or cannot be deleted');
+  });
+
+  it('uses the identity-bound attendance RPC and normalizes its saved record', async () => {
+    mocks.rpc.mockResolvedValue({
+      data: [{
+        id: 'attendance-1', class_id: 'class-1', student_id: 'student-1', attendance_date: '2026-08-21',
+        status: 'present', marked_by: 'teacher-1', marked_at: '2026-08-21T08:30:00.000Z', note: null,
+        created_at: '2026-08-21T08:30:00.000Z', updated_at: '2026-08-21T08:30:00.000Z',
+      }],
+      error: null,
+    });
+
+    await expect(markClassroomAttendance({
+      classId: ' class-1 ', studentId: ' student-1 ', attendanceDate: '2026-08-21', status: 'present',
+    })).resolves.toMatchObject({
+      id: 'attendance-1', classId: 'class-1', studentId: 'student-1', status: 'present',
+    });
+
+    expect(mocks.rpc).toHaveBeenCalledWith('mark_classroom_attendance', {
+      p_class_id: 'class-1',
+      p_student_id: 'student-1',
+      p_attendance_date: '2026-08-21',
+      p_status: 'present',
+      p_note: null,
     });
   });
 });

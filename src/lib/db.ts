@@ -2459,6 +2459,21 @@ export interface LessonVideo {
   createdAt: string;
 }
 
+export type ClassroomAttendanceStatus = 'present' | 'late' | 'absent' | 'excused';
+
+export interface ClassroomAttendanceRecord {
+  id: string;
+  classId: string;
+  studentId: string;
+  attendanceDate: string;
+  status: ClassroomAttendanceStatus;
+  markedBy: string;
+  markedAt: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export async function getLessonVideos(classId: string): Promise<LessonVideo[]> {
   if (!isSupabaseConfigured) return [];
   try {
@@ -2500,8 +2515,10 @@ export async function addLessonVideo(params: {
   videoUrl: string;
   videoType?: 'youtube' | 'live';
   isLive?: boolean;
-}): Promise<LessonVideo | null> {
-  if (!isSupabaseConfigured) return null;
+}): Promise<LessonVideo> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Lesson storage is unavailable.');
+  }
   const videoId = `lv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
   try {
     const { data, error } = await supabase
@@ -2523,6 +2540,9 @@ export async function addLessonVideo(params: {
       console.error('Error adding lesson video:', error.message, error.details, error.hint);
       throw new Error(error.message || 'Unable to save the lesson.');
     }
+    if (!data) {
+      throw new Error('Lesson storage did not return a saved record.');
+    }
     return {
       id: data.id,
       classId: data.class_id,
@@ -2543,23 +2563,125 @@ export async function addLessonVideo(params: {
   }
 }
 
-export async function deleteLessonVideo(videoId: string, classId: string): Promise<boolean> {
-  if (!isSupabaseConfigured) return false;
+export async function deleteLessonVideo(videoId: string, classId: string): Promise<void> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Lesson storage is unavailable.');
+  }
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('classroom_lesson_videos')
       .delete()
       .eq('id', videoId)
-      .eq('class_id', classId);
+      .eq('class_id', classId)
+      .select('id');
     if (error) {
       console.error('Error deleting lesson video:', error.message);
-      return false;
+      throw new Error(error.message || 'Unable to delete the lesson.');
     }
-    return true;
+    if (!data || data.length !== 1) {
+      throw new Error('Lesson was not found or cannot be deleted.');
+    }
   } catch (e) {
     console.error('Error deleting lesson video:', e);
-    return false;
+    throw e instanceof Error ? e : new Error('Unable to delete the lesson.');
   }
+}
+
+function normalizeAttendanceDate(value: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error('Attendance date must use YYYY-MM-DD.');
+  }
+  return value;
+}
+
+function mapClassroomAttendanceRecord(row: any): ClassroomAttendanceRecord {
+  return {
+    id: String(row.id),
+    classId: String(row.class_id),
+    studentId: String(row.student_id),
+    attendanceDate: String(row.attendance_date),
+    status: row.status as ClassroomAttendanceStatus,
+    markedBy: String(row.marked_by),
+    markedAt: String(row.marked_at),
+    note: row.note ?? null,
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at),
+  };
+}
+
+export async function getClassroomAttendanceRecords(
+  classId: string,
+  attendanceDate: string,
+): Promise<ClassroomAttendanceRecord[]> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Attendance storage is unavailable.');
+  }
+
+  const normalizedClassId = classId.trim();
+  if (!normalizedClassId) {
+    throw new Error('Classroom ID is required.');
+  }
+
+  const normalizedDate = normalizeAttendanceDate(attendanceDate);
+  const { data, error } = await supabase
+    .from('classroom_attendance_records')
+    .select('*')
+    .eq('class_id', normalizedClassId)
+    .eq('attendance_date', normalizedDate)
+    .order('student_id', { ascending: true });
+
+  if (error) {
+    console.error('Error loading classroom attendance:', error.message);
+    throw new Error('Unable to load attendance records.');
+  }
+
+  return (data || []).map(mapClassroomAttendanceRecord);
+}
+
+export async function markClassroomAttendance(params: {
+  classId: string;
+  studentId: string;
+  attendanceDate: string;
+  status: ClassroomAttendanceStatus;
+  note?: string;
+}): Promise<ClassroomAttendanceRecord> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Attendance storage is unavailable.');
+  }
+
+  const classId = params.classId.trim();
+  const studentId = params.studentId.trim();
+  const attendanceDate = normalizeAttendanceDate(params.attendanceDate);
+  const note = params.note?.trim() || null;
+  if (!classId || !studentId) {
+    throw new Error('Classroom ID and student ID are required.');
+  }
+  if (!['present', 'late', 'absent', 'excused'].includes(params.status)) {
+    throw new Error('Attendance status is invalid.');
+  }
+  if (note && note.length > 280) {
+    throw new Error('Attendance note is too long.');
+  }
+
+  const { data, error } = await supabase.rpc('mark_classroom_attendance', {
+    p_class_id: classId,
+    p_student_id: studentId,
+    p_attendance_date: attendanceDate,
+    p_status: params.status,
+    p_note: note,
+  });
+
+  if (error) {
+    console.error('Error saving classroom attendance:', error.message);
+    throw new Error('Unable to save attendance.');
+  }
+
+  const record = Array.isArray(data) ? data[0] : data;
+  if (!record) {
+    throw new Error('Attendance storage did not return a saved record.');
+  }
+
+  return mapClassroomAttendanceRecord(record);
 }
 
 export async function incrementLessonVideoViews(videoId: string): Promise<void> {
@@ -2576,8 +2698,16 @@ export async function incrementLessonVideoViews(videoId: string): Promise<void> 
 
 // Extract YouTube video ID from URL
 export function extractYouTubeId(url: string): string {
-  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  return match ? match[1] : '';
+  if (!url) return '';
+  const cleanUrl = url.trim();
+  // Match standard, embed, shorts, youtu.be, and live stream URL patterns
+  const match = cleanUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (match) return match[1];
+  // Fallback: if user pasted just an 11-character YouTube video ID directly
+  if (/^[a-zA-Z0-9_-]{11}$/.test(cleanUrl)) {
+    return cleanUrl;
+  }
+  return '';
 }
 
 // ===== Motivation Hub Functions =====

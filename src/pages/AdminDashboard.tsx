@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, BarChart3, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, BarChart3, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2, ArrowUpRight, RefreshCw, UserRoundCheck } from 'lucide-react';
 import { Quiz } from '../types';
 import { getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
@@ -78,6 +78,9 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   const [allowRegistrations, setAllowRegistrations] = useState(true);
   const [platformSettingsBusy, setPlatformSettingsBusy] = useState(false);
   const [platformSettingsNotice, setPlatformSettingsNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [isLoadingOverview, setIsLoadingOverview] = useState(true);
+  const [overviewLoadError, setOverviewLoadError] = useState<string | null>(null);
+  const [overviewRefreshKey, setOverviewRefreshKey] = useState(0);
 
   const [promoType, setPromoType] = useState('Promo Code');
   const [promoCode, setPromoCode] = useState('');
@@ -188,52 +191,70 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   }, [activeAdminTab]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const profiles = await getAllProfiles();
-        setAllUsers(profiles);
-      } catch (e) {
-        console.warn('Error loading profiles:', e);
+    let isMounted = true;
+    const loadAdminOverview = async () => {
+      setIsLoadingOverview(true);
+      setOverviewLoadError(null);
+
+      const [profilesResult, couponsResult, classroomsResult, studentsResult] = await Promise.allSettled([
+        getAllProfiles(),
+        getCoupons(),
+        supabase.from('classrooms').select('*'),
+        supabase.from('classroom_students').select('*'),
+      ]);
+
+      if (!isMounted) return;
+
+      let hasLoadFailure = false;
+      if (profilesResult.status === 'fulfilled') {
+        setAllUsers(profilesResult.value);
+      } else {
+        hasLoadFailure = true;
+        console.warn('Error loading profiles:', profilesResult.reason);
       }
 
-      try {
-        const list = await getCoupons();
-        if (Array.isArray(list)) {
-          setCoupons(list);
-        }
-      } catch (e) {
-        console.error('Error loading coupons:', e);
+      if (couponsResult.status === 'fulfilled') {
+        setCoupons(Array.isArray(couponsResult.value) ? couponsResult.value : []);
+      } else {
+        hasLoadFailure = true;
+        console.error('Error loading coupons:', couponsResult.reason);
       }
 
-      try {
-        const { data, error } = await supabase.from('classrooms').select('*');
-        if (!error && data) {
-          setAdminClassrooms(data.map((classroom: any) => ({
-            ...classroom,
-            createdAt: classroom.created_at || classroom.createdAt,
-            creatorName: classroom.creator_name || classroom.creatorName || classroom.created_by_name || (isAr ? 'غير محدد' : 'Unknown'),
-          })));
-        }
-      } catch (e) {
-        console.error('Error fetching admin classrooms:', e);
+      if (classroomsResult.status === 'fulfilled' && !classroomsResult.value.error) {
+        const data = classroomsResult.value.data || [];
+        setAdminClassrooms(data.map((classroom: any) => ({
+          ...classroom,
+          createdAt: classroom.created_at || classroom.createdAt,
+          creatorName: classroom.creator_name || classroom.creatorName || classroom.created_by_name || (isAr ? 'غير محدد' : 'Unknown'),
+        })));
+      } else {
+        hasLoadFailure = true;
+        console.error('Error fetching admin classrooms:', classroomsResult.status === 'rejected' ? classroomsResult.reason : classroomsResult.value.error);
       }
 
-      try {
-        const { data, error } = await supabase.from('classroom_students').select('*');
-        if (!error && data) {
-          setAdminStudents(data.map((student: any) => ({
-            ...student,
-            classCode: student.class_code || student.classCode,
-            studentName: student.student_name || student.studentName || student.name || (isAr ? 'طالب' : 'Student'),
-            studentPhoto: student.student_photo || student.studentPhoto || null,
-            avgScore: Number(student.avg_score ?? student.avgScore ?? 0),
-          })));
-        }
-      } catch (e) {
-        console.error('Error fetching admin students:', e);
+      if (studentsResult.status === 'fulfilled' && !studentsResult.value.error) {
+        const data = studentsResult.value.data || [];
+        setAdminStudents(data.map((student: any) => ({
+          ...student,
+          classCode: student.class_code || student.classCode,
+          studentName: student.student_name || student.studentName || student.name || (isAr ? 'طالب' : 'Student'),
+          studentPhoto: student.student_photo || student.studentPhoto || null,
+          avgScore: Number(student.avg_score ?? student.avgScore ?? 0),
+        })));
+      } else {
+        hasLoadFailure = true;
+        console.error('Error fetching admin students:', studentsResult.status === 'rejected' ? studentsResult.reason : studentsResult.value.error);
       }
-    })();
-  }, []);
+
+      if (hasLoadFailure) {
+        setOverviewLoadError(isAr ? 'تعذر تحميل جزء من بيانات الإدارة. يمكنك إعادة المحاولة دون فقدان البيانات المعروضة.' : 'Part of the admin data could not be loaded. You can retry without losing the current view.');
+      }
+      setIsLoadingOverview(false);
+    };
+
+    void loadAdminOverview();
+    return () => { isMounted = false; };
+  }, [isAr, overviewRefreshKey]);
 
   // Fetch classroom messages directly from Supabase if active
   useEffect(() => {
@@ -262,7 +283,8 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
 
   const premiumUsersCount = allUsers.filter(u => u.is_premium).length;
   const activeAttempts = quizzes.reduce((acc, q) => acc + (q.totalPlays || 0), 0);
-  const revenueEstimate = premiumUsersCount * 99; // Simple placeholder revenue calculation
+  const averageAttemptsPerQuiz = quizzes.length > 0 ? Math.round(activeAttempts / quizzes.length) : 0;
+  const premiumAdoptionRate = allUsers.length > 0 ? Math.round((premiumUsersCount / allUsers.length) * 100) : 0;
 
   const adminTabs = [
     { id: 'overview', name: isAr ? 'نظرة عامة' : 'Overview', icon: LayoutDashboard },
@@ -278,20 +300,33 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
   ];
 
   return (
-    <div className="space-y-8" dir={isAr ? 'rtl' : 'ltr'}>
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 glass-panel p-6 rounded-[24px]">
+    <div ref={containerRef} className="space-y-6 sm:space-y-8" dir={isAr ? 'rtl' : 'ltr'}>
+      <div className="admin-header-anim relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/65 sm:p-6">
+        <div className="pointer-events-none absolute -top-20 left-10 h-40 w-40 rounded-full bg-purple-500/10 blur-3xl" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 	        <div className="flex items-center gap-4">
-	          <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center p-3 border border-slate-200 dark:border-slate-700">
-	            <Shield className="w-full h-full" />
+	          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-purple-500/20 bg-purple-500/10 p-3 text-purple-700 dark:text-purple-300">
+	            <Shield className="h-full w-full" />
 	          </div>
-          <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-            <h2 className="font-display font-black text-2xl text-slate-800 dark:text-white">
-              {isAr ? 'لوحة تحكم المسؤول' : 'Admin Dashboard'}
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-              {isAr ? 'إدارة المنصة، المستخدمين، والاختبارات بصلاحيات كاملة' : 'Platform management with administrative privileges'}
-            </p>
+            <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
+              <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+                {isAr ? 'لوحة تحكم المسؤول' : 'Admin Dashboard'}
+              </h2>
+              <p className="mt-1 text-sm font-medium text-slate-600 dark:text-slate-400">
+                {isAr ? 'إدارة المنصة، المستخدمين، والاختبارات بصلاحيات كاملة' : 'Platform management with administrative privileges'}
+              </p>
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setOverviewRefreshKey((value) => value + 1)}
+            disabled={isLoadingOverview}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-black text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoadingOverview ? 'animate-spin' : ''}`} />
+            <span>{isAr ? 'تحديث البيانات' : 'Refresh data'}</span>
+          </button>
         </div>
       </div>
 
@@ -305,7 +340,8 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
               <button
                 key={tab.id}
                 onClick={() => setActiveAdminTab(tab.id as any)}
-                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all whitespace-nowrap lg:whitespace-normal font-bold text-sm ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`admin-nav-item flex min-h-11 items-center gap-3 px-4 py-3.5 rounded-2xl transition-all whitespace-nowrap lg:whitespace-normal font-bold text-sm ${
                   isActive
                     ? 'bg-primary text-white shadow-lg shadow-primary/20'
                     : 'glass-panel text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -319,43 +355,70 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 min-w-0 glass-card p-6 sm:p-8 rounded-[32px] min-h-[500px]">
+        <div className="flex-1 min-w-0 min-h-[500px] rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/55 sm:p-8">
           
-            <div
-              
-              
-              
-              
-            >
+            <div className="admin-content-panel">
               {activeAdminTab === 'overview' && (
-                <div className="space-y-8">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[
-                      { label: isAr ? 'إجمالي للمستخدمين' : 'Total Users', value: allUsers.length.toString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                      { label: isAr ? 'إجمالي الاختبارات' : 'Total Quizzes', value: quizzes.length.toString(), icon: Database, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-                      { label: isAr ? 'محاولات نشطة' : 'Active Attempts', value: activeAttempts.toString(), icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-                      { label: isAr ? 'الإيرادات' : 'Revenue', value: `$${revenueEstimate}`, icon: Crown, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-                    ].map((stat, i) => (
-                      <div key={i} className="glass-panel p-5 rounded-2xl flex items-center justify-between border border-slate-200/50 dark:border-slate-700/50">
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">{stat.label}</p>
-                          <h4 className="font-black text-2xl text-slate-800 dark:text-white">{stat.value}</h4>
-                        </div>
-                        <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
-                          <stat.icon className="w-6 h-6" />
-                        </div>
-                      </div>
-                    ))}
+                <div className="space-y-6">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.16em] text-purple-600 dark:text-purple-300">{isAr ? 'نبض المنصة' : 'Platform pulse'}</p>
+                      <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white">{isAr ? 'نظرة تشغيلية موثوقة' : 'A trustworthy operating view'}</h3>
+                    </div>
+                    <p className="max-w-lg text-xs leading-5 text-slate-600 dark:text-slate-400">{isAr ? 'تعرض المؤشرات بيانات المستخدمين والاختبارات والفصول المتاحة حاليًا، دون تقديرات إيرادات غير مؤكدة.' : 'Metrics use the currently available users, quizzes, and classrooms without unverified revenue estimates.'}</p>
                   </div>
-                  
-                  <div className="glass-panel p-6 rounded-3xl border border-slate-200/50 dark:border-slate-700/50">
-                     <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-4">
-                        {isAr ? 'تقارير حديثة بحاجة لمراجعة' : 'Recent Reports to Review'}
-                     </h3>
-                     <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-                        <AlertTriangle className="w-10 h-10 mb-2 opacity-50" />
-                        <p>{isAr ? 'لا توجد تقارير جديدة' : 'No new reports'}</p>
-                     </div>
+
+                  {overviewLoadError && (
+                    <div role="alert" className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>{overviewLoadError}</span>
+                    </div>
+                  )}
+
+                  {isLoadingOverview ? (
+                    <div aria-busy="true" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      {[0, 1, 2, 3].map((index) => <div key={index} className="h-32 animate-pulse rounded-3xl bg-slate-100 dark:bg-slate-900" />)}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      {[
+                        { label: isAr ? 'إجمالي المستخدمين' : 'Total users', value: allUsers.length.toLocaleString(), caption: isAr ? 'حسابات ظاهرة للإدارة' : 'Accounts visible to admin', icon: Users, color: 'text-blue-600 dark:text-blue-300', bg: 'bg-blue-500/10' },
+                        { label: isAr ? 'الفصول النشطة' : 'Classrooms', value: adminClassrooms.length.toLocaleString(), caption: isAr ? `${adminStudents.length} عضوية طالب` : `${adminStudents.length} learner memberships`, icon: UserRoundCheck, color: 'text-purple-600 dark:text-purple-300', bg: 'bg-purple-500/10' },
+                        { label: isAr ? 'إجمالي الاختبارات' : 'Published quizzes', value: quizzes.length.toLocaleString(), caption: isAr ? `${averageAttemptsPerQuiz} متوسط محاولة لكل اختبار` : `${averageAttemptsPerQuiz} average attempts per quiz`, icon: Database, color: 'text-emerald-600 dark:text-emerald-300', bg: 'bg-emerald-500/10' },
+                        { label: isAr ? 'تبني الباقات المدفوعة' : 'Premium adoption', value: `${premiumAdoptionRate}%`, caption: isAr ? `${premiumUsersCount} مستخدمًا بباقات مدفوعة` : `${premiumUsersCount} paid members`, icon: Crown, color: 'text-amber-600 dark:text-amber-300', bg: 'bg-amber-500/10' },
+                      ].map((stat) => (
+                        <div key={stat.label} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900/55">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-bold text-slate-600 dark:text-slate-400">{stat.label}</p>
+                              <h4 className="mt-2 text-3xl font-black tracking-tight text-slate-950 dark:text-white">{stat.value}</h4>
+                            </div>
+                            <div className={`rounded-2xl p-3 ${stat.bg} ${stat.color}`}><stat.icon className="h-5 w-5" /></div>
+                          </div>
+                          <p className="mt-4 text-[11px] font-medium leading-4 text-slate-500 dark:text-slate-400">{stat.caption}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    {[
+                      { tab: 'users', title: isAr ? 'إدارة المستخدمين' : 'Review users', text: isAr ? 'ابحث في الملفات والحالة قبل أي إجراء.' : 'Search profiles and account status before taking action.', icon: Users },
+                      { tab: 'ai_monitoring', title: isAr ? 'متابعة الذكاء الاصطناعي' : 'Review AI activity', text: isAr ? 'راجع السجلات ونتائج الطلبات الفعلية.' : 'Inspect logs and the outcome of real requests.', icon: Activity },
+                      { tab: 'rewards', title: isAr ? 'النقاط والمتجر' : 'Rewards operations', text: isAr ? 'تابع الأرصدة والطلبات المؤكدة.' : 'Review verified balances and store orders.', icon: Gift },
+                    ].map((action) => {
+                      const ActionIcon = action.icon;
+                      return (
+                        <button key={action.tab} type="button" onClick={() => setActiveAdminTab(action.tab as typeof activeAdminTab)} className="group min-h-32 rounded-3xl border border-slate-200 bg-white p-5 text-right shadow-sm transition-all hover:-translate-y-0.5 hover:border-purple-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/45 dark:hover:border-purple-500/60" style={{ textAlign: isAr ? 'right' : 'left' }}>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="rounded-2xl bg-purple-500/10 p-3 text-purple-600 dark:text-purple-300"><ActionIcon className="h-5 w-5" /></div>
+                            <ArrowUpRight className="h-4 w-4 text-slate-400 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                          </div>
+                          <h4 className="mt-4 text-sm font-black text-slate-900 dark:text-white">{action.title}</h4>
+                          <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-400">{action.text}</p>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

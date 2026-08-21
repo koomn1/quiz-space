@@ -36,19 +36,36 @@ import {
   ExternalLink, UserPlus, Sparkles, Lock, Shield, Send, Paperclip,
   Volume2, Bell, FileText, Image, Download, FolderOpen, Info, 
   MessageSquare, PlusCircle, Calendar, ClipboardList, Megaphone, 
-  CheckCircle, BarChart2, Settings, Sliders, Play, Trash, FileUp, 
-  ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle, Eye, Target
+  CheckCircle, BarChart2, Settings, Sliders, Play, Trash, FileUp,
+  ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle, Eye, Target, ClipboardCheck, CircleX
 } from 'lucide-react';
 import { playChimeSound } from '../lib/chime';
 import { getApiUrl } from '../lib/origin';
 import { encryptMessage, decryptMessage } from '../lib/encryption';
 import { supabase } from '../lib/supabaseClient';
-import { sendPushEvent, getLessonVideos, addLessonVideo, deleteLessonVideo, incrementLessonVideoViews, extractYouTubeId } from '../lib/db';
+import {
+  type ClassroomAttendanceRecord,
+  type ClassroomAttendanceStatus,
+  sendPushEvent,
+  getLessonVideos,
+  addLessonVideo,
+  deleteLessonVideo,
+  incrementLessonVideoViews,
+  extractYouTubeId,
+  getClassroomAttendanceRecords,
+  markClassroomAttendance,
+} from '../lib/db';
 import { canPersistAuthenticatedData } from '../lib/userAccess';
 import { 
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, 
   XAxis, YAxis, Tooltip as ChartTooltip, Cell, PieChart, Pie 
 } from 'recharts';
+
+function getLocalDateInputValue(): string {
+  const now = new Date();
+  const offsetMs = now.getTimezoneOffset() * 60_000;
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
+}
 
 interface Classroom {
   id: string;
@@ -263,8 +280,8 @@ export default function Classrooms({
   const [chatMessageText, setChatMessageText] = useState('');
   const [isSendingChat, setIsSendingChat] = useState(false);
 
-  // Expanded 11 SaaS Workspace Tabs
-  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'overview' | 'discussion' | 'quizzes' | 'assignments' | 'files' | 'members' | 'announcements' | 'grades' | 'calendar' | 'analytics' | 'settings' | 'lessons' | 'challenges'>('overview');
+  // Expanded classroom workspace tabs
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'overview' | 'discussion' | 'quizzes' | 'assignments' | 'files' | 'members' | 'attendance' | 'announcements' | 'grades' | 'calendar' | 'analytics' | 'settings' | 'lessons' | 'challenges'>('overview');
   
   // Custom Assignment Builder State
   const [isCreatingAssign, setIsCreatingAssign] = useState(false);
@@ -295,7 +312,15 @@ export default function Classrooms({
   const [newLessonDesc, setNewLessonDesc] = useState('');
   const [isLessonLive, setIsLessonLive] = useState(false);
   const [isSavingLesson, setIsSavingLesson] = useState(false);
+  const [deletingLessonId, setDeletingLessonId] = useState<string | null>(null);
   const [watchingVideo, setWatchingVideo] = useState<LessonVideo | null>(null);
+
+  // Attendance register state. Teachers own updates; enrolled learners get a read-only view.
+  const [attendanceDate, setAttendanceDate] = useState(getLocalDateInputValue);
+  const [attendanceRecords, setAttendanceRecords] = useState<ClassroomAttendanceRecord[]>([]);
+  const [isLoadingAttendance, setIsLoadingAttendance] = useState(false);
+  const [attendanceError, setAttendanceError] = useState<string | null>(null);
+  const [attendanceBusyStudentId, setAttendanceBusyStudentId] = useState<string | null>(null);
 
   // Drag and drop state
   const [dragActive, setDragActive] = useState(false);
@@ -495,6 +520,35 @@ export default function Classrooms({
     loadClassroomWorkspace();
     return () => { isMounted = false; };
   }, [activeClassroomView]);
+
+  useEffect(() => {
+    if (!activeClassroomView) {
+      setAttendanceRecords([]);
+      setAttendanceError(null);
+      return;
+    }
+
+    let isMounted = true;
+    const loadAttendance = async () => {
+      setIsLoadingAttendance(true);
+      setAttendanceError(null);
+      try {
+        const records = await getClassroomAttendanceRecords(activeClassroomView.id, attendanceDate);
+        if (isMounted) setAttendanceRecords(records);
+      } catch (error) {
+        console.error('Error loading attendance register:', error);
+        if (isMounted) {
+          setAttendanceRecords([]);
+          setAttendanceError(isAr ? 'تعذر تحميل سجل الحضور. تحقق من اتصالك ثم أعد المحاولة.' : 'Attendance register could not be loaded. Check your connection and try again.');
+        }
+      } finally {
+        if (isMounted) setIsLoadingAttendance(false);
+      }
+    };
+
+    void loadAttendance();
+    return () => { isMounted = false; };
+  }, [activeClassroomView?.id, attendanceDate, isAr]);
 
   // Deep linking join classroom
   useEffect(() => {
@@ -941,6 +995,77 @@ export default function Classrooms({
     return studentExists && c.createdBy !== currentUserId;
   });
 
+  const canManageAttendance = Boolean(activeClassroomView && activeClassroomView.createdBy === currentUserId);
+  const attendanceStatusOptions: Array<{
+    id: ClassroomAttendanceStatus;
+    label: string;
+    shortLabel: string;
+    className: string;
+    activeClassName: string;
+  }> = [
+    {
+      id: 'present',
+      label: isAr ? 'حاضر' : 'Present',
+      shortLabel: isAr ? 'حاضر' : 'Present',
+      className: 'border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10',
+      activeClassName: 'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20',
+    },
+    {
+      id: 'late',
+      label: isAr ? 'متأخر' : 'Late',
+      shortLabel: isAr ? 'متأخر' : 'Late',
+      className: 'border-amber-500/30 text-amber-500 hover:bg-amber-500/10',
+      activeClassName: 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20',
+    },
+    {
+      id: 'excused',
+      label: isAr ? 'بعذر' : 'Excused',
+      shortLabel: isAr ? 'بعذر' : 'Excused',
+      className: 'border-sky-500/30 text-sky-500 hover:bg-sky-500/10',
+      activeClassName: 'bg-sky-500 text-white border-sky-500 shadow-lg shadow-sky-500/20',
+    },
+    {
+      id: 'absent',
+      label: isAr ? 'غائب' : 'Absent',
+      shortLabel: isAr ? 'غائب' : 'Absent',
+      className: 'border-rose-500/30 text-rose-500 hover:bg-rose-500/10',
+      activeClassName: 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/20',
+    },
+  ];
+
+  const handleAttendanceStatusChange = async (studentId: string, status: ClassroomAttendanceStatus) => {
+    if (!activeClassroomView || !canManageAttendance || attendanceBusyStudentId) return;
+
+    setAttendanceBusyStudentId(studentId);
+    try {
+      const savedRecord = await markClassroomAttendance({
+        classId: activeClassroomView.id,
+        studentId,
+        attendanceDate,
+        status,
+      });
+      setAttendanceRecords((previous) => {
+        const next = previous.filter((record) => record.studentId !== studentId);
+        return [...next, savedRecord].sort((a, b) => a.studentId.localeCompare(b.studentId));
+      });
+      playChimeSound('click');
+      triggerToast(
+        isAr ? 'تم حفظ الحضور' : 'Attendance saved',
+        isAr ? 'تم تحديث حالة الطالب في سجل اليوم.' : 'The learner status was updated in today’s register.',
+        'info',
+      );
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      triggerToast(
+        isAr ? 'تعذر حفظ الحضور' : 'Attendance could not be saved',
+        isAr ? 'لم يتم تغيير السجل. تحقق من صلاحيتك واتصالك ثم حاول مجددًا.' : 'The register was not changed. Check your permission and connection, then try again.',
+        'info',
+      );
+    } finally {
+      setAttendanceBusyStudentId(null);
+    }
+  };
+
   const renderSidebar = () => (
     <div className="w-full md:w-80 bg-slate-900/60 backdrop-blur-md rounded-3xl border border-slate-800 p-6 flex flex-col gap-6">
       {/* Join Box */}
@@ -1190,7 +1315,7 @@ export default function Classrooms({
               </div>
             </div>
 
-            {/* Premium Dock Navigation - 11 Workspace Modules */}
+            {/* Premium Dock Navigation */}
             <div className="flex overflow-x-auto border-b border-slate-800 bg-slate-900/40 px-6 py-2 gap-1 scrollbar-none shrink-0">
               {[
                 { id: 'overview', label: isAr ? 'نظرة عامة' : 'Overview', icon: BookOpen },
@@ -1200,6 +1325,7 @@ export default function Classrooms({
                 { id: 'challenges', label: isAr ? 'تحديات الفصل' : 'Challenges', icon: Target },
                 { id: 'files', label: isAr ? 'حقيبة الملفات' : 'Files', icon: FolderOpen },
                 { id: 'members', label: isAr ? 'الأعضاء والطلاب' : 'Members', icon: Users2 },
+                { id: 'attendance', label: isAr ? 'سجل الحضور' : 'Attendance', icon: ClipboardCheck },
                 { id: 'announcements', label: isAr ? 'لوحة النشرات' : 'Notices', icon: Megaphone },
                 { id: 'grades', label: isAr ? 'دفتر الدرجات' : 'Gradebook', icon: Award },
                 { id: 'calendar', label: isAr ? 'التقويم' : 'Calendar', icon: Calendar },
@@ -1758,7 +1884,7 @@ export default function Classrooms({
                   {/* Grading Modal dialog overlay */}
                   {gradingSubmission && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4">
+                      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto space-y-4">
                         <h5 className="font-bold text-white text-sm">{isAr ? 'تقييم ورصد الحلول الدراسية' : 'Evaluate Student Work'}</h5>
                         <p className="text-xs text-slate-400"><strong>Student:</strong> {gradingSubmission.studentName}</p>
                         <div className="p-4 bg-slate-950 rounded-xl max-h-40 overflow-y-auto text-xs text-slate-300 border border-slate-800">{gradingSubmission.content}</div>
@@ -1846,54 +1972,202 @@ export default function Classrooms({
               {/* TAB 6: MEMBERS */}
               {activeWorkspaceTab === 'members' && (
                 <div className="space-y-6">
-                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Users className="w-4 h-4 text-purple-400" />
-                    <span>{isAr ? 'دليل الطلاب والكوادر الأكاديمية' : 'Classroom Roster Directory'}</span>
-                  </h4>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Users className="w-4 h-4 text-purple-400" />
+                        <span>{isAr ? 'دليل الطلاب والكوادر الأكاديمية' : 'Classroom Roster Directory'}</span>
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {isAr ? 'قائمة أعضاء الفصل، حالات الاتصال، ومتوسط الأداء الأكاديمي' : 'Member directory, online presence, and academic standing'}
+                      </p>
+                    </div>
+                  </div>
 
-                  <div className="overflow-x-auto rounded-2xl border border-slate-800">
+                  <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/40 shadow-xl">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="bg-slate-950/60 text-slate-400 font-mono text-[10px] uppercase border-b border-slate-800">
+                        <tr className="bg-slate-950/80 text-slate-400 font-mono text-[10px] uppercase border-b border-slate-800">
                           <th className="p-4 text-right rtl:text-right ltr:text-left">{isAr ? 'اسم العضو / الطالب' : 'Student Name'}</th>
                           <th className="p-4 text-center">{isAr ? 'الحالة' : 'Status'}</th>
                           <th className="p-4 text-center">{isAr ? 'تاريخ الانضمام' : 'Joined Date'}</th>
                           <th className="p-4 text-center">{isAr ? 'الكويزات المنجزة' : 'Quizzes Solved'}</th>
-                          <th className="p-4 text-center">{isAr ? 'متوسط الدرجات' : 'Average index'}</th>
-                          <th className="p-4 text-center">{isAr ? 'أخر نشاط' : 'Last Activity'}</th>
+                          <th className="p-4 text-center">{isAr ? 'متوسط الدرجات' : 'Average Index'}</th>
+                          <th className="p-4 text-center">{isAr ? 'آخر نشاط' : 'Last Activity'}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800 bg-slate-900/20 text-slate-200">
-                        {classroomStudents.filter(s => s.classCode === activeClassroomView.code).map(s => {
-                          const presence = getPresenceStatus(s.lastActive, isAr);
-                          return (
-                          <tr  className="hover:bg-slate-900/40">
-                            <td className="p-4 flex items-center gap-2.5 text-right rtl:text-right ltr:text-left">
-                              <div className="relative w-7 h-7 shrink-0">
-                                <div className="w-7 h-7 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center font-bold">
-                                  {s.studentPhoto ? <img src={s.studentPhoto} alt="" className="w-full h-full object-cover" /> : s.studentName.charAt(0)}
-                                </div>
-                                <span className={`absolute -bottom-0.5 -left-0.5 w-2.5 h-2.5 rounded-full border-2 border-slate-900 ${presence.dotClass}`} />
-                              </div>
-                              <span className="font-bold text-white block">{s.studentName}</span>
+                      <tbody className="divide-y divide-slate-800/60 bg-slate-900/20 text-slate-200">
+                        {classroomStudents.filter(s => s.classCode === activeClassroomView.code).length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="p-8 text-center text-slate-500 text-xs">
+                              {isAr ? 'لا يوجد طلاب منضمون لهذا الفصل حتى الآن.' : 'No students enrolled in this classroom yet.'}
                             </td>
-                            <td className="p-4 text-center">
-                              <span className={`text-[10px] font-bold ${presence.color}`}>{presence.label}</span>
-                            </td>
-                            <td className="p-4 text-center font-mono text-slate-400">{new Date(s.joinedAt).toLocaleDateString()}</td>
-                            <td className="p-4 text-center font-mono text-purple-300 font-bold">{s.completedQuizzes}</td>
-                            <td className="p-4 text-center font-mono text-emerald-400 font-bold">{s.avgScore}%</td>
-                            <td className="p-4 text-center text-[10px] text-slate-500">{new Date(s.lastActive).toLocaleTimeString()}</td>
                           </tr>
-                          );
-                        })}
+                        ) : (
+                          classroomStudents.filter(s => s.classCode === activeClassroomView.code).map(s => {
+                            const presence = getPresenceStatus(s.lastActive, isAr);
+                            return (
+                              <tr key={s.id} className="hover:bg-slate-900/60 transition-colors">
+                                <td className="p-4 flex items-center gap-3 text-right rtl:text-right ltr:text-left">
+                                  <div className="relative w-8 h-8 shrink-0">
+                                    <div className="w-8 h-8 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center font-bold text-white shadow-inner">
+                                      {s.studentPhoto ? <img src={s.studentPhoto} alt="" className="w-full h-full object-cover" /> : s.studentName.charAt(0)}
+                                    </div>
+                                    <span className={`absolute -bottom-0.5 -left-0.5 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${presence.dotClass}`} />
+                                  </div>
+                                  <div>
+                                    <span className="font-bold text-white block">{s.studentName}</span>
+                                    <span className="text-[10px] text-slate-500 font-mono">{s.studentId.slice(0, 8)}...</span>
+                                  </div>
+                                </td>
+                                <td className="p-4 text-center">
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-950 border border-slate-800 ${presence.color}`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${presence.dotClass}`}></span>
+                                    {presence.label}
+                                  </span>
+                                </td>
+                                <td className="p-4 text-center font-mono text-slate-400 text-[11px]">{new Date(s.joinedAt).toLocaleDateString()}</td>
+                                <td className="p-4 text-center font-mono text-purple-300 font-bold">{s.completedQuizzes}</td>
+                                <td className="p-4 text-center font-mono text-emerald-400 font-bold">{s.avgScore}%</td>
+                                <td className="p-4 text-center text-[10px] text-slate-500">{new Date(s.lastActive).toLocaleTimeString()}</td>
+                              </tr>
+                            );
+                          })
+                        )}
                       </tbody>
                     </table>
                   </div>
                 </div>
               )}
 
-              {/* TAB 7: ANNOUNCEMENTS */}
+              {/* TAB 7: ATTENDANCE */}
+              {activeWorkspaceTab === 'attendance' && (
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/40 sm:p-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <ClipboardCheck className="h-5 w-5 text-purple-500" />
+                          <h4 className="text-base font-black text-slate-900 dark:text-white">
+                            {isAr ? 'سجل الحضور اليومي' : 'Daily attendance register'}
+                          </h4>
+                        </div>
+                        <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-400">
+                          {canManageAttendance
+                            ? (isAr ? 'حدّد حالة كل طالب. لا يُعرض نجاح إلا بعد حفظ السجل في قاعدة البيانات.' : 'Set each learner status. Success appears only after the record is stored in the database.')
+                            : (isAr ? 'اطّلع على حالات حضورك المسجّلة للفصل.' : 'Review the attendance status recorded for this classroom.')}
+                        </p>
+                      </div>
+
+                      <label className="flex min-h-11 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 focus-within:ring-2 focus-within:ring-purple-500 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-200">
+                        <Calendar className="h-4 w-4 text-purple-500" />
+                        <span>{isAr ? 'التاريخ' : 'Date'}</span>
+                        <input
+                          aria-label={isAr ? 'تاريخ سجل الحضور' : 'Attendance register date'}
+                          type="date"
+                          value={attendanceDate}
+                          onChange={(event) => setAttendanceDate(event.target.value)}
+                          className="min-w-0 bg-transparent text-xs font-bold text-slate-900 outline-none dark:text-white"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      {attendanceStatusOptions.map((status) => {
+                        const count = attendanceRecords.filter((record) => record.status === status.id).length;
+                        return (
+                          <div key={status.id} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
+                            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{status.shortLabel}</p>
+                            <p className="mt-1 text-xl font-black text-slate-900 dark:text-white">{count}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {attendanceError && (
+                    <div role="alert" className="flex items-start gap-3 rounded-2xl border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-700 dark:text-rose-200">
+                      <CircleX className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>{attendanceError}</span>
+                    </div>
+                  )}
+
+                  <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/30">
+                    {isLoadingAttendance ? (
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {[0, 1, 2, 3].map((index) => (
+                          <div key={index} className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
+                              <div className="space-y-2">
+                                <div className="h-3 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                                <div className="h-2.5 w-20 animate-pulse rounded bg-slate-100 dark:bg-slate-900" />
+                              </div>
+                            </div>
+                            <div className="h-10 w-40 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : classroomStudents.filter((student) => student.classCode === activeClassroomView.code).length === 0 ? (
+                      <div className="px-6 py-14 text-center">
+                        <Users2 className="mx-auto h-9 w-9 text-slate-300 dark:text-slate-700" />
+                        <h5 className="mt-3 text-sm font-black text-slate-800 dark:text-white">{isAr ? 'لا يوجد طلاب للحضور اليوم' : 'No learners to mark today'}</h5>
+                        <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-slate-500 dark:text-slate-400">{isAr ? 'سيظهر طلاب الفصل هنا بمجرد انضمامهم.' : 'Classroom learners will appear here once they join.'}</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {classroomStudents.filter((student) => student.classCode === activeClassroomView.code).map((student) => {
+                          const record = attendanceRecords.find((item) => item.studentId === student.studentId);
+                          const currentStatus = record?.status;
+                          const currentStatusLabel = attendanceStatusOptions.find((option) => option.id === currentStatus)?.label;
+                          const isSavingStudent = attendanceBusyStudentId === student.studentId;
+
+                          return (
+                            <div key={student.id} className="flex flex-col gap-4 px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-purple-100 text-xs font-black text-purple-700 dark:bg-purple-500/15 dark:text-purple-300">
+                                  {student.studentPhoto ? <img src={student.studentPhoto} alt="" className="h-full w-full object-cover" /> : student.studentName.charAt(0)}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-black text-slate-900 dark:text-white">{student.studentName}</p>
+                                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{currentStatusLabel || (isAr ? 'لم تُسجّل حالة بعد' : 'No status recorded')}</p>
+                                </div>
+                              </div>
+
+                              {canManageAttendance ? (
+                                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                                  {attendanceStatusOptions.map((status) => {
+                                    const isActive = currentStatus === status.id;
+                                    return (
+                                      <button
+                                        key={status.id}
+                                        type="button"
+                                        aria-label={`${isAr ? 'تحديد حالة' : 'Set status'} ${student.studentName}: ${status.label}`}
+                                        aria-pressed={isActive}
+                                        disabled={isSavingStudent}
+                                        onClick={() => void handleAttendanceStatusChange(student.studentId, status.id)}
+                                        className={`min-h-11 rounded-xl border px-3 text-xs font-black transition-all active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 ${isActive ? status.activeClassName : status.className}`}
+                                      >
+                                        {isSavingStudent ? (isAr ? 'جارٍ الحفظ' : 'Saving') : status.shortLabel}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <span className="inline-flex min-h-9 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-300">
+                                  {currentStatusLabel || (isAr ? 'بانتظار المعلم' : 'Pending teacher')}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 8: ANNOUNCEMENTS */}
               {activeWorkspaceTab === 'announcements' && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
@@ -2264,9 +2538,9 @@ export default function Classrooms({
                               return;
                             }
                             const videoId = extractYouTubeId(lessonUrl);
-                            // Allow non-YouTube links if marked as Live Stream, otherwise require YouTube ID
-                            if (!videoId && !isLessonLive) {
-                              triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'رابط YouTube غير صالح' : 'Invalid YouTube URL', 'info');
+                            // If it's not a recognized YouTube URL or ID, but is marked as live or has http/https, allow it as a stream link
+                            if (!videoId && !isLessonLive && !lessonUrl.startsWith('http')) {
+                              triggerToast(isAr ? 'خطأ' : 'Error', isAr ? 'رابط الفيديو غير صالح' : 'Invalid video URL', 'info');
                               return;
                             }
                             setIsSavingLesson(true);
@@ -2282,7 +2556,7 @@ export default function Classrooms({
                                 videoType: isLessonLive ? 'live' : 'youtube',
                                 isLive: isLessonLive,
                               });
-                              setLessonVideos(prev => [video, ...prev]);
+                              setLessonVideos(prev => [video, ...prev.filter(existing => existing.id !== video.id)]);
                               setIsAddingLesson(false);
                               setNewLessonUrl('');
                               setNewLessonTitle('');
@@ -2369,16 +2643,29 @@ export default function Classrooms({
                               </span>
                               {isTeacher && activeClassroomView.createdBy === currentUserId && (
                                 <button
-                                  onClick={() => {
-                                    deleteLessonVideo(vid.id, vid.classId).then(() => {
+                                  onClick={async () => {
+                                    if (deletingLessonId) return;
+                                    setDeletingLessonId(vid.id);
+                                    try {
+                                      await deleteLessonVideo(vid.id, vid.classId);
                                       setLessonVideos(prev => prev.filter(v => v.id !== vid.id));
                                       triggerToast(isAr ? 'تم الحذف' : 'Deleted', isAr ? 'تم حذف الحصة' : 'Lesson deleted', 'info');
-                                    });
+                                    } catch (error) {
+                                      console.error('Lesson deletion failed:', error);
+                                      triggerToast(
+                                        isAr ? 'تعذر حذف الحصة' : 'Lesson could not be deleted',
+                                        isAr ? 'لم تُحذف الحصة. تحقق من صلاحيتك واتصالك ثم حاول مجددًا.' : 'The lesson was not deleted. Check your permission and connection, then try again.',
+                                        'info',
+                                      );
+                                    } finally {
+                                      setDeletingLessonId(null);
+                                    }
                                   }}
-                                  className="text-[9px] text-red-500 hover:text-red-400 font-bold flex items-center gap-1 cursor-pointer"
+                                  disabled={deletingLessonId === vid.id}
+                                  className="text-[9px] text-red-500 hover:text-red-400 font-bold flex items-center gap-1 cursor-pointer disabled:cursor-wait disabled:opacity-60"
                                 >
                                   <Trash className="w-3 h-3" />
-                                  {isAr ? 'حذف' : 'Delete'}
+                                  {deletingLessonId === vid.id ? (isAr ? 'جارٍ الحذف...' : 'Deleting...') : (isAr ? 'حذف' : 'Delete')}
                                 </button>
                               )}
                             </div>
@@ -2398,7 +2685,7 @@ export default function Classrooms({
       {/* Protected Video Player Overlay */}
       {watchingVideo && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4" onClick={() => setWatchingVideo(null)}>
-          <div className="relative w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+          <div className="relative w-full max-w-5xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
             {/* Close button */}
             <button
               onClick={() => setWatchingVideo(null)}
@@ -2408,38 +2695,39 @@ export default function Classrooms({
             </button>
 
             {/* Protected Video Container */}
-            <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
+            <div className="relative rounded-2xl overflow-hidden bg-black aspect-video shadow-2xl">
               {extractYouTubeId(watchingVideo.videoUrl) ? (
                 <iframe
-                  src={`https://www.youtube.com/embed/${extractYouTubeId(watchingVideo.videoUrl)}?modestbranding=1&controls=1&rel=0&showinfo=0&disablekb=0&fs=0`}
+                  src={`https://www.youtube.com/embed/${extractYouTubeId(watchingVideo.videoUrl)}?modestbranding=1&controls=1&autoplay=1&rel=0`}
                   title={watchingVideo.title}
                   className="w-full h-full"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen={false}
+                  allowFullScreen
                 ></iframe>
+              ) : watchingVideo.videoUrl.includes('mp4') || watchingVideo.videoUrl.includes('webm') ? (
+                <video
+                  src={watchingVideo.videoUrl}
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain"
+                ></video>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white p-6 text-center">
-                  <div>
-                    <Play className="w-12 h-12 text-purple-500 mx-auto mb-4" />
-                    <p className="text-sm font-bold mb-4">{isAr ? 'هذا البث المباشر خارجي' : 'This is an external live stream'}</p>
+                  <div className="space-y-4">
+                    <Play className="w-12 h-12 text-purple-500 mx-auto" />
+                    <p className="text-xs font-bold">{isAr ? 'مشاهدة البث المباشر أو الفيديو الخارجي' : 'Watch Live Stream or External Video'}</p>
                     <a 
                       href={watchingVideo.videoUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="px-6 py-2 bg-purple-600 rounded-xl text-xs font-black hover:bg-purple-500 transition-colors inline-block"
+                      className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl text-xs font-black transition-colors inline-block shadow-lg"
                     >
-                      {isAr ? 'فتح البث في نافذة جديدة' : 'Open Stream in New Window'}
+                      {isAr ? 'فتح الرابط مباشرة ↗' : 'Open Link Directly ↗'}
                     </a>
                   </div>
                 </div>
               )}
-              {/* Transparent overlay to prevent right-click and drag */}
-              <div
-                className="absolute inset-0 bg-transparent z-10"
-                style={{ pointerEvents: 'none' }}
-                onContextMenu={(e) => e.preventDefault()}
-              ></div>
             </div>
 
             {/* Video info */}
@@ -2454,7 +2742,7 @@ export default function Classrooms({
       {/* AI Quiz Generator prompt Modal Dialog */}
       {isAiQuizOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto space-y-4">
             <h5 className="font-bold text-white text-sm">{isAr ? 'توليد اختبار ذكي بالذكاء الاصطناعي كوزمو' : 'Generate Smart Quiz Draft via AI AI'}</h5>
             <p className="text-xs text-slate-400">{isAr ? 'اكتب الموضوع أو المفهوم التعليمي وسيقوم كوزمو بصياغة اختبار متكامل مع مفتاح الإجابات.' : 'Prompt AI AI to compile questions on your selected curriculum topic.'}</p>
             <input 

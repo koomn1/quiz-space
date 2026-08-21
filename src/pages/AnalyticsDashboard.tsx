@@ -13,9 +13,10 @@ interface AnalyticsDashboardProps {
   completions: QuizCompletion[];
   lang: 'ar' | 'en';
   onStartQuiz?: (quizId: string) => void;
+  isLoading?: boolean;
 }
 
-export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStartQuiz }: AnalyticsDashboardProps) {
+export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStartQuiz, isLoading = false }: AnalyticsDashboardProps) {
   const isAr = lang === 'ar';
   const [activeTab, setActiveTab] = useState<'solving' | 'creating'>('solving');
 
@@ -36,6 +37,9 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
   const perfectCompletions = mySolvingCompletions.filter(c => c.score === c.totalQuestions && c.totalQuestions > 0).length;
   const totalSolvedExp = totalQuizzesSolved * 100 + perfectCompletions * 50;
+  const bestSolvingPercentage = totalQuizzesSolved > 0
+    ? Math.max(...mySolvingCompletions.map((completion) => completion.totalQuestions > 0 ? Math.round((completion.score / completion.totalQuestions) * 100) : 0))
+    : 0;
 
   // Preparing data for Taking Score Chart (Line)
   const scoreProgressData = mySolvingCompletions.map((c, idx) => {
@@ -76,8 +80,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
     ? (myCreatedQuizzes.reduce((acc, q) => acc + (q.avgRating || 0), 0) / myCreatedQuizzes.filter(q => q.ratingsCount > 0).length).toFixed(1)
     : '5.0';
 
-  // Revenue model: premium content creator tier payout
-  const totalRevenue = totalPlays * 0.15; // $0.15 per completed play for creators
+  const averagePlaysPerCreatedQuiz = myCreatedQuizzes.length > 0 ? Math.round(totalPlays / myCreatedQuizzes.length) : 0;
 
   // Create category breakdown
   const categoryMap: { [key: string]: number } = {};
@@ -92,21 +95,38 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
   const COLORS = ['#6366f1', '#a855f7', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
 
+  if (isLoading) {
+    return (
+      <div aria-busy="true" className="mx-auto max-w-7xl space-y-6" dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="h-32 animate-pulse rounded-[28px] bg-slate-100 dark:bg-slate-900" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((index) => <div key={index} className="h-32 animate-pulse rounded-3xl bg-slate-100 dark:bg-slate-900" />)}
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="h-80 animate-pulse rounded-[28px] bg-slate-100 lg:col-span-8 dark:bg-slate-900" />
+          <div className="h-80 animate-pulse rounded-[28px] bg-slate-100 lg:col-span-4 dark:bg-slate-900" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fade-in" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8" dir={isAr ? 'rtl' : 'ltr'}>
       
       {/* Title block */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 glass-panel p-6 rounded-[28px]">
+      <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/65 sm:p-6">
+        <div className="pointer-events-none absolute -top-16 left-8 h-36 w-36 rounded-full bg-indigo-500/10 blur-3xl" />
+        <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
           <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center border border-primary/20">
             <BarChart3 className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">
-              {isAr ? 'مستودع البيانات والتحليلات الذكية 📊' : 'Cognitive Analytics Hub 📊'}
+            <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white">
+              {isAr ? 'تحليلات التعلّم والأثر' : 'Learning and impact analytics'}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {isAr ? 'مراقبة التقدم التعليمي الشخصي وتحليلات تفاعل الفصول والاختبارات.' : 'Monitor your study progress metrics, classroom engagements, and authoring reach.'}
+            <p className="mt-1 text-xs font-medium leading-5 text-slate-600 dark:text-slate-400">
+              {isAr ? 'تابع تقدمك الفعلي، واكتشف أين تحتاج إلى مراجعة، وراقب أثر اختباراتك المنشورة.' : 'Track real progress, see where to review, and understand the reach of your published quizzes.'}
             </p>
           </div>
         </div>
@@ -115,7 +135,8 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
         <div className="flex bg-slate-100 dark:bg-slate-900/60 p-1.5 rounded-2xl border border-slate-200/50 dark:border-slate-800 shrink-0">
           <button
             onClick={() => setActiveTab('solving')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
+            aria-pressed={activeTab === 'solving'}
+            className={`flex min-h-11 items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
               activeTab === 'solving'
                 ? 'bg-primary text-white shadow-md shadow-primary/15'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -127,7 +148,8 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
           
           <button
             onClick={() => setActiveTab('creating')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
+            aria-pressed={activeTab === 'creating'}
+            className={`flex min-h-11 items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
               activeTab === 'creating'
                 ? 'bg-primary text-white shadow-md shadow-primary/15'
                 : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -136,6 +158,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
             <BookOpen className="w-4 h-4" />
             <span>{isAr ? 'أداء اختباراتي' : 'Authoring reach'}</span>
           </button>
+        </div>
         </div>
       </div>
 
@@ -166,21 +189,17 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 {
                   label: isAr ? 'الدرجات الكاملة (١٠٠٪)' : 'Perfect Matches',
                   val: perfectCompletions,
-                  icon: <Award className="w-5 h-5 text-amber-500 animate-bounce" />,
+                  icon: <Award className="w-5 h-5 text-amber-500" />,
                   bg: 'bg-amber-500/5 border-amber-500/10'
                 },
                 {
                   label: isAr ? 'خبرة الكوزمو المتراكمة' : 'Accumulated EXP',
                   val: `${totalSolvedExp} XP`,
-                  icon: <Sparkles className="w-5 h-5 text-purple-500 animate-pulse" />,
+                  icon: <Sparkles className="w-5 h-5 text-purple-500" />,
                   bg: 'bg-purple-500/5 border-purple-500/10'
                 }
-              ].map((m, i) => (
-                <div
-                  
-                  
-                  className={`p-5 rounded-2.5xl border bg-white dark:bg-[#0f172a] shadow-xs flex items-center justify-between group transition-all`}
-                >
+              ].map((m) => (
+                <div key={m.label} className="flex items-center justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-950/55 dark:hover:border-indigo-500/50">
                   <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">{m.label}</span>
                     <span className="text-xl font-black text-slate-800 dark:text-white font-mono block">{m.val}</span>
@@ -191,6 +210,20 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 </div>
               ))}
             </div>
+
+            {totalQuizzesSolved > 0 && (
+              <div className="flex flex-col gap-3 rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-black text-indigo-700 dark:text-indigo-300">{isAr ? 'قراءة سريعة لأدائك' : 'A quick read on your progress'}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800 dark:text-slate-100">
+                    {avgSolvingPercentage >= 80
+                      ? (isAr ? `نتيجتك مستقرة؛ أفضل دقة وصلت إلى ${bestSolvingPercentage}%. واصل على نفس النمط.` : `Your performance is steady; your best accuracy is ${bestSolvingPercentage}%. Keep the pattern going.`)
+                      : (isAr ? `متوسطك ${avgSolvingPercentage}%؛ ابدأ بمراجعة آخر محاولة أقل من 80% ثم أعد التحدي.` : `Your average is ${avgSolvingPercentage}%; review the most recent attempt below 80%, then replay it.`)}
+                  </p>
+                </div>
+                <span className="inline-flex shrink-0 items-center rounded-xl bg-white px-3 py-2 text-xs font-black text-indigo-700 shadow-sm dark:bg-slate-950 dark:text-indigo-300">{isAr ? `الأفضل ${bestSolvingPercentage}%` : `Best ${bestSolvingPercentage}%`}</span>
+              </div>
+            )}
 
             {/* CHARTS CONTAINER */}
             {totalQuizzesSolved === 0 ? (
@@ -377,21 +410,17 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 {
                   label: isAr ? 'متوسط تقييم اختباراتي' : 'Average Rating',
                   val: `${creatorAvgRating} ★`,
-                  icon: <Star className="w-5 h-5 text-amber-500 animate-pulse" />,
+                  icon: <Star className="w-5 h-5 text-amber-500" />,
                   bg: 'bg-amber-500/5 border-amber-500/10'
                 },
                 {
-                  label: isAr ? 'الأرباح التراكمية (٠.١٥$ لعب)' : 'Creator Earnings ($0.15/play)',
-                  val: `$${totalRevenue.toFixed(2)}`,
-                  icon: <Activity className="w-5 h-5 text-emerald-500 animate-bounce" />,
+                  label: isAr ? 'متوسط التفاعل لكل اختبار' : 'Average plays per quiz',
+                  val: averagePlaysPerCreatedQuiz,
+                  icon: <Activity className="w-5 h-5 text-emerald-500" />,
                   bg: 'bg-emerald-500/5 border-emerald-500/10'
                 }
-              ].map((m, i) => (
-                <div
-                  
-                  
-                  className={`p-5 rounded-2.5xl border bg-white dark:bg-[#0f172a] shadow-xs flex items-center justify-between group transition-all`}
-                >
+              ].map((m) => (
+                <div key={m.label} className="flex items-center justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-950/55 dark:hover:border-indigo-500/50">
                   <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">{m.label}</span>
                     <span className="text-xl font-black text-slate-800 dark:text-white font-mono block">{m.val}</span>

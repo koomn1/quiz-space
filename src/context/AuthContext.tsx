@@ -1,4 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '../lib/supabaseClient';
 import { getDefaultAvatar } from '../constants/profileAssets';
 import type { Session, User } from '@supabase/supabase-js';
@@ -127,34 +130,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(nextUser ? await fetchAppUser(nextUser) : null);
     };
 
-    const handleOAuthRedirectTokens = async () => {
-      const callbackUrl = new URL(window.location.href);
-      const authorizationCode = callbackUrl.searchParams.get('code');
-      if (authorizationCode) {
-        const { error } = await supabase.auth.exchangeCodeForSession(authorizationCode);
-        callbackUrl.searchParams.delete('code');
-        window.history.replaceState({}, document.title, `${callbackUrl.pathname}${callbackUrl.search}${callbackUrl.hash}`);
-        if (error) return;
-      }
-      const hash = window.location.hash;
-      if (hash && hash.includes('access_token')) {
-        const params = new URLSearchParams(hash.replace(/^#/, ''));
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        if (accessToken && refreshToken) {
-          const isRecovery = params.get('type') === 'recovery';
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-          if (isRecovery) {
-            setPasswordRecovery(true);
-            window.history.replaceState({}, document.title, `${callbackUrl.pathname}${callbackUrl.search}`);
-          } else {
-            window.location.hash = '#/dashboard/landing';
+    const handleOAuthRedirectTokens = async (rawUrl: string) => {
+      try {
+        const callbackUrl = new URL(rawUrl);
+        const authorizationCode = callbackUrl.searchParams.get('code');
+        if (authorizationCode) {
+          const { error } = await supabase.auth.exchangeCodeForSession(authorizationCode);
+          if (error) throw error;
+        }
+
+        const hash = callbackUrl.hash;
+        if (hash && hash.includes('access_token')) {
+          const params = new URLSearchParams(hash.replace(/^#/, ''));
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          if (accessToken && refreshToken) {
+            const isRecovery = params.get('type') === 'recovery';
+            await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+            if (isRecovery) setPasswordRecovery(true);
           }
         }
+
+        if (Capacitor.isNativePlatform()) {
+          await Browser.close().catch(() => undefined);
+        } else if (authorizationCode || hash.includes('access_token')) {
+          window.history.replaceState({}, document.title, `${callbackUrl.pathname}${callbackUrl.search}`);
+          if (!callbackUrl.hash.includes('type=recovery')) window.location.hash = '#/dashboard/landing';
+        }
+      } catch (error) {
+        console.error('OAuth callback could not be completed', error);
       }
     };
 
-    handleOAuthRedirectTokens().then(() => {
+    const initialUrl = window.location.href;
+    handleOAuthRedirectTokens(initialUrl).then(() => {
       supabase.auth.getSession().then(async ({ data: { session } }) => {
         await syncSession(session);
         setLoading(false);
@@ -167,7 +176,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await syncSession(nextSession);
     });
 
-    return () => listener.subscription.unsubscribe();
+    let nativeUrlListenerPromise: Promise<{ remove: () => Promise<void> }> | undefined;
+    if (Capacitor.isNativePlatform()) {
+      nativeUrlListenerPromise = App.addListener('appUrlOpen', ({ url }) => {
+        void handleOAuthRedirectTokens(url);
+      });
+    }
+
+    return () => {
+      void listener.subscription.unsubscribe();
+      void nativeUrlListenerPromise?.then((handle) => handle.remove());
+    };
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
@@ -260,15 +279,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo,
-        queryParams: { prompt: 'select_account' },
+        skipBrowserRedirect: Capacitor.isNativePlatform(),
+        queryParams: { prompt: 'select_account', access_type: 'offline', response_type: 'code' },
       },
     });
     if (error) {
       throw new Error('تعذر فتح تسجيل الدخول بجوجل. تحقق من تفعيل مزود Google ثم حاول مرة أخرى.');
+    }
+    if (Capacitor.isNativePlatform() && data.url) {
+      await Browser.open({ url: data.url, presentationStyle: 'popover' });
     }
   };
 

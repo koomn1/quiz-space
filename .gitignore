@@ -25,6 +25,7 @@ dist-ssr
 
 # Environment variables
 .env
+.env.capacitor
 .env.local
 .env.production.local
 .env.development.local
@@ -33,6 +34,8 @@ dist-ssr
 # Build output
 dist
 build
+*.apk
+*.idsig
 
 # OS generated files
 .DS_Store

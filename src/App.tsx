@@ -1039,6 +1039,10 @@ export default function App() {
   // class creation, community posting, etc.) since it isn't backed by a Supabase
   // Auth session or a verified database row. Those actions must prompt sign-in.
   const activateLocalSandboxMode = () => {
+    if (typeof window !== 'undefined' && window.navigator && window.navigator.onLine === false) {
+      alert(lang === 'ar' ? 'عذراً، التطبيق يحتاج إلى اتصال بالإنترنت للاتصال بقاعدة البيانات ومزامنة الحسابات. يرجى التحقق من الشبكة والمحاولة مرة أخرى.' : 'Offline mode is disabled. Please check your internet connection to sync with Supabase.');
+      return;
+    }
     const id = 'local-user-' + Math.random().toString(36).substring(2, 9);
     const generatedName = generateCoolStudentName(lang);
     setUserId(id);
@@ -1683,6 +1687,7 @@ export default function App() {
                   completions={completions}
                   lang={lang}
                   onStartQuiz={handleStartQuiz}
+                  isLoading={isLoadingQuizzes}
                 />
               )}
 
