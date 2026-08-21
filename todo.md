@@ -307,3 +307,4 @@
 - [x] Implement and verify the AnalyticsDashboard UI improvements with responsive insights, loading states, empty states, and theme-safe contrast
 - [x] Add regression tests for lesson persistence failures, attendance register behavior, and dashboard rendering contracts
 - [x] Restrict attendance visibility so teachers can review the classroom register while learners can view only their own attendance record
+- [x] Rebuild, sign, and distribute Android version 1.1.3 with the latest lessons, attendance, and dashboard improvements
