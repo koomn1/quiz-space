@@ -297,3 +297,9 @@
 - [x] Refactor the classroom tab navigation into a focused reusable hook while retaining the documented desktop and touch behavior
 - [x] Run regression tests and production build after cleanup
 - [x] Publish the web-only cleanup and verify the deployment workflow
+
+## Published Links & E2E Stability Audit (2026-08-21)
+- [x] Inspect the latest GitHub Actions E2E result and published deployment state
+- [x] Verify public GitHub Pages routes and tab-link availability without authentication
+- [x] Document verified coverage and any authenticated flows that require a real test account
+- [ ] Configure an isolated authenticated Playwright account to test classroom attendance, online lessons, dashboards, and premium tabs end-to-end
