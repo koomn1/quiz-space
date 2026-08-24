@@ -1,7 +1,7 @@
 import re, urllib.request
 
-BASE = "https://koomn1.github.io/quiz-space/assets/"
-idx = urllib.request.urlopen("https://koomn1.github.io/quiz-space/").read().decode()
+BASE = "https://quiz-space-app.pages.dev/assets/"
+idx = urllib.request.urlopen("https://quiz-space-app.pages.dev/").read().decode()
 
 # find main entry js referenced by modulepreload or script tag
 m = re.search(r'assets/([A-Za-z0-9-]+)\.js', idx)

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const profileId = process.env.E2E_PROFILE_ID;
-const baseURL = (process.env.PLAYWRIGHT_BASE_URL || 'https://koomn1.github.io/quiz-space/').replace(/\/?$/, '/');
+const baseURL = (process.env.PLAYWRIGHT_BASE_URL || 'https://quiz-space-app.pages.dev/').replace(/\/?$/, '/');
 const assetNames = [
   'boy-robotics-transparent.webp',
   'girl-pottery-transparent.webp',

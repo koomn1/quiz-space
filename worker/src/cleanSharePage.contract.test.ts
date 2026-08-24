@@ -10,7 +10,8 @@ describe('clean share page contract', () => {
     expect(sharePageSource).toContain('const SHARE_PATHS = new Set([\'/share/quiz\', \'/share/quiz/\']);');
     expect(sharePageSource).toContain('function isAllowedAppBase(value)');
     expect(sharePageSource).toContain('quiz-space-app\\.pages\\.dev');
-    expect(sharePageSource).toContain('koomn1\\.github\\.io\\/quiz-space');
+    expect(sharePageSource).not.toContain('koomn1\\.github\\.io\\/quiz-space');
+    expect(sharePageSource).toContain("return isAllowedAppBase(requested) ? requested : APP_FALLBACK;");
   });
 
   it('redirects human visitors to the real quiz app', () => {

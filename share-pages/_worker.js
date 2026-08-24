@@ -12,7 +12,7 @@ function escapeHtml(value) {
 }
 
 function isAllowedAppBase(value) {
-  return /^https:\/\/(quiz-space-app\.pages\.dev|koomn1\.github\.io\/quiz-space|quizspace\.app)(?:\/)?$/i.test(value);
+  return /^https:\/\/quiz-space-app\.pages\.dev(?:\/)?$/i.test(value);
 }
 
 function getAppBase(url) {
@@ -30,7 +30,7 @@ function getQuizTitle(url) {
 
 function getCleanShareUrl(url) {
   const target = new URL(`${SHARE_ORIGIN}/share/quiz`);
-  for (const key of ['quiz', 'title', 'challenge', 'base']) {
+  for (const key of ['quiz', 'title', 'challenge']) {
     const value = url.searchParams.get(key);
     if (value) target.searchParams.set(key, value.slice(0, key === 'title' ? 160 : 240));
   }

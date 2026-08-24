@@ -8,6 +8,6 @@ for m in ["gpt-oss-20b", "qwen3-235b-a22b", "nemotron-3-super-120b"]:
 
 # Check worker runtime response: probe the deployed AI worker for CORS/options
 worker_url = None
-main = urllib.request.urlopen("https://koomn1.github.io/quiz-space/").read().decode()
+main = urllib.request.urlopen("https://quiz-space-app.pages.dev/").read().decode()
 m2 = re.search(r'(https://[^"\'\s]+(?:ai|worker)[^"\'\s]*)', main)
 print("worker url hint:", m2.group(1) if m2 else None)

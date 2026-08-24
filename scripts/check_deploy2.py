@@ -11,7 +11,7 @@ chunks = [
     "plus-BsUSfR3P.js", "save-jKQAv6og.js",
 ]
 for c in chunks:
-    body = requests.get(f"https://koomn1.github.io/quiz-space/assets/{c}").text
+    body = requests.get(f"https://quiz-space-app.pages.dev/assets/{c}").text
     avatars = sorted(set(re.findall(r'avatars/[a-z0-9.-]+\.(png|svg)', body)))
     up = body.count('userPhoto')
     pu = body.count('photo_url')

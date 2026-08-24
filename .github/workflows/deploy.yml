@@ -183,7 +183,7 @@ jobs:
 
   e2e-public:
     name: Public Profile Asset E2E
-    needs: deploy-pages
+    needs: [deploy-pages, deploy-app-pages]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -212,7 +212,7 @@ jobs:
 
       - name: Run Public Profile Asset E2E
         env:
-          PLAYWRIGHT_BASE_URL: https://koomn1.github.io/quiz-space/
+          PLAYWRIGHT_BASE_URL: https://quiz-space-app.pages.dev/
         run: pnpm e2e -- --grep "published profile asset delivery"
 
   deploy-worker:

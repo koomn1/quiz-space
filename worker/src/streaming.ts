@@ -275,12 +275,19 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
     },
   });
 
-  const allowedOrigins = env.ALLOWED_ORIGIN.split(',').map(value => value.trim());
+  const primaryOrigin = 'https://quiz-space-app.pages.dev';
+  const allowedOrigins = [
+    ...env.ALLOWED_ORIGIN
+      .split(',')
+      .map(value => value.trim())
+      .filter(value => value && !/(^|\.)github\.io(?:\/|$)/i.test(value)),
+    primaryOrigin,
+  ];
   const responseHeaders: HeadersInit = {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
     'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0],
+    'Access-Control-Allow-Origin': allowedOrigins.includes(requestOrigin) ? requestOrigin : primaryOrigin,
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Vary': 'Origin',

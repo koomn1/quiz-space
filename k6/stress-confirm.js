@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 
-const BASE_URL = (__ENV.BASE_URL || 'https://koomn1.github.io/quiz-space/').replace(/\/?$/, '/');
+const BASE_URL = (__ENV.BASE_URL || 'https://quiz-space-app.pages.dev/').replace(/\/?$/, '/');
 const ROUTES = [
   'landing', 'dashboard-landing', 'explore', 'categories', 'community',
   'leaderboard', 'achievements', 'motivation', 'motivation-lucky',

@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = (process.env.QA_BASE_URL || 'https://koomn1.github.io/quiz-space/').replace(/\/?$/, '/');
+const baseURL = (process.env.QA_BASE_URL || 'https://quiz-space-app.pages.dev/').replace(/\/?$/, '/');
 
 export default defineConfig({
   testDir: './e2e',

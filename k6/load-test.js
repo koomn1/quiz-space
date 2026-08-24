@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Counter, Rate, Trend } from 'k6/metrics';
 
-const BASE_URL = (__ENV.BASE_URL || 'https://koomn1.github.io/quiz-space/').replace(/\/?$/, '/');
+const BASE_URL = (__ENV.BASE_URL || 'https://quiz-space-app.pages.dev/').replace(/\/?$/, '/');
 const ROUTE_PAUSE_SECONDS = Number(__ENV.ROUTE_PAUSE_SECONDS || 1);
 const PAGE_ROUTES = [
   { name: 'landing', hash: '#/' },

@@ -3,7 +3,7 @@ import path from 'node:path';
 import readline from 'node:readline/promises';
 import { chromium } from '@playwright/test';
 
-const baseURL = (process.env.PLAYWRIGHT_BASE_URL || 'https://koomn1.github.io/quiz-space/').replace(/\/?$/, '/');
+const baseURL = (process.env.PLAYWRIGHT_BASE_URL || 'https://quiz-space-app.pages.dev/').replace(/\/?$/, '/');
 const profileId = process.env.E2E_PROFILE_ID;
 const outputPath = process.env.PLAYWRIGHT_STORAGE_STATE || 'playwright/.auth/profile.json';
 

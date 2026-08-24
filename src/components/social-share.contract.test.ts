@@ -20,7 +20,7 @@ describe('social sharing preview contract', () => {
     expect(shareModal).toContain('quiz-share-card.jpg');
   });
 
-  it('shares the site using the GitHub Pages base path and both social targets', () => {
+  it('shares the site using the active app base and both social targets', () => {
     expect(motivationHub).toContain('getAppBaseUrl()');
     expect(motivationHub).toContain('wa.me/?text=');
     expect(motivationHub).toContain('facebook.com/sharer/sharer.php?u=');

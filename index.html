@@ -1,6 +1,19 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
+    <script>
+      (function () {
+        var hostname = window.location.hostname.toLowerCase();
+        if (!/(^|\.)github\.io$/i.test(hostname)) return;
+        var oldBase = '/quiz-space';
+        var pathname = window.location.pathname;
+        if (pathname === oldBase || pathname.indexOf(oldBase + '/') === 0) {
+          pathname = pathname.slice(oldBase.length) || '/';
+        }
+        var target = 'https://quiz-space-app.pages.dev' + (pathname.charAt(0) === '/' ? pathname : '/' + pathname);
+        window.location.replace(target + window.location.search + window.location.hash);
+      })();
+    </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

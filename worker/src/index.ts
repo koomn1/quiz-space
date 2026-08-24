@@ -97,12 +97,13 @@ function checkRateLimit(key: string): boolean {
 
 function cors(request: Request, env: Env): HeadersInit {
   const origin = request.headers.get('Origin') || '';
-  const allowed = [
-    ...String(env.ALLOWED_ORIGIN || '').split(',').map(value => value.trim()).filter(Boolean),
-    'https://quiz-space-app.pages.dev',
-    'https://koomn1.github.io',
-  ];
-  const allowOrigin = allowed.includes(origin) ? origin : allowed[0] || 'https://koomn1.github.io';
+  const configuredOrigins = String(env.ALLOWED_ORIGIN || '')
+    .split(',')
+    .map(value => value.trim())
+    .filter(value => value && !/(^|\.)github\.io(?:\/|$)/i.test(value));
+  const primaryOrigin = 'https://quiz-space-app.pages.dev';
+  const allowed = [...configuredOrigins, primaryOrigin];
+  const allowOrigin = allowed.includes(origin) ? origin : primaryOrigin;
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
