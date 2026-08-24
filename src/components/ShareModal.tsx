@@ -193,7 +193,7 @@ export default function ShareModal({
         {/* Share Poster Preview */}
         <div className="overflow-hidden rounded-2xl border border-primary/20 bg-slate-950 shadow-lg">
           <img
-            src={`${getAppBaseUrl()}/quiz-share-card.png`}
+            src={`${getAppBaseUrl()}/quiz-share-card.jpg`}
             alt={isAr ? `صورة مشاركة الكويز: ${quizTitle}` : `Quiz sharing image: ${quizTitle}`}
             className="w-full aspect-[1200/630] object-cover"
           />
