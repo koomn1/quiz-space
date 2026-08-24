@@ -27,7 +27,7 @@ describe('social sharing preview contract', () => {
     expect(motivationHub).toContain('siteShareText');
   });
 
-  it('keeps user-facing quiz links on the branded app domain', () => {
+  it('keeps user-facing quiz links on the clean share host', () => {
     const shareStart = originSource.indexOf('export function getPublicQuizShareUrl');
     const shareEnd = originSource.indexOf('export function getApiUrl');
     const shareFunction = originSource.slice(shareStart, shareEnd);
