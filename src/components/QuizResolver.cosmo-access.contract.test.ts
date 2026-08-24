@@ -16,7 +16,7 @@ describe('QuizResolver Cosmo entitlement contract', () => {
     expect(resolverSource).toContain('currentQuestion.explanation ||');
     expect(resolverSource).toContain('{!hasCosmoAccess ? (');
     expect(resolverSource).toContain('handleFetchAiFlashcardExplanation(currentQuestion.id, currentQuestion)');
-    expect(resolverSource).toContain("userPlan !== 'Gold' && userPlan !== 'Diamond'");
+    expect(resolverSource).toContain('!hasCosmoAccess ? (');
   });
 
   it('keeps the next action close and reachable on short mobile viewports', () => {

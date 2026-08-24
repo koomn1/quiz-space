@@ -815,7 +815,7 @@ export default function QuizResolver({
           `}</style>
 
           {isFlashcardMode ? (
-            userPlan !== 'Gold' && userPlan !== 'Diamond' ? (
+            !hasCosmoAccess ? (
               /* Elegant preview screen with an upgrade prompt for locked users */
               <div className="bg-[#0e0a1f]/80 backdrop-blur-2xl border border-[#3d1d6d]/40 rounded-3xl p-8 max-w-lg mx-auto text-center space-y-6 shadow-[0_0_40px_rgba(139,92,246,0.25)] animate-fade-in my-8 relative overflow-hidden">
                 <div className="absolute -top-12 -left-12 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
