@@ -7,10 +7,11 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, updateCompletionReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport } from '../lib/db';
+import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { getApiUrl } from '../lib/origin';
+import { isGuestIdentity } from '../lib/guestIdentity';
 import { fetchWithAuth } from '../lib/authFetch';
 import { pushNotificationsManager } from '../lib/pushNotifications';
 import confetti from 'canvas-confetti';
@@ -104,6 +105,7 @@ export default function QuizResolver({
   // Cosmo is paid: Free users must be blocked in both the UI and the request flow.
   // Silver includes the personal AI assistant in the billing catalog.
   const hasCosmoAccess = Boolean(isPremium) || userPlan === 'Silver' || userPlan === 'Gold' || userPlan === 'Diamond';
+  const isGuest = isGuestIdentity(userId);
   const [quiz, setQuiz] = React.useState<Quiz | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -144,6 +146,16 @@ export default function QuizResolver({
   const [feedbackText, setFeedbackText] = React.useState<string>('');
   const [hasRatedQuiz, setHasRatedQuiz] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
+  const attemptKeyRef = React.useRef<string>('');
+  const autoSaveStartedRef = React.useRef<string | null>(null);
+  const createAttemptKey = React.useCallback(() => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+    return `attempt-${Date.now()}-${Math.random().toString(36).slice(2, 14)}`;
+  }, []);
+  React.useEffect(() => {
+    attemptKeyRef.current = createAttemptKey();
+    autoSaveStartedRef.current = null;
+  }, [quizId, createAttemptKey]);
   const isDailyQuiz = quizId.startsWith('daily-');
 
   // Question ratings states
@@ -238,6 +250,8 @@ export default function QuizResolver({
   // Play premium success sound when quiz finishes & trigger auto-save + route lock
   React.useEffect(() => {
     if (isQuizCompleted) {
+      if (autoSaveStartedRef.current === attemptKeyRef.current) return;
+      autoSaveStartedRef.current = attemptKeyRef.current;
       playNotificationSound('success');
 
       if (onQuizLockChange) {
@@ -246,15 +260,30 @@ export default function QuizResolver({
 
       const autoSave = async () => {
         try {
-          const finalName = takerName.trim() || userName.trim() || 'طالب متميز';
-          const res = await submitQuizAttempt(quizId, {
-            takerId: userId || 'anonymous',
-            takerName: finalName,
-            score,
-            rating: undefined,
-            feedback: '',
-            totalQuestions: quiz.questions.length
-          });
+          // Daily challenges are not available to guests through the normal entry flow.
+          // If a stale/direct URL reaches this component, release the route lock instead
+          // of leaving the guest trapped in an unsaved results overlay.
+          if (isDailyQuiz && isGuest) {
+            onQuizLockChange?.(false);
+            return;
+          }
+          const finalName = takerName.trim() || userName.trim() || 'طالب زائر';
+          const res = isGuest
+            ? await submitGuestQuizAttempt(quizId, {
+                guestId: userId,
+                guestName: finalName,
+                score,
+                clientAttemptKey: attemptKeyRef.current,
+                feedback: '',
+              })
+            : await submitQuizAttempt(quizId, {
+                takerId: userId || 'anonymous',
+                takerName: finalName,
+                score,
+                rating: undefined,
+                feedback: '',
+                totalQuestions: quiz.questions.length
+              });
 
           // Supabase RPC table results are returned as an array, while the
           // legacy fallback returns an object. Normalize both shapes so the
@@ -280,7 +309,7 @@ export default function QuizResolver({
         onQuizLockChange(false);
       }
     }
-  }, [isQuizCompleted, quizId, userId, takerName, userName, score, hasRatedQuiz, isDailyQuiz]);
+  }, [isQuizCompleted, quizId, userId, takerName, userName, score, hasRatedQuiz, isDailyQuiz, isGuest, quiz?.questions.length, onQuizLockChange]);
 
   // Intercept and block all navigation popstate, back gestures, and close actions when in results overlay
   React.useEffect(() => {
@@ -557,15 +586,32 @@ export default function QuizResolver({
       
       // Prevent duplicate insert if already saved (e.g. from autoSave or handleFinalSubmitAndExit)
       if (savedCompletionId && !isDailyQuiz) {
-        await updateCompletionReview(savedCompletionId, rating, feedback);
+        if (isGuest) {
+          await updateGuestQuizAttemptReview(savedCompletionId, userId, rating, feedback.trim());
+        } else {
+          await updateCompletionReview(savedCompletionId, rating, feedback);
+        }
+      } else if (isGuest && !isDailyQuiz) {
+        const result = await submitGuestQuizAttempt(quizId, {
+          guestId: userId,
+          guestName: takerName.trim(),
+          score,
+          clientAttemptKey: attemptKeyRef.current,
+          rating,
+          feedback: feedback.trim(),
+        });
+        const completionRow = Array.isArray(result) ? result[0] : result;
+        if (completionRow?.id) setSavedCompletionId(completionRow.id);
       } else {
-        await submitQuizAttempt(quizId, {
+        const result = await submitQuizAttempt(quizId, {
           takerId: userId,
           takerName: takerName.trim(),
           score,
           rating,
           feedback: feedback.trim()
         });
+        const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
+        if (completionRow?.id) setSavedCompletionId(completionRow.id);
       }
       if (isDailyQuiz) {
         try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}
@@ -589,6 +635,13 @@ export default function QuizResolver({
 
   // Submit the forced star rating and release route lock
   const handleFinalSubmitAndExit = async () => {
+    // Guests cannot participate in the private daily-slot flow. Fail closed for
+    // direct/stale daily URLs and never route a guest id into the authenticated RPC.
+    if (isGuest && isDailyQuiz) {
+      onQuizLockChange?.(false);
+      onGoHome();
+      return;
+    }
     // After the first saved rating, retakes can exit without rating again.
     if (hasRatedQuiz) {
       if (onQuizLockChange) onQuizLockChange(false);
@@ -604,7 +657,24 @@ export default function QuizResolver({
       
       // Save rating attempt to Supabase
       if (savedCompletionId && !isDailyQuiz) {
-        await updateCompletionReview(savedCompletionId, selectedRating, feedbackText);
+        if (isGuest) {
+          await updateGuestQuizAttemptReview(savedCompletionId, userId, selectedRating, feedbackText.trim());
+        } else {
+          await updateCompletionReview(savedCompletionId, selectedRating, feedbackText);
+        }
+        setHasRatedQuiz(true);
+      } else if (isGuest && !isDailyQuiz) {
+        const result = await submitGuestQuizAttempt(quizId, {
+          guestId: userId,
+          guestName: finalName,
+          score,
+          clientAttemptKey: attemptKeyRef.current,
+          rating: selectedRating,
+          feedback: feedbackText.trim(),
+        });
+        const completionRow = Array.isArray(result) ? result[0] : result;
+        if (!completionRow?.id) throw new Error('Quiz completion was not recorded.');
+        setSavedCompletionId(completionRow.id);
         setHasRatedQuiz(true);
       } else {
         const result = await submitQuizAttempt(quizId, {
@@ -660,6 +730,8 @@ export default function QuizResolver({
     setSelectedRating(0);
     setFeedbackText('');
     setFeedback('');
+    attemptKeyRef.current = createAttemptKey();
+    autoSaveStartedRef.current = null;
     setRating(5);
     setIsTimeOut(false);
     setEssayAnswers(new Array(quiz ? quiz.questions.length : 0).fill(''));

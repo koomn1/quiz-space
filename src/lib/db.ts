@@ -532,6 +532,54 @@ export async function deleteQuiz(quizId: string): Promise<void> {
   }
 }
 
+export async function submitGuestQuizAttempt(
+  quizId: string,
+  data: {
+    guestId: string;
+    guestName: string;
+    score: number;
+    clientAttemptKey: string;
+    rating?: number;
+    feedback?: string;
+  }
+): Promise<any> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
+  const { data: result, error } = await supabase.rpc('submit_guest_quiz_attempt', {
+    p_quiz_id: quizId,
+    p_guest_id: data.guestId,
+    p_guest_name: data.guestName,
+    p_score: data.score,
+    p_client_attempt_key: data.clientAttemptKey,
+    p_rating: data.rating ?? null,
+    p_feedback: data.feedback || '',
+  });
+  if (error) {
+    console.error('submit_guest_quiz_attempt RPC failed:', error);
+    throw new Error('تعذر تسجيل نتيجة الاختبار حالياً. حاول مرة أخرى.');
+  }
+  return result;
+}
+
+export async function updateGuestQuizAttemptReview(
+  completionId: string,
+  guestId: string,
+  rating: number,
+  feedback = '',
+): Promise<boolean> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz review cannot be saved.');
+  const { data, error } = await supabase.rpc('update_guest_quiz_attempt_review', {
+    p_completion_id: completionId,
+    p_guest_id: guestId,
+    p_rating: rating,
+    p_feedback: feedback,
+  });
+  if (error) {
+    console.error('update_guest_quiz_attempt_review RPC failed:', error);
+    throw new Error('تعذر حفظ تقييم الاختبار حالياً. حاول مرة أخرى.');
+  }
+  return data === true;
+}
+
 export async function submitQuizAttempt(
   quizId: string,
   data: {

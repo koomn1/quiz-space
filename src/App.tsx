@@ -57,6 +57,7 @@ import { pushNotificationsManager, PushNotificationPayload } from './lib/pushNot
 import { translations } from './lib/i18n';
 import { initAppOrigin, getApiUrl } from './lib/origin';
 import { generateCoolStudentName } from './lib/nameGenerator';
+import { getOrCreateGuestIdentity } from './lib/guestIdentity';
 import { startWebVitalsReporting } from './lib/performanceTelemetry';
 import { getOnboardingTourStorageKey, shouldShowOnboardingTour } from './lib/onboardingState';
 import { useAuth } from './context/AuthContext';
@@ -930,12 +931,13 @@ export default function App() {
         // active Supabase session, otherwise writes can fail or look signed in.
         let storedUserId = localStorage.getItem('quiz_userId');
         let storedUserName = localStorage.getItem('quiz_userName');
-        if (!storedUserId || !storedUserId.startsWith('user-guest-')) {
-          storedUserId = 'user-guest-' + Math.random().toString(36).substring(2, 9);
+        const guestIdentity = getOrCreateGuestIdentity(lang);
+        if (!storedUserId || !/^user-guest-[A-HJ-NP-Z2-9]{6}$/i.test(storedUserId)) {
+          storedUserId = guestIdentity.id;
           localStorage.setItem('quiz_userId', storedUserId);
         }
-        if (!storedUserName) {
-          storedUserName = 'طالب متميز';
+        if (!storedUserName || storedUserName === 'طالب متميز' || storedUserName === 'طالب زائر') {
+          storedUserName = guestIdentity.name;
           localStorage.setItem('quiz_userName', storedUserName);
         }
         setUserId(storedUserId);
@@ -1043,8 +1045,9 @@ export default function App() {
       alert(lang === 'ar' ? 'عذراً، التطبيق يحتاج إلى اتصال بالإنترنت للاتصال بقاعدة البيانات ومزامنة الحسابات. يرجى التحقق من الشبكة والمحاولة مرة أخرى.' : 'Offline mode is disabled. Please check your internet connection to sync with Supabase.');
       return;
     }
-    const id = 'local-user-' + Math.random().toString(36).substring(2, 9);
-    const generatedName = generateCoolStudentName(lang);
+    const guestIdentity = getOrCreateGuestIdentity(lang);
+    const id = guestIdentity.id;
+    const generatedName = guestIdentity.name;
     setUserId(id);
     setUserName(generatedName);
     setUserEmail('local.student@spacequiz.local');
