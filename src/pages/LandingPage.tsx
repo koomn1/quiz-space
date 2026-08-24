@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Quiz } from '../types';
 import { BookOpen, Star, Play, Share2, Search, ArrowLeft, RefreshCw, FileText, CheckCircle, Sparkles, Trash2, Cpu, Trophy, Layers, Flame, Lightbulb, Check, HelpCircle, MessageCircle, BrainCircuit, Rocket, Tag, LayoutGrid, List, Users } from 'lucide-react';
 import { translations } from '../lib/i18n';
@@ -25,6 +26,90 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 import { Hero3DScene } from '../components/Hero3DScene';
 import { InteractiveQuizCard } from '../components/InteractiveQuizCard';
 import { HeroAnimation } from '../components/HeroAnimation';
+
+interface DeleteQuizConfirmDialogProps {
+  isAr: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function DeleteQuizConfirmDialog({ isAr, onCancel, onConfirm }: DeleteQuizConfirmDialogProps) {
+  const confirmButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  React.useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    confirmButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onCancel]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-900/60 p-4 backdrop-blur-xs select-none animate-in fade-in duration-200"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onCancel();
+      }}
+    >
+      <div
+        className="my-auto max-h-[min(640px,90dvh)] w-full max-w-sm overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 text-right shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:w-96 animate-in zoom-in-95 duration-200"
+        dir={isAr ? 'rtl' : 'ltr'}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-quiz-dialog-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center gap-3 justify-start flex-row bg-red-50 dark:bg-red-950/25 p-3.5 rounded-2xl border border-red-100 dark:border-red-950/40">
+          <div className="p-2 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-450 rounded-xl flex-shrink-0">
+            <Trash2 className="w-5 h-5" />
+          </div>
+          <div className="text-right">
+            <h4 id="delete-quiz-dialog-title" className="font-display font-black text-sm text-red-800 dark:text-red-300">
+              {isAr ? 'تأكيد حذف الاختبار نهائياً' : 'Confirm Delete Quiz'}
+            </h4>
+            <p className="text-[10px] text-red-600 dark:text-red-400 font-bold mt-0.5">
+              {isAr ? 'إجراء خطير ومستديم وقاطع' : 'This action is permanent and cannot be undone'}
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-5 text-xs text-slate-900 dark:text-slate-100 leading-relaxed font-black">
+          {isAr
+            ? 'هل أنت متأكد من رغبتك في حذف هذا الاختبار نهائياً؟ سيتم إزالته بالكامل من خوادم قاعدة البيانات، واللوحات، والنتائج، ولا يمكن استرجاعه مجدداً.'
+            : 'Are you sure you want to permanently delete this quiz? It will be fully removed from database servers, dashboards, and completions forever.'}
+        </p>
+
+        <div className="flex items-center gap-2.5 pt-5 justify-end">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="min-h-11 rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 transition-all hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 border border-slate-200/50 dark:border-slate-600/30"
+          >
+            {isAr ? 'إلغاء' : 'Cancel'}
+          </button>
+          <button
+            ref={confirmButtonRef}
+            type="button"
+            onClick={onConfirm}
+            className="min-h-11 rounded-xl bg-red-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-red-600/15 transition-all hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-650"
+          >
+            {isAr ? 'تأكيد الحذف 🗑' : 'Delete Quiz 🗑'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
 
 interface LandingPageProps {
   quizzes: Quiz[];
@@ -466,57 +551,16 @@ export default function LandingPage({
         )}
       </div>
 
-      {/* Non-blocking Custom Confirm Delete Dialog Modals */}
       {quizToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs select-none animate-in fade-in duration-200">
-          <div
-            className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 max-w-sm w-full p-6 shadow-xl space-y-5 text-right w-80 sm:w-96 animate-in zoom-in-95 duration-200"
-            dir={isAr ? 'rtl' : 'ltr'}
-          >
-              <div className="flex items-center gap-3 justify-start flex-row bg-red-50 dark:bg-red-950/25 p-3.5 rounded-2xl border border-red-100 dark:border-red-950/40">
-                <div className="p-2 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-450 rounded-xl flex-shrink-0 animate-bounce">
-                  <Trash2 className="w-5 h-5" />
-                </div>
-                <div className="text-right">
-                  <h4 className="font-display font-black text-sm text-red-800 dark:text-red-300">
-                    {isAr ? 'تأكيد حذف الاختبار نهائياً' : 'Confirm Delete Quiz'}
-                  </h4>
-                  <p className="text-[10px] text-red-600 dark:text-red-400 font-bold mt-0.5">
-                    {isAr ? 'إجراء خطير ومستديم وقاطع' : 'This action is permanent and cannot be undone'}
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-900 dark:text-slate-100 leading-relaxed font-black">
-                {isAr 
-                  ? 'هل أنت متأكد من رغبتك في حذف هذا الاختبار نهائياً؟ سيتم إزالته بالكامل من خوادم قاعدة البيانات، واللوحات، والنتائج، ولا يمكن استرجاعه مجدداً.'
-                  : 'Are you sure you want to permanently delete this quiz? It will be fully removed from database servers, dashboards, and completions forever.'}
-              </p>
-
-              <div className="flex items-center gap-2.5 pt-1.5 justify-end">
-                <button
-                  type="button"
-                  onClick={() => setQuizToDelete(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer border border-slate-200/50 dark:border-slate-600/30"
-                >
-                  {isAr ? 'إلغاء' : 'Cancel'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onDeleteQuiz && quizToDelete) {
-                      onDeleteQuiz(quizToDelete);
-                    }
-                    setQuizToDelete(null);
-                  }}
-                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-650 text-white text-xs font-black shadow-md shadow-red-600/15 transition-all cursor-pointer"
-                >
-                  {isAr ? 'تأكيد الحذف 🗑' : 'Delete Quiz 🗑'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <DeleteQuizConfirmDialog
+          isAr={isAr}
+          onCancel={() => setQuizToDelete(null)}
+          onConfirm={() => {
+            if (onDeleteQuiz) onDeleteQuiz(quizToDelete);
+            setQuizToDelete(null);
+          }}
+        />
+      )}
 
       <ContactFooter lang={lang} />
     </div>
