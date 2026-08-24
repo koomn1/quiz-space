@@ -8,7 +8,8 @@ describe('auth redirect targets', () => {
     );
   });
 
-  it('uses the stable web fallback when no base path is provided', () => {
-    expect(getAuthRedirectUrl('http://localhost:5173', '/')).toBe('http://localhost:5173/quiz-space/');
+  it('uses the domain root when no base path is provided outside GitHub Pages', () => {
+    expect(getAuthRedirectUrl('http://localhost:5173', '/')).toBe('http://localhost:5173/');
+    expect(getAuthRedirectUrl('https://quiz-space-app.pages.dev', '/')).toBe('https://quiz-space-app.pages.dev/');
   });
 });

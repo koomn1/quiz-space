@@ -151,6 +151,8 @@ Rules:
 - Preserve numbering and options (A/B/C/D) exactly.
 - If a question starts on one page and continues on the next, merge it into one complete question.
 - For Essay/Short answer questions, use type "essay" and leave options as an empty array [].
+- For MCQ and true/false questions, set correctIndex only when the source explicitly provides the answer; it must point to the matching option. If the source has no answer key, use null and do not guess.
+- Set correctAnswer to the exact answer text when it is explicitly available; never fabricate an answer or explanation.
 - Return JSON only in the following format:
 {
   "title": "Quiz Title",
@@ -171,7 +173,7 @@ ${customInstruction?.trim() ? `Additional instructions: ${customInstruction.trim
 }
 
 function generatePrompt(amount: number, customInstruction?: string | null): string {
-  return `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف. حافظ على لغة المستند ومعلوماته ولا تخمّن أي معلومة غير موجودة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":-1,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
+  return `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف. حافظ على لغة المستند ومعلوماته ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
 function parseJson(text: string): any {
@@ -188,6 +190,31 @@ function base64FromBytes(bytes: Uint8Array): string {
   let binary = '';
   for (let index = 0; index < bytes.byteLength; index += 1) binary += String.fromCharCode(bytes[index]);
   return btoa(binary);
+}
+
+function normalizeAnswerText(value: unknown): string {
+  return String(value ?? '')
+    .normalize('NFKC')
+    .replace(/[\\u064B-\\u065F\\u0670]/g, '')
+    .replace(/[.,،؛:!?؟"'`()\\[\\]{}]/g, '')
+    .replace(/\\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase();
+}
+
+function resolveCorrectIndex(raw: any, options: string[], type: 'mcq' | 'tf'): number {
+  const suppliedIndex = Number(raw?.correctIndex);
+  if (Number.isInteger(suppliedIndex) && suppliedIndex >= 0 && suppliedIndex < options.length) return suppliedIndex;
+  const answer = normalizeAnswerText(raw?.correctAnswer);
+  if (answer) {
+    const exactIndex = options.findIndex(option => normalizeAnswerText(option) === answer);
+    if (exactIndex >= 0) return exactIndex;
+    if (type === 'tf') {
+      if (['صح', 'صحيح', 'true', 'yes', 'نعم'].includes(answer)) return 0;
+      if (['خطأ', 'خاطئ', 'false', 'no', 'لا'].includes(answer)) return 1;
+    }
+  }
+  return -1;
 }
 
 function normalizeQuestions(value: unknown): any[] {
@@ -215,7 +242,7 @@ function normalizeQuestions(value: unknown): any[] {
       text,
       type,
       options: type === 'essay' ? [] : options,
-      correctIndex: Number.isInteger((raw as any).correctIndex) ? (raw as any).correctIndex : -1,
+      correctIndex: type === 'essay' ? -1 : resolveCorrectIndex(raw, options, type),
       correctAnswer: (raw as any).correctAnswer == null ? '' : String((raw as any).correctAnswer),
       explanation: (raw as any).explanation == null ? '' : String((raw as any).explanation),
     });

@@ -70,7 +70,7 @@ export function validateAndCleanQuiz(data: any): GeneratedQuiz {
       const inferredIndex = inferCorrectIndex(q.correctAnswer, options);
       correctIndex = suppliedIndex >= 0 && suppliedIndex < options.length
         ? suppliedIndex
-        : inferredIndex ?? 0;
+        : inferredIndex ?? -1;
     } else if (type === 'tf') {
       options = ['صح', 'خطأ'];
       const suppliedIndex = typeof q.correctIndex === 'number' && Number.isInteger(q.correctIndex)
@@ -79,7 +79,7 @@ export function validateAndCleanQuiz(data: any): GeneratedQuiz {
       const inferredIndex = inferCorrectIndex(q.correctAnswer, options);
       correctIndex = suppliedIndex === 0 || suppliedIndex === 1
         ? suppliedIndex
-        : inferredIndex ?? 0;
+        : inferredIndex ?? -1;
     } else {
       // Essay questions are assessed separately and do not need selectable options.
       correctAnswer = typeof q.correctAnswer === 'string' ? q.correctAnswer.trim() : '';
@@ -94,6 +94,13 @@ export function validateAndCleanQuiz(data: any): GeneratedQuiz {
       explanation: typeof q.explanation === 'string' ? q.explanation.trim() : '',
     };
   });
+
+  const unresolvedObjectiveQuestions = cleanedQuestions.filter((question) =>
+    question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length)
+  );
+  if (unresolvedObjectiveQuestions.length > 0) {
+    throw new Error('لا يمكن حفظ اختبار موضوعي بدون مفتاح إجابة موثوق. اختر وضع التوليد الذكي أو أضف الإجابات الصحيحة إلى الملف.');
+  }
 
   return {
     title,

@@ -44,10 +44,16 @@ describe('filterValidGeneratedQuestions', () => {
     expect(result.questions[0].correctIndex).toBe(0);
   });
 
-  it('clamps an out-of-range extracted index instead of creating an unsolvable choice', () => {
-    const result = validateAndCleanQuiz({
+  it('rejects an out-of-range extracted index when no reliable answer is available', () => {
+    expect(() => validateAndCleanQuiz({
       questions: [{ text: 'سؤال', type: 'mcq', options: ['أ', 'ب'], correctIndex: 99 }],
+    })).toThrow('مفتاح إجابة موثوق');
+  });
+
+  it('uses the matching answer text to repair an out-of-range index', () => {
+    const result = validateAndCleanQuiz({
+      questions: [{ text: 'سؤال', type: 'mcq', options: ['أ', 'ب'], correctIndex: 99, correctAnswer: 'ب' }],
     });
-    expect(result.questions[0].correctIndex).toBe(0);
+    expect(result.questions[0].correctIndex).toBe(1);
   });
 });

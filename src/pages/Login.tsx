@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { EmailVerificationStep } from '../components/EmailVerificationStep';
 import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
+import { getAuthRedirectUrl } from '../lib/authRedirect';
 
 const APP_BASE_URL = import.meta.env.BASE_URL || '/';
 
@@ -63,7 +64,7 @@ export default function Login() {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + APP_BASE_URL,
+          redirectTo: getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/'),
         },
       });
       if (oauthError) throw oauthError;

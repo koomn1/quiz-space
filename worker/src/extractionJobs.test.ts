@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { buildVisionChunkRanges, selectVisionChunkPlan, visionChunkRetryDelaySeconds } from './extractionJobs';
+
+const extractionSource = readFileSync(new URL('./extractionJobs.ts', import.meta.url), 'utf8');
 
 describe('dynamic vision chunk planning', () => {
   it('keeps the default five-page split for a normal scanned document', () => {
@@ -42,5 +45,11 @@ describe('dynamic vision chunk planning', () => {
     expect(visionChunkRetryDelaySeconds(2)).toBe(20);
     expect(visionChunkRetryDelaySeconds(3)).toBe(40);
     expect(visionChunkRetryDelaySeconds(10)).toBe(60);
+  });
+
+  it('keeps answer accuracy strict instead of silently defaulting to option zero', () => {
+    expect(extractionSource).toContain('If the source has no answer key, use null and do not guess.');
+    expect(extractionSource).toContain('لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية');
+    expect(extractionSource).toContain('correctIndex: type === \'essay\' ? -1 : resolveCorrectIndex(raw, options, type)');
   });
 });

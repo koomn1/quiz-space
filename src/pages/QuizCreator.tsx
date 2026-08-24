@@ -529,6 +529,7 @@ export default function QuizCreator({
   // File Chat Prompt & Batch rendering states
   const [fileCustomPrompt, setFileCustomPrompt] = React.useState('');
   const [fileGuidance, setFileGuidance] = React.useState('');
+  const [fileGuidanceMessages, setFileGuidanceMessages] = React.useState<{ role: 'user' | 'assistant'; text: string }[]>([]);
   const [isGuidingFile, setIsGuidingFile] = React.useState(false);
   const [fileGuidanceError, setFileGuidanceError] = React.useState<string | null>(null);
   const [ocrBatches, setOcrBatches] = React.useState<{
@@ -763,6 +764,7 @@ export default function QuizCreator({
       const { text } = await askAIStream(
         prompt,
         {
+          history: fileGuidanceMessages.slice(-4).map(message => ({ role: message.role === 'assistant' ? 'model' as const : 'user' as const, text: message.text })),
           attachment,
           currentPage: 'quiz-creator-file-guidance',
           siteStatus: 'QuizSpace يعمل بشكل طبيعي',
@@ -772,7 +774,9 @@ export default function QuizCreator({
         },
         (_delta, fullText) => setFileGuidance(fullText),
       );
-      setFileGuidance(text.trim());
+      const answer = text.trim();
+      setFileGuidanceMessages(prev => [...prev, { role: 'user', text: prompt }, { role: 'assistant', text: answer }]);
+      setFileGuidance('');
     } catch (error: any) {
       console.error('Guided file chat failed', error);
       setFileGuidanceError(error?.message || (isAr ? 'تعذر تشغيل الدردشة التوجيهية مع الملف.' : 'Unable to start guided file chat.'));
@@ -834,6 +838,7 @@ export default function QuizCreator({
   const processSelectedFile = (file: File) => {
     setOcrError(null);
     setFileGuidance('');
+    setFileGuidanceMessages([]);
     setFileGuidanceError(null);
     setUploadedFile(file);
     if (file.type.startsWith('image/')) {
@@ -1952,12 +1957,25 @@ A computer is a digital electronic machine...
                 <textarea
                   value={fileCustomPrompt}
                   onChange={(e) => setFileCustomPrompt(e.target.value)}
-                  placeholder={isAr 
-                    ? "اكتب هنا أية شروط إضافية تود إجبار الذكاء الاصطناعي عليها لتفصيل محتوى الملف بدقة تامة..." 
-                    : "Write here any extra constraints or chat prompts you would like the AI model to prioritize..."}
+                  placeholder={fileGuidanceMessages.length > 0
+                    ? (isAr ? 'اكتب سؤال متابعة عن الملف أو عدّل خطة الاستخراج...' : 'Ask a follow-up about the file or adjust the extraction plan...')
+                    : (isAr ? "اكتب هنا أية شروط إضافية تود إجبار الذكاء الاصطناعي عليها لتفصيل محتوى الملف بدقة تامة..." : "Write here any extra constraints or chat prompts you would like the AI model to prioritize...")}
                   className="w-full h-24 p-3.5 bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs text-right text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 transition-all font-sans"
                   dir="rtl"
                 />
+
+                {fileGuidanceMessages.length > 0 && (
+                  <div className="max-h-64 space-y-2 overflow-y-auto rounded-2xl border border-violet-200/70 bg-slate-950/[0.03] p-3 dark:border-violet-900/50 dark:bg-black/10" dir="rtl">
+                    <div className="text-[10px] font-black text-violet-600 dark:text-violet-400">{isAr ? 'سجل الدردشة مع الملف' : 'File guidance chat'}</div>
+                    {fileGuidanceMessages.map((message, index) => (
+                      <div key={`${message.role}-${index}`} className={`rounded-xl px-3 py-2 text-[11px] leading-6 whitespace-pre-wrap ${message.role === 'user' ? 'bg-violet-100/80 text-violet-950 dark:bg-violet-950/40 dark:text-violet-100' : 'bg-white/80 text-slate-700 dark:bg-slate-900/70 dark:text-slate-200'}`}>
+                        <span className="mb-0.5 block text-[9px] font-black opacity-60">{message.role === 'user' ? (isAr ? 'أنت' : 'You') : 'Cosmo'}</span>
+                        {message.text}
+                      </div>
+                    ))}
+                    {fileGuidance && <div className="rounded-xl bg-white/80 px-3 py-2 text-[11px] leading-6 text-slate-700 dark:bg-slate-900/70 dark:text-slate-200 whitespace-pre-wrap">{fileGuidance}</div>}
+                  </div>
+                )}
 
                 <div className="flex flex-col gap-2 rounded-2xl border border-violet-200/70 dark:border-violet-900/50 bg-white/60 dark:bg-slate-950/30 p-3">
                   <div className="flex items-center justify-between gap-3" dir="rtl">

@@ -6,8 +6,10 @@ import { defineConfig } from 'vite';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import viteCompression from 'vite-plugin-compression';
 
+const isCloudflarePagesBuild = process.env.DEPLOY_TARGET === 'cloudflare-pages';
+
 export default defineConfig({
-    base: '/quiz-space/',
+    base: isCloudflarePagesBuild ? '/' : '/quiz-space/',
     plugins: [
       react(),
       tailwindcss(),
