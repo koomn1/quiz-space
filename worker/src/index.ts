@@ -378,6 +378,8 @@ function isAllowedShareBase(value: string): boolean {
   return /^https:\/\/(koomn1\.github\.io\/quiz-space|quizspace\.app)(?:\/)?$/i.test(value);
 }
 
+const CLEAN_SHARE_ORIGIN = 'https://quiz-space-share.pages.dev';
+
 function isSocialCrawler(request: Request): boolean {
   const userAgent = request.headers.get('User-Agent') || '';
   return /facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|pinterest|googlebot|bingbot|crawler|spider|bot\b/i.test(userAgent);
@@ -392,7 +394,7 @@ function getCleanQuizShareUrl(requestUrl: URL): string {
   if (quizId) query.set('quiz', quizId);
   if (title) query.set('title', title);
   if (requestUrl.searchParams.get('challenge') === 'true') query.set('challenge', 'true');
-  return `${appBase}/share/quiz.html?${query.toString()}`;
+  return `${CLEAN_SHARE_ORIGIN}/share/quiz?${query.toString()}`;
 }
 
 async function renderQuizSharePage(request: Request, env: Env): Promise<Response> {

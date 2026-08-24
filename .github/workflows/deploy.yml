@@ -112,6 +112,32 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+  deploy-share-pages:
+    name: Deploy Clean Share Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Share Page Dependencies
+        run: npm install --global wrangler@4.119.0
+      - name: Ensure Share Pages Project Exists
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: wrangler pages project create quiz-space-share --production-branch main || true
+      - name: Deploy Clean Share Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: wrangler pages deploy share-pages --project-name quiz-space-share --branch main
+
   e2e-public:
     name: Public Profile Asset E2E
     needs: deploy-pages

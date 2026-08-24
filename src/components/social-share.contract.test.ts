@@ -31,9 +31,10 @@ describe('social sharing preview contract', () => {
     const shareStart = originSource.indexOf('export function getPublicQuizShareUrl');
     const shareEnd = originSource.indexOf('export function getApiUrl');
     const shareFunction = originSource.slice(shareStart, shareEnd);
-    expect(shareFunction).toContain("return `${appBase}/share/quiz.html?${query}`;");
+    expect(shareFunction).toContain("const shareHost = 'https://quiz-space-share.pages.dev';");
+    expect(shareFunction).toContain("return `${shareHost}/share/quiz?${query}`;");
     expect(shareFunction).not.toContain('workerBase');
-    expect(shareFunction).toContain('account-derived workers.dev subdomain');
+    expect(shareFunction).toContain('Keep the AI Worker host private');
   });
 
   it('renders a crawler-readable dynamic quiz share page on the Worker', () => {

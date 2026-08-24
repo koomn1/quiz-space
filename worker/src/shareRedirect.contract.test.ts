@@ -12,7 +12,8 @@ describe('legacy quiz share redirect contract', () => {
   it('redirects normal browsers to the clean GitHub Pages share URL', () => {
     expect(workerSource).toContain('function getCleanQuizShareUrl(requestUrl: URL)');
     expect(workerSource).toContain("if (!isSocialCrawler(request)) return Response.redirect(getCleanQuizShareUrl(new URL(request.url)), 301);");
-    expect(workerSource).toContain('return `${appBase}/share/quiz.html?${query.toString()}`;');
+    expect(workerSource).toContain("const CLEAN_SHARE_ORIGIN = 'https://quiz-space-share.pages.dev';");
+    expect(workerSource).toContain('return `${CLEAN_SHARE_ORIGIN}/share/quiz?${query.toString()}`;');
   });
 
   it('keeps crawler-readable dynamic metadata for social previews', () => {
