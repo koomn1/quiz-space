@@ -468,43 +468,17 @@ export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPla
 
 async function notifyFollowersAboutNewQuiz(
   quizId: string,
-  creatorId: string,
-  creatorName: string,
+  _creatorId: string,
+  _creatorName: string,
   quizTitle: string,
 ): Promise<void> {
   try {
     if (!isSupabaseConfigured) return;
-    const { data: followerRows, error: followError } = await supabase
-      .from('follows')
-      .select('follower_id')
-      .eq('following_id', creatorId);
-    if (followError) {
-      console.warn('Could not list followers for quiz notification:', followError);
-      return;
-    }
-    const followers = (followerRows || [])
-      .map(row => row?.follower_id)
-      .filter((id): id is string => Boolean(id) && id !== creatorId);
-    if (followers.length === 0) return;
-
-    const nowIso = new Date().toISOString();
-    const rows = followers.map(followerId => ({
-      id: `notif-fq-${creatorId}-${quizId}-${followers.indexOf(followerId)}`,
-      user_id: followerId,
-      type: 'info' as const,
-      title: isArabicContext() ? 'كويز جديد من شخص تتابعه' : 'New quiz from someone you follow',
-      body: `${creatorName} نشر كويزاً جديداً: ${quizTitle}`.slice(0, 220),
-      sender_name: creatorName || 'System',
-      resource_type: 'quiz',
-      resource_id: quizId,
-      is_read: false,
-      created_at: nowIso,
-    }));
-
-    const { error: insertError } = await supabase.from('notifications').insert(rows);
-    if (insertError) {
-      console.warn('Could not create follower quiz notifications:', insertError);
-    }
+    const { error } = await supabase.rpc('notify_followers_about_quiz', {
+      p_quiz_id: quizId,
+      p_quiz_title: quizTitle,
+    });
+    if (error) console.warn('Could not create follower quiz notifications:', error);
   } catch (e) {
     console.warn('Follower notification failed:', e);
   }
@@ -609,46 +583,10 @@ export async function submitQuizAttempt(
     return result;
   }
 
-  // Keep older databases usable while the RPC migration is being applied.
-  // Never return a fake success: save the completion directly and update XP.
-  console.error('submit_quiz_attempt RPC failed; using direct persistence fallback:', error);
-  const { data: quiz, error: quizError } = await supabase
-    .from('quizzes').select('title, questions').eq('id', quizId).single();
-  if (quizError || !quiz) throw error;
-  const { data: previousAttempts } = await supabase
-    .from('completions').select('score').eq('quiz_id', quizId).eq('taker_id', data.takerId);
-  const totalQuestions = Math.max(1, Array.isArray(quiz.questions) ? quiz.questions.length : 1);
-  const previousBest = Math.max(0, ...(previousAttempts || []).map((row: any) => Number(row.score) || 0));
-  const attemptNumber = (previousAttempts || []).length + 1;
-  const xpAwarded = attemptNumber === 1
-    ? 10 + Math.max(0, data.score) * 10
-    : Math.max(0, data.score - previousBest) * 10;
-  const completionId = `comp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-  const isBest = attemptNumber === 1 || data.score > previousBest;
-  if (isBest) {
-    const { error: bestError } = await supabase.from('completions').update({ is_best: false })
-      .eq('quiz_id', quizId).eq('taker_id', data.takerId);
-    if (bestError && bestError.code !== '42703') throw bestError;
-  }
-  const { error: insertError } = await supabase.from('completions').insert({
-    id: completionId, quiz_id: quizId, quiz_title: quiz.title,
-    taker_id: data.takerId, taker_name: data.takerName, score: data.score,
-    total_questions: totalQuestions, rating: data.rating ?? null, feedback: data.feedback || '',
-    attempt_number: attemptNumber, is_best: isBest,
-  });
-  if (insertError) throw insertError;
-  if (xpAwarded > 0) {
-    const { data: userRow, error: userReadError } = await supabase
-      .from('users').select('xp').eq('uid', data.takerId).single();
-    if (userReadError || !userRow) throw userReadError || new Error('User profile not found while awarding XP.');
-    const { error: xpError } = await supabase.from('users')
-      .update({ xp: (userRow.xp || 0) + xpAwarded }).eq('uid', data.takerId);
-    if (xpError) throw xpError;
-  }
-  const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: completionId });
-  if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
-  else if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
-  return { success: true, fallback: true, xp_awarded: xpAwarded, id: completionId, attempt_number: attemptNumber, is_best: isBest };
+  // Never fall back to direct completion/XP writes. The server-side RPC is the
+  // single atomic source of truth for score validation, best-score state, and XP.
+  console.error('submit_quiz_attempt RPC failed:', error);
+  throw new Error('تعذر تسجيل نتيجة الاختبار حالياً. حاول مرة أخرى.');
 }
 
 export async function getRewardsSummary(userId: string): Promise<RewardsSummary> {
@@ -800,10 +738,30 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
   if (!userId || !isSupabaseConfigured) return empty;
 
   try {
-    const { data: userRow, error: userError } = await supabase.from('users').select('*').eq('uid', userId).single();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const isOwnProfile = authUser?.id === userId;
+    const profileColumns = 'uid, custom_id, name, email, photo_url, is_premium, plan_name, plan_id, renewal_date, is_lifetime, is_founder, is_suspended, category_id, bio, location, cover_url, phone, active_frame_id, is_admin, badge_tier, name_color, badge_color, xp';
+    let userRow: any = null;
+    let userError: any = null;
+    if (isOwnProfile) {
+      const ownProfile = await supabase.from('users').select(profileColumns).eq('uid', userId).single();
+      userRow = ownProfile.data;
+      userError = ownProfile.error;
+    } else {
+      const publicProfile = await supabase.rpc('get_public_profile', { p_user_id: userId });
+      userRow = Array.isArray(publicProfile.data) ? publicProfile.data[0] : publicProfile.data;
+      userError = publicProfile.error;
+    }
     if (userError) console.error(`Error loading profile for ${userId}:`, userError.message);
     const { data: createdQuizzes } = await supabase.from('quizzes').select('*').eq('creator_id', userId).order('created_at', { ascending: false });
-    const { data: completions } = await supabase.from('completions').select('*').eq('taker_id', userId).order('created_at', { ascending: false });
+    let completions: any[] = [];
+    if (isOwnProfile) {
+      const ownCompletions = await supabase.from('completions').select('*').eq('taker_id', userId).order('created_at', { ascending: false });
+      completions = ownCompletions.data || [];
+    } else {
+      const publicCompletions = await supabase.rpc('get_public_completions_by_user', { p_user_id: userId });
+      completions = (publicCompletions.data as any[]) || [];
+    }
 
     return {
       userId,
@@ -1567,8 +1525,9 @@ export async function deleteCoupon(couponId: string): Promise<void> {
 export async function getBestScoreByQuizId(quizId: string): Promise<number> {
   if (isSupabaseConfigured) {
     try {
-      const { data } = await supabase.from('completions').select('score').eq('quiz_id', quizId).order('score', { ascending: false }).limit(1).single();
-      return data?.score ?? 0;
+      const { data, error } = await supabase.rpc('get_public_best_score', { p_quiz_id: quizId });
+      if (error) throw error;
+      return Number(data || 0);
     } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return 0;
@@ -1592,8 +1551,8 @@ function mapCompletionRow(row: any): QuizCompletion {
 export async function getCompletionsByQuizId(quizId: string): Promise<QuizCompletion[]> {
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase.from('completions').select('*').eq('quiz_id', quizId).order('created_at', { ascending: false });
-      if (!error && data) return data.map(mapCompletionRow);
+      const { data, error } = await supabase.rpc('get_public_completions_by_quiz', { p_quiz_id: quizId });
+      if (!error && data) return (data as any[]).map(mapCompletionRow);
     } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
@@ -1647,8 +1606,9 @@ export async function getSiteStats(): Promise<any> {
 export async function getRecentCompletions(limitCount = 10): Promise<QuizCompletion[]> {
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await supabase.from('completions').select('*').order('created_at', { ascending: false }).limit(limitCount);
-      if (!error && data) return data.map(mapCompletionRow);
+      const safeLimit = Math.min(50, Math.max(1, Math.floor(limitCount)));
+      const { data, error } = await supabase.rpc('get_public_recent_completions', { p_limit: safeLimit });
+      if (!error && data) return (data as any[]).map(mapCompletionRow);
     } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];
@@ -2001,21 +1961,44 @@ export async function createNotification(
   type?: string
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot create notification.');
-  const newNotif = {
-    id: 'notif-' + Math.random().toString(36).substring(2, 11),
-    title,
-    body,
-    sender_name: senderName || 'System',
-    type: type || 'info',
-    created_at: new Date().toISOString()
-  };
-
-  const { data, error } = await supabase.from('notifications').insert(newNotif).select().single();
+  const { data, error } = await supabase.rpc('create_notification', {
+    p_user_id: null,
+    p_title: title,
+    p_body: body,
+    p_sender_name: senderName || 'System',
+    p_type: type || 'info',
+  });
   if (error) {
     console.error('Error creating notification:', error);
     throw error;
   }
   return data;
+}
+
+export async function updateCompletionReview(completionId: string, rating: number, feedback = ''): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; review cannot be saved.');
+  const { error } = await supabase.rpc('update_completion_review', {
+    p_completion_id: completionId,
+    p_rating: rating,
+    p_feedback: feedback.trim(),
+  });
+  if (error) {
+    console.error('Error updating completion review:', error.message);
+    throw error;
+  }
+}
+
+export async function createDirectMessageNotification(recipientId: string, senderName: string, preview: string): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; notification cannot be created.');
+  const { error } = await supabase.rpc('create_direct_message_notification', {
+    p_recipient_id: recipientId,
+    p_sender_name: senderName,
+    p_preview: preview.slice(0, 200),
+  });
+  if (error) {
+    console.error('Error creating direct message notification:', error.message);
+    throw error;
+  }
 }
 
 export async function broadcastPlatformNotification(title: string, body: string): Promise<number> {
@@ -2039,11 +2022,21 @@ export async function recordWebVital(metricName: 'lcp' | 'fcp' | 'cls' | 'ttfb',
   if (error) throw error;
 }
 
+export async function getPublicProfiles(): Promise<any[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase.rpc('get_public_profiles');
+  if (error) {
+    console.error('Error fetching public profiles:', error);
+    throw error;
+  }
+  return (data as any[]) || [];
+}
+
 export async function getAllProfiles(): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
-  const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+  const { data, error } = await supabase.rpc('admin_list_profiles');
   if (error) {
-    console.error('Error fetching all profiles:', error);
+    console.error('Error fetching admin profiles:', error);
     throw error;
   }
   return data || [];

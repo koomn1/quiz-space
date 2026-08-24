@@ -380,7 +380,8 @@ export default function UserProfile({
 
     setIsVerifyingCustomId(true);
     try {
-      const { data: existingUser } = await supabase.from('users').select('uid').eq('custom_id', clean).maybeSingle();
+      const { data: existingRows } = await supabase.rpc('find_public_profile_by_custom_id', { p_custom_id: clean });
+      const existingUser = Array.isArray(existingRows) ? existingRows[0] : existingRows;
       if (existingUser && existingUser.uid !== profileId) {
         setCustomIdError(
           isAr
@@ -646,7 +647,8 @@ export default function UserProfile({
 
       // Check if taken
       try {
-        const { data: existingUser } = await supabase.from('users').select('uid').eq('custom_id', cleanCustomId).maybeSingle();
+        const { data: existingRows } = await supabase.rpc('find_public_profile_by_custom_id', { p_custom_id: cleanCustomId });
+        const existingUser = Array.isArray(existingRows) ? existingRows[0] : existingRows;
         if (existingUser && existingUser.uid !== profileId) {
           showToast('info', 
             isAr

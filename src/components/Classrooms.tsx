@@ -376,10 +376,9 @@ export default function Classrooms({
 
     const beat = async () => {
       try {
-        await supabase.from('classroom_students')
-          .update({ last_active: new Date().toISOString() })
-          .eq('class_code', activeClassroomView.code)
-          .eq('student_id', currentUserId);
+        await supabase.rpc('touch_classroom_presence', {
+          p_class_code: activeClassroomView.code,
+        });
       } catch (err) {
         console.warn('Presence heartbeat failed:', err);
       }

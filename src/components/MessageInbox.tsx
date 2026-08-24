@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  getAllProfiles, 
+  getPublicProfiles,
+  createDirectMessageNotification,
   getDirectMessages, 
   sendDirectMessage, 
   markMessagesAsRead,
   deleteDirectMessage,
-  createNotification,
   COSMO_ADMIN_UID
 } from '../lib/db';
 import { MessageSquare, Send, Search, Sparkles, User, RefreshCw, Star, ArrowRight, BellRing, Trash2 } from 'lucide-react';
@@ -65,19 +65,19 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
   useEffect(() => {
     async function fetchMembers() {
       try {
-        const profiles = await getAllProfiles();
+        const profiles = await getPublicProfiles();
         const usersList: Member[] = [];
         
         profiles.forEach((p) => {
-          if (p.uid && p.uid !== userId && p.uid !== COSMO_ADMIN_UID && p.badgeSymbol !== '🤖') {
+          if (p.uid && p.uid !== userId && p.uid !== COSMO_ADMIN_UID && p.badge_symbol !== '🤖') {
             usersList.push({
               uid: p.uid,
               name: p.name || (isAr ? 'عضو أكاديمي' : 'Scholar'),
               email: p.email || '',
               bio: p.bio || '',
-              badgeSymbol: p.badgeSymbol || '',
-              badgeColor: p.badgeColor || '',
-              isPremium: p.isPremium || false,
+              badgeSymbol: p.badge_symbol || '',
+              badgeColor: p.badge_color || '',
+              isPremium: p.is_premium || false,
               avatar_url: p.photo_url || p.avatar_url || ''
             });
           }
@@ -267,13 +267,10 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
         setMessages(prev => [...prev, sentMsg]);
       }
 
-      await createNotification(
-        isAr ? 'رسالة مباشرة جديدة 📩' : 'New Direct Message 📩',
-        isAr 
-          ? `أرسل لك ${userName} رسالة: "${msgText.substring(0, 50)}${msgText.length > 50 ? '...' : ''}"`
-          : `${userName} sent you a message: "${msgText.substring(0, 50)}${msgText.length > 50 ? '...' : ''}"`,
+      await createDirectMessageNotification(
+        selectedRecipient.uid,
         userName,
-        'direct_message'
+        msgText.substring(0, 200),
       );
     } catch (e) {
       console.error('Failed to dispatch direct message:', e);

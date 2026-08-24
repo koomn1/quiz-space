@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport } from '../lib/db';
+import { getQuizById, submitQuizAttempt, updateCompletionReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { getApiUrl } from '../lib/origin';
@@ -547,16 +547,7 @@ export default function QuizResolver({
       
       // Prevent duplicate insert if already saved (e.g. from autoSave or handleFinalSubmitAndExit)
       if (savedCompletionId && !isDailyQuiz) {
-        const { error: updateError } = await supabase.from('completions').update({
-          rating,
-          feedback: feedback.trim(),
-          score,
-          taker_name: takerName.trim()
-        }).eq('id', savedCompletionId);
-        if (updateError) {
-          console.error('Failed to update completion:', updateError);
-          throw updateError;
-        }
+        await updateCompletionReview(savedCompletionId, rating, feedback);
       } else {
         await submitQuizAttempt(quizId, {
           takerId: userId,
@@ -603,11 +594,7 @@ export default function QuizResolver({
       
       // Save rating attempt to Supabase
       if (savedCompletionId && !isDailyQuiz) {
-        const { error } = await supabase.from('completions').update({
-          rating: selectedRating,
-          feedback: feedbackText.trim()
-        }).eq('id', savedCompletionId);
-        if (error) throw error;
+        await updateCompletionReview(savedCompletionId, selectedRating, feedbackText);
         setHasRatedQuiz(true);
       } else {
         const result = await submitQuizAttempt(quizId, {

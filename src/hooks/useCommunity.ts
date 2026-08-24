@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getCommunityPosts, createCommunityPost, likeCommunityPost, deleteCommunityPost,
   getDirectMessages, sendDirectMessage, markMessagesAsRead,
-  getNotifications, createNotification, sendPushEvent
+  getNotifications, sendPushEvent
 } from '../lib/db';
 
 export function useCommunity(userId?: string) {
@@ -78,15 +78,6 @@ export function useCommunity(userId?: string) {
     }
   });
 
-  // Mutations for Notifications
-  const createNotificationMutation = useMutation({
-    mutationFn: (data: { title: string; body: string; senderName?: string; type?: string }) =>
-      createNotification(data.title, data.body, data.senderName, data.type),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    }
-  });
-
   return {
     posts,
     refetchPosts,
@@ -102,7 +93,6 @@ export function useCommunity(userId?: string) {
     markMessagesAsRead: readMessagesMutation.mutateAsync,
 
     systemNotifications,
-    refetchNotifications,
-    createNotification: createNotificationMutation.mutateAsync
+    refetchNotifications
   };
 }

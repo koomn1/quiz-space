@@ -1,6 +1,5 @@
 import mammoth from 'mammoth';
 import { PDFDocument } from 'pdf-lib';
-import * as XLSX from 'xlsx';
 import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
 
 export interface ExtractionJobEnv {
@@ -96,8 +95,6 @@ const supportedMimeTypes = new Set([
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-powerpoint',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'text/plain',
@@ -673,8 +670,7 @@ export async function extractJobQuiz(
     const result = await mammoth.extractRawText({ arrayBuffer: wordDocument.buffer });
     text = result.value;
   } else if (mimeType.includes('spreadsheetml') || mimeType.includes('ms-excel')) {
-    const workbook = XLSX.read(source, { type: 'array' });
-    text = workbook.SheetNames.map(name => `Sheet: ${name}\n${XLSX.utils.sheet_to_txt(workbook.Sheets[name])}`).join('\n\n');
+    throw new Error('Spreadsheet uploads are temporarily unavailable while the secure parser is being deployed.');
   } else if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
     text = new TextDecoder().decode(source);
   }

@@ -1,5 +1,4 @@
 import * as mammoth from 'mammoth';
-import * as XLSX from 'xlsx';
 import { handleStreamingExtraction } from './streaming';
 import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
 import {
@@ -468,10 +467,17 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
               if (!result.description && extra.description) result.description = extra.description;
               result.questions = (result.questions || []).concat(extra.questions);
               missing = body.amount - result.questions.length;
-            } else { missing = 0; }
+            } else {
+              break;
+            }
           } catch { break; }
         }
-        
+
+        if (!Array.isArray(result?.questions) || result.questions.length < body.amount) {
+          throw new Error('Generation did not return the requested number of questions.');
+        }
+        result.questions = result.questions.slice(0, body.amount);
+
         if (userId !== 'guest') await logAiPerformance(env, authHeader, {
           user_id: userId,
           operation: 'generation',
@@ -570,12 +576,7 @@ ${extraInstruction}`;
             const result = await mammoth.extractRawText({ arrayBuffer: fileData.buffer });
             textContent = result.value;
           } else if (body.mimeType.includes('spreadsheetml') || body.mimeType.includes('excel')) {
-            // Excel Extraction
-            const workbook = XLSX.read(fileData, { type: 'array' });
-            textContent = workbook.SheetNames.map(name => {
-              const sheet = workbook.Sheets[name];
-              return `Sheet: ${name}\n${XLSX.utils.sheet_to_txt(sheet)}`;
-            }).join('\n\n');
+            return json({ error: 'Spreadsheet uploads are temporarily unavailable while the secure parser is being deployed.' }, 415, headers);
           } else if (body.mimeType.includes('presentationml') || body.mimeType.includes('powerpoint')) {
             // PPTX Extraction (OpenRouter fallback as PPTX parsing is complex)
             const text = await callOpenRouterWithFallback(env, [{

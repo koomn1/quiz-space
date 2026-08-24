@@ -39,11 +39,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const APP_USER_COLUMNS = 'uid, email, name, photo_url, custom_id, is_premium, plan_name';
+
 async function fetchAppUser(authUser: User): Promise<AppUser> {
   const metaName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.user_metadata?.preferred_username || (authUser.email ? authUser.email.split('@')[0] : '') || 'طالب متميز';
   const metaPhoto = authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '';
 
-  let { data } = await supabase.from('users').select('*').eq('uid', authUser.id).single();
+  let { data } = await supabase.from('users').select(APP_USER_COLUMNS).eq('uid', authUser.id).single();
 
   let resolvedName = data?.name;
   if (!resolvedName || resolvedName === 'طالب متميز') {
@@ -65,11 +67,11 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
       if (insertError) {
         console.error('Failed to create users row after sign-up for', authUser.id, insertError);
       } else {
-        const { data: freshData } = await supabase.from('users').select('*').eq('uid', authUser.id).single();
+        const { data: freshData } = await supabase.from('users').select(APP_USER_COLUMNS).eq('uid', authUser.id).single();
         if (freshData) data = freshData;
       }
     } else {
-      const { data: freshData } = await supabase.from('users').select('*').eq('uid', authUser.id).single();
+      const { data: freshData } = await supabase.from('users').select(APP_USER_COLUMNS).eq('uid', authUser.id).single();
       if (freshData) data = freshData;
     }
   } else if ((!data.name || data.name === 'طالب متميز') && metaName && metaName !== 'طالب متميز') {
@@ -78,7 +80,7 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
       console.error('Failed to sync name/photo from auth metadata for', authUser.id, updateError);
     } else {
       // Re-fetch to reflect the updated name/photo in the returned object.
-      const { data: freshData } = await supabase.from('users').select('*').eq('uid', authUser.id).single();
+      const { data: freshData } = await supabase.from('users').select(APP_USER_COLUMNS).eq('uid', authUser.id).single();
       if (freshData) {
         data = freshData;
         resolvedName = freshData.name || resolvedName;
@@ -202,8 +204,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const verifyEmailCode = async (_email: string, _code: string) => {
-    // Deprecated in link-based flow
+  const verifyEmailCode = async (email: string, code: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanCode = code.trim();
+    if (!cleanEmail || !/^\d{6}$/.test(cleanCode)) {
+      throw new Error('أدخل البريد والرمز المكوّن من 6 أرقام بشكل صحيح.');
+    }
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: cleanEmail,
+      token: cleanCode,
+      type: 'signup',
+    });
+    if (error || !data.user?.email_confirmed_at) {
+      throw new Error('رمز التحقق غير صحيح أو منتهي الصلاحية. اطلب رمزاً جديداً وحاول مرة أخرى.');
+    }
   };
 
   const resendEmailVerification = async (email: string) => {

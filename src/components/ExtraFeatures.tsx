@@ -23,7 +23,6 @@ import {
   getReactionsForPosts,
   ReactionType,
   getNotifications, 
-  createNotification, 
   getRecentCompletions,
   getUserProfileStats,
   saveUserProfile,
@@ -642,14 +641,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
         setInputText('');
       }
 
-      await createNotification(
-        isAr ? 'منشور مجتمع جديد 💬' : 'New Community Post 💬',
-        isAr 
-          ? `أضاف ${authName} مشاركة جديدة: "${inputText.trim().substring(0, 55)}..."`
-          : `${authName} shared a new community post: "${inputText.trim().substring(0, 55)}..."`,
-        authName,
-        'community'
-      );
+
     } catch (e) {
       console.error('Failed to write community post:', e);
     } finally {

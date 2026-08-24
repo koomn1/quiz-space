@@ -13,7 +13,7 @@ import { playChimeSound } from '../lib/chime';
 import ParallaxTiltCard from '../components/ParallaxTiltCard';
 import { getApiUrl } from '../lib/origin';
 import { UserBadge } from '../components/UserBadge';
-import { getAllProfiles, getSiteStats } from '../lib/db';
+import { getPublicProfiles, getSiteStats } from '../lib/db';
 import DailyQuizCard from '../components/DailyQuizCard';
 
 import { useGSAP } from '@gsap/react';
@@ -128,10 +128,10 @@ export default function LandingPage({
     // Fetch profiles map to show correct badges
     const loadProfiles = async () => {
       try {
-        const pList = await getAllProfiles();
+        const pList = await getPublicProfiles();
         const map: Record<string, any> = {};
         pList.forEach(p => {
-          map[p.userId] = p;
+          if (p.uid) map[p.uid] = p;
         });
         if (active) setProfilesMap(map);
       } catch (err) {
@@ -442,7 +442,7 @@ export default function LandingPage({
           <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 [perspective:1400px]" : "flex flex-col gap-4 max-w-4xl mx-auto"}>
             {filteredQuizzes.map((quiz, idx) => {
               const creatorProfile = profilesMap[quiz.creatorId || ''];
-              const creatorTier = creatorProfile?.planName || (quiz.creatorId === 'sys-1' || quiz.creatorName?.includes('أدمن') ? 'enterprise' : 'free');
+              const creatorTier = creatorProfile?.is_premium ? 'premium' : (quiz.creatorId === 'sys-1' || quiz.creatorName?.includes('أدمن') ? 'enterprise' : 'free');
               return (
                 <InteractiveQuizCard
                   key={quiz.id}
