@@ -8,6 +8,7 @@ const motivationHub = read('src/components/MotivationHub.tsx');
 const siteHtml = read('index.html');
 const quizHtml = read('public/share/quiz.html');
 const workerSource = read('worker/src/index.ts');
+const originSource = read('src/lib/origin.ts');
 
 describe('social sharing preview contract', () => {
   it('shares the quiz title in the deep link and social messages', () => {
@@ -24,6 +25,15 @@ describe('social sharing preview contract', () => {
     expect(motivationHub).toContain('wa.me/?text=');
     expect(motivationHub).toContain('facebook.com/sharer/sharer.php?u=');
     expect(motivationHub).toContain('siteShareText');
+  });
+
+  it('keeps user-facing quiz links on the branded app domain', () => {
+    const shareStart = originSource.indexOf('export function getPublicQuizShareUrl');
+    const shareEnd = originSource.indexOf('export function getApiUrl');
+    const shareFunction = originSource.slice(shareStart, shareEnd);
+    expect(shareFunction).toContain("return `${appBase}/share/quiz.html?${query}`;");
+    expect(shareFunction).not.toContain('workerBase');
+    expect(shareFunction).toContain('account-derived workers.dev subdomain');
   });
 
   it('renders a crawler-readable dynamic quiz share page on the Worker', () => {
