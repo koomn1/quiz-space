@@ -28,4 +28,18 @@ describe('Cosmo generation recovery contract', () => {
   it('does not silently ignore a rejected Supabase telemetry insert', () => {
     expect(workerSource).toContain("console.error('AI performance logging rejected', response.status, details)");
   });
+
+  it('enforces paid entitlement on question explanations before calling the AI provider', () => {
+    expect(workerSource).toContain('async function hasPaidCosmoAccess');
+    expect(workerSource).toContain("if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);");
+    expect(workerSource).toContain("if (!(await hasPaidCosmoAccess(request, env, userId))) return json({ error: 'Cosmo explanations require an active paid plan.' }, 403, headers);");
+    expect(workerSource).toContain('&limit=1');
+    expect(workerSource).toContain("Boolean(profile?.is_premium) || isPaidCosmoPlan(profile?.plan_name)");
+  });
+
+  it('bounds explanation inputs before constructing the provider prompt', () => {
+    expect(workerSource).toContain('body.questionText.length > 8_000');
+    expect(workerSource).toContain('body.options.length > 20');
+    expect(workerSource).toContain('body.correctAnswer.length > 2_000');
+  });
 });

@@ -101,6 +101,9 @@ export default function QuizResolver({
 }: QuizResolverProps) {
   const t = translations[lang];
   const isAr = lang === 'ar';
+  // Cosmo is paid: Free users must be blocked in both the UI and the request flow.
+  // Silver includes the personal AI assistant in the billing catalog.
+  const hasCosmoAccess = Boolean(isPremium) || userPlan === 'Silver' || userPlan === 'Gold' || userPlan === 'Diamond';
   const [quiz, setQuiz] = React.useState<Quiz | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -154,6 +157,13 @@ export default function QuizResolver({
   const [aiFlashcardLoading, setAiFlashcardLoading] = React.useState<Record<string, boolean>>({});
 
   const handleFetchAiFlashcardExplanation = async (qId: string, q: Question) => {
+    if (!hasCosmoAccess) {
+      setAiFlashcardExplanations(prev => ({
+        ...prev,
+        [qId]: isAr ? 'ميزة الشرح المتقدم مع كوزمو متاحة للمشتركين فقط. قم بالترقية من صفحة الباقات.' : 'Cosmo explanations are available to paid members only. Upgrade from the plans page.',
+      }));
+      return;
+    }
     if (aiFlashcardLoading[qId]) return;
     setAiFlashcardLoading(prev => ({ ...prev, [qId]: true }));
     try {
@@ -708,7 +718,7 @@ export default function QuizResolver({
   };
 
   return (
-    <div  className="max-w-3xl mx-auto space-y-8 pb-16 print:bg-white print:p-0">
+    <div className="mx-auto max-w-3xl space-y-4 pb-8 print:bg-white print:p-0 sm:space-y-8 sm:pb-16">
       
       {/* Top progress bar tracking percentage of completed questions with Framer Motion anim */}
       {!isQuizCompleted && (
@@ -723,7 +733,7 @@ export default function QuizResolver({
       )}
 
       {/* Return Page Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 print:hidden">
+      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 print:hidden sm:pb-4">
         {!isQuizCompleted ? (
           <button
             onClick={onGoHome}
@@ -745,16 +755,16 @@ export default function QuizResolver({
 
       {/* Solving Phase layout */}
       {!isQuizCompleted ? (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           
           {/* Dual Toggle tab representing solving vs study flashcards */}
-          <div className="flex bg-slate-100/80 dark:bg-slate-900/40 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 w-fit mx-auto print:hidden gap-1.5 shadow-xs">
+          <div className="flex bg-slate-100/80 dark:bg-slate-900/40 p-0.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 w-fit mx-auto print:hidden gap-1 shadow-xs">
             <button
               onClick={() => {
                 playChimeSound('click');
                 setIsFlashcardMode(false);
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:gap-2 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer ${
                 !isFlashcardMode
                   ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700/60'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
@@ -769,7 +779,7 @@ export default function QuizResolver({
                 setIsFlashcardMode(true);
                 setIsFlipped(false);
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:gap-2 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer ${
                 isFlashcardMode
                   ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700/60'
                   : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
@@ -1109,7 +1119,7 @@ export default function QuizResolver({
               
               
               
-              className={`relative p-6 sm:p-10 md:p-12 rounded-[2rem] bg-white/95 dark:bg-[#090d16]/70 backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] space-y-10 transition-all duration-500 overflow-hidden ${
+              className={`relative p-4 sm:p-10 md:p-12 rounded-[2rem] bg-white/95 dark:bg-[#090d16]/70 backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] space-y-5 sm:space-y-10 transition-all duration-500 overflow-hidden ${
                 hasShaken ? 'shake-question' : ''
               } ${
                 isAnswersFrozen 
@@ -1120,7 +1130,7 @@ export default function QuizResolver({
               }`}
             >
             {/* Live Countdowns or State Headers */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 pb-2 sm:pb-6">
               <div className="flex items-center gap-2">
                 {quiz.timeLimit ? (
                   <QuizCountdownTimer
@@ -1147,12 +1157,12 @@ export default function QuizResolver({
               )}
             </div>
 
-            <h3 className="font-display font-medium text-2xl sm:text-3xl text-slate-800 dark:text-slate-100 leading-[1.6] text-right md:text-center z-10 relative tracking-tight selection:bg-primary/20">
+            <h3 className="font-display font-medium text-xl sm:text-3xl text-slate-800 dark:text-slate-100 leading-[1.35] sm:leading-[1.6] text-right md:text-center z-10 relative tracking-tight selection:bg-primary/20">
               {currentQuestion.text}
             </h3>
 
             {currentQuestion.imageUrl && (
-              <div className="flex justify-center my-4">
+              <div className="flex justify-center my-2 sm:my-4">
                 <img
                   src={currentQuestion.imageUrl}
                   alt="Question Diagram"
@@ -1245,7 +1255,7 @@ export default function QuizResolver({
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-2.5 sm:gap-4">
                 {currentQuestion.options.map((option, oIdx) => {
                   const isSelected = selectedIdx === oIdx;
                   const isCorrect = oIdx === currentQuestion.correctIndex;
@@ -1268,7 +1278,7 @@ export default function QuizResolver({
                       
                       disabled={isAnswersFrozen}
                       onClick={() => handleSelectOption(oIdx)}
-                      className={`relative flex items-center p-5 rounded-[1.25rem] text-sm font-medium text-right transition-all duration-300 cursor-pointer ${optClass} overflow-hidden`}
+                      className={`relative flex min-h-12 items-center p-3.5 sm:p-5 rounded-[1.25rem] text-sm font-medium text-right transition-all duration-300 cursor-pointer ${optClass} overflow-hidden`}
                       
                       
                       
@@ -1303,7 +1313,7 @@ export default function QuizResolver({
                   
                   
                   
-                  className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3 text-right"
+                  className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5 text-right sm:pt-6 sm:space-y-3"
                 >
                   <div className="flex items-center gap-2 justify-start text-xs font-semibold tracking-wide text-slate-400 dark:text-slate-500 uppercase">
                     <Sparkles className="w-4 h-4 text-primary" />
@@ -1316,13 +1326,25 @@ export default function QuizResolver({
                   {/* AI-powered deeper explanation on demand — same engine used in
                       flashcard mode, wired here so it's available during a normal
                       quiz attempt too, not just review. */}
-                  {aiFlashcardExplanations[currentQuestion.id] ? (
-                    <div className="mt-3 p-3 rounded-xl bg-primary/5 border border-primary/20 space-y-1.5">
+                  {!hasCosmoAccess ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.location.hash = '#billing';
+                        onGoHome();
+                      }}
+                      className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-amber-400/20 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-500 transition-colors hover:bg-amber-500/20"
+                    >
+                      <Lock className="h-3.5 w-3.5" />
+                      <span>{isAr ? 'شرح كوزمو للمشتركين فقط — الترقية' : 'Cosmo explanation is for paid members — Upgrade'}</span>
+                    </button>
+                  ) : aiFlashcardExplanations[currentQuestion.id] ? (
+                    <div className="mt-3 space-y-1.5 rounded-xl border border-primary/20 bg-primary/5 p-3">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-primary">
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Sparkles className="h-3.5 w-3.5" />
                         <span>{isAr ? 'شرح كوزمو' : "AI's Explanation"}</span>
                       </div>
-                      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300">
                         {aiFlashcardExplanations[currentQuestion.id]}
                       </p>
                     </div>
@@ -1331,9 +1353,9 @@ export default function QuizResolver({
                       type="button"
                       onClick={() => handleFetchAiFlashcardExplanation(currentQuestion.id, currentQuestion)}
                       disabled={!!aiFlashcardLoading[currentQuestion.id]}
-                      className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors disabled:opacity-60"
+                      className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
                     >
-                      <Sparkles className={`w-3.5 h-3.5 ${aiFlashcardLoading[currentQuestion.id] ? 'animate-pulse' : ''}`} />
+                      <Sparkles className={`h-3.5 w-3.5 ${aiFlashcardLoading[currentQuestion.id] ? 'animate-pulse' : ''}`} />
                       {aiFlashcardLoading[currentQuestion.id]
                         ? (isAr ? 'كوزمو بيفكر...' : 'AI is thinking...')
                         : (isAr ? '💡 اشرحلي أكتر مع كوزمو' : '💡 Explain more with AI')}
@@ -1346,11 +1368,11 @@ export default function QuizResolver({
         
 
           {/* Action button bar */}
-          <div className="flex justify-end pt-2 print:hidden">
+          <div className="sticky bottom-2 z-10 -mx-1 flex justify-end rounded-2xl bg-[#090d16]/85 p-1 backdrop-blur-sm print:hidden sm:static sm:mx-0 sm:justify-end sm:bg-transparent sm:p-0">
             {isAnswersFrozen && (
               <button
                 onClick={handleNextQuestion}
-                className="flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-primary hover:bg-primary-hover text-white font-bold transition-all duration-205 cursor-pointer shadow-md shadow-primary/20"
+                className="flex min-h-12 items-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-primary/20 transition-all duration-205 cursor-pointer hover:bg-primary-hover sm:px-8"
               >
                 <span>{currentIdx + 1 === quiz.questions.length ? 'إنهاء وحساب الدرجة' : 'السؤال التالي'}</span>
                 <ArrowLeft className="w-4 h-4" />

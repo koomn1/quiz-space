@@ -155,6 +155,29 @@ async function scheduleExtractionJob(env: Env, authHeader: string, jobId: string
   }
 }
 
+function isPaidCosmoPlan(planName: unknown): boolean {
+  const plan = typeof planName === 'string' ? planName.trim().toLowerCase() : '';
+  return ['silver', 'gold', 'diamond', 'الفضية', 'الذهبية', 'الماسية'].some(token => plan.includes(token));
+}
+
+async function hasPaidCosmoAccess(request: Request, env: Env, userId: string | null): Promise<boolean> {
+  if (!userId || userId === 'guest' || userId === 'placeholder-user') return false;
+  const authorization = request.headers.get('Authorization') || '';
+  try {
+    const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/users?uid=eq.${encodeURIComponent(userId)}&select=is_premium,plan_name&limit=1`;
+    const response = await fetch(url, {
+      headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: authorization },
+    });
+    if (!response.ok) return false;
+    const rows = await response.json() as Array<{ is_premium?: boolean; plan_name?: string | null }>;
+    const profile = rows[0];
+    return Boolean(profile?.is_premium) || isPaidCosmoPlan(profile?.plan_name);
+  } catch (error) {
+    console.warn('Unable to verify Cosmo entitlement:', error);
+    return false;
+  }
+}
+
 async function getCosmoAccountContext(request: Request, env: Env, userId: string | null): Promise<string> {
   if (!userId || userId === 'guest' || env.SUPABASE_URL.includes('placeholder')) {
     return 'حالة الحساب الموثقة: زائر أو لا توجد جلسة Supabase موثقة. لا تفترض وجود باقة أو صلاحيات.';
@@ -490,7 +513,11 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
       }
 
     if (path === '/api/ai/explain') {
-      if (typeof body.questionText !== 'string' || !Array.isArray(body.options) || typeof body.correctAnswer !== 'string') return json({ error: 'Invalid explanation request' }, 400, headers);
+      if (typeof body.questionText !== 'string' || body.questionText.length === 0 || body.questionText.length > 8_000 || !Array.isArray(body.options) || body.options.length > 20 || body.options.some((option: unknown) => typeof option !== 'string' || option.length > 1_000) || typeof body.correctAnswer !== 'string' || body.correctAnswer.length > 2_000) {
+        return json({ error: 'Invalid explanation request' }, 400, headers);
+      }
+      if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);
+      if (!(await hasPaidCosmoAccess(request, env, userId))) return json({ error: 'Cosmo explanations require an active paid plan.' }, 403, headers);
       const prompt = `اشرح باختصار بالعربية لماذا الإجابة "${body.correctAnswer}" صحيحة للسؤال: ${body.questionText}. الخيارات: ${body.options.join(', ')}. أجب بـ JSON فقط: {"explanation":"..."}`;
       return json(extractJson(await providerText('openrouter', prompt, env)), 200, headers);
     }
