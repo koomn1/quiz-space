@@ -1,6 +1,7 @@
 import React from 'react';
 import { XCircle, Sparkles, Award } from 'lucide-react';
 import { MainLogo } from './MainLogo';
+import OverlayPortal from './OverlayPortal';
 
 interface WelcomeAuthOverlayProps {
   authRedirectQuizId: string;
@@ -64,7 +65,8 @@ export default function WelcomeAuthOverlay({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-b from-white via-sky-50 to-sky-300 dark:from-[#090d16] dark:via-[#111827] dark:to-[#1e293b] flex flex-col items-center justify-center p-4">
+    <OverlayPortal>
+    <div className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-gradient-to-b from-white via-sky-50 to-sky-300 dark:from-[#090d16] dark:via-[#111827] dark:to-[#1e293b] flex flex-col items-center justify-center p-4">
       <div
         
         
@@ -177,5 +179,6 @@ export default function WelcomeAuthOverlay({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

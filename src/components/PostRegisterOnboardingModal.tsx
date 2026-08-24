@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, Calendar, Sparkles, Check, Crown, Zap, X, ShieldCheck } from 'lucide-react';
 import { saveUserProfile } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
+import OverlayPortal from './OverlayPortal';
 
 interface PostRegisterOnboardingModalProps {
   isOpen: boolean;
@@ -74,7 +75,8 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in overflow-y-auto">
+    <OverlayPortal>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in overflow-y-auto overscroll-contain">
       <div className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl overflow-hidden my-8 text-right">
         {/* Background glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
@@ -259,5 +261,6 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
         </form>
       </div>
     </div>
+    </OverlayPortal>
   );
 };

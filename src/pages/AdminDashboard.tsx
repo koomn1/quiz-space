@@ -12,6 +12,7 @@ import { decryptMessage } from '../lib/encryption';
 
 import AdminSubscriptions from '../components/AdminSubscriptions';
 import AdminMotivationUsagePanel from '../components/AdminMotivationUsagePanel';
+import OverlayPortal from '../components/OverlayPortal';
 
 function DecryptedMessageItem({ msg, classId, isAr, currentUserEmail }: { msg: any; classId: string; isAr: boolean; currentUserEmail?: string }) {
   const [decrypted, setDecrypted] = useState<string>('...');
@@ -975,17 +976,18 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
       {/* GHOST MODE INTERACTION OVERLAY MODAL */}
       
         {activeAdminClassroom && (
+          <OverlayPortal>
           <div
             
             
             
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto overscroll-contain"
           >
             <div
               
               
               
-              className="w-full max-w-4xl bg-[#090514] border border-purple-500/20 rounded-[32px] p-6 md:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto space-y-6"
+              className="my-auto w-full max-w-4xl bg-[#090514] border border-purple-500/20 rounded-[32px] p-6 md:p-8 shadow-2xl relative max-h-[90dvh] overflow-y-auto space-y-6"
             >
               <div className="flex justify-between items-center pb-4 border-b border-slate-800/60">
                 <div className="flex items-center gap-3">
@@ -1120,6 +1122,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
               </div>
             </div>
           </div>
+          </OverlayPortal>
         )}
       
     </div>

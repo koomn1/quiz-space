@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { XCircle, Search, FileText, Image as ImageIcon, Check, RefreshCw, AlertCircle, Cloud, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import OverlayPortal from './OverlayPortal';
 
 interface DrivePickerProps {
   isOpen: boolean;
@@ -185,9 +186,9 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
   };
 
   return (
-        <>
+        <OverlayPortal>
           {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto overscroll-contain p-4">
           {/* Backdrop */}
           <div
             
@@ -395,7 +396,6 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
           </div>
         </div>
       )}
-    
-    </>
+    </OverlayPortal>
   );
 }

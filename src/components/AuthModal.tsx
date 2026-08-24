@@ -3,6 +3,7 @@ import { AlertCircle, ArrowRight, Check, Chrome, Lock, Mail, RefreshCw, ShieldCh
 import { useAuth } from '../context/AuthContext';
 import { EmailVerificationStep } from './EmailVerificationStep';
 import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
+import OverlayPortal from './OverlayPortal';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -200,7 +201,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   const isBusy = loading || googleLoading;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-3 sm:p-6" dir="rtl">
+    <OverlayPortal>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto overscroll-contain p-3 sm:p-6" dir="rtl">
       <button
         type="button"
         aria-label="إغلاق نافذة تسجيل الدخول"
@@ -578,6 +580,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
         </section>
       </div>
     </div>
+    </OverlayPortal>
   );
 };
 

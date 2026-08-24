@@ -7,6 +7,7 @@ import React from 'react';
 import { X, Copy, Check, Twitter, Facebook, Linkedin, MessageCircle, Send, ExternalLink, Share2 } from 'lucide-react';
 import { getAppBaseUrl } from '../lib/origin';
 import { LiquidGlassSwitch } from './LiquidGlassSwitch';
+import OverlayPortal from './OverlayPortal';
 
 interface ShareModalProps {
   quizId: string;
@@ -143,13 +144,14 @@ export default function ShareModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/85 backdrop-blur-xs">
+    <OverlayPortal>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain p-4 bg-slate-900/60 dark:bg-black/85 backdrop-blur-xs">
       {/* Modal Card */}
       <div
         
         
         
-        className="w-full max-w-lg bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 dark:border-slate-700/80 text-right"
+        className="my-auto max-h-[min(720px,90dvh)] w-full max-w-lg overflow-y-auto bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 dark:border-slate-700/80 text-right"
         dir={isAr ? 'rtl' : 'ltr'}
       >
         {/* Header */}
@@ -279,5 +281,6 @@ export default function ShareModal({
         </p>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

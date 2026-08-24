@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, ArrowRight, ArrowLeft, X, BookOpen, ImageIcon, HelpCircle } from 'lucide-react';
 import { playNotificationSound } from '../lib/sound';
+import OverlayPortal from './OverlayPortal';
 
 interface Step {
   id: string;
@@ -121,6 +122,7 @@ export default function OnboardingTour({
   };
 
   return (
+    <OverlayPortal>
     <div className="fixed inset-0 z-[100] overflow-hidden select-none pointer-events-auto">
       {/* Semi-transparent backdrop with click-through masking */}
       <div 
@@ -221,5 +223,6 @@ export default function OnboardingTour({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

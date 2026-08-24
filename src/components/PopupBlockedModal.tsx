@@ -1,5 +1,6 @@
 import React from 'react';
 import { XCircle, AlertTriangle, ExternalLink } from 'lucide-react';
+import OverlayPortal from './OverlayPortal';
 
 interface PopupBlockedModalProps {
   isOpen: boolean;
@@ -16,7 +17,8 @@ export default function PopupBlockedModal({
   const isAr = lang === 'ar';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 dark:bg-[#05060b]/95 backdrop-blur-md">
+    <OverlayPortal>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain p-4 bg-slate-900/70 dark:bg-[#05060b]/95 backdrop-blur-md">
       <div
         
         
@@ -84,5 +86,6 @@ export default function PopupBlockedModal({
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

@@ -15,6 +15,7 @@ import { fetchWithAuth } from '../lib/authFetch';
 import { useQuizGenerator } from '../hooks/useQuizGenerator';
 import { getRememberedExtractionJobId } from '../services/aiWorkerClient';
 import DrivePicker from '../components/DrivePicker';
+import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
 
@@ -331,7 +332,10 @@ export default function QuizCreator({
   // Helper to render paywall overlay
   const renderPaywallOverlay = (titleAr: string, titleEn: string) => {
     return (
-      <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-xl z-50 flex flex-col items-center justify-center p-6 text-center space-y-5 rounded-[32px] border border-violet-500/35 shadow-[0_0_50px_rgba(139,92,246,0.3)] animate-fade-in">
+      <OverlayPortal>
+              <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/95 p-4 backdrop-blur-xl animate-fade-in">
+
+        <div className="my-auto flex w-full max-w-lg flex-col items-center justify-center space-y-5 rounded-[32px] border border-violet-500/35 bg-slate-950/95 p-6 text-center shadow-[0_0_50px_rgba(139,92,246,0.3)]">
         <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-violet-600 via-fuchsia-600 to-pink-500 flex items-center justify-center border border-white/15 shadow-[0_0_25px_rgba(139,92,246,0.5)] animate-pulse">
           <Sparkles className="w-8 h-8 text-white" />
         </div>
@@ -361,7 +365,9 @@ export default function QuizCreator({
         >
           <span>{isAr ? 'ترقية الاشتراك إلى الباقة الذهبية الآن 👑' : 'Upgrade to Gold Plan Now 👑'}</span>
         </button>
+        </div>
       </div>
+      </OverlayPortal>
     );
   };
   
@@ -1154,12 +1160,13 @@ export default function QuizCreator({
     <>
       {/* Fullscreen AI Generation Loading Screen with blob animation */}
       
-        {(isGenerating || isGeneratingAi || isGeneratingPaste || isProcessingOcr) && (
+        <OverlayPortal>
+          {(isGenerating || isGeneratingAi || isGeneratingPaste || isProcessingOcr) && (
           <div
             
             
             
-            className="fixed inset-0 z-50 bg-[#F8FAFC] dark:bg-[#090d16] overflow-hidden flex flex-col items-center justify-center font-sans"
+            className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-[#F8FAFC] p-4 dark:bg-[#090d16] flex flex-col items-center justify-center font-sans"
             dir={isAr ? 'rtl' : 'ltr'}
           >
             {/* Pulsating colorful blobs backing */}
@@ -1169,7 +1176,7 @@ export default function QuizCreator({
               <div className="absolute bottom-1/4 left-1/3 w-[280px] sm:w-[400px] h-[280px] sm:h-[400px] bg-pink-300 dark:bg-pink-600/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[80px] sm:blur-[120px] animate-blob animation-delay-4000"></div>
             </div>
 
-            <div className="relative z-10 text-center space-y-8 px-6 max-w-lg">
+            <div className="relative z-10 my-auto w-full max-w-lg space-y-8 px-2 text-center sm:px-6">
               {/* Video loader engine — perfectly cropped inside circle with hidden edges */}
               <div className="flex justify-center">
                 <div className="relative w-28 h-28 rounded-full overflow-hidden shadow-[0_0_40px_rgba(99,102,241,0.5)] ring-2 ring-indigo-500/50 transform-gpu">
@@ -1220,7 +1227,8 @@ export default function QuizCreator({
               </div>
             </div>
           </div>
-        )}
+          )}
+        </OverlayPortal>
       
 
       <div className="max-w-4xl mx-auto space-y-8 pb-16 animate-fade-in text-right" dir="rtl">

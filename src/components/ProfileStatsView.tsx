@@ -14,6 +14,7 @@ import { Quiz, QuizCompletion, UserStats } from '../types';
 import { getLearningStreakStatus, isTrialSubscription, saveUserProfile, updateBadgeAndNameColor } from '../lib/db';
 import RewardsSection from './RewardsSection';
 import { UserBadge } from './UserBadge';
+import OverlayPortal from './OverlayPortal';
 import { ReputationBadge } from './ReputationBadge';
 import {
   availableBadgeTiers, availableNameColors, availableBadgeColors,
@@ -1322,13 +1323,14 @@ export default function ProfileStatsView({
       {/* 5. Custom edit details and verification marks Modal */}
       
         {isEditingInfo && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <OverlayPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain p-4 bg-black/80 backdrop-blur-md">
             <div 
               
               
               
               
-              className="w-full max-w-lg bg-[#070709] border border-slate-800 rounded-3xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto overflow-hidden text-right"
+              className="my-auto w-full max-w-lg max-h-[90dvh] bg-[#070709] border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-y-auto overflow-x-hidden text-right"
               dir={isAr ? "rtl" : "ltr"}
             >
               <button 
@@ -1603,8 +1605,9 @@ export default function ProfileStatsView({
               </form>
             </div>
           </div>
+          </OverlayPortal>
         )}
-      
+
     </div>
   );
 }
