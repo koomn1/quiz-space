@@ -10,22 +10,36 @@
   <meta property="og:title" content="اختبار تفاعلي جديد | QuizSpace">
   <meta property="og:description" content="هل تستطيع تصدّر لوحة المتصدرين؟ حل الاختبار الآن وشارك التحدي مع أصدقائك.">
   <meta property="og:image" content="https://koomn1.github.io/quiz-space/quiz-share-card.png">
+  <meta property="og:image:alt" content="صورة تحدي Quiz Space">
   <meta property="og:image:type" content="image/png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
+  <meta property="og:image:width" content="1600">
+  <meta property="og:image:height" content="900">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="اختبار تفاعلي جديد | QuizSpace">
+  <meta name="twitter:description" content="حل الاختبار الآن وشارك التحدي مع أصدقائك.">
   <meta name="twitter:image" content="https://koomn1.github.io/quiz-space/quiz-share-card.png">
+  <meta name="twitter:image:alt" content="صورة تحدي Quiz Space">
   <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#090b2a;color:#fff;font-family:Arial,sans-serif}main{text-align:center;padding:2rem}a{color:#c4b5fd}</style>
 </head>
 <body>
-  <main><h1>جاري فتح الاختبار...</h1><p>استعد للتحدي.</p><a id="fallback" href="/quiz-space/">العودة إلى QuizSpace</a></main>
+  <main><h1 id="share-title">جاري فتح الاختبار...</h1><p id="share-description">استعد للتحدي.</p><a id="fallback" href="/quiz-space/">العودة إلى QuizSpace</a></main>
   <script>
     (function () {
       var params = new URLSearchParams(location.search);
       var id = params.get('quiz');
-      var challenge = params.get('challenge') === 'true' ? '?challenge=true' : '';
+      var title = params.get('title');
+      var challenge = params.get('challenge') === 'true';
       var base = location.pathname.split('/share/quiz.html')[0] || '/quiz-space';
-      var target = base + '/#/quiz/' + encodeURIComponent(id || '') + challenge;
+      var target = base + '/#/quiz/' + encodeURIComponent(id || '') + (challenge ? '?challenge=true' : '');
+      var safeTitle = title && title.trim() ? title.trim().slice(0, 160) : 'اختبار تفاعلي جديد';
+      var pageTitle = safeTitle + ' | QuizSpace';
+      document.title = pageTitle;
+      document.querySelector('meta[property="og:title"]').setAttribute('content', pageTitle);
+      document.querySelector('meta[name="twitter:title"]').setAttribute('content', pageTitle);
+      document.querySelector('meta[property="og:description"]').setAttribute('content', 'حل «' + safeTitle + '» الآن وشارك التحدي مع أصدقائك.');
+      document.querySelector('meta[name="twitter:description"]').setAttribute('content', 'حل «' + safeTitle + '» الآن وشارك التحدي مع أصدقائك.');
+      document.getElementById('share-title').textContent = safeTitle;
+      document.getElementById('share-description').textContent = challenge ? 'استعد للتحدي ونافس أصدقاءك.' : 'حل الاختبار الآن وشارك نتيجتك.';
       document.getElementById('fallback').href = base + '/';
       if (id) setTimeout(function () { location.replace(target); }, 250);
     }());

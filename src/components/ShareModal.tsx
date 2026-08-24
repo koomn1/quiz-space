@@ -52,7 +52,7 @@ export default function ShareModal({
     closeTooltip: isAr ? 'إغلاق التبويب' : 'Close'
   };
 
-  const shareUrl = `${getAppBaseUrl()}/share/quiz.html?quiz=${encodeURIComponent(quizId)}${isChallengeMode ? '&challenge=true' : ''}`;
+  const shareUrl = `${getAppBaseUrl()}/share/quiz.html?quiz=${encodeURIComponent(quizId)}&title=${encodeURIComponent(quizTitle.trim().slice(0, 160))}${isChallengeMode ? '&challenge=true' : ''}`;
 
   const shareText = isChallengeMode
     ? (isAr 
@@ -118,7 +118,7 @@ export default function ShareModal({
       icon: <Facebook className="w-5 h-5 text-white" fill="white" />,
       color: 'bg-blue-600 hover:bg-blue-700',
       shadow: 'shadow-blue-600/20',
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`
     },
     {
       name: textDict.linkedin,
@@ -194,7 +194,7 @@ export default function ShareModal({
         <div className="overflow-hidden rounded-2xl border border-primary/20 bg-slate-950 shadow-lg">
           <img
             src={`${getAppBaseUrl()}/quiz-share-card.png`}
-            alt={isAr ? 'بوستر مشاركة الاختبار' : 'Quiz sharing poster'}
+            alt={isAr ? `صورة مشاركة الكويز: ${quizTitle}` : `Quiz sharing image: ${quizTitle}`}
             className="w-full aspect-[1200/630] object-cover"
           />
         </div>

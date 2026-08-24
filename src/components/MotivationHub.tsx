@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getMotivationStatus, claimLuckySpin, claimMysteryBox, submitBrainChallenge } from '../lib/db';
+import { getAppBaseUrl } from '../lib/origin';
 
 interface MotivationHubProps {
   userId: string | null;
@@ -45,6 +46,16 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
   const openFeature = (title: string, description: string, image: string) => {
     setActiveFeature({ title, description, image });
+  };
+  const siteShareUrl = `${getAppBaseUrl()}/?ref=${encodeURIComponent(userId || 'friend')}`;
+  const siteShareText = isAr
+    ? 'انضم إلى Quiz Space وتعلّم ونافس أصدقاءك الآن!'
+    : 'Join Quiz Space to learn, compete, and challenge your friends!';
+  const openSiteShare = (platform: 'whatsapp' | 'facebook') => {
+    const target = platform === 'whatsapp'
+      ? `https://wa.me/?text=${encodeURIComponent(`${siteShareText}\n\n${siteShareUrl}`)}`
+      : `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(siteShareUrl)}&quote=${encodeURIComponent(siteShareText)}`;
+    window.open(target, '_blank', 'noopener,noreferrer');
   };
 
   const handleFeatureKeyDown = (
@@ -319,18 +330,33 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           <p className="text-[9px] text-slate-600 mb-1">
             {isAr ? `${status?.referrals_used || 0}/5 هذا الشهر` : `${status?.referrals_used || 0}/5 this month`}
           </p>
-          <button
-            onClick={(event) => {
-              event.stopPropagation();
-              const link = `${window.location.origin}?ref=${userId}`;
-              navigator.clipboard.writeText(link);
-              triggerToast(isAr ? '📋 تم النسخ!' : '📋 Copied!', isAr ? 'شارك الرابط مع صديق' : 'Share the link with a friend', 'info');
-            }}
-            disabled={(status?.referrals_used || 0) >= 5}
-            className="px-4 py-1.5 rounded-xl text-xs font-black text-white cursor-pointer transition-all disabled:opacity-40 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500"
-          >
-            {isAr ? '📋 انسخ رابط الدعوة' : '📋 Copy Invite Link'}
-          </button>
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                navigator.clipboard.writeText(siteShareUrl);
+                triggerToast(isAr ? '📋 تم النسخ!' : '📋 Copied!', isAr ? 'شارك الرابط مع صديق' : 'Share the link with a friend', 'info');
+              }}
+              disabled={(status?.referrals_used || 0) >= 5}
+              className="rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 px-4 py-1.5 text-xs font-black text-white transition-all hover:from-teal-500 hover:to-cyan-500 disabled:opacity-40"
+            >
+              {isAr ? '📋 انسخ رابط الدعوة' : '📋 Copy Invite Link'}
+            </button>
+            <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); openSiteShare('whatsapp'); }}
+              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-black text-white transition-colors hover:bg-emerald-500"
+            >
+              {isAr ? 'واتساب' : 'WhatsApp'}
+            </button>
+            <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); openSiteShare('facebook'); }}
+              className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-black text-white transition-colors hover:bg-blue-500"
+            >
+              {isAr ? 'فيسبوك' : 'Facebook'}
+            </button>
+          </div>
         </div>
 
         {/* 6. Weekly Achievement */}
