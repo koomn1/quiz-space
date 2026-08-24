@@ -124,9 +124,15 @@ export default function App() {
   const mainContainerRef = React.useRef<HTMLElement>(null);
 
   const authContext = useAuth();
-  // The intro belongs to the landing entry, not to authentication refreshes or inner routes.
-  // Session storage prevents it from replaying after login, route changes, or remounts.
-  const [splashActive, setSplashActive] = React.useState(false);
+  // The intro belongs to a fresh load of the primary root URL only.
+  // Inner hash routes and auth refreshes use the normal application loader.
+  const [splashActive, setSplashActive] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
+    const isPrimaryHost = window.location.hostname.toLowerCase() === 'quiz-space-app.pages.dev';
+    const isRootPath = window.location.pathname === '/' || window.location.pathname === '';
+    const hasInnerRoute = Boolean(window.location.hash && window.location.hash !== '#/' && window.location.hash !== '#');
+    return isPrimaryHost && isRootPath && !hasInnerRoute;
+  });
   const [platformMaintenanceActive, setPlatformMaintenanceActive] = React.useState(false);
 
   const [isQuizLocked, setIsQuizLocked] = React.useState(false);
@@ -312,22 +318,6 @@ export default function App() {
     const base = import.meta.env.BASE_URL || '/';
     return base.endsWith('/') ? base : base + '/';
   }, []);
-
-  React.useEffect(() => {
-    if (activeTab !== 'landing') {
-      setSplashActive(false);
-      return;
-    }
-
-    try {
-      if (window.sessionStorage.getItem('quizspace:landing-splash-seen:v2') !== 'true') {
-        setSplashActive(true);
-      }
-    } catch {
-      // If storage is unavailable, the landing page still works without replay protection.
-      setSplashActive(false);
-    }
-  }, [activeTab]);
 
   const setActiveTab = React.useCallback((tab: string) => {
     const basePath = getAppBasePath();
@@ -1357,11 +1347,6 @@ export default function App() {
           userName={userName}
           isGuest={!userId || userId.startsWith('user-')}
           onComplete={() => {
-            try {
-              window.sessionStorage.setItem('quizspace:landing-splash-seen:v2', 'true');
-            } catch {
-              // Ignore storage restrictions; this only controls replay behavior.
-            }
             setSplashActive(false);
           }}
         />

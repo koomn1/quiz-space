@@ -22,11 +22,12 @@ describe('Quiz Space App authentication success contract', () => {
     expect(source).not.toContain("redirectTo: window.location.origin + (import.meta.env.BASE_URL || '/')");
   });
 
-  it('shows the splash only for landing entry and remembers completion per session', () => {
-    expect(source).toContain("const [splashActive, setSplashActive] = React.useState(false);");
-    expect(source).toContain("if (activeTab !== 'landing')");
-    expect(source).toContain("if (hostname === 'quiz-space-app.pages.dev')");
-    expect(source).toContain("window.sessionStorage.getItem('quizspace:landing-splash-seen:v2')");
-    expect(source).toContain("window.sessionStorage.setItem('quizspace:landing-splash-seen:v2', 'true')");
+  it('shows the splash on primary-root loads but not on inner routes or auth refreshes', () => {
+    expect(source).toContain("const [splashActive, setSplashActive] = React.useState(() => {");
+    expect(source).toContain("const isPrimaryHost = window.location.hostname.toLowerCase() === 'quiz-space-app.pages.dev';");
+    expect(source).toContain("const isRootPath = window.location.pathname === '/' || window.location.pathname === '';");
+    expect(source).toContain("const hasInnerRoute = Boolean(window.location.hash && window.location.hash !== '#/' && window.location.hash !== '#');");
+    expect(source).toContain('return isPrimaryHost && isRootPath && !hasInnerRoute;');
+    expect(source).not.toContain("quizspace:landing-splash-seen:v2");
   });
 });
