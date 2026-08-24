@@ -15,4 +15,13 @@ describe('file extraction progress contract', () => {
     expect(source).toContain('validateAndCleanQuiz({');
     expect(source).toContain('accumulatedQuestions = cleanedFileQuiz.questions;');
   });
+
+  it('supports a non-persisted draft followed by an explicit solving stage', () => {
+    expect(source).toContain('persist?: boolean');
+    expect(source).toContain('persist = true');
+    expect(source).toContain('if (!persist)');
+    expect(source).toContain("stage: 'solving'");
+    expect(source).toContain('correctIndex: typeof q.correctIndex === \'number\' ? q.correctIndex : -1');
+    expect(source).toContain('بعض الإجابات الموضوعية غير مؤكدة');
+  });
 });

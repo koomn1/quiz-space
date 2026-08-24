@@ -17,4 +17,17 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('ملف Office سيُعالج مباشرة من مسار الاستخراج');
     expect(source).toContain('percentage: generationProgress.percentage');
   });
+
+  it('runs a distinct post-extraction solve stage before final persistence', () => {
+    expect(source).toContain('const solveExtractedQuiz = async');
+    expect(source).toContain('const prepareAndSolveExtractedQuiz = async');
+    expect(source).toContain('persist: false');
+    expect(source).toContain('await prepareAndSolveExtractedQuiz(result);');
+    expect(source).toContain('حل الاختبار بعد الاستخراج');
+    expect(source).toContain("currentPage: 'quiz-creator-post-extraction-solving'");
+    expect(source).toContain('attachment: attachment || undefined');
+    expect(source).toContain('applyVerifiedAnswerReviews(batch, text)');
+    expect(source).toContain('const saved = await handlePublishQuiz(solvedQuestions');
+    expect(source).toContain('correctIndex: typeof q.correctIndex === \'number\' ? q.correctIndex : -1');
+  });
 });

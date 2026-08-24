@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import { createQuiz } from '../lib/db';
 import { filterValidGeneratedQuestions } from '../lib/quizGenerationValidation';
-import { Question, GeneratedQuiz } from '../types';
+import { Question, Quiz, GeneratedQuiz } from '../types';
 import { generateQuizWithFallback, validateAndCleanQuiz } from './useQuizzes';
 import { createExtractionJob, getExtractionJob } from '../services/aiWorkerClient';
 
@@ -11,7 +11,7 @@ export interface ProgressState {
   current: number;
   total: number;
   percentage?: number;
-  stage: 'scanning' | 'generating' | 'saving' | 'complete';
+  stage: 'scanning' | 'generating' | 'solving' | 'saving' | 'complete';
   message: string;
 }
 
@@ -46,6 +46,7 @@ export function useQuizGenerator() {
       userId: string;
       creatorName: string;
       category: string;
+      persist?: boolean;
     }) => {
       const {
         type,
@@ -63,6 +64,7 @@ export function useQuizGenerator() {
         userId,
         creatorName,
         category,
+        persist = true,
       } = params;
 
       setProgress({
@@ -240,11 +242,27 @@ export function useQuizGenerator() {
         if (!data) throw new Error('انتهت مهلة متابعة الاستخراج. افتح صفحة إنشاء الاختبار مجدداً لاستئناف المهمة.');
 
         if (data.questions && Array.isArray(data.questions)) {
-          const cleanedFileQuiz = validateAndCleanQuiz({
-            title: data.title,
-            description: data.description,
-            questions: filterValidGeneratedQuestions(data.questions),
-          });
+          const fileQuestions = filterValidGeneratedQuestions(data.questions);
+          const cleanedFileQuiz = persist
+            ? validateAndCleanQuiz({
+                title: data.title,
+                description: data.description,
+                questions: fileQuestions,
+              })
+            : {
+                title: typeof data.title === 'string' && data.title.trim() ? data.title.trim() : 'اختبار مخصص جديد',
+                description: typeof data.description === 'string' && data.description.trim() ? data.description.trim() : 'اختبار مستخرج من الملف',
+                questions: fileQuestions.map((q: any, index: number): Question => ({
+                  id: q.id || `q-file-draft-${index}-${Date.now()}`,
+                  number: q.number || index + 1,
+                  type: q.type === 'tf' ? 'tf' : q.type === 'essay' ? 'essay' : 'mcq',
+                  text: String(q.text || '').trim(),
+                  options: q.type === 'tf' ? ['صح', 'خطأ'] : q.type === 'essay' ? [] : Array.isArray(q.options) ? q.options.map((option: unknown) => String(option || '').trim()) : [],
+                  correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1,
+                  correctAnswer: typeof q.correctAnswer === 'string' ? q.correctAnswer : '',
+                  explanation: typeof q.explanation === 'string' ? q.explanation : '',
+                })),
+              };
           if (!finalTitle && cleanedFileQuiz.title) finalTitle = cleanedFileQuiz.title;
           if (!finalDescription && cleanedFileQuiz.description) finalDescription = cleanedFileQuiz.description;
           accumulatedQuestions = cleanedFileQuiz.questions;
@@ -292,26 +310,65 @@ export function useQuizGenerator() {
       const finalQuizTitle = finalTitle?.trim() || (type === 'topic' ? `اختبار: ${topic}` : 'اختبار مخصص جديد');
       const finalQuizDesc = finalDescription?.trim() || 'اختبار مخصص تم توليده بدقة كاملة بالذكاء الاصطناعي كوانتم.';
 
+      const preparedQuestions: Question[] = accumulatedQuestions.map((q: any, idx: number) => {
+        const isEnglish = !/[\u0600-\u06FF]/.test(q.text || '');
+        return {
+          id: `q-gen-${idx}-${Date.now()}`,
+          number: q.number || (idx + 1),
+          type: q.type === 'tf' ? 'tf' : q.type === 'essay' ? 'essay' : 'mcq',
+          text: q.text || '',
+          options: q.type === 'tf'
+            ? (q.options && q.options.length === 2 && q.options[0].trim() ? q.options : (isEnglish ? ['True', 'False'] : ['صح', 'خطأ']))
+            : q.type === 'essay' ? [] : (q.options || ['', '', '', '']),
+          correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1,
+          correctAnswer: q.correctAnswer || '',
+          explanation: q.explanation || '',
+        };
+      });
+
+      const unresolvedObjectiveQuestions = preparedQuestions.filter((question) =>
+        question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length)
+      );
+      if (persist && unresolvedObjectiveQuestions.length > 0) {
+        throw new Error('تعذر حفظ الاختبار لأن بعض الإجابات الموضوعية غير مؤكدة. شغّل مرحلة حل الاختبار بعد الاستخراج أولاً.');
+      }
+
+      if (!persist) {
+        setProgress({
+          current: totalQuestions,
+          total: totalQuestions,
+          percentage: 100,
+          stage: 'solving',
+          message: 'اكتمل استخراج الملف. الآن تبدأ مرحلة حل الاختبار ومراجعة الإجابات بدقة...',
+        });
+        const draftQuiz: Quiz = {
+          id: '',
+          title: finalQuizTitle,
+          description: finalQuizDesc,
+          creatorId: userId,
+          creatorName: creatorName || 'صانع متميز',
+          questions: preparedQuestions as Question[],
+          totalPlays: 0,
+          avgRating: 0,
+          ratingsCount: 0,
+          timeLimit: 0,
+          createdAt: new Date().toISOString(),
+          category: category || 'عام',
+        };
+        return {
+          quiz: draftQuiz,
+          questions: accumulatedQuestions,
+          title: finalQuizTitle,
+          description: finalQuizDesc,
+        };
+      }
+
       const createdQuiz = await createQuiz({
         title: finalQuizTitle,
         description: finalQuizDesc,
         creatorId: userId,
         creatorName: creatorName || 'صانع متميز',
-        questions: accumulatedQuestions.map((q: any, idx: number) => {
-          const isEnglish = !/[\u0600-\u06FF]/.test(q.text || '');
-          return {
-            id: `q-gen-${idx}-${Date.now()}`,
-            number: q.number || (idx + 1),
-            type: q.type === 'tf' ? 'tf' : q.type === 'essay' ? 'essay' : 'mcq',
-            text: q.text || '',
-            options: q.type === 'tf'
-              ? (q.options && q.options.length === 2 && q.options[0].trim() ? q.options : (isEnglish ? ['True', 'False'] : ['صح', 'خطأ']))
-              : q.type === 'essay' ? [] : (q.options || ['', '', '', '']),
-            correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : 0,
-            correctAnswer: q.correctAnswer || '',
-            explanation: q.explanation || '',
-          };
-        }),
+        questions: preparedQuestions,
         timeLimit: 0,
         category: category || 'عام',
       });

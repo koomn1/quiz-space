@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { askAI, askAIStream } from '../services/aiWorkerClient';
-import { generateQuizWithFallback } from '../hooks/useQuizzes';
+import { generateQuizWithFallback, validateAndCleanQuiz } from '../hooks/useQuizzes';
 import { GeneratedQuiz } from '../types';
 import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
@@ -763,18 +763,19 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     setIsQuizGenerationError(false);
     try {
       const generated = await generateCosmoQuizInBatches(pendingQuiz.topic, pendingQuiz.amount);
+      const verified = validateAndCleanQuiz(generated);
       const saved = await createQuiz({
-        title: generated.title,
-        description: generated.description,
+        title: verified.title,
+        description: verified.description,
         creatorId: userId || 'user-guest',
         creatorName: userName || 'Cosmo AI user',
-        questions: generated.questions.map((question, index) => ({
+        questions: verified.questions.map((question, index) => ({
           id: `cosmo-${Date.now()}-q${index + 1}`,
           number: question.number ?? index + 1,
           type: question.type,
           text: question.text,
-          options: question.options ?? (question.type === 'tf' ? ['صح', 'خطأ'] : []),
-          correctIndex: question.correctIndex ?? 0,
+          options: question.options,
+          correctIndex: question.correctIndex,
           correctAnswer: question.correctAnswer,
           explanation: question.explanation,
         })),

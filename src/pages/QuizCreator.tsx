@@ -18,6 +18,7 @@ import DrivePicker from '../components/DrivePicker';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
+import { applyVerifiedAnswerReviews } from '../lib/extractedAnswerReview';
 
 interface QuizCreatorProps {
   userId: string;
@@ -505,7 +506,7 @@ export default function QuizCreator({
   const [isProcessingOcr, setIsProcessingOcr] = React.useState(false);
   const [ocrError, setOcrError] = React.useState<string | null>(null);
   const [ocrProgress, setOcrProgress] = React.useState<{
-    stage: 'analyzing' | 'extracting' | 'compiling';
+    stage: 'analyzing' | 'extracting' | 'solving' | 'compiling' | 'saving';
     current: number;
     total: number;
     percentage?: number;
@@ -532,6 +533,8 @@ export default function QuizCreator({
   const [fileGuidanceMessages, setFileGuidanceMessages] = React.useState<{ role: 'user' | 'assistant'; text: string }[]>([]);
   const [isGuidingFile, setIsGuidingFile] = React.useState(false);
   const [fileGuidanceError, setFileGuidanceError] = React.useState<string | null>(null);
+  const extractedAttachmentRef = React.useRef<AiChatAttachment | null>(null);
+  const [postExtractionSolvePending, setPostExtractionSolvePending] = React.useState(false);
   const [ocrBatches, setOcrBatches] = React.useState<{
     id: number;
     nameAr: string;
@@ -575,7 +578,7 @@ export default function QuizCreator({
   React.useEffect(() => {
     if (generationProgress && activeMode === 'ocr') {
       setOcrProgress({
-        stage: generationProgress.stage === 'scanning' ? 'analyzing' : generationProgress.stage === 'saving' ? 'compiling' : 'extracting',
+        stage: generationProgress.stage === 'scanning' ? 'analyzing' : generationProgress.stage === 'saving' ? 'compiling' : generationProgress.stage === 'solving' ? 'solving' : 'extracting',
         current: generationProgress.current,
         total: generationProgress.total,
         percentage: generationProgress.percentage,
@@ -611,16 +614,10 @@ export default function QuizCreator({
           userId,
           creatorName,
           category: 'عام',
+          persist: false,
         });
         if (cancelled) return;
-        setTitle(result.title);
-        setDescription(result.description);
-        setQuestions(result.quiz.questions.map((question: any, index: number) => ({
-          ...question,
-          id: question.id || `q-resumed-${index}-${Date.now()}`,
-        })));
-        setAiSavedQuizId(result.quiz.id);
-        setActiveMode('manual');
+        await prepareAndSolveExtractedQuiz(result);
         setIsProcessingOcr(false);
         setOcrProgress(null);
       } catch (error: any) {
@@ -659,7 +656,11 @@ export default function QuizCreator({
                 } else if (pasteError === errorStr) {
                   handleGenerateFromPastedText();
                 } else if (ocrError === errorStr) {
-                  handleProcessDocument();
+                  if (extractedAttachmentRef.current && questions.some(question => question.text.trim())) {
+                    void retryPostExtractionSolve();
+                  } else {
+                    void handleProcessDocument();
+                  }
                 }
               }}
               className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-violet-600/10 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
@@ -785,6 +786,155 @@ export default function QuizCreator({
     }
   };
 
+  const solveExtractedQuiz = async (draftQuestions: Question[]): Promise<Question[]> => {
+    const attachment = extractedAttachmentRef.current;
+    if (!attachment) {
+      throw new Error('لا يمكن تشغيل مرحلة حل الاختبار بعد الاستخراج بدون الملف الأصلي. أعد رفع الملف للمراجعة الآمنة.');
+    }
+    if (attachment.kind !== 'image' && attachment.mimeType !== 'application/pdf') {
+      throw new Error('مرحلة حل الاختبار بعد الاستخراج تدعم ملفات PDF والصور فقط حاليًا. يمكنك مراجعة أسئلة ملف Office يدويًا دون تخمين.');
+    }
+    const solvedQuestions = draftQuestions.map(question => ({ ...question }));
+    const batchSize = 5;
+    const total = solvedQuestions.length;
+
+    for (let offset = 0; offset < total; offset += batchSize) {
+      const batch = solvedQuestions.slice(offset, offset + batchSize);
+      setOcrProgress({
+        stage: 'solving',
+        current: offset,
+        total,
+        percentage: Math.round((offset / Math.max(total, 1)) * 100),
+        message: `مرحلة حل الاختبار بعد الاستخراج: مراجعة الأسئلة ${offset + 1}–${Math.min(offset + batch.length, total)} من ${total} بدقة...`,
+      });
+
+      const questionsForModel = batch.map((question, index) => ({
+        questionIndex: index + 1,
+        text: question.text.slice(0, 2_000),
+        type: question.type,
+        options: question.options.map(option => option.slice(0, 350)),
+      }));
+      const prompt = `أنت الآن في مرحلة «حل الاختبار بعد الاستخراج». استخدم الملف المرفق كمصدر أساسي، واستخدم نص السؤال والاختيارات أدناه للوصول إلى الإجابة الصحيحة فقط. لا تختار الخيار الأول افتراضيًا ولا تخمّن.
+
+أعد JSON فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0,"correctAnswer":"نص الخيار المطابق","explanation":"سبب مختصر","evidence":"مرجع قصير من محتوى الملف"}]}
+
+قواعد إلزامية:
+- correctIndex يبدأ من 0 ويجب أن يشير إلى الخيار الصحيح فعلًا.
+- correctAnswer يجب أن يساوي نص الخيار المشار إليه، بعد نسخه كما هو.
+- راجع كل إجابة مقابل محتوى الملف قبل إرجاعها.
+- إذا لم تستطع إثبات إجابة سؤال موضوعي من الملف، لا تضع له إجابة؛ النظام سيرفض حفظه بدل تسجيل إجابة عشوائية.
+- لا تغيّر نص السؤال أو ترتيب الخيارات.
+
+الأسئلة:
+${JSON.stringify(questionsForModel, null, 2)}`;
+      const { text } = await askAIStream(
+        prompt,
+        {
+          attachment: attachment || undefined,
+          currentPage: 'quiz-creator-post-extraction-solving',
+          siteStatus: 'QuizSpace يعمل بشكل طبيعي',
+          systemInstruction: isAr
+            ? 'أنت مراجع إجابات أكاديمي شديد الدقة. لا تختر أول خيار أبدًا كحل افتراضي. لا تعتمد إلا على دليل الملف أو على إجابة يمكن إثباتها مباشرة من السؤال والخيارات. أعد JSON صالحًا فقط.'
+            : 'You are a strict academic answer verifier. Never default to the first option. Use only evidence from the file or a directly provable answer. Return valid JSON only.',
+        },
+        (_delta, _fullText) => {
+          setOcrProgress(prev => prev ? { ...prev, message: `جاري تحليل إجابات المجموعة ${Math.floor(offset / batchSize) + 1}...` } : prev);
+        },
+      );
+      const solvedBatch = applyVerifiedAnswerReviews(batch, text);
+      solvedQuestions.splice(offset, batch.length, ...solvedBatch);
+    }
+
+    setOcrProgress({
+      stage: 'solving',
+      current: total,
+      total,
+      percentage: 100,
+      message: 'اكتملت مرحلة حل الاختبار بعد الاستخراج والتحقق من الإجابات. الاختبار جاهز للمراجعة والحفظ.',
+    });
+    return solvedQuestions;
+  };
+
+  const prepareAndSolveExtractedQuiz = async (result: { title: string; description: string; quiz: Quiz }) => {
+    setTitle(result.title);
+    setDescription(result.description);
+    const draftQuestions = result.quiz.questions.map((question: any, index: number) => ({
+      ...question,
+      id: question.id || `q-post-extraction-${index}-${Date.now()}`,
+    })) as Question[];
+    setQuestions(draftQuestions);
+    setAiSavedQuizId(null);
+    setPostExtractionSolvePending(true);
+    setOcrProgress({
+      stage: 'solving',
+      current: 0,
+      total: draftQuestions.length,
+      percentage: 0,
+      message: 'مرحلة حل الاختبار بعد الاستخراج: يراجع كوزمو الإجابات من الملف قبل السماح بالحفظ...',
+    });
+    try {
+      const solvedQuestions = await solveExtractedQuiz(draftQuestions);
+      setOcrProgress({
+        stage: 'saving',
+        current: solvedQuestions.length,
+        total: solvedQuestions.length,
+        percentage: 100,
+        message: 'اكتمل حل الاختبار بعد الاستخراج. جاري حفظ الاختبار بعد التحقق من كل الإجابات...',
+      });
+      const saved = await handlePublishQuiz(solvedQuestions, { title: result.title, description: result.description });
+      if (!saved) throw new Error('تعذر حفظ الاختبار بعد اكتمال التحقق من الإجابات.');
+      setQuestions(solvedQuestions);
+      setPostExtractionSolvePending(false);
+      setActiveMode('manual');
+      setUploadedFile(null);
+      setUploadedFilePreview(null);
+      setFileType(null);
+      setFileCustomPrompt('');
+      setIsProcessingOcr(false);
+      setOcrProgress(null);
+    } catch (error) {
+      setPostExtractionSolvePending(false);
+      setIsProcessingOcr(false);
+      setActiveMode('manual');
+      throw error;
+    }
+  };
+
+  const retryPostExtractionSolve = async () => {
+    const draftQuestions = questions.filter(question => question.text.trim());
+    if (!extractedAttachmentRef.current || draftQuestions.length === 0) {
+      await handleProcessDocument();
+      return;
+    }
+    setIsProcessingOcr(true);
+    setActiveMode('ocr');
+    setOcrError(null);
+    try {
+      await prepareAndSolveExtractedQuiz({
+        title,
+        description,
+        quiz: {
+          id: '',
+          title,
+          description,
+          creatorId: userId,
+          creatorName,
+          questions: draftQuestions,
+          totalPlays: 0,
+          avgRating: 0,
+          ratingsCount: 0,
+          timeLimit,
+          createdAt: new Date().toISOString(),
+          category,
+        },
+      });
+    } catch (error: any) {
+      setOcrError(error?.message || 'تعذر إعادة مرحلة حل الاختبار بعد الاستخراج.');
+      setIsProcessingOcr(false);
+      setOcrProgress(null);
+    }
+  };
+
   // Helper to split image into vertical chunks for better processing
   const splitImageIntoParts = async (file: File, parts: number = 3): Promise<string[]> => {
     return new Promise((resolve, reject) => {
@@ -836,6 +986,8 @@ export default function QuizCreator({
   };
 
   const processSelectedFile = (file: File) => {
+    extractedAttachmentRef.current = null;
+    setPostExtractionSolvePending(false);
     setOcrError(null);
     setFileGuidance('');
     setFileGuidanceMessages([]);
@@ -894,6 +1046,12 @@ export default function QuizCreator({
       // Convert to base64
       const base64Data = await convertToBase64(uploadedFile);
       const base64Clean = base64Data.split(',')[1]; // Strip data URL prefix
+      extractedAttachmentRef.current = {
+        data: base64Clean,
+        mimeType: uploadedFile.type || 'application/pdf',
+        name: uploadedFile.name,
+        kind: uploadedFile.type.startsWith('image/') ? 'image' : 'file',
+      };
 
       // We handle document initialization locally now in serverless
       const initData = { fileUri: base64Clean, fileUploadName: uploadedFile.name, totalPages: 1 };
@@ -914,27 +1072,11 @@ export default function QuizCreator({
         userId,
         creatorName,
         category: 'عام',
+        persist: false,
       });
 
-      // Step 3: Populate results in UI State
-      setTitle(result.title);
-      setDescription(result.description);
-      setQuestions(
-        result.quiz.questions.map((q: any, i: number) => ({
-          ...q,
-          id: q.id || `q-direct-${i}-${Date.now()}`
-        }))
-      );
-      setAiSavedQuizId(result.quiz.id);
-
-      // Transition to Manual Editor mode seamlessly
-      setActiveMode('manual');
-      setUploadedFile(null);
-      setUploadedFilePreview(null);
-      setFileType(null);
-      setFileCustomPrompt('');
-      setIsProcessingOcr(false);
-      setOcrProgress(null);
+      // Step 3: Extraction is complete; now solve and verify answers as a separate phase.
+      await prepareAndSolveExtractedQuiz(result);
       return; // Handled completely
     } catch (err: any) {
       console.error(err);
@@ -1115,40 +1257,55 @@ export default function QuizCreator({
   };
 
   // Publish or Update Quiz in database
-  const handlePublishQuiz = async () => {
-    if (!title.trim()) {
+  const handlePublishQuiz = async (
+    questionsOverride?: Question[],
+    metadataOverride?: { title?: string; description?: string },
+  ): Promise<boolean> => {
+    const effectiveTitle = metadataOverride?.title ?? title;
+    const effectiveDescription = metadataOverride?.description ?? description;
+    const questionsToSave = questionsOverride ?? questions;
+    if (!effectiveTitle.trim()) {
       setSaveError('يرجى تحديد عنوان جذاب للاختبار.');
-      return;
+      return false;
     }
 
-    const invalidQuestion = questions.some(q => !q.text.trim());
+    const invalidQuestion = questionsToSave.some(q => !q.text.trim());
     if (invalidQuestion) {
       setSaveError('يرجى التأكد من كتابة نص الأسئلة بالكامل.');
-      return;
+      return false;
     }
 
     setIsSaving(true);
     setSaveError(null);
 
     try {
-      const sanitizedQuestions = questions.map((q, index) => ({
+      const sanitizedQuestions = questionsToSave.map((q, index) => ({
         id: q.id || `q-${index}-${Date.now()}`,
         type: q.type || 'mcq',
         text: q.text.trim(),
         options: q.type === 'tf' ? ['صح', 'خطأ'] : q.options,
-        correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : 0,
+        correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1,
         correctAnswer: q.correctAnswer || '',
         explanation: q.explanation || '',
         imageUrl: q.imageUrl || ''
       }));
+
+      const unresolvedQuestions = sanitizedQuestions.filter((question) =>
+        question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length || question.options.some((option: string) => !option.trim()))
+      );
+      if (unresolvedQuestions.length > 0) {
+        setSaveError('لا يمكن حفظ الاختبار قبل اكتمال مرحلة حل الاختبار بعد الاستخراج والتحقق من الإجابات.');
+        setIsSaving(false);
+        return;
+      }
 
       let savedQuiz: any;
       const effectiveEditId = quizToEdit?.id || aiSavedQuizId;
       if (effectiveEditId) {
         // Update Firestore database
         await updateQuiz(effectiveEditId, {
-          title: title.trim(),
-          description: description.trim(),
+          title: effectiveTitle.trim(),
+          description: effectiveDescription.trim(),
           creatorId: userId,
           creatorName: creatorName.trim(),
           questions: sanitizedQuestions,
@@ -1157,12 +1314,12 @@ export default function QuizCreator({
           distributionRouting: distributionRouting,
           classroomId: distributionRouting === 'classroom' ? selectedClassroomId : null
         });
-        savedQuiz = { id: effectiveEditId, title: title.trim() };
+        savedQuiz = { id: effectiveEditId, title: effectiveTitle.trim() };
       } else {
         // Create new quiz in Firestore
         savedQuiz = await createQuiz({
-          title: title.trim(),
-          description: description.trim(),
+          title: effectiveTitle.trim(),
+          description: effectiveDescription.trim(),
           creatorId: userId,
           creatorName: creatorName.trim(),
           questions: sanitizedQuestions,
@@ -1177,7 +1334,7 @@ export default function QuizCreator({
       const targetClassroomId = distributionRouting === 'classroom' ? (selectedClassroomId || searchParams.get('classroomId')) : null;
       if (targetClassroomId && savedQuiz && savedQuiz.id) {
         try {
-          const embedText = `[QUIZ_EMBED:${savedQuiz.id}:${title.trim()}]`;
+          const embedText = `[QUIZ_EMBED:${savedQuiz.id}:${effectiveTitle.trim()}]`;
           const cipher = await encryptMessage(embedText, targetClassroomId);
 
           // Post message to classroom E2EE chat
@@ -1214,9 +1371,11 @@ export default function QuizCreator({
       ]);
       
       onQuizCreated();
+      return true;
     } catch (err: any) {
       console.error(err);
       setSaveError(err.message || 'عذراً، فشل حفظ أو تحديث الاختبار في قاعدة البيانات.');
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -2033,14 +2192,44 @@ A computer is a digital electronic machine...
               <div className="p-5 rounded-2xl bg-amber-500/5 dark:bg-slate-900/30 border border-amber-500/15 dark:border-slate-800 space-y-5 shadow-xs">
                 {ocrProgress && (
                   <>
+                    <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/70 p-1.5 text-[10px] font-black" dir="rtl">
+                      {[
+                        { stage: 'extracting', label: isAr ? '١. استخراج' : '1. Extract' },
+                        { stage: 'solving', label: isAr ? '٢. حل الاختبار بعد الاستخراج' : '2. Solve after extraction' },
+                        { stage: 'saving', label: isAr ? '٣. حفظ بعد التحقق' : '3. Save verified quiz' },
+                      ].map((item) => (
+                        <span
+                          key={item.stage}
+                          className={`rounded-xl px-2 py-2 text-center leading-tight transition-colors ${
+                            ocrProgress.stage === item.stage
+                              ? 'bg-white text-violet-700 shadow-sm dark:bg-slate-800 dark:text-violet-300'
+                              : 'text-slate-400 dark:text-slate-500'
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                      ))}
+                    </div>
+                    {postExtractionSolvePending && ocrProgress.stage === 'solving' && (
+                      <div className="rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2 text-right text-[11px] font-extrabold text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/20 dark:text-violet-300" dir="rtl">
+                        هذه مرحلة مستقلة بعد الاستخراج: لا يتم حفظ أي إجابة قبل مطابقتها مع الاختيارات ومحتوى الملف.
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {ocrProgress && (
+                  <>
                     <div className="flex justify-between items-center text-xs flex-row-reverse text-right">
                       <span className="font-extrabold text-amber-600 dark:text-amber-400">
                         {ocrProgress.stage === 'analyzing' && (isAr ? '🔍 تجهيز وقراءة الملف...' : '🔍 Preparing and reading the file...')}
                         {ocrProgress.stage === 'extracting' && (isAr ? '🔮 استخراج الأسئلة من أجزاء الملف...' : '🔮 Extracting questions from file parts...')}
+                        {ocrProgress.stage === 'solving' && (isAr ? '✅ حل الاختبار بعد الاستخراج والتحقق من الإجابات...' : '✅ Solving and verifying the extracted quiz...')}
+                        {ocrProgress.stage === 'saving' && (isAr ? '💾 حفظ الاختبار بعد التحقق...' : '💾 Saving the verified quiz...')}
                         {ocrProgress.stage === 'compiling' && (isAr ? '📊 تجميع الاختبار النهائي...' : '📊 Compiling the final quiz...')}
                       </span>
                       <span className="font-mono font-bold text-slate-500">
-                        {Math.round(ocrProgress.percentage ?? (ocrProgress.current / Math.max(ocrProgress.total, 1)) * 100)}% · {ocrProgress.current} / {ocrProgress.total} {isAr ? 'جزء' : 'parts'}
+                        {Math.round(ocrProgress.percentage ?? (ocrProgress.current / Math.max(ocrProgress.total, 1)) * 100)}% · {ocrProgress.current} / {ocrProgress.total} {ocrProgress.stage === 'solving' || ocrProgress.stage === 'saving' ? (isAr ? 'سؤال' : 'questions') : (isAr ? 'جزء' : 'parts')}
                       </span>
                     </div>
                     
@@ -2198,7 +2387,7 @@ A computer is a digital electronic machine...
                 <div className="flex items-center gap-2 relative z-10">
                   <button
                     type="button"
-                    onClick={handlePublishQuiz}
+                    onClick={() => void handlePublishQuiz()}
                     disabled={isSaving}
                     className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-violet-500/25 transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto hover:-translate-y-0.5"
                   >
@@ -2823,7 +3012,7 @@ A computer is a digital electronic machine...
 
               <button
                 type="button"
-                onClick={handlePublishQuiz}
+                onClick={() => void handlePublishQuiz()}
                 disabled={isSaving}
                 className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-bold shadow-lg shadow-primary/30 transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto"
               >
