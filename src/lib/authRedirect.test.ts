@@ -8,8 +8,12 @@ describe('auth redirect targets', () => {
     );
   });
 
+  it('always uses the primary pages.dev root even when a legacy base is passed', () => {
+    expect(getAuthRedirectUrl('https://quiz-space-app.pages.dev', '/quiz-space/')).toBe('https://quiz-space-app.pages.dev/');
+    expect(getAuthRedirectUrl('https://quiz-space-app.pages.dev/', '/quiz-space/')).toBe('https://quiz-space-app.pages.dev/');
+  });
+
   it('uses the domain root when no base path is provided outside GitHub Pages', () => {
     expect(getAuthRedirectUrl('http://localhost:5173', '/')).toBe('http://localhost:5173/');
-    expect(getAuthRedirectUrl('https://quiz-space-app.pages.dev', '/')).toBe('https://quiz-space-app.pages.dev/');
   });
 });

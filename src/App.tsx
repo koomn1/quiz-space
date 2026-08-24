@@ -60,6 +60,7 @@ import { generateCoolStudentName } from './lib/nameGenerator';
 import { getOrCreateGuestIdentity } from './lib/guestIdentity';
 import { startWebVitalsReporting } from './lib/performanceTelemetry';
 import { getOnboardingTourStorageKey, shouldShowOnboardingTour } from './lib/onboardingState';
+import { getAuthRedirectUrl } from './lib/authRedirect';
 import { useAuth } from './context/AuthContext';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -123,8 +124,9 @@ export default function App() {
   const mainContainerRef = React.useRef<HTMLElement>(null);
 
   const authContext = useAuth();
-  // Show splash only once per day — not on every page refresh
-  const [splashActive, setSplashActive] = React.useState(true);
+  // The intro belongs to the landing entry, not to authentication refreshes or inner routes.
+  // Session storage prevents it from replaying after login, route changes, or remounts.
+  const [splashActive, setSplashActive] = React.useState(false);
   const [platformMaintenanceActive, setPlatformMaintenanceActive] = React.useState(false);
 
   const [isQuizLocked, setIsQuizLocked] = React.useState(false);
@@ -300,12 +302,32 @@ export default function App() {
 
   const getAppBasePath = React.useCallback(() => {
     const currentPath = window.location.pathname;
-    if (currentPath.includes('/quiz-space') || window.location.hostname.includes('github.io')) {
+    const hostname = window.location.hostname.toLowerCase();
+    if (hostname === 'quiz-space-app.pages.dev') {
+      return '/';
+    }
+    if (currentPath.includes('/quiz-space') || hostname.includes('github.io')) {
       return '/quiz-space/';
     }
     const base = import.meta.env.BASE_URL || '/';
     return base.endsWith('/') ? base : base + '/';
   }, []);
+
+  React.useEffect(() => {
+    if (activeTab !== 'landing') {
+      setSplashActive(false);
+      return;
+    }
+
+    try {
+      if (window.sessionStorage.getItem('quizspace:landing-splash-seen:v2') !== 'true') {
+        setSplashActive(true);
+      }
+    } catch {
+      // If storage is unavailable, the landing page still works without replay protection.
+      setSplashActive(false);
+    }
+  }, [activeTab]);
 
   const setActiveTab = React.useCallback((tab: string) => {
     const basePath = getAppBasePath();
@@ -1098,7 +1120,7 @@ export default function App() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + (import.meta.env.BASE_URL || '/'),
+          redirectTo: getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/'),
         },
       });
       if (error) throw error;
@@ -1335,6 +1357,11 @@ export default function App() {
           userName={userName}
           isGuest={!userId || userId.startsWith('user-')}
           onComplete={() => {
+            try {
+              window.sessionStorage.setItem('quizspace:landing-splash-seen:v2', 'true');
+            } catch {
+              // Ignore storage restrictions; this only controls replay behavior.
+            }
             setSplashActive(false);
           }}
         />
