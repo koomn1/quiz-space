@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { filterValidGeneratedQuestions } from './quizGenerationValidation';
+import { validateAndCleanQuiz } from '../hooks/useQuizzes';
 
 describe('filterValidGeneratedQuestions', () => {
   it('retains only generated questions with meaningful text', () => {
@@ -19,5 +20,34 @@ describe('filterValidGeneratedQuestions', () => {
 
   it('handles an absent generator payload safely', () => {
     expect(filterValidGeneratedQuestions(undefined)).toEqual([]);
+  });
+
+  it('repairs an invalid extracted correct index from the answer text', () => {
+    const result = validateAndCleanQuiz({
+      title: 'اختبار من ملف',
+      questions: [{
+        text: 'ما عاصمة مصر؟',
+        type: 'mcq',
+        options: ['الإسكندرية', 'القاهرة', 'الأقصر', 'أسوان'],
+        correctIndex: -1,
+        correctAnswer: 'القاهرة',
+      }],
+    });
+    expect(result.questions[0].correctIndex).toBe(1);
+  });
+
+  it('keeps extracted true/false questions selectable when the model returns text answers', () => {
+    const result = validateAndCleanQuiz({
+      questions: [{ text: 'الشمس نجم؟', type: 'tf', correctIndex: -1, correctAnswer: 'صح' }],
+    });
+    expect(result.questions[0].options).toEqual(['صح', 'خطأ']);
+    expect(result.questions[0].correctIndex).toBe(0);
+  });
+
+  it('clamps an out-of-range extracted index instead of creating an unsolvable choice', () => {
+    const result = validateAndCleanQuiz({
+      questions: [{ text: 'سؤال', type: 'mcq', options: ['أ', 'ب'], correctIndex: 99 }],
+    });
+    expect(result.questions[0].correctIndex).toBe(0);
   });
 });

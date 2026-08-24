@@ -13,7 +13,7 @@ import { getApiUrl, getAppOrigin } from '../lib/origin';
 import { supabase } from '../lib/supabaseClient';
 import { fetchWithAuth } from '../lib/authFetch';
 import { useQuizGenerator } from '../hooks/useQuizGenerator';
-import { getRememberedExtractionJobId } from '../services/aiWorkerClient';
+import { askAIStream, getRememberedExtractionJobId, type AiChatAttachment } from '../services/aiWorkerClient';
 import DrivePicker from '../components/DrivePicker';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
@@ -508,6 +508,7 @@ export default function QuizCreator({
     stage: 'analyzing' | 'extracting' | 'compiling';
     current: number;
     total: number;
+    percentage?: number;
     message: string;
   } | null>(null);
 
@@ -527,6 +528,9 @@ export default function QuizCreator({
 
   // File Chat Prompt & Batch rendering states
   const [fileCustomPrompt, setFileCustomPrompt] = React.useState('');
+  const [fileGuidance, setFileGuidance] = React.useState('');
+  const [isGuidingFile, setIsGuidingFile] = React.useState(false);
+  const [fileGuidanceError, setFileGuidanceError] = React.useState<string | null>(null);
   const [ocrBatches, setOcrBatches] = React.useState<{
     id: number;
     nameAr: string;
@@ -573,6 +577,7 @@ export default function QuizCreator({
         stage: generationProgress.stage === 'scanning' ? 'analyzing' : generationProgress.stage === 'saving' ? 'compiling' : 'extracting',
         current: generationProgress.current,
         total: generationProgress.total,
+        percentage: generationProgress.percentage,
         message: generationProgress.message,
       });
     } else {
@@ -594,6 +599,7 @@ export default function QuizCreator({
         stage: 'analyzing',
         current: 0,
         total: 1,
+        percentage: 0,
         message: isAr ? 'تم العثور على ملف قيد المعالجة، جارٍ استئناف التقدم...' : 'A pending document was found. Resuming its progress…',
       });
       try {
@@ -723,6 +729,58 @@ export default function QuizCreator({
     });
   };
 
+  const handleGuideFile = async () => {
+    if (!uploadedFile || isGuidingFile) return;
+    if (userPlan === 'Free') {
+      setFileGuidanceError(isAr ? 'الدردشة التوجيهية مع الملف متاحة للمشتركين. يمكنك استخدام تعليمات الاستخراج مباشرة.' : 'Guided file chat is available to members. You can still use the extraction instructions directly.');
+      return;
+    }
+    if (fileType !== 'image' && fileType !== 'pdf') {
+      setFileGuidanceError(isAr ? 'الدردشة التوجيهية تدعم الصور وPDF حاليًا. ملف Office سيُعالج مباشرة من مسار الاستخراج.' : 'Guided chat currently supports images and PDF files. Office files continue through the extraction flow.');
+      return;
+    }
+    if (uploadedFile.size > 10 * 1024 * 1024) {
+      setFileGuidanceError(isAr ? 'الدردشة التوجيهية تدعم ملفات حتى 10 ميجابايت. سيستمر استخراج الملف مباشرة.' : 'Guided chat supports files up to 10 MB. Direct extraction will continue to work.');
+      return;
+    }
+
+    setIsGuidingFile(true);
+    setFileGuidanceError(null);
+    setFileGuidance('');
+    try {
+      const dataUrl = await convertToBase64(uploadedFile);
+      const comma = dataUrl.indexOf(',');
+      if (comma < 0) throw new Error('تعذر قراءة محتوى الملف.');
+      const attachment: AiChatAttachment = {
+        data: dataUrl.slice(comma + 1),
+        mimeType: uploadedFile.type || (fileType === 'image' ? 'image/png' : 'application/pdf'),
+        name: uploadedFile.name,
+        kind: fileType === 'image' ? 'image' : 'file',
+      };
+      const prompt = fileCustomPrompt.trim() || (isAr
+        ? 'اقرأ هذا الملف وافهم محتواه. لخّص موضوعه، حدّد نوع الأسئلة أو المعلومات الموجودة، واقترح بدقة كيف ينبغي استخراج الاختبار منه. لا تخمّن أي معلومات غير موجودة.'
+        : 'Read and understand this file. Summarize its content, identify the question or information structure, and recommend exactly how the quiz should be extracted from it. Do not invent information.');
+      const { text } = await askAIStream(
+        prompt,
+        {
+          attachment,
+          currentPage: 'quiz-creator-file-guidance',
+          siteStatus: 'QuizSpace يعمل بشكل طبيعي',
+          systemInstruction: isAr
+            ? 'أنت مساعد توجيهي داخل منشئ الاختبارات. افهم الملف المرفق أولًا، ثم اشرح للمستخدم ما وجدته وما الذي ستفعله عملية الاستخراج. كن مختصرًا ودقيقًا، ولا تكتب أسئلة كاملة إلا إذا طلب المستخدم ذلك.'
+            : 'You are a guidance assistant inside a quiz creator. Understand the attached file first, then explain what you found and what the extraction will do. Be concise and accurate; do not write full questions unless requested.',
+        },
+        (_delta, fullText) => setFileGuidance(fullText),
+      );
+      setFileGuidance(text.trim());
+    } catch (error: any) {
+      console.error('Guided file chat failed', error);
+      setFileGuidanceError(error?.message || (isAr ? 'تعذر تشغيل الدردشة التوجيهية مع الملف.' : 'Unable to start guided file chat.'));
+    } finally {
+      setIsGuidingFile(false);
+    }
+  };
+
   // Helper to split image into vertical chunks for better processing
   const splitImageIntoParts = async (file: File, parts: number = 3): Promise<string[]> => {
     return new Promise((resolve, reject) => {
@@ -775,6 +833,8 @@ export default function QuizCreator({
 
   const processSelectedFile = (file: File) => {
     setOcrError(null);
+    setFileGuidance('');
+    setFileGuidanceError(null);
     setUploadedFile(file);
     if (file.type.startsWith('image/')) {
       setFileType('image');
@@ -817,8 +877,9 @@ export default function QuizCreator({
     // Step 1: Uploading and analyzing metadata
     setOcrProgress({
       stage: 'analyzing',
-      current: 1,
-      total: 10,
+      current: 0,
+      total: 1,
+      percentage: 0,
         message: isAr
         ? 'الخطوة 1: جاري تجهيز النص واستخراج الأسئلة بدقة عبر Nemotron...'
         : 'Step 1: Preparing document text for fast Nemotron extraction...'
@@ -1898,6 +1959,36 @@ A computer is a digital electronic machine...
                   dir="rtl"
                 />
 
+                <div className="flex flex-col gap-2 rounded-2xl border border-violet-200/70 dark:border-violet-900/50 bg-white/60 dark:bg-slate-950/30 p-3">
+                  <div className="flex items-center justify-between gap-3" dir="rtl">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {isAr ? 'اجعل كوزمو يقرأ الملف أولًا ويشرح لك ما سيفعله قبل الاستخراج.' : 'Let Cosmo read the file first and explain what it will do before extraction.'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleGuideFile}
+                      disabled={isGuidingFile || isProcessingOcr || fileType === 'document' || uploadedFile.size > 10 * 1024 * 1024}
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-2 text-[10px] font-black text-white shadow-sm shadow-violet-600/20 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isGuidingFile ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <Sparkles className="h-3.5 w-3.5" />}
+                      {isGuidingFile ? (isAr ? 'جاري فهم الملف...' : 'Reading file...') : (isAr ? 'اسأل كوزمو عن الملف' : 'Ask Cosmo about file')}
+                    </button>
+                  </div>
+                  {fileType === 'document' && (
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400" dir="rtl">
+                      {isAr ? 'الدردشة التوجيهية متاحة للصور وPDF حاليًا، أما Word وExcel وPowerPoint فستستمر عبر استخراج الملف المباشر.' : 'Guided chat currently supports images and PDF; Word, Excel, and PowerPoint continue through direct extraction.'}
+                    </p>
+                  )}
+                  {fileGuidanceError && (
+                    <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400" dir="rtl">{fileGuidanceError}</p>
+                  )}
+                  {fileGuidance && (
+                    <div className="rounded-xl bg-violet-50/80 dark:bg-violet-950/20 p-3 text-[11px] leading-6 text-slate-700 dark:text-slate-200 whitespace-pre-wrap" dir="rtl">
+                      {fileGuidance}
+                    </div>
+                  )}
+                </div>
+
                 {/* Quick assistant suggestion pills */}
                 <div className="flex flex-wrap gap-1.5 justify-end pt-1">
                   {[
@@ -1926,12 +2017,12 @@ A computer is a digital electronic machine...
                   <>
                     <div className="flex justify-between items-center text-xs flex-row-reverse text-right">
                       <span className="font-extrabold text-amber-600 dark:text-amber-400">
-                        {ocrProgress.stage === 'analyzing' && (isAr ? '🔍 تقسيم محتوى الكورس لجرعات تتابعية...' : '🔍 Partitioning document for sequentials...')}
-                        {ocrProgress.stage === 'extracting' && (isAr ? '🔮 استخراج الأسئلة من الجزء الجاري...' : '🔮 Extracting questions from segment...')}
-                        {ocrProgress.stage === 'compiling' && (isAr ? '📊 تجميع وحبك بنك الأسئلة النهائي...' : '📊 Organizing completed quiz...')}
+                        {ocrProgress.stage === 'analyzing' && (isAr ? '🔍 تجهيز وقراءة الملف...' : '🔍 Preparing and reading the file...')}
+                        {ocrProgress.stage === 'extracting' && (isAr ? '🔮 استخراج الأسئلة من أجزاء الملف...' : '🔮 Extracting questions from file parts...')}
+                        {ocrProgress.stage === 'compiling' && (isAr ? '📊 تجميع الاختبار النهائي...' : '📊 Compiling the final quiz...')}
                       </span>
                       <span className="font-mono font-bold text-slate-500">
-                        {ocrProgress.current} / {ocrProgress.total}
+                        {Math.round(ocrProgress.percentage ?? (ocrProgress.current / Math.max(ocrProgress.total, 1)) * 100)}% · {ocrProgress.current} / {ocrProgress.total} {isAr ? 'جزء' : 'parts'}
                       </span>
                     </div>
                     
@@ -1939,7 +2030,7 @@ A computer is a digital electronic machine...
                     <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300 ease-out" 
-                        style={{ width: `${Math.max(5, Math.min(100, (ocrProgress.current / ocrProgress.total) * 100))}%` }}
+                        style={{ width: `${Math.max(0, Math.min(100, ocrProgress.percentage ?? (ocrProgress.current / Math.max(ocrProgress.total, 1)) * 100))}%` }}
                       />
                     </div>
                     

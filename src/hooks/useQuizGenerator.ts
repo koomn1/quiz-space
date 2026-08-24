@@ -3,13 +3,14 @@ import React from 'react';
 import { createQuiz } from '../lib/db';
 import { filterValidGeneratedQuestions } from '../lib/quizGenerationValidation';
 import { Question, GeneratedQuiz } from '../types';
-import { generateQuizWithFallback } from './useQuizzes';
+import { generateQuizWithFallback, validateAndCleanQuiz } from './useQuizzes';
 import { createExtractionJob, getExtractionJob } from '../services/aiWorkerClient';
 
 
 export interface ProgressState {
   current: number;
   total: number;
+  percentage?: number;
   stage: 'scanning' | 'generating' | 'saving' | 'complete';
   message: string;
 }
@@ -221,12 +222,17 @@ export function useQuizGenerator() {
             break;
           }
           if (job.status === 'error') throw new Error(job.errorMessage || 'تعذر استخراج أسئلة من هذا الملف.');
+          const totalChunks = job.totalChunks || 1;
+          const reportedPercentage = Number.isFinite(job.progressPercentage)
+            ? Math.min(100, Math.max(0, job.progressPercentage))
+            : Math.round((job.processedChunks / totalChunks) * 100);
           const eta = formatExtractionEta(job.createdAt, job.processedChunks, job.totalChunks);
           setProgress({
-            current: job.processedChunks,
-            total: job.totalChunks || 1,
+            current: Math.min(job.processedChunks, totalChunks),
+            total: totalChunks,
+            percentage: reportedPercentage,
             stage: 'generating',
-            message: [job.progressMessage || `جارٍ استخراج الأسئلة (${job.progressPercentage}%).`, eta].filter(Boolean).join(' '),
+            message: [job.progressMessage || `جارٍ استخراج الأسئلة (${reportedPercentage}%).`, eta].filter(Boolean).join(' '),
           });
           await new Promise(resolve => window.setTimeout(resolve, 2000));
           job = await getExtractionJob(job.id);
@@ -234,9 +240,14 @@ export function useQuizGenerator() {
         if (!data) throw new Error('انتهت مهلة متابعة الاستخراج. افتح صفحة إنشاء الاختبار مجدداً لاستئناف المهمة.');
 
         if (data.questions && Array.isArray(data.questions)) {
-          if (!finalTitle && data.title) finalTitle = data.title;
-          if (!finalDescription && data.description) finalDescription = data.description;
-          accumulatedQuestions = filterValidGeneratedQuestions(data.questions);
+          const cleanedFileQuiz = validateAndCleanQuiz({
+            title: data.title,
+            description: data.description,
+            questions: filterValidGeneratedQuestions(data.questions),
+          });
+          if (!finalTitle && cleanedFileQuiz.title) finalTitle = cleanedFileQuiz.title;
+          if (!finalDescription && cleanedFileQuiz.description) finalDescription = cleanedFileQuiz.description;
+          accumulatedQuestions = cleanedFileQuiz.questions;
 
           // Validation logic for sequential numbering
           const sorted = [...accumulatedQuestions].sort((a, b) => (a.number || 0) - (b.number || 0));

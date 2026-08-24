@@ -7,6 +7,28 @@ import { generateWithDeepSeek } from '../services/deepseekService';
 import { generateWithOpenAI } from '../services/openaiService';
 import { hasUnexpectedForeignLanguage, normalizeArabicGeneratedQuiz, requiresArabicGeneration } from '../lib/quizLanguageValidation';
 
+function normalizeAnswer(value: unknown): string {
+  return String(value ?? '')
+    .normalize('NFKC')
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[.,،؛:!?؟"'`()\[\]{}]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase();
+}
+
+function inferCorrectIndex(correctAnswer: unknown, options: string[]): number | undefined {
+  const answer = normalizeAnswer(correctAnswer);
+  if (!answer) return undefined;
+  const exactIndex = options.findIndex(option => normalizeAnswer(option) === answer);
+  if (exactIndex >= 0) return exactIndex;
+  if (options.length === 2) {
+    if (['صح', 'صحيح', 'true', 'yes', 'نعم'].includes(answer)) return 0;
+    if (['خطأ', 'خاطئ', 'false', 'no', 'لا'].includes(answer)) return 1;
+  }
+  return undefined;
+}
+
 // Helper for static schema validation
 export function validateAndCleanQuiz(data: any): GeneratedQuiz {
   if (!data || typeof data !== 'object') {
@@ -31,34 +53,43 @@ export function validateAndCleanQuiz(data: any): GeneratedQuiz {
 
     const type = (q.type === 'mcq' || q.type === 'tf' || q.type === 'essay') ? q.type : 'mcq';
     
-    let options: string[] | undefined = undefined;
-    let correctIndex: number | undefined = undefined;
+    let options: string[] = [];
+    let correctIndex = 0;
     let correctAnswer: string | undefined = undefined;
 
     if (type === 'mcq') {
-      if (!q.options || !Array.isArray(q.options) || q.options.length < 2) {
-        options = ['خيّار أ', 'خيّار ب', 'خيّار ج', 'خيّار د'];
-      } else {
-        options = q.options.map((opt: any) => String(opt || '').trim()).filter(Boolean);
-      }
-      correctIndex = typeof q.correctIndex === 'number' && q.correctIndex >= 0 && q.correctIndex < (options?.length || 4) 
-        ? q.correctIndex 
-        : 0;
+      const candidateOptions = Array.isArray(q.options)
+        ? q.options.map((opt: any) => String(opt || '').trim()).filter(Boolean)
+        : [];
+      options = candidateOptions.length >= 2
+        ? candidateOptions
+        : ['خيّار أ', 'خيّار ب', 'خيّار ج', 'خيّار د'];
+      const suppliedIndex = typeof q.correctIndex === 'number' && Number.isInteger(q.correctIndex)
+        ? q.correctIndex
+        : -1;
+      const inferredIndex = inferCorrectIndex(q.correctAnswer, options);
+      correctIndex = suppliedIndex >= 0 && suppliedIndex < options.length
+        ? suppliedIndex
+        : inferredIndex ?? 0;
     } else if (type === 'tf') {
       options = ['صح', 'خطأ'];
-      correctIndex = typeof q.correctIndex === 'number' && (q.correctIndex === 0 || q.correctIndex === 1) 
-        ? q.correctIndex 
-        : 0;
+      const suppliedIndex = typeof q.correctIndex === 'number' && Number.isInteger(q.correctIndex)
+        ? q.correctIndex
+        : -1;
+      const inferredIndex = inferCorrectIndex(q.correctAnswer, options);
+      correctIndex = suppliedIndex === 0 || suppliedIndex === 1
+        ? suppliedIndex
+        : inferredIndex ?? 0;
     } else {
-      // essay
+      // Essay questions are assessed separately and do not need selectable options.
       correctAnswer = typeof q.correctAnswer === 'string' ? q.correctAnswer.trim() : '';
     }
 
     return {
       text: q.text.trim(),
       type,
-      options: options || [],
-      correctIndex: correctIndex ?? 0,
+      options,
+      correctIndex,
       correctAnswer,
       explanation: typeof q.explanation === 'string' ? q.explanation.trim() : '',
     };
