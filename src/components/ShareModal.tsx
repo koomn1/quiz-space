@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { X, Copy, Check, Twitter, Facebook, Linkedin, MessageCircle, Send, ExternalLink, Share2 } from 'lucide-react';
-import { getAppBaseUrl } from '../lib/origin';
+import { getAppBaseUrl, getPublicQuizShareUrl } from '../lib/origin';
 import { LiquidGlassSwitch } from './LiquidGlassSwitch';
 import OverlayPortal from './OverlayPortal';
 
@@ -52,7 +52,7 @@ export default function ShareModal({
     closeTooltip: isAr ? 'إغلاق التبويب' : 'Close'
   };
 
-  const shareUrl = `${getAppBaseUrl()}/share/quiz.html?quiz=${encodeURIComponent(quizId)}&title=${encodeURIComponent(quizTitle.trim().slice(0, 160))}${isChallengeMode ? '&challenge=true' : ''}`;
+  const shareUrl = getPublicQuizShareUrl(quizId, quizTitle, isChallengeMode);
 
   const shareText = isChallengeMode
     ? (isAr 

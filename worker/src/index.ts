@@ -365,6 +365,52 @@ function decodeBase64Utf8(value: string): string {
   return new TextDecoder().decode(bytes);
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function isAllowedShareBase(value: string): boolean {
+  return /^https:\/\/(koomn1\.github\.io\/quiz-space|quizspace\.app)(?:\/)?$/i.test(value);
+}
+
+async function renderQuizSharePage(request: Request, env: Env): Promise<Response> {
+  const requestUrl = new URL(request.url);
+  const quizId = (requestUrl.searchParams.get('quiz') || '').trim().slice(0, 120);
+  const requestedTitle = (requestUrl.searchParams.get('title') || '').trim().slice(0, 160);
+  const requestedBase = (requestUrl.searchParams.get('base') || '').trim().replace(/\/$/, '');
+  const appBase = isAllowedShareBase(requestedBase) ? requestedBase : 'https://koomn1.github.io/quiz-space';
+  let title = requestedTitle || 'اختبار تفاعلي جديد';
+  let description = 'حل الاختبار الآن وشارك التحدي مع أصدقائك على Quiz Space.';
+
+  // Only fetch the allow-listed title/description for a public quiz. Never expose
+  // questions or private daily payloads through this crawler-facing page.
+  if (quizId && !quizId.startsWith('daily-')) {
+    try {
+      const endpoint = `${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/quizzes?id=eq.${encodeURIComponent(quizId)}&select=title,description&limit=1`;
+      const response = await fetch(endpoint, { headers: { apikey: env.SUPABASE_ANON_KEY } });
+      if (response.ok) {
+        const rows = await response.json() as Array<{ title?: string; description?: string }>;
+        if (rows[0]?.title) title = String(rows[0].title).slice(0, 160);
+        if (rows[0]?.description) description = String(rows[0].description).slice(0, 240);
+      }
+    } catch (error) {
+      console.warn('Unable to load public quiz share metadata:', error);
+    }
+  }
+
+  const challenge = requestUrl.searchParams.get('challenge') === 'true';
+  const pageTitle = `${title} | Quiz Space`;
+  const imageUrl = `${appBase}/quiz-share-card.png`;
+  const target = `${appBase}/#/quiz/${encodeURIComponent(quizId)}${challenge ? '?challenge=true' : ''}`;
+  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(pageTitle)}</title><meta name="description" content="${escapeHtml(description)}"><link rel="canonical" href="${escapeHtml(target)}"><meta property="og:type" content="website"><meta property="og:site_name" content="Quiz Space"><meta property="og:title" content="${escapeHtml(pageTitle)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(requestUrl.href)}"><meta property="og:image" content="${escapeHtml(imageUrl)}"><meta property="og:image:alt" content="صورة تحدي Quiz Space"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1600"><meta property="og:image:height" content="900"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(pageTitle)}"><meta name="twitter:description" content="${escapeHtml(description)}"><meta name="twitter:image" content="${escapeHtml(imageUrl)}"><meta name="twitter:image:alt" content="صورة تحدي Quiz Space"><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#090b2a;color:#fff;font-family:Arial,sans-serif}main{text-align:center;padding:2rem}a{color:#c4b5fd}</style></head><body><main><h1>${escapeHtml(title)}</h1><p>${escapeHtml(challenge ? 'استعد للتحدي ونافس أصدقاءك.' : 'حل الاختبار الآن وشارك نتيجتك.')}</p><a href="${escapeHtml(target)}">فتح الاختبار</a></main><script>setTimeout(function(){location.replace(${JSON.stringify(target)});},250);</script></body></html>`;
+  return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'index, follow' } });
+}
+
 function buildCosmoUserContent(body: any): any {
   const prompt = typeof body.prompt === 'string' ? body.prompt : '';
   const attachment = body.attachment;
@@ -404,6 +450,9 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   if (!checkRateLimit(`${request.method}:${clientIp}`)) {
     return json({ error: 'Rate limit exceeded. Please wait a moment before sending more requests.' }, 429, headers);
   }
+
+  const isPublicQuizShare = request.method === 'GET' && path === '/share/quiz';
+  if (isPublicQuizShare) return renderQuizSharePage(request, env);
 
   const isExtractionJobRead = request.method === 'GET' && (path === '/api/ai/extraction-jobs' || /^\/api\/ai\/extraction-jobs\/[0-9a-f-]{36}$/i.test(path));
   if (request.method !== 'POST' && !isExtractionJobRead) return json({ error: 'Method not allowed' }, 405, headers);

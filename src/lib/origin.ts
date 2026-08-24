@@ -138,6 +138,13 @@ export async function initAppOrigin(): Promise<string> {
  * Allows pointing to an external free backend server (like Render, Koyeb, or Railway)
  * via VITE_API_BASE_URL, otherwise defaults to local host.
  */
+export function getPublicQuizShareUrl(quizId: string, quizTitle: string, isChallenge = false): string {
+  const appBase = getAppBaseUrl();
+  const query = `quiz=${encodeURIComponent(quizId)}&title=${encodeURIComponent(quizTitle.trim().slice(0, 160))}${isChallenge ? '&challenge=true' : ''}&base=${encodeURIComponent(appBase)}`;
+  const workerBase = sanitizeAndSecureOrigin((import.meta as any).env?.VITE_AI_WORKER_URL || '');
+  return workerBase ? `${workerBase}/share/quiz?${query}` : `${appBase}/share/quiz.html?${query}`;
+}
+
 export function getApiUrl(path: string): string {
   const workerBase =
     (import.meta as any).env?.VITE_AI_WORKER_URL ||

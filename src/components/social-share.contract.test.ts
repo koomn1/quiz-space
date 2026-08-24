@@ -7,10 +7,11 @@ const shareModal = read('src/components/ShareModal.tsx');
 const motivationHub = read('src/components/MotivationHub.tsx');
 const siteHtml = read('index.html');
 const quizHtml = read('public/share/quiz.html');
+const workerSource = read('worker/src/index.ts');
 
 describe('social sharing preview contract', () => {
   it('shares the quiz title in the deep link and social messages', () => {
-    expect(shareModal).toContain('title=${encodeURIComponent(quizTitle.trim().slice(0, 160))}');
+    expect(shareModal).toContain('getPublicQuizShareUrl(quizId, quizTitle, isChallengeMode)');
     expect(shareModal).toContain('api.whatsapp.com/send?text=');
     expect(shareModal).toContain('quizTitle');
     expect(shareModal).toContain('facebook.com/sharer/sharer.php?u=');
@@ -25,7 +26,16 @@ describe('social sharing preview contract', () => {
     expect(motivationHub).toContain('siteShareText');
   });
 
-  it('provides crawler-readable image metadata for the site and quiz share pages', () => {
+  it('renders a crawler-readable dynamic quiz share page on the Worker', () => {
+    expect(workerSource).toContain("const isPublicQuizShare = request.method === 'GET' && path === '/share/quiz';");
+    expect(workerSource).toContain('async function renderQuizSharePage');
+    expect(workerSource).toContain('select=title,description&limit=1');
+    expect(workerSource).toContain('og:title');
+    expect(workerSource).toContain('og:image');
+    expect(workerSource).toContain('isAllowedShareBase');
+  });
+
+  it('provides crawler-readable image metadata for the site and static fallback share page', () => {
     expect(siteHtml).toContain('https://koomn1.github.io/quiz-space/share-card.png');
     expect(siteHtml).toContain('og:image:alt');
     expect(quizHtml).toContain('https://koomn1.github.io/quiz-space/quiz-share-card.png');
