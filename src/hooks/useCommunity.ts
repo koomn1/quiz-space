@@ -40,7 +40,7 @@ export function useCommunity(userId?: string) {
   const createPostMutation = useMutation({
     mutationFn: async (data: { text: string; authorId: string; authorName: string; authorBadgeSymbol?: string; authorBadgeColor?: string }) => {
       const post = await createCommunityPost(data.text, data.authorId, data.authorName, data.authorBadgeSymbol, data.authorBadgeColor);
-      void sendPushEvent({ title: '🌐 منشور جديد في المجتمع', body: `${data.authorName}: ${data.text.slice(0, 160)}`, url: '/quiz-space/#/community', category: 'community' });
+      void sendPushEvent({ title: '🌐 منشور جديد في المجتمع', body: `${data.authorName}: ${data.text.slice(0, 160)}`, url: 'https://quiz-space-app.pages.dev/#/community', category: 'community' });
       return post;
     },
     onSuccess: () => {

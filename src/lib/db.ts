@@ -453,7 +453,7 @@ export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPla
     void sendPushEvent({
       title: '🧠 كويز جديد في فصلك',
       body: `${creatorName} نشر كويزاً جديداً: ${quiz.title}`.slice(0, 180),
-      url: `/quiz-space/#/classrooms`,
+      url: `https://quiz-space-app.pages.dev/#/classrooms`,
       category: 'quiz',
       classId: quiz.classroomId,
     });

@@ -217,7 +217,7 @@ async function callModel(
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://koomn1.github.io/quiz-space/',
+          'HTTP-Referer': 'https://quiz-space-app.pages.dev/',
           'X-Title': 'QuizSpace',
         },
         body: JSON.stringify({

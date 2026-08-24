@@ -9,6 +9,7 @@ describe('clean share page contract', () => {
     expect(sharePageSource).toContain("const SHARE_ORIGIN = 'https://quiz-space-share.pages.dev';");
     expect(sharePageSource).toContain('const SHARE_PATHS = new Set([\'/share/quiz\', \'/share/quiz/\']);');
     expect(sharePageSource).toContain('function isAllowedAppBase(value)');
+    expect(sharePageSource).toContain('quiz-space-app\\.pages\\.dev');
     expect(sharePageSource).toContain('koomn1\\.github\\.io\\/quiz-space');
   });
 

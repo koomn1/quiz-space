@@ -697,7 +697,7 @@ export default function Classrooms({
       });
 
       if (error) throw new Error(error.message);
-      void sendPushEvent({ title: `💬 ${activeClassroomView.name}`, body: `${currentUserName}: ${text.slice(0, 140)}`, url: '/quiz-space/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
+      void sendPushEvent({ title: `💬 ${activeClassroomView.name}`, body: `${currentUserName}: ${text.slice(0, 140)}`, url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
       setChatMessageText('');
       playChimeSound('click');
         } catch (err) {
@@ -753,7 +753,7 @@ export default function Classrooms({
         file_type: typeMapped
       }).select().single();
       if (error) throw new Error(error.message);
-      void sendPushEvent({ title: `📁 ملف جديد في ${activeClassroomView.name}`, body: `${currentUserName} أضاف الملف: ${file.name}`, url: '/quiz-space/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
+      void sendPushEvent({ title: `📁 ملف جديد في ${activeClassroomView.name}`, body: `${currentUserName} أضاف الملف: ${file.name}`, url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
 
       const newFile: SharedFile = {
         id: data.id, classId: data.class_id, name: data.name, sharedByName: data.shared_by_name,
@@ -789,7 +789,7 @@ export default function Classrooms({
         creator_name: currentUserName
       }).select().single();
       if (error) throw new Error(error.message);
-      void sendPushEvent({ title: `📝 تكليف جديد في ${activeClassroomView.name}`, body: `${currentUserName}: ${newAssignTitle.slice(0, 140)}`, url: '/quiz-space/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
+      void sendPushEvent({ title: `📝 تكليف جديد في ${activeClassroomView.name}`, body: `${currentUserName}: ${newAssignTitle.slice(0, 140)}`, url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
 
       const newAssign: Assignment = {
         id: data.id, classId: data.class_id, title: data.title, description: data.description,
@@ -896,7 +896,7 @@ export default function Classrooms({
         reactions: { '🚀': 0, '❤️': 0, '👍': 0 }
       }).select().single();
       if (error) throw new Error(error.message);
-      void sendPushEvent({ title: `📢 إعلان جديد في ${activeClassroomView.name}`, body: annContent.slice(0, 160), url: '/quiz-space/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
+      void sendPushEvent({ title: `📢 إعلان جديد في ${activeClassroomView.name}`, body: annContent.slice(0, 160), url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
 
       const newAnn: Announcement = {
         id: data.id, classId: data.class_id, content: data.content, priority: data.priority,

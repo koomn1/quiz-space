@@ -1,10 +1,13 @@
 const CACHE_VERSION = 'v3';
 const VIDEO_CACHE = `quiz-space-videos-${CACHE_VERSION}`;
 const PROFILE_ASSET_CACHE = `quiz-space-profile-assets-${CACHE_VERSION}`;
+const APP_PATH = new URL('./', self.registration.scope).pathname.replace(/\/$/, '');
+const appAsset = (path) => `${APP_PATH}${path}`;
+const DEFAULT_CLASSROOMS_URL = `${APP_PATH}/#/classrooms`;
 const VIDEOS_TO_PRECACHE = [
-  '/quiz-space/videos/splash-intro.mp4',
-  '/quiz-space/videos/splash-desktop.mp4',
-  '/quiz-space/videos/splash-mobile.mp4',
+  appAsset('/videos/splash-intro.mp4'),
+  appAsset('/videos/splash-desktop.mp4'),
+  appAsset('/videos/splash-mobile.mp4'),
 ];
 const PROFILE_ASSETS_TO_PRECACHE = [
   'clean-assets-replacement/boy-robotics-transparent.webp',
@@ -120,13 +123,13 @@ self.addEventListener('push', (event) => {
   const title = data.title || '👾 كويز جديد مطلوب في فصلك!';
   const options = {
     body: data.body || 'قام المعلم بنشر كويز جديد. اضغط هنا للدخول والحل فوراً قبل انتهاء الوقت.',
-    icon: data.icon || '/assets/logo.png',
-    badge: data.badge || '/assets/logo.png',
+    icon: data.icon || appAsset('/assets/logo.png'),
+    badge: data.badge || appAsset('/assets/logo.png'),
     dir: data.dir || 'rtl',
     lang: data.lang || 'ar',
     requireInteraction: Boolean(data.requireInteraction),
     data: {
-      url: data.url || '/quiz-space/#/classrooms',
+      url: data.url || DEFAULT_CLASSROOMS_URL,
       eventId: data.eventId || null,
     },
     vibrate: [200, 100, 200],
@@ -139,7 +142,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/quiz-space/#/classrooms';
+  const targetUrl = event.notification.data?.url || DEFAULT_CLASSROOMS_URL;
   const eventId = event.notification.data?.eventId;
   const separator = targetUrl.includes('?') ? '&' : '?';
   const openUrl = eventId ? `${targetUrl}${separator}pushEventId=${encodeURIComponent(eventId)}` : targetUrl;

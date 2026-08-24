@@ -26,4 +26,11 @@ describe('service worker update contract', () => {
     expect(workerSource).toContain('avatar-boy-football-analyst-v2.webp');
     expect(workerSource).toContain('avatar-girl-astronomy-v2.webp');
   });
+
+  it('derives notification and video paths from the active deployment scope', () => {
+    expect(workerSource).toContain("const APP_PATH = new URL('./', self.registration.scope).pathname.replace(/\\/$/, '')");
+    expect(workerSource).toContain('const DEFAULT_CLASSROOMS_URL = `${APP_PATH}/#/classrooms`');
+    expect(workerSource).not.toContain("data.url || '/quiz-space/#/classrooms'");
+    expect(workerSource).not.toContain("event.notification.data?.url || '/quiz-space/#/classrooms'");
+  });
 });

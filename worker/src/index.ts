@@ -380,7 +380,7 @@ function escapeHtml(value: unknown): string {
 }
 
 function isAllowedShareBase(value: string): boolean {
-  return /^https:\/\/(koomn1\.github\.io\/quiz-space|quizspace\.app)(?:\/)?$/i.test(value);
+  return /^https:\/\/(quiz-space-app\.pages\.dev|koomn1\.github\.io\/quiz-space|quizspace\.app)(?:\/)?$/i.test(value);
 }
 
 const CLEAN_SHARE_ORIGIN = 'https://quiz-space-share.pages.dev';
@@ -392,7 +392,7 @@ function isSocialCrawler(request: Request): boolean {
 
 function getCleanQuizShareUrl(requestUrl: URL): string {
   const requestedBase = (requestUrl.searchParams.get('base') || '').trim().replace(/\/$/, '');
-  const appBase = isAllowedShareBase(requestedBase) ? requestedBase : 'https://koomn1.github.io/quiz-space';
+  const appBase = isAllowedShareBase(requestedBase) ? requestedBase : 'https://quiz-space-app.pages.dev';
   const query = new URLSearchParams();
   const quizId = (requestUrl.searchParams.get('quiz') || '').trim().slice(0, 120);
   const title = (requestUrl.searchParams.get('title') || '').trim().slice(0, 160);
@@ -407,7 +407,7 @@ async function renderQuizSharePage(request: Request, env: Env): Promise<Response
   const quizId = (requestUrl.searchParams.get('quiz') || '').trim().slice(0, 120);
   const requestedTitle = (requestUrl.searchParams.get('title') || '').trim().slice(0, 160);
   const requestedBase = (requestUrl.searchParams.get('base') || '').trim().replace(/\/$/, '');
-  const appBase = isAllowedShareBase(requestedBase) ? requestedBase : 'https://koomn1.github.io/quiz-space';
+  const appBase = isAllowedShareBase(requestedBase) ? requestedBase : 'https://quiz-space-app.pages.dev';
   const cleanShareUrl = getCleanQuizShareUrl(requestUrl);
   let title = requestedTitle || 'اختبار تفاعلي جديد';
   let description = 'حل الاختبار الآن وشارك التحدي مع أصدقائك على Quiz Space.';

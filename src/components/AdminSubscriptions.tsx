@@ -360,7 +360,7 @@ export default function AdminSubscriptions({
           body: {
             title: isAr ? '🎁 عرض جديد من SpaceQuiz' : '🎁 New SpaceQuiz offer',
             body: aiPromoMsg.replace(/\n+/g, ' ').slice(0, 180),
-            url: '/quiz-space/#/dashboard/landing',
+            url: 'https://quiz-space-app.pages.dev/#/dashboard/landing',
             category: 'promotion',
           },
         });

@@ -50,7 +50,7 @@ describe('social sharing preview contract', () => {
   it('provides crawler-readable image metadata for the site and static fallback share page', () => {
     expect(siteHtml).toContain('https://koomn1.github.io/quiz-space/share-card.jpg');
     expect(siteHtml).toContain('og:image:alt');
-    expect(quizHtml).toContain('https://koomn1.github.io/quiz-space/quiz-share-card.jpg');
+    expect(quizHtml).toContain('https://quiz-space-app.pages.dev/quiz-share-card.jpg');
     expect(quizHtml).toContain('twitter:title');
     expect(quizHtml).toContain("params.get('title')");
   });

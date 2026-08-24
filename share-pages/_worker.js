@@ -1,4 +1,4 @@
-const APP_FALLBACK = 'https://koomn1.github.io/quiz-space';
+const APP_FALLBACK = 'https://quiz-space-app.pages.dev';
 const SHARE_ORIGIN = 'https://quiz-space-share.pages.dev';
 const SHARE_PATHS = new Set(['/share/quiz', '/share/quiz/']);
 
@@ -12,7 +12,7 @@ function escapeHtml(value) {
 }
 
 function isAllowedAppBase(value) {
-  return /^https:\/\/(koomn1\.github\.io\/quiz-space|quizspace\.app)(?:\/)?$/i.test(value);
+  return /^https:\/\/(quiz-space-app\.pages\.dev|koomn1\.github\.io\/quiz-space|quizspace\.app)(?:\/)?$/i.test(value);
 }
 
 function getAppBase(url) {
