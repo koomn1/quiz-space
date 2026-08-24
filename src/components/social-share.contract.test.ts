@@ -37,7 +37,7 @@ describe('social sharing preview contract', () => {
   });
 
   it('renders a crawler-readable dynamic quiz share page on the Worker', () => {
-    expect(workerSource).toContain("const isPublicQuizShare = request.method === 'GET' && path === '/share/quiz';");
+    expect(workerSource).toContain("const isPublicQuizShare = request.method === 'GET' && (path === '/share/quiz' || path === '/share/quiz/');");
     expect(workerSource).toContain('async function renderQuizSharePage');
     expect(workerSource).toContain('select=title,description&limit=1');
     expect(workerSource).toContain('og:title');

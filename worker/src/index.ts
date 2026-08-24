@@ -378,12 +378,30 @@ function isAllowedShareBase(value: string): boolean {
   return /^https:\/\/(koomn1\.github\.io\/quiz-space|quizspace\.app)(?:\/)?$/i.test(value);
 }
 
+function isSocialCrawler(request: Request): boolean {
+  const userAgent = request.headers.get('User-Agent') || '';
+  return /facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot|discordbot|pinterest|googlebot|bingbot|crawler|spider|bot\b/i.test(userAgent);
+}
+
+function getCleanQuizShareUrl(requestUrl: URL): string {
+  const requestedBase = (requestUrl.searchParams.get('base') || '').trim().replace(/\/$/, '');
+  const appBase = isAllowedShareBase(requestedBase) ? requestedBase : 'https://koomn1.github.io/quiz-space';
+  const query = new URLSearchParams();
+  const quizId = (requestUrl.searchParams.get('quiz') || '').trim().slice(0, 120);
+  const title = (requestUrl.searchParams.get('title') || '').trim().slice(0, 160);
+  if (quizId) query.set('quiz', quizId);
+  if (title) query.set('title', title);
+  if (requestUrl.searchParams.get('challenge') === 'true') query.set('challenge', 'true');
+  return `${appBase}/share/quiz.html?${query.toString()}`;
+}
+
 async function renderQuizSharePage(request: Request, env: Env): Promise<Response> {
   const requestUrl = new URL(request.url);
   const quizId = (requestUrl.searchParams.get('quiz') || '').trim().slice(0, 120);
   const requestedTitle = (requestUrl.searchParams.get('title') || '').trim().slice(0, 160);
   const requestedBase = (requestUrl.searchParams.get('base') || '').trim().replace(/\/$/, '');
   const appBase = isAllowedShareBase(requestedBase) ? requestedBase : 'https://koomn1.github.io/quiz-space';
+  const cleanShareUrl = getCleanQuizShareUrl(requestUrl);
   let title = requestedTitle || 'اختبار تفاعلي جديد';
   let description = 'حل الاختبار الآن وشارك التحدي مع أصدقائك على Quiz Space.';
 
@@ -407,7 +425,7 @@ async function renderQuizSharePage(request: Request, env: Env): Promise<Response
   const pageTitle = `${title} | Quiz Space`;
   const imageUrl = `${appBase}/quiz-share-card.jpg`;
   const target = `${appBase}/#/quiz/${encodeURIComponent(quizId)}${challenge ? '?challenge=true' : ''}`;
-  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(pageTitle)}</title><meta name="description" content="${escapeHtml(description)}"><link rel="canonical" href="${escapeHtml(target)}"><meta property="og:type" content="website"><meta property="og:site_name" content="Quiz Space"><meta property="og:title" content="${escapeHtml(pageTitle)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(requestUrl.href)}"><meta property="og:image" content="${escapeHtml(imageUrl)}"><meta property="og:image:alt" content="صورة تحدي Quiz Space"><meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="675"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(pageTitle)}"><meta name="twitter:description" content="${escapeHtml(description)}"><meta name="twitter:image" content="${escapeHtml(imageUrl)}"><meta name="twitter:image:alt" content="صورة تحدي Quiz Space"><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#090b2a;color:#fff;font-family:Arial,sans-serif}main{text-align:center;padding:2rem}a{color:#c4b5fd}</style></head><body><main><h1>${escapeHtml(title)}</h1><p>${escapeHtml(challenge ? 'استعد للتحدي ونافس أصدقاءك.' : 'حل الاختبار الآن وشارك نتيجتك.')}</p><a href="${escapeHtml(target)}">فتح الاختبار</a></main><script>setTimeout(function(){location.replace(${JSON.stringify(target)});},250);</script></body></html>`;
+  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(pageTitle)}</title><meta name="description" content="${escapeHtml(description)}"><link rel="canonical" href="${escapeHtml(target)}"><meta property="og:type" content="website"><meta property="og:site_name" content="Quiz Space"><meta property="og:title" content="${escapeHtml(pageTitle)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(cleanShareUrl)}"><meta property="og:image" content="${escapeHtml(imageUrl)}"><meta property="og:image:alt" content="صورة تحدي Quiz Space"><meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="675"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(pageTitle)}"><meta name="twitter:description" content="${escapeHtml(description)}"><meta name="twitter:image" content="${escapeHtml(imageUrl)}"><meta name="twitter:image:alt" content="صورة تحدي Quiz Space"><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#090b2a;color:#fff;font-family:Arial,sans-serif}main{text-align:center;padding:2rem}a{color:#c4b5fd}</style></head><body><main><h1>${escapeHtml(title)}</h1><p>${escapeHtml(challenge ? 'استعد للتحدي ونافس أصدقاءك.' : 'حل الاختبار الآن وشارك نتيجتك.')}</p><a href="${escapeHtml(target)}">فتح الاختبار</a></main><script>setTimeout(function(){location.replace(${JSON.stringify(target)});},250);</script></body></html>`;
   return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'index, follow' } });
 }
 
@@ -451,8 +469,14 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
     return json({ error: 'Rate limit exceeded. Please wait a moment before sending more requests.' }, 429, headers);
   }
 
-  const isPublicQuizShare = request.method === 'GET' && path === '/share/quiz';
-  if (isPublicQuizShare) return renderQuizSharePage(request, env);
+  const isPublicQuizShare = request.method === 'GET' && (path === '/share/quiz' || path === '/share/quiz/');
+  if (isPublicQuizShare) {
+    // Human browsers should leave the legacy Worker host immediately. Social
+    // crawlers still receive server-rendered metadata so WhatsApp/Facebook do
+    // not lose the dynamic quiz title and image preview.
+    if (!isSocialCrawler(request)) return Response.redirect(getCleanQuizShareUrl(new URL(request.url)), 301);
+    return renderQuizSharePage(request, env);
+  }
 
   const isExtractionJobRead = request.method === 'GET' && (path === '/api/ai/extraction-jobs' || /^\/api\/ai\/extraction-jobs\/[0-9a-f-]{36}$/i.test(path));
   if (request.method !== 'POST' && !isExtractionJobRead) return json({ error: 'Method not allowed' }, 405, headers);
