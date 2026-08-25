@@ -889,22 +889,23 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         }
       }
 
+      const isPdfAttachment = attachment.kind === 'file' && attachment.mimeType === 'application/pdf';
+      const primaryRequestOptions = isPdfAttachment || sourceContext
+        ? requestOptions
+        : { ...requestOptions, attachment };
       let response: { text: string };
       try {
-        response = await askAI(
-          prompt,
-          sourceContext ? requestOptions : { ...requestOptions, attachment },
-        );
+        response = await askAI(prompt, primaryRequestOptions);
       } catch (error) {
         // Some OpenRouter vision models reject large or malformed PDF file
-        // payloads even though the extracted questions are valid. Do not stop
-        // the whole solve stage in that case: retry the bounded question text
-        // without the file so a text model can verify the same batch.
-        if (!sourceText && attachment.kind === 'file') {
-          console.warn('PDF answer-review request failed; retrying the same batch as text-only.', error);
+        // payloads even though the extracted questions are valid. For PDFs,
+        // keep the fast text-only request first and use the attachment only as
+        // a fallback for image-dependent questions.
+        if (isPdfAttachment) {
+          console.warn('PDF answer-review request failed; retrying the same batch with the PDF attachment.', error);
           response = await askAI(
-            `${prompt}\n\nملاحظة تشغيلية: تعذر فتح مرفق PDF في محاولة الرؤية؛ استخدم نص السؤال والاختيارات أعلاه فقط، ولا تخمّن أو تغيّر ترتيب الخيارات.`,
-            requestOptions,
+            `${prompt}\n\nملاحظة تشغيلية: استخدم مرفق PDF الآن فقط للتحقق البصري عند الحاجة، ولا تخمّن أو تغيّر ترتيب الخيارات.`,
+            { ...requestOptions, attachment },
           );
         } else {
           throw error;
