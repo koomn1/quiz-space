@@ -19,6 +19,14 @@ import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
 import { applyVerifiedAnswerReviews } from '../lib/extractedAnswerReview';
+import {
+  clearExtractedQuizDraft,
+  getQuizCreatorDraftKey,
+  getQuizCreatorDraftOwnerId,
+  loadExtractedQuizDraft,
+  saveExtractedQuizDraft,
+  type ExtractedQuizDraft,
+} from '../lib/quizCreatorDraft';
 
 interface QuizCreatorProps {
   userId: string;
@@ -277,6 +285,9 @@ export default function QuizCreator({
   const [searchParams] = useSearchParams();
   const t = translations[lang];
   const isAr = lang === 'ar';
+  const draftOwnerId = React.useMemo(() => getQuizCreatorDraftOwnerId(userId, lang), [userId, lang]);
+  const [pendingExtractedDraft, setPendingExtractedDraft] = React.useState<ExtractedQuizDraft | null>(null);
+  const [showResumeExtractedDraft, setShowResumeExtractedDraft] = React.useState(false);
   const [activeMode, setActiveMode] = React.useState<'manual' | 'ocr' | 'ai' | 'paste'>('manual');
   const [isModeMenuOpen, setIsModeMenuOpen] = React.useState(false);
 
@@ -453,12 +464,11 @@ export default function QuizCreator({
     };
     fetchExistingCategories();
   }, [quizToEdit]);
-  // Persistence: Auto-restore un-saved draft quiz if user navigated away or closed page
+  // Persistence: auto-restore the ordinary editor draft under the current owner's key.
   React.useEffect(() => {
     if (quizToEdit) return;
     try {
-      const draftKey = `quiz_creator_draft_${userId || 'guest'}`;
-      const savedDraft = localStorage.getItem(draftKey);
+      const savedDraft = localStorage.getItem(getQuizCreatorDraftKey(draftOwnerId));
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft);
         if (parsed.questions && parsed.questions.length > 0 && (parsed.title || parsed.questions[0].text)) {
@@ -470,13 +480,13 @@ export default function QuizCreator({
         }
       }
     } catch (_) {}
-  }, [userId, quizToEdit]);
+  }, [draftOwnerId, quizToEdit]);
 
-  // Auto-save draft on changes when there are generated/written questions
+  // Auto-save ordinary editor changes under the same owner-specific key.
   React.useEffect(() => {
     if (quizToEdit) return;
     try {
-      const draftKey = `quiz_creator_draft_${userId || 'guest'}`;
+      const draftKey = getQuizCreatorDraftKey(draftOwnerId);
       const hasContent = title.trim() || questions.some(q => q.text.trim());
       if (hasContent) {
         localStorage.setItem(draftKey, JSON.stringify({
@@ -489,7 +499,16 @@ export default function QuizCreator({
         }));
       }
     } catch (_) {}
-  }, [title, description, category, timeLimit, questions, userId, quizToEdit]);
+  }, [title, description, category, timeLimit, questions, draftOwnerId, quizToEdit]);
+
+  // Extracted drafts are separate from ordinary editor drafts and are surfaced
+  // as an explicit continuation choice when the creator is opened again.
+  React.useEffect(() => {
+    if (quizToEdit) return;
+    const savedExtractedDraft = loadExtractedQuizDraft(draftOwnerId);
+    setPendingExtractedDraft(savedExtractedDraft);
+    setShowResumeExtractedDraft(Boolean(savedExtractedDraft));
+  }, [draftOwnerId, quizToEdit]);
 
   // Pasted Text States
   const [pastedText, setPastedText] = React.useState('');
@@ -862,6 +881,20 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
       ...question,
       id: question.id || `q-post-extraction-${index}-${Date.now()}`,
     })) as Question[];
+    const attachment = extractedAttachmentRef.current;
+    const draftFileType = attachment
+      ? attachment.kind === 'image' ? 'image' : attachment.mimeType === 'application/pdf' ? 'pdf' : 'document'
+      : fileType || 'document';
+    saveExtractedQuizDraft({
+      ownerId: draftOwnerId,
+      title: result.title,
+      description: result.description,
+      category,
+      timeLimit,
+      questions: draftQuestions,
+      fileName: attachment?.name || 'ملف مستخرج سابق',
+      fileType: draftFileType,
+    });
     setQuestions(draftQuestions);
     setAiSavedQuizId(null);
     setPostExtractionSolvePending(true);
@@ -933,6 +966,52 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
       setIsProcessingOcr(false);
       setOcrProgress(null);
     }
+  };
+
+  const handleResumeExtractedDraft = () => {
+    const draft = pendingExtractedDraft;
+    if (!draft) return;
+    setTitle(draft.title);
+    setDescription(draft.description);
+    setCategory(draft.category);
+    setTimeLimit(draft.timeLimit);
+    setQuestions(draft.questions);
+    setActiveMode('manual');
+    setPostExtractionSolvePending(false);
+    setShowResumeExtractedDraft(false);
+    setPendingExtractedDraft(null);
+    setSaveError(null);
+  };
+
+  const handleDiscardExtractedDraft = () => {
+    clearExtractedQuizDraft(draftOwnerId);
+    try {
+      localStorage.removeItem(getQuizCreatorDraftKey(draftOwnerId));
+    } catch {
+      // Ignore storage restrictions; the visible editor is still reset below.
+    }
+    setPendingExtractedDraft(null);
+    setShowResumeExtractedDraft(false);
+    setTitle('');
+    setDescription('');
+    setCategory('عام');
+    setTimeLimit(0);
+    setQuestions([{
+      id: 'q-initial-0',
+      type: 'mcq',
+      text: '',
+      options: ['', '', '', ''],
+      correctIndex: 0,
+      explanation: '',
+    }]);
+    setActiveMode('manual');
+    setPostExtractionSolvePending(false);
+    setOcrError(null);
+    setSaveError(null);
+    setUploadedFile(null);
+    setUploadedFilePreview(null);
+    setFileType(null);
+    extractedAttachmentRef.current = null;
   };
 
   // Helper to split image into vertical chunks for better processing
@@ -1353,6 +1432,14 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
         }
       }
 
+      // A successfully saved quiz no longer needs either kind of local draft.
+      clearExtractedQuizDraft(draftOwnerId);
+      try {
+        localStorage.removeItem(getQuizCreatorDraftKey(draftOwnerId));
+      } catch {
+        // Ignore storage restrictions; the persisted quiz is already safe.
+      }
+
       // Reset values
       setAiSavedQuizId(null);
       setTitle('');
@@ -1383,6 +1470,34 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
 
   return (
     <>
+      {showResumeExtractedDraft && pendingExtractedDraft && (
+        <OverlayPortal>
+          <div className="fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-md" role="dialog" aria-modal="true" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="w-full max-w-md rounded-[28px] border border-violet-300/30 bg-white p-6 text-center shadow-2xl dark:border-violet-500/30 dark:bg-slate-900 sm:p-8">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300">
+                <FileText className="h-8 w-8" />
+              </div>
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">
+                {isAr ? 'هل تريد استكمال هذا الاختبار؟' : 'Do you want to continue this quiz?'}
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                {isAr
+                  ? `تم العثور على ${pendingExtractedDraft.questions.length} سؤالًا مستخرجًا من ملف «${pendingExtractedDraft.fileName}». يمكنك استكمال مراجعتها أو مسحها والبدء من جديد.`
+                  : `${pendingExtractedDraft.questions.length} extracted questions from “${pendingExtractedDraft.fileName}” were found. You can continue reviewing them or clear them and start over.`}
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button type="button" onClick={handleResumeExtractedDraft} className="min-h-11 rounded-xl bg-violet-600 px-4 py-3 text-sm font-black text-white transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400">
+                  {isAr ? 'نعم، استكمال الاختبار' : 'Yes, continue'}
+                </button>
+                <button type="button" onClick={handleDiscardExtractedDraft} className="min-h-11 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
+                  {isAr ? 'لا، مسح كل الأسئلة' : 'No, clear all questions'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </OverlayPortal>
+      )}
+
       {/* Fullscreen AI Generation Loading Screen with blob animation */}
       
         <OverlayPortal>

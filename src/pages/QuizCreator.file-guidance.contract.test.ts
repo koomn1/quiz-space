@@ -18,6 +18,17 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('percentage: generationProgress.percentage');
   });
 
+  it('offers owner-scoped continuation after leaving an extracted quiz', () => {
+    expect(source).toContain('getQuizCreatorDraftOwnerId(userId, lang)');
+    expect(source).toContain('saveExtractedQuizDraft({');
+    expect(source).toContain('loadExtractedQuizDraft(draftOwnerId)');
+    expect(source).toContain('هل تريد استكمال هذا الاختبار؟');
+    expect(source).toContain('نعم، استكمال الاختبار');
+    expect(source).toContain('لا، مسح كل الأسئلة');
+    expect(source).toContain('clearExtractedQuizDraft(draftOwnerId);');
+    expect(source).toContain('localStorage.removeItem(getQuizCreatorDraftKey(draftOwnerId));');
+  });
+
   it('runs a distinct post-extraction solve stage before final persistence', () => {
     expect(source).toContain('const solveExtractedQuiz = async');
     expect(source).toContain('const prepareAndSolveExtractedQuiz = async');
