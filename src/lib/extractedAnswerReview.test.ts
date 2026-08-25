@@ -54,6 +54,18 @@ describe('extracted answer review', () => {
     expect(result.questions[1].correctAnswer).toBe('C2');
   });
 
+  it('accepts common answer-key separators, question prefixes, and numeric choices', () => {
+    const sourceQuestions = [
+      { ...questions[0], number: 1, options: ['A1', 'B1', 'C1', 'D1'] },
+      { ...questions[0], id: 'q2', number: 2, options: ['A2', 'B2', 'C2', 'D2'] },
+      { ...questions[0], id: 'q3', number: 3, options: ['A3', 'B3', 'C3', 'D3'] },
+      { ...questions[0], id: 'q4', number: 4, options: ['A4', 'B4', 'C4', 'D4'] },
+    ];
+    const result = applySourceAnswerKey(sourceQuestions, 'Answer Key: Q1: B, (2) 3, 3) D, 4 - A');
+    expect(result.matched).toBe(4);
+    expect(result.questions.map(question => question.correctIndex)).toEqual([1, 2, 3, 0]);
+  });
+
   it('accepts JSON wrapped in a markdown code fence and normalizes harmless typography', () => {
     expect(parseAnswerReviews('```json\n{"answers":[]}\n```')).toEqual([]);
     expect(normalizeReviewAnswer(' القَاهِرة، ')).toBe('القاهرة');

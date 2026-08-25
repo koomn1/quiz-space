@@ -43,14 +43,19 @@ export function applySourceAnswerKey(questions: Question[], sourceText: string, 
   const marker = sourceText.search(/(?:answer\s*key|مفتاح\s*(?:الإجابة|الإجابات)|نموذج\s+الإجابة)/i);
   if (marker < 0) return { questions: questions.map(question => ({ ...question })), matched: 0 };
 
-  const answerKey = sourceText.slice(marker);
+  const answerKey = sourceText.slice(marker).replace(/[()[\]{}]/g, ' ');
   const letterToIndex: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, أ: 0, ب: 1, ج: 2, د: 3 };
   const answerMap = new Map<number, number>();
-  const answerPattern = /(?:^|\s)(\d{1,3})\s*[:.)-]\s*([a-dأ-د])(?=\s|$)/gi;
-  for (const match of answerKey.matchAll(answerPattern)) {
-    const questionNumber = Number(match[1]);
-    const optionIndex = letterToIndex[match[2].toLocaleLowerCase()];
-    if (Number.isInteger(questionNumber) && Number.isInteger(optionIndex)) answerMap.set(questionNumber - 1, optionIndex);
+  const answerPatterns = [
+    /(?:^|[\s,;|])(?:q(?:uestion)?\s*)?(\d{1,3})\s*(?:[:.)-]|\s+)\s*(?:answer\s*)?([a-dأ-د1-4])(?=\s|$|[,;|])/gi,
+  ];
+  for (const answerPattern of answerPatterns) {
+    for (const match of answerKey.matchAll(answerPattern)) {
+      const questionNumber = Number(match[1]);
+      const rawOption = match[2].toLocaleLowerCase();
+      const optionIndex = /^[1-4]$/.test(rawOption) ? Number(rawOption) - 1 : letterToIndex[rawOption];
+      if (Number.isInteger(questionNumber) && Number.isInteger(optionIndex)) answerMap.set(questionNumber - 1, optionIndex);
+    }
   }
 
   let matched = 0;

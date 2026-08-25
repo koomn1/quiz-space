@@ -38,6 +38,8 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain("currentPage: 'quiz-creator-post-extraction-solving'");
     expect(source).toContain('const overlayProgress = isProcessingOcr ? ocrProgress : generationProgress;');
     expect(source).toContain('const maxConcurrentBatches = 3;');
+    expect(source).toContain('const unresolvedObjectiveCount = solvedQuestions.filter(question =>');
+    expect(source).toContain('اكتملت الإجابات الموجودة في الاستخراج، دون استدعاء مزود خارجي إضافي.');
     expect(source).toContain('const answerKeyMarker =');
     expect(source).toContain(': { ...requestOptions, attachment };');
     expect(source).toContain('const isPdfAttachment = attachment.kind === \'file\' && attachment.mimeType === \'application/pdf\';');

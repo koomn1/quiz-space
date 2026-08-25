@@ -833,7 +833,28 @@ export default function QuizCreator({
       throw new Error('مرحلة حل الاختبار بعد الاستخراج تدعم ملفات PDF والصور فقط حاليًا. يمكنك مراجعة أسئلة ملف Office يدويًا دون تخمين.');
     }
 
-    const solvedQuestions = draftQuestions.map(question => ({ ...question }));
+    const solvedQuestions = draftQuestions.map(question => {
+      const next = { ...question };
+      if (next.type !== 'essay' && next.correctIndex >= 0 && next.correctIndex < next.options.length) {
+        next.correctAnswer = next.options[next.correctIndex];
+      }
+      return next;
+    });
+    const unresolvedObjectiveCount = solvedQuestions.filter(question =>
+      question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length)
+    ).length;
+    if (unresolvedObjectiveCount === 0) {
+      setVerifiedQuestionsCount(solvedQuestions.length);
+      setOcrProgress(prev => prev ? {
+        ...prev,
+        stage: 'solving',
+        current: solvedQuestions.length,
+        total: solvedQuestions.length,
+        percentage: 100,
+        message: 'اكتملت الإجابات الموجودة في الاستخراج، دون استدعاء مزود خارجي إضافي.',
+      } : prev);
+      return solvedQuestions;
+    }
     const normalizedSourceText = sourceText.replace(/\s+/g, ' ').trim();
     const answerKeyMarker = /(?:answer\s*key|مفتاح\s*(?:الإجابة|الإجابات)|نموذج\s+الإجابة)/i;
     const answerKeyStart = normalizedSourceText.search(answerKeyMarker);
