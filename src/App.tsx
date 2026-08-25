@@ -1338,6 +1338,13 @@ export default function App() {
     }
   };
 
+  const isBootstrapLoading = authContext.loading || !isStatsLoaded || isLoadingQuizzes;
+  const bootstrapMessage = authContext.loading
+    ? (lang === 'ar' ? 'جارٍ التحقق من جلسة الدخول...' : 'Checking your session...')
+    : !isStatsLoaded
+      ? (lang === 'ar' ? 'جارٍ تحميل بيانات حسابك...' : 'Loading your account data...')
+      : (lang === 'ar' ? 'جارٍ تجهيز الاختبارات والموارد...' : 'Preparing quizzes and assets...');
+
   return (
         <>
           <ToastHost />
@@ -1350,6 +1357,10 @@ export default function App() {
             setSplashActive(false);
           }}
         />
+      ) : isBootstrapLoading ? (
+        <div className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center bg-slate-950/95 px-6 text-center backdrop-blur-xl" dir={lang === 'ar' ? 'rtl' : 'ltr'} role="status" aria-live="polite">
+          <CosmicLoader size="lg" message={bootstrapMessage} />
+        </div>
       ) : (
         <>
           {platformMaintenanceActive && !isAdminUser && (
@@ -1749,9 +1760,11 @@ export default function App() {
                     userName={userName}
                     userEmail={userEmail || ''}
                     quizToEdit={quizToEdit}
-                    onQuizCreated={() => {
+                    onQuizCreated={(options) => {
                       setQuizToEdit(null);
-                      handleSetTab('my-quizzes');
+                      if (!options?.keepCreatorOpen) {
+                        handleSetTab('my-quizzes');
+                      }
                       fetchQuizzesList();
                     }}
                     onCancelEdit={() => {

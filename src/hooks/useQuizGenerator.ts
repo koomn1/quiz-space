@@ -261,6 +261,7 @@ export function useQuizGenerator() {
                   correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1,
                   correctAnswer: typeof q.correctAnswer === 'string' ? q.correctAnswer : '',
                   explanation: typeof q.explanation === 'string' ? q.explanation : '',
+                  imageUrl: typeof q.imageUrl === 'string' ? q.imageUrl.trim() : '',
                 })),
               };
           if (!finalTitle && cleanedFileQuiz.title) finalTitle = cleanedFileQuiz.title;
@@ -323,6 +324,7 @@ export function useQuizGenerator() {
           correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1,
           correctAnswer: q.correctAnswer || '',
           explanation: q.explanation || '',
+          imageUrl: typeof q.imageUrl === 'string' ? q.imageUrl.trim() : '',
         };
       });
 

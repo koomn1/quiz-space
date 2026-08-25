@@ -202,15 +202,19 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
   const [checkingAvailability, setCheckingAvailability] = React.useState(true);
 
   const segments = [
-    { label: '5', color: 'bg-indigo-500' },
-    { label: '10', color: 'bg-purple-500' },
-    { label: '20', color: 'bg-fuchsia-500' },
-    { label: '50', color: 'bg-rose-500' },
-    { label: '1', color: 'bg-amber-500' },
-    { label: '15', color: 'bg-cyan-500' },
-    { label: '5', color: 'bg-indigo-500' },
-    { label: '10', color: 'bg-purple-500' },
+    { label: 1, color: '#06b6d4' },
+    { label: 2, color: '#6366f1' },
+    { label: 3, color: '#8b5cf6' },
+    { label: 5, color: '#d946ef' },
+    { label: 10, color: '#f43f5e' },
+    { label: 15, color: '#f97316' },
+    { label: 20, color: '#eab308' },
+    { label: 25, color: '#22c55e' },
+    { label: 30, color: '#14b8a6' },
+    { label: 50, color: '#0ea5e9' },
   ];
+  const segmentAngle = 360 / segments.length;
+  const wheelBackground = `conic-gradient(${segments.map((segment, index) => `${segment.color} ${index * segmentAngle}deg ${(index + 1) * segmentAngle}deg`).join(', ')})`;
 
   React.useEffect(() => {
     let active = true;
@@ -229,110 +233,72 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
     if (spinning || alreadyPlayed || checkingAvailability) return;
     setCheckingAvailability(true);
     setResult(null);
-    const response = await claimLuckySpin();
-    if (!response?.success) {
-      setCheckingAvailability(false);
-      if (/already\s+spun/i.test(String(response?.message || ''))) {
-        setAlreadyPlayed(true);
-        setResult({
-          ...response,
-          message: lang === 'ar' ? 'لقد أدرت العجلة اليوم. عد غداً.' : 'Already spun today. Come back tomorrow.',
-        });
-      } else {
-        setResult(response);
+    try {
+      const response = await claimLuckySpin();
+      if (!response?.success) {
+        if (/already\s+spun/i.test(String(response?.message || ''))) {
+          setAlreadyPlayed(true);
+          setResult({ ...response, message: lang === 'ar' ? 'لقد أدرت العجلة اليوم. عد غداً.' : 'Already spun today. Come back tomorrow.' });
+        } else {
+          setResult(response);
+        }
+        return;
       }
-      return;
+
+      const points = Number(response.points) || 1;
+      const targetIndex = Math.max(0, segments.findIndex((segment) => segment.label === points));
+      const targetCenter = targetIndex * segmentAngle + segmentAngle / 2;
+      const extraSpins = 6 + Math.floor(Math.random() * 3);
+      const targetAngle = (360 - targetCenter + 360) % 360;
+      setAngle((current) => current + extraSpins * 360 + targetAngle);
+      setSpinning(true);
+      setCheckingAvailability(false);
+
+      await new Promise((resolve) => setTimeout(resolve, 4100));
+      setSpinning(false);
+      setAlreadyPlayed(true);
+      onRewardsChanged();
+      setResult({ ...response, wheelLabel: segments[targetIndex].label });
+    } catch (error: any) {
+      setSpinning(false);
+      setResult({ success: false, message: error?.message || (lang === 'ar' ? 'تعذر تشغيل العجلة الآن.' : 'The wheel could not be started right now.') });
+    } finally {
+      setCheckingAvailability(false);
     }
-
-    setCheckingAvailability(false);
-    setSpinning(true);
-    const extraSpins = 5 + Math.floor(Math.random() * 5);
-    const randomAngle = Math.floor(Math.random() * 360);
-    const totalAngle = extraSpins * 360 + randomAngle;
-    setAngle(totalAngle);
-
-    await new Promise((resolve) => setTimeout(resolve, 4000));
-    setSpinning(false);
-    // Keep the angle but normalize it for UI consistency if needed
-    // setAngle(totalAngle % 360); 
-    setAlreadyPlayed(true);
-    onRewardsChanged();
-    setResult(response);
   };
 
   return (
-    <div className="mx-auto max-w-3xl rounded-[2.5rem] border border-slate-200 bg-white/50 p-6 text-center shadow-2xl backdrop-blur-sm dark:border-white/10 dark:bg-[#0c071e]/50 sm:p-12">
-      <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary shadow-inner">
-        <Gift className="h-10 w-10 animate-pulse" />
-      </div>
-      <h2 className="text-3xl font-black bg-gradient-to-r from-primary via-purple-500 to-fuchsia-500 bg-clip-text text-transparent">
-        {t.lucky}
-      </h2>
-      <p className="mx-auto mt-3 max-w-lg text-sm font-bold text-slate-500 dark:text-slate-400">
-        {t.spinHint}
-      </p>
+    <div className="mx-auto max-w-4xl rounded-[2.5rem] border border-slate-200 bg-white/60 p-6 text-center shadow-2xl backdrop-blur-sm dark:border-white/10 dark:bg-[#0c071e]/60 sm:p-10">
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-500/15 to-cyan-500/20 text-primary shadow-inner"><Gift className="h-10 w-10 animate-pulse" /></div>
+      <h2 className="bg-gradient-to-r from-primary via-purple-500 to-cyan-500 bg-clip-text text-3xl font-black text-transparent">{t.lucky}</h2>
+      <p className="mx-auto mt-3 max-w-lg text-sm font-bold leading-7 text-slate-500 dark:text-slate-400">{t.spinHint}</p>
 
-      <div className="relative mx-auto my-12 h-72 w-72 sm:h-80 sm:w-80">
-        {/* Pointer */}
-        <div className="absolute -top-4 left-1/2 z-30 -translate-x-1/2 drop-shadow-[0_4px_10px_rgba(0,0,0,0.3)]">
-          <div className="h-0 w-0 border-x-[15px] border-t-[30px] border-x-transparent border-t-rose-600" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-white/50" />
+      <div className="mx-auto my-10 grid max-w-3xl items-center gap-8 md:grid-cols-[minmax(0,1fr)_220px]">
+        <div className="relative mx-auto aspect-square w-full max-w-[21rem]">
+          <div className="absolute -top-5 left-1/2 z-30 -translate-x-1/2 drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]" aria-hidden="true">
+            <div className="h-0 w-0 border-x-[17px] border-t-[32px] border-x-transparent border-t-rose-600" />
+            <div className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 rounded-full bg-white/60" />
+          </div>
+          <div className="relative h-full w-full rounded-full border-[10px] border-slate-900/90 p-1 shadow-[0_0_55px_-12px_rgba(139,92,246,0.7)] transition-transform duration-[4100ms] [transition-timing-function:cubic-bezier(0.12,0.8,0.15,1)] motion-reduce:transition-none" style={{ transform: `rotate(${angle}deg)`, background: wheelBackground }} role="img" aria-label={lang === 'ar' ? 'عجلة جوائز من 1 إلى 50 نقطة' : 'Prize wheel from 1 to 50 points'}>
+            <div className="absolute inset-0 rounded-full bg-white/5" />
+            {segments.map((segment, index) => {
+              const center = index * segmentAngle + segmentAngle / 2;
+              return <div key={segment.label} className="absolute inset-0" style={{ transform: `rotate(${center}deg)` }}><span className="absolute left-1/2 top-5 -translate-x-1/2 text-lg font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,.55)]" style={{ transform: `rotate(-${center}deg)` }}>{segment.label}</span></div>;
+            })}
+            <div className="absolute inset-0 m-auto flex h-20 w-20 items-center justify-center rounded-full border-8 border-slate-900 bg-white shadow-xl dark:bg-slate-100"><div className="h-5 w-5 rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 shadow-[0_0_0_5px_rgba(255,255,255,.45)]" /></div>
+          </div>
         </div>
 
-        {/* Wheel Container */}
-        <div 
-          className="relative h-full w-full rounded-full border-[8px] border-slate-800 bg-slate-900 shadow-[0_0_50px_-12px_rgba(139,92,246,0.5)] transition-transform duration-[4000ms] cubic-bezier(0.15, 0, 0.15, 1) overflow-hidden"
-          style={{ transform: `rotate(${angle}deg)` }}
-        >
-          {segments.map((seg, i) => (
-            <div
-              key={i}
-              className={`absolute top-0 left-1/2 h-1/2 w-1/2 origin-bottom-left ${seg.color}`}
-              style={{
-                transform: `rotate(${i * (360 / segments.length)}deg) skewY(-${90 - (360 / segments.length)}deg)`,
-              }}
-            >
-              <div 
-                className="absolute bottom-4 left-4 flex h-24 w-24 origin-center items-center justify-center font-black text-white"
-                style={{
-                  transform: `skewY(${90 - (360 / segments.length)}deg) rotate(${(360 / segments.length) / 2}deg) translateY(-20px)`,
-                }}
-              >
-                <span className="text-xl drop-shadow-md">{seg.label}</span>
-              </div>
-            </div>
-          ))}
-          
-          {/* Center Cap */}
-          <div className="absolute inset-0 m-auto h-12 w-12 rounded-full border-4 border-slate-800 bg-white shadow-lg flex items-center justify-center z-20">
-            <div className="h-3 w-3 rounded-full bg-primary animate-ping" />
-          </div>
+        <div className="rounded-3xl border border-violet-200 bg-white/80 p-4 text-start shadow-sm dark:border-violet-900/50 dark:bg-slate-950/45">
+          <div className="flex items-center gap-2 text-xs font-black text-violet-700 dark:text-violet-300"><Sparkles className="h-4 w-4" />{lang === 'ar' ? 'جوائز اليوم' : "Today's prizes"}</div>
+          <div className="mt-3 grid grid-cols-2 gap-2">{segments.map((segment) => <div key={segment.label} className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-2 text-center text-xs font-black text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"><span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: segment.color }} />{segment.label} {t.points}</div>)}</div>
+          <p className="mt-3 text-[11px] font-bold leading-5 text-slate-500 dark:text-slate-400">{lang === 'ar' ? 'العجلة تتوقف عند نفس الجائزة التي يثبتها النظام، وليس عند نتيجة عشوائية مختلفة.' : 'The wheel stops on the same prize secured by the server, not on a disconnected visual result.'}</p>
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={spin}
-        disabled={spinning || alreadyPlayed || checkingAvailability}
-        className="group relative mx-auto flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-primary px-10 py-4 text-sm font-black text-white shadow-xl shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-2xl active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
-        {spinning ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5 fill-current" />}
-        {checkingAvailability ? (lang === 'ar' ? 'جاري التحقق...' : 'Checking...') : spinning ? t.spinning : alreadyPlayed ? t.done : t.spin}
-      </button>
+      <button type="button" onClick={spin} disabled={spinning || alreadyPlayed || checkingAvailability} aria-label={t.spin} className="group relative mx-auto flex min-h-14 items-center justify-center gap-3 overflow-hidden rounded-2xl bg-primary px-10 py-4 text-sm font-black text-white shadow-xl shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-2xl active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 motion-reduce:transform-none"><div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />{spinning ? <Loader2 className="h-5 w-5 animate-spin" /> : <Zap className="h-5 w-5 fill-current" />}{checkingAvailability ? (lang === 'ar' ? 'جاري التحقق...' : 'Checking...') : spinning ? t.spinning : alreadyPlayed ? t.done : t.spin}</button>
 
-      {result && (
-        <div className={`mx-auto mt-8 max-w-md animate-in fade-in slide-in-from-top-4 rounded-2xl border p-5 text-sm font-black shadow-sm ${
-          result.success 
-            ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/30 dark:text-emerald-400' 
-            : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/30 dark:bg-amber-950/30 dark:text-amber-400'
-        }`}>
-          <div className="flex items-center justify-center gap-2">
-            {result.success ? <Sparkles className="h-5 w-5" /> : <Loader2 className="h-5 w-5" />}
-            {result.success ? `+${result.points} ${t.points}` : result.message}
-          </div>
-        </div>
-      )}
+      {result && <div className={`mx-auto mt-8 max-w-xl rounded-3xl border p-5 text-sm font-black shadow-sm ${result.success ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/30 dark:text-emerald-300' : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/30 dark:bg-amber-950/30 dark:text-amber-400'}`}><div className="flex items-center justify-center gap-2 text-base">{result.success ? <Sparkles className="h-5 w-5" /> : <Loader2 className="h-5 w-5" />}{result.success ? (lang === 'ar' ? `مبروك! ربحت ${result.points} ${t.points}` : `Congratulations! You won ${result.points} ${t.points}`) : result.message}</div>{result.success && <div className="mt-4 grid gap-2 text-xs sm:grid-cols-2"><div className="rounded-2xl bg-white/70 px-3 py-3 dark:bg-slate-950/30">{lang === 'ar' ? 'الجائزة التي توقفت عندها العجلة' : 'Wheel landed on'}<strong className="mt-1 block text-lg">{result.wheelLabel} {t.points}</strong></div><div className="rounded-2xl bg-white/70 px-3 py-3 dark:bg-slate-950/30">{lang === 'ar' ? 'تمت إضافة المكافأة إلى رصيدك' : 'Reward added to your balance'}<strong className="mt-1 block text-lg">{Number(result.total_points || 0).toLocaleString()} {t.points}</strong></div></div>}</div>}
     </div>
   );
 }
@@ -437,10 +403,24 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
     else showToast('error', response?.message || 'Purchase failed'); 
   };
   const sendOrder = async () => { if (!paymentItem || busy) return; setBusy(paymentItem.id); const response = await createRewardPointsOrder(paymentItem.id, paymentMethod, reference, receipt); setBusy(null); if (response?.success) { setPaymentItem(null); setReference(''); setReceipt(''); showToast('success', t.orderSent); } else showToast('error', response?.message || 'Could not create order'); };
+  const handleStoreAction = async (item: StoreItem) => {
+    const payment = getStorePaymentMode(item);
+    if (item.item_type === 'points_bundle') {
+      if (payment.mode === 'cash') setPaymentItem(item);
+      else showToast('info', lang === 'ar' ? 'هذا العرض يحتاج طلب شراء نقدي من خلال المتجر.' : 'This bundle requires a cash purchase order from the store.');
+      return;
+    }
+    if (payment.mode === 'cash') {
+      showToast('info', lang === 'ar' ? 'الدفع النقدي لهذا النوع سيتم توفيره قريباً.' : 'Cash checkout for this item is coming soon.');
+      return;
+    }
+    await buyFrame(item);
+  };
   const uploadReceipt = (file?: File) => { if (!file) return; const reader = new FileReader(); reader.onload = () => setReceipt(String(reader.result || '')); reader.readAsDataURL(file); };
   const offers = items.filter((item: any) => item.is_featured);
   const frames = uniqueProfileFrames(items.filter((item) => item.item_type === 'frame' && !item.is_featured));
   const bundles = items.filter((item) => item.item_type === 'points_bundle' && !item.is_featured);
+  const cosmetics = items.filter((item) => item.item_type === 'cosmetic' && !item.is_featured);
   const planRank = (planName || '').toLowerCase().includes('diamond') || (planName || '').includes('الماس') ? 4 : (isPremium ? 2 : 1);
   const rankFor = (plan: string) => plan === 'diamond' ? 4 : plan === 'gold' ? 3 : plan === 'silver' ? 2 : 1;
   const renderCard = (item: StoreItem) => { 
@@ -503,8 +483,10 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
             {lang === 'ar' ? '🔥 عروض وتخفيضات حصرية' : '🔥 Exclusive Flash Offers'}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {offers.map((item: any) => (
-              <div key={item.id} className="relative flex flex-col rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-md dark:border-rose-900/50 dark:from-rose-950/30 dark:via-slate-900 dark:to-amber-950/20">
+            {offers.map((item: any) => {
+              const offerImage = item.image_url ? resolveFrameAsset(item) : null;
+              return <div key={item.id} className="relative flex flex-col rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-md dark:border-rose-900/50 dark:from-rose-950/30 dark:via-slate-900 dark:to-amber-950/20">
+                {offerImage && <div className="mb-4 flex h-28 items-center justify-center overflow-hidden rounded-2xl bg-white/70 p-3 dark:bg-slate-950/30"><img src={offerImage} alt="" loading="lazy" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} /></div>}
                 {item.badge_text && (
                   <span className="absolute top-4 start-4 rounded-full bg-rose-600 px-3 py-1 text-[10px] font-black text-white shadow-sm">
                     {item.badge_text}
@@ -522,12 +504,12 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
                       <span className="text-xs font-black text-amber-600 dark:text-amber-300">{item.price_points.toLocaleString()} {t.points}</span>
                     )}
                   </div>
-                  <button type="button" onClick={() => item.price_egp > 0 ? setPaymentItem(item) : buyFrame(item)} className="rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 px-4 py-2 text-xs font-black text-white shadow-md transition hover:opacity-90">
+                  <button type="button" onClick={() => void handleStoreAction(item)} className="rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 px-4 py-2 text-xs font-black text-white shadow-md transition hover:opacity-90 active:scale-[0.98]">
                     {item.price_egp > 0 ? (lang === 'ar' ? 'اطلب العرض' : 'Claim Offer') : t.buy}
                   </button>
                 </div>
-              </div>
-            ))}
+              </div>;
+            })}
           </div>
         </section>
       )}
@@ -550,7 +532,8 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {bundles.map((item) => {
             const payment = getStorePaymentMode(item);
-            const isPurchasable = payment.mode !== 'unavailable';
+            const isPurchasable = payment.mode === 'cash';
+            const bundleImage = item.image_url ? resolveFrameAsset(item) : null;
             const paymentLabel = payment.mode === 'cash'
               ? `${payment.amount.toLocaleString()} EGP · ${lang === 'ar' ? 'اطلب الآن' : 'Order now'}`
               : payment.mode === 'coins'
@@ -559,18 +542,31 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
                   ? `${payment.amount.toLocaleString()} ${t.points} · ${t.buy}`
                   : (lang === 'ar' ? 'غير متاح' : 'Unavailable');
             return <div key={item.id} className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                <Sparkles className="h-6 w-6" />
-              </div>
+              <div className="flex h-20 items-center justify-center overflow-hidden rounded-2xl bg-emerald-50 p-2 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">{bundleImage ? <img src={bundleImage} alt="" loading="lazy" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} /> : <Sparkles className="h-6 w-6" />}</div>
               <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{getStoreBundleBenefitLabel(item, lang)}</p>
-              <button type="button" disabled={!isPurchasable || busy === item.id} onClick={() => payment.mode === 'cash' ? setPaymentItem(item) : buyFrame(item)} className="mt-5 w-full rounded-2xl bg-emerald-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-45">
+              <button type="button" disabled={!isPurchasable || busy === item.id} onClick={() => void handleStoreAction(item)} className="mt-5 w-full rounded-2xl bg-emerald-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45">
                 {paymentLabel}
               </button>
             </div>;
           })}
         </div>
       </section>
+
+      {cosmetics.length > 0 && <section>
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white"><Sparkles className="h-5 w-5 text-fuchsia-500" />{lang === 'ar' ? 'الكوزمتكس والإضافات' : 'Cosmetics & extras'}</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{cosmetics.map((item) => {
+          const payment = getStorePaymentMode(item);
+          const itemImage = item.image_url ? resolveFrameAsset(item) : null;
+          const locked = planRank < rankFor(item.min_plan);
+          const isOwned = owned(item.id);
+          const usable = !locked && (payment.mode === 'points' || payment.mode === 'coins' || isOwned);
+          return <article key={item.id} className="flex min-h-48 flex-col rounded-3xl border border-fuchsia-200 bg-gradient-to-br from-fuchsia-50 via-white to-rose-50 p-5 shadow-sm dark:border-fuchsia-900/50 dark:from-fuchsia-950/20 dark:via-slate-900 dark:to-rose-950/20">
+            <div className="flex items-start gap-4"><div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/80 p-2 shadow-sm dark:bg-slate-950/40">{itemImage ? <img src={itemImage} alt="" loading="lazy" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} /> : <Sparkles className="h-7 w-7 text-fuchsia-500" />}</div><div className="min-w-0 flex-1"><h3 className="text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3><p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">{lang === 'ar' ? item.description_ar : item.description}</p></div></div>
+            <div className="mt-auto flex items-center justify-between gap-3 pt-5"><span className="text-xs font-black text-fuchsia-700 dark:text-fuchsia-300">{locked ? t.diamond : isOwned ? t.owned : payment.mode === 'coins' ? `${payment.amount.toLocaleString()} ${t.coins}` : payment.mode === 'points' ? `${payment.amount.toLocaleString()} ${t.points}` : (lang === 'ar' ? 'غير متاح' : 'Unavailable')}</span><button type="button" disabled={!usable || busy === item.id} onClick={() => void handleStoreAction(item)} className="rounded-xl bg-fuchsia-600 px-4 py-2 text-xs font-black text-white transition hover:bg-fuchsia-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45">{busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (lang === 'ar' ? 'مملوك' : 'Owned') : (lang === 'ar' ? 'شراء' : 'Buy')}</button></div>
+          </article>;
+        })}</div>
+      </section>}
     </div>}
     {paymentItem && <OverlayPortal><div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/60 p-4 backdrop-blur-sm" onClick={() => setPaymentItem(null)}><div className="my-auto max-h-[min(720px,90dvh)] w-full max-w-lg overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900" onClick={(event) => event.stopPropagation()}><div className="flex items-start justify-between gap-4"><div><h3 className="text-lg font-black text-slate-900 dark:text-white">{t.paymentTitle}</h3><p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">{t.paymentHint}</p></div><button type="button" onClick={() => setPaymentItem(null)}><X className="h-5 w-5 text-slate-500" /></button></div><div className="mt-5 grid grid-cols-2 gap-2"><button type="button" onClick={() => setPaymentMethod('vodafone_cash')} className={`rounded-2xl border px-3 py-3 text-xs font-black ${paymentMethod === 'vodafone_cash' ? 'border-red-500 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300' : 'border-slate-200 text-slate-500 dark:border-slate-700'}`}>{t.vodafone}<span className="mt-1 block text-[10px] font-bold">{settings?.vodafone_number || '—'}</span></button><button type="button" onClick={() => setPaymentMethod('instapay')} className={`rounded-2xl border px-3 py-3 text-xs font-black ${paymentMethod === 'instapay' ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300' : 'border-slate-200 text-slate-500 dark:border-slate-700'}`}>{t.instapay}<span className="mt-1 block text-[10px] font-bold">{settings?.instapay_handle || '—'}</span></button></div><input value={reference} onChange={(event) => setReference(event.target.value)} placeholder={t.reference} className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white" /><label className="mt-3 block cursor-pointer rounded-2xl border border-dashed border-slate-300 p-4 text-center text-xs font-bold text-slate-500 dark:border-slate-700">{receipt ? t.receipt + ' ✓' : t.receipt}<input type="file" accept="image/*" className="hidden" onChange={(event) => uploadReceipt(event.target.files?.[0])} /></label><button type="button" onClick={sendOrder} disabled={busy === paymentItem.id} className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-60">{busy === paymentItem.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />}{busy === paymentItem.id ? t.sending : t.sendOrder}</button><button type="button" onClick={() => setPaymentItem(null)} className="mt-2 w-full rounded-2xl px-4 py-2 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">{t.cancel}</button></div></div></OverlayPortal>}
   </div>;

@@ -28,11 +28,16 @@ import {
   type ExtractedQuizDraft,
 } from '../lib/quizCreatorDraft';
 
+interface QuizCreatedOptions {
+  keepCreatorOpen?: boolean;
+  quizId?: string;
+}
+
 interface QuizCreatorProps {
   userId: string;
   userName: string;
   userEmail?: string;
-  onQuizCreated: () => void;
+  onQuizCreated: (options?: QuizCreatedOptions) => void;
   quizToEdit?: Quiz | null;
   onCancelEdit?: () => void;
   lang?: 'ar' | 'en';
@@ -519,6 +524,7 @@ export default function QuizCreator({
   // Image Upload / OCR / PDF States
   const [uploadedFile, setUploadedFile] = React.useState<File | null>(null);
   const [uploadedFilePreview, setUploadedFilePreview] = React.useState<string | null>(null);
+  const [extractedSourcePreview, setExtractedSourcePreview] = React.useState<{ url: string; name: string } | null>(null);
   const [fileType, setFileType] = React.useState<'image' | 'pdf' | 'document' | null>(null);
   const [pdfCount, setPdfCount] = React.useState(5);
   
@@ -531,6 +537,7 @@ export default function QuizCreator({
     percentage?: number;
     message: string;
   } | null>(null);
+  const [verifiedQuestionsCount, setVerifiedQuestionsCount] = React.useState<number | null>(null);
 
   // Google Drive state
   const [gdriveAccount, setGdriveAccount] = React.useState<string | null>(() => {
@@ -603,10 +610,16 @@ export default function QuizCreator({
         percentage: generationProgress.percentage,
         message: generationProgress.message,
       });
-    } else {
+      return;
+    }
+
+    // The extraction hook can finish before the separate answer-verification
+    // phase. Keep the user-facing status alive until that phase and its save
+    // operation have fully settled instead of flashing an empty editor.
+    if (!postExtractionSolvePending && !isProcessingOcr) {
       setOcrProgress(null);
     }
-  }, [generationProgress, activeMode]);
+  }, [generationProgress, activeMode, postExtractionSolvePending, isProcessingOcr]);
 
   React.useEffect(() => {
     const jobId = getRememberedExtractionJobId();
@@ -885,6 +898,15 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
     const draftFileType = attachment
       ? attachment.kind === 'image' ? 'image' : attachment.mimeType === 'application/pdf' ? 'pdf' : 'document'
       : fileType || 'document';
+    const sourceImagePreview = attachment?.kind === 'image'
+      ? (uploadedFilePreview || `data:${attachment.mimeType || 'image/png'};base64,${attachment.data}`)
+      : null;
+    if (sourceImagePreview) {
+      setExtractedSourcePreview({
+        url: sourceImagePreview,
+        name: attachment?.name || uploadedFile?.name || 'صورة المصدر',
+      });
+    }
     saveExtractedQuizDraft({
       ownerId: draftOwnerId,
       title: result.title,
@@ -914,11 +936,14 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
         percentage: 100,
         message: 'اكتمل حل الاختبار بعد الاستخراج. جاري حفظ الاختبار بعد التحقق من كل الإجابات...',
       });
-      const saved = await handlePublishQuiz(solvedQuestions, { title: result.title, description: result.description });
+      const saved = await handlePublishQuiz(solvedQuestions, { title: result.title, description: result.description }, { keepCreatorOpen: true });
       if (!saved) throw new Error('تعذر حفظ الاختبار بعد اكتمال التحقق من الإجابات.');
       setQuestions(solvedQuestions);
+      setVerifiedQuestionsCount(solvedQuestions.length);
       setPostExtractionSolvePending(false);
       setActiveMode('manual');
+      // Keep the source preview in its own state so it remains visible after
+      // the upload controls are reset for a possible next extraction.
       setUploadedFile(null);
       setUploadedFilePreview(null);
       setFileType(null);
@@ -1067,6 +1092,8 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
   const processSelectedFile = (file: File) => {
     extractedAttachmentRef.current = null;
     setPostExtractionSolvePending(false);
+    setVerifiedQuestionsCount(null);
+    setExtractedSourcePreview(null);
     setOcrError(null);
     setFileGuidance('');
     setFileGuidanceMessages([]);
@@ -1339,6 +1366,7 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
   const handlePublishQuiz = async (
     questionsOverride?: Question[],
     metadataOverride?: { title?: string; description?: string },
+    options?: { keepCreatorOpen?: boolean },
   ): Promise<boolean> => {
     const effectiveTitle = metadataOverride?.title ?? title;
     const effectiveDescription = metadataOverride?.description ?? description;
@@ -1440,12 +1468,25 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
         // Ignore storage restrictions; the persisted quiz is already safe.
       }
 
-      // Reset values
+      if (options?.keepCreatorOpen) {
+        // Post-extraction solving has just produced the result the user needs
+        // to inspect. Keep the verified editor state mounted instead of
+        // clearing it or navigating to the quiz list.
+        setAiSavedQuizId(savedQuiz?.id || null);
+        setTitle(effectiveTitle);
+        setDescription(effectiveDescription);
+        setQuestions(questionsToSave);
+        onQuizCreated({ keepCreatorOpen: true, quizId: savedQuiz?.id });
+        return true;
+      }
+
+      // Reset values for the ordinary manual publish flow.
       setAiSavedQuizId(null);
       setTitle('');
       setDescription('');
       setTimeLimit(0);
       setCategory('عام');
+      setVerifiedQuestionsCount(null);
       setQuestions([
         {
           id: 'q-initial-0',
@@ -2804,6 +2845,42 @@ A computer is a digital electronic machine...
               </div>
             </div>
 
+            {verifiedQuestionsCount !== null && !postExtractionSolvePending && (
+              <div className="rounded-[28px] border border-emerald-200/70 bg-emerald-50/80 p-5 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/20" dir="rtl">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3 text-right">
+                    <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
+                      <Check className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-black text-emerald-800 dark:text-emerald-300">تم حل الاختبار وحفظه بعد التحقق</p>
+                      <p className="mt-1 text-xs font-bold leading-6 text-emerald-700/80 dark:text-emerald-300/80">
+                        تم تثبيت إجابات {verifiedQuestionsCount} سؤالًا داخل المحرر. راجع الاختيارات الخضراء أو عدّلها يدويًا قبل النشر النهائي.
+                      </p>
+                    </div>
+                  </div>
+                  {aiSavedQuizId && (
+                    <span className="shrink-0 rounded-full bg-white/80 px-3 py-2 text-[10px] font-black text-emerald-700 shadow-sm dark:bg-slate-900/50 dark:text-emerald-300">
+                      محفوظ · {aiSavedQuizId}
+                    </span>
+                  )}
+                </div>
+                {extractedSourcePreview && (
+                  <div className="mt-4 border-t border-emerald-200/70 pt-4 dark:border-emerald-900/50">
+                    <p className="mb-2 text-[11px] font-black text-emerald-800 dark:text-emerald-300">صورة الملف المصدر</p>
+                    <img
+                      src={extractedSourcePreview.url}
+                      alt={`معاينة الملف المصدر: ${extractedSourcePreview.name}`}
+                      loading="eager"
+                      decoding="async"
+                      className="max-h-56 w-full rounded-2xl border border-emerald-200/70 bg-white/70 object-contain p-2 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900/40"
+                      onError={() => setExtractedSourcePreview(null)}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Questions list array */}
             <div className="space-y-6">
               <div className="glass-card bg-slate-50/50 dark:bg-slate-900/30 p-5 rounded-[28px] border border-slate-200/50 dark:border-slate-700/50 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between shadow-sm backdrop-blur-sm">
@@ -3044,10 +3121,13 @@ A computer is a digital electronic machine...
                         
                         {question.imageUrl ? (
                           <div className="relative group w-fit max-w-sm mx-auto border border-indigo-200 dark:border-indigo-500/30 p-2.5 rounded-[24px] bg-slate-50/80 dark:bg-slate-900/60 shadow-md">
-                            <img 
-                              src={question.imageUrl} 
-                              alt="Question Illustration" 
+                              <img
+                              src={question.imageUrl}
+                              alt="Question Illustration"
+                              loading="eager"
+                              decoding="async"
                               className="max-h-48 rounded-[16px] object-contain mx-auto"
+                              onError={() => handleQuestionChange(qIdx, { imageUrl: '' })}
                             />
                             <button
                               type="button"

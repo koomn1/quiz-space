@@ -156,6 +156,10 @@ export const FRAME_ASSET_OVERRIDES: Record<string, string> = {
   frame_back_to_school: profileAssetUrl('clean-assets-replacement/school-bus-transparent.webp'),
   frame_dragon_spirit: profileAssetUrl('clean-assets-replacement/fire-trail-transparent.webp'),
   frame_legendary_dragon: profileAssetUrl('clean-assets-replacement/fire-trail-transparent.webp'),
+  frame_stone_royal: profileAssetUrl('clean-assets-replacement/frame-stone-royal-transparent.webp'),
+  frame_stone_moon: profileAssetUrl('clean-assets-replacement/frame-stone-moon-transparent.webp'),
+  frame_ice_glacier: profileAssetUrl('clean-assets-replacement/frame-ice-glacier-transparent.webp'),
+  frame_ice_frost: profileAssetUrl('clean-assets-replacement/frame-ice-frost-transparent.webp'),
 };
 
 export function uniqueProfileFrames<T extends { id?: string | null; image_url?: string | null }>(frames: T[]): T[] {

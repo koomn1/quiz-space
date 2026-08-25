@@ -450,6 +450,7 @@ export interface GeneratedQuestion {
   correctIndex?: number;
   correctAnswer?: string;
   explanation?: string;
+  imageUrl?: string;
 }
 
 export interface GeneratedQuiz {

@@ -56,4 +56,17 @@ describe('filterValidGeneratedQuestions', () => {
     });
     expect(result.questions[0].correctIndex).toBe(1);
   });
+
+  it('preserves an extracted question image URL during validation', () => {
+    const result = validateAndCleanQuiz({
+      questions: [{
+        text: 'ما الذي توضحه الصورة؟',
+        type: 'mcq',
+        options: ['أ', 'ب'],
+        correctIndex: 0,
+        imageUrl: 'data:image/png;base64,abc123',
+      }],
+    });
+    expect(result.questions[0].imageUrl).toBe('data:image/png;base64,abc123');
+  });
 });

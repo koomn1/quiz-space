@@ -92,6 +92,7 @@ export function validateAndCleanQuiz(data: any): GeneratedQuiz {
       correctIndex,
       correctAnswer,
       explanation: typeof q.explanation === 'string' ? q.explanation.trim() : '',
+      imageUrl: typeof q.imageUrl === 'string' ? q.imageUrl.trim() : '',
     };
   });
 

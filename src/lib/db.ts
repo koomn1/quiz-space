@@ -2928,7 +2928,7 @@ export async function getRewardStoreItems() {
 }
 
 export async function getAdminRewardStoreItems() {
-  const { data, error } = await supabase.from('reward_store_items').select('*').eq('item_type', 'frame').order('sort_order', { ascending: true });
+  const { data, error } = await supabase.from('reward_store_items').select('*').order('sort_order', { ascending: true }).limit(250);
   if (error) throw error;
   return data || [];
 }
