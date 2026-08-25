@@ -21,6 +21,7 @@ import QuizCountdownTimer from './QuizCountdownTimer';
 import { playChimeSound } from '../lib/chime';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
 import { getInstitutionExportBrandForQuiz } from '../lib/institutions';
+import QuestionMedia from './QuestionMedia';
 
 import { translations } from '../lib/i18n';
 
@@ -995,11 +996,12 @@ export default function QuizResolver({
                     <div className="text-center py-4">
                       {quiz.questions[currentFlashcardIdx].imageUrl && (
                         <div className="flex justify-center mb-3">
-                          <img
+                          <QuestionMedia
                             src={quiz.questions[currentFlashcardIdx].imageUrl}
-                            alt="Question Diagram"
-                            referrerPolicy="no-referrer"
-                            className="max-h-28 rounded-lg object-contain border border-slate-200 dark:border-slate-800"
+                            alt={isAr ? 'صورة توضيحية للسؤال' : 'Question illustration'}
+                            eager
+                            className="max-h-28 rounded-lg border border-slate-200 dark:border-slate-800"
+                            containerClassName="max-w-full"
                           />
                         </div>
                       )}
@@ -1235,11 +1237,12 @@ export default function QuizResolver({
 
             {currentQuestion.imageUrl && (
               <div className="flex justify-center my-2 sm:my-4">
-                <img
+                <QuestionMedia
                   src={currentQuestion.imageUrl}
-                  alt="Question Diagram"
-                  referrerPolicy="no-referrer"
-                  className="max-h-72 rounded-2xl object-contain border border-slate-200 dark:border-slate-700 shadow-xs"
+                  alt={isAr ? 'صورة توضيحية للسؤال' : 'Question illustration'}
+                  eager
+                  className="max-h-72 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs"
+                  containerClassName="w-full max-w-3xl"
                 />
               </div>
             )}

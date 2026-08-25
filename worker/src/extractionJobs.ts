@@ -102,6 +102,8 @@ const supportedMimeTypes = new Set([
   'image/jpeg',
   'image/png',
   'image/webp',
+  'image/gif',
+  'image/avif',
 ]);
 
 function apiUrl(env: ExtractionJobEnv, path: string): string {

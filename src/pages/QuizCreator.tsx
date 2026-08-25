@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Question, Quiz } from '../types';
 import { Plus, Trash2, Camera, Sparkles, Wand2, Save, FileText, ChevronLeft, Image as ImageIcon, HelpCircle, Clock, Check, MessageSquare, User, BookOpen, Tag, FolderOpen, XCircle, Search } from 'lucide-react';
-import { createQuiz, updateQuiz, getQuizzes } from '../lib/db';
+import { createQuiz, updateQuiz, getQuizzes, persistQuestionImages } from '../lib/db';
 import { translations } from '../lib/i18n';
 import { getApiUrl, getAppOrigin } from '../lib/origin';
 import { supabase } from '../lib/supabaseClient';
@@ -15,6 +15,7 @@ import { fetchWithAuth } from '../lib/authFetch';
 import { useQuizGenerator } from '../hooks/useQuizGenerator';
 import { askAI, askAIStream, getRememberedExtractionJobId, type AiChatAttachment } from '../services/aiWorkerClient';
 import DrivePicker from '../components/DrivePicker';
+import QuestionMedia from '../components/QuestionMedia';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
@@ -1152,29 +1153,47 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
   // Helper to split image into vertical chunks for better processing
   const splitImageIntoParts = async (file: File, parts: number = 3): Promise<string[]> => {
+    // Canvas cannot preserve animated GIF frames and can silently change the
+    // encoding for AVIF. Keep these formats byte-for-byte intact and let the
+    // model receive the original asset instead of a black/flattened rendition.
+    if (file.type === 'image/gif' || file.type === 'image/avif') {
+      return [await convertToBase64(file)];
+    }
+
     return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
       const img = new Image();
+      const cleanup = () => URL.revokeObjectURL(objectUrl);
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject('Failed to create canvas context');
-        
-        const partHeight = img.height / parts;
-        const result: string[] = [];
-        
-        for (let i = 0; i < parts; i++) {
-          canvas.width = img.width;
-          canvas.height = partHeight;
-          ctx.drawImage(img, 
-            0, i * partHeight, img.width, partHeight, 
-            0, 0, img.width, partHeight
-          );
-          result.push(canvas.toDataURL(file.type));
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Failed to create canvas context');
+
+          const safeParts = Math.max(1, Math.min(8, Math.floor(parts) || 1));
+          const partHeight = Math.max(1, Math.floor(img.height / safeParts));
+          const result: string[] = [];
+          for (let i = 0; i < safeParts; i++) {
+            const sourceY = i * partHeight;
+            const currentHeight = i === safeParts - 1 ? img.height - sourceY : partHeight;
+            canvas.width = img.width;
+            canvas.height = currentHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, sourceY, img.width, currentHeight, 0, 0, img.width, currentHeight);
+            result.push(canvas.toDataURL(file.type || 'image/png'));
+          }
+          cleanup();
+          resolve(result);
+        } catch (error) {
+          cleanup();
+          reject(error);
         }
-        resolve(result);
       };
-      img.src = URL.createObjectURL(file);
-      img.onerror = reject;
+      img.onerror = (error) => {
+        cleanup();
+        reject(error);
+      };
+      img.src = objectUrl;
     });
   };
 
@@ -1517,6 +1536,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         return;
       }
 
+      await persistQuestionImages(userId, sanitizedQuestions);
+
       let savedQuiz: any;
       const effectiveEditId = quizToEdit?.id || aiSavedQuizId;
       if (effectiveEditId) {
@@ -1586,7 +1607,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         setAiSavedQuizId(savedQuiz?.id || null);
         setTitle(effectiveTitle);
         setDescription(effectiveDescription);
-        setQuestions(questionsToSave);
+        setQuestions(sanitizedQuestions as Question[]);
         onQuizCreated({ keepCreatorOpen: true, quizId: savedQuiz?.id });
         return true;
       }
@@ -2214,10 +2235,12 @@ A computer is a digital electronic machine...
                   {uploadedFile ? (
                     <div className="space-y-4">
                       {fileType === 'image' && uploadedFilePreview ? (
-                        <img
+                        <QuestionMedia
                           src={uploadedFilePreview}
-                          alt="Preview"
-                          className="max-h-48 mx-auto rounded-xl object-contain shadow-md"
+                          alt={isAr ? 'معاينة الملف المصدر' : 'Source file preview'}
+                          eager
+                          className="max-h-48 rounded-xl shadow-md"
+                          containerClassName="mx-auto max-w-full"
                         />
                       ) : (
                         <div className="w-20 h-20 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-800 shadow-xs rounded-3xl flex items-center justify-center mx-auto text-red-500">
@@ -2988,13 +3011,12 @@ A computer is a digital electronic machine...
                 {extractedSourcePreview && (
                   <div className="mt-4 border-t border-emerald-200/70 pt-4 dark:border-emerald-900/50">
                     <p className="mb-2 text-[11px] font-black text-emerald-800 dark:text-emerald-300">صورة الملف المصدر</p>
-                    <img
+                    <QuestionMedia
                       src={extractedSourcePreview.url}
                       alt={`معاينة الملف المصدر: ${extractedSourcePreview.name}`}
-                      loading="eager"
-                      decoding="async"
+                      eager
                       className="max-h-56 w-full rounded-2xl border border-emerald-200/70 bg-white/70 object-contain p-2 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900/40"
-                      onError={() => setExtractedSourcePreview(null)}
+                      containerClassName="w-full"
                     />
                   </div>
                 )}
@@ -3241,14 +3263,13 @@ A computer is a digital electronic machine...
                         
                         {question.imageUrl ? (
                           <div className="relative group w-fit max-w-sm mx-auto border border-indigo-200 dark:border-indigo-500/30 p-2.5 rounded-[24px] bg-slate-50/80 dark:bg-slate-900/60 shadow-md">
-                              <img
-                              src={question.imageUrl}
-                              alt="Question Illustration"
-                              loading="eager"
-                              decoding="async"
-                              className="max-h-48 rounded-[16px] object-contain mx-auto"
-                              onError={() => handleQuestionChange(qIdx, { imageUrl: '' })}
-                            />
+                              <QuestionMedia
+                                src={question.imageUrl}
+                                alt={isAr ? 'صورة توضيحية للسؤال' : 'Question illustration'}
+                                eager
+                                className="max-h-48 rounded-[16px]"
+                                containerClassName="mx-auto max-w-full"
+                              />
                             <button
                               type="button"
                               onClick={() => handleQuestionChange(qIdx, { imageUrl: '' })}

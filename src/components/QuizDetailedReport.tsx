@@ -3,6 +3,7 @@ import { Question } from '../types';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { Check, X, BookOpen, ThumbsUp, ThumbsDown, Filter, HelpCircle, ArrowDown, Sparkles } from 'lucide-react';
 import { getApiUrl } from '../lib/origin';
+import QuestionMedia from './QuestionMedia';
 import { fetchWithAuth } from '../lib/authFetch';
 
 interface QuizDetailedReportProps {
@@ -207,11 +208,11 @@ export default function QuizDetailedReport({
                   {/* Question Image if present */}
                   {q.imageUrl && (
                     <div className="my-3 flex justify-start">
-                      <img
+                      <QuestionMedia
                         src={q.imageUrl}
-                        alt="Question Diagram"
-                        referrerPolicy="no-referrer"
-                        className="max-h-48 rounded-xl object-contain border border-slate-200 dark:border-slate-700/60 shadow-xs"
+                        alt={isAr ? 'صورة توضيحية للسؤال' : 'Question illustration'}
+                        className="max-h-48 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-xs"
+                        containerClassName="w-full max-w-3xl"
                       />
                     </div>
                   )}

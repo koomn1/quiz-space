@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { buildVisionChunkRanges, selectVisionChunkPlan, visionChunkRetryDelaySeconds } from './extractionJobs';
+import { buildVisionChunkRanges, selectVisionChunkPlan, validateCreateExtractionJobInput, visionChunkRetryDelaySeconds } from './extractionJobs';
 
 const extractionSource = readFileSync(new URL('./extractionJobs.ts', import.meta.url), 'utf8');
 
@@ -45,6 +45,17 @@ describe('dynamic vision chunk planning', () => {
     expect(visionChunkRetryDelaySeconds(2)).toBe(20);
     expect(visionChunkRetryDelaySeconds(3)).toBe(40);
     expect(visionChunkRetryDelaySeconds(10)).toBe(60);
+  });
+
+  it('accepts supported animated and modern image MIME types', () => {
+    const base = {
+      idempotencyKey: 'media-test-key-123456',
+      fileStoragePath: '00000000-0000-4000-8000-000000000001/uploads/source.gif',
+      extractionMode: 'literal' as const,
+      requestedQuestionCount: 1,
+    };
+    expect(validateCreateExtractionJobInput({ ...base, mimeType: 'image/gif' }, '00000000-0000-4000-8000-000000000001')).toBeNull();
+    expect(validateCreateExtractionJobInput({ ...base, mimeType: 'image/avif' }, '00000000-0000-4000-8000-000000000001')).toBeNull();
   });
 
   it('keeps answer accuracy strict instead of silently defaulting to option zero', () => {

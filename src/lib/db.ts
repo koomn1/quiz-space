@@ -7,6 +7,13 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, PdfExportRecord, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, normalizeBadgeColor, normalizeBadgeTier, normalizeNameColor, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
+import {
+  QUIZ_QUESTION_MEDIA_BUCKET,
+  QUIZ_QUESTION_MEDIA_MAX_BYTES,
+  fileExtensionForImageMimeType,
+  isDurableQuestionImageUrl,
+  parseInlineImageDataUrl,
+} from './questionMedia';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
 // `users` is required to have a valid UUID `uid` — a trigger
@@ -19,6 +26,63 @@ export const COSMO_ADMIN_UID = '00000000-0000-4000-8000-000000000001';
 export const COSMO_SYSTEM_UID = '00000000-0000-4000-8000-000000000002';
 
 // ---------------- SUPABASE STORAGE UPLOAD HELPERS ----------------
+
+export async function persistQuestionImageDataUrl(
+  userId: string,
+  imageUrl: string,
+  assetId: string,
+): Promise<string> {
+  const normalizedUrl = imageUrl.trim();
+  if (!normalizedUrl) return '';
+  if (isDurableQuestionImageUrl(normalizedUrl)) return normalizedUrl;
+
+  const parsed = parseInlineImageDataUrl(normalizedUrl);
+  if (!parsed) {
+    throw new Error('صيغة صورة السؤال غير مدعومة أو انتهت صلاحيتها. أعد اختيار الصورة ثم حاول مرة أخرى.');
+  }
+  if (parsed.bytes.byteLength > QUIZ_QUESTION_MEDIA_MAX_BYTES) {
+    throw new Error('حجم صورة السؤال أكبر من 10 ميجابايت. اختر صورة أصغر للحفاظ على سرعة الاختبار.');
+  }
+  if (!userId || !isSupabaseConfigured) {
+    throw new Error('لا يمكن حفظ صورة السؤال قبل الاتصال الآمن بالتخزين.');
+  }
+
+  const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80);
+  const safeAssetId = assetId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100) || crypto.randomUUID();
+  const extension = fileExtensionForImageMimeType(parsed.mimeType);
+  const storagePath = `${safeUserId}/questions/${safeAssetId}.${extension}`;
+  const fileBuffer = new ArrayBuffer(parsed.bytes.byteLength);
+  new Uint8Array(fileBuffer).set(parsed.bytes);
+  const { error } = await supabase.storage.from(QUIZ_QUESTION_MEDIA_BUCKET).upload(
+    storagePath,
+    new Blob([fileBuffer], { type: parsed.mimeType }),
+    {
+      contentType: parsed.mimeType,
+      cacheControl: '31536000',
+      upsert: true,
+    },
+  );
+  if (error) throw new Error('تعذر حفظ صورة السؤال في التخزين الآمن. حاول مرة أخرى.');
+
+  const { data } = supabase.storage.from(QUIZ_QUESTION_MEDIA_BUCKET).getPublicUrl(storagePath);
+  if (!data?.publicUrl) throw new Error('تعذر إنشاء رابط صورة السؤال.');
+  return data.publicUrl;
+}
+
+export async function persistQuestionImages(
+  userId: string,
+  questions: Array<{ id?: string; imageUrl?: string }>,
+): Promise<void> {
+  for (let index = 0; index < questions.length; index += 1) {
+    const question = questions[index];
+    if (!question.imageUrl || !question.imageUrl.startsWith('data:')) continue;
+    question.imageUrl = await persistQuestionImageDataUrl(
+      userId,
+      question.imageUrl,
+      question.id || `question-${index}`,
+    );
+  }
+}
 
 export async function uploadCoverImage(userId: string, file: File): Promise<string | null> {
   if (!isSupabaseConfigured) return null;
