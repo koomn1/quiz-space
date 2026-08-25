@@ -253,7 +253,12 @@ jobs:
             --data '{"model":"nvidia/nemotron-3-super-120b-a12b:free","messages":[{"role":"user","content":"Return OK only."}],"max_tokens":8}' \
             https://openrouter.ai/api/v1/chat/completions)
           echo "OpenRouter provider check HTTP status: ${status}"
-          test "${status}" = '200'
+          # 429 means the key is recognized but temporarily rate-limited;
+          # continue so the Worker can use the direct provider fallbacks.
+          if [ "${status}" != '200' ] && [ "${status}" != '429' ]; then
+            echo 'OpenRouter rejected the credential or request configuration.'
+            exit 1
+          fi
 
       - name: Sync AI Worker provider secrets
         working-directory: worker
