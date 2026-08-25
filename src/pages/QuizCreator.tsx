@@ -2259,7 +2259,8 @@ A computer is a digital electronic machine...
                       </div>
                       <div className="space-y-1">
                         <p className="text-sm font-semibold text-slate-755 dark:text-slate-300">{isAr ? 'اسحب صورة الامتحان أو ملف PDF/Word وألقه هنا' : 'Drag & drop exam image or PDF/Word here'}</p>
-                        <p className="text-xs text-slate-400 font-medium font-sans">{isAr ? 'يدعم JPG وPNG وPDF وWord وExcel وPowerPoint' : 'Supports JPG, PNG, PDF, Word, Excel, and PowerPoint files'}</p>
+                        <p className="text-xs text-slate-400 font-medium font-sans">{isAr ? 'يدعم JPG وPNG وGIF وAVIF وPDF وWord وExcel وPowerPoint' : 'Supports JPG, PNG, GIF, AVIF, PDF, Word, Excel, and PowerPoint files'}
+</p>
                       </div>
                     </div>
                   )}
@@ -3286,7 +3287,7 @@ A computer is a digital electronic machine...
                                 <ImageIcon className="w-5 h-5 text-violet-600 dark:text-violet-400" />
                               </div>
                               <span className="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">اضغط لإدراج أو سحب صورة لهذا السؤال</span>
-                              <span className="text-xs text-slate-500 dark:text-slate-500 font-medium tracking-wide border px-3 py-1 rounded-full border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50">PNG, JPG, SVG</span>
+                              <span className="text-xs text-slate-500 dark:text-slate-500 font-medium tracking-wide border px-3 py-1 rounded-full border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50">PNG, JPG, GIF, AVIF</span>
                               <input 
                                 type="file" 
                                 accept="image/*"
