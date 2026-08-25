@@ -87,7 +87,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
                 {isAr ? 'مساحة منظمة للتعلم والاختبارات والتقدم' : 'A focused home for learning, quizzes, and progress'}
               </p>
               <h1 className="text-4xl font-black leading-[1.18] tracking-tight text-white sm:text-6xl">
-                {isAr ? 'كل ما تحتاجه لتجربة تعلم أكثر وضوحاً وتحفيزاً.' : 'Everything you need for a clearer, more motivating learning journey.'}
+                {isAr ? 'QuizSpace — كل ما تحتاجه لتجربة تعلم أكثر وضوحاً وتحفيزاً.' : 'QuizSpace — everything you need for a clearer, more motivating learning journey.'}
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-indigo-100 sm:text-lg lg:mx-0">
                 {isAr
