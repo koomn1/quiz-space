@@ -18,12 +18,13 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('max_tokens: 8_000');
   });
 
-  it('uses bounded direct providers before OpenRouter for text-only answer review', () => {
+  it('keeps OpenRouter first and bounds direct recovery for text-only answer review', () => {
     expect(workerSource).toContain('const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 12_000');
     expect(workerSource).toContain("aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat'");
-    expect(workerSource).toContain("timeoutMs: 10_000");
-    expect(workerSource).toContain("text = await providerText('groq', directAnswerReviewPrompt");
-    expect(workerSource).toContain("console.warn('Direct answer-review providers failed; trying OpenRouter text models.'");
+    expect(workerSource).toContain("if (!isAnswerReview || hasAttachment) throw openRouterError;");
+    expect(workerSource).toContain("{ skipOpenRouterFallback: true, timeoutMs: 4_000 }");
+    expect(workerSource).toContain("text = await providerText(\n            'groq'");
+    expect(workerSource).toContain('All answer-review providers failed after the OpenRouter fallback.');
     expect(workerSource).toContain("if (options.skipOpenRouterFallback) throw lastError");
   });
 

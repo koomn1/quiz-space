@@ -827,28 +827,9 @@ ${extraInstruction}`;
           ? OPENROUTER_VISION_FALLBACKS
           : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS);
       aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat';
+      aiProvider = 'openrouter';
       let text: string;
-      const directAnswerReviewPrompt = `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\n${body.prompt}`;
-      if (isAnswerReview && !hasAttachment) {
-        try {
-          // Use the direct provider chain first for answer review. It avoids
-          // OpenRouter rate limits and keeps PDF solving independent from
-          // vision-model availability when the extracted question text is enough.
-          aiProvider = 'direct';
-          text = await providerText('groq', directAnswerReviewPrompt, env, { skipOpenRouterFallback: true, timeoutMs: 10_000 });
-        } catch (directProviderError) {
-          console.warn('Direct answer-review providers failed; trying OpenRouter text models.', directProviderError);
-          aiProvider = 'openrouter';
-          text = await callOpenRouterWithFallback(
-            env,
-            messages,
-            models,
-            undefined,
-            { max_tokens: 5_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS },
-          );
-        }
-      } else {
-        aiProvider = 'openrouter';
+      try {
         text = await callOpenRouterWithFallback(
           env,
           messages,
@@ -856,6 +837,23 @@ ${extraInstruction}`;
           undefined,
           isAnswerReview ? { max_tokens: 5_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS } : undefined,
         );
+      } catch (openRouterError) {
+        // If the text models are temporarily unavailable, keep one bounded
+        // direct-provider recovery path. File attachments never use this path
+        // because direct providers cannot safely inspect an unreadable PDF.
+        if (!isAnswerReview || hasAttachment) throw openRouterError;
+        try {
+          aiProvider = 'direct';
+          text = await providerText(
+            'groq',
+            `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\n${body.prompt}`,
+            env,
+            { skipOpenRouterFallback: true, timeoutMs: 4_000 },
+          );
+        } catch (directProviderError) {
+          console.error('All answer-review providers failed after the OpenRouter fallback.', { openRouterError, directProviderError });
+          throw openRouterError;
+        }
       }
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {
