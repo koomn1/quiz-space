@@ -67,6 +67,13 @@ const OPENROUTER_STREAM_TEXT_MODELS = [
   ...OPENROUTER_TEXT_FALLBACKS,
 ];
 const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'google/gemma-4-26b-a4b-it:free'];
+// Post-extraction answer review is a bounded JSON task. Use a short,
+// quality-first sequence so one slow provider cannot block every batch.
+const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
+  'qwen/qwen3.7-flash',
+  'mistralai/mistral-small-3.1-24b-instruct',
+  'nvidia/nemotron-3.5-lightning:free',
+];
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
 
@@ -277,6 +284,7 @@ function quizPrompt(topic: string, amount: number, previous: string[]): string {
 interface OpenRouterRequestOptions {
   max_tokens?: number;
   temperature?: number;
+  timeoutMs?: number;
 }
 
 async function callOpenRouter(
@@ -286,24 +294,33 @@ async function callOpenRouter(
   plugins?: any[],
   options?: OpenRouterRequestOptions,
 ): Promise<string> {
-  const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-      'HTTP-Referer': OPENROUTER_SITE_URL,
-      'X-Title': OPENROUTER_SITE_NAME,
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      ...(plugins ? { plugins } : {}),
-      ...(options || {}),
-    }),
-  });
-  if (!r.ok) throw new Error(await r.text());
-  const d: any = await r.json();
-  return d.choices?.[0]?.message?.content || '';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), options?.timeoutMs ?? 30_000);
+  try {
+    const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+        'HTTP-Referer': OPENROUTER_SITE_URL,
+        'X-Title': OPENROUTER_SITE_NAME,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        ...(plugins ? { plugins } : {}),
+        ...(options ? { max_tokens: options.max_tokens, temperature: options.temperature } : {}),
+      }),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    const d: any = await r.json();
+    const text = d.choices?.[0]?.message?.content || '';
+    if (!text) throw new Error(`OpenRouter ${model} returned an empty response`);
+    return text;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // Tries each model in order and returns the first success. Free OpenRouter
@@ -784,7 +801,19 @@ ${extraInstruction}`;
       // this once the models were swapped to ones whose names don't contain
       // that word (google/gemma-4-31b-it:free, nvidia/nemotron-...), so
       // every image was being sent to a text-only model and failing.
-      const text = await callOpenRouterWithFallback(env, messages, hasAttachment ? OPENROUTER_VISION_FALLBACKS : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS));
+      const isAnswerReview = body.currentPage === 'quiz-creator-post-extraction-solving';
+      const models = hasAttachment
+        ? OPENROUTER_VISION_FALLBACKS
+        : isAnswerReview
+          ? OPENROUTER_ANSWER_REVIEW_FALLBACKS
+          : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS);
+      const text = await callOpenRouterWithFallback(
+        env,
+        messages,
+        models,
+        undefined,
+        isAnswerReview ? { max_tokens: 5_000, temperature: 0.1, timeoutMs: 25_000 } : undefined,
+      );
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {
           user_id: userId,

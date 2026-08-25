@@ -829,12 +829,12 @@ export default function QuizCreator({
 
     const solvedQuestions = draftQuestions.map(question => ({ ...question }));
     const normalizedSourceText = sourceText.replace(/\s+/g, ' ').trim();
-    const sourceContext = normalizedSourceText.length > 7_500
-      ? `${normalizedSourceText.slice(0, 3_750)}\n... [تم اختصار منتصف المصدر] ...\n${normalizedSourceText.slice(-3_750)}`
+    const sourceContext = normalizedSourceText.length > 4_000
+      ? `${normalizedSourceText.slice(0, 2_000)}\n... [تم اختصار منتصف المصدر] ...\n${normalizedSourceText.slice(-2_000)}`
       : normalizedSourceText;
     // Keep each request under the worker's 20k prompt limit while running a
     // small number of requests concurrently for large quizzes.
-    const batchSize = 5;
+    const batchSize = 8;
     const maxConcurrentBatches = 3;
     const total = solvedQuestions.length;
     const batches = Array.from({ length: Math.ceil(total / batchSize) }, (_, batchNumber) => {
@@ -845,9 +845,9 @@ export default function QuizCreator({
     const solveBatch = async (batch: { offset: number; questions: Question[] }) => {
       const questionsForModel = batch.questions.map((question, index) => ({
         questionIndex: index + 1,
-        text: question.text.slice(0, 900),
+        text: question.text.slice(0, 750),
         type: question.type,
-        options: question.options.map(option => option.slice(0, 220)),
+        options: question.options.map(option => option.slice(0, 180)),
       }));
       const prompt = `أنت الآن في مرحلة «حل الاختبار بعد الاستخراج». استخدم الملف المرفق كمصدر أساسي، واستخدم نص السؤال والاختيارات أدناه للوصول إلى الإجابة الصحيحة فقط. لا تختار الخيار الأول افتراضيًا ولا تخمّن.
 

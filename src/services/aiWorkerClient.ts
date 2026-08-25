@@ -9,12 +9,17 @@ interface WorkerError {
   error?: string;
 }
 
+const AI_REQUEST_TIMEOUT_MS = 45_000;
+
 async function workerRequest<T>(path: string, body: unknown): Promise<T> {
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
   try {
     const response = await fetchWithAuth(getApiUrl(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
 
     if (response.ok) {
@@ -34,6 +39,8 @@ async function workerRequest<T>(path: string, body: unknown): Promise<T> {
     throw new Error(
       "Unable to reach the AI Worker. Please check VITE_AI_WORKER_URL, Cloudflare deployment, or CORS configuration."
     );
+  } finally {
+    globalThis.clearTimeout(timeoutId);
   }
 }
 
