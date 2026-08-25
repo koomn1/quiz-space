@@ -28,6 +28,12 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain("if (options.skipOpenRouterFallback) throw lastError");
   });
 
+  it('uses a current Groq production model for the direct fallback', () => {
+    expect(workerSource).toContain("env.GROQ_API_KEY, 'openai/gpt-oss-120b'");
+    expect(workerSource).not.toContain("llama-3.3-70b-versatile");
+    expect(workerSource).toContain("response_format: { type: 'json_object' }");
+  });
+
   it('records safe generation failures so Super Admin monitoring can diagnose them', () => {
     expect(workerSource).toContain("aiOperation = 'generation'");
     expect(workerSource).toContain("status: 'error'");

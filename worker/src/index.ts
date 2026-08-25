@@ -370,7 +370,7 @@ async function providerText(
     let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
       const s = current === 'openai' ? ['https://api.openai.com/v1/chat/completions', env.OPENAI_API_KEY, 'gpt-4o-mini']
-        : current === 'groq' ? ['https://api.groq.com/openai/v1/chat/completions', env.GROQ_API_KEY, 'llama-3.3-70b-versatile']
+        : current === 'groq' ? ['https://api.groq.com/openai/v1/chat/completions', env.GROQ_API_KEY, 'openai/gpt-oss-120b']
         : ['https://api.deepseek.com/chat/completions', env.DEEPSEEK_API_KEY, 'deepseek-chat'];
       const controller = new AbortController();
       timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 15_000);
@@ -778,7 +778,7 @@ ${extraInstruction}`;
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages }),
+        body: JSON.stringify({ model: 'openai/gpt-oss-120b', messages, response_format: { type: 'json_object' } }),
       });
       if (!response.ok) throw new Error(await response.text());
       const data = await response.json() as any;
@@ -787,7 +787,7 @@ ${extraInstruction}`;
           user_id: userId,
           operation: 'cosmo_chat',
           provider: 'groq',
-          model: 'llama-3.3-70b-versatile',
+          model: 'openai/gpt-oss-120b',
           status: 'success',
           latency_ms: Date.now() - startTime,
         });
