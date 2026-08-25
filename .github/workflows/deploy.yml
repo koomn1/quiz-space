@@ -242,6 +242,19 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler queues create quizspace-extraction-jobs --config wrangler.toml || true
 
+      - name: Validate OpenRouter provider secret
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          status=$(curl -sS -o /tmp/openrouter-provider-check.json -w '%{http_code}' \
+            -H "Authorization: Bearer ${OPENROUTER_API_KEY}" \
+            -H 'Content-Type: application/json' \
+            --data '{"model":"nvidia/nemotron-3-super-120b-a12b:free","messages":[{"role":"user","content":"Return OK only."}],"max_tokens":8}' \
+            https://openrouter.ai/api/v1/chat/completions)
+          echo "OpenRouter provider check HTTP status: ${status}"
+          test "${status}" = '200'
+
       - name: Sync AI Worker provider secrets
         working-directory: worker
         env:
