@@ -9,30 +9,64 @@ export type AnswerReview = {
   evidence?: string;
 };
 
+function findBalancedJsonCandidate(value: string): string | null {
+  const start = value.search(/[\[{]/);
+  if (start < 0) return null;
+  const stack: string[] = [];
+  let inString = false;
+  let escaped = false;
+  for (let index = start; index < value.length; index += 1) {
+    const char = value[index];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === '"') inString = false;
+      continue;
+    }
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+    if (char === '{' || char === '[') stack.push(char);
+    else if (char === '}' || char === ']') {
+      const expected = char === '}' ? '{' : '[';
+      if (stack.pop() !== expected) return null;
+      if (stack.length === 0) return value.slice(start, index + 1);
+    }
+  }
+  return null;
+}
+
+function extractReviews(value: unknown): AnswerReview[] | null {
+  if (Array.isArray(value)) return value as AnswerReview[];
+  if (!value || typeof value !== 'object') return null;
+  const record = value as { answers?: unknown; result?: unknown; data?: unknown };
+  if (Array.isArray(record.answers)) return record.answers as AnswerReview[];
+  return extractReviews(record.result) || extractReviews(record.data);
+}
+
 export function parseAnswerReviews(text: string): AnswerReview[] {
   const cleaned = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-  const objectStart = cleaned.indexOf('{');
-  const objectEnd = cleaned.lastIndexOf('}');
-  if (objectStart < 0 || objectEnd <= objectStart) {
-    throw new Error('لم تُرجع مرحلة حل الاختبار نتيجة JSON صالحة.');
+  const candidates = [cleaned, findBalancedJsonCandidate(cleaned)].filter((candidate, index, all): candidate is string => Boolean(candidate) && all.indexOf(candidate) === index);
+  for (const candidate of candidates) {
+    try {
+      const firstParse = JSON.parse(candidate) as unknown;
+      const parsed = typeof firstParse === 'string' ? JSON.parse(firstParse) as unknown : firstParse;
+      const reviews = extractReviews(parsed);
+      if (reviews) return reviews;
+    } catch {
+      // Try the next balanced candidate before reporting an invalid response.
+    }
   }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned.slice(objectStart, objectEnd + 1));
-  } catch {
-    throw new Error('لم تُرجع مرحلة حل الاختبار نتيجة JSON صالحة.');
-  }
-  const reviews = Array.isArray(parsed) ? parsed : (parsed as { answers?: unknown } | null)?.answers;
-  if (!Array.isArray(reviews)) {
-    throw new Error('لم تُرجع مرحلة حل الاختبار إجابات قابلة للمراجعة.');
-  }
-  return reviews as AnswerReview[];
+  throw new Error('لم تُرجع مرحلة حل الاختبار نتيجة JSON صالحة.');
 }
 
 export function normalizeReviewAnswer(value: unknown): string {
   return String(value ?? '')
     .normalize('NFKC')
     .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/^(?:option|answer|الإجابة|الاختيار)\s*/i, '')
+    .replace(/^[a-dأ-د1-4]\s*[).:\-]\s*/i, '')
     .replace(/[.,،؛:!?؟"'`()\[\]{}]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
@@ -95,7 +129,8 @@ export function applyVerifiedAnswerReviews(questions: Question[], responseText: 
     }
     const optionAnswer = normalizeReviewAnswer(question.options[correctIndex]);
     const returnedAnswer = normalizeReviewAnswer(review.correctAnswer);
-    if (!returnedAnswer || returnedAnswer !== optionAnswer) continue;
+    const optionLabel = returnedAnswer.length === 1 ? { a: 0, b: 1, c: 2, d: 3, أ: 0, ب: 1, ج: 2, د: 3 }[returnedAnswer] : undefined;
+    if (!returnedAnswer || (returnedAnswer !== optionAnswer && optionLabel !== correctIndex)) continue;
 
     reviewedIndexes.add(questionIndex);
     const explanationParts = [review.explanation, review.evidence]

@@ -66,6 +66,15 @@ describe('extracted answer review', () => {
     expect(result.questions.map(question => question.correctIndex)).toEqual([1, 2, 3, 0]);
   });
 
+  it('accepts Worker-wrapped, double-encoded, and prefixed model answers', () => {
+    const workerResponse = JSON.stringify({ text: JSON.stringify({
+      answers: [{ questionIndex: 1, correctIndex: 1, correctAnswer: 'B) القاهرة', explanation: 'سبب', evidence: 'دليل' }],
+    }) });
+    expect(parseAnswerReviews(JSON.parse(workerResponse).text)).toHaveLength(1);
+    expect(parseAnswerReviews(JSON.stringify(JSON.parse(workerResponse).text))).toHaveLength(1);
+    expect(normalizeReviewAnswer('B) القاهرة')).toBe('القاهرة');
+  });
+
   it('accepts JSON wrapped in a markdown code fence and normalizes harmless typography', () => {
     expect(parseAnswerReviews('```json\n{"answers":[]}\n```')).toEqual([]);
     expect(normalizeReviewAnswer(' القَاهِرة، ')).toBe('القاهرة');
