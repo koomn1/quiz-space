@@ -74,6 +74,11 @@ const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
   'mistralai/mistral-small-3.1-24b-instruct',
   'nvidia/nemotron-3.5-lightning:free',
 ];
+const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
+  'google/gemma-4-31b-it:free',
+  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+  'google/gemma-4-26b-a4b-it:free',
+];
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
 
@@ -802,10 +807,10 @@ ${extraInstruction}`;
       // that word (google/gemma-4-31b-it:free, nvidia/nemotron-...), so
       // every image was being sent to a text-only model and failing.
       const isAnswerReview = body.currentPage === 'quiz-creator-post-extraction-solving';
-      const models = hasAttachment
-        ? OPENROUTER_VISION_FALLBACKS
-        : isAnswerReview
-          ? OPENROUTER_ANSWER_REVIEW_FALLBACKS
+      const models = isAnswerReview
+        ? (hasAttachment ? OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS : OPENROUTER_ANSWER_REVIEW_FALLBACKS)
+        : hasAttachment
+          ? OPENROUTER_VISION_FALLBACKS
           : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS);
       const text = await callOpenRouterWithFallback(
         env,

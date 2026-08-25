@@ -38,10 +38,14 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain("currentPage: 'quiz-creator-post-extraction-solving'");
     expect(source).toContain('const overlayProgress = isProcessingOcr ? ocrProgress : generationProgress;');
     expect(source).toContain('const maxConcurrentBatches = 3;');
-    expect(source).toContain('if (sourceContext)');
-    expect(source).toContain('attachment },');
+    expect(source).toContain('const answerKeyMarker =');
+    expect(source).toContain('sourceContext ? requestOptions : { ...requestOptions, attachment }');
+    expect(source).toContain('const { text } = await askAI(');
     expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, text)');
     expect(source).toContain('const saved = await handlePublishQuiz(solvedQuestions');
-    expect(source).toContain('correctIndex: typeof q.correctIndex === \'number\' ? q.correctIndex : -1');
+    expect(source).toContain("correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1");
+    expect(source).toContain("setActiveMode('ocr');");
+    expect(source).toContain('An extracted quiz must not leak into the ordinary draft channel');
+    expect(source).toContain('question?.type === \'essay\'');
   });
 });

@@ -469,6 +469,8 @@ export default function QuizCreator({
     };
     fetchExistingCategories();
   }, [quizToEdit]);
+  const [postExtractionSolvePending, setPostExtractionSolvePending] = React.useState(false);
+
   // Persistence: auto-restore the ordinary editor draft under the current owner's key.
   React.useEffect(() => {
     if (quizToEdit) return;
@@ -492,6 +494,9 @@ export default function QuizCreator({
     if (quizToEdit) return;
     try {
       const draftKey = getQuizCreatorDraftKey(draftOwnerId);
+      // An extracted quiz must not leak into the ordinary draft channel while
+      // answer verification is still pending or has failed.
+      if (postExtractionSolvePending) return;
       const hasContent = title.trim() || questions.some(q => q.text.trim());
       if (hasContent) {
         localStorage.setItem(draftKey, JSON.stringify({
@@ -504,7 +509,7 @@ export default function QuizCreator({
         }));
       }
     } catch (_) {}
-  }, [title, description, category, timeLimit, questions, draftOwnerId, quizToEdit]);
+  }, [title, description, category, timeLimit, questions, draftOwnerId, quizToEdit, postExtractionSolvePending]);
 
   // Extracted drafts are separate from ordinary editor drafts and are surfaced
   // as an explicit continuation choice when the creator is opened again.
@@ -560,7 +565,6 @@ export default function QuizCreator({
   const [isGuidingFile, setIsGuidingFile] = React.useState(false);
   const [fileGuidanceError, setFileGuidanceError] = React.useState<string | null>(null);
   const extractedAttachmentRef = React.useRef<AiChatAttachment | null>(null);
-  const [postExtractionSolvePending, setPostExtractionSolvePending] = React.useState(false);
   const [ocrBatches, setOcrBatches] = React.useState<{
     id: number;
     nameAr: string;
@@ -690,8 +694,10 @@ export default function QuizCreator({
                 } else if (ocrError === errorStr) {
                   if (extractedAttachmentRef.current && questions.some(question => question.text.trim())) {
                     void retryPostExtractionSolve();
-                  } else {
+                  } else if (uploadedFile) {
                     void handleProcessDocument();
+                  } else {
+                    setOcrError(isAr ? 'أعد رفع ملف المصدر أولًا حتى يمكن إعادة التحقق من الإجابات.' : 'Re-upload the source file before retrying answer verification.');
                   }
                 }
               }}
@@ -829,9 +835,16 @@ export default function QuizCreator({
 
     const solvedQuestions = draftQuestions.map(question => ({ ...question }));
     const normalizedSourceText = sourceText.replace(/\s+/g, ' ').trim();
-    const sourceContext = normalizedSourceText.length > 4_000
-      ? `${normalizedSourceText.slice(0, 2_000)}\n... [تم اختصار منتصف المصدر] ...\n${normalizedSourceText.slice(-2_000)}`
-      : normalizedSourceText;
+    const answerKeyMarker = /(?:answer\s*key|مفتاح\s*(?:الإجابة|الإجابات)|نموذج\s+الإجابة)/i;
+    const answerKeyStart = normalizedSourceText.search(answerKeyMarker);
+    const sourceContext = answerKeyStart >= 0
+      ? [
+          normalizedSourceText.slice(0, Math.min(answerKeyStart, 6_500)),
+          normalizedSourceText.slice(answerKeyStart, answerKeyStart + 6_500),
+        ].filter(Boolean).join('\n... [تم اختصار متن المصدر مع إبقاء مفتاح الإجابة] ...\n')
+      : normalizedSourceText.length > 4_000
+        ? `${normalizedSourceText.slice(0, 2_000)}\n... [تم اختصار منتصف المصدر] ...\n${normalizedSourceText.slice(-2_000)}`
+        : normalizedSourceText;
     // Keep each request under the worker's 20k prompt limit while running a
     // small number of requests concurrently for large quizzes.
     const batchSize = 8;
@@ -869,23 +882,10 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           ? 'أنت مراجع إجابات أكاديمي شديد الدقة. لا تختر الخيار الأول أبدًا كحل افتراضي. لا تعتمد إلا على دليل الملف أو على إجابة يمكن إثباتها مباشرة من السؤال والخيارات. أعد JSON صالحًا فقط.'
           : 'You are a strict academic answer verifier. Never default to the first option. Use only evidence from the file or a directly provable answer. Return valid JSON only.',
       };
-      let text: string;
-      if (sourceContext) {
-        // Text PDFs use the normal text route, which has provider fallback and
-        // avoids sending a PDF file to a vision-only streaming model.
-        ({ text } = await askAI(prompt, requestOptions));
-      } else {
-        ({ text } = await askAIStream(
-          prompt,
-          { ...requestOptions, attachment },
-          (_delta, _fullText) => {
-            setOcrProgress(prev => prev ? {
-              ...prev,
-              message: `جاري تحليل إجابات الأسئلة ${batch.offset + 1}–${Math.min(batch.offset + batch.questions.length, total)} من ${total}...`,
-            } : prev);
-          },
-        ));
-      }
+      const { text } = await askAI(
+        prompt,
+        sourceContext ? requestOptions : { ...requestOptions, attachment },
+      );
       return { offset: batch.offset, questions: applyVerifiedAnswerReviews(batch.questions, text) };
     };
 
@@ -929,10 +929,15 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
   const prepareAndSolveExtractedQuiz = async (result: { title: string; description: string; quiz: Quiz }) => {
     setTitle(result.title);
     setDescription(result.description);
-    const draftQuestions = result.quiz.questions.map((question: any, index: number) => ({
-      ...question,
-      id: question.id || `q-post-extraction-${index}-${Date.now()}`,
-    })) as Question[];
+    const draftQuestions = result.quiz.questions
+      .filter((question: any) => question?.type === 'essay' || (Array.isArray(question?.options) && question.options.filter((option: unknown) => typeof option === 'string' && option.trim()).length >= 2))
+      .map((question: any, index: number) => ({
+        ...question,
+        id: question.id || `q-post-extraction-${index}-${Date.now()}`,
+      })) as Question[];
+    if (draftQuestions.length === 0) {
+      throw new Error('لم يتم العثور على أسئلة قابلة للحل في الملف. تأكد من وضوح المستند ثم أعد المحاولة.');
+    }
     const attachment = extractedAttachmentRef.current;
     const draftFileType = attachment
       ? attachment.kind === 'image' ? 'image' : attachment.mimeType === 'application/pdf' ? 'pdf' : 'document'
@@ -1002,9 +1007,11 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       setIsProcessingOcr(false);
       setOcrProgress(null);
     } catch (error) {
-      setPostExtractionSolvePending(false);
+      // Keep the user in the extraction panel so the error and retry action are
+      // visible. Never fall back silently to a manual editor with unsolved questions.
+      setPostExtractionSolvePending(true);
       setIsProcessingOcr(false);
-      setActiveMode('manual');
+      setActiveMode('ocr');
       throw error;
     }
   };
@@ -1052,8 +1059,15 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     setCategory(draft.category);
     setTimeLimit(draft.timeLimit);
     setQuestions(draft.questions);
+    const unresolvedCount = draft.questions.filter(question =>
+      question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length)
+    ).length;
+    setVerifiedQuestionsCount(unresolvedCount === 0 ? draft.questions.length : null);
+    setPostExtractionSolvePending(unresolvedCount > 0);
+    setOcrError(unresolvedCount > 0
+      ? (isAr ? `هذه مسودة غير مكتملة: لم يتم التحقق من إجابات ${unresolvedCount} سؤالًا. أعد رفع الملف لإعادة الحل.` : `This draft is incomplete: ${unresolvedCount} answers were not verified. Re-upload the file to retry.`)
+      : null);
     setActiveMode('manual');
-    setPostExtractionSolvePending(false);
     setShowResumeExtractedDraft(false);
     setPendingExtractedDraft(null);
     setSaveError(null);
@@ -2902,6 +2916,8 @@ A computer is a digital electronic machine...
 
               </div>
             </div>
+
+            {ocrError && activeMode === 'manual' && renderErrorMsg(ocrError)}
 
             {verifiedQuestionsCount !== null && !postExtractionSolvePending && (
               <div className="rounded-[28px] border border-emerald-200/70 bg-emerald-50/80 p-5 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/20" dir="rtl">
