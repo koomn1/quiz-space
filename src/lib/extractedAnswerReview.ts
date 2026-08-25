@@ -39,6 +39,34 @@ export function normalizeReviewAnswer(value: unknown): string {
     .toLocaleLowerCase();
 }
 
+export function applySourceAnswerKey(questions: Question[], sourceText: string, questionOffset = 0): { questions: Question[]; matched: number } {
+  const marker = sourceText.search(/(?:answer\s*key|مفتاح\s*(?:الإجابة|الإجابات)|نموذج\s+الإجابة)/i);
+  if (marker < 0) return { questions: questions.map(question => ({ ...question })), matched: 0 };
+
+  const answerKey = sourceText.slice(marker);
+  const letterToIndex: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, أ: 0, ب: 1, ج: 2, د: 3 };
+  const answerMap = new Map<number, number>();
+  const answerPattern = /(?:^|\s)(\d{1,3})\s*[:.)-]\s*([a-dأ-د])(?=\s|$)/gi;
+  for (const match of answerKey.matchAll(answerPattern)) {
+    const questionNumber = Number(match[1]);
+    const optionIndex = letterToIndex[match[2].toLocaleLowerCase()];
+    if (Number.isInteger(questionNumber) && Number.isInteger(optionIndex)) answerMap.set(questionNumber - 1, optionIndex);
+  }
+
+  let matched = 0;
+  const next = questions.map((question, index) => {
+    const correctIndex = answerMap.get(index + questionOffset);
+    if (question.type === 'essay' || correctIndex === undefined || correctIndex >= question.options.length) return { ...question };
+    matched += 1;
+    return {
+      ...question,
+      correctIndex,
+      correctAnswer: question.options[correctIndex],
+    };
+  });
+  return { questions: next, matched };
+}
+
 export function applyVerifiedAnswerReviews(questions: Question[], responseText: string): Question[] {
   const next = questions.map(question => ({ ...question }));
   const reviews = parseAnswerReviews(responseText);

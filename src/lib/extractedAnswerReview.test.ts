@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Question } from '../types';
-import { applyVerifiedAnswerReviews, normalizeReviewAnswer, parseAnswerReviews } from './extractedAnswerReview';
+import { applySourceAnswerKey, applyVerifiedAnswerReviews, normalizeReviewAnswer, parseAnswerReviews } from './extractedAnswerReview';
 
 const questions: Question[] = [{
   id: 'q1',
@@ -40,6 +40,18 @@ describe('extracted answer review', () => {
     expect(() => applyVerifiedAnswerReviews(questions, JSON.stringify({
       answers: [{ questionIndex: 2, correctIndex: 0, correctAnswer: 'الإسكندرية' }],
     }))).toThrow('رقم سؤال غير صالح');
+  });
+
+  it('applies a complete source answer key without an AI round trip', () => {
+    const sourceQuestions = [
+      { ...questions[0], number: 1, options: ['A1', 'B1', 'C1', 'D1'] },
+      { ...questions[0], id: 'q2', number: 2, options: ['A2', 'B2', 'C2', 'D2'] },
+      { ...questions[0], id: 'q3', number: 3, options: ['A3', 'B3', 'C3', 'D3'] },
+    ];
+    const result = applySourceAnswerKey(sourceQuestions, 'Questions... Answer key 1: B 2: C 3: D');
+    expect(result.matched).toBe(3);
+    expect(result.questions.map(question => question.correctIndex)).toEqual([1, 2, 3]);
+    expect(result.questions[1].correctAnswer).toBe('C2');
   });
 
   it('accepts JSON wrapped in a markdown code fence and normalizes harmless typography', () => {

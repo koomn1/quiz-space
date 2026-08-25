@@ -18,7 +18,7 @@ import DrivePicker from '../components/DrivePicker';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
-import { applyVerifiedAnswerReviews } from '../lib/extractedAnswerReview';
+import { applySourceAnswerKey, applyVerifiedAnswerReviews } from '../lib/extractedAnswerReview';
 import {
   clearExtractedQuizDraft,
   getQuizCreatorDraftKey,
@@ -882,6 +882,13 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           ? 'أنت مراجع إجابات أكاديمي شديد الدقة. لا تختر الخيار الأول أبدًا كحل افتراضي. لا تعتمد إلا على دليل الملف أو على إجابة يمكن إثباتها مباشرة من السؤال والخيارات. أعد JSON صالحًا فقط.'
           : 'You are a strict academic answer verifier. Never default to the first option. Use only evidence from the file or a directly provable answer. Return valid JSON only.',
       };
+      if (sourceText) {
+        const sourceKeyResult = applySourceAnswerKey(batch.questions, sourceText, batch.offset);
+        if (sourceKeyResult.matched === batch.questions.filter(question => question.type !== 'essay').length) {
+          return { offset: batch.offset, questions: sourceKeyResult.questions };
+        }
+      }
+
       const { text } = await askAI(
         prompt,
         sourceContext ? requestOptions : { ...requestOptions, attachment },
