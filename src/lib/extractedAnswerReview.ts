@@ -40,8 +40,15 @@ function findBalancedJsonCandidate(value: string): string | null {
 function extractReviews(value: unknown): AnswerReview[] | null {
   if (Array.isArray(value)) return value as AnswerReview[];
   if (!value || typeof value !== 'object') return null;
-  const record = value as { answers?: unknown; result?: unknown; data?: unknown };
+  const record = value as { answers?: unknown; result?: unknown; data?: unknown; text?: unknown };
   if (Array.isArray(record.answers)) return record.answers as AnswerReview[];
+  if (typeof record.text === 'string') {
+    try {
+      return extractReviews(JSON.parse(record.text));
+    } catch {
+      return null;
+    }
+  }
   return extractReviews(record.result) || extractReviews(record.data);
 }
 

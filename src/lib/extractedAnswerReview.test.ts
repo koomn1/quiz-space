@@ -72,6 +72,7 @@ describe('extracted answer review', () => {
     }) });
     expect(parseAnswerReviews(JSON.parse(workerResponse).text)).toHaveLength(1);
     expect(parseAnswerReviews(JSON.stringify(JSON.parse(workerResponse).text))).toHaveLength(1);
+    expect(parseAnswerReviews(workerResponse)).toHaveLength(1);
     expect(normalizeReviewAnswer('B) القاهرة')).toBe('القاهرة');
   });
 
