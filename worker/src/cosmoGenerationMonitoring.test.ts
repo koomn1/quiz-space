@@ -18,12 +18,13 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('max_tokens: 8_000');
   });
 
-  it('keeps answer-review requests bounded and recovers text-only failures', () => {
+  it('uses bounded direct providers before OpenRouter for text-only answer review', () => {
     expect(workerSource).toContain('const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 12_000');
     expect(workerSource).toContain("aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat'");
-    expect(workerSource).toContain("if (!isAnswerReview || hasAttachment) throw openRouterError;");
-    expect(workerSource).toContain("text = await providerText(\n            'groq'");
-    expect(workerSource).toContain('Direct answer-review fallback returned an empty response');
+    expect(workerSource).toContain("timeoutMs: 10_000");
+    expect(workerSource).toContain("text = await providerText('groq', directAnswerReviewPrompt");
+    expect(workerSource).toContain("console.warn('Direct answer-review providers failed; trying OpenRouter text models.'");
+    expect(workerSource).toContain("if (options.skipOpenRouterFallback) throw lastError");
   });
 
   it('records safe generation failures so Super Admin monitoring can diagnose them', () => {

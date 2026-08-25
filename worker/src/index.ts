@@ -352,7 +352,12 @@ async function callOpenRouterWithFallback(
   throw lastError || new Error('All OpenRouter models failed');
 }
 
-async function providerText(provider: Provider, prompt: string, env: Env): Promise<string> {
+async function providerText(
+  provider: Provider,
+  prompt: string,
+  env: Env,
+  options: { skipOpenRouterFallback?: boolean; timeoutMs?: number } = {},
+): Promise<string> {
   const order: Provider[] = provider === 'groq'
     ? ['groq', 'openai', 'deepseek']
     : provider === 'openai'
@@ -362,15 +367,23 @@ async function providerText(provider: Provider, prompt: string, env: Env): Promi
         : [];
   let lastError: any;
   for (const current of order) {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
       const s = current === 'openai' ? ['https://api.openai.com/v1/chat/completions', env.OPENAI_API_KEY, 'gpt-4o-mini']
         : current === 'groq' ? ['https://api.groq.com/openai/v1/chat/completions', env.GROQ_API_KEY, 'llama-3.3-70b-versatile']
         : ['https://api.deepseek.com/chat/completions', env.DEEPSEEK_API_KEY, 'deepseek-chat'];
-      const r = await fetch(s[0], { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s[1]}` }, body: JSON.stringify({ model: s[2], messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }) });
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 15_000);
+      const r = await fetch(s[0], { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s[1]}` }, body: JSON.stringify({ model: s[2], messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }) });
       if (!r.ok) throw new Error(await r.text());
-      const d: any = await r.json(); return d.choices?.[0]?.message?.content || '';
+      const d: any = await r.json();
+      const text = d.choices?.[0]?.message?.content || '';
+      if (!text.trim()) throw new Error(`Provider ${current} returned an empty response`);
+      return text;
     } catch (e) { console.error('Provider failed', current, e); lastError = e; }
+    finally { if (timeout) clearTimeout(timeout); }
   }
+  if (options.skipOpenRouterFallback) throw lastError ?? new Error('All direct text providers failed');
   try {
     return await callOpenRouterWithFallback(env, [{ role: 'user', content: prompt }], OPENROUTER_TEXT_FALLBACKS, undefined, { max_tokens: 8_000, temperature: 0.35 });
   } catch (openRouterError) {
@@ -814,9 +827,28 @@ ${extraInstruction}`;
           ? OPENROUTER_VISION_FALLBACKS
           : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS);
       aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat';
-      aiProvider = 'openrouter';
       let text: string;
-      try {
+      const directAnswerReviewPrompt = `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\n${body.prompt}`;
+      if (isAnswerReview && !hasAttachment) {
+        try {
+          // Use the direct provider chain first for answer review. It avoids
+          // OpenRouter rate limits and keeps PDF solving independent from
+          // vision-model availability when the extracted question text is enough.
+          aiProvider = 'direct';
+          text = await providerText('groq', directAnswerReviewPrompt, env, { skipOpenRouterFallback: true, timeoutMs: 10_000 });
+        } catch (directProviderError) {
+          console.warn('Direct answer-review providers failed; trying OpenRouter text models.', directProviderError);
+          aiProvider = 'openrouter';
+          text = await callOpenRouterWithFallback(
+            env,
+            messages,
+            models,
+            undefined,
+            { max_tokens: 5_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS },
+          );
+        }
+      } else {
+        aiProvider = 'openrouter';
         text = await callOpenRouterWithFallback(
           env,
           messages,
@@ -824,23 +856,6 @@ ${extraInstruction}`;
           undefined,
           isAnswerReview ? { max_tokens: 5_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS } : undefined,
         );
-      } catch (openRouterError) {
-        // A text-only answer review can be recovered through the direct
-        // provider chain. This is intentionally disabled for file attachments:
-        // direct providers cannot verify an unreadable PDF safely.
-        if (!isAnswerReview || hasAttachment) throw openRouterError;
-        try {
-          aiProvider = 'groq';
-          text = await providerText(
-            'groq',
-            `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\n${body.prompt}`,
-            env,
-          );
-          if (!text.trim()) throw new Error('Direct answer-review fallback returned an empty response');
-        } catch (directProviderError) {
-          console.error('All answer-review providers failed after the OpenRouter fallback.', { openRouterError, directProviderError });
-          throw openRouterError;
-        }
       }
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {
