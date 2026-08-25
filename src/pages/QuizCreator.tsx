@@ -889,11 +889,28 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         }
       }
 
-      const { text } = await askAI(
-        prompt,
-        sourceContext ? requestOptions : { ...requestOptions, attachment },
-      );
-      return { offset: batch.offset, questions: applyVerifiedAnswerReviews(batch.questions, text) };
+      let response: { text: string };
+      try {
+        response = await askAI(
+          prompt,
+          sourceContext ? requestOptions : { ...requestOptions, attachment },
+        );
+      } catch (error) {
+        // Some OpenRouter vision models reject large or malformed PDF file
+        // payloads even though the extracted questions are valid. Do not stop
+        // the whole solve stage in that case: retry the bounded question text
+        // without the file so a text model can verify the same batch.
+        if (!sourceText && attachment.kind === 'file') {
+          console.warn('PDF answer-review request failed; retrying the same batch as text-only.', error);
+          response = await askAI(
+            `${prompt}\n\nملاحظة تشغيلية: تعذر فتح مرفق PDF في محاولة الرؤية؛ استخدم نص السؤال والاختيارات أعلاه فقط، ولا تخمّن أو تغيّر ترتيب الخيارات.`,
+            requestOptions,
+          );
+        } else {
+          throw error;
+        }
+      }
+      return { offset: batch.offset, questions: applyVerifiedAnswerReviews(batch.questions, response.text) };
     };
 
     for (let groupStart = 0; groupStart < batches.length; groupStart += maxConcurrentBatches) {

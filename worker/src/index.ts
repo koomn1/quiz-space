@@ -79,6 +79,7 @@ const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
 ];
+const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 12_000;
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
 
@@ -812,18 +813,40 @@ ${extraInstruction}`;
         : hasAttachment
           ? OPENROUTER_VISION_FALLBACKS
           : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS);
-      const text = await callOpenRouterWithFallback(
-        env,
-        messages,
-        models,
-        undefined,
-        isAnswerReview ? { max_tokens: 5_000, temperature: 0.1, timeoutMs: 25_000 } : undefined,
-      );
+      aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat';
+      aiProvider = 'openrouter';
+      let text: string;
+      try {
+        text = await callOpenRouterWithFallback(
+          env,
+          messages,
+          models,
+          undefined,
+          isAnswerReview ? { max_tokens: 5_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS } : undefined,
+        );
+      } catch (openRouterError) {
+        // A text-only answer review can be recovered through the direct
+        // provider chain. This is intentionally disabled for file attachments:
+        // direct providers cannot verify an unreadable PDF safely.
+        if (!isAnswerReview || hasAttachment) throw openRouterError;
+        try {
+          aiProvider = 'groq';
+          text = await providerText(
+            'groq',
+            `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\n${body.prompt}`,
+            env,
+          );
+          if (!text.trim()) throw new Error('Direct answer-review fallback returned an empty response');
+        } catch (directProviderError) {
+          console.error('All answer-review providers failed after the OpenRouter fallback.', { openRouterError, directProviderError });
+          throw openRouterError;
+        }
+      }
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {
           user_id: userId,
-          operation: 'cosmo_chat',
-          provider: 'openrouter',
+          operation: aiOperation,
+          provider: aiProvider,
           model: typeof body.model === 'string' ? body.model : OPENROUTER_TEXT_MODEL,
           status: 'success',
           latency_ms: Date.now() - startTime,

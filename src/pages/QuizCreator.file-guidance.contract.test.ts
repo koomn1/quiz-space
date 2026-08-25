@@ -40,8 +40,10 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('const maxConcurrentBatches = 3;');
     expect(source).toContain('const answerKeyMarker =');
     expect(source).toContain('sourceContext ? requestOptions : { ...requestOptions, attachment }');
-    expect(source).toContain('const { text } = await askAI(');
-    expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, text)');
+    expect(source).toContain('response = await askAI(');
+    expect(source).toContain('PDF answer-review request failed; retrying the same batch as text-only.');
+    expect(source).toContain('تعذر فتح مرفق PDF في محاولة الرؤية');
+    expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, response.text)');
     expect(source).toContain('const saved = await handlePublishQuiz(solvedQuestions');
     expect(source).toContain("correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1");
     expect(source).toContain("setActiveMode('ocr');");
