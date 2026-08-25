@@ -36,8 +36,11 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('await prepareAndSolveExtractedQuiz(result);');
     expect(source).toContain('حل الاختبار بعد الاستخراج');
     expect(source).toContain("currentPage: 'quiz-creator-post-extraction-solving'");
-    expect(source).toContain('attachment: attachment || undefined');
-    expect(source).toContain('applyVerifiedAnswerReviews(batch, text)');
+    expect(source).toContain('const overlayProgress = isProcessingOcr ? ocrProgress : generationProgress;');
+    expect(source).toContain('const maxConcurrentBatches = 3;');
+    expect(source).toContain('if (sourceContext)');
+    expect(source).toContain('attachment },');
+    expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, text)');
     expect(source).toContain('const saved = await handlePublishQuiz(solvedQuestions');
     expect(source).toContain('correctIndex: typeof q.correctIndex === \'number\' ? q.correctIndex : -1');
   });

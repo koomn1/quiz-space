@@ -297,59 +297,68 @@ export async function askAIStream(
   options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string },
   onChunk: (deltaText: string, fullTextSoFar: string) => void,
 ): Promise<{ text: string }> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 120_000);
   let response: Response;
+  let fullText = '';
+
+  const consumeSseLine = (line: string) => {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('data:')) return;
+    let dataStr = trimmed.slice(5).trim();
+    if (!dataStr) return;
+    // OpenRouter prepends [OPENAI_STREAM_CHUNK] to some models (gpt-oss etc.)
+    if (dataStr.startsWith('[OPENAI_STREAM_CHUNK]')) dataStr = dataStr.slice(21);
+    if (dataStr === '[DONE]') return;
+    try {
+      const parsed = JSON.parse(dataStr);
+      const delta: string = parsed.choices?.[0]?.delta?.content || '';
+      if (delta) {
+        fullText += delta;
+        onChunk(delta, fullText);
+      }
+    } catch {
+      // Ignore malformed/partial SSE lines.
+    }
+  };
+
   try {
     response = await fetchWithAuth(getApiUrl('/api/ai/openrouter/stream'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, ...options }),
+      signal: controller.signal,
     });
-  } catch {
-    return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
-  }
 
-  if (!response.ok || !response.body) {
-    const payload = await response.json().catch(() => ({})) as WorkerError;
-    if (response.status >= 500) {
+    if (!response.ok || !response.body) {
+      const payload = await response.json().catch(() => ({})) as WorkerError;
+      if (response.status >= 500) {
+        return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
+      }
+      throw new Error(payload.error || `AI streaming failed (${response.status}).`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      lines.forEach(consumeSseLine);
+    }
+    // Some proxies close the stream without a final newline. Do not discard
+    // the final JSON chunk in that case.
+    if (buffer.trim()) consumeSseLine(buffer);
+  } catch (error) {
+    if (!fullText) {
       return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
     }
-    throw new Error(payload.error || `AI streaming failed (${response.status}).`);
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let fullText = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || ''; // keep the last (possibly incomplete) line for next chunk
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith('data:')) continue;
-      let dataStr = trimmed.slice(5).trim();
-      if (!dataStr) continue;
-      // OpenRouter prepends [OPENAI_STREAM_CHUNK] to some models (gpt-oss etc.)
-      if (dataStr.startsWith('[OPENAI_STREAM_CHUNK]')) {
-        dataStr = dataStr.slice(21);
-      }
-      if (dataStr === '[DONE]') continue;
-      try {
-        const parsed = JSON.parse(dataStr);
-        const delta: string = parsed.choices?.[0]?.delta?.content || '';
-        if (delta) {
-          fullText += delta;
-          onChunk(delta, fullText);
-        }
-      } catch {
-        // Ignore malformed/partial SSE lines
-      }
-    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 
   if (!fullText) {

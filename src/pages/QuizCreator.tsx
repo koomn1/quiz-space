@@ -13,7 +13,7 @@ import { getApiUrl, getAppOrigin } from '../lib/origin';
 import { supabase } from '../lib/supabaseClient';
 import { fetchWithAuth } from '../lib/authFetch';
 import { useQuizGenerator } from '../hooks/useQuizGenerator';
-import { askAIStream, getRememberedExtractionJobId, type AiChatAttachment } from '../services/aiWorkerClient';
+import { askAI, askAIStream, getRememberedExtractionJobId, type AiChatAttachment } from '../services/aiWorkerClient';
 import DrivePicker from '../components/DrivePicker';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
@@ -818,7 +818,7 @@ export default function QuizCreator({
     }
   };
 
-  const solveExtractedQuiz = async (draftQuestions: Question[]): Promise<Question[]> => {
+  const solveExtractedQuiz = async (draftQuestions: Question[], sourceText = ''): Promise<Question[]> => {
     const attachment = extractedAttachmentRef.current;
     if (!attachment) {
       throw new Error('لا يمكن تشغيل مرحلة حل الاختبار بعد الاستخراج بدون الملف الأصلي. أعد رفع الملف للمراجعة الآمنة.');
@@ -826,25 +826,28 @@ export default function QuizCreator({
     if (attachment.kind !== 'image' && attachment.mimeType !== 'application/pdf') {
       throw new Error('مرحلة حل الاختبار بعد الاستخراج تدعم ملفات PDF والصور فقط حاليًا. يمكنك مراجعة أسئلة ملف Office يدويًا دون تخمين.');
     }
+
     const solvedQuestions = draftQuestions.map(question => ({ ...question }));
+    const normalizedSourceText = sourceText.replace(/\s+/g, ' ').trim();
+    const sourceContext = normalizedSourceText.length > 7_500
+      ? `${normalizedSourceText.slice(0, 3_750)}\n... [تم اختصار منتصف المصدر] ...\n${normalizedSourceText.slice(-3_750)}`
+      : normalizedSourceText;
+    // Keep each request under the worker's 20k prompt limit while running a
+    // small number of requests concurrently for large quizzes.
     const batchSize = 5;
+    const maxConcurrentBatches = 3;
     const total = solvedQuestions.length;
+    const batches = Array.from({ length: Math.ceil(total / batchSize) }, (_, batchNumber) => {
+      const offset = batchNumber * batchSize;
+      return { offset, questions: solvedQuestions.slice(offset, offset + batchSize) };
+    });
 
-    for (let offset = 0; offset < total; offset += batchSize) {
-      const batch = solvedQuestions.slice(offset, offset + batchSize);
-      setOcrProgress({
-        stage: 'solving',
-        current: offset,
-        total,
-        percentage: Math.round((offset / Math.max(total, 1)) * 100),
-        message: `مرحلة حل الاختبار بعد الاستخراج: مراجعة الأسئلة ${offset + 1}–${Math.min(offset + batch.length, total)} من ${total} بدقة...`,
-      });
-
-      const questionsForModel = batch.map((question, index) => ({
+    const solveBatch = async (batch: { offset: number; questions: Question[] }) => {
+      const questionsForModel = batch.questions.map((question, index) => ({
         questionIndex: index + 1,
-        text: question.text.slice(0, 2_000),
+        text: question.text.slice(0, 900),
         type: question.type,
-        options: question.options.map(option => option.slice(0, 350)),
+        options: question.options.map(option => option.slice(0, 220)),
       }));
       const prompt = `أنت الآن في مرحلة «حل الاختبار بعد الاستخراج». استخدم الملف المرفق كمصدر أساسي، واستخدم نص السؤال والاختيارات أدناه للوصول إلى الإجابة الصحيحة فقط. لا تختار الخيار الأول افتراضيًا ولا تخمّن.
 
@@ -858,29 +861,65 @@ export default function QuizCreator({
 - لا تغيّر نص السؤال أو ترتيب الخيارات.
 
 الأسئلة:
-${JSON.stringify(questionsForModel, null, 2)}`;
-      const { text } = await askAIStream(
-        prompt,
-        {
-          attachment: attachment || undefined,
-          currentPage: 'quiz-creator-post-extraction-solving',
-          siteStatus: 'QuizSpace يعمل بشكل طبيعي',
-          systemInstruction: isAr
-            ? 'أنت مراجع إجابات أكاديمي شديد الدقة. لا تختر أول خيار أبدًا كحل افتراضي. لا تعتمد إلا على دليل الملف أو على إجابة يمكن إثباتها مباشرة من السؤال والخيارات. أعد JSON صالحًا فقط.'
-            : 'You are a strict academic answer verifier. Never default to the first option. Use only evidence from the file or a directly provable answer. Return valid JSON only.',
-        },
-        (_delta, _fullText) => {
-          setOcrProgress(prev => prev ? { ...prev, message: `جاري تحليل إجابات المجموعة ${Math.floor(offset / batchSize) + 1}...` } : prev);
-        },
-      );
-      const solvedBatch = applyVerifiedAnswerReviews(batch, text);
-      solvedQuestions.splice(offset, batch.length, ...solvedBatch);
+${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف المصدر النصي للتحقق فقط:\n${sourceContext}` : ''}`;
+      const requestOptions = {
+        currentPage: 'quiz-creator-post-extraction-solving',
+        siteStatus: 'QuizSpace يعمل بشكل طبيعي',
+        systemInstruction: isAr
+          ? 'أنت مراجع إجابات أكاديمي شديد الدقة. لا تختر الخيار الأول أبدًا كحل افتراضي. لا تعتمد إلا على دليل الملف أو على إجابة يمكن إثباتها مباشرة من السؤال والخيارات. أعد JSON صالحًا فقط.'
+          : 'You are a strict academic answer verifier. Never default to the first option. Use only evidence from the file or a directly provable answer. Return valid JSON only.',
+      };
+      let text: string;
+      if (sourceContext) {
+        // Text PDFs use the normal text route, which has provider fallback and
+        // avoids sending a PDF file to a vision-only streaming model.
+        ({ text } = await askAI(prompt, requestOptions));
+      } else {
+        ({ text } = await askAIStream(
+          prompt,
+          { ...requestOptions, attachment },
+          (_delta, _fullText) => {
+            setOcrProgress(prev => prev ? {
+              ...prev,
+              message: `جاري تحليل إجابات الأسئلة ${batch.offset + 1}–${Math.min(batch.offset + batch.questions.length, total)} من ${total}...`,
+            } : prev);
+          },
+        ));
+      }
+      return { offset: batch.offset, questions: applyVerifiedAnswerReviews(batch.questions, text) };
+    };
+
+    for (let groupStart = 0; groupStart < batches.length; groupStart += maxConcurrentBatches) {
+      const group = batches.slice(groupStart, groupStart + maxConcurrentBatches);
+      const groupFirst = group[0]?.offset || 0;
+      const groupLast = Math.min(total, (group[group.length - 1]?.offset || 0) + (group[group.length - 1]?.questions.length || 0));
+      setOcrProgress({
+        stage: 'solving',
+        current: groupFirst,
+        total: Math.max(total, 1),
+        percentage: Math.round((groupFirst / Math.max(total, 1)) * 100),
+        message: `مرحلة حل الاختبار بعد الاستخراج: مراجعة الأسئلة ${groupFirst + 1}–${groupLast} من ${total} بدقة...`,
+      });
+
+      const solvedGroup = await Promise.all(group.map(solveBatch));
+      solvedGroup.sort((left, right) => left.offset - right.offset);
+      for (const solvedBatch of solvedGroup) {
+        solvedQuestions.splice(solvedBatch.offset, solvedBatch.questions.length, ...solvedBatch.questions);
+      }
+      const completed = Math.min(total, groupLast);
+      setOcrProgress({
+        stage: 'solving',
+        current: completed,
+        total: Math.max(total, 1),
+        percentage: Math.round((completed / Math.max(total, 1)) * 100),
+        message: `تم التحقق من ${completed} من ${total} سؤالًا. جاري متابعة باقي الإجابات بدقة...`,
+      });
     }
 
     setOcrProgress({
       stage: 'solving',
       current: total,
-      total,
+      total: Math.max(total, 1),
       percentage: 100,
       message: 'اكتملت مرحلة حل الاختبار بعد الاستخراج والتحقق من الإجابات. الاختبار جاهز للمراجعة والحفظ.',
     });
@@ -928,7 +967,19 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
       message: 'مرحلة حل الاختبار بعد الاستخراج: يراجع كوزمو الإجابات من الملف قبل السماح بالحفظ...',
     });
     try {
-      const solvedQuestions = await solveExtractedQuiz(draftQuestions);
+      let sourceText = '';
+      if (uploadedFile && fileType === 'pdf') {
+        try {
+          setOcrProgress(prev => prev ? { ...prev, message: 'جاري تجهيز النص المصدر للتحقق السريع من إجابات الاختبار...' } : prev);
+          const extractedText = (await extractTextFromPdf(uploadedFile)).filter(Boolean).join('\n').trim();
+          // Very short PDF text usually means a scanned/image-only document;
+          // keep the original PDF attachment for vision verification in that case.
+          if (extractedText.length >= 500) sourceText = extractedText;
+        } catch (error) {
+          console.warn('Local PDF text extraction for answer verification failed; using the original attachment.', error);
+        }
+      }
+      const solvedQuestions = await solveExtractedQuiz(draftQuestions, sourceText);
       setOcrProgress({
         stage: 'saving',
         current: solvedQuestions.length,
@@ -1509,6 +1560,11 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
     }
   };
 
+  const overlayProgress = isProcessingOcr ? ocrProgress : generationProgress;
+  const overlayFallbackTotal = isProcessingOcr
+    ? Math.max(1, pdfCount, questions.filter(question => question.text.trim()).length)
+    : (isGeneratingAi ? aiCount : isGeneratingPaste ? pasteCount : 10);
+
   return (
     <>
       {showResumeExtractedDraft && pendingExtractedDraft && (
@@ -1577,10 +1633,12 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
               {/* Title & Description */}
               <div className="space-y-3">
                 <h1 className="text-2xl sm:text-4.5xl font-black text-slate-800 dark:text-slate-100 tracking-wide animate-pulse font-display leading-tight">
-                  {isAr ? 'جاري صياغة الأسئلة...' : 'Crafting questions...'}
+                  {isProcessingOcr
+                    ? (isAr ? 'جاري استخراج وحل الأسئلة...' : 'Extracting and solving questions...')
+                    : (isAr ? 'جاري صياغة الأسئلة...' : 'Crafting questions...')}
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
-                  {generationProgress?.message || (isAr 
+                  {overlayProgress?.message || (isAr
                     ? 'يقوم محرك الذكاء الاصطناعي بتحليل المحتوى وصياغة اختبار تفاعلي فائق الدقة...' 
                     : 'The AI model is analyzing the material and compiling a highly accurate interactive quiz...')}
                 </p>
@@ -1591,14 +1649,14 @@ ${JSON.stringify(questionsForModel, null, 2)}`;
                 <div className="flex justify-between items-center text-xs font-extrabold text-slate-700 dark:text-slate-300" dir={isAr ? 'rtl' : 'ltr'}>
                   <span>{isAr ? 'نسبة التقدم الكلية:' : 'Overall Progress:'}</span>
                   <span className="font-mono text-indigo-600 dark:text-indigo-400">
-                    {generationProgress ? generationProgress.current : 0} / {generationProgress ? generationProgress.total : (isGeneratingAi ? aiCount : isGeneratingPaste ? pasteCount : 10)} {isAr ? 'سؤال' : 'questions'}
+                    {overlayProgress ? overlayProgress.current : 0} / {overlayProgress ? overlayProgress.total : overlayFallbackTotal} {isAr ? 'سؤال' : 'questions'}
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div 
                     className="bg-indigo-600 dark:bg-indigo-500 h-full transition-all duration-500 ease-out"
                     style={{ 
-                      width: `${Math.min(100, Math.max(8, (generationProgress ? (generationProgress.current / (generationProgress.total || 1)) * 100 : 0)))}%` 
+                      width: `${Math.min(100, Math.max(8, (overlayProgress ? (overlayProgress.current / (overlayProgress.total || 1)) * 100 : 0)))}%`
                     }}
                   />
                 </div>
