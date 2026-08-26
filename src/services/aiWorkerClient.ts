@@ -10,10 +10,12 @@ interface WorkerError {
 }
 
 const AI_REQUEST_TIMEOUT_MS = 45_000;
+const AI_STREAM_TIMEOUT_MS = 60_000;
+const AI_STREAM_FALLBACK_TIMEOUT_MS = 30_000;
 
-async function workerRequest<T>(path: string, body: unknown): Promise<T> {
+async function workerRequest<T>(path: string, body: unknown, timeoutMs = AI_REQUEST_TIMEOUT_MS): Promise<T> {
   const controller = new AbortController();
-  const timeoutId = globalThis.setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetchWithAuth(getApiUrl(path), {
       method: 'POST',
@@ -305,7 +307,7 @@ export async function askAIStream(
   onChunk: (deltaText: string, fullTextSoFar: string) => void,
 ): Promise<{ text: string }> {
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), 120_000);
+  const timeoutId = window.setTimeout(() => controller.abort(), AI_STREAM_TIMEOUT_MS);
   let response: Response;
   let fullText = '';
 
@@ -340,7 +342,7 @@ export async function askAIStream(
     if (!response.ok || !response.body) {
       const payload = await response.json().catch(() => ({})) as WorkerError;
       if (response.status >= 500) {
-        return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
+        return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
       }
       throw new Error(payload.error || `AI streaming failed (${response.status}).`);
     }
@@ -361,7 +363,7 @@ export async function askAIStream(
     if (buffer.trim()) consumeSseLine(buffer);
   } catch (error) {
     if (!fullText) {
-      return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
+      return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
     }
     throw error;
   } finally {
@@ -369,7 +371,7 @@ export async function askAIStream(
   }
 
   if (!fullText) {
-    return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
+    return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
   }
   return { text: fullText };
 }

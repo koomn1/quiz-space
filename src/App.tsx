@@ -1778,11 +1778,16 @@ export default function App() {
                     userEmail={userEmail || ''}
                     quizToEdit={quizToEdit}
                     onQuizCreated={(options) => {
-                      setQuizToEdit(null);
+                      // The extraction/solve flow intentionally keeps the verified
+                      // editor mounted. Clearing quizToEdit here can trigger a
+                      // parent-driven state transition while QuizCreator is still
+                      // applying the solved questions, which makes the editor look
+                      // empty even though the quiz was already saved.
                       if (!options?.keepCreatorOpen) {
+                        setQuizToEdit(null);
                         handleSetTab('my-quizzes');
                       }
-                      fetchQuizzesList();
+                      void fetchQuizzesList();
                     }}
                     onCancelEdit={() => {
                       setQuizToEdit(null);

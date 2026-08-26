@@ -71,10 +71,11 @@ export function useQuizGenerator() {
         current: 0,
         total: totalQuestions,
         stage: 'generating',
-        message: 'جاري تهيئة عملية التوليد...',
+        message: 'جاري الاتصال بمزود الذكاء الاصطناعي... قد يستغرق استلام الدفعة الأولى بضع لحظات.',
       });
 
       let accumulatedQuestions: any[] = [];
+      let lastGenerationError: Error | null = null;
       let finalTitle = '';
       let finalDescription = '';
 
@@ -88,7 +89,7 @@ export function useQuizGenerator() {
             current: i * BATCH_SIZE,
             total: totalQuestions,
             stage: 'generating',
-            message: `جاري توليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${totalQuestions} سؤال)...`,
+            message: `جاري الاتصال بالمزود لتوليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${totalQuestions} سؤال)... قد يتأخر الرد قليلًا دون أن تتوقف العملية.`,
           });
 
           let data: GeneratedQuiz | null = null;
@@ -98,7 +99,9 @@ export function useQuizGenerator() {
               currentBatchSize,
               accumulatedQuestions.map(q => q.text)
             );
-          } catch { /* providers failed, data stays null */ }
+          } catch (error) {
+            lastGenerationError = error instanceof Error ? error : new Error(String(error));
+          }
           
           // If the batch failed entirely (no questions returned), retry with providers
           if (!data?.questions || data.questions.length === 0) {
@@ -111,7 +114,9 @@ export function useQuizGenerator() {
               if (retry.questions && retry.questions.length > 0) {
                 data = retry;
               }
-            } catch { /* keep empty, will throw at end */ }
+            } catch (error) {
+              lastGenerationError = error instanceof Error ? error : new Error(String(error));
+            }
           }
           // Models occasionally return fewer questions than requested —
           // retry the batch once, asking for the exact missing remainder.
@@ -126,7 +131,9 @@ export function useQuizGenerator() {
               if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
                 data.questions = [...data.questions, ...extra.questions];
               }
-            } catch { /* keep whatever we already have */ }
+            } catch (error) {
+              lastGenerationError = error instanceof Error ? error : new Error(String(error));
+            }
           }
 
           if (data?.questions && Array.isArray(data.questions)) {
@@ -154,7 +161,9 @@ export function useQuizGenerator() {
               currentBatchSize,
               accumulatedQuestions.map(q => q.text)
             );
-          } catch { /* providers failed, data stays null */ }
+          } catch (error) {
+            lastGenerationError = error instanceof Error ? error : new Error(String(error));
+          }
           
           // If the batch failed entirely, retry once more
           if (!data?.questions || data.questions.length === 0) {
@@ -167,7 +176,9 @@ export function useQuizGenerator() {
               if (retry.questions && retry.questions.length > 0) {
                 data = retry;
               }
-            } catch { /* keep empty, will throw at end */ }
+            } catch (error) {
+              lastGenerationError = error instanceof Error ? error : new Error(String(error));
+            }
           }
           const returned2 = data?.questions ? data.questions.length : 0;
           if (returned2 > 0 && returned2 < currentBatchSize && data) {
@@ -180,7 +191,9 @@ export function useQuizGenerator() {
               if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
                 data.questions = [...data.questions, ...extra.questions];
               }
-            } catch { /* keep whatever we already have */ }
+            } catch (error) {
+              lastGenerationError = error instanceof Error ? error : new Error(String(error));
+            }
           }
 
           if (data?.questions && Array.isArray(data.questions)) {
@@ -298,7 +311,7 @@ export function useQuizGenerator() {
       }
 
       if (accumulatedQuestions.length === 0) {
-        throw new Error('فشل توليد أي أسئلة صالحة للطلب المختار.');
+        throw lastGenerationError || new Error('فشل توليد أي أسئلة صالحة للطلب المختار.');
       }
 
       setProgress({
