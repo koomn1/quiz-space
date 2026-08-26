@@ -887,7 +887,9 @@ export default function QuizCreator({
     // small number of requests concurrently for large quizzes.
     const batchSize = 8;
     const maxConcurrentBatches = 3;
-    const maxSolveAttempts = 3;
+    // Two bounded attempts are enough before recovery; the Worker already has
+    // its own model fallback, so a third client retry multiplies peak latency.
+    const maxSolveAttempts = 2;
     const waitBeforeRetry = (attempt: number) => new Promise<void>(resolve => {
       globalThis.setTimeout(resolve, 1_000 * attempt);
     });
@@ -897,7 +899,7 @@ export default function QuizCreator({
       return { offset, questions: solvedQuestions.slice(offset, offset + batchSize) };
     });
 
-    const solveBatch = async (batch: { offset: number; questions: Question[] }, allowSingleQuestionRecovery = true): Promise<{ offset: number; questions: Question[] }> => {
+    const solveBatch = async (batch: { offset: number; questions: Question[] }): Promise<{ offset: number; questions: Question[] }> => {
       const questionsForModel = batch.questions.map((question, index) => ({
         questionIndex: index + 1,
         text: question.text.slice(0, 750),
@@ -978,19 +980,31 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         }
       }
 
-      if (allowSingleQuestionRecovery && batch.questions.length > 1) {
+      throw lastError instanceof Error ? lastError : new Error('تعذر حل سؤال واحد بعد إعادة المحاولة.');
+    };
+
+    type FailedQuestion = { offset: number; question: Question };
+    const recoverFailedBatches = async (failedBatches: { offset: number; questions: Question[] }[]): Promise<{ offset: number; questions: Question[] }[]> => {
+      const pendingQuestions: FailedQuestion[] = failedBatches.flatMap(batch =>
+        batch.questions.map((question, index) => ({ offset: batch.offset + index, question }))
+      );
+      const recovered: { offset: number; questions: Question[] }[] = [];
+      for (let start = 0; start < pendingQuestions.length; start += maxConcurrentBatches) {
+        const group = pendingQuestions.slice(start, start + maxConcurrentBatches);
         setOcrProgress(prev => prev ? {
           ...prev,
-          message: `جاري تقسيم الدفعة ${batch.offset + 1}–${batch.offset + batch.questions.length} إلى أسئلة منفردة لضمان الحل الدقيق...`,
+          message: `إعادة التحقق المتوازي من ${start + 1}–${Math.min(start + group.length, pendingQuestions.length)} سؤال غير معتمد؛ بدون اختيار تخميني...`,
         } : prev);
-        const recovered: Question[] = [];
-        for (let index = 0; index < batch.questions.length; index += 1) {
-          const single = await solveBatch({ offset: batch.offset + index, questions: [batch.questions[index]] }, false);
-          recovered.push(single.questions[0]);
+        const settled = await Promise.allSettled(group.map(item => solveBatch({ offset: item.offset, questions: [item.question] })));
+        const failed = settled.find(result => result.status === 'rejected');
+        if (failed?.status === 'rejected') {
+          throw failed.reason instanceof Error ? failed.reason : new Error('تعذر التحقق من سؤال أثناء recovery المتوازي.');
         }
-        return { offset: batch.offset, questions: recovered };
+        settled.forEach(result => {
+          if (result.status === 'fulfilled') recovered.push(result.value);
+        });
       }
-      throw lastError instanceof Error ? lastError : new Error('تعذر حل سؤال واحد بعد إعادة المحاولة.');
+      return recovered;
     };
 
     for (let groupStart = 0; groupStart < batches.length; groupStart += maxConcurrentBatches) {
@@ -1013,20 +1027,36 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       for (const solvedBatch of solvedGroup) {
         solvedQuestions.splice(solvedBatch.offset, solvedBatch.questions.length, ...solvedBatch.questions);
       }
-      const verifiedSoFar = solvedQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
+      let verifiedSoFar = solvedQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
       setQuestions([...solvedQuestions]);
       setVerifiedQuestionsCount(verifiedSoFar);
-      const failedBatches = settledGroup.filter((result): result is PromiseRejectedResult => result.status === 'rejected');
-      const completed = Math.min(total, groupLast);
+      const failedBatches = settledGroup.flatMap((result, index) => result.status === 'rejected' ? [group[index]] : []);
+      let recoveryError: Error | null = null;
+      if (failedBatches.length) {
+        try {
+          const recoveredSingles = await recoverFailedBatches(failedBatches);
+          for (const recoveredSingle of recoveredSingles) {
+            solvedQuestions.splice(recoveredSingle.offset, recoveredSingle.questions.length, ...recoveredSingle.questions);
+          }
+        } catch (error) {
+          recoveryError = error instanceof Error ? error : new Error(String(error));
+        }
+      }
+      verifiedSoFar = solvedQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
+      setQuestions([...solvedQuestions]);
+      setVerifiedQuestionsCount(verifiedSoFar);
       setOcrProgress({
         stage: 'solving',
         current: verifiedSoFar,
         total: Math.max(total, 1),
         percentage: Math.round((verifiedSoFar / Math.max(total, 1)) * 100),
-        message: failedBatches.length > 0
-          ? `تم اعتماد ${verifiedSoFar} من ${total} سؤالًا. توجد دفعة لم تعتمد بعد، وسأواصل المحاولة دون إيقاف الاختبار...`
-          : `تم التحقق من ${verifiedSoFar} من ${total} سؤالًا. جاري متابعة باقي الإجابات بدقة...`,
+        message: recoveryError
+          ? `تعذر التحقق من بعض الأسئلة بعد recovery المتوازي؛ لن يتم حفظ إجابة غير معتمدة.`
+          : failedBatches.length > 0
+            ? `تم اعتماد ${verifiedSoFar} من ${total} سؤالًا بعد recovery متوازي، وجاري متابعة باقي الإجابات...`
+            : `تم التحقق من ${verifiedSoFar} من ${total} سؤالًا. جاري متابعة باقي الإجابات بدقة...`,
       });
+      if (recoveryError) throw recoveryError;
     }
 
     const unresolvedAfterRetries = solvedQuestions.filter(question =>
