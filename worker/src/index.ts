@@ -71,8 +71,8 @@ const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'nvidia/nemot
 // quality-first sequence so one slow provider cannot block every batch.
 const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
   'qwen/qwen3.7-flash',
+  'openai/gpt-4o-mini',
   'mistralai/mistral-small-3.1-24b-instruct',
-  'nvidia/nemotron-3.5-lightning:free',
 ];
 const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
   'google/gemma-4-31b-it:free',

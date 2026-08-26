@@ -88,6 +88,7 @@ describe('dynamic vision chunk planning', () => {
 
   it('races primary answer-review providers before using the bounded third fallback', () => {
     expect(indexSource).toContain('async function callOpenRouterWithParallelAnswerReviewFallback(');
+    expect(indexSource).toContain("'openai/gpt-4o-mini'");
     expect(indexSource).toContain('Promise.any(primaryModels.map(model => callOpenRouter(env, messages, model, undefined, options)))');
     expect(indexSource).toContain('models.slice(primaryModels.length)');
     expect(indexSource).toContain('isAnswerReview\n          ? await callOpenRouterWithParallelAnswerReviewFallback(');
