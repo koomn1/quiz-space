@@ -271,39 +271,44 @@ function providerContentToText(value: unknown): string {
   return '';
 }
 
-function balancedJsonCandidate(value: string): string | null {
-  const objectStart = value.indexOf('{');
-  const arrayStart = value.indexOf('[');
-  const starts = [objectStart, arrayStart].filter((index) => index >= 0);
-  const start = starts.length ? Math.min(...starts) : -1;
-  if (start < 0) return null;
-  const stack: string[] = [];
-  let inString = false;
-  let escaped = false;
-  for (let index = start; index < value.length; index += 1) {
-    const char = value[index];
-    if (inString) {
-      if (escaped) escaped = false;
-      else if (char.charCodeAt(0) === 92) escaped = true;
-      else if (char === '\"') inString = false;
-      continue;
-    }
-    if (char === '\"') { inString = true; continue; }
-    if (char === '{' || char === '[') stack.push(char);
-    else if (char === '}' || char === ']') {
-      const expected = char === '}' ? '{' : '[';
-      if (stack.pop() !== expected) return null;
-      if (stack.length === 0) return value.slice(start, index + 1);
+function balancedJsonCandidates(value: string): string[] {
+  const candidates: string[] = [];
+  for (let start = 0; start < value.length; start += 1) {
+    if (value[start] !== '{' && value[start] !== '[') continue;
+    const stack: string[] = [];
+    let inString = false;
+    let escaped = false;
+    for (let index = start; index < value.length; index += 1) {
+      const char = value[index];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (char.charCodeAt(0) === 92) escaped = true;
+        else if (char === '\"') inString = false;
+        continue;
+      }
+      if (char === '\"') { inString = true; continue; }
+      if (char === '{' || char === '[') stack.push(char);
+      else if (char === '}' || char === ']') {
+        const expected = char === '}' ? '{' : '[';
+        if (stack.pop() !== expected) break;
+        if (stack.length === 0) {
+          candidates.push(value.slice(start, index + 1));
+          break;
+        }
+      }
     }
   }
-  return null;
+  return candidates.filter((candidate, index, all) => all.indexOf(candidate) === index);
+}
+
+function balancedJsonCandidate(value: string): string | null {
+  return balancedJsonCandidates(value)[0] || null;
 }
 
 function extractJson(text: string, depth = 0): unknown {
   if (depth > 6) throw new Error('AI returned excessively nested JSON.');
   const cleaned = String(text || '').trim();
-  const candidate = balancedJsonCandidate(cleaned);
-  const candidates = [cleaned, candidate].filter((value, index, all): value is string => Boolean(value) && all.indexOf(value) === index);
+  const candidates = [cleaned, ...balancedJsonCandidates(cleaned)].filter((value, index, all): value is string => Boolean(value) && all.indexOf(value) === index);
   for (const item of candidates) {
     try {
       const parsed = JSON.parse(item) as unknown;
@@ -386,15 +391,23 @@ export function validateAnswerReviewResponse(text: string, expectedAnswerCount: 
   if (!Number.isInteger(expectedAnswerCount) || expectedAnswerCount < 1 || expectedAnswerCount > 8) {
     throw new AiProviderError('invalid_response', 'answer-review-contract', model);
   }
-  let parsed: unknown;
-  try {
-    parsed = extractJson(text);
-  } catch {
-    throw new AiProviderError('invalid_response', 'answer-review-contract', model);
+  const cleaned = String(text || '').trim();
+  const candidates = [cleaned, ...balancedJsonCandidates(cleaned)].filter((value, index, all) => Boolean(value) && all.indexOf(value) === index);
+  let record: Record<string, unknown> | null = null;
+  for (const candidate of candidates) {
+    try {
+      const parsed = extractJson(candidate);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const possibleRecord = parsed as Record<string, unknown>;
+        if (Array.isArray(possibleRecord.answers)) {
+          record = possibleRecord;
+          break;
+        }
+      }
+    } catch {
+      // Try the next balanced candidate; reasoning text may contain JSON-like fragments.
+    }
   }
-  const record = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-    ? parsed as Record<string, unknown>
-    : null;
   const answers = record && Array.isArray(record.answers) ? record.answers : null;
   if (!answers || answers.length !== expectedAnswerCount) {
     throw new AiProviderError('invalid_response', 'answer-review-contract', model);

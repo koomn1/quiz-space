@@ -33,8 +33,13 @@ afterEach(() => {
 
 describe('answer review protocol', () => {
   it('accepts a compact complete response and rejects a partial response', () => {
-    expect(validateAnswerReviewResponse(validResponse(), 1, 'test-model')).toContain('"answers"');
-    expect(() => validateAnswerReviewResponse('{"answers":[]}', 1, 'test-model')).toThrow();
+    expect(validateAnswerReviewResponse(validResponse(), 1, 'test-model')).toContain('\"answers\"');
+    expect(() => validateAnswerReviewResponse('{\"answers\":[]}', 1, 'test-model')).toThrow();
+  });
+
+  it('finds the valid JSON after an incomplete reasoning object', () => {
+    const response = 'Reasoning note: {\"step\":1}\nFinal: ' + validResponse();
+    expect(validateAnswerReviewResponse(response, 1, 'test-model')).toContain('\"answers\"');
   });
 
   it('does not let a malformed primary response win the parallel race', async () => {
