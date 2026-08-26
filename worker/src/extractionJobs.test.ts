@@ -86,6 +86,13 @@ describe('dynamic vision chunk planning', () => {
     expect(extractionSource).toContain('never fabricate an answer or explanation');
   });
 
+  it('races primary answer-review providers before using the bounded third fallback', () => {
+    expect(indexSource).toContain('async function callOpenRouterWithParallelAnswerReviewFallback(');
+    expect(indexSource).toContain('Promise.any(primaryModels.map(model => callOpenRouter(env, messages, model, undefined, options)))');
+    expect(indexSource).toContain('models.slice(primaryModels.length)');
+    expect(indexSource).toContain('isAnswerReview\n          ? await callOpenRouterWithParallelAnswerReviewFallback(');
+  });
+
   it('applies the source title fallback after literal text extraction returns', () => {
     expect(extractionSource).toContain('title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim()');
     expect(extractionSource).toContain('description: result.description?.trim() || `أسئلة مستخرجة من محتوى');

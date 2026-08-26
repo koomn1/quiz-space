@@ -413,6 +413,24 @@ async function callOpenRouterWithFallback(
   throw lastError || new Error('All OpenRouter models failed');
 }
 
+async function callOpenRouterWithParallelAnswerReviewFallback(
+  env: Env,
+  messages: any[],
+  models: string[],
+  options?: OpenRouterRequestOptions,
+): Promise<string> {
+  const primaryModels = models.slice(0, Math.min(2, models.length));
+  if (primaryModels.length === 0) throw new Error('No answer-review models configured');
+  try {
+    // Race two independent providers for the first usable JSON response. A
+    // third model is kept as a bounded sequential fallback to avoid turning
+    // every transient failure into three simultaneous provider requests.
+    return await Promise.any(primaryModels.map(model => callOpenRouter(env, messages, model, undefined, options)));
+  } catch {
+    return callOpenRouterWithFallback(env, messages, models.slice(primaryModels.length), undefined, options);
+  }
+}
+
 async function providerText(
   provider: Provider,
   prompt: string,
@@ -892,13 +910,20 @@ ${extraInstruction}`;
       aiProvider = 'openrouter';
       let text: string;
       try {
-        text = await callOpenRouterWithFallback(
-          env,
-          messages,
-          models,
-          undefined,
-          isAnswerReview ? { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, response_format: { type: 'json_object' as const } } : undefined,
-        );
+        text = isAnswerReview
+          ? await callOpenRouterWithParallelAnswerReviewFallback(
+              env,
+              messages,
+              models,
+              { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, response_format: { type: 'json_object' as const } },
+            )
+          : await callOpenRouterWithFallback(
+              env,
+              messages,
+              models,
+              undefined,
+              undefined,
+            );
       } catch (openRouterError) {
         // If the text models are temporarily unavailable, keep one bounded
         // direct-provider recovery path. File attachments never use this path
