@@ -233,7 +233,8 @@ async function logAiPerformance(env: Env, authHeader: string, data: {
   total_pages?: number,
   status: 'success' | 'error',
   latency_ms: number,
-  error_message?: string
+  error_message?: string,
+  error_category?: AiErrorCategory
 }) {
   if (env.SUPABASE_URL.includes('placeholder')) return;
   try {
@@ -348,7 +349,74 @@ interface OpenRouterRequestOptions {
   temperature?: number;
   timeoutMs?: number;
   response_format?: { type: 'json_object' };
+  expectedAnswerCount?: number;
 }
+
+type AiErrorCategory = 'timeout' | 'rate_limit' | 'http_4xx' | 'http_5xx' | 'invalid_response' | 'empty_response' | 'provider_error';
+
+class AiProviderError extends Error {
+  constructor(
+    readonly category: AiErrorCategory,
+    readonly provider?: string,
+    readonly model?: string,
+    readonly status?: number,
+  ) {
+    super(category);
+    this.name = 'AiProviderError';
+  }
+}
+
+function aiErrorCategoryFromStatus(status: number): AiErrorCategory {
+  if (status === 429) return 'rate_limit';
+  if (status >= 500) return 'http_5xx';
+  if (status >= 400) return 'http_4xx';
+  return 'provider_error';
+}
+
+function safeAiErrorCategory(error: unknown): AiErrorCategory {
+  if (error instanceof AiProviderError) return error.category;
+  if (error instanceof DOMException && error.name === 'AbortError') return 'timeout';
+  const raw = error instanceof Error ? error.message.toLowerCase() : String(error || '').toLowerCase();
+  if (raw.includes('timeout') || raw.includes('aborted')) return 'timeout';
+  if (raw.includes('invalid json') || raw.includes('invalid_response') || raw.includes('shape')) return 'invalid_response';
+  return 'provider_error';
+}
+
+export function validateAnswerReviewResponse(text: string, expectedAnswerCount: number, model?: string): string {
+  if (!Number.isInteger(expectedAnswerCount) || expectedAnswerCount < 1 || expectedAnswerCount > 8) {
+    throw new AiProviderError('invalid_response', 'answer-review-contract', model);
+  }
+  let parsed: unknown;
+  try {
+    parsed = extractJson(text);
+  } catch {
+    throw new AiProviderError('invalid_response', 'answer-review-contract', model);
+  }
+  const record = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+    ? parsed as Record<string, unknown>
+    : null;
+  const answers = record && Array.isArray(record.answers) ? record.answers : null;
+  if (!answers || answers.length !== expectedAnswerCount) {
+    throw new AiProviderError('invalid_response', 'answer-review-contract', model);
+  }
+  const indexes = new Set<number>();
+  for (const answer of answers) {
+    if (!answer || typeof answer !== 'object' || Array.isArray(answer)) {
+      throw new AiProviderError('invalid_response', 'answer-review-contract', model);
+    }
+    const item = answer as Record<string, unknown>;
+    if (!Number.isInteger(item.questionIndex) || indexes.has(item.questionIndex as number)) {
+      throw new AiProviderError('invalid_response', 'answer-review-contract', model);
+    }
+    if (!Number.isInteger(item.correctIndex) || (item.correctIndex as number) < 0 || (item.correctIndex as number) > 9) {
+      throw new AiProviderError('invalid_response', 'answer-review-contract', model);
+    }
+    indexes.add(item.questionIndex as number);
+  }
+  return text;
+}
+
+type AnswerReviewResult = { text: string; model: string };
 
 async function callOpenRouter(
   env: Env,
@@ -380,11 +448,24 @@ async function callOpenRouter(
         } : {}),
       }),
     });
-    if (!r.ok) throw new Error(await r.text());
-    const d: any = await r.json();
+    if (!r.ok) throw new AiProviderError(aiErrorCategoryFromStatus(r.status), 'openrouter', model, r.status);
+    let d: any;
+    try {
+      d = await r.json();
+    } catch {
+      throw new AiProviderError('invalid_response', 'openrouter', model);
+    }
     const text = providerContentToText(d.choices?.[0]?.message?.content ?? d.choices?.[0]?.text ?? d.text ?? d.output ?? d.result);
-    if (!text) throw new Error(`OpenRouter ${model} returned an empty response`);
-    return text;
+    if (!text) throw new AiProviderError('empty_response', 'openrouter', model);
+    return options?.expectedAnswerCount
+      ? validateAnswerReviewResponse(text, options.expectedAnswerCount, model)
+      : text;
+  } catch (error) {
+    if (error instanceof AiProviderError) throw error;
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new AiProviderError('timeout', 'openrouter', model);
+    }
+    throw new AiProviderError('provider_error', 'openrouter', model);
   } finally {
     clearTimeout(timeout);
   }
@@ -413,21 +494,39 @@ async function callOpenRouterWithFallback(
   throw lastError || new Error('All OpenRouter models failed');
 }
 
-async function callOpenRouterWithParallelAnswerReviewFallback(
+async function callAnswerReviewModel(
+  env: Env,
+  messages: any[],
+  model: string,
+  options: OpenRouterRequestOptions,
+): Promise<AnswerReviewResult> {
+  const text = await callOpenRouter(env, messages, model, undefined, options);
+  return { text, model };
+}
+
+export async function callOpenRouterWithParallelAnswerReviewFallback(
   env: Env,
   messages: any[],
   models: string[],
-  options?: OpenRouterRequestOptions,
-): Promise<string> {
+  options: OpenRouterRequestOptions,
+): Promise<AnswerReviewResult> {
   const primaryModels = models.slice(0, Math.min(2, models.length));
-  if (primaryModels.length === 0) throw new Error('No answer-review models configured');
+  if (primaryModels.length === 0) throw new AiProviderError('provider_error', 'openrouter');
   try {
-    // Race two independent providers for the first usable JSON response. A
-    // third model is kept as a bounded sequential fallback to avoid turning
-    // every transient failure into three simultaneous provider requests.
-    return await Promise.any(primaryModels.map(model => callOpenRouter(env, messages, model, undefined, options)));
+    // Race two independent models, but only after each response passes the
+    // strict answer count/index contract. A malformed or partial response is
+    // therefore a failure and cannot win Promise.any.
+    return await Promise.any(primaryModels.map(model => callAnswerReviewModel(env, messages, model, options)));
   } catch {
-    return callOpenRouterWithFallback(env, messages, models.slice(primaryModels.length), undefined, options);
+    let lastError: unknown;
+    for (const model of models.slice(primaryModels.length)) {
+      try {
+        return await callAnswerReviewModel(env, messages, model, options);
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError instanceof Error ? lastError : new AiProviderError('provider_error', 'openrouter');
   }
 }
 
@@ -469,6 +568,56 @@ async function providerText(
     console.error('OpenRouter quiz fallback failed', openRouterError);
     throw lastError ?? openRouterError ?? new Error('All quiz generation providers failed');
   }
+}
+
+async function callDirectAnswerReview(
+  provider: Provider,
+  prompt: string,
+  env: Env,
+  expectedAnswerCount: number,
+  timeoutMs = 4_000,
+): Promise<AnswerReviewResult> {
+  const order: Provider[] = provider === 'groq'
+    ? ['groq', 'openai', 'deepseek']
+    : provider === 'openai'
+      ? ['openai', 'deepseek']
+      : provider === 'deepseek'
+        ? ['deepseek']
+        : [];
+  let lastError: unknown;
+  for (const current of order) {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const model = current === 'openai' ? 'gpt-4o-mini' : current === 'groq' ? 'openai/gpt-oss-120b' : 'deepseek-chat';
+    try {
+      const endpoint = current === 'openai' ? 'https://api.openai.com/v1/chat/completions'
+        : current === 'groq' ? 'https://api.groq.com/openai/v1/chat/completions'
+        : 'https://api.deepseek.com/chat/completions';
+      const key = current === 'openai' ? env.OPENAI_API_KEY : current === 'groq' ? env.GROQ_API_KEY : env.DEEPSEEK_API_KEY;
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), timeoutMs);
+      const r = await fetch(endpoint, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }),
+      });
+      if (!r.ok) throw new AiProviderError(aiErrorCategoryFromStatus(r.status), current, model, r.status);
+      let data: any;
+      try {
+        data = await r.json();
+      } catch {
+        throw new AiProviderError('invalid_response', current, model);
+      }
+      const text = providerContentToText(data.choices?.[0]?.message?.content ?? data.text ?? data.output);
+      if (!text) throw new AiProviderError('empty_response', current, model);
+      return { text: validateAnswerReviewResponse(text, expectedAnswerCount, model), model };
+    } catch (error) {
+      lastError = error instanceof AiProviderError ? error : new AiProviderError(safeAiErrorCategory(error), current, model);
+    } finally {
+      if (timeout) clearTimeout(timeout);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new AiProviderError('provider_error', provider);
 }
 
 function safeAiErrorMessage(error: unknown): string {
@@ -610,6 +759,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   const startTime = Date.now();
   let aiOperation = 'request';
   let aiProvider = 'unknown';
+  let aiModel: string | undefined;
 
   try {
     if (isExtractionJobRead) {
@@ -877,6 +1027,11 @@ ${extraInstruction}`;
 
       if (path === '/api/ai/openrouter') {
       if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid request' }, 400, headers);
+      const isAnswerReviewRequest = body.currentPage === 'quiz-creator-post-extraction-solving';
+      const expectedAnswerCount = Number.isInteger(body.expectedAnswerCount) && body.expectedAnswerCount >= 1 && body.expectedAnswerCount <= 8
+        ? body.expectedAnswerCount
+        : undefined;
+      if (isAnswerReviewRequest && expectedAnswerCount === undefined) return json({ error: 'Invalid answer-review contract' }, 400, headers);
       const allowedModels = [
         OPENROUTER_TEXT_MODEL,
         OPENROUTER_VISION_MODEL,
@@ -900,7 +1055,7 @@ ${extraInstruction}`;
       // this once the models were swapped to ones whose names don't contain
       // that word (google/gemma-4-31b-it:free, nvidia/nemotron-...), so
       // every image was being sent to a text-only model and failing.
-      const isAnswerReview = body.currentPage === 'quiz-creator-post-extraction-solving';
+      const isAnswerReview = isAnswerReviewRequest;
       const models = isAnswerReview
         ? (hasAttachment ? OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS : OPENROUTER_ANSWER_REVIEW_FALLBACKS)
         : hasAttachment
@@ -910,20 +1065,18 @@ ${extraInstruction}`;
       aiProvider = 'openrouter';
       let text: string;
       try {
-        text = isAnswerReview
-          ? await callOpenRouterWithParallelAnswerReviewFallback(
-              env,
-              messages,
-              models,
-              { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, response_format: { type: 'json_object' as const } },
-            )
-          : await callOpenRouterWithFallback(
-              env,
-              messages,
-              models,
-              undefined,
-              undefined,
-            );
+        if (isAnswerReview) {
+          const result = await callOpenRouterWithParallelAnswerReviewFallback(
+            env,
+            messages,
+            models,
+            { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, response_format: { type: 'json_object' as const }, expectedAnswerCount: expectedAnswerCount as number },
+          );
+          aiModel = result.model;
+          text = result.text;
+        } else {
+          text = await callOpenRouterWithFallback(env, messages, models, undefined, undefined);
+        }
       } catch (openRouterError) {
         // If the text models are temporarily unavailable, keep one bounded
         // direct-provider recovery path. File attachments never use this path
@@ -931,15 +1084,21 @@ ${extraInstruction}`;
         if (!isAnswerReview || hasAttachment) throw openRouterError;
         try {
           aiProvider = 'direct';
-          text = await providerText(
+          const result = await callDirectAnswerReview(
             'groq',
             `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\n${body.prompt}`,
             env,
-            { skipOpenRouterFallback: true, timeoutMs: 4_000 },
+            expectedAnswerCount as number,
+            4_000,
           );
+          aiModel = result.model;
+          text = result.text;
         } catch (directProviderError) {
-          console.error('All answer-review providers failed after the OpenRouter fallback.', { openRouterError, directProviderError });
-          throw openRouterError;
+          console.error('All answer-review providers failed after the OpenRouter fallback.', {
+            openRouterCategory: safeAiErrorCategory(openRouterError),
+            directCategory: safeAiErrorCategory(directProviderError),
+          });
+          throw directProviderError;
         }
       }
       if (userId !== 'guest') {
@@ -947,7 +1106,7 @@ ${extraInstruction}`;
           user_id: userId,
           operation: aiOperation,
           provider: aiProvider,
-          model: typeof body.model === 'string' ? body.model : OPENROUTER_TEXT_MODEL,
+          model: aiModel || (typeof body.model === 'string' ? body.model : OPENROUTER_TEXT_MODEL),
           status: 'success',
           latency_ms: Date.now() - startTime,
         });
@@ -1021,10 +1180,12 @@ ${extraInstruction}`;
       await logAiPerformance(env, authHeader, {
         user_id: userId,
         operation: aiOperation,
-        provider: aiProvider,
+        provider: error instanceof AiProviderError && error.provider ? error.provider : aiProvider,
+        model: error instanceof AiProviderError ? error.model : aiModel,
         status: 'error',
         latency_ms: Date.now() - startTime,
-        error_message: safeAiErrorMessage(error),
+        error_category: safeAiErrorCategory(error),
+        error_message: aiOperation === 'answer_review' ? safeAiErrorCategory(error) : safeAiErrorMessage(error),
       });
     }
     const message = aiOperation === 'generation'

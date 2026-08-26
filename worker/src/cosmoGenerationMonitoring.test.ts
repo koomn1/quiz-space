@@ -31,8 +31,8 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain("response_format: { type: 'json_object' as const }");
     expect(workerSource).toContain("aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat'");
     expect(workerSource).toContain("if (!isAnswerReview || hasAttachment) throw openRouterError;");
-    expect(workerSource).toContain("{ skipOpenRouterFallback: true, timeoutMs: 4_000 }");
-    expect(workerSource).toContain("text = await providerText(\n            'groq'");
+    expect(workerSource).toContain('async function callDirectAnswerReview(');
+    expect(workerSource).toContain('expectedAnswerCount as number');
     expect(workerSource).toContain('All answer-review providers failed after the OpenRouter fallback.');
     expect(workerSource).toContain("if (options.skipOpenRouterFallback) throw lastError");
   });
@@ -46,7 +46,8 @@ describe('Cosmo generation recovery contract', () => {
   it('records safe generation failures so Super Admin monitoring can diagnose them', () => {
     expect(workerSource).toContain("aiOperation = 'generation'");
     expect(workerSource).toContain("status: 'error'");
-    expect(workerSource).toContain('error_message: safeAiErrorMessage(error)');
+    expect(workerSource).toContain("error_message: aiOperation === 'answer_review' ? safeAiErrorCategory(error) : safeAiErrorMessage(error)");
+    expect(workerSource).toContain('error_category: safeAiErrorCategory(error)');
     expect(workerSource).toContain('Quiz generation providers are temporarily unavailable. Please retry shortly.');
   });
 

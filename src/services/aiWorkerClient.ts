@@ -289,7 +289,7 @@ export interface AiChatMessage {
 
 export async function askAI(
   prompt: string,
-  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string } = {},
+  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string; expectedAnswerCount?: number } = {},
 ): Promise<{ text: string }> {
   try {
     return await workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });

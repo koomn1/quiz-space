@@ -900,6 +900,8 @@ export default function QuizCreator({
     });
 
     const solveBatch = async (batch: { offset: number; questions: Question[] }): Promise<{ offset: number; questions: Question[]; unresolved: number[] }> => {
+      const objectiveQuestions = batch.questions.filter(question => question.type !== 'essay');
+      if (objectiveQuestions.length === 0) return { offset: batch.offset, questions: batch.questions, unresolved: [] };
       const questionsForModel = batch.questions.map((question, index) => ({
         questionIndex: index + 1,
         text: question.text.slice(0, 750),
@@ -925,6 +927,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const requestOptions = {
         currentPage: 'quiz-creator-post-extraction-solving',
         siteStatus: 'QuizSpace يعمل بشكل طبيعي',
+        expectedAnswerCount: objectiveQuestions.length,
         systemInstruction: isAr
             ? 'أنت مراجع إجابات أكاديمي شديد الدقة. أعد JSON صغيرًا يحتوي على questionIndex وcorrectIndex وشرح قصير لكل سؤال موضوعي. لا تكتب نصًا خارج JSON، ولا تختر الخيار الأول افتراضيًا، ولا تضع شرحًا غير مستند.'
           : 'You are a strict academic answer verifier. Return only compact JSON with questionIndex, correctIndex, and a brief evidence-based explanation for every objective question. Never default to the first option, invent an explanation, or add text outside JSON.',
