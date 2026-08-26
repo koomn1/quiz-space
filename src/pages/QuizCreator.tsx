@@ -47,6 +47,21 @@ interface QuizCreatorProps {
   isAdmin?: boolean;
 }
 
+function deriveLocalQuizTitle(fileName?: string): string {
+  const baseName = String(fileName || '')
+    .split(/[\\/]/).pop()
+    ?.replace(/\.[a-z0-9]{1,8}$/i, '')
+    .replace(/[._-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 100);
+  return baseName || 'اختبار مستخرج من الملف';
+}
+
+function isGenericExtractionTitle(title?: string): boolean {
+  return ['extracted quiz', 'اختبار مستخرج', 'اختبار مستخرج من الملف'].includes(String(title || '').trim().toLocaleLowerCase());
+}
+
 // Function to load pdf.js from CDN dynamically
 const loadPdfJS = (): Promise<any> => {
   return new Promise((resolve, reject) => {
@@ -891,15 +906,16 @@ export default function QuizCreator({
       }));
       const prompt = `أنت الآن في مرحلة «حل الاختبار بعد الاستخراج». استخدم الملف المرفق ومحتوى المصدر للوصول إلى الاختيار الصحيح فقط. لا تختار الخيار الأول افتراضيًا ولا تخمّن.
 
-أعد JSON مختصرًا فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0}]}
+أعد JSON مختصرًا فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0,"explanation":"سبب علمي مختصر يثبت لماذا هذا الاختيار صحيح."}]}
 
 قواعد إلزامية:
-- الرد يجب أن يحتوي على answers فقط، بلا شرح أو evidence أو correctAnswer أو Markdown أو نص خارج JSON.
+- الرد يجب أن يحتوي على answers فقط، بلا Markdown أو نص خارج JSON. أضف explanation قصيرًا لكل سؤال موضوعي، بحد أقصى 240 حرفًا، يشرح سبب صحة الاختيار المحدد.
 - correctIndex يبدأ من 0 ويشير إلى الاختيار الصحيح في القائمة كما هي.
 - questionIndex يبدأ من 1 داخل هذه الدفعة، ولا تستخدم ترقيم الملف الكامل.
 - يجب إرجاع عنصر واحد لكل سؤال موضوعي في الدفعة، وبنفس ترتيبها.
-- راجع كل إجابة مقابل محتوى الملف قبل إرجاعها.
-- إذا لم تستطع إثبات الإجابة، أعد المحاولة داخليًا قبل الرد، ولا تضع اختيارًا عشوائيًا.
+- راجع كل إجابة وشرح مقابل محتوى الملف والسؤال والاختيارات قبل إرجاعها.
+- إذا لم تستطع إثبات الإجابة أو شرحها، أعد المحاولة داخليًا قبل الرد، ولا تضع اختيارًا عشوائيًا أو شرحًا إنشائيًا غير مستند.
+- اكتب الشرح بالعربية عندما تكون واجهة المستخدم عربية، وبنفس لغة السؤال عندما تكون الواجهة إنجليزية.
 - لا تغيّر نص السؤال أو ترتيب الاختيارات.
 
 الأسئلة:
@@ -908,13 +924,23 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         currentPage: 'quiz-creator-post-extraction-solving',
         siteStatus: 'QuizSpace يعمل بشكل طبيعي',
         systemInstruction: isAr
-          ? 'أنت مراجع إجابات أكاديمي شديد الدقة. أعد JSON صغيرًا يحتوي على questionIndex وcorrectIndex فقط لكل سؤال. لا تكتب شرحًا أو نصًا خارج JSON، ولا تختر الخيار الأول افتراضيًا.'
-          : 'You are a strict academic answer verifier. Return only compact JSON with questionIndex and correctIndex for every question. Never default to the first option and never add explanations or text outside JSON.',
+            ? 'أنت مراجع إجابات أكاديمي شديد الدقة. أعد JSON صغيرًا يحتوي على questionIndex وcorrectIndex وشرح قصير لكل سؤال موضوعي. لا تكتب نصًا خارج JSON، ولا تختر الخيار الأول افتراضيًا، ولا تضع شرحًا غير مستند.'
+          : 'You are a strict academic answer verifier. Return only compact JSON with questionIndex, correctIndex, and a brief evidence-based explanation for every objective question. Never default to the first option, invent an explanation, or add text outside JSON.',
       };
       if (sourceText) {
         const sourceKeyResult = applySourceAnswerKey(batch.questions, sourceText, batch.offset);
         if (sourceKeyResult.matched === batch.questions.filter(question => question.type !== 'essay').length) {
-          return { offset: batch.offset, questions: sourceKeyResult.questions };
+          const sourceKeyQuestions = sourceKeyResult.questions.map(question => (
+            question.type === 'essay' || question.explanation?.trim()
+              ? question
+              : {
+                  ...question,
+                  explanation: isAr
+                    ? 'تم تثبيت هذا الاختيار وفق مفتاح الإجابة المرفق في الملف.'
+                    : 'This choice was verified against the answer key included in the file.',
+                }
+          ));
+          return { offset: batch.offset, questions: sourceKeyQuestions };
         }
       }
 
@@ -1020,8 +1046,14 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
   };
 
   const prepareAndSolveExtractedQuiz = async (result: { title: string; description: string; quiz: Quiz }) => {
-    setTitle(result.title);
-    setDescription(result.description);
+    const sourceName = extractedAttachmentRef.current?.name || uploadedFile?.name || '';
+    const effectiveTitle = isGenericExtractionTitle(result.title)
+      ? deriveLocalQuizTitle(sourceName)
+      : result.title.trim();
+    const effectiveDescription = result.description?.trim()
+      || `أسئلة مستخرجة من محتوى ${deriveLocalQuizTitle(sourceName)}.`;
+    setTitle(effectiveTitle);
+    setDescription(effectiveDescription);
     const draftQuestions = result.quiz.questions
       .filter((question: any) => question?.type === 'essay' || (Array.isArray(question?.options) && question.options.filter((option: unknown) => typeof option === 'string' && option.trim()).length >= 2))
       .map((question: any, index: number) => ({
@@ -1046,8 +1078,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     }
     saveExtractedQuizDraft({
       ownerId: draftOwnerId,
-      title: result.title,
-      description: result.description,
+      title: effectiveTitle,
+      description: effectiveDescription,
       category,
       timeLimit,
       questions: draftQuestions,
@@ -1062,7 +1094,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       current: 0,
       total: draftQuestions.length,
       percentage: 0,
-      message: 'مرحلة حل الاختبار بعد الاستخراج: يراجع كوزمو الإجابات من الملف قبل السماح بالحفظ...',
+        message: `مرحلة حل الاختبار بعد الاستخراج: يراجع كوزمو إجابات «${sourceName || effectiveTitle}» من الملف قبل السماح بالحفظ...`,
     });
     try {
       let sourceText = '';
@@ -1083,9 +1115,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         current: solvedQuestions.length,
         total: solvedQuestions.length,
         percentage: 100,
-        message: 'اكتمل حل الاختبار بعد الاستخراج. جاري حفظ الاختبار بعد التحقق من كل الإجابات...',
+        message: `اكتمل حل «${effectiveTitle}» بعد الاستخراج. جاري حفظ الاختبار بعد التحقق من كل الإجابات...`,
       });
-      const saved = await handlePublishQuiz(solvedQuestions, { title: result.title, description: result.description }, { keepCreatorOpen: true });
+      const saved = await handlePublishQuiz(solvedQuestions, { title: effectiveTitle, description: effectiveDescription }, { keepCreatorOpen: true });
       if (!saved) throw new Error('تعذر حفظ الاختبار بعد اكتمال التحقق من الإجابات.');
       setQuestions(solvedQuestions);
       setVerifiedQuestionsCount(solvedQuestions.length);
@@ -2213,6 +2245,16 @@ A computer is a digital electronic machine...
               </div>
             </div>
 
+            {uploadedFile && (
+              <div className="relative z-10 rounded-2xl border border-indigo-200/80 bg-indigo-50/70 px-4 py-3 text-right dark:border-indigo-900/60 dark:bg-indigo-950/20" dir="rtl">
+                <p className="text-[10px] font-black uppercase tracking-wide text-indigo-500 dark:text-indigo-300">{isAr ? 'مصدر الاختبار' : 'Quiz source'}</p>
+                <p className="mt-1 truncate text-sm font-extrabold text-slate-800 dark:text-slate-100" title={uploadedFile.name}>{uploadedFile.name}</p>
+                {!isGenericExtractionTitle(title) && (
+                  <p className="mt-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">{isAr ? 'الموضوع المستخلص:' : 'Extracted topic:'} {title}</p>
+                )}
+              </div>
+            )}
+
             {/* Conditional Google Drive integration layout */}
             {gdriveAccount && !uploadedFile ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10" dir="rtl">
@@ -2549,6 +2591,15 @@ A computer is a digital electronic machine...
             {/* Batch Progress Bar and Monitor (As requested) */}
             {isProcessingOcr && (
               <div className="p-5 rounded-2xl bg-amber-500/5 dark:bg-slate-900/30 border border-amber-500/15 dark:border-slate-800 space-y-5 shadow-xs">
+                {uploadedFile && (
+                  <div className="rounded-2xl border border-indigo-200/80 bg-indigo-50/70 px-4 py-3 text-right dark:border-indigo-900/60 dark:bg-indigo-950/20" dir="rtl">
+                    <p className="text-[10px] font-black uppercase tracking-wide text-indigo-500 dark:text-indigo-300">{isAr ? 'مصدر الاختبار الجاري' : 'Current quiz source'}</p>
+                    <p className="mt-1 truncate text-sm font-extrabold text-slate-800 dark:text-slate-100" title={uploadedFile.name}>{uploadedFile.name}</p>
+                    {!isGenericExtractionTitle(title) && (
+                      <p className="mt-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">{isAr ? 'الموضوع المستخلص:' : 'Extracted topic:'} {title}</p>
+                    )}
+                  </div>
+                )}
                 {ocrProgress && (
                   <>
                     <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/70 p-1.5 text-[10px] font-black" dir="rtl">

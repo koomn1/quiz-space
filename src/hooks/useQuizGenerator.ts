@@ -71,7 +71,9 @@ export function useQuizGenerator() {
         current: 0,
         total: totalQuestions,
         stage: 'generating',
-        message: 'جاري الاتصال بمزود الذكاء الاصطناعي... قد يستغرق استلام الدفعة الأولى بضع لحظات.',
+        message: type === 'file_direct'
+          ? `جاري قراءة الملف «${fileUploadName || sourceFile?.name || 'المستند المرفوع'}» وتحضير محتواه...`
+          : 'جاري الاتصال بمزود الذكاء الاصطناعي... قد يستغرق استلام الدفعة الأولى بضع لحظات.',
       });
 
       let accumulatedQuestions: any[] = [];
@@ -224,6 +226,7 @@ export function useQuizGenerator() {
           if (!fileForJob) throw new Error('لم يتم العثور على محتوى المستند.');
           job = await createExtractionJob({
             file: fileForJob,
+            sourceFileName: fileUploadName || fileForJob.name,
             extractionMode: extractionMode || 'literal',
             customInstruction,
             requestedQuestionCount: totalQuestions,
@@ -247,7 +250,10 @@ export function useQuizGenerator() {
             total: totalChunks,
             percentage: reportedPercentage,
             stage: 'generating',
-            message: [job.progressMessage || `جارٍ استخراج الأسئلة (${reportedPercentage}%).`, eta].filter(Boolean).join(' '),
+            message: [
+              job.progressMessage || `جارٍ استخراج محتوى «${fileUploadName || sourceFile?.name || 'المستند'}» (${reportedPercentage}%).`,
+              eta,
+            ].filter(Boolean).join(' '),
           });
           await new Promise(resolve => window.setTimeout(resolve, 2000));
           job = await getExtractionJob(job.id);

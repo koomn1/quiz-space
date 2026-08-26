@@ -33,6 +33,16 @@ describe('extracted answer review', () => {
     expect(result[0].correctAnswer).toBe('القاهرة');
   });
 
+  it('keeps a concise explanation when the compact index review includes one', () => {
+    const result = applyVerifiedAnswerReviews(questions, JSON.stringify({
+      answers: [{ questionIndex: 1, correctIndex: 1, explanation: 'لأن القاهرة هي عاصمة مصر.' }],
+    }));
+
+    expect(result[0].correctIndex).toBe(1);
+    expect(result[0].correctAnswer).toBe('القاهرة');
+    expect(result[0].explanation).toBe('لأن القاهرة هي عاصمة مصر.');
+  });
+
   it('accepts zero-based question indexes when the response clearly uses index zero', () => {
     const twoQuestions = [
       { ...questions[0], id: 'q1-zero' },

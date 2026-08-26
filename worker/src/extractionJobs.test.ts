@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { buildVisionChunkRanges, selectVisionChunkPlan, validateCreateExtractionJobInput, visionChunkRetryDelaySeconds } from './extractionJobs';
+import { buildVisionChunkRanges, deriveQuizTitle, isGenericQuizTitle, selectVisionChunkPlan, sourceFileBaseName, validateCreateExtractionJobInput, visionChunkRetryDelaySeconds } from './extractionJobs';
 
 const extractionSource = readFileSync(new URL('./extractionJobs.ts', import.meta.url), 'utf8');
+const indexSource = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
 
 describe('dynamic vision chunk planning', () => {
   it('keeps the default five-page split for a normal scanned document', () => {
@@ -62,5 +63,26 @@ describe('dynamic vision chunk planning', () => {
     expect(extractionSource).toContain('If the source has no answer key, use null and do not guess.');
     expect(extractionSource).toContain('لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية');
     expect(extractionSource).toContain('correctIndex: type === \'essay\' ? -1 : resolveCorrectIndex(raw, options, type)');
+  });
+
+  it('derives a meaningful title from a document heading before falling back to the filename', () => {
+    expect(deriveQuizTitle('Proteinbank.pdf', '\nProtein Chemistry\n\n1. What is a protein?')).toBe('Protein Chemistry');
+    expect(deriveQuizTitle('Proteinbank.pdf', '1. What is a protein?\nA. A\nB. B')).toBe('Proteinbank');
+    expect(sourceFileBaseName('uploads/Proteinbank.v2.pdf')).toBe('Proteinbank v2');
+  });
+
+  it('retains non-generic model titles and recognizes only known generic titles', () => {
+    expect(isGenericQuizTitle('Extracted Quiz')).toBe(true);
+    expect(isGenericQuizTitle('Protein Chemistry')).toBe(false);
+    expect(deriveQuizTitle('source.pdf', '')).not.toBe('Extracted Quiz');
+  });
+
+  it('bounds and persists the untrusted source filename contract', () => {
+    expect(extractionSource).toContain('source_file_name: input.sourceFileName?.trim().slice(0, 255) || null');
+    expect(indexSource).toContain('sourceFileName: typeof body.sourceFileName === \'string\' ? body.sourceFileName.slice(0, 255) : undefined');
+  });
+
+  it('requires concise, source-grounded explanations in the answer review contract', () => {
+    expect(extractionSource).toContain('never fabricate an answer or explanation');
   });
 });

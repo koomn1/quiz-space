@@ -75,6 +75,7 @@ export interface ExtractionJob {
 
 export interface CreateExtractionJobOptions {
   file: File;
+  sourceFileName?: string;
   extractionMode: 'literal' | 'generate';
   customInstruction?: string;
   requestedQuestionCount: number;
@@ -156,6 +157,7 @@ export async function createExtractionJob(options: CreateExtractionJobOptions): 
       idempotencyKey,
       fileStoragePath: storagePath,
       mimeType,
+      sourceFileName: (options.sourceFileName || options.file.name || '').trim().slice(0, 255) || undefined,
       extractionMode: options.extractionMode,
       customInstruction: options.customInstruction,
       // Zero is the UI sentinel for "automatic". Omitting the field keeps the

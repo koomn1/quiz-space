@@ -624,6 +624,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
           idempotencyKey: typeof body.idempotencyKey === 'string' ? body.idempotencyKey : '',
           fileStoragePath: typeof body.fileStoragePath === 'string' ? body.fileStoragePath : '',
           mimeType: typeof body.mimeType === 'string' ? body.mimeType : '',
+          sourceFileName: typeof body.sourceFileName === 'string' ? body.sourceFileName.slice(0, 255) : undefined,
           extractionMode: body.extractionMode === 'generate' ? 'generate' as const : 'literal' as const,
           customInstruction: typeof body.customInstruction === 'string' ? body.customInstruction : undefined,
           requestedQuestionCount: Number.isInteger(body.requestedQuestionCount) && body.requestedQuestionCount > 0

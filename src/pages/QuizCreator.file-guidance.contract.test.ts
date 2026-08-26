@@ -48,8 +48,11 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('PDF answer-review request failed; retrying the same batch with the PDF attachment.');
     expect(source).toContain('استخدم مرفق PDF الآن فقط للتحقق البصري عند الحاجة');
     expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, response.text)');
-    expect(source).toContain('أعد JSON مختصرًا فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0}]}');
-    expect(source).toContain('بلا شرح أو evidence أو correctAnswer أو Markdown أو نص خارج JSON');
+    expect(source).toContain('أعد JSON مختصرًا فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0,"explanation":"سبب علمي مختصر يثبت لماذا هذا الاختيار صحيح."}]}');
+    expect(source).toContain('أضف explanation قصيرًا لكل سؤال موضوعي، بحد أقصى 240 حرفًا');
+    expect(source).toContain('شرحًا إنشائيًا غير مستند');
+    expect(source).toContain('تم تثبيت هذا الاختيار وفق مفتاح الإجابة المرفق في الملف.');
+    expect(source).toContain('This choice was verified against the answer key included in the file.');
     expect(source).toContain('const saved = await handlePublishQuiz(solvedQuestions');
     expect(source).toContain("correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1");
     expect(source).toContain("setActiveMode('ocr');");
@@ -61,5 +64,8 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('Never leave the user trapped in the solving stage');
     expect(source).toContain('An extracted quiz must not leak into the ordinary draft channel');
     expect(source).toContain('question?.type === \'essay\'');
+    expect(source).toContain('مصدر الاختبار الجاري');
+    expect(source).toContain('الموضوع المستخلص:');
+    expect(source).toContain('fileUploadName,');
   });
 });

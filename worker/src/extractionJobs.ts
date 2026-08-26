@@ -14,6 +14,7 @@ export interface ExtractionJobRow {
   idempotency_key: string;
   file_storage_path: string;
   file_mime_type: string;
+  source_file_name: string | null;
   extraction_mode: 'literal' | 'generate';
   custom_instruction: string | null;
   requested_question_count: number | null;
@@ -54,6 +55,7 @@ export interface CreateExtractionJobInput {
   idempotencyKey: string;
   fileStoragePath: string;
   mimeType: string;
+  sourceFileName?: string;
   extractionMode: 'literal' | 'generate';
   customInstruction?: string;
   requestedQuestionCount?: number;
@@ -90,6 +92,33 @@ const VISION_MODEL_FALLBACKS = [
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
 ];
+
+export function sourceFileBaseName(sourceFileName: string | null | undefined): string {
+  const baseName = String(sourceFileName || '').split(/[\\/]/).pop() || '';
+  return baseName
+    .replace(/\.[a-z0-9]{1,8}$/i, '')
+    .replace(/[._-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 100);
+}
+
+export function deriveQuizTitle(sourceFileName: string | null | undefined, sourceText = ''): string {
+  const lines = sourceText.split(/\r?\n/).map(line => line.trim()).filter(Boolean).slice(0, 20);
+  const heading = lines.find(line =>
+    line.length >= 3 && line.length <= 100 &&
+    !/^\d{1,4}[.)\-:]/.test(line) &&
+    !/^(?:question|choose the correct|put true|answer the questions|answer key|مفتاح|اختر|ضع|أجب)/i.test(line) &&
+    !/^[A-H][.)\-:]/i.test(line)
+  );
+  if (heading) return heading.replace(/\s+/g, ' ').trim();
+  return sourceFileBaseName(sourceFileName) || 'اختبار مستخرج من الملف';
+}
+
+export function isGenericQuizTitle(value: unknown): boolean {
+  const normalized = String(value || '').trim().toLocaleLowerCase();
+  return !normalized || ['extracted quiz', 'اختبار مستخرج', 'اختبار مستخرج من الملف'].includes(normalized);
+}
 
 const supportedMimeTypes = new Set([
   'application/pdf',
@@ -490,8 +519,8 @@ async function reconcileVisionParentJob(
     total_chunks: total,
     progress_message: `اكتمل الاستخراج: ${questions.length} سؤالاً جاهزاً للمراجعة.`,
     questions_json: questions,
-    quiz_title: 'اختبار مستخرج',
-    quiz_description: 'أسئلة مستخرجة من ملف PDF ممسوح ضوئياً.',
+    quiz_title: deriveQuizTitle(parent.source_file_name),
+    quiz_description: `أسئلة مستخرجة من محتوى ${sourceFileBaseName(parent.source_file_name) || 'الملف الممسوح ضوئيًا'}.`,
     provider: providers,
     completed_at: new Date().toISOString(),
     processing_token: null,
@@ -583,7 +612,7 @@ async function extractPdfVision(
     }
   }
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
-  return { title: 'Extracted Quiz', description: 'Questions extracted from the uploaded document.', questions: normalizeQuestions(questions), provider: [...providers].join(', '), chunks: chunks.length };
+  return { title: deriveQuizTitle(job.source_file_name), description: `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`, questions: normalizeQuestions(questions), provider: [...providers].join(', '), chunks: chunks.length };
 }
 
 export function shouldUseVisionForLargeScannedPdf(pageCount: number, sampledText: string): boolean {
@@ -647,8 +676,8 @@ async function generateQuestionsFromText(
       if (!questions.length) throw new Error('The document did not contain any valid questions.');
       await onProgress(1, 1, questions.length);
       return {
-        title: typeof quiz?.title === 'string' ? quiz.title : 'Extracted Quiz',
-        description: typeof quiz?.description === 'string' ? quiz.description : 'Questions generated from the uploaded document.',
+        title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
+        description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
         questions,
         provider: response.model,
         chunks: 1,
@@ -728,8 +757,8 @@ export async function extractJobQuiz(
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
   await onProgress(1, 1, questions.length);
   return {
-    title: typeof quiz?.title === 'string' ? quiz.title : 'Extracted Quiz',
-    description: typeof quiz?.description === 'string' ? quiz.description : 'Questions extracted from the uploaded document.',
+    title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
+    description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
     questions,
     provider: response.model,
     chunks: 1,
@@ -763,6 +792,7 @@ export async function createOrGetExtractionJob(env: ExtractionJobEnv, authHeader
       file_storage_path: input.fileStoragePath,
       file_mime_type: input.mimeType,
       extraction_mode: input.extractionMode,
+      source_file_name: input.sourceFileName?.trim().slice(0, 255) || null,
       custom_instruction: input.customInstruction?.trim() || null,
       requested_question_count: input.requestedQuestionCount || null,
       progress_message: 'تم استلام الملف وتجهيز مهمة الاستخراج.',
