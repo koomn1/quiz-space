@@ -76,6 +76,13 @@ describe('extracted answer review', () => {
     expect(normalizeReviewAnswer('B) القاهرة')).toBe('القاهرة');
   });
 
+  it('accepts nested result/data/content wrappers and double-encoded JSON', () => {
+    const answers = [{ questionIndex: 1, correctIndex: 1, correctAnswer: 'القاهرة' }];
+    expect(parseAnswerReviews(JSON.stringify({ result: JSON.stringify({ answers }) }))).toEqual(answers);
+    expect(parseAnswerReviews(JSON.stringify({ data: { content: JSON.stringify({ answers }) } }))).toEqual(answers);
+    expect(parseAnswerReviews(JSON.stringify({ output: { response: { answers } } }))).toEqual(answers);
+  });
+
   it('accepts JSON wrapped in a markdown code fence and normalizes harmless typography', () => {
     expect(parseAnswerReviews('```json\n{"answers":[]}\n```')).toEqual([]);
     expect(normalizeReviewAnswer(' القَاهِرة، ')).toBe('القاهرة');

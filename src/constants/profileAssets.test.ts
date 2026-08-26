@@ -72,6 +72,9 @@ describe('profile asset catalog', () => {
   it('falls back removed legacy avatar URLs to the first replacement avatar', () => {
     expect(resolveProfileImageUrl('./avatars/boy-cartoon-1.webp')).toBe(AVATAR_PRESETS[0].url);
     expect(resolveProfileImageUrl('/quiz-space/avatars/girl-6.webp')).toBe(AVATAR_PRESETS[0].url);
+    expect(resolveProfileImageUrl('/quiz-space/clean-assets-replacement/avatar-boy-music-walker-v2.webp')).toBe('/clean-assets-replacement/avatar-boy-music-walker-v2.webp');
+    expect(resolveProfileImageUrl('https://z-space-app.pages.dev/quiz-space/clean-assets-replacement/avatar-boy-music-walker-v2.webp')).toBe('/clean-assets-replacement/avatar-boy-music-walker-v2.webp');
+    expect(resolveProfileImageUrl('https://quiz-space-app.pages.dev/quiz-space/clean-assets-replacement/avatar-boy-music-walker-v2.webp')).toBe('/clean-assets-replacement/avatar-boy-music-walker-v2.webp');
     expect(resolveProfileImageUrl('data:image/webp;base64,abc')).toBe('data:image/webp;base64,abc');
   });
 

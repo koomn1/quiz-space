@@ -37,19 +37,33 @@ function findBalancedJsonCandidate(value: string): string | null {
   return null;
 }
 
-function extractReviews(value: unknown): AnswerReview[] | null {
+function extractReviews(value: unknown, depth = 0): AnswerReview[] | null {
+  if (depth > 6) return null;
   if (Array.isArray(value)) return value as AnswerReview[];
-  if (!value || typeof value !== 'object') return null;
-  const record = value as { answers?: unknown; result?: unknown; data?: unknown; text?: unknown };
-  if (Array.isArray(record.answers)) return record.answers as AnswerReview[];
-  if (typeof record.text === 'string') {
-    try {
-      return extractReviews(JSON.parse(record.text));
-    } catch {
-      return null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const candidates = [trimmed, findBalancedJsonCandidate(trimmed)].filter((candidate, index, all): candidate is string => Boolean(candidate) && all.indexOf(candidate) === index);
+    for (const candidate of candidates) {
+      try {
+        const parsed = JSON.parse(candidate) as unknown;
+        const reviews = extractReviews(parsed, depth + 1);
+        if (reviews) return reviews;
+      } catch {
+        // Try the next wrapper/candidate.
+      }
     }
+    return null;
   }
-  return extractReviews(record.result) || extractReviews(record.data);
+  if (!value || typeof value !== 'object') return null;
+  const record = value as Record<string, unknown>;
+  if (Array.isArray(record.answers)) return record.answers as AnswerReview[];
+  const nestedKeys = ['result', 'data', 'text', 'content', 'output', 'response', 'message', 'body'];
+  for (const key of nestedKeys) {
+    const reviews = extractReviews(record[key], depth + 1);
+    if (reviews) return reviews;
+  }
+  return null;
 }
 
 export function parseAnswerReviews(text: string): AnswerReview[] {
@@ -58,8 +72,7 @@ export function parseAnswerReviews(text: string): AnswerReview[] {
   for (const candidate of candidates) {
     try {
       const firstParse = JSON.parse(candidate) as unknown;
-      const parsed = typeof firstParse === 'string' ? JSON.parse(firstParse) as unknown : firstParse;
-      const reviews = extractReviews(parsed);
+      const reviews = extractReviews(firstParse);
       if (reviews) return reviews;
     } catch {
       // Try the next balanced candidate before reporting an invalid response.

@@ -82,7 +82,13 @@ export const AVATAR_PRESET_URLS = AVATAR_PRESETS.map((avatar) => avatar.url);
 export function resolveProfileImageUrl(value: string | null | undefined): string {
   const raw = String(value || '').trim();
   if (/^data:image\//i.test(raw)) return raw;
-  if (/^(https?:)?\/\//i.test(raw) && !/^(?:https?:)?\/\/koomn1\.github\.io\/quiz-space\//i.test(raw)) return raw;
+
+  // Profile rows created by the old deployments may contain either an
+  // absolute z-space URL or a stale /quiz-space/ base. Convert only our own
+  // app hosts; leave third-party avatars (Google/GitHub/etc.) untouched.
+  const ownAppAsset = raw.match(/^https?:\/\/(?:z-space-app|quiz-space-app)\.pages\.dev\/(?:quiz-space\/)?(.+)$/i);
+  if (ownAppAsset?.[1]) return profileAssetUrl(ownAppAsset[1]);
+  if (/^(?:https?:)?\/\//i.test(raw) && !/^(?:https?:)?\/\/koomn1\.github\.io\/quiz-space\//i.test(raw)) return raw;
   if (!raw || /(?:^|\/)\b(?:boy|girl)(?:-cartoon)?-[1-6]\.(?:png|webp)$/i.test(raw)) {
     return AVATAR_PRESETS[0]?.url || profileAssetUrl('clean-assets-deterministic/avatar-football-pro-transparent.webp');
   }

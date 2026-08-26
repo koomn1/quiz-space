@@ -18,6 +18,13 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('max_tokens: 8_000');
   });
 
+  it('normalizes wrapped provider content and extracts balanced JSON safely', () => {
+    expect(workerSource).toContain('function providerContentToText(value: unknown): string');
+    expect(workerSource).toContain('function balancedJsonCandidate(value: string): string | null');
+    expect(workerSource).toContain("['result', 'data', 'text', 'content', 'output', 'response', 'body']");
+    expect(workerSource).toContain('providerContentToText(d.choices?.[0]?.message?.content');
+  });
+
   it('keeps OpenRouter first and bounds direct recovery for text-only answer review', () => {
     expect(workerSource).toContain('const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 12_000');
     expect(workerSource).toContain("aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat'");

@@ -8,6 +8,7 @@ import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
 import { Image as ImageIcon, FileText, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
 import { profileAssetUrl } from '../constants/profileAssets';
+import ProfileAvatar from '../components/ProfileAvatar';
 const COSMO_AVATAR = profileAssetUrl('avatars/cosmo-cartoon.webp');
 
 /* ═══════════════════════════════════════════════════════════
@@ -227,9 +228,14 @@ function ThinkingOrb() {
 /* ─── Assistant avatar (small) ─────────────────────────── */
 function AssistantAvatar() {
   return (
-    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-violet-400/60 shadow-lg shadow-violet-500/20">
-      <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover" />
-    </div>
+    <ProfileAvatar
+      src={COSMO_AVATAR}
+      alt="Cosmo AI"
+      fallback="C"
+      className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-violet-400/60 shadow-lg shadow-violet-500/20"
+      imageClassName="w-full h-full object-cover"
+      fallbackClassName="text-sm font-black text-violet-300"
+    />
   );
 }
 
@@ -409,14 +415,14 @@ function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial, t
             <div>{msg.text}</div>
             <p className="text-[10px] mt-1 text-right" style={{ color: theme.MUTED }}>{msg.timestamp}</p>
           </div>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden"
-            style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)', color: 'white' }}>
-            {userPhoto ? (
-              <img src={userPhoto} alt="" className="w-full h-full object-cover" />
-            ) : (
-              userInitial
-            )}
-          </div>
+          <ProfileAvatar
+            src={userPhoto}
+            alt={userInitial}
+            fallback={userInitial}
+            className="h-8 w-8 rounded-full flex-shrink-0"
+            imageClassName="h-full w-full object-cover"
+            fallbackClassName="text-sm font-semibold text-white"
+          />
         </div>
       ) : (
         <div className="flex items-start gap-4">

@@ -7,6 +7,7 @@ import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, PdfExportRecord, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, normalizeBadgeColor, normalizeBadgeTier, normalizeNameColor, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
+import { resolveProfileImageUrl } from '../constants/profileAssets';
 import {
   QUIZ_QUESTION_MEDIA_BUCKET,
   QUIZ_QUESTION_MEDIA_MAX_BYTES,
@@ -880,7 +881,7 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       customId: userRow?.custom_id || '',
       name: userRow?.name || '',
       email: userRow?.email || '',
-      photoURL: userRow?.photo_url || '',
+      photoURL: userRow?.photo_url ? resolveProfileImageUrl(userRow.photo_url) : '',
       isPremium: userRow?.is_premium || false,
       planName: userRow?.plan_name || 'Free',
       planId: userRow?.plan_id || undefined,

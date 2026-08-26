@@ -8,6 +8,7 @@ import { AnimatedSidebarIcon } from './AnimatedSidebarIcon';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag, BadgeTier, NameColorKey, BadgeColorKey } from './PremiumNameTag';
 import CosmoOrb from './CosmoOrb';
+import ProfileAvatar from './ProfileAvatar';
 
 interface SidebarProps {
   currentTab: string;
@@ -184,16 +185,15 @@ export default function Sidebar({
               {/* Glowing ring container around avatar */}
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-[#9b51e0] to-[#b175ff] p-[2px] shrink-0 shadow-md ring-2 ring-offset-2 ring-offset-[#130b2b] ring-[#9b51e0] group-hover:ring-[#b175ff] group-hover:scale-105 transition-all duration-300 animate-[pulse_3s_infinite]">
                 <div className="w-full h-full rounded-full bg-[#0a0518] flex items-center justify-center overflow-hidden">
-                  {(photoUrl || avatar_url) ? (
-                    <img 
-                      src={photoUrl || avatar_url || undefined} 
-                      alt={userName} 
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-[#b175ff] font-black text-sm">{userName?.charAt(0)?.toUpperCase()}</span>
-                  )}
+                  <ProfileAvatar
+                    src={photoUrl || avatar_url}
+                    alt={userName}
+                    fallback={userName?.charAt(0)?.toUpperCase() || 'U'}
+                    eager
+                    className="h-full w-full rounded-full"
+                    imageClassName="h-full w-full object-cover"
+                    fallbackClassName="text-[#b175ff] font-black text-sm"
+                  />
                 </div>
               </div>
               

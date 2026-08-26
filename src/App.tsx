@@ -7,7 +7,7 @@ import CosmicLoader from "./components/CosmicLoader";
 import React from 'react';
 import { useSearchParams } from './hooks/useSearchParams';
 import { Quiz, UserStats, getUserRoleAndPlan } from './types';
-import { AVATAR_PRESETS, getDefaultAvatar } from './constants/profileAssets';
+import { AVATAR_PRESETS, getDefaultAvatar, resolveProfileImageUrl } from './constants/profileAssets';
 import { supabase } from './lib/supabaseClient';
 import { registerPushNotifications } from './lib/pushManager';
 import Header from './components/Header';
@@ -67,6 +67,11 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+function normalizeUserPhoto(value: unknown): string | null {
+  const raw = String(value || '').trim();
+  return raw ? resolveProfileImageUrl(raw) : null;
+}
 
 function lazyWithRetry<T extends React.ComponentType<any>>(
   loader: () => Promise<{ default: T }>,
@@ -161,7 +166,7 @@ export default function App() {
     setUserId(u.uid);
     setUserName(u.name || '');
     setUserEmail(u.email || null);
-    setUserPhoto(u.photoURL || null);
+    setUserPhoto(normalizeUserPhoto(u.photoURL));
     setUserCustomId(u.customId || null);
     setIsUserPremium(!!u.isPremium);
     setUserPlanName(u.planName || '');
@@ -771,7 +776,11 @@ export default function App() {
       setUserEmail(savedEmail);
       
       const savedPhoto = localStorage.getItem('quiz_userPhoto');
-      if (savedPhoto) setUserPhoto(savedPhoto);
+      if (savedPhoto) {
+        const normalizedPhoto = normalizeUserPhoto(savedPhoto);
+        setUserPhoto(normalizedPhoto);
+        if (normalizedPhoto && normalizedPhoto !== savedPhoto) localStorage.setItem('quiz_userPhoto', normalizedPhoto);
+      }
 
       // Async load their actual Postgres statistics
       getUserProfileStats(localUserId).then(stats => {
@@ -780,8 +789,9 @@ export default function App() {
           setIsUserPremium(!!stats.isPremium);
           setUserPlanName(stats.planName || '');
           if (stats.photoURL) {
-            setUserPhoto(stats.photoURL);
-            localStorage.setItem('quiz_userPhoto', stats.photoURL);
+            const normalizedPhoto = normalizeUserPhoto(stats.photoURL);
+            setUserPhoto(normalizedPhoto);
+            if (normalizedPhoto) localStorage.setItem('quiz_userPhoto', normalizedPhoto);
           }
           if (stats.customId) {
             setUserCustomId(stats.customId);
@@ -836,7 +846,11 @@ export default function App() {
         // Don't set photo from auth metadata here — wait for getUserProfileStats
         // to load the user's actual chosen photo from the DB
         const savedLocalPhoto = localStorage.getItem('quiz_userPhoto');
-        if (savedLocalPhoto) setUserPhoto(savedLocalPhoto);
+        if (savedLocalPhoto) {
+          const normalizedPhoto = normalizeUserPhoto(savedLocalPhoto);
+          setUserPhoto(normalizedPhoto);
+          if (normalizedPhoto && normalizedPhoto !== savedLocalPhoto) localStorage.setItem('quiz_userPhoto', normalizedPhoto);
+        }
         localStorage.setItem('quiz_userId', user.id);
         localStorage.setItem('quiz_userName', finalName);
 
@@ -904,17 +918,20 @@ export default function App() {
             setIsUserPremium(!!stats.isPremium);
             setUserPlanName(stats.planName || '');
             if (stats.photoURL) {
-            setUserPhoto(stats.photoURL);
-            localStorage.setItem('quiz_userPhoto', stats.photoURL);
+            const normalizedPhoto = normalizeUserPhoto(stats.photoURL);
+            setUserPhoto(normalizedPhoto);
+            if (normalizedPhoto) localStorage.setItem('quiz_userPhoto', normalizedPhoto);
           } else if (user.user_metadata?.avatar_url) {
             // Fallback: use Google/GitHub avatar if user hasn't set a custom one
-            setUserPhoto(user.user_metadata.avatar_url);
-            localStorage.setItem('quiz_userPhoto', user.user_metadata.avatar_url);
+            const normalizedPhoto = normalizeUserPhoto(user.user_metadata.avatar_url);
+            setUserPhoto(normalizedPhoto);
+            if (normalizedPhoto) localStorage.setItem('quiz_userPhoto', normalizedPhoto);
           } else {
             // Fallback: assign a default avatar using the curated catalog helper
             const defaultAvatar = getDefaultAvatar(finalName);
-            setUserPhoto(defaultAvatar);
-            localStorage.setItem('quiz_userPhoto', defaultAvatar);
+            const normalizedPhoto = normalizeUserPhoto(defaultAvatar);
+            setUserPhoto(normalizedPhoto);
+            if (normalizedPhoto) localStorage.setItem('quiz_userPhoto', normalizedPhoto);
           }
             if (stats.customId) {
               setUserCustomId(stats.customId);
@@ -971,7 +988,7 @@ export default function App() {
           setUserPlanName(stats.planName || '');
           setUserStats(stats);
           if (stats.photoURL) {
-            setUserPhoto(stats.photoURL);
+            setUserPhoto(normalizeUserPhoto(stats.photoURL));
           }
         }
       } catch (_) {}
@@ -1793,7 +1810,7 @@ export default function App() {
                     localStorage.setItem('quiz_userName', name);
                   }}
                   onUpdatePhoto={(photo) => {
-                    setUserPhoto(photo);
+                    setUserPhoto(normalizeUserPhoto(photo));
                   }}
                   onUpdateCustomId={(cid) => {
                     setUserCustomId(cid);
