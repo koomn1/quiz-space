@@ -889,18 +889,18 @@ export default function QuizCreator({
         type: question.type,
         options: question.options.map(option => option.slice(0, 180)),
       }));
-      const prompt = `أنت الآن في مرحلة «حل الاختبار بعد الاستخراج». استخدم الملف المرفق كمصدر أساسي، واستخدم نص السؤال والاختيارات أدناه للوصول إلى الإجابة الصحيحة فقط. لا تختار الخيار الأول افتراضيًا ولا تخمّن.
+      const prompt = `أنت الآن في مرحلة «حل الاختبار بعد الاستخراج». استخدم الملف المرفق ومحتوى المصدر للوصول إلى الاختيار الصحيح فقط. لا تختار الخيار الأول افتراضيًا ولا تخمّن.
 
-أعد JSON فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0,"correctAnswer":"نص الخيار المطابق","explanation":"سبب مختصر","evidence":"مرجع قصير من محتوى الملف"}]}
+أعد JSON مختصرًا فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0}]}
 
 قواعد إلزامية:
-- correctIndex يبدأ من 0 ويجب أن يشير إلى الخيار الصحيح فعلًا.
-- correctAnswer يجب أن يساوي نص الخيار المشار إليه، بعد نسخه كما هو.
+- الرد يجب أن يحتوي على answers فقط، بلا شرح أو evidence أو correctAnswer أو Markdown أو نص خارج JSON.
+- correctIndex يبدأ من 0 ويشير إلى الاختيار الصحيح في القائمة كما هي.
 - questionIndex يبدأ من 1 داخل هذه الدفعة، ولا تستخدم ترقيم الملف الكامل.
-- يجب إرجاع إجابة لكل سؤال موضوعي في الدفعة؛ لا تُرجع مصفوفة ناقصة.
+- يجب إرجاع عنصر واحد لكل سؤال موضوعي في الدفعة، وبنفس ترتيبها.
 - راجع كل إجابة مقابل محتوى الملف قبل إرجاعها.
-- إذا لم تستطع إثبات إجابة سؤال موضوعي من الملف، أعد المحاولة بتحليل السؤال والاختيارات بدقة قبل الفشل، ولا تضع إجابة عشوائية.
-- لا تغيّر نص السؤال أو ترتيب الخيارات.
+- إذا لم تستطع إثبات الإجابة، أعد المحاولة داخليًا قبل الرد، ولا تضع اختيارًا عشوائيًا.
+- لا تغيّر نص السؤال أو ترتيب الاختيارات.
 
 الأسئلة:
 ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف المصدر النصي للتحقق فقط:\n${sourceContext}` : ''}`;
@@ -908,8 +908,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         currentPage: 'quiz-creator-post-extraction-solving',
         siteStatus: 'QuizSpace يعمل بشكل طبيعي',
         systemInstruction: isAr
-          ? 'أنت مراجع إجابات أكاديمي شديد الدقة. لا تختر الخيار الأول أبدًا كحل افتراضي. لا تعتمد إلا على دليل الملف أو على إجابة يمكن إثباتها مباشرة من السؤال والخيارات. أعد JSON صالحًا فقط وأجب عن كل أسئلة الدفعة.'
-          : 'You are a strict academic answer verifier. Never default to the first option. Use only evidence from the file or a directly provable answer. Return valid JSON only and answer every question in the batch.',
+          ? 'أنت مراجع إجابات أكاديمي شديد الدقة. أعد JSON صغيرًا يحتوي على questionIndex وcorrectIndex فقط لكل سؤال. لا تكتب شرحًا أو نصًا خارج JSON، ولا تختر الخيار الأول افتراضيًا.'
+          : 'You are a strict academic answer verifier. Return only compact JSON with questionIndex and correctIndex for every question. Never default to the first option and never add explanations or text outside JSON.',
       };
       if (sourceText) {
         const sourceKeyResult = applySourceAnswerKey(batch.questions, sourceText, batch.offset);

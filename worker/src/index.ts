@@ -347,6 +347,7 @@ interface OpenRouterRequestOptions {
   max_tokens?: number;
   temperature?: number;
   timeoutMs?: number;
+  response_format?: { type: 'json_object' };
 }
 
 async function callOpenRouter(
@@ -372,7 +373,11 @@ async function callOpenRouter(
         model,
         messages,
         ...(plugins ? { plugins } : {}),
-        ...(options ? { max_tokens: options.max_tokens, temperature: options.temperature } : {}),
+        ...(options ? {
+          max_tokens: options.max_tokens,
+          temperature: options.temperature,
+          ...(options.response_format ? { response_format: options.response_format } : {}),
+        } : {}),
       }),
     });
     if (!r.ok) throw new Error(await r.text());
@@ -891,7 +896,7 @@ ${extraInstruction}`;
           messages,
           models,
           undefined,
-          isAnswerReview ? { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS } : undefined,
+          isAnswerReview ? { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, response_format: { type: 'json_object' as const } } : undefined,
         );
       } catch (openRouterError) {
         // If the text models are temporarily unavailable, keep one bounded

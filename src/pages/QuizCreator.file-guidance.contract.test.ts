@@ -48,6 +48,8 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('PDF answer-review request failed; retrying the same batch with the PDF attachment.');
     expect(source).toContain('استخدم مرفق PDF الآن فقط للتحقق البصري عند الحاجة');
     expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, response.text)');
+    expect(source).toContain('أعد JSON مختصرًا فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0}]}');
+    expect(source).toContain('بلا شرح أو evidence أو correctAnswer أو Markdown أو نص خارج JSON');
     expect(source).toContain('const saved = await handlePublishQuiz(solvedQuestions');
     expect(source).toContain("correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1");
     expect(source).toContain("setActiveMode('ocr');");
