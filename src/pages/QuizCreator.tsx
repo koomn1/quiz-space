@@ -3063,7 +3063,7 @@ A computer is a digital electronic machine...
 
             {ocrError && activeMode === 'manual' && renderErrorMsg(ocrError)}
 
-            {verifiedQuestionsCount !== null && !postExtractionSolvePending && (
+            {verifiedQuestionsCount !== null && !postExtractionSolvePending && !manualSolveOnlyNotice && (
               <div className="rounded-[28px] border border-emerald-200/70 bg-emerald-50/80 p-5 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/20" dir="rtl">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-start gap-3 text-right">
@@ -3071,7 +3071,9 @@ A computer is a digital electronic machine...
                       <Check className="h-5 w-5" />
                     </span>
                     <div>
-                      <p className="text-sm font-black text-emerald-800 dark:text-emerald-300">تم حل الاختبار وحفظه بعد التحقق</p>
+                      <p className="text-sm font-black text-emerald-800 dark:text-emerald-300">
+                        {aiSavedQuizId ? 'تم حل الاختبار وحفظه بعد التحقق' : 'تم التحقق من الإجابات داخل المحرر'}
+                      </p>
                       <p className="mt-1 text-xs font-bold leading-6 text-emerald-700/80 dark:text-emerald-300/80">
                         تم تثبيت إجابات {verifiedQuestionsCount} سؤالًا داخل المحرر. راجع الاختيارات الخضراء أو عدّلها يدويًا قبل النشر النهائي.
                       </p>

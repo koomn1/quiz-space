@@ -174,9 +174,15 @@ export function applyVerifiedAnswerReviews(questions: Question[], responseText: 
     if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= question.options.length) {
       correctIndex = optionLabel ?? question.options.findIndex(option => normalizeReviewAnswer(option) === returnedAnswer);
     }
-    if (!returnedAnswer || !Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= question.options.length) continue;
-    const optionAnswer = normalizeReviewAnswer(question.options[correctIndex]);
-    if (returnedAnswer !== optionAnswer && optionLabel !== correctIndex) continue;
+    if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= question.options.length) continue;
+    // The compact answer-review contract intentionally returns only correctIndex.
+    // If the provider also sends answer text, cross-check it; otherwise the strictly
+    // range-checked index is the authoritative value and must not be rejected merely
+    // because correctAnswer is omitted.
+    if (returnedAnswer) {
+      const optionAnswer = normalizeReviewAnswer(question.options[correctIndex]);
+      if (returnedAnswer !== optionAnswer && optionLabel !== correctIndex) continue;
+    }
 
     reviewedIndexes.add(questionIndex);
     const explanationParts = [review.explanation, review.evidence]
