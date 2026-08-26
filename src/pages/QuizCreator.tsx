@@ -553,6 +553,7 @@ export default function QuizCreator({
   const [isProcessingOcr, setIsProcessingOcr] = React.useState(false);
   const [ocrError, setOcrError] = React.useState<string | null>(null);
   const [manualSolveOnlyNotice, setManualSolveOnlyNotice] = React.useState<string | null>(null);
+  const [isManuallyConfirmingAnswers, setIsManuallyConfirmingAnswers] = React.useState(false);
   const [ocrProgress, setOcrProgress] = React.useState<{
     stage: 'analyzing' | 'extracting' | 'solving' | 'compiling' | 'saving';
     current: number;
@@ -1725,6 +1726,14 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         return;
       }
 
+      // A failed AI pass is only an advisory state once the user has explicitly
+      // reviewed every answer. The structural validation above remains mandatory.
+      if (manualSolveOnlyNotice) {
+        setManualSolveOnlyNotice(null);
+        setPostExtractionSolvePending(false);
+        setVerifiedQuestionsCount(sanitizedQuestions.length);
+      }
+
       await persistQuestionImages(userId, sanitizedQuestions);
 
       let savedQuiz: any;
@@ -1828,6 +1837,36 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       return false;
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleConfirmManualAnswersAndSave = async () => {
+    const invalidQuestions = getInvalidQuizQuestions(questions);
+    if (invalidQuestions.length > 0) {
+      const questionNumbers = invalidQuestions.slice(0, 5).map(({ index }) => index + 1).join('، ');
+      setSaveError(`لا يمكن اعتماد التصحيح اليدوي بعد: يوجد ${invalidQuestions.length} سؤال يحتاج إجابة أو خيارًا مكتملًا (أرقام: ${questionNumbers}${invalidQuestions.length > 5 ? '…' : ''}).`);
+      return;
+    }
+
+    setIsManuallyConfirmingAnswers(true);
+    setSaveError(null);
+    setManualSolveOnlyNotice(null);
+    setPostExtractionSolvePending(false);
+    setVerifiedQuestionsCount(questions.length);
+    saveExtractedQuizDraft({
+      ownerId: draftOwnerId,
+      title,
+      description,
+      category,
+      timeLimit,
+      questions,
+      fileName: extractedAttachmentRef.current?.name || uploadedFile?.name || 'ملف مستخرج سابق',
+      fileType: fileType || 'document',
+    });
+    try {
+      await handlePublishQuiz();
+    } finally {
+      setIsManuallyConfirmingAnswers(false);
     }
   };
 
@@ -2884,9 +2923,24 @@ A computer is a digital electronic machine...
                 className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-4 text-right text-sm font-extrabold leading-7 text-amber-900 shadow-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
                 dir="rtl"
               >
-                <div className="flex items-start justify-end gap-2">
-                  <span className="text-lg" aria-hidden="true">⚠️</span>
-                  <p>{manualSolveOnlyNotice}</p>
+                <div className="flex flex-col items-stretch gap-3">
+                  <div className="flex items-start justify-end gap-2">
+                    <span className="text-lg" aria-hidden="true">⚠️</span>
+                    <p>{manualSolveOnlyNotice}</p>
+                  </div>
+                  <div className="rounded-xl border border-amber-200/80 bg-white/60 p-3 text-xs font-bold leading-6 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/20 dark:text-amber-100">
+                    {getInvalidQuizQuestions(questions).length === 0
+                      ? 'راجعت الإجابات بنفسك؟ يمكنك اعتمادها صراحةً وحفظ الاختبار الآن.'
+                      : `أكمل مراجعة ${getInvalidQuizQuestions(questions).length} سؤالًا قبل الاعتماد اليدوي.`}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isManuallyConfirmingAnswers || isSaving || getInvalidQuizQuestions(questions).length > 0}
+                    onClick={() => void handleConfirmManualAnswersAndSave()}
+                    className="min-h-11 rounded-xl bg-amber-600 px-4 py-3 text-sm font-black text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isManuallyConfirmingAnswers ? 'جاري اعتماد الإجابات والحفظ...' : 'اعتماد الإجابات اليدوية وحفظ الاختبار'}
+                  </button>
                 </div>
               </div>
             )}
