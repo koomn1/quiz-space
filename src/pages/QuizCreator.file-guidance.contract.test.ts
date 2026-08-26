@@ -67,6 +67,10 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('const handleConfirmManualAnswersAndSave = async () => {');
     expect(source).toContain('اعتماد الإجابات اليدوية وحفظ الاختبار');
     expect(source).toContain('disabled={isManuallyConfirmingAnswers || isSaving || getInvalidQuizQuestions(questions).length > 0}');
+    expect(source).toContain('const incompleteQuestions = getInvalidQuizQuestions(questions);');
+    expect(source).toContain('عرض الأسئلة غير المكتملة');
+    expect(source).toContain('scrollToIncompleteQuestion');
+    expect(source).toContain('id={`quiz-question-${qIdx}`}');
     expect(source).toContain("setActiveMode('ocr');");
     expect(source).toContain("setManualSolveOnlyNotice");
     expect(source).toContain('تم تجاوز مرحلة الحل تلقائيًا');

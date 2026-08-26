@@ -1910,6 +1910,16 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     }
   };
 
+  const incompleteQuestions = getInvalidQuizQuestions(questions);
+  const [showIncompleteQuestions, setShowIncompleteQuestions] = React.useState(false);
+
+  const scrollToIncompleteQuestion = (index: number) => {
+    setShowIncompleteQuestions(false);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`quiz-question-${index}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  };
+
   const overlayProgress = isProcessingOcr ? ocrProgress : generationProgress;
   const overlayFallbackTotal = isProcessingOcr
     ? Math.max(1, pdfCount, questions.filter(question => question.text.trim()).length)
@@ -2969,10 +2979,40 @@ A computer is a digital electronic machine...
                     <p>{manualSolveOnlyNotice}</p>
                   </div>
                   <div className="rounded-xl border border-amber-200/80 bg-white/60 p-3 text-xs font-bold leading-6 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/20 dark:text-amber-100">
-                    {getInvalidQuizQuestions(questions).length === 0
+                    {incompleteQuestions.length === 0
                       ? 'راجعت الإجابات بنفسك؟ يمكنك اعتمادها صراحةً وحفظ الاختبار الآن.'
-                      : `أكمل مراجعة ${getInvalidQuizQuestions(questions).length} سؤالًا قبل الاعتماد اليدوي.`}
+                      : `أكمل مراجعة ${incompleteQuestions.length} سؤالًا قبل الاعتماد اليدوي.`}
                   </div>
+                  {incompleteQuestions.length > 0 && (
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowIncompleteQuestions(current => !current)}
+                        className="w-full min-h-11 rounded-xl border border-amber-300 bg-amber-100/70 px-4 py-3 text-sm font-black text-amber-900 transition hover:bg-amber-200 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+                        aria-expanded={showIncompleteQuestions}
+                      >
+                        {showIncompleteQuestions ? 'إخفاء الأسئلة غير المكتملة' : `عرض الأسئلة غير المكتملة (${incompleteQuestions.length})`}
+                      </button>
+                      {showIncompleteQuestions && (
+                        <div className="grid max-h-56 gap-2 overflow-y-auto rounded-xl border border-amber-200/80 bg-white/60 p-2 dark:border-amber-800/60 dark:bg-amber-950/20" role="list" aria-label="الأسئلة غير المكتملة">
+                          {incompleteQuestions.map(({ index, reason }) => (
+                            <button
+                              key={index}
+                              type="button"
+                              role="listitem"
+                              onClick={() => scrollToIncompleteQuestion(index)}
+                              className="flex min-h-10 items-center justify-between gap-3 rounded-lg border border-amber-200/70 bg-white/70 px-3 py-2 text-right text-xs font-black text-amber-900 transition hover:bg-amber-100 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-100"
+                            >
+                              <span>السؤال {index + 1}</span>
+                              <span className="font-bold text-amber-700 dark:text-amber-300">
+                                {reason === 'empty-option' ? 'يحتاج إكمال خيار' : 'يحتاج تحديد الإجابة'}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <button
                     type="button"
                     disabled={isManuallyConfirmingAnswers || isSaving || getInvalidQuizQuestions(questions).length > 0}
@@ -3394,6 +3434,7 @@ A computer is a digital electronic machine...
                 return (
                   <div
                     
+                    id={`quiz-question-${qIdx}`}
                     className="group glass-card border border-slate-200/50 dark:border-slate-700/50 p-6 sm:p-8 rounded-[28px] shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 relative overflow-hidden flex flex-col gap-6 text-right" key={question.id || qIdx}
                   >
                     {/* Visual side accent border */}
