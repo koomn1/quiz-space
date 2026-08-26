@@ -51,6 +51,12 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('const saved = await handlePublishQuiz(solvedQuestions');
     expect(source).toContain("correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1");
     expect(source).toContain("setActiveMode('ocr');");
+    expect(source).toContain("setManualSolveOnlyNotice");
+    expect(source).toContain('تم تجاوز مرحلة الحل تلقائيًا');
+    expect(source).toContain('هذا الـquiz غير مسموح حله آليًا');
+    expect(source).toContain('setPostExtractionSolvePending(false);');
+    expect(source).toContain("setActiveMode('manual');");
+    expect(source).toContain('Never leave the user trapped in the solving stage');
     expect(source).toContain('An extracted quiz must not leak into the ordinary draft channel');
     expect(source).toContain('question?.type === \'essay\'');
   });

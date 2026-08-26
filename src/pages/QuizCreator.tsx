@@ -536,6 +536,7 @@ export default function QuizCreator({
   
   const [isProcessingOcr, setIsProcessingOcr] = React.useState(false);
   const [ocrError, setOcrError] = React.useState<string | null>(null);
+  const [manualSolveOnlyNotice, setManualSolveOnlyNotice] = React.useState<string | null>(null);
   const [ocrProgress, setOcrProgress] = React.useState<{
     stage: 'analyzing' | 'extracting' | 'solving' | 'compiling' | 'saving';
     current: number;
@@ -1043,6 +1044,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       if (!saved) throw new Error('تعذر حفظ الاختبار بعد اكتمال التحقق من الإجابات.');
       setQuestions(solvedQuestions);
       setVerifiedQuestionsCount(solvedQuestions.length);
+      setManualSolveOnlyNotice(null);
       setPostExtractionSolvePending(false);
       setActiveMode('manual');
       // Keep the source preview in its own state so it remains visible after
@@ -1054,12 +1056,22 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       setIsProcessingOcr(false);
       setOcrProgress(null);
     } catch (error) {
-      // Keep the user in the extraction panel so the error and retry action are
-      // visible. Never fall back silently to a manual editor with unsolved questions.
-      setPostExtractionSolvePending(true);
+      // Never leave the user trapped in the solving stage. The extracted draft
+      // is still useful, but unresolved answers must be handled manually rather
+      // than guessed or silently saved as correct.
+      console.warn('Post-extraction answer verification failed; switching to manual solving.', error);
+      const notice = isAr
+        ? 'تعذر التحقق الآلي من إجابات هذا الـquiz بشكل موثوق. تم تجاوز مرحلة الحل تلقائيًا، والأسئلة محفوظة أمامك للحل اليدوي. هذا الـquiz غير مسموح حله آليًا لتجنب أي مشاكل؛ يرجى حل الاختبار يدويًا.'
+        : 'Automatic answer verification for this quiz was not reliable. The solve stage was skipped and the extracted questions are ready for manual solving. This quiz is not eligible for automatic solving; please solve it manually to avoid errors.';
+      setQuestions(draftQuestions);
+      setVerifiedQuestionsCount(null);
+      setManualSolveOnlyNotice(notice);
+      setOcrError(null);
+      setPostExtractionSolvePending(false);
       setIsProcessingOcr(false);
-      setActiveMode('ocr');
-      throw error;
+      setOcrProgress(null);
+      setActiveMode('manual');
+      return;
     }
   };
 
@@ -1072,6 +1084,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     setIsProcessingOcr(true);
     setActiveMode('ocr');
     setOcrError(null);
+    setManualSolveOnlyNotice(null);
     try {
       await prepareAndSolveExtractedQuiz({
         title,
@@ -1111,8 +1124,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     ).length;
     setVerifiedQuestionsCount(unresolvedCount === 0 ? draft.questions.length : null);
     setPostExtractionSolvePending(unresolvedCount > 0);
-    setOcrError(unresolvedCount > 0
-      ? (isAr ? `هذه مسودة غير مكتملة: لم يتم التحقق من إجابات ${unresolvedCount} سؤالًا. أعد رفع الملف لإعادة الحل.` : `This draft is incomplete: ${unresolvedCount} answers were not verified. Re-upload the file to retry.`)
+    setOcrError(null);
+    setManualSolveOnlyNotice(unresolvedCount > 0
+      ? (isAr ? `هذا الـquiz غير مسموح حله آليًا لعدم وجود إجابات موثوقة. يرجى حل الاختبار يدويًا لتجنب أي مشاكل. الأسئلة المستخرجة محفوظة أمامك.` : `This quiz is not eligible for automatic solving because verified answers are unavailable. Please solve it manually to avoid errors. The extracted questions are preserved below.`)
       : null);
     setActiveMode('manual');
     setShowResumeExtractedDraft(false);
@@ -1225,6 +1239,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     setVerifiedQuestionsCount(null);
     setExtractedSourcePreview(null);
     setOcrError(null);
+    setManualSolveOnlyNotice(null);
     setFileGuidance('');
     setFileGuidanceMessages([]);
     setFileGuidanceError(null);
@@ -2669,6 +2684,19 @@ A computer is a digital electronic machine...
             
             className="space-y-8"
           >
+            {manualSolveOnlyNotice && (
+              <div
+                role="alert"
+                className="rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-4 text-right text-sm font-extrabold leading-7 text-amber-900 shadow-sm dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+                dir="rtl"
+              >
+                <div className="flex items-start justify-end gap-2">
+                  <span className="text-lg" aria-hidden="true">⚠️</span>
+                  <p>{manualSolveOnlyNotice}</p>
+                </div>
+              </div>
+            )}
+
             {/* Meta-Info Card and Top Actions */}
             <div className="glass-card p-4 sm:p-8 rounded-[28px] space-y-5 relative overflow-hidden border border-slate-200/60 dark:border-slate-800/70 shadow-xl shadow-slate-950/5">
               <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-primary/5 rounded-full blur-[60px] pointer-events-none" />
