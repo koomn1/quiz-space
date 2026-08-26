@@ -899,7 +899,7 @@ export default function QuizCreator({
       return { offset, questions: solvedQuestions.slice(offset, offset + batchSize) };
     });
 
-    const solveBatch = async (batch: { offset: number; questions: Question[] }): Promise<{ offset: number; questions: Question[] }> => {
+    const solveBatch = async (batch: { offset: number; questions: Question[] }): Promise<{ offset: number; questions: Question[]; unresolved: number[] }> => {
       const questionsForModel = batch.questions.map((question, index) => ({
         questionIndex: index + 1,
         text: question.text.slice(0, 750),
@@ -942,7 +942,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     : 'This choice was verified against the answer key included in the file.',
                 }
           ));
-          return { offset: batch.offset, questions: sourceKeyQuestions };
+          return { offset: batch.offset, questions: sourceKeyQuestions, unresolved: [] };
         }
       }
 
@@ -970,7 +970,11 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           const normalizedResponse = batch.questions.length === 1
             ? normalizeSingleQuestionReviewResponse(response.text, batch.offset, batch.questions[0]?.number)
             : response.text;
-          return { offset: batch.offset, questions: applyVerifiedAnswerReviews(batch.questions, normalizedResponse) };
+          const reviewedQuestions = applyVerifiedAnswerReviews(batch.questions, normalizedResponse, { allowPartial: true });
+          const unresolved = reviewedQuestions.flatMap((question, index) =>
+            question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length) ? [index] : []
+          );
+          return { offset: batch.offset, questions: reviewedQuestions, unresolved };
         } catch (error) {
           lastError = error;
           if (attempt < maxSolveAttempts) {
@@ -986,12 +990,15 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       throw lastError instanceof Error ? lastError : new Error('تعذر حل سؤال واحد بعد إعادة المحاولة.');
     };
 
+    type SolvedBatch = { offset: number; questions: Question[]; unresolved: number[] };
     type FailedQuestion = { offset: number; question: Question };
-    const recoverFailedBatches = async (failedBatches: { offset: number; questions: Question[] }[]): Promise<{ offset: number; questions: Question[] }[]> => {
+    type RecoveryResult = { recovered: SolvedBatch[]; error: Error | null };
+    const recoverFailedBatches = async (failedBatches: { offset: number; questions: Question[] }[]): Promise<RecoveryResult> => {
       const pendingQuestions: FailedQuestion[] = failedBatches.flatMap(batch =>
         batch.questions.map((question, index) => ({ offset: batch.offset + index, question }))
       );
-      const recovered: { offset: number; questions: Question[] }[] = [];
+      const recovered: SolvedBatch[] = [];
+      let recoveryError: Error | null = null;
       for (let start = 0; start < pendingQuestions.length; start += maxConcurrentBatches) {
         const group = pendingQuestions.slice(start, start + maxConcurrentBatches);
         setOcrProgress(prev => prev ? {
@@ -999,15 +1006,18 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           message: `إعادة التحقق المتوازي من ${start + 1}–${Math.min(start + group.length, pendingQuestions.length)} سؤال غير معتمد؛ بدون اختيار تخميني...`,
         } : prev);
         const settled = await Promise.allSettled(group.map(item => solveBatch({ offset: item.offset, questions: [item.question] })));
-        const failed = settled.find(result => result.status === 'rejected');
-        if (failed?.status === 'rejected') {
-          throw failed.reason instanceof Error ? failed.reason : new Error('تعذر التحقق من سؤال أثناء recovery المتوازي.');
-        }
         settled.forEach(result => {
-          if (result.status === 'fulfilled') recovered.push(result.value);
+          if (result.status === 'rejected') {
+            recoveryError ??= result.reason instanceof Error ? result.reason : new Error('تعذر التحقق من سؤال أثناء recovery المتوازي.');
+          } else if (result.value.unresolved.length > 0) {
+            recoveryError ??= new Error('تعذر التحقق من سؤال أثناء recovery المتوازي.');
+          } else {
+            recovered.push(result.value);
+          }
         });
+        if (recoveryError) break;
       }
-      return recovered;
+      return { recovered, error: recoveryError };
     };
 
     for (let groupStart = 0; groupStart < batches.length; groupStart += maxConcurrentBatches) {
@@ -1024,7 +1034,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
       const settledGroup = await Promise.allSettled(group.map(batch => solveBatch(batch)));
       const solvedGroup = settledGroup
-        .filter((result): result is PromiseFulfilledResult<{ offset: number; questions: Question[] }> => result.status === 'fulfilled')
+        .filter((result): result is PromiseFulfilledResult<SolvedBatch> => result.status === 'fulfilled')
         .map(result => result.value)
         .sort((left, right) => left.offset - right.offset);
       for (const solvedBatch of solvedGroup) {
@@ -1033,17 +1043,23 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       let verifiedSoFar = solvedQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
       setQuestions([...solvedQuestions]);
       setVerifiedQuestionsCount(verifiedSoFar);
-      const failedBatches = settledGroup.flatMap((result, index) => result.status === 'rejected' ? [group[index]] : []);
+      const failedBatches = settledGroup.flatMap((result, index) => {
+        if (result.status === 'rejected') {
+          const failedBatch = group[index];
+          return failedBatch ? [failedBatch] : [];
+        }
+        return result.value.unresolved.flatMap(questionIndex => {
+          const question = result.value.questions[questionIndex];
+          return question ? [{ offset: result.value.offset + questionIndex, questions: [question] }] : [];
+        });
+      });
       let recoveryError: Error | null = null;
       if (failedBatches.length) {
-        try {
-          const recoveredSingles = await recoverFailedBatches(failedBatches);
-          for (const recoveredSingle of recoveredSingles) {
-            solvedQuestions.splice(recoveredSingle.offset, recoveredSingle.questions.length, ...recoveredSingle.questions);
-          }
-        } catch (error) {
-          recoveryError = error instanceof Error ? error : new Error(String(error));
+        const recoveryResult = await recoverFailedBatches(failedBatches);
+        for (const recoveredSingle of recoveryResult.recovered) {
+          solvedQuestions.splice(recoveredSingle.offset, recoveredSingle.questions.length, ...recoveredSingle.questions);
         }
+        recoveryError = recoveryResult.error;
       }
       verifiedSoFar = solvedQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
       setQuestions([...solvedQuestions]);

@@ -56,6 +56,19 @@ describe('extracted answer review', () => {
     expect(normalizeSingleQuestionReviewResponse(response, 2, 3)).toBe(response);
   });
 
+  it('keeps verified answers and leaves missing answers unresolved in partial mode', () => {
+    const twoQuestions = [
+      { ...questions[0], id: 'q1-partial' },
+      { ...questions[0], id: 'q2-partial', number: 2 },
+    ];
+    const result = applyVerifiedAnswerReviews(twoQuestions, JSON.stringify({
+      answers: [{ questionIndex: 1, correctIndex: 1, explanation: 'شرح موثق.' }],
+    }), { allowPartial: true });
+    expect(result[0].correctIndex).toBe(1);
+    expect(result[0].explanation).toBe('شرح موثق.');
+    expect(result[1].correctIndex).toBe(-1);
+  });
+
   it('accepts zero-based question indexes when the response clearly uses index zero', () => {
     const twoQuestions = [
       { ...questions[0], id: 'q1-zero' },

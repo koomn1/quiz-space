@@ -52,7 +52,7 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain("if (!isPdfAttachment || sourceContext) throw error;");
     expect(source).toContain('استخدم مرفق PDF الآن فقط للتحقق البصري عند الحاجة');
     expect(source).toContain('normalizeSingleQuestionReviewResponse(response.text, batch.offset, batch.questions[0]?.number)');
-    expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, normalizedResponse)');
+    expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, normalizedResponse, { allowPartial: true })');
     expect(source).toContain('أعد JSON مختصرًا فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0,"explanation":"سبب علمي مختصر يثبت لماذا هذا الاختيار صحيح."}]}');
     expect(source).toContain('أضف explanation قصيرًا لكل سؤال موضوعي، بحد أقصى 240 حرفًا');
     expect(source).toContain('شرحًا إنشائيًا غير مستند');

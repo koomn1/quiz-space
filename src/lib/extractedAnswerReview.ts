@@ -159,7 +159,7 @@ export function normalizeSingleQuestionReviewResponse(responseText: string, abso
   }
 }
 
-export function applyVerifiedAnswerReviews(questions: Question[], responseText: string): Question[] {
+export function applyVerifiedAnswerReviews(questions: Question[], responseText: string, options: { allowPartial?: boolean } = {}): Question[] {
   const next = questions.map(question => ({ ...question }));
   const reviews = parseAnswerReviews(responseText);
   const reviewedIndexes = new Set<number>();
@@ -218,7 +218,7 @@ export function applyVerifiedAnswerReviews(questions: Question[], responseText: 
       question.correctIndex >= question.options.length
     )
   );
-  if (unresolved.length > 0) {
+  if (unresolved.length > 0 && !options.allowPartial) {
     throw new Error(`تعذر التحقق من إجابات ${unresolved.length} سؤالاً. لم يتم حفظ إجابة تخمينية.`);
   }
   return next;
