@@ -19,7 +19,7 @@ import QuestionMedia from '../components/QuestionMedia';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
-import { applySourceAnswerKey, applyVerifiedAnswerReviews } from '../lib/extractedAnswerReview';
+import { applySourceAnswerKey, applyVerifiedAnswerReviews, normalizeSingleQuestionReviewResponse } from '../lib/extractedAnswerReview';
 import {
   clearExtractedQuizDraft,
   getQuizCreatorDraftKey,
@@ -960,14 +960,17 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
             // Keep the fast text-only PDF request first and use the attachment
             // only as a visual fallback. The outer retry handles transient 429,
             // timeout, network, and malformed-JSON failures.
-            if (!isPdfAttachment) throw error;
+            if (!isPdfAttachment || sourceContext) throw error;
             console.warn('PDF answer-review request failed; retrying the same batch with the PDF attachment.', error);
             response = await askAI(
               `${prompt}\n\nملاحظة تشغيلية: استخدم مرفق PDF الآن فقط للتحقق البصري عند الحاجة، ولا تخمّن أو تغيّر ترتيب الخيارات.`,
               { ...requestOptions, attachment },
             );
           }
-          return { offset: batch.offset, questions: applyVerifiedAnswerReviews(batch.questions, response.text) };
+          const normalizedResponse = batch.questions.length === 1
+            ? normalizeSingleQuestionReviewResponse(response.text, batch.offset, batch.questions[0]?.number)
+            : response.text;
+          return { offset: batch.offset, questions: applyVerifiedAnswerReviews(batch.questions, normalizedResponse) };
         } catch (error) {
           lastError = error;
           if (attempt < maxSolveAttempts) {

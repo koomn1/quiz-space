@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Question } from '../types';
-import { applySourceAnswerKey, applyVerifiedAnswerReviews, normalizeReviewAnswer, parseAnswerReviews } from './extractedAnswerReview';
+import { applySourceAnswerKey, applyVerifiedAnswerReviews, normalizeReviewAnswer, normalizeSingleQuestionReviewResponse, parseAnswerReviews } from './extractedAnswerReview';
 
 const questions: Question[] = [{
   id: 'q1',
@@ -41,6 +41,19 @@ describe('extracted answer review', () => {
     expect(result[0].correctIndex).toBe(1);
     expect(result[0].correctAnswer).toBe('القاهرة');
     expect(result[0].explanation).toBe('لأن القاهرة هي عاصمة مصر.');
+  });
+
+  it('rebinds a singleton response that uses the original absolute question number', () => {
+    const response = JSON.stringify({ answers: [{ questionIndex: 3, correctIndex: 1, explanation: 'سبب موثق.' }] });
+    const normalized = normalizeSingleQuestionReviewResponse(response, 2, 3);
+    const result = applyVerifiedAnswerReviews(questions, normalized);
+    expect(result[0].correctIndex).toBe(1);
+    expect(result[0].explanation).toBe('سبب موثق.');
+  });
+
+  it('does not rebind a singleton response for an unrelated question number', () => {
+    const response = JSON.stringify({ answers: [{ questionIndex: 9, correctIndex: 1 }] });
+    expect(normalizeSingleQuestionReviewResponse(response, 2, 3)).toBe(response);
   });
 
   it('accepts zero-based question indexes when the response clearly uses index zero', () => {

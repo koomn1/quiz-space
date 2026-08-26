@@ -49,8 +49,10 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('const primaryRequestOptions = isPdfAttachment || sourceContext');
     expect(source).toContain('response = await askAI(`${prompt}\\n\\nمحاولة التحقق رقم ${attempt} من ${maxSolveAttempts}.`, primaryRequestOptions)');
     expect(source).toContain('PDF answer-review request failed; retrying the same batch with the PDF attachment.');
+    expect(source).toContain("if (!isPdfAttachment || sourceContext) throw error;");
     expect(source).toContain('استخدم مرفق PDF الآن فقط للتحقق البصري عند الحاجة');
-    expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, response.text)');
+    expect(source).toContain('normalizeSingleQuestionReviewResponse(response.text, batch.offset, batch.questions[0]?.number)');
+    expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, normalizedResponse)');
     expect(source).toContain('أعد JSON مختصرًا فقط بهذا الشكل: {"answers":[{"questionIndex":1,"correctIndex":0,"explanation":"سبب علمي مختصر يثبت لماذا هذا الاختيار صحيح."}]}');
     expect(source).toContain('أضف explanation قصيرًا لكل سؤال موضوعي، بحد أقصى 240 حرفًا');
     expect(source).toContain('شرحًا إنشائيًا غير مستند');

@@ -144,6 +144,21 @@ export function applySourceAnswerKey(questions: Question[], sourceText: string, 
   return { questions: next, matched };
 }
 
+export function normalizeSingleQuestionReviewResponse(responseText: string, absoluteQuestionIndex: number, sourceQuestionNumber?: number): string {
+  try {
+    const reviews = parseAnswerReviews(responseText);
+    if (reviews.length !== 1) return responseText;
+    const review = reviews[0];
+    const rawIndex = Number(review.questionIndex ?? review.index ?? review.questionNumber ?? review.number);
+    const expectedAbsoluteNumber = absoluteQuestionIndex + 1;
+    const matchesKnownQuestion = rawIndex === expectedAbsoluteNumber || (Number.isInteger(sourceQuestionNumber) && rawIndex === sourceQuestionNumber);
+    if (rawIndex === 1 || !matchesKnownQuestion) return responseText;
+    return JSON.stringify({ answers: [{ ...review, questionIndex: 1 }] });
+  } catch {
+    return responseText;
+  }
+}
+
 export function applyVerifiedAnswerReviews(questions: Question[], responseText: string): Question[] {
   const next = questions.map(question => ({ ...question }));
   const reviews = parseAnswerReviews(responseText);
