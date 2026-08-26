@@ -20,6 +20,7 @@ import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
 import { applySourceAnswerKey, applyVerifiedAnswerReviews, normalizeSingleQuestionReviewResponse } from '../lib/extractedAnswerReview';
+import { countVerifiedQuizQuestions, getInvalidQuizQuestions } from '../lib/quizSaveValidation';
 import {
   clearExtractedQuizDraft,
   getQuizCreatorDraftKey,
@@ -582,6 +583,8 @@ export default function QuizCreator({
   const [isGuidingFile, setIsGuidingFile] = React.useState(false);
   const [fileGuidanceError, setFileGuidanceError] = React.useState<string | null>(null);
   const extractedAttachmentRef = React.useRef<AiChatAttachment | null>(null);
+  // Keep the latest verified/partially verified state if a later recovery request fails.
+  const lastSolvedQuestionsRef = React.useRef<Question[]>([]);
   const [ocrBatches, setOcrBatches] = React.useState<{
     id: number;
     nameAr: string;
@@ -857,9 +860,8 @@ export default function QuizCreator({
       }
       return next;
     });
-    const unresolvedObjectiveCount = solvedQuestions.filter(question =>
-      question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length)
-    ).length;
+    lastSolvedQuestionsRef.current = solvedQuestions.map(question => ({ ...question, options: [...question.options] }));
+    const unresolvedObjectiveCount = getInvalidQuizQuestions(solvedQuestions).length;
     if (unresolvedObjectiveCount === 0) {
       setVerifiedQuestionsCount(solvedQuestions.length);
       setOcrProgress(prev => prev ? {
@@ -1043,6 +1045,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       for (const solvedBatch of solvedGroup) {
         solvedQuestions.splice(solvedBatch.offset, solvedBatch.questions.length, ...solvedBatch.questions);
       }
+      lastSolvedQuestionsRef.current = solvedQuestions.map(question => ({ ...question, options: [...question.options] }));
       let verifiedSoFar = solvedQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
       setQuestions([...solvedQuestions]);
       setVerifiedQuestionsCount(verifiedSoFar);
@@ -1062,6 +1065,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         for (const recoveredSingle of recoveryResult.recovered) {
           solvedQuestions.splice(recoveredSingle.offset, recoveredSingle.questions.length, ...recoveredSingle.questions);
         }
+        lastSolvedQuestionsRef.current = solvedQuestions.map(question => ({ ...question, options: [...question.options] }));
         recoveryError = recoveryResult.error;
       }
       verifiedSoFar = solvedQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
@@ -1081,9 +1085,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       if (recoveryError) throw recoveryError;
     }
 
-    const unresolvedAfterRetries = solvedQuestions.filter(question =>
-      question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length)
-    ).length;
+    const unresolvedAfterRetries = getInvalidQuizQuestions(solvedQuestions).length;
     if (unresolvedAfterRetries > 0) {
       throw new Error(`تعذر حل ${unresolvedAfterRetries} سؤالاً بعد إعادة المحاولة. سيتم الاحتفاظ بالأسئلة وبالإجابات المعتمدة فقط.`);
     }
@@ -1138,6 +1140,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       fileName: attachment?.name || 'ملف مستخرج سابق',
       fileType: draftFileType,
     });
+    lastSolvedQuestionsRef.current = draftQuestions.map(question => ({ ...question, options: [...question.options] }));
     setQuestions(draftQuestions);
     setAiSavedQuizId(null);
     setPostExtractionSolvePending(true);
@@ -1192,9 +1195,20 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const notice = isAr
         ? 'تعذر التحقق الآلي من إجابات هذا الـquiz بشكل موثوق. تم تجاوز مرحلة الحل تلقائيًا، والأسئلة محفوظة أمامك للحل اليدوي. هذا الـquiz غير مسموح حله آليًا لتجنب أي مشاكل؛ يرجى حل الاختبار يدويًا.'
         : 'Automatic answer verification for this quiz was not reliable. The solve stage was skipped and the extracted questions are ready for manual solving. This quiz is not eligible for automatic solving; please solve it manually to avoid errors.';
-      setQuestions(draftQuestions);
-      const verifiedSoFar = draftQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
+      const preservedQuestions = lastSolvedQuestionsRef.current.length > 0 ? lastSolvedQuestionsRef.current : draftQuestions;
+      setQuestions(preservedQuestions);
+      const verifiedSoFar = countVerifiedQuizQuestions(preservedQuestions);
       setVerifiedQuestionsCount(verifiedSoFar > 0 ? verifiedSoFar : null);
+      saveExtractedQuizDraft({
+        ownerId: draftOwnerId,
+        title: effectiveTitle,
+        description: effectiveDescription,
+        category,
+        timeLimit,
+        questions: preservedQuestions,
+        fileName: attachment?.name || 'ملف مستخرج سابق',
+        fileType: draftFileType,
+      });
       setManualSolveOnlyNotice(notice);
       setOcrError(null);
       setPostExtractionSolvePending(false);
@@ -1277,6 +1291,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     setDescription('');
     setCategory('عام');
     setTimeLimit(0);
+    lastSolvedQuestionsRef.current = [];
     setQuestions([{
       id: 'q-initial-0',
       type: 'mcq',
@@ -1364,6 +1379,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
   };
 
   const processSelectedFile = (file: File) => {
+    lastSolvedQuestionsRef.current = [];
     extractedAttachmentRef.current = null;
     setPostExtractionSolvePending(false);
     setVerifiedQuestionsCount(null);
@@ -1622,10 +1638,24 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
+  const syncManualVerificationState = (next: Question[]) => {
+    if (!manualSolveOnlyNotice && !postExtractionSolvePending) return;
+    const invalidQuestions = getInvalidQuizQuestions(next);
+    if (invalidQuestions.length === 0) {
+      setVerifiedQuestionsCount(next.length);
+      setManualSolveOnlyNotice(null);
+      setPostExtractionSolvePending(false);
+      setSaveError(null);
+    } else {
+      setVerifiedQuestionsCount(countVerifiedQuizQuestions(next) > 0 ? countVerifiedQuizQuestions(next) : null);
+    }
+  };
+
   const handleQuestionChange = (index: number, updated: Partial<Question>) => {
     const next = [...questions];
     next[index] = { ...next[index], ...updated } as Question;
     setQuestions(next);
+    syncManualVerificationState(next);
   };
 
   const handleOptionChange = (qIndex: number, optIndex: number, val: string) => {
@@ -1635,6 +1665,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     opts[optIndex] = val;
     next[qIndex] = { ...q, options: opts };
     setQuestions(next);
+    syncManualVerificationState(next);
   };
 
   // Publish or Update Quiz in database
@@ -1672,11 +1703,10 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         imageUrl: q.imageUrl || ''
       }));
 
-      const unresolvedQuestions = sanitizedQuestions.filter((question) =>
-        question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length || question.options.some((option: string) => !option.trim()))
-      );
+      const unresolvedQuestions = getInvalidQuizQuestions(sanitizedQuestions);
       if (unresolvedQuestions.length > 0) {
-        setSaveError('لا يمكن حفظ الاختبار قبل اكتمال مرحلة حل الاختبار بعد الاستخراج والتحقق من الإجابات.');
+        const questionNumbers = unresolvedQuestions.slice(0, 5).map(({ index }) => index + 1).join('، ');
+        setSaveError(`لا يمكن الحفظ بعد: يوجد ${unresolvedQuestions.length} سؤال غير مكتمل أو بدون إجابة مؤكدة (أرقام: ${questionNumbers}${unresolvedQuestions.length > 5 ? '…' : ''}). حدّد الإجابات الخضراء أو أكمل الخيارات الفارغة أولًا.`);
         setIsSaving(false);
         return;
       }
@@ -1764,6 +1794,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       setTimeLimit(0);
       setCategory('عام');
       setVerifiedQuestionsCount(null);
+      lastSolvedQuestionsRef.current = [];
       setQuestions([
         {
           id: 'q-initial-0',
@@ -3250,6 +3281,8 @@ A computer is a digital electronic machine...
 
               {questions.map((question, qIdx) => {
                 const hasText = question.text.trim().length > 0;
+                const hasValidAnswer = getInvalidQuizQuestions([question]).length === 0;
+                const isComplete = hasText && hasValidAnswer;
                 return (
                   <div
                     
@@ -3281,9 +3314,9 @@ A computer is a digital electronic machine...
                         </span>
                         
                         <span className={`inline-flex items-center text-[10px] font-mono font-bold px-3.5 py-1.5 rounded-xl border ${
-                          hasText ? 'bg-emerald-50/50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/50' : 'bg-rose-50/50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50'
+                          isComplete ? 'bg-emerald-50/50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/50' : 'bg-rose-50/50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50'
                         }`}>
-                          {hasText ? '✨ جاهز ومكتمل' : '⚠️ مسودة فارغة'}
+                          {isComplete ? '✨ جاهز ومكتمل' : hasText ? '⚠️ يحتاج إجابة مؤكدة' : '⚠️ مسودة فارغة'}
                         </span>
                       </div>
                       

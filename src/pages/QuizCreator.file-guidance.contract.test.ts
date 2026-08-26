@@ -41,7 +41,7 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('const maxSolveAttempts = 2;');
     expect(source).toContain('const recoverFailedBatches = async');
     expect(source).toContain('Promise.allSettled(group.map(item => solveBatch({ offset: item.offset, questions: [item.question] })))');
-    expect(source).toContain('const unresolvedObjectiveCount = solvedQuestions.filter(question =>');
+    expect(source).toContain('const unresolvedObjectiveCount = getInvalidQuizQuestions(solvedQuestions).length;');
     expect(source).toContain('اكتملت الإجابات الموجودة في الاستخراج، دون استدعاء مزود خارجي إضافي.');
     expect(source).toContain('const answerKeyMarker =');
     expect(source).toContain(': { ...requestOptions, attachment };');
@@ -60,6 +60,10 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('This choice was verified against the answer key included in the file.');
     expect(source).toContain('const saved = await handlePublishQuiz(solvedQuestions');
     expect(source).toContain("correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1");
+    expect(source).toContain('const unresolvedQuestions = getInvalidQuizQuestions(sanitizedQuestions);');
+    expect(source).toContain('const preservedQuestions = lastSolvedQuestionsRef.current.length > 0 ? lastSolvedQuestionsRef.current : draftQuestions;');
+    expect(source).toContain('const hasValidAnswer = getInvalidQuizQuestions([question]).length === 0;');
+    expect(source).toContain('const isComplete = hasText && hasValidAnswer;');
     expect(source).toContain("setActiveMode('ocr');");
     expect(source).toContain("setManualSolveOnlyNotice");
     expect(source).toContain('تم تجاوز مرحلة الحل تلقائيًا');
