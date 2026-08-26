@@ -44,7 +44,7 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain(': { ...requestOptions, attachment };');
     expect(source).toContain('const isPdfAttachment = attachment.kind === \'file\' && attachment.mimeType === \'application/pdf\';');
     expect(source).toContain('const primaryRequestOptions = isPdfAttachment || sourceContext');
-    expect(source).toContain('response = await askAI(prompt, primaryRequestOptions);');
+    expect(source).toContain('response = await askAI(`${prompt}\\n\\nمحاولة التحقق رقم ${attempt} من ${maxSolveAttempts}.`, primaryRequestOptions)');
     expect(source).toContain('PDF answer-review request failed; retrying the same batch with the PDF attachment.');
     expect(source).toContain('استخدم مرفق PDF الآن فقط للتحقق البصري عند الحاجة');
     expect(source).toContain('applyVerifiedAnswerReviews(batch.questions, response.text)');

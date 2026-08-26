@@ -3,38 +3,55 @@ import type { Question } from '../types';
 export type AnswerReview = {
   questionIndex?: number;
   index?: number;
+  questionNumber?: number;
+  number?: number;
   correctIndex?: number;
+  selectedIndex?: number;
+  optionIndex?: number;
+  answerIndex?: number;
   correctAnswer?: string;
   explanation?: string;
   evidence?: string;
 };
 
-function findBalancedJsonCandidate(value: string): string | null {
-  const start = value.search(/[\[{]/);
-  if (start < 0) return null;
-  const stack: string[] = [];
-  let inString = false;
-  let escaped = false;
-  for (let index = start; index < value.length; index += 1) {
-    const char = value[index];
-    if (inString) {
-      if (escaped) escaped = false;
-      else if (char === '\\') escaped = true;
-      else if (char === '"') inString = false;
-      continue;
+// Reasoning-capable models may emit stray balanced or unbalanced brackets
+// before the actual answer. Scan every balanced candidate instead of trusting
+// the first bracket in the response.
+function findBalancedJsonCandidates(value: string): string[] {
+  const candidates: string[] = [];
+  let searchFrom = 0;
+  while (searchFrom < value.length) {
+    const relativeStart = value.slice(searchFrom).search(/[\[{]/);
+    if (relativeStart < 0) break;
+    const start = searchFrom + relativeStart;
+    const stack: string[] = [];
+    let inString = false;
+    let escaped = false;
+    let end = -1;
+    let mismatched = false;
+    for (let index = start; index < value.length; index += 1) {
+      const char = value[index];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (char === '\\') escaped = true;
+        else if (char === '"') inString = false;
+        continue;
+      }
+      if (char === '"') {
+        inString = true;
+        continue;
+      }
+      if (char === '{' || char === '[') stack.push(char);
+      else if (char === '}' || char === ']') {
+        const expected = char === '}' ? '{' : '[';
+        if (stack.pop() !== expected) { mismatched = true; break; }
+        if (stack.length === 0) { end = index; break; }
+      }
     }
-    if (char === '"') {
-      inString = true;
-      continue;
-    }
-    if (char === '{' || char === '[') stack.push(char);
-    else if (char === '}' || char === ']') {
-      const expected = char === '}' ? '{' : '[';
-      if (stack.pop() !== expected) return null;
-      if (stack.length === 0) return value.slice(start, index + 1);
-    }
+    if (!mismatched && end >= 0) candidates.push(value.slice(start, end + 1));
+    searchFrom = start + 1;
   }
-  return null;
+  return candidates;
 }
 
 function extractReviews(value: unknown, depth = 0): AnswerReview[] | null {
@@ -43,7 +60,7 @@ function extractReviews(value: unknown, depth = 0): AnswerReview[] | null {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     if (!trimmed) return null;
-    const candidates = [trimmed, findBalancedJsonCandidate(trimmed)].filter((candidate, index, all): candidate is string => Boolean(candidate) && all.indexOf(candidate) === index);
+    const candidates = [trimmed, ...findBalancedJsonCandidates(trimmed)].filter((candidate, index, all): candidate is string => Boolean(candidate) && all.indexOf(candidate) === index);
     for (const candidate of candidates) {
       try {
         const parsed = JSON.parse(candidate) as unknown;
@@ -68,7 +85,8 @@ function extractReviews(value: unknown, depth = 0): AnswerReview[] | null {
 
 export function parseAnswerReviews(text: string): AnswerReview[] {
   const cleaned = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
-  const candidates = [cleaned, findBalancedJsonCandidate(cleaned)].filter((candidate, index, all): candidate is string => Boolean(candidate) && all.indexOf(candidate) === index);
+  const candidates = [cleaned, ...findBalancedJsonCandidates(cleaned)].filter((candidate, index, all): candidate is string => Boolean(candidate) && all.indexOf(candidate) === index);
+
   for (const candidate of candidates) {
     try {
       const firstParse = JSON.parse(candidate) as unknown;
@@ -131,9 +149,16 @@ export function applyVerifiedAnswerReviews(questions: Question[], responseText: 
   const reviews = parseAnswerReviews(responseText);
   const reviewedIndexes = new Set<number>();
 
+  const rawQuestionIndexes = reviews
+    .map(review => Number(review.questionIndex ?? review.index ?? review.questionNumber ?? review.number))
+    .filter(Number.isInteger);
+  const usesZeroBasedQuestionNumbers = rawQuestionIndexes.includes(0) && !rawQuestionIndexes.includes(questions.length);
+
   for (const review of reviews) {
-    const rawIndex = Number(review.questionIndex ?? review.index);
-    const questionIndex = Number.isInteger(rawIndex) ? rawIndex - 1 : -1;
+    const rawIndex = Number(review.questionIndex ?? review.index ?? review.questionNumber ?? review.number);
+    const questionIndex = Number.isInteger(rawIndex)
+      ? (usesZeroBasedQuestionNumbers ? rawIndex : rawIndex - 1)
+      : -1;
     const question = next[questionIndex];
     if (!question) {
       throw new Error('مرحلة حل الاختبار أعادت رقم سؤال غير صالح.');
@@ -143,14 +168,15 @@ export function applyVerifiedAnswerReviews(questions: Question[], responseText: 
       throw new Error('مرحلة حل الاختبار أعادت إجابة مكررة لسؤال واحد.');
     }
 
-    const correctIndex = Number(review.correctIndex);
-    if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= question.options.length) {
-      continue;
-    }
-    const optionAnswer = normalizeReviewAnswer(question.options[correctIndex]);
     const returnedAnswer = normalizeReviewAnswer(review.correctAnswer);
     const optionLabel = returnedAnswer.length === 1 ? { a: 0, b: 1, c: 2, d: 3, أ: 0, ب: 1, ج: 2, د: 3 }[returnedAnswer] : undefined;
-    if (!returnedAnswer || (returnedAnswer !== optionAnswer && optionLabel !== correctIndex)) continue;
+    let correctIndex = Number(review.correctIndex ?? review.selectedIndex ?? review.optionIndex ?? review.answerIndex);
+    if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= question.options.length) {
+      correctIndex = optionLabel ?? question.options.findIndex(option => normalizeReviewAnswer(option) === returnedAnswer);
+    }
+    if (!returnedAnswer || !Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= question.options.length) continue;
+    const optionAnswer = normalizeReviewAnswer(question.options[correctIndex]);
+    if (returnedAnswer !== optionAnswer && optionLabel !== correctIndex) continue;
 
     reviewedIndexes.add(questionIndex);
     const explanationParts = [review.explanation, review.evidence]

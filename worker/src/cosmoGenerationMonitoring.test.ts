@@ -26,7 +26,7 @@ describe('Cosmo generation recovery contract', () => {
   });
 
   it('keeps OpenRouter first and bounds direct recovery for text-only answer review', () => {
-    expect(workerSource).toContain('const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 12_000');
+    expect(workerSource).toContain('const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 16_000');
     expect(workerSource).toContain("aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat'");
     expect(workerSource).toContain("if (!isAnswerReview || hasAttachment) throw openRouterError;");
     expect(workerSource).toContain("{ skipOpenRouterFallback: true, timeoutMs: 4_000 }");

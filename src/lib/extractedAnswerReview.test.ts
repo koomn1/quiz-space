@@ -24,6 +24,32 @@ describe('extracted answer review', () => {
     expect(result[0].explanation).toBe('وردت في المصدر.');
   });
 
+  it('accepts zero-based question indexes when the response clearly uses index zero', () => {
+    const twoQuestions = [
+      { ...questions[0], id: 'q1-zero' },
+      { ...questions[0], id: 'q2-zero', number: 2 },
+    ];
+    const result = applyVerifiedAnswerReviews(twoQuestions, JSON.stringify({
+      answers: [
+        { questionIndex: 0, correctIndex: 1, correctAnswer: 'القاهرة' },
+        { questionIndex: 1, correctIndex: 2, correctAnswer: 'الأقصر' },
+      ],
+    }));
+    expect(result.map(question => question.correctIndex)).toEqual([1, 2]);
+  });
+
+  it('derives the selected option from selectedIndex or exact answer text', () => {
+    const selectedIndexResult = applyVerifiedAnswerReviews(questions, JSON.stringify({
+      answers: [{ questionIndex: 1, selectedIndex: 1, correctAnswer: 'القاهرة' }],
+    }));
+    expect(selectedIndexResult[0].correctIndex).toBe(1);
+
+    const exactTextResult = applyVerifiedAnswerReviews(questions, JSON.stringify({
+      answers: [{ questionIndex: 1, correctAnswer: 'القاهرة' }],
+    }));
+    expect(exactTextResult[0].correctIndex).toBe(1);
+  });
+
   it('rejects a response whose correctAnswer does not match the selected option', () => {
     expect(() => applyVerifiedAnswerReviews(questions, JSON.stringify({
       answers: [{ questionIndex: 1, correctIndex: 1, correctAnswer: 'الإسكندرية' }],
@@ -86,5 +112,17 @@ describe('extracted answer review', () => {
   it('accepts JSON wrapped in a markdown code fence and normalizes harmless typography', () => {
     expect(parseAnswerReviews('```json\n{"answers":[]}\n```')).toEqual([]);
     expect(normalizeReviewAnswer(' القَاهِرة، ')).toBe('القاهرة');
+  });
+
+  it('skips an unbalanced bracket in reasoning text before the real JSON answer', () => {
+    const reasoningPreamble = 'دعني أفكر خطوة بخطوة [مثال غير مكتمل للتنسيق ثم القيمة الصحيحة هي القاهرة.\n\n';
+    const response = `${reasoningPreamble}${JSON.stringify({ answers: [{ questionIndex: 1, correctIndex: 1, correctAnswer: 'القاهرة' }] })}`;
+    expect(parseAnswerReviews(response)).toHaveLength(1);
+  });
+
+  it('skips a balanced but irrelevant bracket group before the real JSON answer', () => {
+    const reasoningPreamble = 'الخيارات هي [الإسكندرية، القاهرة، الأقصر، أسوان] وسأتحقق من كل واحد.\n\n';
+    const response = `${reasoningPreamble}${JSON.stringify({ answers: [{ questionIndex: 1, correctIndex: 1, correctAnswer: 'القاهرة' }] })}`;
+    expect(parseAnswerReviews(response)).toHaveLength(1);
   });
 });

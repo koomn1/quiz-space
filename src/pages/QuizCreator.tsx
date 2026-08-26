@@ -872,13 +872,17 @@ export default function QuizCreator({
     // small number of requests concurrently for large quizzes.
     const batchSize = 8;
     const maxConcurrentBatches = 3;
+    const maxSolveAttempts = 3;
+    const waitBeforeRetry = (attempt: number) => new Promise<void>(resolve => {
+      globalThis.setTimeout(resolve, 1_000 * attempt);
+    });
     const total = solvedQuestions.length;
     const batches = Array.from({ length: Math.ceil(total / batchSize) }, (_, batchNumber) => {
       const offset = batchNumber * batchSize;
       return { offset, questions: solvedQuestions.slice(offset, offset + batchSize) };
     });
 
-    const solveBatch = async (batch: { offset: number; questions: Question[] }) => {
+    const solveBatch = async (batch: { offset: number; questions: Question[] }, allowSingleQuestionRecovery = true): Promise<{ offset: number; questions: Question[] }> => {
       const questionsForModel = batch.questions.map((question, index) => ({
         questionIndex: index + 1,
         text: question.text.slice(0, 750),
@@ -892,8 +896,10 @@ export default function QuizCreator({
 قواعد إلزامية:
 - correctIndex يبدأ من 0 ويجب أن يشير إلى الخيار الصحيح فعلًا.
 - correctAnswer يجب أن يساوي نص الخيار المشار إليه، بعد نسخه كما هو.
+- questionIndex يبدأ من 1 داخل هذه الدفعة، ولا تستخدم ترقيم الملف الكامل.
+- يجب إرجاع إجابة لكل سؤال موضوعي في الدفعة؛ لا تُرجع مصفوفة ناقصة.
 - راجع كل إجابة مقابل محتوى الملف قبل إرجاعها.
-- إذا لم تستطع إثبات إجابة سؤال موضوعي من الملف، لا تضع له إجابة؛ النظام سيرفض حفظه بدل تسجيل إجابة عشوائية.
+- إذا لم تستطع إثبات إجابة سؤال موضوعي من الملف، أعد المحاولة بتحليل السؤال والاختيارات بدقة قبل الفشل، ولا تضع إجابة عشوائية.
 - لا تغيّر نص السؤال أو ترتيب الخيارات.
 
 الأسئلة:
@@ -902,8 +908,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         currentPage: 'quiz-creator-post-extraction-solving',
         siteStatus: 'QuizSpace يعمل بشكل طبيعي',
         systemInstruction: isAr
-          ? 'أنت مراجع إجابات أكاديمي شديد الدقة. لا تختر الخيار الأول أبدًا كحل افتراضي. لا تعتمد إلا على دليل الملف أو على إجابة يمكن إثباتها مباشرة من السؤال والخيارات. أعد JSON صالحًا فقط.'
-          : 'You are a strict academic answer verifier. Never default to the first option. Use only evidence from the file or a directly provable answer. Return valid JSON only.',
+          ? 'أنت مراجع إجابات أكاديمي شديد الدقة. لا تختر الخيار الأول أبدًا كحل افتراضي. لا تعتمد إلا على دليل الملف أو على إجابة يمكن إثباتها مباشرة من السؤال والخيارات. أعد JSON صالحًا فقط وأجب عن كل أسئلة الدفعة.'
+          : 'You are a strict academic answer verifier. Never default to the first option. Use only evidence from the file or a directly provable answer. Return valid JSON only and answer every question in the batch.',
       };
       if (sourceText) {
         const sourceKeyResult = applySourceAnswerKey(batch.questions, sourceText, batch.offset);
@@ -916,25 +922,49 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const primaryRequestOptions = isPdfAttachment || sourceContext
         ? requestOptions
         : { ...requestOptions, attachment };
-      let response: { text: string };
-      try {
-        response = await askAI(prompt, primaryRequestOptions);
-      } catch (error) {
-        // Some OpenRouter vision models reject large or malformed PDF file
-        // payloads even though the extracted questions are valid. For PDFs,
-        // keep the fast text-only request first and use the attachment only as
-        // a fallback for image-dependent questions.
-        if (isPdfAttachment) {
-          console.warn('PDF answer-review request failed; retrying the same batch with the PDF attachment.', error);
-          response = await askAI(
-            `${prompt}\n\nملاحظة تشغيلية: استخدم مرفق PDF الآن فقط للتحقق البصري عند الحاجة، ولا تخمّن أو تغيّر ترتيب الخيارات.`,
-            { ...requestOptions, attachment },
-          );
-        } else {
-          throw error;
+      let lastError: unknown;
+      for (let attempt = 1; attempt <= maxSolveAttempts; attempt += 1) {
+        try {
+          let response: { text: string };
+          try {
+            response = await askAI(`${prompt}\n\nمحاولة التحقق رقم ${attempt} من ${maxSolveAttempts}.`, primaryRequestOptions);
+          } catch (error) {
+            // Keep the fast text-only PDF request first and use the attachment
+            // only as a visual fallback. The outer retry handles transient 429,
+            // timeout, network, and malformed-JSON failures.
+            if (!isPdfAttachment) throw error;
+            console.warn('PDF answer-review request failed; retrying the same batch with the PDF attachment.', error);
+            response = await askAI(
+              `${prompt}\n\nملاحظة تشغيلية: استخدم مرفق PDF الآن فقط للتحقق البصري عند الحاجة، ولا تخمّن أو تغيّر ترتيب الخيارات.`,
+              { ...requestOptions, attachment },
+            );
+          }
+          return { offset: batch.offset, questions: applyVerifiedAnswerReviews(batch.questions, response.text) };
+        } catch (error) {
+          lastError = error;
+          if (attempt < maxSolveAttempts) {
+            setOcrProgress(prev => prev ? {
+              ...prev,
+              message: `تعذر اعتماد دفعة الأسئلة ${batch.offset + 1}–${batch.offset + batch.questions.length} مؤقتًا. إعادة المحاولة ${attempt + 1} من ${maxSolveAttempts}...`,
+            } : prev);
+            await waitBeforeRetry(attempt);
+          }
         }
       }
-      return { offset: batch.offset, questions: applyVerifiedAnswerReviews(batch.questions, response.text) };
+
+      if (allowSingleQuestionRecovery && batch.questions.length > 1) {
+        setOcrProgress(prev => prev ? {
+          ...prev,
+          message: `جاري تقسيم الدفعة ${batch.offset + 1}–${batch.offset + batch.questions.length} إلى أسئلة منفردة لضمان الحل الدقيق...`,
+        } : prev);
+        const recovered: Question[] = [];
+        for (let index = 0; index < batch.questions.length; index += 1) {
+          const single = await solveBatch({ offset: batch.offset + index, questions: [batch.questions[index]] }, false);
+          recovered.push(single.questions[0]);
+        }
+        return { offset: batch.offset, questions: recovered };
+      }
+      throw lastError instanceof Error ? lastError : new Error('تعذر حل سؤال واحد بعد إعادة المحاولة.');
     };
 
     for (let groupStart = 0; groupStart < batches.length; groupStart += maxConcurrentBatches) {
@@ -949,21 +979,36 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         message: `مرحلة حل الاختبار بعد الاستخراج: مراجعة الأسئلة ${groupFirst + 1}–${groupLast} من ${total} بدقة...`,
       });
 
-      const solvedGroup = await Promise.all(group.map(solveBatch));
-      solvedGroup.sort((left, right) => left.offset - right.offset);
+      const settledGroup = await Promise.allSettled(group.map(batch => solveBatch(batch)));
+      const solvedGroup = settledGroup
+        .filter((result): result is PromiseFulfilledResult<{ offset: number; questions: Question[] }> => result.status === 'fulfilled')
+        .map(result => result.value)
+        .sort((left, right) => left.offset - right.offset);
       for (const solvedBatch of solvedGroup) {
         solvedQuestions.splice(solvedBatch.offset, solvedBatch.questions.length, ...solvedBatch.questions);
       }
+      const verifiedSoFar = solvedQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
+      setQuestions([...solvedQuestions]);
+      setVerifiedQuestionsCount(verifiedSoFar);
+      const failedBatches = settledGroup.filter((result): result is PromiseRejectedResult => result.status === 'rejected');
       const completed = Math.min(total, groupLast);
       setOcrProgress({
         stage: 'solving',
-        current: completed,
+        current: verifiedSoFar,
         total: Math.max(total, 1),
-        percentage: Math.round((completed / Math.max(total, 1)) * 100),
-        message: `تم التحقق من ${completed} من ${total} سؤالًا. جاري متابعة باقي الإجابات بدقة...`,
+        percentage: Math.round((verifiedSoFar / Math.max(total, 1)) * 100),
+        message: failedBatches.length > 0
+          ? `تم اعتماد ${verifiedSoFar} من ${total} سؤالًا. توجد دفعة لم تعتمد بعد، وسأواصل المحاولة دون إيقاف الاختبار...`
+          : `تم التحقق من ${verifiedSoFar} من ${total} سؤالًا. جاري متابعة باقي الإجابات بدقة...`,
       });
     }
 
+    const unresolvedAfterRetries = solvedQuestions.filter(question =>
+      question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length)
+    ).length;
+    if (unresolvedAfterRetries > 0) {
+      throw new Error(`تعذر حل ${unresolvedAfterRetries} سؤالاً بعد إعادة المحاولة. سيتم الاحتفاظ بالأسئلة وبالإجابات المعتمدة فقط.`);
+    }
     setOcrProgress({
       stage: 'solving',
       current: total,
@@ -1064,7 +1109,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         ? 'تعذر التحقق الآلي من إجابات هذا الـquiz بشكل موثوق. تم تجاوز مرحلة الحل تلقائيًا، والأسئلة محفوظة أمامك للحل اليدوي. هذا الـquiz غير مسموح حله آليًا لتجنب أي مشاكل؛ يرجى حل الاختبار يدويًا.'
         : 'Automatic answer verification for this quiz was not reliable. The solve stage was skipped and the extracted questions are ready for manual solving. This quiz is not eligible for automatic solving; please solve it manually to avoid errors.';
       setQuestions(draftQuestions);
-      setVerifiedQuestionsCount(null);
+      const verifiedSoFar = draftQuestions.filter(question => question.type === 'essay' || (question.correctIndex >= 0 && question.correctIndex < question.options.length)).length;
+      setVerifiedQuestionsCount(verifiedSoFar > 0 ? verifiedSoFar : null);
       setManualSolveOnlyNotice(notice);
       setOcrError(null);
       setPostExtractionSolvePending(false);
