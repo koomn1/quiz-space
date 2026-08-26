@@ -713,9 +713,14 @@ export async function extractJobQuiz(
     text = await extractPdfTextContent(source);
     if (text.trim().length > 40) {
       if (isLiteral) {
-        return extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
+        const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
           await onProgress(progress.processed, progress.total, progress.questionsExtracted);
         });
+        return {
+          ...result,
+          title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
+          description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+        };
       }
       return generateQuestionsFromText(text, job, env, onProgress);
     }
@@ -738,7 +743,11 @@ export async function extractJobQuiz(
       const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
         await onProgress(progress.processed, progress.total, progress.questionsExtracted);
       });
-      return result;
+      return {
+        ...result,
+        title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
+        description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+      };
     }
 
     return generateQuestionsFromText(text, job, env, onProgress);

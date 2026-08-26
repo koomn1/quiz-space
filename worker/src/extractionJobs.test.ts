@@ -85,4 +85,9 @@ describe('dynamic vision chunk planning', () => {
   it('requires concise, source-grounded explanations in the answer review contract', () => {
     expect(extractionSource).toContain('never fabricate an answer or explanation');
   });
+
+  it('applies the source title fallback after literal text extraction returns', () => {
+    expect(extractionSource).toContain('title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim()');
+    expect(extractionSource).toContain('description: result.description?.trim() || `أسئلة مستخرجة من محتوى');
+  });
 });
