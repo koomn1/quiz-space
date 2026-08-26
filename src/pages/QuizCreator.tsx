@@ -1165,6 +1165,18 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         }
       }
       const solvedQuestions = await solveExtractedQuiz(draftQuestions, sourceText);
+      // Persist the latest verified state before the database write so a refresh
+      // or a transient save error cannot restore the pre-solve draft.
+      saveExtractedQuizDraft({
+        ownerId: draftOwnerId,
+        title: effectiveTitle,
+        description: effectiveDescription,
+        category,
+        timeLimit,
+        questions: solvedQuestions,
+        fileName: attachment?.name || 'ملف مستخرج سابق',
+        fileType: draftFileType,
+      });
       setOcrProgress({
         stage: 'saving',
         current: solvedQuestions.length,
@@ -1174,6 +1186,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       });
       const saved = await handlePublishQuiz(solvedQuestions, { title: effectiveTitle, description: effectiveDescription }, { keepCreatorOpen: true });
       if (!saved) throw new Error('تعذر حفظ الاختبار بعد اكتمال التحقق من الإجابات.');
+      clearExtractedQuizDraft(draftOwnerId);
       setQuestions(solvedQuestions);
       setVerifiedQuestionsCount(solvedQuestions.length);
       setManualSolveOnlyNotice(null);
@@ -1262,6 +1275,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     setDescription(draft.description);
     setCategory(draft.category);
     setTimeLimit(draft.timeLimit);
+    lastSolvedQuestionsRef.current = draft.questions.map(question => ({ ...question, options: [...question.options] }));
     setQuestions(draft.questions);
     const unresolvedCount = draft.questions.filter(question =>
       question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length)
