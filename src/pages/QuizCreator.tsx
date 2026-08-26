@@ -586,6 +586,8 @@ export default function QuizCreator({
   const extractedAttachmentRef = React.useRef<AiChatAttachment | null>(null);
   // Keep the latest verified/partially verified state if a later recovery request fails.
   const lastSolvedQuestionsRef = React.useRef<Question[]>([]);
+  const extractedDraftActiveRef = React.useRef(false);
+  const extractedDraftMetaRef = React.useRef<{ fileName: string; fileType: 'image' | 'pdf' | 'document' } | null>(null);
   const [ocrBatches, setOcrBatches] = React.useState<{
     id: number;
     nameAr: string;
@@ -1122,6 +1124,11 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     const draftFileType = attachment
       ? attachment.kind === 'image' ? 'image' : attachment.mimeType === 'application/pdf' ? 'pdf' : 'document'
       : fileType || 'document';
+    extractedDraftActiveRef.current = true;
+    extractedDraftMetaRef.current = {
+      fileName: attachment?.name || uploadedFile?.name || 'ملف مستخرج سابق',
+      fileType: draftFileType,
+    };
     const sourceImagePreview = attachment?.kind === 'image'
       ? (uploadedFilePreview || `data:${attachment.mimeType || 'image/png'};base64,${attachment.data}`)
       : null;
@@ -1276,6 +1283,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     setDescription(draft.description);
     setCategory(draft.category);
     setTimeLimit(draft.timeLimit);
+    extractedDraftActiveRef.current = true;
+    extractedDraftMetaRef.current = { fileName: draft.fileName, fileType: draft.fileType };
     lastSolvedQuestionsRef.current = draft.questions.map(question => ({ ...question, options: [...question.options] }));
     setQuestions(draft.questions);
     const unresolvedCount = draft.questions.filter(question =>
@@ -1307,6 +1316,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     setCategory('عام');
     setTimeLimit(0);
     lastSolvedQuestionsRef.current = [];
+    extractedDraftActiveRef.current = false;
+    extractedDraftMetaRef.current = null;
     setQuestions([{
       id: 'q-initial-0',
       type: 'mcq',
@@ -1395,6 +1406,11 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
   const processSelectedFile = (file: File) => {
     lastSolvedQuestionsRef.current = [];
+    extractedDraftActiveRef.current = true;
+    extractedDraftMetaRef.current = {
+      fileName: file.name,
+      fileType: file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : 'document',
+    };
     extractedAttachmentRef.current = null;
     setPostExtractionSolvePending(false);
     setVerifiedQuestionsCount(null);
@@ -1612,6 +1628,21 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
   const [aiSavedQuizId, setAiSavedQuizId] = React.useState<string | null>(null);
   const [dedupStatus, setDedupStatus] = React.useState<string | null>(null);
 
+  const persistExtractedDraftIfActive = (nextQuestions: Question[]) => {
+    if (!extractedDraftActiveRef.current) return;
+    const metadata = extractedDraftMetaRef.current;
+    saveExtractedQuizDraft({
+      ownerId: draftOwnerId,
+      title,
+      description,
+      category,
+      timeLimit,
+      questions: nextQuestions,
+      fileName: metadata?.fileName || extractedAttachmentRef.current?.name || uploadedFile?.name || 'ملف مستخرج سابق',
+      fileType: metadata?.fileType || (fileType === 'image' ? 'image' : fileType === 'pdf' ? 'pdf' : 'document'),
+    });
+  };
+
   const handleAutoDeduplicate = () => {
     const seen = new Set<string>();
     const uniqueQuestions = questions.filter(q => {
@@ -1625,6 +1656,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     const diff = questions.length - uniqueQuestions.length;
     if (diff > 0) {
       setQuestions(uniqueQuestions);
+      persistExtractedDraftIfActive(uniqueQuestions);
       setDedupStatus(`تمت تصفية وحذف ${diff} سؤال مكرر بنجاح! ✨`);
     } else {
       setDedupStatus(`مسودتك خالية تماماً من أي أسئلة مكررة! 👍`);
@@ -1635,7 +1667,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
   };
 
   const handleAddQuestion = () => {
-    setQuestions([
+    const nextQuestions: Question[] = [
       ...questions,
       {
         id: `q-manual-${questions.length}-${Date.now()}`,
@@ -1644,13 +1676,17 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         options: ['', '', '', ''],
         correctIndex: 0,
         explanation: ''
-      }
-    ]);
+      } as Question
+    ];
+    setQuestions(nextQuestions);
+    persistExtractedDraftIfActive(nextQuestions);
   };
 
   const handleDeleteQuestion = (index: number) => {
     if (questions.length === 1) return;
-    setQuestions(questions.filter((_, i) => i !== index));
+    const nextQuestions = questions.filter((_, i) => i !== index);
+    setQuestions(nextQuestions);
+    persistExtractedDraftIfActive(nextQuestions);
   };
 
   const syncManualVerificationState = (next: Question[]) => {
@@ -1671,6 +1707,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     next[index] = { ...next[index], ...updated } as Question;
     setQuestions(next);
     syncManualVerificationState(next);
+    persistExtractedDraftIfActive(next);
   };
 
   const handleOptionChange = (qIndex: number, optIndex: number, val: string) => {
@@ -1681,6 +1718,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     next[qIndex] = { ...q, options: opts };
     setQuestions(next);
     syncManualVerificationState(next);
+    persistExtractedDraftIfActive(next);
   };
 
   // Publish or Update Quiz in database
@@ -1792,6 +1830,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
       // A successfully saved quiz no longer needs either kind of local draft.
       clearExtractedQuizDraft(draftOwnerId);
+      extractedDraftActiveRef.current = false;
+      extractedDraftMetaRef.current = null;
       try {
         localStorage.removeItem(getQuizCreatorDraftKey(draftOwnerId));
       } catch {
