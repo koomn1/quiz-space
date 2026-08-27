@@ -15,7 +15,10 @@ class AdminOverview {
   final int quizzes;
   final int completions;
 
-  factory AdminOverview.fromMap(Map<String, dynamic> map) => AdminOverview(users: _asInt(map['users']), quizzes: _asInt(map['quizzes']), completions: _asInt(map['completions']));
+  factory AdminOverview.fromMap(Map<String, dynamic> map) {
+    int parse(dynamic value) => value is num ? value.round() : int.tryParse(value?.toString() ?? '') ?? 0;
+    return AdminOverview(users: parse(map['users']), quizzes: parse(map['quizzes']), completions: parse(map['completions']));
+  }
 }
 
 class NotificationPreferences {
