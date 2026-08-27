@@ -39,6 +39,9 @@ if 'com.google.gms.google-services' not in settings_text:
 app_text = app_gradle.read_text(encoding='utf-8')
 if app_gradle.suffix == '.kts':
     app_text, app_id_count = re.subn(r'applicationId\s*=\s*"[^"]+"', 'applicationId = "com.quizspace.badawy"', app_text, count=1)
+    app_text = re.sub(r'\n\s*kotlinOptions\s*\{\s*jvmTarget\s*=\s*JavaVersion\.VERSION_11\.toString\(\)\s*\}\s*', '\n', app_text, count=1)
+    if 'compilerOptions {' not in app_text:
+        app_text += '\n\nkotlin {\n    compilerOptions {\n        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)\n    }\n}\n'
 else:
     app_text, app_id_count = re.subn(r'applicationId\s+[\'\"][^\'\"]+[\'\"]', "applicationId 'com.quizspace.badawy'", app_text, count=1)
 if app_id_count != 1:
