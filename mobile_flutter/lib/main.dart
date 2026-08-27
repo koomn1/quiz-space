@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,12 @@ import 'data/quizspace_repository.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'widgets/update_gate.dart';
+
+const _background = Color(0xFF080D1C);
+const _surface = Color(0xFF121A31);
+const _surfaceRaised = Color(0xFF192342);
+const _primary = Color(0xFFA78BFA);
+const _primaryStrong = Color(0xFF7C3AED);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,38 +47,232 @@ class QuizSpaceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: _primaryStrong,
+      brightness: Brightness.dark,
+      surface: _surface,
+    ).copyWith(
+      primary: _primary,
+      onPrimary: const Color(0xFF160C2B),
+      secondary: const Color(0xFF67E8F9),
+      tertiary: const Color(0xFFFBBF24),
+      surface: _surface,
+      onSurface: const Color(0xFFF7F5FF),
+      outline: const Color(0xFF3B4668),
+    );
+
     return MaterialApp(
       title: 'QuizSpace',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0B1020),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF8B5CF6),
-          brightness: Brightness.dark,
-          surface: const Color(0xFF151B31),
-        ),
+        scaffoldBackgroundColor: _background,
+        colorScheme: scheme,
         useMaterial3: true,
         fontFamily: 'Arial',
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: _surfaceRaised.withValues(alpha: 0.68),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.72)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.72)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: _primary, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(color: scheme.error.withValues(alpha: 0.85)),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide(color: scheme.error, width: 1.5),
+          ),
+          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.68)),
+          floatingLabelStyle: const TextStyle(color: _primary),
+        ),
       ),
       home: configurationMissing ? const _ConfigurationScreen() : const UpdateGate(child: _AuthGate()),
     );
   }
 }
 
-class _AuthGate extends StatelessWidget {
+class _AuthGate extends StatefulWidget {
   const _AuthGate();
 
   @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  late final QuizSpaceRepository _repository;
+  StreamSubscription<firebase.User?>? _authSubscription;
+  firebase.User? _user;
+  Future<void>? _sessionFuture;
+  Object? _sessionError;
+  bool _initializing = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _repository = QuizSpaceRepository(Supabase.instance.client);
+    _user = _repository.currentUser;
+    if (_user != null) _startSessionPreparation(_user!);
+    _authSubscription = _repository.authChanges.listen(_onAuthChanged);
+    _initializing = false;
+  }
+
+  void _onAuthChanged(firebase.User? user) {
+    if (!mounted) return;
+    if (user == null) {
+      setState(() {
+        _user = null;
+        _sessionFuture = null;
+        _sessionError = null;
+      });
+      return;
+    }
+    if (_user?.uid == user.uid && _sessionFuture != null) return;
+    setState(() {
+      _user = user;
+      _sessionError = null;
+    });
+    _startSessionPreparation(user);
+  }
+
+  void _startSessionPreparation(firebase.User user) {
+    final future = _repository.prepareDataSession();
+    if (mounted) {
+      setState(() {
+        _sessionFuture = future;
+        _sessionError = null;
+      });
+    }
+    future.catchError((error) {
+      if (!mounted) return;
+      setState(() => _sessionError = error);
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final repository = QuizSpaceRepository(Supabase.instance.client);
-    return StreamBuilder<firebase.User?>(
-      stream: repository.authChanges,
+    if (_initializing) return const _AuthLoadingView(label: 'بنجهز جلستك...');
+    final user = _user;
+    if (user == null) return AuthScreen(repository: _repository);
+
+    if (_sessionError != null) {
+      return _SessionErrorView(
+        onRetry: () => _startSessionPreparation(user),
+        onSignOut: _repository.signOut,
+      );
+    }
+
+    final future = _sessionFuture;
+    if (future == null) return const _AuthLoadingView(label: 'بنجهز جلستك...');
+    return FutureBuilder<void>(
+      future: future,
       builder: (context, snapshot) {
-        final user = repository.currentUser;
-        if (user == null) return AuthScreen(repository: repository);
-        return HomeScreen(repository: repository);
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const _AuthLoadingView(label: 'بنحمّل حسابك بأمان...');
+        }
+        if (snapshot.hasError) {
+          return _SessionErrorView(
+            onRetry: () => _startSessionPreparation(user),
+            onSignOut: _repository.signOut,
+          );
+        }
+        return HomeScreen(repository: _repository);
       },
+    );
+  }
+}
+
+class _AuthLoadingView extends StatelessWidget {
+  const _AuthLoadingView({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_background, Color(0xFF111A38), _background],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset('assets/quizspace-logo.webp', width: 84, height: 84),
+              const SizedBox(height: 22),
+              const SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2.5, color: _primary)),
+              const SizedBox(height: 18),
+              Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.74), fontSize: 15)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SessionErrorView extends StatelessWidget {
+  const _SessionErrorView({required this.onRetry, required this.onSignOut});
+
+  final VoidCallback onRetry;
+  final Future<void> Function() onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: Card(
+                color: _surface,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28), side: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(width: 58, height: 58, decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.14), shape: BoxShape.circle), child: const Icon(Icons.sync_problem_rounded, color: Colors.orange, size: 30)),
+                      const SizedBox(height: 18),
+                      const Text('الحساب اتسجل، بس لسه بنربطه بـQuizSpace', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, height: 1.25)),
+                      const SizedBox(height: 10),
+                      Text('اضغط إعادة المحاولة. لو المشكلة استمرت، سجّل الخروج وجرّب مرة ثانية بعد التأكد من الإنترنت.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.66), height: 1.5)),
+                      const SizedBox(height: 22),
+                      SizedBox(width: double.infinity, height: 52, child: FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('إعادة المحاولة'))),
+                      const SizedBox(height: 8),
+                      TextButton(onPressed: () async => onSignOut(), child: const Text('تسجيل الخروج')),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
