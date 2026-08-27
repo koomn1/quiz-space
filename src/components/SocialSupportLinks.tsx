@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { Facebook, Github, Instagram, Linkedin, Link as LinkIcon } from 'lucide-react';
 
 interface SocialSupportLinksProps {
   github?: string;
@@ -9,55 +9,52 @@ interface SocialSupportLinksProps {
   isAr?: boolean;
 }
 
-export function SocialSupportLinks({ github, instagram, linkedin, facebook, isAr = true }: SocialSupportLinksProps) {
-  // If no links are available, show a friendly status note to guide the profile owner or visitors
-  const hasAnyLinks = !!(github || instagram || linkedin || facebook);
+const normalizeExternalUrl = (value?: string): string | null => {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const url = new URL(candidate);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
+};
 
-  const socialLinks = [
-    { id: 'github', url: github, icon: 'fab fa-github', name: 'GitHub', color: 'hover:bg-[#171515] hover:border-[#171515] hover:shadow-[#171515]/30' },
-    { id: 'instagram', url: instagram, icon: 'fab fa-instagram', name: 'Instagram', color: 'hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:border-[#dc2743] hover:shadow-[#dc2743]/30' },
-    { id: 'linkedin', url: linkedin, icon: 'fab fa-linkedin-in', name: 'LinkedIn', color: 'hover:bg-[#0077b5] hover:border-[#0077b5] hover:shadow-[#0077b5]/30' },
-    { id: 'facebook', url: facebook, icon: 'fab fa-facebook-f', name: 'Facebook', color: 'hover:bg-[#1877f2] hover:border-[#1877f2] hover:shadow-[#1877f2]/30' },
-  ].filter(link => link.url);
+export function SocialSupportLinks({ github, instagram, linkedin, facebook, isAr = true }: SocialSupportLinksProps) {
+  const links = [
+    { id: 'github', url: normalizeExternalUrl(github), icon: Github, name: 'GitHub', tone: 'hover:bg-slate-900 hover:border-slate-700 hover:text-white hover:shadow-slate-950/30' },
+    { id: 'instagram', url: normalizeExternalUrl(instagram), icon: Instagram, name: 'Instagram', tone: 'hover:bg-gradient-to-tr hover:from-orange-500 hover:via-rose-500 hover:to-fuchsia-600 hover:border-rose-400 hover:text-white hover:shadow-rose-500/30' },
+    { id: 'linkedin', url: normalizeExternalUrl(linkedin), icon: Linkedin, name: 'LinkedIn', tone: 'hover:bg-sky-700 hover:border-sky-500 hover:text-white hover:shadow-sky-500/30' },
+    { id: 'facebook', url: normalizeExternalUrl(facebook), icon: Facebook, name: 'Facebook', tone: 'hover:bg-blue-600 hover:border-blue-400 hover:text-white hover:shadow-blue-500/30' },
+  ].filter((link): link is typeof link & { url: string } => Boolean(link.url));
 
   return (
-    <>
-      {typeof window !== 'undefined' && !document.getElementById('font-awesome-css') && (
-         <link id="font-awesome-css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <div className="flex w-full items-center justify-center gap-2 py-2 sm:justify-start" dir={isAr ? 'rtl' : 'ltr'}>
+      {links.length > 0 ? (
+        links.map(({ id, url, icon: Icon, name, tone }, index) => (
+          <a
+            key={id}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={isAr ? `فتح ${name}` : `Open ${name}`}
+            title={name}
+            className={`group relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-105 motion-safe:active:scale-95 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 ${tone}`}
+            style={{ animationDelay: `${index * 45}ms` }}
+          >
+            <Icon className="h-4.5 w-4.5 transition-transform duration-200 group-hover:rotate-6" strokeWidth={2.1} aria-hidden="true" />
+            <span className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] font-black text-white opacity-0 shadow-xl transition-all duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100">
+              {name}
+            </span>
+          </a>
+        ))
+      ) : (
+        <div className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-xs font-bold text-slate-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-500">
+          <LinkIcon className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>{isAr ? 'لم تتم إضافة روابط اجتماعية بعد.' : "No social links added yet."}</span>
+        </div>
       )}
-
-      <div className="flex justify-center items-center gap-4 py-2 flex-wrap">
-        {hasAnyLinks ? (
-          socialLinks.map((link, index) => (
-            <a
-              
-              href={link.url?.startsWith('http') ? link.url : `https://${link.url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              
-              
-              
-              className={`relative flex items-center justify-center w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 transition-all duration-300 shadow-sm hover:shadow-xl hover:text-white group ${link.color}`}
-            >
-              <i className={`${link.icon} text-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-12`}></i>
-              
-              {/* Modern Tooltip */}
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 pointer-events-none z-50">
-                <div className="bg-slate-900 dark:bg-black text-white text-[10px] font-black px-3 py-1.5 rounded-xl shadow-xl whitespace-nowrap border border-white/10 relative">
-                  {link.name}
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-slate-900 dark:bg-black rotate-45 border-r border-b border-white/10"></div>
-                </div>
-              </div>
-            </a>
-          ))
-        ) : (
-          <div className="w-full text-center text-xs font-bold text-slate-400 dark:text-slate-500 py-3 italic bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-            {isAr 
-              ? 'لم يقم هذا العضو بإضافة روابط السوشيال ميديا بعد.' 
-              : 'This member hasn\'t added social links yet.'}
-          </div>
-        )}
-      </div>
-    </>
+    </div>
   );
 }

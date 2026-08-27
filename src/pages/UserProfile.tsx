@@ -1391,8 +1391,8 @@ export default function UserProfile({
 
       {/* Comprehensive Editing Area when triggered */}
       {isEditing && (
-        <section className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 rounded-[2rem] p-6 sm:p-8 space-y-8 animate-fade-in shadow-xl">
-          <div className="flex items-center gap-3 border-b border-slate-200/50 dark:border-slate-800/50 pb-4">
+        <section className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 rounded-[2rem] p-4 sm:p-8 space-y-6 sm:space-y-8 animate-fade-in shadow-xl">
+          <div className="sticky top-2 z-20 -mx-1 flex items-center gap-3 rounded-2xl border border-slate-200/70 bg-white/90 px-3 py-3 shadow-sm backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/90 sm:static sm:mx-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:shadow-none sm:backdrop-blur-none">
             <div className="p-2.5 bg-primary/10 rounded-xl">
               <Settings className="w-6 h-6 text-primary" />
             </div>
@@ -1408,10 +1408,10 @@ export default function UserProfile({
             </div>
           </div>
 
-          <nav className="grid grid-cols-3 gap-2 sm:hidden" aria-label={isAr ? "التنقل داخل إعدادات الملف" : "Profile settings navigation"}>
-            <a href="#profile-basics" className="flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-center text-[10px] font-black text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">{isAr ? "الملف" : "Profile"}</a>
-            <a href="#profile-style" className="flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-center text-[10px] font-black text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">{isAr ? "المظهر" : "Style"}</a>
-            <a href="#profile-cover-settings" className="flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-2 text-center text-[10px] font-black text-slate-700 transition hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">{isAr ? "الغلاف" : "Cover"}</a>
+          <nav className="flex gap-2 overflow-x-auto pb-1 sm:hidden" aria-label={isAr ? "التنقل داخل إعدادات الملف" : "Profile settings navigation"}>
+            <a href="#profile-basics" className="flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-center text-[10px] font-black text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">{isAr ? "الملف" : "Profile"}</a>
+            <a href="#profile-style" className="flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-center text-[10px] font-black text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">{isAr ? "المظهر" : "Style"}</a>
+            <a href="#profile-cover-settings" className="flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-center text-[10px] font-black text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">{isAr ? "الغلاف" : "Cover"}</a>
           </nav>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-8">

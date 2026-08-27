@@ -15,7 +15,7 @@ import { getLearningStreakStatus, isTrialSubscription, saveUserProfile, updateBa
 import RewardsSection from './RewardsSection';
 import { UserBadge } from './UserBadge';
 import OverlayPortal from './OverlayPortal';
-import { ReputationBadge } from './ReputationBadge';
+import { ProfileQuickBadgeRail } from './ProfileQuickBadgeRail';
 import {
   availableBadgeTiers, availableNameColors, availableBadgeColors,
   BADGE_COLOR_PRESETS, NAME_COLOR_PRESETS, BADGE_LABELS,
@@ -706,19 +706,14 @@ export default function ProfileStatsView({
                 <h3 className="font-display font-black text-2xl sm:text-3xl tracking-tight flex items-center gap-2 flex-wrap">
                   <span>{profileData?.name || (isAr ? "طالب متميز" : "Star Student")}</span>
                   
-                  <UserBadge 
-                    tier={(profileData?.badgeTier && profileData.badgeTier !== 'none') ? (profileData.badgeTier as any) : 'free'}
-                    badgeColor={(profileData?.badgeColor as any) || 'blue'}
-                    size="lg" 
+                  <ProfileQuickBadgeRail
+                    isAr={isAr}
+                    streak={currentStreak}
+                    quizzesTaken={quizzesTaken}
+                    accuracy={overallAccuracy}
+                    quizzesCreated={creations.length}
+                    isPremium={isUserPremium}
                   />
-
-                  {/* Reputation Badges */}
-                  <div className="flex items-center gap-1.5 ml-2 mr-2">
-                    {calculatedLevel >= 20 && <ReputationBadge type="quiz_master" size="md" />}
-                    {((completions || []).reduce((acc, curr) => acc + curr.score, 0)) >= 1000 && <ReputationBadge type="thousand_correct" size="md" />}
-                    {(creations?.length || 0) >= 3 && <ReputationBadge type="top_creator" size="md" />}
-                    {isUserPremium && <ReputationBadge type="premium_member" size="sm" />}
-                  </div>
                 </h3>
                 
                 {isOwnProfile && (

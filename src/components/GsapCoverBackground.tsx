@@ -38,11 +38,27 @@ export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, 
   const containerRef = useRef<HTMLDivElement>(null);
   const isProfileImage = mode.startsWith('profile-cover-');
   const safeMode = mode === 'custom' && customImage ? 'custom' : (isProfileImage || modeClasses[mode] ? mode : 'cosmic');
+  const [reduceMotion, setReduceMotion] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduceMotion(media.matches);
+    update();
+    media.addEventListener?.('change', update);
+    return () => media.removeEventListener?.('change', update);
+  }, []);
 
   useGSAP(() => {
     const root = containerRef.current;
     if (!root || safeMode === 'custom') return;
     const items = gsap.utils.toArray<HTMLElement>('.cover-orb, .cover-line, .cover-particle', root);
+    if (reduceMotion) {
+      gsap.set(items, { opacity: 0.65, x: 0, y: 0, rotation: 0, scale: 1 });
+      gsap.set('.cover-rotate', { rotation: 0 });
+      gsap.set('.cover-shimmer', { xPercent: 0, opacity: 0.35 });
+      return;
+    }
     gsap.to(items, {
       x: 'random(-28, 28)', y: 'random(-18, 18)', rotation: 'random(-12, 12)',
       opacity: 'random(0.35, 1)', scale: 'random(0.82, 1.18)',
@@ -50,7 +66,7 @@ export const GsapCoverBackground: React.FC<GsapCoverBackgroundProps> = ({ mode, 
     });
     gsap.to('.cover-rotate', { rotation: 360, duration: safeMode === 'waves' ? 26 : 34, repeat: -1, ease: 'none' });
     gsap.to('.cover-shimmer', { xPercent: 120, duration: 7, repeat: -1, ease: 'none', delay: 1 });
-  }, { scope: containerRef, dependencies: [safeMode] });
+  }, { scope: containerRef, dependencies: [safeMode, reduceMotion] });
 
   if (safeMode === 'custom') {
     return <div ref={containerRef} className="absolute inset-0 overflow-hidden bg-slate-950" style={{ backgroundImage: `linear-gradient(115deg, rgba(5,8,25,.72), rgba(7,12,35,.18)), url(${customImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />;
