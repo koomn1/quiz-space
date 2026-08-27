@@ -75,6 +75,23 @@ jobs:
           printf '%s' "$FIREBASE_ANDROID_CONFIG_JSON" > config/google-services.json
           python3 tool/prepare_android_firebase.py
 
+      - name: Verify Android signing secret
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/quizspace-upload-keystore.jks
+          actual_hash=$(sha256sum /tmp/quizspace-upload-keystore.jks | cut -d' ' -f1)
+          if [ "$actual_hash" != "de9382e0ca60f6191f7ae631f63c850ac27be179d2fdf2345057238d6d3c321b" ]; then
+            echo 'The Android keystore secret payload is corrupted or incomplete.'
+            exit 1
+          fi
+          if ! keytool -list -keystore /tmp/quizspace-upload-keystore.jks -storepass "$ANDROID_KEYSTORE_PASSWORD" >/dev/null 2>&1; then
+            echo 'The Android keystore payload is correct but its password secret is incorrect.'
+            exit 1
+          fi
+
       - name: Configure Android release signing
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
