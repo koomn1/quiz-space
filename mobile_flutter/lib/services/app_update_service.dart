@@ -134,7 +134,7 @@ class AppUpdateService {
 
       if (!Platform.isAndroid) return;
       final installPermission = await permissions.requestInstallPackages();
-      if (!installPermission.isGranted) {
+      if (!installPermission) {
         throw StateError('INSTALL_PERMISSION_REQUIRED');
       }
       await InstallApk().installApk(apkFile.path);
