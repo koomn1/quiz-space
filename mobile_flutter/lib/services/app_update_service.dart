@@ -5,7 +5,8 @@ import 'package:apk_sideload/install_apk.dart';
 import 'package:crypto/crypto.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+
+import 'permissions_service.dart';
 
 class AppUpdateInfo {
   const AppUpdateInfo({
@@ -93,6 +94,7 @@ class AppUpdateService {
     if (await apkFile.exists()) await apkFile.delete();
 
     final httpClient = HttpClient()..userAgent = 'QuizSpace-Mobile-Updater';
+    final permissions = AppPermissionsService();
     try {
       final request = await httpClient.getUrl(Uri.parse(update.apkUrl));
       request.headers.set(HttpHeaders.acceptHeader, 'application/octet-stream');
@@ -131,7 +133,7 @@ class AppUpdateService {
       }
 
       if (!Platform.isAndroid) return;
-      final installPermission = await Permission.requestInstallPackages.request();
+      final installPermission = await permissions.requestInstallPackages();
       if (!installPermission.isGranted) {
         throw StateError('INSTALL_PERMISSION_REQUIRED');
       }

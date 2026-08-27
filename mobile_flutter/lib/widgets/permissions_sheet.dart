@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 
+import '../services/native_permissions.dart';
 import '../services/permissions_service.dart';
 
 class PermissionsSheet extends StatefulWidget {
@@ -12,21 +12,35 @@ class PermissionsSheet extends StatefulWidget {
 
 class _PermissionsSheetState extends State<PermissionsSheet> {
   final _service = AppPermissionsService();
-  Permission? _loading;
-  final _statuses = <Permission, PermissionStatus>{};
+  NativePermissionType? _loading;
+  final _statuses = <NativePermissionType, bool>{};
 
-  Future<void> _request(Permission permission, Future<PermissionStatus> Function() action) async {
+  @override
+  void initState() {
+    super.initState();
+    _refreshStatuses();
+  }
+
+  Future<void> _refreshStatuses() async {
+    for (final permission in NativePermissionType.values) {
+      try {
+        final granted = await _service.isGranted(permission);
+        if (mounted) setState(() => _statuses[permission] = granted);
+      } catch (_) {
+        // Unsupported platform permissions remain unknown.
+      }
+    }
+  }
+
+  Future<void> _request(NativePermissionType permission, Future<bool> Function() action) async {
     setState(() => _loading = permission);
     try {
-      final status = await action();
-      if (mounted) setState(() => _statuses[permission] = status);
-      if (mounted && status.isPermanentlyDenied) await openAppSettings();
+      final granted = await action();
+      if (mounted) setState(() => _statuses[permission] = granted);
     } finally {
       if (mounted) setState(() => _loading = null);
     }
   }
-
-  PermissionStatus? _status(Permission permission) => _statuses[permission];
 
   @override
   Widget build(BuildContext context) {
@@ -43,30 +57,9 @@ class _PermissionsSheetState extends State<PermissionsSheet> {
             const SizedBox(height: 7),
             Text('نطلب كل صلاحية وقت احتياج الميزة فقط، ولا نستخدم تخزين الهاتف بالكامل.', style: TextStyle(color: Colors.white.withValues(alpha: 0.62), height: 1.4)),
             const SizedBox(height: 16),
-            _PermissionRow(
-              icon: Icons.notifications_outlined,
-              title: 'الإشعارات',
-              subtitle: 'لتنبيهات التحديث والأحداث المهمة',
-              status: _status(Permission.notification),
-              loading: _loading == Permission.notification,
-              onPressed: () => _request(Permission.notification, _service.requestNotificationsOnce),
-            ),
-            _PermissionRow(
-              icon: Icons.photo_camera_outlined,
-              title: 'الكاميرا',
-              subtitle: 'لما تستخدم تصوير أو رفع صورة',
-              status: _status(Permission.camera),
-              loading: _loading == Permission.camera,
-              onPressed: () => _request(Permission.camera, _service.requestCamera),
-            ),
-            _PermissionRow(
-              icon: Icons.photo_library_outlined,
-              title: 'الصور',
-              subtitle: 'لاختيار صورة من معرض الهاتف',
-              status: _status(Permission.photos),
-              loading: _loading == Permission.photos,
-              onPressed: () => _request(Permission.photos, _service.requestPhotos),
-            ),
+            _PermissionRow(icon: Icons.notifications_outlined, title: 'الإشعارات', subtitle: 'لتنبيهات التحديث والأحداث المهمة', granted: _statuses[NativePermissionType.notifications], loading: _loading == NativePermissionType.notifications, onPressed: () => _request(NativePermissionType.notifications, () => _service.requestNotificationsOnce())),
+            _PermissionRow(icon: Icons.photo_camera_outlined, title: 'الكاميرا', subtitle: 'لما تستخدم تصوير أو رفع صورة', granted: _statuses[NativePermissionType.camera], loading: _loading == NativePermissionType.camera, onPressed: () => _request(NativePermissionType.camera, _service.requestCamera)),
+            _PermissionRow(icon: Icons.photo_library_outlined, title: 'الصور', subtitle: 'لاختيار صورة من معرض الهاتف', granted: _statuses[NativePermissionType.photos], loading: _loading == NativePermissionType.photos, onPressed: () => _request(NativePermissionType.photos, _service.requestPhotos)),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(14),
@@ -81,24 +74,24 @@ class _PermissionsSheetState extends State<PermissionsSheet> {
 }
 
 class _PermissionRow extends StatelessWidget {
-  const _PermissionRow({required this.icon, required this.title, required this.subtitle, required this.status, required this.loading, required this.onPressed});
+  const _PermissionRow({required this.icon, required this.title, required this.subtitle, required this.granted, required this.loading, required this.onPressed});
 
   final IconData icon;
   final String title;
   final String subtitle;
-  final PermissionStatus? status;
+  final bool? granted;
   final bool loading;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final granted = status?.isGranted == true;
+    final allowed = granted == true;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 3),
       leading: CircleAvatar(backgroundColor: const Color(0xFF7C3AED).withValues(alpha: 0.2), child: Icon(icon, color: const Color(0xFFD8B4FE))),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-      subtitle: Text(granted ? 'مسموح' : subtitle, style: TextStyle(color: granted ? const Color(0xFF86EFAC) : Colors.white54, fontSize: 12)),
-      trailing: loading ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)) : OutlinedButton(onPressed: onPressed, child: Text(granted ? 'تم' : 'السماح')),
+      subtitle: Text(allowed ? 'مسموح' : subtitle, style: TextStyle(color: allowed ? const Color(0xFF86EFAC) : Colors.white54, fontSize: 12)),
+      trailing: loading ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)) : OutlinedButton(onPressed: onPressed, child: Text(allowed ? 'تم' : 'السماح')),
     );
   }
 }

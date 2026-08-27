@@ -83,21 +83,24 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           set -euo pipefail
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] && [ -n "$ANDROID_KEY_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ]; then
-            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
-            cat > android/key.properties <<EOF
+          test -n "$ANDROID_KEYSTORE_BASE64" || { echo 'ANDROID_KEYSTORE_BASE64 is required for update-safe releases.'; exit 1; }
+          test -n "$ANDROID_KEYSTORE_PASSWORD" || { echo 'ANDROID_KEYSTORE_PASSWORD is required.'; exit 1; }
+          test -n "$ANDROID_KEY_PASSWORD" || { echo 'ANDROID_KEY_PASSWORD is required.'; exit 1; }
+          test -n "$ANDROID_KEY_ALIAS" || { echo 'ANDROID_KEY_ALIAS is required.'; exit 1; }
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
+          cat > android/key.properties <<EOF
           storePassword=$ANDROID_KEYSTORE_PASSWORD
           keyPassword=$ANDROID_KEY_PASSWORD
           keyAlias=$ANDROID_KEY_ALIAS
           storeFile=upload-keystore.jks
           EOF
-            python3 tool/prepare_android_signing.py
-          else
-            echo 'No stable signing key supplied; retaining Flutter debug signing for migration compatibility.'
-          fi
+          python3 tool/prepare_android_signing.py
 
       - name: Configure Android permissions and update deep link
         run: python3 tool/patch_android_manifest.py android/app/src/main/AndroidManifest.xml
+
+      - name: Configure native Android permission bridge
+        run: python3 tool/prepare_native_permissions.py
 
       - name: Generate official QuizSpace launcher icon
         run: dart run flutter_launcher_icons

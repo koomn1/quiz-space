@@ -17,6 +17,7 @@ permissions = (
     'android.permission.POST_NOTIFICATIONS',
     'android.permission.CAMERA',
     'android.permission.READ_MEDIA_IMAGES',
+    'android.permission.READ_EXTERNAL_STORAGE',
     'android.permission.REQUEST_INSTALL_PACKAGES',
 )
 for permission in permissions:

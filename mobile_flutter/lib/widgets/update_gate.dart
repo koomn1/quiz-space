@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../services/app_update_service.dart';
+import '../services/permissions_service.dart';
 
 class UpdateGate extends StatefulWidget {
   const UpdateGate({super.key, required this.child});
@@ -14,6 +14,7 @@ class UpdateGate extends StatefulWidget {
 
 class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
   final _service = AppUpdateService();
+  final _permissions = AppPermissionsService();
   AppUpdateInfo? _update;
   bool _checking = true;
   bool _downloading = false;
@@ -121,6 +122,7 @@ class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
       installPermissionBlocked: _installPermissionBlocked,
       onUpdate: _downloadAndInstall,
       onRetry: _checkForUpdate,
+      onOpenInstallSettings: _permissions.openInstallSettings,
     );
   }
 }
@@ -135,6 +137,7 @@ class _UpdateRequiredView extends StatelessWidget {
     required this.installPermissionBlocked,
     required this.onUpdate,
     required this.onRetry,
+    required this.onOpenInstallSettings,
   });
 
   final AppUpdateInfo update;
@@ -145,6 +148,7 @@ class _UpdateRequiredView extends StatelessWidget {
   final bool installPermissionBlocked;
   final VoidCallback onUpdate;
   final VoidCallback onRetry;
+  final VoidCallback onOpenInstallSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +196,7 @@ class _UpdateRequiredView extends StatelessWidget {
                       SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: onUpdate, icon: const Icon(Icons.download_rounded), label: const Text('تحميل وتثبيت التحديث'), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), backgroundColor: const Color(0xFFB88CFF), foregroundColor: const Color(0xFF160B2B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))))),
                       if (installPermissionBlocked) ...[
                         const SizedBox(height: 10),
-                        TextButton.icon(onPressed: openAppSettings, icon: const Icon(Icons.settings_rounded), label: const Text('فتح إعدادات التطبيق')),
+                        TextButton.icon(onPressed: onOpenInstallSettings, icon: const Icon(Icons.settings_rounded), label: const Text('فتح إعدادات التثبيت')),
                       ],
                       if (error != null) ...[
                         const SizedBox(height: 5),
