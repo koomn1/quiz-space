@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">QuizSpace</string>
-    <string name="title_activity_main">QuizSpace</string>
-    <string name="package_name">com.quizspace.badawy</string>
-    <string name="custom_url_scheme">com.quizspace.badawy</string>
-</resources>

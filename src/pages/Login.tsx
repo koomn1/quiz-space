@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Browser } from '@capacitor/browser';
-import { Capacitor } from '@capacitor/core';
 import {
   AlertCircle,
   ArrowRight,
@@ -63,16 +61,13 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/'),
-          skipBrowserRedirect: Capacitor.isNativePlatform(),
-          queryParams: { prompt: 'select_account' },
         },
       });
       if (oauthError) throw oauthError;
-      if (Capacitor.isNativePlatform() && data.url) await Browser.open({ url: data.url });
     } catch (err: any) {
       setError(err.message || (isAr ? 'فشلت عملية تسجيل الدخول بجوجل.' : 'Google sign-in failed.'));
       setLoading(false);

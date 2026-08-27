@@ -1,6 +1,8 @@
 name: Mobile Flutter Release
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_tag:
