@@ -104,3 +104,11 @@ jobs:
           --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
           --dart-define=AI_WORKER_URL=$AI_WORKER_URL
           --dart-define=GOOGLE_SERVER_CLIENT_ID=$GOOGLE_SERVER_CLIENT_ID
+
+      - name: Upload Native debug APK for device testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: quizspace-native-debug-${{ github.run_number }}
+          path: mobile_flutter/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
