@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: _loading
             ? const _LoadingView()
             : _error != null
-                ? _ErrorView(onRetry: _loadProfile)
+                ? _ErrorView(error: _error, onRetry: _loadProfile)
                 : IndexedStack(index: _selectedIndex, children: [_HomeTab(profile: _profile!, onShowTakers: _showTakers, onRefresh: _loadProfile), _ProfileTab(profile: _profile!, onSignOut: widget.repository.signOut, onRefresh: _loadProfile)]),
       ),
       bottomNavigationBar: NavigationBar(
@@ -341,8 +341,16 @@ class _LoadingView extends StatelessWidget {
 }
 
 class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.onRetry});
+  const _ErrorView({required this.error, required this.onRetry});
+
+  final Object? error;
   final Future<void> Function() onRetry;
+
+  String get message {
+    if (error is MobileSessionException) return (error as MobileSessionException).message;
+    return 'تعذر تحميل بيانات حسابك الآن. تحقق من الإنترنت وحاول مرة أخرى.';
+  }
+
   @override
-  Widget build(BuildContext context) => Center(child: Padding(padding: const EdgeInsets.all(28), child: Column(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.cloud_off_rounded, size: 52, color: Colors.white38), const SizedBox(height: 14), const Text('تعذر تحميل بيانات حسابك.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)), const SizedBox(height: 16), FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('إعادة المحاولة'))])));
+  Widget build(BuildContext context) => Center(child: Padding(padding: const EdgeInsets.all(28), child: Column(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.cloud_off_rounded, size: 52, color: Colors.white38), const SizedBox(height: 14), const Text('الصفحة الرئيسية موجودة، لكن البيانات لم تكتمل.', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)), const SizedBox(height: 10), Text(message, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.62), height: 1.45)), const SizedBox(height: 16), FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('إعادة المحاولة'))])));
 }

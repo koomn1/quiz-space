@@ -114,8 +114,6 @@ class _AuthGateState extends State<_AuthGate> {
   late final QuizSpaceRepository _repository;
   StreamSubscription<firebase.User?>? _authSubscription;
   firebase.User? _user;
-  Future<void>? _sessionFuture;
-  Object? _sessionError;
   bool _initializing = true;
 
   @override
@@ -126,41 +124,13 @@ class _AuthGateState extends State<_AuthGate> {
       supabaseAnonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
     );
     _user = _repository.currentUser;
-    if (_user != null) _startSessionPreparation(_user!);
     _authSubscription = _repository.authChanges.listen(_onAuthChanged);
     _initializing = false;
   }
 
   void _onAuthChanged(firebase.User? user) {
     if (!mounted) return;
-    if (user == null) {
-      setState(() {
-        _user = null;
-        _sessionFuture = null;
-        _sessionError = null;
-      });
-      return;
-    }
-    if (_user?.uid == user.uid && _sessionFuture != null) return;
-    setState(() {
-      _user = user;
-      _sessionError = null;
-    });
-    _startSessionPreparation(user);
-  }
-
-  void _startSessionPreparation(firebase.User user) {
-    final future = _repository.prepareDataSession();
-    if (mounted) {
-      setState(() {
-        _sessionFuture = future;
-        _sessionError = null;
-      });
-    }
-    future.catchError((error) {
-      if (!mounted) return;
-      setState(() => _sessionError = error);
-    });
+    setState(() => _user = user);
   }
 
   @override
@@ -175,32 +145,7 @@ class _AuthGateState extends State<_AuthGate> {
     final user = _user;
     if (user == null) return AuthScreen(repository: _repository);
 
-    if (_sessionError != null) {
-      return _SessionErrorView(
-        error: _sessionError,
-        onRetry: () => _startSessionPreparation(user),
-        onSignOut: _repository.signOut,
-      );
-    }
-
-    final future = _sessionFuture;
-    if (future == null) return const _AuthLoadingView(label: 'بنجهز جلستك...');
-    return FutureBuilder<void>(
-      future: future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const _AuthLoadingView(label: 'بنحمّل حسابك بأمان...');
-        }
-        if (snapshot.hasError) {
-          return _SessionErrorView(
-            error: snapshot.error,
-            onRetry: () => _startSessionPreparation(user),
-            onSignOut: _repository.signOut,
-          );
-        }
-        return HomeScreen(repository: _repository);
-      },
-    );
+    return HomeScreen(repository: _repository);
   }
 }
 
