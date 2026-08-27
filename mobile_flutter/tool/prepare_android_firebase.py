@@ -18,6 +18,10 @@ if settings is None or app_gradle is None:
     raise SystemExit('Generated Android Gradle files are missing')
 
 settings_text = settings.read_text(encoding='utf-8')
+if settings.suffix == '.kts':
+    settings_text = re.sub(r'(id\("org\.jetbrains\.kotlin\.android"\) version )"[^"]+"', r'\1"2.3.0"', settings_text, count=1)
+else:
+    settings_text = re.sub(r'(id [\'\"]org\.jetbrains\.kotlin\.android[\'\"] version [\'\"])[^\'\"]+([\'\"])', r'\g<1>2.3.0\g<2>', settings_text, count=1)
 if 'com.google.gms.google-services' not in settings_text:
     if settings.suffix == '.kts':
         marker = '  id("org.jetbrains.kotlin.android") version "'
