@@ -9,10 +9,10 @@ if 'io.quizspace.mobile' in text:
     print('Deep link already configured')
     raise SystemExit(0)
 
-activity_pattern = re.compile(r'(<activity\b(?=[^>]*android:name="\\.MainActivity")[^>]*>)', re.DOTALL)
+activity_pattern = re.compile(r'(<activity\b[^>]*>)', re.DOTALL)
 match = activity_pattern.search(text)
 if not match:
-    raise SystemExit('MainActivity entry was not found in AndroidManifest.xml')
+    raise SystemExit('The main activity entry was not found in AndroidManifest.xml')
 
 intent_filter = '''
             <intent-filter>
