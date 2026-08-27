@@ -11,7 +11,7 @@ class MobileAiService {
 
   Future<String> ask(String prompt, {List<Map<String, String>> history = const []}) async {
     final normalizedPrompt = prompt.trim();
-    if (normalizedPrompt.isEmpty || normalizedPrompt.length > 8_000) {
+    if (normalizedPrompt.isEmpty || normalizedPrompt.length > 8000) {
       throw const MobileSessionException('اكتب سؤالًا واضحًا وقصيرًا لـCosmo.');
     }
     if (workerUrl.trim().isEmpty) {

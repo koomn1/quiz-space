@@ -135,7 +135,7 @@ class _QuizCreatorScreenState extends State<QuizCreatorScreen> {
             const SizedBox(height: 22),
             Row(children: [const Expanded(child: Text('الأسئلة', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900))), Text('${_questions.length}/200', style: TextStyle(color: Colors.white.withValues(alpha: 0.6)))]),
             const SizedBox(height: 10),
-            ...List.generate(_questions.length, (index) => Padding(padding: const EdgeInsets.only(bottom: 12), child: _QuestionCard(index: index, state: _questions[index], canRemove: _questions.length > 1, onRemove: () => _removeQuestion(index))),
+            ...List.generate(_questions.length, (index) => Padding(padding: const EdgeInsets.only(bottom: 12), child: _QuestionCard(index: index, state: _questions[index], canRemove: _questions.length > 1, onRemove: () => _removeQuestion(index)))),
             OutlinedButton.icon(onPressed: _addQuestion, icon: const Icon(Icons.add_rounded), label: const Text('إضافة سؤال'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)))),
             if (_error != null) ...[const SizedBox(height: 14), Text(_error!, style: const TextStyle(color: Color(0xFFFCA5A5), height: 1.4))],
             const SizedBox(height: 18),
