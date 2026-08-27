@@ -70,6 +70,9 @@ jobs:
           VITE_APP_VERSION: ${{ steps.release_meta.outputs.version_name }}
         run: pnpm build
 
+      - name: Remove web compression sidecars from Android assets
+        run: find dist -type f \( -name '*.gz' -o -name '*.br' \) -delete
+
       - name: Sync website into Android app
         run: pnpm exec cap sync android
 
