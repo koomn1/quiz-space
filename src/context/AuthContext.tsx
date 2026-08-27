@@ -4,6 +4,8 @@ import { getDefaultAvatar } from '../constants/profileAssets';
 import type { Session, User } from '@supabase/supabase-js';
 import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
 import { getAuthRedirectUrl } from '../lib/authRedirect';
+import { Capacitor } from '@capacitor/core';
+import { ErrorCode, GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 
 export interface AppUser {
   uid: string;
@@ -38,6 +40,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+let nativeGoogleInitialized = false;
 
 const APP_USER_COLUMNS = 'uid, email, name, photo_url, custom_id, is_premium, plan_name';
 
@@ -279,6 +282,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithGoogle = async () => {
+    if (Capacitor.isNativePlatform()) {
+      const clientId = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID?.trim();
+      if (!clientId) throw new Error('إعداد Google Native غير مكتمل. أعد بناء التطبيق من خلال الإصدار الرسمي.');
+      try {
+        if (!nativeGoogleInitialized) {
+          await GoogleSignIn.initialize({ clientId });
+          nativeGoogleInitialized = true;
+        }
+        const result = await GoogleSignIn.signIn();
+        if (!result.idToken) throw new Error('GOOGLE_ID_TOKEN_MISSING');
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: result.idToken,
+        });
+        if (error || !data.session) throw new Error('تعذر إنشاء جلسة QuizSpace بعد اختيار الحساب.');
+        return;
+      } catch (cause) {
+        const code = typeof cause === 'object' && cause !== null && 'code' in cause ? String((cause as { code?: unknown }).code) : '';
+        if (code === ErrorCode.SignInCanceled) return;
+        if (code === ErrorCode.NoCredentialAvailable) throw new Error('لا يوجد حساب Google متاح على هذا الجهاز.');
+        if (code === ErrorCode.ProviderConfigurationError) throw new Error('إعداد Google للتطبيق غير مكتمل. تأكد من شهادة Android ثم أعد المحاولة.');
+        if (cause instanceof Error && cause.message === 'GOOGLE_ID_TOKEN_MISSING') throw new Error('لم يرجع Google رمز تسجيل صالح. أعد اختيار الحساب.');
+        console.error('Native Google sign-in failed', code || 'unknown');
+        throw new Error('تعذر تسجيل الدخول باستخدام Google حاليًا. حاول مرة أخرى.');
+      }
+    }
+
     const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

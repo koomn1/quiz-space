@@ -683,6 +683,13 @@ export default function Classrooms({
   const handleSendChatMessage = async () => {
     const text = chatMessageText.trim();
     if (!text || !activeClassroomView) return;
+    const isCreator = activeClassroomView.createdBy === currentUserId;
+    const myStudent = classroomStudents.find((student) => student.classCode === activeClassroomView.code && student.studentId === currentUserId);
+    const canSend = isAdmin || isCreator || myStudent?.role === 'co-moderator' || activeClassroomView.allowStudentMessages !== false;
+    if (!canSend) {
+      setErrorText(isAr ? 'المعلم قافل رسائل الطلاب في الفصل.' : 'The teacher disabled student messages in this classroom.');
+      return;
+    }
 
     setIsSendingChat(true);
     try {
@@ -777,6 +784,10 @@ export default function Classrooms({
   const handleCreateAssignment = async () => {
     if (!newAssignTitle.trim() || !activeClassroomView) return;
     if (isGuest) { setErrorText(guestBlockMessage); playChimeSound('wrong'); return; }
+    if (!isAdmin && activeClassroomView.createdBy !== currentUserId) {
+      setErrorText(isAr ? 'إنشاء التكليفات متاح لمدرس الفصل فقط.' : 'Only the classroom teacher can create assignments.');
+      return;
+    }
 
     try {
       const { data, error } = await supabase.from('classroom_assignments').insert({
@@ -852,6 +863,10 @@ export default function Classrooms({
   // Grade Submission Operation
   const handleGradeSubmission = async () => {
     if (!gradingSubmission) return;
+    if (!isAdmin && (!activeClassroomView || activeClassroomView.createdBy !== currentUserId)) {
+      setErrorText(isAr ? 'تصحيح التكليفات متاح لمدرس الفصل فقط.' : 'Only the classroom teacher can grade submissions.');
+      return;
+    }
 
     try {
       const { error } = await supabase.from('classroom_submissions').update({
@@ -885,6 +900,10 @@ export default function Classrooms({
   const handleCreateAnnouncement = async () => {
     if (!annContent.trim() || !activeClassroomView) return;
     if (isGuest) { setErrorText(guestBlockMessage); playChimeSound('wrong'); return; }
+    if (!isAdmin && activeClassroomView.createdBy !== currentUserId) {
+      setErrorText(isAr ? 'نشر الإعلانات متاح لمدرس الفصل فقط.' : 'Only the classroom teacher can publish announcements.');
+      return;
+    }
 
     try {
       const { data, error } = await supabase.from('classroom_announcements').insert({
@@ -962,6 +981,10 @@ export default function Classrooms({
   // Permissions settings operations
   const handleUpdatePermissions = async (allowMessages: boolean, allowMedia: boolean) => {
     if (!activeClassroomView) return;
+    if (!isAdmin && activeClassroomView.createdBy !== currentUserId) {
+      setErrorText(isAr ? 'إعدادات الصلاحيات متاحة لمدرس الفصل فقط.' : 'Only the classroom teacher can change permissions.');
+      return;
+    }
     try {
       const { error } = await supabase.from('classrooms').update({
         allow_student_messages: allowMessages,

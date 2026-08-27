@@ -1,0 +1,218 @@
+name: Mobile Full App Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'capacitor.config.ts'
+      - 'android/**'
+      - 'scripts/**'
+      - 'worker/**'
+      - 'supabase/functions/**'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Optional tag such as mobile-v3.1.123'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mobile-full-app-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Build website wrapper and publish signed APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.21.0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install web and Capacitor packages
+        run: pnpm install --frozen-lockfile --child-concurrency=1 --network-concurrency=4
+
+      - name: Calculate release version
+        id: release_meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          requested_tag='${{ inputs.release_tag }}'
+          if [ -n "$requested_tag" ]; then
+            release_tag="$requested_tag"
+          else
+            release_tag="mobile-v3.1.${GITHUB_RUN_NUMBER}"
+          fi
+          version_name="${release_tag#mobile-v}"
+          if ! [[ "$version_name" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'Release tag must look like mobile-v3.1.123'
+            exit 1
+          fi
+          major="${version_name%%.*}"
+          if [ "$major" -lt 3 ]; then
+            echo 'Refusing to publish a release below v3; historical v1/v2 wrappers are not eligible.'
+            exit 1
+          fi
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "version_name=$version_name" >> "$GITHUB_OUTPUT"
+          echo "version_code=$((3000000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve Google web client ID without exposing it
+        env:
+          FIREBASE_ANDROID_CONFIG_JSON: ${{ secrets.FIREBASE_ANDROID_CONFIG_JSON }}
+        run: |
+          set -euo pipefail
+          test -n "$FIREBASE_ANDROID_CONFIG_JSON"
+          GOOGLE_WEB_CLIENT_ID=$(python3 - <<'PY'
+          import json
+          import os
+          data = json.loads(os.environ['FIREBASE_ANDROID_CONFIG_JSON'])
+          packages = [item.get('client_info', {}).get('android_client_info', {}).get('package_name') for item in data.get('client', [])]
+          if 'com.quizspace.badawy' not in packages:
+              raise SystemExit('Firebase config does not contain com.quizspace.badawy')
+          ids = [oauth.get('client_id') for item in data.get('client', []) for oauth in item.get('oauth_client', []) if oauth.get('client_type') == 3 and oauth.get('client_id')]
+          if not ids:
+              raise SystemExit('Firebase config is missing the Web OAuth client')
+          print(ids[0])
+          PY
+          )
+          echo "::add-mask::$GOOGLE_WEB_CLIENT_ID"
+          echo "VITE_GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID" >> "$GITHUB_ENV"
+
+      - name: Build web assets
+        env:
+          VITE_APP_VERSION: ${{ steps.release_meta.outputs.version_name }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: pnpm build
+
+      - name: Sync website into Android wrapper
+        run: pnpm exec cap sync android
+
+      - name: Verify Android signing secret
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/quizspace-upload-keystore.jks
+          actual_hash=$(sha256sum /tmp/quizspace-upload-keystore.jks | cut -d' ' -f1)
+          if [ "$actual_hash" != "de9382e0ca60f6191f7ae631f63c850ac27be179d2fdf2345057238d6d3c321b" ]; then
+            echo 'The Android keystore secret payload is corrupted or incomplete.'
+            exit 1
+          fi
+          keytool -list -keystore /tmp/quizspace-upload-keystore.jks -storepass "$ANDROID_KEYSTORE_PASSWORD" >/dev/null
+
+      - name: Configure Android release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          test -n "$ANDROID_KEY_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=../upload-keystore.jks
+          EOF
+          python3 scripts/prepare_capacitor_signing.py
+
+      - name: Set Android version
+        env:
+          VERSION_NAME: ${{ steps.release_meta.outputs.version_name }}
+          VERSION_CODE: ${{ steps.release_meta.outputs.version_code }}
+        run: python3 scripts/set_capacitor_version.py
+
+      - name: Build signed wrapper APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Verify signing continuity and version code
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_apk='android/app/build/outputs/apk/release/app-release.apk'
+          latest_url=$(curl -fsSL -H 'Accept: application/vnd.github+json' https://api.github.com/repos/koomn1/quiz-space/releases/latest | jq -r '.assets[]? | select(.name == "quizspace-mobile.apk") | .browser_download_url' | head -n1)
+          if [ -z "$latest_url" ] || [ "$latest_url" = "null" ]; then
+            echo 'No previous APK release found; skipping continuity check.'
+            exit 0
+          fi
+          curl -fsSL "$latest_url" -o /tmp/previous-quizspace.apk
+          apksigner_path=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n1)
+          test -x "$apksigner_path"
+          current_cert=$($apksigner_path verify --print-certs "$current_apk" | awk -F': ' '/SHA-256 digest:/ {print $2; exit}')
+          previous_cert=$($apksigner_path verify --print-certs /tmp/previous-quizspace.apk | awk -F': ' '/SHA-256 digest:/ {print $2; exit}')
+          test -n "$current_cert" && test -n "$previous_cert"
+          test "$current_cert" = "$previous_cert"
+          aapt_path=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n1)
+          current_code=$($aapt_path dump badging "$current_apk" | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p" | head -n1)
+          previous_code=$($aapt_path dump badging /tmp/previous-quizspace.apk | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p" | head -n1)
+          test -n "$current_code" && test -n "$previous_code"
+          test "$current_code" -gt "$previous_code"
+          echo 'Signing continuity and increasing versionCode verified.'
+
+      - name: Prepare release files
+        id: release_files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-artifacts
+          cp android/app/build/outputs/apk/release/app-release.apk release-artifacts/quizspace-mobile.apk
+          (cd release-artifacts && sha256sum quizspace-mobile.apk > quizspace-mobile.apk.sha256)
+          echo "apk_path=release-artifacts/quizspace-mobile.apk" >> "$GITHUB_OUTPUT"
+          echo "checksum_path=release-artifacts/quizspace-mobile.apk.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_meta.outputs.release_tag }}
+          name: QuizSpace Android ${{ steps.release_meta.outputs.release_tag }}
+          generate_release_notes: true
+          files: |
+            ${{ steps.release_files.outputs.apk_path }}
+            ${{ steps.release_files.outputs.checksum_path }}
+          body: |
+            نسخة Android من QuizSpace مبنية من آخر إصدار الويب.
+
+            الإصدار: `${{ steps.release_meta.outputs.version_name }}`.
+
+            التطبيق يفحص هذا الـRelease تلقائيًا. عند وجود إصدار أعلى، يبدأ تنزيل APK في الخلفية، يحفظه حتى لو اتقفل التطبيق، يتحقق من SHA-256، ثم يفتح مثبت Android لتثبيته فوق النسخة الحالية.
+
+            التثبيت الأول: نزّل `quizspace-mobile.apk` وافتحه بعد السماح بالتثبيت من هذا المصدر.
+            تحديث Android يحتاج تأكيد مثبت النظام؛ لا يوجد تثبيت صامت للتطبيقات العادية.
+
+      - name: Remove signing files
+        if: always()
+        run: rm -f android/key.properties android/upload-keystore.jks
