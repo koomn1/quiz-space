@@ -121,7 +121,10 @@ class _AuthGateState extends State<_AuthGate> {
   @override
   void initState() {
     super.initState();
-    _repository = QuizSpaceRepository(Supabase.instance.client);
+    _repository = QuizSpaceRepository(
+      supabaseUrl: const String.fromEnvironment('SUPABASE_URL'),
+      supabaseAnonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+    );
     _user = _repository.currentUser;
     if (_user != null) _startSessionPreparation(_user!);
     _authSubscription = _repository.authChanges.listen(_onAuthChanged);

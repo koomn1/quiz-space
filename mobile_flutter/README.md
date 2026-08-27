@@ -1,6 +1,6 @@
 # QuizSpace Mobile
 
-تطبيق Flutter أصلي لـQuizSpace، وليس WebView. يتضمن تسجيل الدخول عبر Supabase Auth، شاشة رئيسية للاختبارات المنشورة، بروفايل المستخدم، شارات أيقونية متجاورة، وزرًا يفتح قائمة «الأعضاء الذين حلوا الاختبار» داخل BottomSheet فوري.
+تطبيق Flutter أصلي لـQuizSpace، وليس WebView. يتضمن تسجيل الدخول عبر Firebase Auth، شاشة رئيسية للاختبارات المنشورة، بروفايل المستخدم، شارات أيقونية متجاورة، وزرًا يفتح قائمة «الأعضاء الذين حلوا الاختبار» داخل BottomSheet فوري.
 
 ## التشغيل المحلي
 
@@ -21,15 +21,15 @@ flutter run \
 
 أضف `google-services.json` كـGitHub Actions Secret باسم `FIREBASE_ANDROID_CONFIG_JSON`، ولا تضعه في source. الـworkflow يكتبه مؤقتًا أثناء البناء، ويثبت Firebase Gradle plugin، ويطابق package `com.quizspace.badawy` مع إعداد Android المرفق.
 
-حتى تصل الجلسة إلى بيانات QuizSpace، فعّل Firebase Third-Party Auth في إعدادات Supabase، وسجّل Firebase project ID، وتأكد أن Firebase JWT يحصل على claim باسم `role` وقيمته `authenticated`. هذه الخطوة تحافظ على RLS بدل استخدام service-role key. فعّل أيضًا Email/Password وGoogle داخل Firebase Authentication.
+التطبيق يرسل Firebase ID token إلى Edge Function باسم `mobile-firebase-session-v2`. الخادم يتحقق من توقيع Firebase والبريد المؤكَّد، ثم يبحث عن سجل QuizSpace القديم بالبريد ويعيد UID القديم دون تغييره، أو ينشئ سجلًا جديدًا للمستخدم الجديد. لا يوجد service-role key داخل التطبيق، ولا يعتمد مسار البروفايل على Firebase JWT داخل RLS مباشرة. يجب أن يكون Firebase project المستخدم في `google-services.json` هو مشروع QuizSpace، مع تفعيل Email/Password وGoogle داخل Firebase Authentication.
 
 ## البيانات والصلاحيات
 
-يقرأ التطبيق بيانات المستخدم المسجل من جداول `users` و`quizzes` و`completions`، ويستخدم RPC `get_quiz_takers_unique` لقائمة الحلّالين. كل الطلبات تمر من عميل Supabase الموثّق وتظل خاضعة لـRLS والصلاحيات الموجودة في المشروع؛ لا توجد بيانات mock أو ترقيات صلاحيات من الواجهة.
+يقرأ التطبيق بيانات المستخدم المسجل من جداول `users` و`quizzes` و`completions`، ويستخدم RPC `get_quiz_takers_unique` لقائمة الحلّالين. القراءة الخاصة تتم داخل Function بعد التحقق من Firebase وبـservice-role محفوظ على الخادم فقط؛ التطبيق لا يستطيع تعديل `uid` أو `is_admin` أو `is_premium` ولا يحمل أي مفتاح إداري.
 
 ## GitHub Release
 
-التدفق `.github/workflows/mobile-release.yml` يعمل يدويًا من GitHub Actions. يشغّل `flutter analyze` و`flutter test` ثم يبني APK release باستخدام أسرار Actions وقت البناء، ويرفع APK وملف SHA-256 إلى GitHub Release. لا يتم ادعاء دعم iOS أو توقيعه؛ ذلك يحتاج بيئة macOS وشهادة Apple منفصلة.
+التدفق `.github/workflows/mobile-release.yml` يعمل تلقائيًا مع كل push إلى `main` أو يدويًا من GitHub Actions. يشغّل `flutter analyze` و`flutter test` ثم يبني APK release باستخدام أسرار Actions وقت البناء، ويرفع APK وملف SHA-256 إلى GitHub Release. لا يتم ادعاء دعم iOS أو توقيعه؛ ذلك يحتاج بيئة macOS وشهادة Apple منفصلة.
 
 ## التحديث الإجباري داخل التطبيق
 

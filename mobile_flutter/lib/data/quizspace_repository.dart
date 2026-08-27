@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile_models.dart';
 
@@ -14,9 +17,10 @@ class MobileSessionException implements Exception {
 }
 
 class QuizSpaceRepository {
-  QuizSpaceRepository(this.client);
+  QuizSpaceRepository({required this.supabaseUrl, required this.supabaseAnonKey});
 
-  final SupabaseClient client;
+  final String supabaseUrl;
+  final String supabaseAnonKey;
 
   Stream<firebase.User?> get authChanges => firebase.FirebaseAuth.instance.authStateChanges();
 
@@ -68,101 +72,29 @@ class QuizSpaceRepository {
     await firebase.FirebaseAuth.instance.signOut();
   }
 
-  /// Verifies that Firebase has a usable token and that Supabase can reach the
-  /// user's profile before AuthGate leaves the auth screen.
+  /// Verifies Firebase and lets the server resolve the legacy QuizSpace UID.
+  /// The app never rewrites users.uid and never uses a service-role key.
   Future<void> prepareDataSession() async {
-    final user = currentUser;
-    if (user == null) {
-      throw const MobileSessionException('يجب تسجيل الدخول أولًا.');
+    final payload = await _invokeMobileSession();
+    final appUid = (payload['app_user_uid'] ?? '').toString().trim();
+    if (appUid.isEmpty || _asMap(payload['profile']) == null) {
+      throw const MobileSessionException('تعذر تجهيز بيانات حساب QuizSpace الآن. حاول مرة أخرى.');
     }
-
-    final token = await user.getIdToken();
-    if (token == null || token.isEmpty) {
-      throw const MobileSessionException('تعذر تأمين جلسة الحساب. سجّل الدخول مرة أخرى.');
-    }
-
-    try {
-      await _ensureAppUser(user);
-      await loadOwnProfile();
-    } on PostgrestException catch (_) {
-      throw const MobileSessionException(
-        'تم تسجيل الحساب، لكن ربط قاعدة البيانات غير مكتمل. راجع إعداد Firebase Third-Party Auth ثم حاول مرة أخرى.',
-      );
-    } on AuthException catch (_) {
-      throw const MobileSessionException('انتهت جلسة الحساب. سجّل الدخول مرة أخرى.');
-    } on MobileSessionException {
-      rethrow;
-    } catch (_) {
-      throw const MobileSessionException('تعذر تحميل الحساب الآن. تحقق من الإنترنت وحاول مرة أخرى.');
-    }
-  }
-
-  Future<void> _ensureAppUser(firebase.User user) async {
-    final existing = await client
-        .from('users')
-        .select('uid, name, photo_url')
-        .eq('uid', user.uid)
-        .maybeSingle()
-        .timeout(const Duration(seconds: 12));
-
-    if (existing != null) return;
-
-    final metadata = user.providerData.isNotEmpty ? user.providerData.first : null;
-    final fallbackName = user.email?.split('@').first.trim();
-    final name = (user.displayName ?? metadata?.displayName ?? fallbackName ?? 'طالب جديد').trim();
-    final photoUrl = (user.photoURL ?? metadata?.photoURL ?? '').trim();
-
-    await client.from('users').insert({
-      'uid': user.uid,
-      'email': user.email ?? '',
-      'name': name.isEmpty ? 'طالب جديد' : name,
-      'photo_url': photoUrl,
-      'plan_name': 'Free',
-      'is_premium': false,
-    }).timeout(const Duration(seconds: 12));
   }
 
   Future<ProfileModel> loadOwnProfile() async {
-    final userId = currentUser?.uid;
-    if (userId == null) throw const AuthException('يجب تسجيل الدخول أولًا.');
+    final payload = await _invokeMobileSession();
+    final appUid = (payload['app_user_uid'] ?? '').toString().trim();
+    final envelope = _asMap(payload['profile']);
+    if (appUid.isEmpty || envelope == null) {
+      throw const MobileSessionException('بيانات الحساب غير مكتملة. حاول مرة أخرى.');
+    }
 
-    final responses = await Future.wait<dynamic>([
-      client
-          .from('users')
-          .select('uid, custom_id, name, bio, location, photo_url, is_premium, is_founder, xp')
-          .eq('uid', userId)
-          .maybeSingle()
-          .timeout(const Duration(seconds: 12)),
-      client
-          .from('quizzes')
-          .select('id, title, description')
-          .eq('creator_id', userId)
-          .order('created_at', ascending: false)
-          .limit(50)
-          .timeout(const Duration(seconds: 12)),
-      client
-          .from('completions')
-          .select('score, total_questions, created_at')
-          .eq('taker_id', userId)
-          .order('created_at', ascending: false)
-          .limit(100)
-          .timeout(const Duration(seconds: 12)),
-    ]).timeout(const Duration(seconds: 18));
-
-    final user = Map<String, dynamic>.from(
-      (responses[0] as Map<String, dynamic>?) ?? <String, dynamic>{},
-    );
-    final quizzes = (responses[1] as List<dynamic>?)
-            ?.whereType<Map<String, dynamic>>()
-            .toList(growable: false) ??
-        const <Map<String, dynamic>>[];
-    final completions = (responses[2] as List<dynamic>?)
-            ?.whereType<Map<String, dynamic>>()
-            .toList(growable: false) ??
-        const <Map<String, dynamic>>[];
-
+    final user = _asMap(envelope['user']) ?? <String, dynamic>{};
+    final quizzes = _asListOfMaps(envelope['quizzes']);
+    final completions = _asListOfMaps(envelope['completions']);
     return ProfileModel.fromMaps(
-      id: userId,
+      id: appUid,
       user: user,
       quizzes: quizzes,
       completions: completions,
@@ -173,14 +105,76 @@ class QuizSpaceRepository {
     final normalizedQuizId = quizId.trim();
     if (normalizedQuizId.isEmpty) return const [];
 
-    final rows = await client
-        .rpc('get_quiz_takers_unique', params: {'p_quiz_id': normalizedQuizId})
-        .timeout(const Duration(seconds: 12));
-    if (rows is! List) return const [];
+    final payload = await _invokeMobileSession(action: 'quiz_takers', quizId: normalizedQuizId);
+    final rows = _asListOfMaps(payload['takers']);
+    return rows.map(TakerModel.fromMap).toList(growable: false);
+  }
 
-    return rows
-        .whereType<Map<String, dynamic>>()
-        .map(TakerModel.fromMap)
-        .toList(growable: false);
+  Future<Map<String, dynamic>> _invokeMobileSession({String action = 'bootstrap', String? quizId}) async {
+    final user = currentUser;
+    if (user == null) {
+      throw const MobileSessionException('يجب تسجيل الدخول أولًا.');
+    }
+    if (supabaseUrl.trim().isEmpty || supabaseAnonKey.trim().isEmpty) {
+      throw const MobileSessionException('إعداد التطبيق غير مكتمل.');
+    }
+
+    final token = await user.getIdToken(true);
+    if (token == null || token.isEmpty) {
+      throw const MobileSessionException('تعذر تأمين جلسة الحساب. سجّل الدخول مرة أخرى.');
+    }
+
+    final endpoint = Uri.parse('${supabaseUrl.replaceFirst(RegExp(r'/+$'), '')}/functions/v1/mobile-firebase-session-v2');
+    final httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 8);
+    try {
+      final request = await httpClient.postUrl(endpoint).timeout(const Duration(seconds: 12));
+      request.headers
+        ..set(HttpHeaders.contentTypeHeader, 'application/json')
+        ..set(HttpHeaders.acceptHeader, 'application/json')
+        ..set('apikey', supabaseAnonKey)
+        ..set(HttpHeaders.authorizationHeader, 'Bearer $token');
+      request.add(utf8.encode(jsonEncode({
+        'action': action,
+        if (quizId != null) 'quiz_id': quizId,
+      })));
+
+      final httpResponse = await request.close().timeout(const Duration(seconds: 18));
+      final rawBody = await httpResponse.transform(utf8.decoder).join().timeout(const Duration(seconds: 8));
+      Map<String, dynamic> body = <String, dynamic>{};
+      if (rawBody.trim().isNotEmpty) {
+        final decoded = jsonDecode(rawBody);
+        if (decoded is Map) body = Map<String, dynamic>.from(decoded);
+      }
+
+      if (httpResponse.statusCode < 200 || httpResponse.statusCode >= 300) {
+        final serverMessage = (body['error'] ?? '').toString().trim();
+        throw MobileSessionException(
+          serverMessage.isEmpty ? 'تعذر تحميل حسابك الآن. تحقق من الإنترنت وحاول مرة أخرى.' : serverMessage,
+        );
+      }
+      return body;
+    } on MobileSessionException {
+      rethrow;
+    } on SocketException {
+      throw const MobileSessionException('تعذر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.');
+    } on TimeoutException {
+      throw const MobileSessionException('الخادم اتأخر في الرد. حاول مرة أخرى.');
+    } on FormatException {
+      throw const MobileSessionException('وصل رد غير مكتمل من الخادم. حاول مرة أخرى.');
+    } catch (_) {
+      throw const MobileSessionException('تعذر تحميل حسابك الآن. تحقق من الإنترنت وحاول مرة أخرى.');
+    } finally {
+      httpClient.close(force: true);
+    }
+  }
+
+  static Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  static List<Map<String, dynamic>> _asListOfMaps(dynamic value) {
+    if (value is! List) return const <Map<String, dynamic>>[];
+    return value.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList(growable: false);
   }
 }
