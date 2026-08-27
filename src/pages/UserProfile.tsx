@@ -42,6 +42,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import { GsapCoverBackground } from "../components/GsapCoverBackground";
 import { SocialSupportLinks } from "../components/SocialSupportLinks";
+import { ProfileQuickBadgeRail } from "../components/ProfileQuickBadgeRail";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, resolveProfileImageUrl, uniqueProfileFrames } from "../constants/profileAssets";
@@ -141,6 +142,10 @@ export default function UserProfile({
   const [avatarFilter, setAvatarFilter] = React.useState<'all' | 'boy' | 'girl'>('all');
   const [avatarSearch, setAvatarSearch] = React.useState('');
   const [frameSearch, setFrameSearch] = React.useState('');
+  const profileCompletions = profileData?.completions || [];
+  const profileAccuracy = profileCompletions.length > 0
+    ? Math.round((profileCompletions.reduce((total, completion) => total + (completion.totalQuestions > 0 ? completion.score / completion.totalQuestions : 0), 0) / profileCompletions.length) * 100)
+    : 0;
 
   const refreshActiveFrame = React.useCallback(async () => {
     setIsFramesLoading(true);
@@ -1223,17 +1228,27 @@ export default function UserProfile({
                 })()}
 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
-                  <h1 className="text-2xl md:text-3xl font-black font-display drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] flex items-center">
-                    <PremiumNameTag
-                      name={profileData?.name || currentUserName}
-                      isPremium={!!profileData?.isPremium}
-                      badgeTier={(profileData as any)?.badgeTier}
-                      nameColor={(profileData as any)?.nameColor}
-                      badgeColor={(profileData as any)?.badgeColor}
-                      badgeSize="lg"
-                      className="text-slate-900 dark:text-white"
+                  <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                    <h1 className="text-2xl md:text-3xl font-black font-display drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] flex items-center">
+                      <PremiumNameTag
+                        name={profileData?.name || currentUserName}
+                        isPremium={!!profileData?.isPremium}
+                        badgeTier={(profileData as any)?.badgeTier}
+                        nameColor={(profileData as any)?.nameColor}
+                        badgeColor={(profileData as any)?.badgeColor}
+                        badgeSize="lg"
+                        className="text-slate-900 dark:text-white"
+                      />
+                    </h1>
+                    <ProfileQuickBadgeRail
+                      isAr={isAr}
+                      streak={0}
+                      quizzesTaken={profileCompletions.length}
+                      accuracy={profileAccuracy}
+                      quizzesCreated={profileData?.createdQuizzes?.length || 0}
+                      isPremium={Boolean(profileData?.isPremium)}
                     />
-                  </h1>
+                  </div>
                 </div>
 
                 {isOwnProfile && (
