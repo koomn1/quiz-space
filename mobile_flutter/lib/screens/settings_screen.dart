@@ -16,6 +16,8 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notifications = true;
+  bool _emailAlerts = true;
+  bool _rankUpdates = true;
   bool _weeklySummary = false;
   String _version = 'جارٍ القراءة...';
 
@@ -28,10 +30,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final info = await PackageInfo.fromPlatform();
+    NotificationPreferences? remote;
+    try {
+      remote = await widget.repository.loadNotificationPreferences();
+    } catch (_) {
+      // Keep locally cached values when the account bridge is temporarily unavailable.
+    }
     if (!mounted) return;
     setState(() {
-      _notifications = prefs.getBool('native_notifications_enabled') ?? true;
-      _weeklySummary = prefs.getBool('native_weekly_summary_enabled') ?? false;
+      _notifications = remote?.pushEnabled ?? prefs.getBool('native_notifications_enabled') ?? true;
+      _emailAlerts = remote?.emailAlerts ?? true;
+      _rankUpdates = remote?.rankUpdates ?? true;
+      _weeklySummary = remote?.weeklyReports ?? prefs.getBool('native_weekly_summary_enabled') ?? false;
       _version = '${info.version} (${info.buildNumber})';
     });
   }
@@ -39,6 +49,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setPreference(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
+  }
+
+  Future<void> _saveRemotePreferences() async {
+    try {
+      final saved = await widget.repository.saveNotificationPreferences(NotificationPreferences(emailAlerts: _emailAlerts, rankUpdates: _rankUpdates, weeklyReports: _weeklySummary, pushEnabled: _notifications));
+      if (!mounted) return;
+      setState(() { _notifications = saved.pushEnabled; _weeklySummary = saved.weeklyReports; });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('اتحفظت تفضيلات الإشعارات على حسابك.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('اتحفظت محليًا، لكن تعذر مزامنتها مع الحساب الآن.')));
+    }
   }
 
   @override
@@ -53,9 +74,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: const Color(0xFF151B31),
             child: Column(
               children: [
-                SwitchListTile.adaptive(value: _notifications, onChanged: (value) { setState(() => _notifications = value); _setPreference('native_notifications_enabled', value); }, title: const Text('تنبيهات QuizSpace'), subtitle: const Text('تفعيل أو إيقاف التنبيهات من داخل التطبيق'), secondary: const Icon(Icons.notifications_active_outlined)),
+                SwitchListTile.adaptive(value: _notifications, onChanged: (value) { setState(() => _notifications = value); _setPreference('native_notifications_enabled', value); _saveRemotePreferences(); }, title: const Text('تنبيهات QuizSpace'), subtitle: const Text('تفعيل أو إيقاف التنبيهات من داخل التطبيق'), secondary: const Icon(Icons.notifications_active_outlined)),
                 const Divider(height: 1),
-                SwitchListTile.adaptive(value: _weeklySummary, onChanged: _notifications ? (value) { setState(() => _weeklySummary = value); _setPreference('native_weekly_summary_enabled', value); } : null, title: const Text('ملخص أسبوعي'), subtitle: const Text('تذكير اختياري بنشاطك التعليمي'), secondary: const Icon(Icons.insights_outlined)),
+                SwitchListTile.adaptive(value: _emailAlerts, onChanged: (value) { setState(() => _emailAlerts = value); _saveRemotePreferences(); }, title: const Text('تنبيهات البريد'), subtitle: const Text('رسائل عند إنشاء أو تحديث اختبار'), secondary: const Icon(Icons.mail_outline_rounded)),
+                const Divider(height: 1),
+                SwitchListTile.adaptive(value: _rankUpdates, onChanged: (value) { setState(() => _rankUpdates = value); _saveRemotePreferences(); }, title: const Text('تحديثات الترتيب'), subtitle: const Text('تنبيهات تغيّر ترتيبك في المتصدرين'), secondary: const Icon(Icons.emoji_events_outlined)),
+                const Divider(height: 1),
+                SwitchListTile.adaptive(value: _weeklySummary, onChanged: (value) { setState(() => _weeklySummary = value); _setPreference('native_weekly_summary_enabled', value); _saveRemotePreferences(); }, title: const Text('ملخص أسبوعي'), subtitle: const Text('تذكير اختياري بنشاطك التعليمي'), secondary: const Icon(Icons.insights_outlined)),
               ],
             ),
           ),

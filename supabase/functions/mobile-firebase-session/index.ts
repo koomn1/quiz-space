@@ -327,6 +327,33 @@ async function createQuiz(context: ServiceContext, appUid: string, claims: Fireb
   return inserted.data as Record<string, unknown>;
 }
 
+async function loadNotificationPreferences(context: ServiceContext, appUid: string): Promise<Record<string, boolean>> {
+  const result = await context.client.from("user_notification_preferences").select("email_alerts, rank_updates, weekly_reports, push_enabled").eq("user_id", appUid).maybeSingle();
+  if (result.error) throw new Error("notification_preferences_failed");
+  const row = (result.data ?? {}) as Record<string, unknown>;
+  return {
+    email_alerts: row.email_alerts !== false,
+    rank_updates: row.rank_updates !== false,
+    weekly_reports: row.weekly_reports === true,
+    push_enabled: row.push_enabled !== false,
+  };
+}
+
+async function updateNotificationPreferences(context: ServiceContext, appUid: string, body: Record<string, unknown>): Promise<Record<string, boolean>> {
+  const value = (key: string, fallback: boolean): boolean => typeof body[key] === "boolean" ? body[key] as boolean : fallback;
+  const preferences = {
+    user_id: appUid,
+    email_alerts: value("email_alerts", true),
+    rank_updates: value("rank_updates", true),
+    weekly_reports: value("weekly_reports", false),
+    push_enabled: value("push_enabled", true),
+    updated_at: new Date().toISOString(),
+  };
+  const result = await context.client.from("user_notification_preferences").upsert(preferences, { onConflict: "user_id" }).select("email_alerts, rank_updates, weekly_reports, push_enabled").limit(1);
+  if (result.error || result.data?.length !== 1) throw new Error("notification_preferences_failed");
+  return result.data[0] as Record<string, boolean>;
+}
+
 async function updateProfile(context: ServiceContext, appUid: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const name = boundedString(body.name, MAX_NAME_LENGTH);
   const bio = boundedString(body.bio, 2_000);
@@ -463,6 +490,11 @@ Deno.serve(async (request: Request) => {
       return response({ user: await updateProfile(context, identity.uid, body) });
     }
 
+    if (action === "notification_preferences") {
+      if (body.write === true) return response({ preferences: await updateNotificationPreferences(context, identity.uid, body) });
+      return response({ preferences: await loadNotificationPreferences(context, identity.uid) });
+    }
+
     return genericFailure(400);
   } catch (error) {
     console.error("mobile-firebase-session failed", error instanceof Error ? error.message : "unknown");
@@ -475,6 +507,7 @@ Deno.serve(async (request: Request) => {
     if (message === "invalid_profile") return response({ error: "بيانات البروفايل غير صالحة." }, 400);
     if (message === "profile_update_failed") return response({ error: "تعذر حفظ بيانات البروفايل الآن." }, 500);
     if (message === "public_quizzes_failed") return response({ error: "تعذر تحميل الاختبارات العامة الآن." }, 500);
+    if (message === "notification_preferences_failed") return response({ error: "تعذر تحميل تفضيلات الإشعارات الآن." }, 500);
     if (message === "server_configuration_missing") return genericFailure(503);
     return genericFailure(500);
   }

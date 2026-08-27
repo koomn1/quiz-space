@@ -8,6 +8,22 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../models/profile_models.dart';
 import '../models/quiz_models.dart';
 
+class NotificationPreferences {
+  const NotificationPreferences({this.emailAlerts = true, this.rankUpdates = true, this.weeklyReports = false, this.pushEnabled = true});
+
+  final bool emailAlerts;
+  final bool rankUpdates;
+  final bool weeklyReports;
+  final bool pushEnabled;
+
+  factory NotificationPreferences.fromMap(Map<String, dynamic> map) => NotificationPreferences(
+    emailAlerts: map['email_alerts'] != false,
+    rankUpdates: map['rank_updates'] != false,
+    weeklyReports: map['weekly_reports'] == true,
+    pushEnabled: map['push_enabled'] != false,
+  );
+}
+
 class MobileSessionException implements Exception {
   const MobileSessionException(this.message);
 
@@ -44,6 +60,25 @@ class QuizSpaceRepository {
     final notice = _pendingAuthNotice;
     _pendingAuthNotice = null;
     return notice;
+  }
+
+  Future<NotificationPreferences> loadNotificationPreferences() async {
+    final payload = await _invokeMobileSession(action: 'notification_preferences');
+    final preferences = _asMap(payload['preferences']);
+    return NotificationPreferences.fromMap(preferences ?? const {});
+  }
+
+  Future<NotificationPreferences> saveNotificationPreferences(NotificationPreferences preferences) async {
+    final payload = await _invokeMobileSession(action: 'notification_preferences', extra: {
+      'write': true,
+      'email_alerts': preferences.emailAlerts,
+      'rank_updates': preferences.rankUpdates,
+      'weekly_reports': preferences.weeklyReports,
+      'push_enabled': preferences.pushEnabled,
+    });
+    final result = _asMap(payload['preferences']);
+    if (result == null) throw const MobileSessionException('تعذر حفظ تفضيلات الإشعارات.');
+    return NotificationPreferences.fromMap(result);
   }
 
   Future<void> sendPasswordReset({required String email}) async {
