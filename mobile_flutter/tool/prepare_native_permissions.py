@@ -49,7 +49,7 @@ class MainActivity : FlutterActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, updateChannelName).setMethodCallHandler { call, result ->
             when (call.method) {
-                "status" -> result.success(updateStatus(call.argument<String>("version")))
+                "status" -> result.success(queryDownload(call.argument<String>("version") ?: ""))
                 "enqueue" -> enqueueUpdate(call, result)
                 "clear" -> clearUpdate(call.argument<String>("version"), result)
                 else -> result.notImplemented()
