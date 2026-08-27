@@ -14,7 +14,6 @@ class QuizSolveScreen extends StatefulWidget {
 }
 
 class _QuizSolveScreenState extends State<QuizSolveScreen> {
-  final _pageController = PageController();
   QuizDetailModel? _quiz;
   List<String?> _answers = const [];
   Object? _error;
@@ -31,7 +30,6 @@ class _QuizSolveScreenState extends State<QuizSolveScreen> {
 
   @override
   void dispose() {
-    _pageController.dispose();
     super.dispose();
   }
 
@@ -60,7 +58,7 @@ class _QuizSolveScreenState extends State<QuizSolveScreen> {
       return;
     }
     if (_page < quiz.questions.length - 1) {
-      await _pageController.nextPage(duration: const Duration(milliseconds: 220), curve: Curves.easeOutCubic);
+      setState(() => _page += 1);
       return;
     }
     await _submit();
@@ -68,7 +66,7 @@ class _QuizSolveScreenState extends State<QuizSolveScreen> {
 
   Future<void> _previous() async {
     if (_page == 0) return;
-    await _pageController.previousPage(duration: const Duration(milliseconds: 220), curve: Curves.easeOutCubic);
+    setState(() => _page -= 1);
   }
 
   Future<void> _submit() async {
