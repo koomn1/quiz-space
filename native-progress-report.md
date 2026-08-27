@@ -6,6 +6,8 @@
 
 ## ما تم تنفيذه
 
+تمت إعادة اللوجو الرسمي بدل أيقونة Flutter الافتراضية. التطبيق يستخدم `mobile_flutter/assets/quizspace-icon.png` كـlauncher icon عبر `flutter_launcher_icons`، ويستخدم `quizspace-logo.webp` داخل شاشة الدخول والرئيسية والتحديث. أضيفت خطوة توليد الأيقونة إلى Native CI أيضًا، لذلك لن ترجع الأيقونة الافتراضية في debug validation أو الإصدار Native القادم.
+
 | المجال | الحالة الحالية |
 |---|---|
 | Firebase email/password | تسجيل وإنشاء حساب وتأكيد البريد داخل التطبيق، مع رسالة تأكيد محفوظة بعد signOut |
@@ -29,6 +31,8 @@
 
 ## التحقق
 
+آخر commit الخاص باللوجو هو `717f3ef`، ونجح Native CI بعد تشغيل خطوة `Generate official QuizSpace launcher icon`. كما نجح Build & Deploy على نفس commit، وGit working tree نظيف.
+
 نجح Native CI على آخر شرائح التطوير، بما في ذلك `flutter analyze` و`flutter test` و`flutter build apk --debug`. آخر run ناجح كان بعد إصلاح parser الخاص بلوحة Admin. Git working tree نظيف بعد آخر push.
 
 تم تعطيل النشر التلقائي لـMobile Release أثناء التطوير، وإضافة Native CI منفصل لا ينشر Release. Updater يرفض أي إصدار أقل من `3.0.0`، لذلك إصدارات WebView/Prototype القديمة مثل `mobile-v2.0.3` لا تُفرض على التطبيق Native.
@@ -42,7 +46,7 @@
 ## المراجع البرمجية
 
 - Repository: https://github.com/koomn1/quiz-space
-- آخر commit: `71395b8`
+- آخر commit: `717f3ef`
 - CI workflow: `.github/workflows/mobile-native-ci.yml`
 - Release workflow اليدوي: `.github/workflows/mobile-release.yml`
 - Flutter Native: `mobile_flutter/`
