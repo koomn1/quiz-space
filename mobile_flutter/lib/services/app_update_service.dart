@@ -133,7 +133,7 @@ class AppUpdateService {
       if (!Platform.isAndroid) return;
       final installPermission = await Permission.requestInstallPackages.request();
       if (!installPermission.isGranted) {
-        throw const StateError('INSTALL_PERMISSION_REQUIRED');
+        throw StateError('INSTALL_PERMISSION_REQUIRED');
       }
       await InstallApk().installApk(apkFile.path);
     } finally {
@@ -156,14 +156,14 @@ class AppUpdateService {
       httpClient.close(force: true);
     }
   }
+}
 
 int compareVersions(String left, String right) {
-    final a = left.split('.').map((part) => int.tryParse(part) ?? 0).toList();
-    final b = right.split('.').map((part) => int.tryParse(part) ?? 0).toList();
-    for (var index = 0; index < 3; index++) {
-      final comparison = (a.length > index ? a[index] : 0).compareTo(b.length > index ? b[index] : 0);
-      if (comparison != 0) return comparison;
-    }
-    return 0;
+  final a = left.split('.').map((part) => int.tryParse(part) ?? 0).toList();
+  final b = right.split('.').map((part) => int.tryParse(part) ?? 0).toList();
+  for (var index = 0; index < 3; index++) {
+    final comparison = (a.length > index ? a[index] : 0).compareTo(b.length > index ? b[index] : 0);
+    if (comparison != 0) return comparison;
   }
+  return 0;
 }

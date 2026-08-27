@@ -43,7 +43,9 @@ class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
   }
 
   Future<void> _checkForUpdate() async {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     setState(() {
       _checking = true;
       _error = null;
@@ -51,11 +53,17 @@ class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
     });
     try {
       final update = await _service.checkForUpdate();
-      if (mounted) setState(() => _update = update);
+      if (mounted) {
+        setState(() => _update = update);
+      }
     } catch (_) {
-      if (mounted) setState(() => _error = 'تعذر التحقق من التحديث الآن. تحقق من اتصال الإنترنت وحاول مرة أخرى.');
+      if (mounted) {
+        setState(() => _error = 'تعذر التحقق من التحديث الآن. تحقق من اتصال الإنترنت وحاول مرة أخرى.');
+      }
     } finally {
-      if (mounted) setState(() => _checking = false);
+      if (mounted) {
+        setState(() => _checking = false);
+      }
     }
   }
 
