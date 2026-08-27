@@ -583,20 +583,12 @@ export default function Classrooms({
     setIsJoining(true);
     setErrorText(null);
     try {
-      const { data: classData } = await supabase.from('classrooms').select('*').ilike('code', targetCode).single();
-      if (!classData) throw new Error(isAr ? 'عذراً، هذا الرمز غير صحيح.' : 'Sorry, invalid classroom code.');
-      
-      const membership = {
-        class_code: targetCode,
-        class_id: classData.id,
-        student_id: currentUserId,
-        student_name: currentUserName,
-        student_photo: currentUserPhoto,
-        joined_at: new Date().toISOString()
-      };
-
-      const { error: joinError } = await supabase.from('classroom_students').insert(membership);
-      if (joinError) throw new Error(joinError.message);
+      const { data: joinedClass, error: joinError } = await supabase.rpc('join_classroom_by_code', {
+        p_class_code: targetCode,
+      });
+      if (joinError || !joinedClass) {
+        throw new Error(isAr ? 'تعذر الانضمام. راجع كود الفصل وحاول مرة أخرى.' : 'Could not join the classroom. Check the code and try again.');
+      }
 
       const { data: freshClassrooms } = await supabase.from('classrooms').select('*');
       if (freshClassrooms) {
