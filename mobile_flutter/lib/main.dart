@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,8 +18,17 @@ Future<void> main() async {
     return;
   }
 
-  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
-  runApp(const QuizSpaceApp());
+  try {
+    await Firebase.initializeApp();
+    await Supabase.initialize(
+      url: supabaseUrl,
+      publishableKey: supabaseAnonKey,
+      accessToken: () async => firebase.FirebaseAuth.instance.currentUser?.getIdToken(),
+    );
+    runApp(const QuizSpaceApp());
+  } catch (_) {
+    runApp(const QuizSpaceApp(configurationMissing: true));
+  }
 }
 
 class QuizSpaceApp extends StatelessWidget {
@@ -52,7 +63,7 @@ class _AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final repository = QuizSpaceRepository(Supabase.instance.client);
-    return StreamBuilder<AuthState>(
+    return StreamBuilder<firebase.User?>(
       stream: repository.authChanges,
       builder: (context, snapshot) {
         final user = repository.currentUser;

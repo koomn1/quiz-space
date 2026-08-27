@@ -1,5 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../data/quizspace_repository.dart';
 
@@ -38,8 +38,8 @@ class _AuthScreenState extends State<AuthScreen> {
     });
     try {
       await widget.repository.signInWithGoogle();
-    } on AuthException catch (error) {
-      if (mounted) setState(() => _error = error.message == 'EMAIL_NOT_CONFIRMED' ? 'بريدك الإلكتروني غير مؤكد. راجع رسالة التأكيد ثم حاول مرة أخرى.' : 'تعذر فتح Google. تأكد من تفعيل Google في Supabase ثم حاول مرة أخرى.');
+    } on FirebaseAuthException catch (error) {
+      if (mounted) setState(() => _error = _firebaseErrorMessage(error.code, google: true));
     } catch (_) {
       if (mounted) setState(() => _error = 'تعذر فتح تسجيل Google الآن. تحقق من اتصال الإنترنت وحاول مرة أخرى.');
     } finally {
@@ -70,8 +70,8 @@ class _AuthScreenState extends State<AuthScreen> {
           password: _passwordController.text,
         );
       }
-    } on AuthException catch (error) {
-      if (mounted) setState(() => _error = error.message == 'EMAIL_NOT_CONFIRMED' ? 'بريدك الإلكتروني غير مؤكد. راجع رسالة التأكيد ثم حاول مرة أخرى.' : _isRegister ? 'تعذر إنشاء الحساب. تأكد من البريد وكلمة المرور وحاول مرة أخرى.' : 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+    } on FirebaseAuthException catch (error) {
+      if (mounted) setState(() => _error = _firebaseErrorMessage(error.code, register: _isRegister));
     } catch (_) {
       if (mounted) setState(() => _error = 'حدث خطأ مؤقت في الاتصال. حاول مرة أخرى.');
     } finally {
@@ -169,6 +169,16 @@ class _AuthScreenState extends State<AuthScreen> {
       ),
     );
   }
+}
+
+String _firebaseErrorMessage(String code, {bool register = false, bool google = false}) {
+  if (code == 'email-not-verified' || code == 'user-disabled') return 'الحساب غير متاح حاليًا. تأكد من البريد الإلكتروني أو تواصل مع الدعم.';
+  if (code == 'email-already-in-use') return 'هذا البريد مسجّل بالفعل. سجّل الدخول بدل إنشاء حساب جديد.';
+  if (code == 'invalid-credential' || code == 'wrong-password' || code == 'user-not-found') return 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+  if (code == 'weak-password') return 'اختَر كلمة مرور أقوى من 6 أحرف.';
+  if (code == 'invalid-email') return 'اكتب بريدًا إلكترونيًا صحيحًا.';
+  if (google) return 'تعذر تسجيل الدخول بحساب Google. تأكد من إعداد Firebase وحاول مرة أخرى.';
+  return register ? 'تعذر إنشاء الحساب الآن. راجع البيانات وحاول مرة أخرى.' : 'تعذر تسجيل الدخول الآن. راجع البيانات وحاول مرة أخرى.';
 }
 
 class _GoogleMark extends StatelessWidget {

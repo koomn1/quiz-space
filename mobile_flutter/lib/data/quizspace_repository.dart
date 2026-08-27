@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile_models.dart';
@@ -7,40 +9,57 @@ class QuizSpaceRepository {
 
   final SupabaseClient client;
 
-  Stream<AuthState> get authChanges => client.auth.onAuthStateChange;
+  Stream<firebase.User?> get authChanges => firebase.FirebaseAuth.instance.authStateChanges();
 
-  User? get currentUser => client.auth.currentUser;
+  firebase.User? get currentUser => firebase.FirebaseAuth.instance.currentUser;
 
-  static const googleRedirectUri = 'io.quizspace.mobile://login-callback';
+  static bool _googleInitialized = false;
 
   Future<void> signIn({required String email, required String password}) async {
-    final response = await client.auth.signInWithPassword(email: email.trim(), password: password);
-    final user = response.user;
-    if (user == null) throw AuthException('LOGIN_FAILED');
-    if (user.emailConfirmedAt == null) {
-      await client.auth.signOut(scope: SignOutScope.local);
-      throw AuthException('EMAIL_NOT_CONFIRMED');
+    final credential = await firebase.FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+    final user = credential.user;
+    if (user == null) throw firebase.FirebaseAuthException(code: 'user-not-found');
+    if (!user.emailVerified) {
+      await firebase.FirebaseAuth.instance.signOut();
+      throw firebase.FirebaseAuthException(code: 'email-not-verified');
     }
   }
 
   Future<void> signUp({required String email, required String password}) async {
-    final response = await client.auth.signUp(email: email.trim(), password: password);
-    if (response.user == null) throw AuthException('SIGNUP_FAILED');
+    final credential = await firebase.FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+    await credential.user?.sendEmailVerification();
+    await firebase.FirebaseAuth.instance.signOut();
   }
 
   Future<void> signInWithGoogle() async {
-    await client.auth.signInWithOAuth(
-      OAuthProvider.google,
-      redirectTo: googleRedirectUri,
-      authScreenLaunchMode: LaunchMode.externalApplication,
-      queryParams: const {'prompt': 'select_account'},
-    );
+    if (!_googleInitialized) {
+      await GoogleSignIn.instance.initialize();
+      _googleInitialized = true;
+    }
+    final googleUser = await GoogleSignIn.instance.authenticate();
+    final googleAuth = googleUser.authentication;
+    final idToken = googleAuth.idToken;
+    if (idToken == null || idToken.isEmpty) {
+      throw firebase.FirebaseAuthException(code: 'missing-google-id-token');
+    }
+
+    final credential = firebase.GoogleAuthProvider.credential(idToken: idToken);
+    await firebase.FirebaseAuth.instance.signInWithCredential(credential);
   }
 
-  Future<void> signOut() => client.auth.signOut();
+  Future<void> signOut() async {
+    await GoogleSignIn.instance.signOut();
+    await firebase.FirebaseAuth.instance.signOut();
+  }
 
   Future<ProfileModel> loadOwnProfile() async {
-    final userId = currentUser?.id;
+    final userId = currentUser?.uid;
     if (userId == null) throw const AuthException('يجب تسجيل الدخول أولًا.');
 
     final responses = await Future.wait<dynamic>([

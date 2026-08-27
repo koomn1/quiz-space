@@ -60,3 +60,9 @@ qa/qa-report
 playwright/.cache
 test-results
 playwright/.auth
+
+# Flutter mobile generated files and Firebase client config
+mobile_flutter/.dart_tool/
+mobile_flutter/build/
+mobile_flutter/android/
+mobile_flutter/config/google-services.json
