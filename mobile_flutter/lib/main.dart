@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'data/quizspace_repository.dart';
 import 'screens/auth_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/native_app_shell.dart';
 import 'widgets/update_gate.dart';
 
 const _background = Color(0xFF080D1C);
@@ -145,7 +145,7 @@ class _AuthGateState extends State<_AuthGate> {
     final user = _user;
     if (user == null) return AuthScreen(repository: _repository);
 
-    return HomeScreen(repository: _repository);
+    return NativeAppShell(repository: _repository);
   }
 }
 

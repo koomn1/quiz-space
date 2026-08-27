@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/profile_models.dart';
+import '../models/quiz_models.dart';
 
 class MobileSessionException implements Exception {
   const MobileSessionException(this.message);
@@ -129,6 +130,82 @@ class QuizSpaceRepository {
     );
   }
 
+  Future<QuizDetailModel> loadQuizDetails(String quizId) async {
+    final normalizedQuizId = quizId.trim();
+    if (normalizedQuizId.isEmpty) throw const MobileSessionException('رقم الاختبار غير صحيح.');
+    final payload = await _invokeMobileSession(action: 'quiz_detail', quizId: normalizedQuizId);
+    final quiz = _asMap(payload['quiz']);
+    if (quiz == null) throw const MobileSessionException('بيانات الاختبار غير مكتملة.');
+    return QuizDetailModel.fromMap(quiz);
+  }
+
+  Future<QuizDetailModel> createQuiz({
+    required String title,
+    required String description,
+    required String category,
+    required List<Map<String, dynamic>> questions,
+  }) async {
+    final normalizedTitle = title.trim();
+    if (normalizedTitle.length < 2 || normalizedTitle.length > 160) {
+      throw const MobileSessionException('اسم الاختبار لازم يكون بين حرفين و160 حرفًا.');
+    }
+    if (questions.isEmpty || questions.length > 200) {
+      throw const MobileSessionException('الاختبار لازم يحتوي من سؤال واحد إلى 200 سؤال.');
+    }
+    final payload = await _invokeMobileSession(
+      action: 'create_quiz',
+      extra: {
+        'title': normalizedTitle,
+        'description': description.trim(),
+        'category': category.trim().isEmpty ? 'عام' : category.trim(),
+        'questions': questions,
+      },
+    );
+    final quiz = _asMap(payload['quiz']);
+    if (quiz == null) throw const MobileSessionException('تعذر حفظ الاختبار.');
+    return QuizDetailModel.fromMap(quiz);
+  }
+
+  Future<Map<String, dynamic>> updateOwnProfile({
+    required String name,
+    required String bio,
+    required String location,
+  }) async {
+    final payload = await _invokeMobileSession(
+      action: 'update_profile',
+      extra: {
+        'name': name.trim(),
+        'bio': bio.trim(),
+        'location': location.trim(),
+      },
+    );
+    final user = _asMap(payload['user']);
+    if (user == null) throw const MobileSessionException('تعذر حفظ بيانات البروفايل.');
+    return user;
+  }
+
+  Future<Map<String, dynamic>> submitQuizAttempt({
+    required String quizId,
+    required List<String?> answers,
+    int? rating,
+    String feedback = '',
+  }) async {
+    final normalizedQuizId = quizId.trim();
+    if (normalizedQuizId.isEmpty) throw const MobileSessionException('رقم الاختبار غير صحيح.');
+    final payload = await _invokeMobileSession(
+      action: 'submit_attempt',
+      extra: {
+        'quiz_id': normalizedQuizId,
+        'answers': answers,
+        if (rating != null) 'rating': rating,
+        if (feedback.trim().isNotEmpty) 'feedback': feedback.trim(),
+      },
+    );
+    final completion = _asMap(payload['completion']);
+    if (completion == null) throw const MobileSessionException('تعذر حفظ المحاولة.');
+    return completion;
+  }
+
   Future<List<TakerModel>> loadQuizTakers(String quizId) async {
     final normalizedQuizId = quizId.trim();
     if (normalizedQuizId.isEmpty) return const [];
@@ -138,7 +215,7 @@ class QuizSpaceRepository {
     return rows.map(TakerModel.fromMap).toList(growable: false);
   }
 
-  Future<Map<String, dynamic>> _invokeMobileSession({String action = 'bootstrap', String? quizId}) async {
+  Future<Map<String, dynamic>> _invokeMobileSession({String action = 'bootstrap', String? quizId, Map<String, dynamic>? extra}) async {
     final user = currentUser;
     if (user == null) {
       throw const MobileSessionException('يجب تسجيل الدخول أولًا.');
@@ -164,6 +241,7 @@ class QuizSpaceRepository {
       request.add(utf8.encode(jsonEncode({
         'action': action,
         if (quizId != null) 'quiz_id': quizId,
+        ...?extra,
       })));
 
       final httpResponse = await request.close().timeout(const Duration(seconds: 18));

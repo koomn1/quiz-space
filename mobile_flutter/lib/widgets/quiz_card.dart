@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import '../models/profile_models.dart';
 
 class QuizCard extends StatelessWidget {
-  const QuizCard({super.key, required this.quiz, required this.onShowTakers});
+  const QuizCard({super.key, required this.quiz, required this.onShowTakers, this.onOpen});
 
   final QuizModel quiz;
   final VoidCallback onShowTakers;
+  final VoidCallback? onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +15,12 @@ class QuizCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       color: const Color(0xFF151B31),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
@@ -49,6 +53,7 @@ class QuizCard extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );

@@ -45,7 +45,6 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_OPENROUTER_API_KEY: ${{ secrets.VITE_OPENROUTER_API_KEY }}
           VITE_AI_WORKER_URL: ${{ secrets.VITE_AI_WORKER_URL }}
           VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY || 'BGeggKssxQJez09uO0tV0PBfer-lBMHXNxkuqeUdCJ0EJWziVvi0v0Mf-Y5R_b_hB26GTgc4bWkpJZJ0lOz7NgI' }}
         run: pnpm build
@@ -164,7 +163,6 @@ jobs:
           DEPLOY_TARGET: cloudflare-pages
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_OPENROUTER_API_KEY: ${{ secrets.VITE_OPENROUTER_API_KEY }}
           VITE_AI_WORKER_URL: ${{ secrets.VITE_AI_WORKER_URL }}
           VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY || 'BGeggKssxQJez09uO0tV0PBfer-lBMHXNxkuqeUdCJ0EJWziVvi0v0Mf-Y5R_b_hB26GTgc4bWkpJZJ0lOz7NgI' }}
         run: pnpm build

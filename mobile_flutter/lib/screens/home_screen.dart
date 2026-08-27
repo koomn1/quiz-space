@@ -8,9 +8,10 @@ import '../widgets/profile_badge_rail.dart';
 import '../widgets/quiz_card.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.repository});
+  const HomeScreen({super.key, required this.repository, this.showBottomNavigation = true});
 
   final QuizSpaceRepository repository;
+  final bool showBottomNavigation;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -73,18 +74,22 @@ class _HomeScreenState extends State<HomeScreen> {
             ? const _LoadingView()
             : _error != null
                 ? _ErrorView(error: _error, onRetry: _loadProfile)
-                : IndexedStack(index: _selectedIndex, children: [_HomeTab(profile: _profile!, onShowTakers: _showTakers, onRefresh: _loadProfile), _ProfileTab(profile: _profile!, onSignOut: widget.repository.signOut, onRefresh: _loadProfile)]),
+                : widget.showBottomNavigation
+                    ? IndexedStack(index: _selectedIndex, children: [_HomeTab(profile: _profile!, onShowTakers: _showTakers, onRefresh: _loadProfile), _ProfileTab(profile: _profile!, onSignOut: widget.repository.signOut, onRefresh: _loadProfile)])
+                    : _HomeTab(profile: _profile!, onShowTakers: _showTakers, onRefresh: _loadProfile),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (value) => setState(() => _selectedIndex = value),
-        backgroundColor: const Color(0xFF10162A),
-        indicatorColor: const Color(0xFF7C3AED).withValues(alpha: 0.28),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'الرئيسية'),
-          NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'البروفايل'),
-        ],
-      ),
+      bottomNavigationBar: widget.showBottomNavigation
+          ? NavigationBar(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (value) => setState(() => _selectedIndex = value),
+              backgroundColor: const Color(0xFF10162A),
+              indicatorColor: const Color(0xFF7C3AED).withValues(alpha: 0.28),
+              destinations: const [
+                NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'الرئيسية'),
+                NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'البروفايل'),
+              ],
+            )
+          : null,
     );
   }
 }

@@ -1,14 +1,17 @@
 name: Mobile Flutter Release
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
     inputs:
+      publish_native:
+        description: 'Publish only after the complete Native Flutter feature set passes UAT'
+        required: true
+        default: false
+        type: boolean
       release_tag:
-        description: 'Optional GitHub release tag; automatic pushes generate one from the run number'
-        required: false
-        default: ''
+        description: 'Native release tag; must be mobile-v3.x.y or higher'
+        required: true
+        default: 'mobile-v3.0.0'
         type: string
 
 permissions:
@@ -41,20 +44,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          requested_tag='${{ inputs.release_tag }}'
-          if [ -n "$requested_tag" ]; then
-            release_tag="$requested_tag"
-          else
-            release_tag="mobile-v1.0.${GITHUB_RUN_NUMBER}"
+          if [ '${{ inputs.publish_native }}' != 'true' ]; then
+            echo 'Native release publishing is intentionally disabled until the complete Native app passes UAT.'
+            exit 1
           fi
+          requested_tag='${{ inputs.release_tag }}'
+          release_tag="$requested_tag"
           version_name="${release_tag#mobile-v}"
           if ! [[ "$version_name" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Release tag must look like mobile-v1.2.3"
+            echo "Release tag must look like mobile-v3.0.0"
+            exit 1
+          fi
+          major="${version_name%%.*}"
+          if [ "$major" -lt 3 ]; then
+            echo 'Refusing to publish a Native release below v3; v2.x releases may contain the rejected WebView wrapper.'
             exit 1
           fi
           echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
           echo "version_name=$version_name" >> "$GITHUB_OUTPUT"
-          echo "version_code=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          # Keep Native versionCodes in a monotonically higher range than all
+          # historical prototype builds while remaining below Android's limit.
+          echo "version_code=$((3000000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_OUTPUT"
 
       - name: Generate native Android project files
         run: flutter create --platforms=android --project-name badawy --org com.quizspace .
@@ -132,12 +142,14 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          AI_WORKER_URL: ${{ secrets.VITE_AI_WORKER_URL }}
         run: >-
           flutter build apk --release
           --build-name=${{ steps.release_meta.outputs.version_name }}
           --build-number=${{ steps.release_meta.outputs.version_code }}
           --dart-define=SUPABASE_URL=$SUPABASE_URL
           --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+          --dart-define=AI_WORKER_URL=$AI_WORKER_URL
 
       - name: Verify signing continuity
         shell: bash
@@ -159,6 +171,17 @@ jobs:
             exit 1
           fi
           echo 'Signing certificate matches the previous release.'
+
+          aapt_path=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n1)
+          test -x "$aapt_path"
+          current_code=$($aapt_path dump badging build/app/outputs/flutter-apk/app-release.apk | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p" | head -n1)
+          previous_code=$($aapt_path dump badging /tmp/previous-quizspace.apk | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p" | head -n1)
+          test -n "$current_code" && test -n "$previous_code"
+          if [ "$current_code" -le "$previous_code" ]; then
+            echo "Android versionCode must increase: current=$current_code previous=$previous_code"
+            exit 1
+          fi
+          echo "Android versionCode increases: current=$current_code previous=$previous_code"
 
       - name: Prepare release files
         id: release_files

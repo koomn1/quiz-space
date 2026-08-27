@@ -1,0 +1,241 @@
+import 'package:flutter/material.dart';
+
+import '../data/quizspace_repository.dart';
+import '../models/profile_models.dart';
+import '../widgets/permissions_sheet.dart';
+import '../widgets/profile_badge_rail.dart';
+
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key, required this.repository});
+
+  final QuizSpaceRepository repository;
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  ProfileModel? _profile;
+  Object? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    if (mounted) setState(() { _loading = true; _error = null; });
+    try {
+      final profile = await widget.repository.loadOwnProfile();
+      if (mounted) setState(() => _profile = profile);
+    } catch (error) {
+      if (mounted) setState(() => _error = error);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    await widget.repository.signOut();
+  }
+
+  Future<void> _editProfile(ProfileModel profile) async {
+    final name = TextEditingController(text: profile.name);
+    final bio = TextEditingController(text: profile.bio);
+    final location = TextEditingController(text: profile.location);
+    var saving = false;
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: const Text('تعديل البروفايل'),
+            content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [TextField(controller: name, maxLength: 160, decoration: const InputDecoration(labelText: 'الاسم')), const SizedBox(height: 10), TextField(controller: bio, maxLines: 3, maxLength: 2000, decoration: const InputDecoration(labelText: 'النبذة')), const SizedBox(height: 10), TextField(controller: location, maxLength: 160, decoration: const InputDecoration(labelText: 'الموقع'))])),
+            actions: [
+              TextButton(onPressed: saving ? null : () => Navigator.of(dialogContext).pop(), child: const Text('إلغاء')),
+              FilledButton(
+                onPressed: saving ? null : () async {
+                  if (name.text.trim().isEmpty) return;
+                  setDialogState(() => saving = true);
+                  try {
+                    await widget.repository.updateOwnProfile(name: name.text, bio: bio.text, location: location.text);
+                    if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+                    await _load();
+                  } catch (error) {
+                    if (dialogContext.mounted) ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text(error is MobileSessionException ? error.message : 'تعذر حفظ البروفايل.')));
+                    if (dialogContext.mounted) setDialogState(() => saving = false);
+                  }
+                },
+                child: Text(saving ? 'بيتحفظ...' : 'حفظ'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } finally {
+      name.dispose();
+      bio.dispose();
+      location.dispose();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: RefreshIndicator(
+        onRefresh: _load,
+        color: const Color(0xFFD8B4FE),
+        backgroundColor: const Color(0xFF151B31),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 32),
+          children: [
+            Row(
+              children: [
+                const Expanded(child: Text('حسابي', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),),
+                IconButton(onPressed: _load, tooltip: 'تحديث', icon: const Icon(Icons.refresh_rounded)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_loading)
+              const Padding(padding: EdgeInsets.symmetric(vertical: 90), child: Center(child: CircularProgressIndicator()))
+            else if (_error != null)
+              _ErrorCard(onRetry: _load)
+            else if (_profile != null)
+              _ProfileContent(profile: _profile!, onSignOut: _signOut, onEdit: () => _editProfile(_profile!))
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileContent extends StatelessWidget {
+  const _ProfileContent({required this.profile, required this.onSignOut, required this.onEdit});
+
+  final ProfileModel profile;
+  final Future<void> Function() onSignOut;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Card(
+          color: const Color(0xFF151B31),
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 34,
+                  backgroundColor: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+                  backgroundImage: profile.photoUrl.isEmpty ? null : NetworkImage(profile.photoUrl),
+                  child: profile.photoUrl.isEmpty ? const Icon(Icons.person_rounded, size: 34, color: Color(0xFFE9D5FF)) : null,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(profile.name.isEmpty ? 'عضو QuizSpace' : profile.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                      if (profile.customId.isNotEmpty) Text('@${profile.customId}', style: TextStyle(color: Colors.white.withValues(alpha: 0.58))),
+                      if (profile.bio.isNotEmpty) ...[const SizedBox(height: 6), Text(profile.bio, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: 0.65), height: 1.35))],
+                    ],
+                  ),
+                ),
+                IconButton(onPressed: onEdit, tooltip: 'تعديل البروفايل', icon: const Icon(Icons.edit_rounded)),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ProfileBadgeRail(profile: profile),
+        const SizedBox(height: 16),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 1.65,
+          children: [
+            _Stat(label: 'الدقة', value: profile.completions.isEmpty ? '—' : '${profile.accuracy}%', icon: Icons.speed_rounded),
+            _Stat(label: 'الخبرة', value: profile.xp > 0 ? '${profile.xp} XP' : '—', icon: Icons.auto_awesome_rounded),
+            _Stat(label: 'اختبارات منشورة', value: '${profile.createdQuizzes.length}', icon: Icons.library_books_rounded),
+            _Stat(label: 'الحلول', value: '${profile.quizzesTaken}', icon: Icons.task_alt_rounded),
+          ],
+        ),
+        const SizedBox(height: 22),
+        OutlinedButton.icon(
+          onPressed: () => showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            backgroundColor: const Color(0xFF151B31),
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+            builder: (_) => const PermissionsSheet(),
+          ),
+          icon: const Icon(Icons.shield_outlined),
+          label: const Text('إدارة الصلاحيات'),
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          onPressed: onSignOut,
+          icon: const Icon(Icons.logout_rounded),
+          label: const Text('تسجيل الخروج'),
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+        ),
+      ],
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({required this.label, required this.value, required this.icon});
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.white.withValues(alpha: 0.08))),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: const Color(0xFFD8B4FE)),
+            const SizedBox(width: 9),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)), Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 11))])),
+          ],
+        ),
+      );
+}
+
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard({required this.onRetry});
+
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        color: const Color(0xFF311827),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const Icon(Icons.cloud_off_rounded, size: 42, color: Color(0xFFFCA5A5)),
+              const SizedBox(height: 10),
+              const Text('تعذر تحميل الحساب', style: TextStyle(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 12),
+              FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('إعادة المحاولة')),
+            ],
+          ),
+        ),
+      );
+}

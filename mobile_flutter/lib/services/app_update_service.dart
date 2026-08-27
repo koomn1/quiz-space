@@ -64,6 +64,9 @@ class AppUpdateInfo {
 
 class AppUpdateService {
   static const latestReleaseUrl = 'https://api.github.com/repos/koomn1/quiz-space/releases/latest';
+  // v2.0.3 was a rejected WebView wrapper. Only v3+ Native Flutter releases
+  // are eligible for the forced-update gate.
+  static const minimumNativeVersion = '3.0.0';
 
   final _background = BackgroundUpdateDownloadService();
 
@@ -80,6 +83,7 @@ class AppUpdateService {
 
     try {
       final release = AppUpdateInfo.fromGithubRelease(json);
+      if (compareVersions(release.version, minimumNativeVersion) < 0) return null;
       if (compareVersions(release.version, current) <= 0) return null;
       return release;
     } on FormatException {

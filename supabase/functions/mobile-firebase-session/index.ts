@@ -25,6 +25,14 @@ const MAX_UID_LENGTH = 256;
 const MAX_QUIZ_ID_LENGTH = 256;
 const MAX_NAME_LENGTH = 160;
 const MAX_PHOTO_LENGTH = 2_048;
+const MAX_DESCRIPTION_LENGTH = 4_000;
+const MAX_CATEGORY_LENGTH = 80;
+const MAX_QUESTIONS = 200;
+const MAX_QUESTION_LENGTH = 2_000;
+const MAX_OPTION_LENGTH = 800;
+const MAX_EXPLANATION_LENGTH = 4_000;
+const MAX_ANSWERS = 200;
+const MAX_FEEDBACK_LENGTH = 2_000;
 const certificateUrl = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
 let certificateCache: CertificateCache | null = null;
 
@@ -183,7 +191,7 @@ async function loadProfile(context: ServiceContext, appUid: string): Promise<Rec
   const [userResult, quizResult, completionResult] = await Promise.all([
     context.client
       .from("users")
-      .select("uid, custom_id, name, bio, location, photo_url, is_premium, is_founder, xp")
+      .select("uid, custom_id, name, bio, location, photo_url, is_premium, is_founder, plan_name, xp")
       .eq("uid", appUid)
       .limit(1),
     context.client
@@ -208,6 +216,154 @@ async function loadProfile(context: ServiceContext, appUid: string): Promise<Rec
     quizzes: quizResult.data ?? [],
     completions: completionResult.data ?? [],
   };
+}
+
+function normalizeQuestions(value: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(value) || value.length < 1 || value.length > MAX_QUESTIONS) throw new Error("invalid_questions");
+  return value.map((rawQuestion) => {
+    if (!rawQuestion || typeof rawQuestion !== "object" || Array.isArray(rawQuestion)) throw new Error("invalid_questions");
+    const question = rawQuestion as Record<string, unknown>;
+    const text = boundedString(question.question ?? question.questionText ?? question.text, MAX_QUESTION_LENGTH);
+    const rawOptions = question.options;
+    if (!text || !Array.isArray(rawOptions) || rawOptions.length < 2 || rawOptions.length > 8) throw new Error("invalid_questions");
+    const options = rawOptions.map((option) => boundedString(option, MAX_OPTION_LENGTH));
+    if (options.some((option) => !option)) throw new Error("invalid_questions");
+
+    const rawCorrect = question.correctAnswer ?? question.correct_answer;
+    let correctAnswer = boundedString(rawCorrect, MAX_OPTION_LENGTH);
+    const numericIndex = typeof rawCorrect === "number" || /^\d+$/.test(correctAnswer) ? Number(rawCorrect) : -1;
+    if (numericIndex >= 0 && numericIndex < options.length) correctAnswer = options[numericIndex];
+    if (!correctAnswer || !options.includes(correctAnswer)) throw new Error("invalid_questions");
+
+    const normalized: Record<string, unknown> = {
+      question: text,
+      options,
+      correctAnswer,
+    };
+    const explanation = boundedString(question.explanation, MAX_EXPLANATION_LENGTH);
+    const imageUrl = boundedString(question.imageUrl ?? question.image_url, MAX_PHOTO_LENGTH);
+    if (explanation) normalized.explanation = explanation;
+    if (imageUrl) {
+      let image: URL;
+      try {
+        image = new URL(imageUrl);
+      } catch {
+        throw new Error("invalid_questions");
+      }
+      if (image.protocol !== "https:") throw new Error("invalid_questions");
+      normalized.imageUrl = image.toString();
+    }
+    return normalized;
+  });
+}
+
+async function loadQuizDetails(context: ServiceContext, appUid: string, quizId: string): Promise<Record<string, unknown>> {
+  const select = "id, title, description, questions, category, time_limit, creator_name, total_plays, avg_rating, distribution_routing, creator_id";
+  const publicResult = await context.client
+    .from("quizzes")
+    .select(select)
+    .eq("id", quizId)
+    .eq("distribution_routing", "public")
+    .limit(1);
+  if (publicResult.error) throw new Error("quiz_lookup_failed");
+  let quiz = publicResult.data?.[0] as Record<string, unknown> | undefined;
+  if (!quiz) {
+    const ownerResult = await context.client
+      .from("quizzes")
+      .select(select)
+      .eq("id", quizId)
+      .eq("creator_id", appUid)
+      .limit(1);
+    if (ownerResult.error) throw new Error("quiz_lookup_failed");
+    quiz = ownerResult.data?.[0] as Record<string, unknown> | undefined;
+  }
+  if (!quiz) throw new Error("quiz_not_found");
+  return {
+    ...quiz,
+    questions: Array.isArray(quiz.questions) ? quiz.questions.slice(0, MAX_QUESTIONS) : [],
+  };
+}
+
+async function createQuiz(context: ServiceContext, appUid: string, claims: FirebaseClaims, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const title = boundedString(body.title, 160);
+  const description = boundedString(body.description, MAX_DESCRIPTION_LENGTH);
+  const category = boundedString(body.category, MAX_CATEGORY_LENGTH) || "عام";
+  if (title.length < 2) throw new Error("invalid_quiz");
+  const questions = normalizeQuestions(body.questions);
+  const userResult = await context.client.from("users").select("name").eq("uid", appUid).limit(1);
+  if (userResult.error || userResult.data?.length !== 1) throw new Error("profile_not_found");
+  const creatorName = boundedString(userResult.data[0].name, MAX_NAME_LENGTH) || boundedString(claims.name, MAX_NAME_LENGTH) || "عضو QuizSpace";
+  const quizId = `quiz-${crypto.randomUUID()}`;
+  const inserted = await context.client.from("quizzes").insert({
+    id: quizId,
+    title,
+    description,
+    creator_id: appUid,
+    creator_name: creatorName,
+    questions,
+    category,
+    distribution_routing: "public",
+    time_limit: 0,
+  }).select("id, title, description, questions, category, time_limit, creator_name, total_plays, avg_rating, distribution_routing, creator_id").single();
+  if (inserted.error || !inserted.data) throw new Error("quiz_create_failed");
+  return inserted.data as Record<string, unknown>;
+}
+
+async function updateProfile(context: ServiceContext, appUid: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const name = boundedString(body.name, MAX_NAME_LENGTH);
+  const bio = boundedString(body.bio, 2_000);
+  const location = boundedString(body.location, 160);
+  if (name.length < 1) throw new Error("invalid_profile");
+  const updated = await context.client
+    .from("users")
+    .update({ name, bio, location, updated_at: new Date().toISOString() })
+    .eq("uid", appUid)
+    .select("uid, custom_id, name, bio, location, photo_url, is_premium, is_founder, xp")
+    .limit(1);
+  if (updated.error || updated.data?.length !== 1) throw new Error("profile_update_failed");
+  return updated.data[0] as Record<string, unknown>;
+}
+
+async function submitQuizAttempt(context: ServiceContext, appUid: string, claims: FirebaseClaims, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const quizId = boundedString(body.quiz_id, MAX_QUIZ_ID_LENGTH);
+  const rawAnswers = body.answers;
+  if (!quizId || !Array.isArray(rawAnswers) || rawAnswers.length > MAX_ANSWERS) throw new Error("invalid_attempt");
+  const quiz = await loadQuizDetails(context, appUid, quizId);
+  const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+  if (questions.length < 1 || questions.length > MAX_QUESTIONS) throw new Error("invalid_attempt");
+  let score = 0;
+  questions.forEach((rawQuestion, index) => {
+    if (!rawQuestion || typeof rawQuestion !== "object" || Array.isArray(rawQuestion)) return;
+    const question = rawQuestion as Record<string, unknown>;
+    const options = Array.isArray(question.options) ? question.options.map((item) => boundedString(item, MAX_OPTION_LENGTH)) : [];
+    const rawCorrect = question.correctAnswer ?? question.correct_answer;
+    let correct = boundedString(rawCorrect, MAX_OPTION_LENGTH);
+    const correctIndex = typeof rawCorrect === "number" || /^\d+$/.test(correct) ? Number(rawCorrect) : -1;
+    if (correctIndex >= 0 && correctIndex < options.length) correct = options[correctIndex];
+    const submitted = rawAnswers[index];
+    let answer = boundedString(submitted, MAX_OPTION_LENGTH);
+    const answerIndex = typeof submitted === "number" || /^\d+$/.test(answer) ? Number(submitted) : -1;
+    if (answerIndex >= 0 && answerIndex < options.length) answer = options[answerIndex];
+    if (correct && answer && correct === answer) score += 1;
+  });
+
+  const userResult = await context.client.from("users").select("name").eq("uid", appUid).limit(1);
+  if (userResult.error || userResult.data?.length !== 1) throw new Error("profile_not_found");
+  const takerName = boundedString(userResult.data[0].name, MAX_NAME_LENGTH) || boundedString(claims.name, MAX_NAME_LENGTH) || "عضو QuizSpace";
+  const ratingValue = body.rating == null || body.rating === "" ? null : Number(body.rating);
+  const rating = Number.isInteger(ratingValue) && ratingValue >= 1 && ratingValue <= 5 ? ratingValue : null;
+  const feedback = boundedString(body.feedback, MAX_FEEDBACK_LENGTH);
+  const result = await context.client.rpc("submit_mobile_quiz_attempt", {
+    p_quiz_id: quizId,
+    p_taker_id: appUid,
+    p_taker_name: takerName,
+    p_score: score,
+    p_rating: rating,
+    p_feedback: feedback,
+  });
+  if (result.error || !result.data) throw new Error("attempt_save_failed");
+  const row = Array.isArray(result.data) ? result.data[0] : result.data;
+  return typeof row === "object" && row !== null ? row as Record<string, unknown> : { score, total_questions: questions.length };
 }
 
 async function loadQuizTakers(context: ServiceContext, appUid: string, quizId: string): Promise<unknown[]> {
@@ -267,13 +423,35 @@ Deno.serve(async (request: Request) => {
       return response({ takers: await loadQuizTakers(context, identity.uid, quizId) });
     }
 
+    if (action === "quiz_detail") {
+      const quizId = boundedString(body.quiz_id, MAX_QUIZ_ID_LENGTH);
+      if (!quizId) return genericFailure(400);
+      return response({ quiz: await loadQuizDetails(context, identity.uid, quizId) });
+    }
+
+    if (action === "create_quiz") {
+      return response({ quiz: await createQuiz(context, identity.uid, claims, body) }, 201);
+    }
+
+    if (action === "submit_attempt") {
+      return response({ completion: await submitQuizAttempt(context, identity.uid, claims, body) }, 201);
+    }
+
+    if (action === "update_profile") {
+      return response({ user: await updateProfile(context, identity.uid, body) });
+    }
+
     return genericFailure(400);
   } catch (error) {
     console.error("mobile-firebase-session failed", error instanceof Error ? error.message : "unknown");
     const message = error instanceof Error ? error.message : "";
     if (message === "firebase_email_not_verified") return response({ error: "أكد بريدك الإلكتروني أولًا ثم سجّل الدخول مرة أخرى." }, 403);
     if (message === "ambiguous_legacy_email" || message === "identity_conflict") return response({ error: "تعذر ربط الحساب تلقائيًا. تواصل مع الدعم." }, 409);
-    if (message === "quiz_not_owned") return genericFailure(404);
+    if (message === "quiz_not_owned" || message === "quiz_not_found") return genericFailure(404);
+    if (message === "invalid_quiz" || message === "invalid_questions" || message === "invalid_attempt") return response({ error: "بيانات الاختبار أو المحاولة غير صالحة." }, 400);
+    if (message === "attempt_save_failed") return response({ error: "تعذر حفظ المحاولة الآن. حاول مرة أخرى." }, 500);
+    if (message === "invalid_profile") return response({ error: "بيانات البروفايل غير صالحة." }, 400);
+    if (message === "profile_update_failed") return response({ error: "تعذر حفظ بيانات البروفايل الآن." }, 500);
     if (message === "server_configuration_missing") return genericFailure(503);
     return genericFailure(500);
   }
