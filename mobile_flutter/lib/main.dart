@@ -182,56 +182,6 @@ class _AuthLoadingView extends StatelessWidget {
   }
 }
 
-class _SessionErrorView extends StatelessWidget {
-  const _SessionErrorView({required this.error, required this.onRetry, required this.onSignOut});
-
-  final Object? error;
-  final VoidCallback onRetry;
-  final Future<void> Function() onSignOut;
-
-  String get message {
-    if (error is MobileSessionException) return (error as MobileSessionException).message;
-    return 'تعذر تجهيز بيانات QuizSpace الآن. اضغط إعادة المحاولة، ولو استمرت المشكلة سجّل الخروج ثم ادخل مرة أخرى.';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
-              child: Card(
-                color: _surface,
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28), side: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(width: 58, height: 58, decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.14), shape: BoxShape.circle), child: const Icon(Icons.sync_problem_rounded, color: Colors.orange, size: 30)),
-                      const SizedBox(height: 18),
-                      const Text('الحساب اتسجل، بس لسه بنربطه بـQuizSpace', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, height: 1.25)),
-                      const SizedBox(height: 10),
-                      Text(message, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.66), height: 1.5)),
-                      const SizedBox(height: 22),
-                      SizedBox(width: double.infinity, height: 52, child: FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('إعادة المحاولة'))),
-                      const SizedBox(height: 8),
-                      TextButton(onPressed: () async => onSignOut(), child: const Text('تسجيل الخروج')),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _ConfigurationScreen extends StatelessWidget {
   const _ConfigurationScreen();
