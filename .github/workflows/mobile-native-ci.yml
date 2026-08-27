@@ -105,6 +105,66 @@ jobs:
           --dart-define=AI_WORKER_URL=$AI_WORKER_URL
           --dart-define=GOOGLE_SERVER_CLIENT_ID=$GOOGLE_SERVER_CLIENT_ID
 
+      - name: Verify Android signing secret for device UAT
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/quizspace-upload-keystore.jks
+          actual_hash=$(sha256sum /tmp/quizspace-upload-keystore.jks | cut -d' ' -f1)
+          if [ "$actual_hash" != "de9382e0ca60f6191f7ae631f63c850ac27be179d2fdf2345057238d6d3c321b" ]; then
+            echo 'The Android keystore secret payload is corrupted or incomplete.'
+            exit 1
+          fi
+          if ! keytool -list -keystore /tmp/quizspace-upload-keystore.jks -storepass "$ANDROID_KEYSTORE_PASSWORD" >/dev/null 2>&1; then
+            echo 'The Android keystore payload is correct but its password secret is incorrect.'
+            exit 1
+          fi
+
+      - name: Configure Android release signing for device UAT
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=../upload-keystore.jks
+          EOF
+          python3 tool/prepare_android_signing.py
+
+      - name: Build signed Native UAT APK without publishing
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          AI_WORKER_URL: ${{ secrets.VITE_AI_WORKER_URL }}
+        run: >-
+          flutter build apk --release
+          --build-name=3.0.0
+          --build-number=$((3000000 + GITHUB_RUN_NUMBER))
+          --dart-define=SUPABASE_URL=$SUPABASE_URL
+          --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+          --dart-define=AI_WORKER_URL=$AI_WORKER_URL
+          --dart-define=GOOGLE_SERVER_CLIENT_ID=$GOOGLE_SERVER_CLIENT_ID
+
+      - name: Upload Native signed UAT APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: quizspace-native-signed-uat-${{ github.run_number }}
+          path: mobile_flutter/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Upload Native debug APK for device testing
         uses: actions/upload-artifact@v4
         with:
