@@ -117,7 +117,7 @@ class AppUpdateService {
     }
 
     final expected = await _fetchExpectedChecksum(update.checksumUrl);
-    final actual = (await sha256.bind(apkFile.openRead())).toString().toLowerCase();
+    final actual = (await sha256.bind(apkFile.openRead()).last).toString().toLowerCase();
     if (actual != expected) {
       await _background.clear(update);
       throw const FormatException('APK checksum mismatch');
