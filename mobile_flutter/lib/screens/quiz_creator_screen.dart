@@ -180,6 +180,7 @@ class _QuestionCardState extends State<_QuestionCard> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
                     children: [
+                      // ignore: deprecated_member_use
                       Radio<int>(value: index, groupValue: state.correctIndex, onChanged: (value) => setState(() => state.correctIndex = value ?? 0)),
                       Expanded(child: TextField(controller: state.options[index], decoration: InputDecoration(labelText: 'الاختيار ${index + 1}', prefixIcon: const Icon(Icons.radio_button_unchecked_rounded)))),
                     ],
