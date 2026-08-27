@@ -177,6 +177,7 @@ class _AuthGateState extends State<_AuthGate> {
 
     if (_sessionError != null) {
       return _SessionErrorView(
+        error: _sessionError,
         onRetry: () => _startSessionPreparation(user),
         onSignOut: _repository.signOut,
       );
@@ -192,6 +193,7 @@ class _AuthGateState extends State<_AuthGate> {
         }
         if (snapshot.hasError) {
           return _SessionErrorView(
+            error: snapshot.error,
             onRetry: () => _startSessionPreparation(user),
             onSignOut: _repository.signOut,
           );
@@ -236,10 +238,16 @@ class _AuthLoadingView extends StatelessWidget {
 }
 
 class _SessionErrorView extends StatelessWidget {
-  const _SessionErrorView({required this.onRetry, required this.onSignOut});
+  const _SessionErrorView({required this.error, required this.onRetry, required this.onSignOut});
 
+  final Object? error;
   final VoidCallback onRetry;
   final Future<void> Function() onSignOut;
+
+  String get message {
+    if (error is MobileSessionException) return (error as MobileSessionException).message;
+    return 'تعذر تجهيز بيانات QuizSpace الآن. اضغط إعادة المحاولة، ولو استمرت المشكلة سجّل الخروج ثم ادخل مرة أخرى.';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +271,7 @@ class _SessionErrorView extends StatelessWidget {
                       const SizedBox(height: 18),
                       const Text('الحساب اتسجل، بس لسه بنربطه بـQuizSpace', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, height: 1.25)),
                       const SizedBox(height: 10),
-                      Text('اضغط إعادة المحاولة. لو المشكلة استمرت، سجّل الخروج وجرّب مرة ثانية بعد التأكد من الإنترنت.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.66), height: 1.5)),
+                      Text(message, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.66), height: 1.5)),
                       const SizedBox(height: 22),
                       SizedBox(width: double.infinity, height: 52, child: FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('إعادة المحاولة'))),
                       const SizedBox(height: 8),

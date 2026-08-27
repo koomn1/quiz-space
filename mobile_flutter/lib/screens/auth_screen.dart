@@ -30,6 +30,21 @@ class _AuthScreenState extends State<AuthScreen> {
   String? _success;
 
   @override
+  void initState() {
+    super.initState();
+    final notice = widget.repository.takePendingAuthNotice();
+    if (notice != null) {
+      _emailController.text = notice.email;
+      _isRegister = notice.kind == MobileAuthNoticeKind.success;
+      if (notice.kind == MobileAuthNoticeKind.success) {
+        _success = notice.message;
+      } else {
+        _error = notice.message;
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -77,7 +92,7 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _emailController.text,
           password: _passwordController.text,
         );
-        nextSuccess = 'الحساب اتعمل. افتح بريدك واضغط رسالة التأكيد، وبعدها ارجع سجّل الدخول.';
+        nextSuccess = 'تم إرسال رسالة تأكيدية للحساب. من فضلك افتح بريدك الإلكتروني واستكشف الرسالة، ثم ارجع وسجّل الدخول.';
       } else {
         await widget.repository.signIn(
           email: _emailController.text,

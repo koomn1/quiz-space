@@ -16,6 +16,16 @@ class MobileSessionException implements Exception {
   String toString() => message;
 }
 
+enum MobileAuthNoticeKind { success, error }
+
+class MobileAuthNotice {
+  const MobileAuthNotice({required this.email, required this.message, required this.kind});
+
+  final String email;
+  final String message;
+  final MobileAuthNoticeKind kind;
+}
+
 class QuizSpaceRepository {
   QuizSpaceRepository({required this.supabaseUrl, required this.supabaseAnonKey});
 
@@ -27,6 +37,13 @@ class QuizSpaceRepository {
   firebase.User? get currentUser => firebase.FirebaseAuth.instance.currentUser;
 
   static bool _googleInitialized = false;
+  MobileAuthNotice? _pendingAuthNotice;
+
+  MobileAuthNotice? takePendingAuthNotice() {
+    final notice = _pendingAuthNotice;
+    _pendingAuthNotice = null;
+    return notice;
+  }
 
   Future<void> signIn({required String email, required String password}) async {
     final credential = await firebase.FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -36,17 +53,28 @@ class QuizSpaceRepository {
     final user = credential.user;
     if (user == null) throw firebase.FirebaseAuthException(code: 'user-not-found');
     if (!user.emailVerified) {
+      _pendingAuthNotice = MobileAuthNotice(
+        email: email.trim(),
+        message: 'الحساب غير مؤكّد. افتح رسالة التأكيد في بريدك ثم ارجع وسجّل الدخول مرة أخرى.',
+        kind: MobileAuthNoticeKind.error,
+      );
       await firebase.FirebaseAuth.instance.signOut();
       throw firebase.FirebaseAuthException(code: 'email-not-verified');
     }
   }
 
   Future<void> signUp({required String email, required String password}) async {
+    final normalizedEmail = email.trim();
     final credential = await firebase.FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: email.trim(),
+      email: normalizedEmail,
       password: password,
     );
     await credential.user?.sendEmailVerification();
+    _pendingAuthNotice = MobileAuthNotice(
+      email: normalizedEmail,
+      message: 'تم إرسال رسالة تأكيدية للحساب. من فضلك افتح بريدك الإلكتروني واستكشف الرسالة، ثم ارجع وسجّل الدخول.',
+      kind: MobileAuthNoticeKind.success,
+    );
     await firebase.FirebaseAuth.instance.signOut();
   }
 
