@@ -30,3 +30,15 @@ flutter run \
 ## GitHub Release
 
 التدفق `.github/workflows/mobile-release.yml` يعمل يدويًا من GitHub Actions. يشغّل `flutter analyze` و`flutter test` ثم يبني APK release باستخدام أسرار Actions وقت البناء، ويرفع APK وملف SHA-256 إلى GitHub Release. لا يتم ادعاء دعم iOS أو توقيعه؛ ذلك يحتاج بيئة macOS وشهادة Apple منفصلة.
+
+## التحديث الإجباري داخل التطبيق
+
+كل push إلى فرع `main` يشغّل workflow الهاتف تلقائيًا، ويرفع Release جديدًا بصيغة `mobile-v1.0.<run-number>`. التطبيق يقرأ أحدث Release من GitHub عند فتحه، ويقارن النسخة المثبتة، ثم يعرض شاشة تحديث إجبارية إذا وجد إصدار أعلى. التنزيل يتم داخل التطبيق مع نسبة تقدم وفحص SHA-256، وبعدها يفتح مثبت Android لتأكيد التثبيت فوق النسخة الحالية.
+
+التثبيت الصامت غير ممكن لتطبيق Android عادي؛ Android سيطلب تأكيد المستخدم، وقد يطلب تفعيل السماح بالتثبيت من هذا المصدر. لا يتم حذف بيانات Firebase أو ملفات التطبيق أثناء التحديث. لكي يقبل Android التحديث فوق النسخة السابقة، يجب أن تستخدم كل الإصدارات **نفس مفتاح التوقيع**.
+
+يحتاج GitHub Actions إلى الأسرار التالية: `FIREBASE_ANDROID_CONFIG_JSON`، و`ANDROID_KEYSTORE_BASE64`، و`ANDROID_KEYSTORE_PASSWORD`، و`ANDROID_KEY_PASSWORD`، و`ANDROID_KEY_ALIAS`. ملف Firebase وkeystore لا يدخلان Git أو APK source، بل يُستخدمان وقت البناء فقط. يجب أن تكون قيمة `ANDROID_KEYSTORE_BASE64` لنفس keystore المستخدم في كل الإصدارات السابقة؛ تغيير المفتاح يجعل Android يرفض التحديث فوق النسخة المثبتة.
+
+## الصلاحيات
+
+تُطلب الإشعارات مرة واحدة بعد أول دخول ناجح، بينما الكاميرا والصور تُطلبان من شاشة «إدارة الصلاحيات» أو عند استخدام الميزة. اختيار الملفات يعتمد على Android system picker ولا يحتاج صلاحية قراءة كل مساحة التخزين. تحديث APK يحتاج `REQUEST_INSTALL_PACKAGES`، ويُطلب فقط عند بدء التحديث.

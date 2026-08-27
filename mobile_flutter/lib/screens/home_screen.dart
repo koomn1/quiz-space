@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../data/quizspace_repository.dart';
 import '../models/profile_models.dart';
+import '../services/permissions_service.dart';
+import '../widgets/permissions_sheet.dart';
 import '../widgets/profile_badge_rail.dart';
 import '../widgets/quiz_card.dart';
 
@@ -19,11 +21,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Object? _error;
   bool _loading = true;
   int _selectedIndex = 0;
+  final _permissions = AppPermissionsService();
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _requestNotifications();
+  }
+
+  Future<void> _requestNotifications() async {
+    try {
+      await _permissions.requestNotificationsOnce();
+    } catch (_) {
+      // A denied notification permission must not block the app.
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -140,6 +152,8 @@ class _ProfileTab extends StatelessWidget {
           const SizedBox(height: 18),
           _StatsGrid(profile: profile),
           const SizedBox(height: 24),
+          OutlinedButton.icon(onPressed: () => showModalBottomSheet<void>(context: context, isScrollControlled: true, useSafeArea: true, backgroundColor: const Color(0xFF151B31), shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))), builder: (_) => const PermissionsSheet()), icon: const Icon(Icons.shield_outlined), label: const Text('إدارة الصلاحيات'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)))),
+          const SizedBox(height: 10),
           OutlinedButton.icon(onPressed: onSignOut, icon: const Icon(Icons.logout_rounded), label: const Text('تسجيل الخروج'), style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)))),
         ],
       ),

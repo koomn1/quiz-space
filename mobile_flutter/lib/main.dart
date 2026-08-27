@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'data/quizspace_repository.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
+import 'widgets/update_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,7 +53,7 @@ class QuizSpaceApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Arial',
       ),
-      home: configurationMissing ? const _ConfigurationScreen() : const _AuthGate(),
+      home: configurationMissing ? const _ConfigurationScreen() : const UpdateGate(child: _AuthGate()),
     );
   }
 }
