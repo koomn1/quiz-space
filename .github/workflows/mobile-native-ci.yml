@@ -63,6 +63,9 @@ jobs:
           python3 tool/patch_android_manifest.py android/app/src/main/AndroidManifest.xml
           python3 tool/prepare_native_permissions.py
 
+      - name: Generate official QuizSpace launcher icon
+        run: dart run flutter_launcher_icons
+
       - name: Analyze Dart code
         run: flutter analyze
 
