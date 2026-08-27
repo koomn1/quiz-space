@@ -3,6 +3,12 @@
   <head>
     <script>
       (function () {
+        var current = new URL(window.location.href);
+        if (current.searchParams.get('quizspace_native_callback') === '1') {
+          current.searchParams.delete('quizspace_native_callback');
+          window.location.replace('quizspace://auth/callback' + current.search + current.hash);
+          return;
+        }
         var hostname = window.location.hostname.toLowerCase();
         if (!/(^|\.)github\.io$/i.test(hostname)) return;
         var oldBase = '/quiz-space';

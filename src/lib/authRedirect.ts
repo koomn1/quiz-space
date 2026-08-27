@@ -1,4 +1,8 @@
+import { Capacitor } from '@capacitor/core';
+
 export function getAuthRedirectUrl(origin: string, baseUrl: string): string {
+  if (Capacitor.isNativePlatform()) return 'https://quiz-space-app.pages.dev/?quizspace_native_callback=1';
+
   const normalizedOrigin = origin.replace(/\/$/, '');
   const hostname = new URL(normalizedOrigin).hostname.toLowerCase();
   const isGithubPages = /(^|\.)github\.io$/i.test(hostname);
