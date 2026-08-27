@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../services/app_update_service.dart';
+import '../services/background_download_service.dart';
 import '../services/permissions_service.dart';
 
 class UpdateGate extends StatefulWidget {
@@ -16,11 +19,11 @@ class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
   final _service = AppUpdateService();
   final _permissions = AppPermissionsService();
   AppUpdateInfo? _update;
+  CachedUpdateDownload? _download;
+  Timer? _downloadPoller;
   bool _checking = true;
-  bool _downloading = false;
+  bool _busy = false;
   bool _installPermissionBlocked = false;
-  int _received = 0;
-  int _total = 0;
   String? _error;
 
   @override
@@ -32,21 +35,20 @@ class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _downloadPoller?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && !_downloading) {
+    if (state == AppLifecycleState.resumed) {
       _checkForUpdate();
     }
   }
 
   Future<void> _checkForUpdate() async {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     setState(() {
       _checking = true;
       _error = null;
@@ -54,55 +56,107 @@ class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
     });
     try {
       final update = await _service.checkForUpdate();
-      if (mounted) {
-        setState(() => _update = update);
+      if (!mounted) return;
+      if (update == null) {
+        _downloadPoller?.cancel();
+        setState(() {
+          _update = null;
+          _download = null;
+        });
+        return;
       }
+
+      final cached = await _service.cachedDownload(update);
+      if (!mounted) return;
+      setState(() {
+        _update = update;
+        _download = cached;
+      });
+      _startDownloadPollingIfNeeded();
     } catch (_) {
-      if (mounted) {
-        setState(() => _error = 'تعذر التحقق من التحديث الآن. تحقق من اتصال الإنترنت وحاول مرة أخرى.');
-      }
+      if (mounted) setState(() => _error = 'تعذر التحقق من التحديث الآن. تحقق من اتصال الإنترنت وحاول مرة أخرى.');
     } finally {
-      if (mounted) {
-        setState(() => _checking = false);
-      }
+      if (mounted) setState(() => _checking = false);
     }
   }
 
-  Future<void> _downloadAndInstall() async {
+  void _startDownloadPollingIfNeeded() {
+    _downloadPoller?.cancel();
+    if (!(_download?.isActive ?? false)) return;
+    _downloadPoller = Timer.periodic(const Duration(seconds: 2), (_) => _refreshDownloadStatus());
+  }
+
+  Future<void> _refreshDownloadStatus() async {
     final update = _update;
-    if (update == null || _downloading) return;
+    if (update == null || !mounted) return;
+    try {
+      final state = await _service.refreshBackgroundDownload(update);
+      if (!mounted) return;
+      setState(() => _download = state);
+      if (!(state?.isActive ?? false)) _downloadPoller?.cancel();
+    } catch (_) {
+      // DownloadManager remains the authority. A transient status read failure
+      // must not cancel a download that is continuing outside Flutter.
+    }
+  }
+
+  Future<void> _downloadOrInstall() async {
+    final update = _update;
+    if (update == null || _busy) return;
+    if (_download?.isReady == true) {
+      await _installCached(update);
+    } else {
+      await _startBackgroundDownload(update);
+    }
+  }
+
+  Future<void> _startBackgroundDownload(AppUpdateInfo update) async {
     setState(() {
-      _downloading = true;
+      _busy = true;
       _error = null;
-      _received = 0;
-      _total = 0;
       _installPermissionBlocked = false;
     });
     try {
-      await _service.downloadAndInstall(
-        update,
-        onProgress: (received, total) {
-          if (mounted) {
-            setState(() {
-              _received = received;
-              _total = total;
-            });
-          }
-        },
-      );
-    } on StateError catch (error) {
-      if (mounted) {
-        setState(() {
-          _installPermissionBlocked = error.message == 'INSTALL_PERMISSION_REQUIRED';
-          _error = _installPermissionBlocked
-              ? 'السماح بالتثبيت مطلوب من إعدادات Android. فعّله ثم اضغط تحديث مرة أخرى.'
-              : 'تعذر بدء تثبيت التحديث.';
-        });
-      }
+      final state = await _service.startBackgroundDownload(update);
+      if (!mounted) return;
+      setState(() => _download = state);
+      _startDownloadPollingIfNeeded();
+    } on FormatException {
+      if (mounted) setState(() => _error = 'رابط التحديث غير موثوق. حاول مرة أخرى من داخل التطبيق.');
+    } on StateError {
+      if (mounted) setState(() => _error = 'تعذر بدء التنزيل في الخلفية. حاول مرة أخرى.');
     } catch (_) {
-      if (mounted) setState(() => _error = 'تعذر تنزيل التحديث أو التحقق منه. حاول مرة أخرى.');
+      if (mounted) setState(() => _error = 'تعذر بدء تنزيل التحديث. تحقق من الإنترنت وحاول مرة أخرى.');
     } finally {
-      if (mounted) setState(() => _downloading = false);
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _installCached(AppUpdateInfo update) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+      _installPermissionBlocked = false;
+    });
+    try {
+      await _service.installCachedUpdate(update);
+    } on StateError catch (error) {
+      if (!mounted) return;
+      final code = error.message;
+      setState(() {
+        _installPermissionBlocked = code == 'INSTALL_PERMISSION_REQUIRED';
+        _error = switch (code) {
+          'INSTALL_PERMISSION_REQUIRED' => 'السماح بالتثبيت مطلوب من إعدادات Android. فعّله ثم اضغط تثبيت مرة أخرى.',
+          'UPDATE_DOWNLOAD_NOT_READY' => 'التحديث لسه بيتنزّل. اقفل التطبيق عادي، ولما تفتحه هتلاقيه جاهز أو اضغط تحديث الحالة.',
+          _ => 'تعذر بدء تثبيت التحديث.',
+        };
+      });
+    } on FormatException {
+      if (mounted) setState(() => _error = 'فشل التحقق من ملف التحديث. بدأ تنزيله من جديد للحماية.');
+    } catch (_) {
+      if (mounted) setState(() => _error = 'تعذر تثبيت التحديث الآن. حاول مرة أخرى.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -115,12 +169,11 @@ class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
     if (update == null) return widget.child;
     return _UpdateRequiredView(
       update: update,
-      downloading: _downloading,
-      received: _received,
-      total: _total,
+      download: _download,
+      busy: _busy,
       error: _error,
       installPermissionBlocked: _installPermissionBlocked,
-      onUpdate: _downloadAndInstall,
+      onDownloadOrInstall: _downloadOrInstall,
       onRetry: _checkForUpdate,
       onOpenInstallSettings: _permissions.openInstallSettings,
     );
@@ -130,29 +183,30 @@ class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
 class _UpdateRequiredView extends StatelessWidget {
   const _UpdateRequiredView({
     required this.update,
-    required this.downloading,
-    required this.received,
-    required this.total,
+    required this.download,
+    required this.busy,
     required this.error,
     required this.installPermissionBlocked,
-    required this.onUpdate,
+    required this.onDownloadOrInstall,
     required this.onRetry,
     required this.onOpenInstallSettings,
   });
 
   final AppUpdateInfo update;
-  final bool downloading;
-  final int received;
-  final int total;
+  final CachedUpdateDownload? download;
+  final bool busy;
   final String? error;
   final bool installPermissionBlocked;
-  final VoidCallback onUpdate;
+  final VoidCallback onDownloadOrInstall;
   final VoidCallback onRetry;
   final VoidCallback onOpenInstallSettings;
 
   @override
   Widget build(BuildContext context) {
-    final progress = total > 0 ? received / total : null;
+    final progress = download?.progress;
+    final isReady = download?.isReady ?? false;
+    final isActive = download?.isActive ?? false;
+    final isFailed = download?.status == CachedUpdateDownloadStatus.failed;
     return Scaffold(
       backgroundColor: const Color(0xFF080D1D),
       body: SafeArea(
@@ -188,12 +242,23 @@ class _UpdateRequiredView extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 22),
-                    if (downloading) ...[
+                    if (isReady) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(13),
+                        decoration: BoxDecoration(color: const Color(0xFF064E3B).withValues(alpha: 0.42), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFF6EE7B7).withValues(alpha: 0.42))),
+                        child: const Text('التحديث اتنزّل بالكامل وجاهز للتثبيت.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFFA7F3D0), fontWeight: FontWeight.w700)),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: busy ? null : onDownloadOrInstall, icon: busy ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: Color(0xFF160B2B))) : const Icon(Icons.install_mobile_rounded), label: Text(busy ? 'جاري تجهيز التثبيت...' : 'تثبيت التحديث'), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), backgroundColor: const Color(0xFFB88CFF), foregroundColor: const Color(0xFF160B2B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))))),
+                    ] else if (isActive) ...[
                       LinearProgressIndicator(value: progress, minHeight: 8, borderRadius: BorderRadius.circular(8), color: const Color(0xFFD8B4FE), backgroundColor: Colors.white12),
                       const SizedBox(height: 10),
-                      Text(total > 0 ? '${(progress! * 100).round()}% — جاري تنزيل التحديث' : 'جاري تنزيل التحديث...', style: TextStyle(color: Colors.white.withValues(alpha: 0.68))),
+                      Text(progress != null ? '${(progress * 100).round()}% — التحديث بيتنزّل في الخلفية' : 'التحديث بيتنزّل في الخلفية...', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.72))),
+                      const SizedBox(height: 8),
+                      Text('تقدر تقفل التطبيق عادي. Android هيكمل التنزيل، ولما ترجع هتلاقيه جاهز للتثبيت.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.52), height: 1.45, fontSize: 12)),
                     ] else ...[
-                      SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: onUpdate, icon: const Icon(Icons.download_rounded), label: const Text('تحميل وتثبيت التحديث'), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), backgroundColor: const Color(0xFFB88CFF), foregroundColor: const Color(0xFF160B2B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))))),
+                      SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: busy ? null : onDownloadOrInstall, icon: busy ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.2, color: Color(0xFF160B2B))) : const Icon(Icons.download_rounded), label: Text(busy ? 'جاري بدء التنزيل...' : isFailed ? 'إعادة تنزيل التحديث' : 'تحميل التحديث في الخلفية'), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), backgroundColor: const Color(0xFFB88CFF), foregroundColor: const Color(0xFF160B2B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))))),
                       if (installPermissionBlocked) ...[
                         const SizedBox(height: 10),
                         TextButton.icon(onPressed: onOpenInstallSettings, icon: const Icon(Icons.settings_rounded), label: const Text('فتح إعدادات التثبيت')),

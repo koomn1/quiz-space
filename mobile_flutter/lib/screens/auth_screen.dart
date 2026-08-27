@@ -43,14 +43,20 @@ class _AuthScreenState extends State<AuthScreen> {
       _error = null;
       _success = null;
     });
+    String? nextError;
     try {
       await widget.repository.signInWithGoogle();
     } on FirebaseAuthException catch (error) {
-      if (mounted) setState(() => _error = _firebaseErrorMessage(error.code, google: true));
+      nextError = _firebaseErrorMessage(error.code, google: true);
     } catch (_) {
-      if (mounted) setState(() => _error = 'تعذر فتح حساب Google. تأكد من وجود حساب على الهاتف وحاول مرة أخرى.');
+      nextError = 'تعذر فتح حساب Google. تأكد من وجود حساب على الهاتف وحاول مرة أخرى.';
     } finally {
-      if (mounted) setState(() => _googleLoading = false);
+      if (mounted) {
+        setState(() {
+          _googleLoading = false;
+          _error = nextError;
+        });
+      }
     }
   }
 
@@ -63,14 +69,15 @@ class _AuthScreenState extends State<AuthScreen> {
       _success = null;
     });
 
+    String? nextError;
+    String? nextSuccess;
     try {
       if (_isRegister) {
         await widget.repository.signUp(
           email: _emailController.text,
           password: _passwordController.text,
         );
-        if (!mounted) return;
-        setState(() => _success = 'الحساب اتعمل. افتح بريدك واضغط رسالة التأكيد، وبعدها ارجع سجّل الدخول.');
+        nextSuccess = 'الحساب اتعمل. افتح بريدك واضغط رسالة التأكيد، وبعدها ارجع سجّل الدخول.';
       } else {
         await widget.repository.signIn(
           email: _emailController.text,
@@ -78,11 +85,17 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
     } on FirebaseAuthException catch (error) {
-      if (mounted) setState(() => _error = _firebaseErrorMessage(error.code, register: _isRegister));
+      nextError = _firebaseErrorMessage(error.code, register: _isRegister);
     } catch (_) {
-      if (mounted) setState(() => _error = 'حصلت مشكلة مؤقتة في الاتصال. حاول مرة أخرى.');
+      nextError = 'حصلت مشكلة مؤقتة في الاتصال. حاول مرة أخرى.';
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = nextError;
+          _success = nextSuccess;
+        });
+      }
     }
   }
 

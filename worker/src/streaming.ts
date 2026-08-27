@@ -31,9 +31,6 @@ async function logAiPerformance(env: Env, authHeader: string, data: {
 
 export interface Env {
   OPENROUTER_API_KEY: string;
-  OPENAI_API_KEY: string;
-  GROQ_API_KEY: string;
-  DEEPSEEK_API_KEY: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   ALLOWED_ORIGIN: string;

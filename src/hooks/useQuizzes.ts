@@ -2,9 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getQuizzes, createQuiz, deleteQuiz, updateQuiz } from '../lib/db';
 import { Quiz, GeneratedQuiz } from '../types';
 import { generateWithOpenRouter } from '../services/openrouterService';
-import { generateWithGroq } from '../services/groqService';
-import { generateWithDeepSeek } from '../services/deepseekService';
-import { generateWithOpenAI } from '../services/openaiService';
 import { hasUnexpectedForeignLanguage, normalizeArabicGeneratedQuiz, requiresArabicGeneration } from '../lib/quizLanguageValidation';
 
 function normalizeAnswer(value: unknown): string {
@@ -136,9 +133,6 @@ export async function generateQuizWithFallback(
   const enforceArabic = requiresArabicGeneration(topic);
   const providers = [
     { key: 'openrouter', run: () => generateWithOpenRouter(topic, amount, alreadyGeneratedQuestions) },
-    { key: 'groq', run: () => generateWithGroq(topic, amount, alreadyGeneratedQuestions) },
-    { key: 'deepseek', run: () => generateWithDeepSeek(topic, amount, alreadyGeneratedQuestions) },
-    { key: 'openai', run: () => generateWithOpenAI(topic, amount, alreadyGeneratedQuestions) },
   ];
 
   const errors: string[] = [];

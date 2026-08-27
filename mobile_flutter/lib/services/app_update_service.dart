@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:apk_sideload/install_apk.dart';
 import 'package:crypto/crypto.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path_provider/path_provider.dart';
 
+import 'background_download_service.dart';
 import 'permissions_service.dart';
 
 class AppUpdateInfo {
@@ -65,6 +65,8 @@ class AppUpdateInfo {
 class AppUpdateService {
   static const latestReleaseUrl = 'https://api.github.com/repos/koomn1/quiz-space/releases/latest';
 
+  final _background = BackgroundUpdateDownloadService();
+
   Future<String> currentVersion() async {
     final packageInfo = await PackageInfo.fromPlatform();
     return packageInfo.version;
@@ -85,61 +87,85 @@ class AppUpdateService {
     }
   }
 
+  Future<CachedUpdateDownload?> cachedDownload(AppUpdateInfo update) {
+    return _background.status(update);
+  }
+
+  /// Queues an app-specific Android DownloadManager job. The job survives
+  /// Flutter process death and is resumed/reported when the app opens again.
+  Future<CachedUpdateDownload> startBackgroundDownload(AppUpdateInfo update) async {
+    _validateDownloadUrl(update.apkUrl);
+    return _background.enqueue(update);
+  }
+
+  Future<CachedUpdateDownload?> refreshBackgroundDownload(AppUpdateInfo update) {
+    return _background.status(update);
+  }
+
+  /// Verifies the cached APK before opening Android's installer. Downloading
+  /// and installing are deliberately separate user actions.
+  Future<void> installCachedUpdate(AppUpdateInfo update) async {
+    final cached = await _background.status(update);
+    if (cached == null || !cached.isReady || cached.filePath == null) {
+      throw StateError('UPDATE_DOWNLOAD_NOT_READY');
+    }
+
+    final apkFile = File(cached.filePath!);
+    if (!await apkFile.exists()) {
+      await _background.clear(update);
+      throw StateError('UPDATE_DOWNLOAD_NOT_READY');
+    }
+
+    final expected = await _fetchExpectedChecksum(update.checksumUrl);
+    final actual = (await sha256.bind(apkFile.openRead())).toString().toLowerCase();
+    if (actual != expected) {
+      await _background.clear(update);
+      throw const FormatException('APK checksum mismatch');
+    }
+
+    final permissions = AppPermissionsService();
+    if (!await permissions.requestInstallPackages()) {
+      throw StateError('INSTALL_PERMISSION_REQUIRED');
+    }
+    await InstallApk().installApk(apkFile.path);
+  }
+
+  /// Kept for callers from older builds. New UI uses the two-step background
+  /// API so closing the app never cancels the download.
   Future<void> downloadAndInstall(
     AppUpdateInfo update, {
     required void Function(int received, int total) onProgress,
   }) async {
-    final directory = await getTemporaryDirectory();
-    final apkFile = File('${directory.path}/quizspace-update-${update.version}.apk');
-    if (await apkFile.exists()) await apkFile.delete();
+    final state = await startBackgroundDownload(update);
+    onProgress(state.received, state.total);
+    if (!state.isReady) throw StateError('DOWNLOAD_STARTED_IN_BACKGROUND');
+    await installCachedUpdate(update);
+  }
 
+  Future<String> _fetchExpectedChecksum(String url) async {
     final httpClient = HttpClient()..userAgent = 'QuizSpace-Mobile-Updater';
-    final permissions = AppPermissionsService();
     try {
-      final request = await httpClient.getUrl(Uri.parse(update.apkUrl));
-      request.headers.set(HttpHeaders.acceptHeader, 'application/octet-stream');
+      final request = await httpClient.getUrl(Uri.parse(url));
+      request.headers.set(HttpHeaders.acceptHeader, 'text/plain');
       final response = await request.close();
       if (response.statusCode != HttpStatus.ok) {
-        throw HttpException('APK download failed', uri: Uri.parse(update.apkUrl));
-      }
-
-      final total = response.contentLength;
-      var received = 0;
-      final sink = apkFile.openWrite();
-      await for (final chunk in response) {
-        sink.add(chunk);
-        received += chunk.length;
-        onProgress(received, total);
-      }
-      await sink.close();
-
-      final checksumResponse = await httpClient.getUrl(Uri.parse(update.checksumUrl));
-      final checksumResult = await checksumResponse.close();
-      if (checksumResult.statusCode != HttpStatus.ok) {
         throw const FormatException('Checksum download failed');
       }
-      final checksumText = await checksumResult.transform(utf8.decoder).join();
+      final checksumText = await response.transform(utf8.decoder).join();
       final expected = RegExp(r'\b[a-fA-F0-9]{64}\b').firstMatch(checksumText)?.group(0)?.toLowerCase();
       if (expected == null) throw const FormatException('Checksum format is invalid');
-
-      final actual = sha256.convert(await apkFile.readAsBytes()).toString().toLowerCase();
-      if (actual != expected) {
-        try {
-          await apkFile.delete();
-        } catch (_) {
-          // Ignore cleanup failures after a checksum mismatch.
-        }
-        throw const FormatException('APK checksum mismatch');
-      }
-
-      if (!Platform.isAndroid) return;
-      final installPermission = await permissions.requestInstallPackages();
-      if (!installPermission) {
-        throw StateError('INSTALL_PERMISSION_REQUIRED');
-      }
-      await InstallApk().installApk(apkFile.path);
+      return expected;
     } finally {
       httpClient.close(force: true);
+    }
+  }
+
+  void _validateDownloadUrl(String rawUrl) {
+    final uri = Uri.tryParse(rawUrl);
+    final host = uri?.host.toLowerCase() ?? '';
+    final allowedHost = host == 'github.com' || host.endsWith('.github.com') || host.endsWith('.githubusercontent.com');
+    if (uri == null || uri.scheme != 'https' || !allowedHost) {
+      throw const FormatException('Update URL is not trusted');
     }
   }
 

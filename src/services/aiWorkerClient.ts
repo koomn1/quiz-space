@@ -3,7 +3,7 @@ import { getApiUrl } from '../lib/origin';
 import { GeneratedQuiz } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
-export type AiProvider = 'openrouter' | 'groq' | 'deepseek' | 'openai';
+export type AiProvider = 'openrouter';
 
 interface WorkerError {
   error?: string;
@@ -245,7 +245,8 @@ export interface FileQuizGenerationResult {
   provider: string;
 }
 
-// Fallback version: tries multiple providers in sequence (same as generateQuizWithFallback)
+// OpenRouter owns model fallback inside the Worker. The client never loops
+// through direct providers, so telemetry and user-facing errors stay consistent.
 export async function generateQuizFromFileWithFallback(
   fileBase64: string,
   mimeType: string,
@@ -253,26 +254,14 @@ export async function generateQuizFromFileWithFallback(
   customInstruction?: string,
   extractionMode?: 'literal' | 'generate',
 ): Promise<GeneratedQuiz> {
-  const providers = ['groq', 'openrouter', 'deepseek', 'openai'] as AiProvider[];
-  let lastError: Error | null = null;
-
-  for (const provider of providers) {
-    try {
-      return await workerRequest<GeneratedQuiz>('/api/ai/generate-file', {
-        provider,
-        fileBase64,
-        mimeType,
-        amount,
-        customInstruction,
-        extractionMode,
-      });
-    } catch (err: any) {
-      lastError = err;
-      console.warn(`Provider ${provider} failed for file generation, trying next:`, err?.message || err);
-    }
-  }
-
-  throw lastError || new Error('All providers failed for file generation.');
+  return workerRequest<GeneratedQuiz>('/api/ai/generate-file', {
+    provider: 'openrouter',
+    fileBase64,
+    mimeType,
+    amount,
+    customInstruction,
+    extractionMode,
+  });
 }
 
 export interface AiChatAttachment {
@@ -378,16 +367,12 @@ export async function askAIStream(
   return { text: fullText };
 }
 
-// Groq counterpart to askAI, used to power AI's chat as an alternative provider.
+// Backward-compatible alias. It is intentionally routed to OpenRouter.
 export async function askGroq(
   prompt: string,
   options: { model?: string; systemInstruction?: string; history?: AiChatMessage[] } = {},
 ): Promise<{ text: string }> {
-  try {
-    return await workerRequest<{ text: string }>('/api/ai/groq', { prompt, ...options });
-  } catch (err) {
-    throw err;
-  }
+  return askAI(prompt, options);
 }
 
 export interface StreamProgress {

@@ -14,7 +14,8 @@ describe('Cosmo generation recovery contract', () => {
   });
 
   it('uses the resilient OpenRouter model sequence for quiz generation', () => {
-    expect(workerSource).toContain('callOpenRouterWithFallback(env, [{ role: \'user\', content: prompt }], OPENROUTER_TEXT_FALLBACKS');
+    expect(workerSource).toContain('return callOpenRouterWithFallback(');
+    expect(workerSource).toContain('OPENROUTER_TEXT_FALLBACKS');
     expect(workerSource).toContain('max_tokens: 8_000');
   });
 
@@ -25,22 +26,24 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('providerContentToText(d.choices?.[0]?.message?.content');
   });
 
-  it('keeps OpenRouter first and bounds direct recovery for text-only answer review', () => {
+  it('keeps answer review on OpenRouter with bounded JSON validation', () => {
     expect(workerSource).toContain('const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 16_000');
     expect(workerSource).toContain("max_tokens: 7_000");
     expect(workerSource).toContain("response_format: { type: 'json_object' as const }");
     expect(workerSource).toContain("aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat'");
-    expect(workerSource).toContain("if (!isAnswerReview || hasAttachment) throw openRouterError;");
-    expect(workerSource).toContain('async function callDirectAnswerReview(');
+    expect(workerSource).toContain('callOpenRouterWithParallelAnswerReviewFallback');
     expect(workerSource).toContain('expectedAnswerCount as number');
-    expect(workerSource).toContain('All answer-review providers failed after the OpenRouter fallback.');
-    expect(workerSource).toContain("if (options.skipOpenRouterFallback) throw lastError");
+    expect(workerSource).toContain('Do not fall back to a different provider.');
   });
 
-  it('uses a current Groq production model for the direct fallback', () => {
-    expect(workerSource).toContain("env.GROQ_API_KEY, 'openai/gpt-oss-120b'");
-    expect(workerSource).not.toContain("llama-3.3-70b-versatile");
-    expect(workerSource).toContain("response_format: { type: 'json_object' }");
+  it('does not contain direct provider endpoints or direct-provider telemetry', () => {
+    expect(workerSource).toContain("type Provider = 'openrouter'");
+    expect(workerSource).not.toContain('api.deepseek.com');
+    expect(workerSource).not.toContain('api.groq.com');
+    expect(workerSource).not.toContain('api.openai.com');
+    expect(workerSource).not.toContain("provider: 'deepseek'");
+    expect(workerSource).not.toContain("provider: 'groq'");
+    expect(workerSource).not.toContain("provider: 'direct'");
   });
 
   it('records safe generation failures so Super Admin monitoring can diagnose them', () => {

@@ -15,9 +15,6 @@ import {
 
 export interface Env {
   OPENROUTER_API_KEY: string;
-  OPENAI_API_KEY: string;
-  GROQ_API_KEY: string;
-  DEEPSEEK_API_KEY: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   ALLOWED_ORIGIN: string;
@@ -36,7 +33,7 @@ interface ExtractionQueueMessage {
   chunkId?: string;
 }
 
-type Provider = 'openrouter' | 'openai' | 'groq' | 'deepseek';
+type Provider = 'openrouter';
 
 // Default text + vision models used when calling OpenRouter. OpenRouter is
 // a single API that proxies many underlying models — change these two
@@ -544,93 +541,18 @@ export async function callOpenRouterWithParallelAnswerReviewFallback(
 }
 
 async function providerText(
-  provider: Provider,
+  _provider: Provider,
   prompt: string,
   env: Env,
-  options: { skipOpenRouterFallback?: boolean; timeoutMs?: number } = {},
+  options: { timeoutMs?: number } = {},
 ): Promise<string> {
-  const order: Provider[] = provider === 'groq'
-    ? ['groq', 'openai', 'deepseek']
-    : provider === 'openai'
-      ? ['openai', 'deepseek']
-      : provider === 'deepseek'
-        ? ['deepseek']
-        : [];
-  let lastError: any;
-  for (const current of order) {
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const s = current === 'openai' ? ['https://api.openai.com/v1/chat/completions', env.OPENAI_API_KEY, 'gpt-4o-mini']
-        : current === 'groq' ? ['https://api.groq.com/openai/v1/chat/completions', env.GROQ_API_KEY, 'openai/gpt-oss-120b']
-        : ['https://api.deepseek.com/chat/completions', env.DEEPSEEK_API_KEY, 'deepseek-chat'];
-      const controller = new AbortController();
-      timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 15_000);
-      const r = await fetch(s[0], { method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s[1]}` }, body: JSON.stringify({ model: s[2], messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }) });
-      if (!r.ok) throw new Error(await r.text());
-      const d: any = await r.json();
-      const text = d.choices?.[0]?.message?.content || '';
-      if (!text.trim()) throw new Error(`Provider ${current} returned an empty response`);
-      return text;
-    } catch (e) { console.error('Provider failed', current, e); lastError = e; }
-    finally { if (timeout) clearTimeout(timeout); }
-  }
-  if (options.skipOpenRouterFallback) throw lastError ?? new Error('All direct text providers failed');
-  try {
-    return await callOpenRouterWithFallback(env, [{ role: 'user', content: prompt }], OPENROUTER_TEXT_FALLBACKS, undefined, { max_tokens: 8_000, temperature: 0.35 });
-  } catch (openRouterError) {
-    console.error('OpenRouter quiz fallback failed', openRouterError);
-    throw lastError ?? openRouterError ?? new Error('All quiz generation providers failed');
-  }
-}
-
-async function callDirectAnswerReview(
-  provider: Provider,
-  prompt: string,
-  env: Env,
-  expectedAnswerCount: number,
-  timeoutMs = 4_000,
-): Promise<AnswerReviewResult> {
-  const order: Provider[] = provider === 'groq'
-    ? ['groq', 'openai', 'deepseek']
-    : provider === 'openai'
-      ? ['openai', 'deepseek']
-      : provider === 'deepseek'
-        ? ['deepseek']
-        : [];
-  let lastError: unknown;
-  for (const current of order) {
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    const model = current === 'openai' ? 'gpt-4o-mini' : current === 'groq' ? 'openai/gpt-oss-120b' : 'deepseek-chat';
-    try {
-      const endpoint = current === 'openai' ? 'https://api.openai.com/v1/chat/completions'
-        : current === 'groq' ? 'https://api.groq.com/openai/v1/chat/completions'
-        : 'https://api.deepseek.com/chat/completions';
-      const key = current === 'openai' ? env.OPENAI_API_KEY : current === 'groq' ? env.GROQ_API_KEY : env.DEEPSEEK_API_KEY;
-      const controller = new AbortController();
-      timeout = setTimeout(() => controller.abort(), timeoutMs);
-      const r = await fetch(endpoint, {
-        method: 'POST',
-        signal: controller.signal,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }),
-      });
-      if (!r.ok) throw new AiProviderError(aiErrorCategoryFromStatus(r.status), current, model, r.status);
-      let data: any;
-      try {
-        data = await r.json();
-      } catch {
-        throw new AiProviderError('invalid_response', current, model);
-      }
-      const text = providerContentToText(data.choices?.[0]?.message?.content ?? data.text ?? data.output);
-      if (!text) throw new AiProviderError('empty_response', current, model);
-      return { text: validateAnswerReviewResponse(text, expectedAnswerCount, model), model };
-    } catch (error) {
-      lastError = error instanceof AiProviderError ? error : new AiProviderError(safeAiErrorCategory(error), current, model);
-    } finally {
-      if (timeout) clearTimeout(timeout);
-    }
-  }
-  throw lastError instanceof Error ? lastError : new AiProviderError('provider_error', provider);
+  return callOpenRouterWithFallback(
+    env,
+    [{ role: 'user', content: prompt }],
+    OPENROUTER_TEXT_FALLBACKS,
+    undefined,
+    { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs },
+  );
 }
 
 function safeAiErrorMessage(error: unknown): string {
@@ -824,7 +746,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
         aiOperation = 'generation';
         aiProvider = typeof body.provider === 'string' ? body.provider : 'unknown';
         const provider = body.provider as Provider;
-        if (!['openrouter', 'openai', 'groq', 'deepseek'].includes(provider) || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
+        if (provider !== 'openrouter' || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
           return json({ error: 'Invalid generation request' }, 400, headers);
         }
         const baseQuestions = Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : [];
@@ -1013,29 +935,25 @@ ${extraInstruction}`;
     }
 
     if (path === '/api/ai/groq') {
-      if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid Groq request' }, 400, headers);
+      // Backward-compatible alias for older web clients. It never calls Groq;
+      // all requests are routed through the OpenRouter model fallback.
+      if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid request' }, 400, headers);
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];
       const messages: any[] = [];
       if (typeof body.systemInstruction === 'string') messages.push({ role: 'system', content: body.systemInstruction.slice(0, 10_000) });
       messages.push(...history, { role: 'user', content: body.prompt });
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-        body: JSON.stringify({ model: 'openai/gpt-oss-120b', messages, response_format: { type: 'json_object' } }),
-      });
-      if (!response.ok) throw new Error(await response.text());
-      const data = await response.json() as any;
+      const text = await callOpenRouterWithFallback(env, messages, OPENROUTER_TEXT_FALLBACKS);
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {
           user_id: userId,
           operation: 'cosmo_chat',
-          provider: 'groq',
-          model: 'openai/gpt-oss-120b',
+          provider: 'openrouter',
+          model: OPENROUTER_TEXT_MODEL,
           status: 'success',
           latency_ms: Date.now() - startTime,
         });
       }
-      return json({ text: data.choices?.[0]?.message?.content || '' }, 200, headers);
+      return json({ text }, 200, headers);
     }
 
       if (path === '/api/ai/openrouter') {
@@ -1049,7 +967,6 @@ ${extraInstruction}`;
         OPENROUTER_TEXT_MODEL,
         OPENROUTER_VISION_MODEL,
         'openai/gpt-4o-mini',
-        'deepseek/deepseek-chat',
         'anthropic/claude-3.5-haiku',
         'qwen/qwen-2.5-72b-instruct',
         'openai/gpt-oss-20b:free',
@@ -1091,28 +1008,9 @@ ${extraInstruction}`;
           text = await callOpenRouterWithFallback(env, messages, models, undefined, undefined);
         }
       } catch (openRouterError) {
-        // If the text models are temporarily unavailable, keep one bounded
-        // direct-provider recovery path. File attachments never use this path
-        // because direct providers cannot safely inspect an unreadable PDF.
-        if (!isAnswerReview || hasAttachment) throw openRouterError;
-        try {
-          aiProvider = 'direct';
-          const result = await callDirectAnswerReview(
-            'groq',
-            `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\n${body.prompt}`,
-            env,
-            expectedAnswerCount as number,
-            4_000,
-          );
-          aiModel = result.model;
-          text = result.text;
-        } catch (directProviderError) {
-          console.error('All answer-review providers failed after the OpenRouter fallback.', {
-            openRouterCategory: safeAiErrorCategory(openRouterError),
-            directCategory: safeAiErrorCategory(directProviderError),
-          });
-          throw directProviderError;
-        }
+        // Do not fall back to a different provider. OpenRouter already tries
+        // multiple models and preserves one telemetry provider label.
+        throw openRouterError;
       }
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {

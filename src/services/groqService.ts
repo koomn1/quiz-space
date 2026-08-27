@@ -1,6 +1,10 @@
-import { GeneratedQuiz } from '../types';
-import { generateQuizWithProvider } from './aiWorkerClient';
+import type { GeneratedQuiz } from '../types';
+import { generateWithOpenRouter } from './openrouterService';
 
+/**
+ * Legacy name kept for compatibility with older imports. Runtime routing is
+ * OpenRouter-only; this wrapper never contacts Groq.
+ */
 export function generateWithGroq(topic: string, amount: number, alreadyGeneratedQuestions: string[] = []): Promise<GeneratedQuiz> {
-  return generateQuizWithProvider('groq', topic, amount, alreadyGeneratedQuestions);
+  return generateWithOpenRouter(topic, amount, alreadyGeneratedQuestions);
 }
