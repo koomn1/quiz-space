@@ -6,6 +6,9 @@ import '../services/permissions_service.dart';
 import '../widgets/permissions_sheet.dart';
 import '../widgets/profile_badge_rail.dart';
 import '../widgets/quiz_card.dart';
+import '../widgets/native_ui.dart';
+import 'analytics_screen.dart';
+import 'discover_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.repository, this.showBottomNavigation = true});
@@ -75,8 +78,8 @@ class _HomeScreenState extends State<HomeScreen> {
             : _error != null
                 ? _ErrorView(error: _error, onRetry: _loadProfile)
                 : widget.showBottomNavigation
-                    ? IndexedStack(index: _selectedIndex, children: [_HomeTab(profile: _profile!, onShowTakers: _showTakers, onRefresh: _loadProfile), _ProfileTab(profile: _profile!, onSignOut: widget.repository.signOut, onRefresh: _loadProfile)])
-                    : _HomeTab(profile: _profile!, onShowTakers: _showTakers, onRefresh: _loadProfile),
+                    ? IndexedStack(index: _selectedIndex, children: [_HomeTab(profile: _profile!, repository: widget.repository, onShowTakers: _showTakers, onRefresh: _loadProfile), _ProfileTab(profile: _profile!, onSignOut: widget.repository.signOut, onRefresh: _loadProfile)])
+                    : _HomeTab(profile: _profile!, repository: widget.repository, onShowTakers: _showTakers, onRefresh: _loadProfile),
       ),
       bottomNavigationBar: widget.showBottomNavigation
           ? NavigationBar(
@@ -95,9 +98,10 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _HomeTab extends StatelessWidget {
-  const _HomeTab({required this.profile, required this.onShowTakers, required this.onRefresh});
+  const _HomeTab({required this.profile, required this.repository, required this.onShowTakers, required this.onRefresh});
 
   final ProfileModel profile;
+  final QuizSpaceRepository repository;
   final ValueChanged<QuizModel> onShowTakers;
   final Future<void> Function() onRefresh;
 
@@ -110,18 +114,38 @@ class _HomeTab extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
         children: [
-          Row(
-            children: [
-              Image.asset('assets/quizspace-logo.webp', width: 48, height: 48),
-              const SizedBox(width: 12),
-              Expanded(child: Text('أهلًا ${profile.name.isEmpty ? 'بك' : profile.name}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900))),
-              IconButton(onPressed: onRefresh, tooltip: 'تحديث', icon: const Icon(Icons.refresh_rounded)),
-            ],
+          NativeCard(
+            padding: const EdgeInsets.all(16),
+            gradient: const LinearGradient(colors: [Color(0xFF1D2750), Color(0xFF111A31)], begin: Alignment.topRight, end: Alignment.bottomLeft),
+            child: Row(
+              children: [
+                NativeAvatar(photoUrl: profile.photoUrl, radius: 27),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('أهلًا ${profile.name.isEmpty ? 'بك' : profile.name}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 5),
+                    Text('جاهز تكمل رحلتك؟', style: TextStyle(color: Colors.white.withValues(alpha: .66), fontSize: 13)),
+                  ]),
+                ),
+                IconButton(onPressed: onRefresh, tooltip: 'تحديث البيانات', icon: const Icon(Icons.refresh_rounded)),
+              ],
+            ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 14),
+          Align(alignment: AlignmentDirectional.centerStart, child: NativeStatusPill(label: profile.isFounder ? 'حساب مؤسس' : profile.isPremium ? 'خطة Premium' : 'الخطة المجانية', icon: profile.isPremium || profile.isFounder ? Icons.workspace_premium_rounded : Icons.school_outlined, color: profile.isPremium || profile.isFounder ? NativeColors.gold : NativeColors.cyan)),
+          const SizedBox(height: 18),
           _HeroCard(profile: profile),
           const SizedBox(height: 24),
-          const _SectionTitle(title: 'اختباراتك المنشورة', icon: Icons.library_books_outlined),
+          const NativeSectionHeading(title: 'ابدأ بسرعة', icon: Icons.bolt_rounded),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(child: NativeQuickAction(icon: Icons.explore_outlined, label: 'اكتشف اختبارات', color: NativeColors.cyan, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => DiscoverScreen(repository: repository))))),
+            const SizedBox(width: 10),
+            Expanded(child: NativeQuickAction(icon: Icons.insights_outlined, label: 'تحليلاتي', color: NativeColors.primary, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AnalyticsScreen(repository: repository))))),
+          ]),
+          const SizedBox(height: 24),
+          const NativeSectionHeading(title: 'اختباراتك المنشورة', icon: Icons.library_books_outlined),
           const SizedBox(height: 10),
           if (profile.createdQuizzes.isEmpty)
             const _EmptyCard(text: 'لا توجد اختبارات منشورة في هذا الحساب بعد.')
@@ -316,13 +340,6 @@ class _TakerTile extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.icon});
-  final String title;
-  final IconData icon;
-  @override
-  Widget build(BuildContext context) => Row(children: [Icon(icon, color: const Color(0xFFD8B4FE), size: 21), const SizedBox(width: 8), Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900))]);
-}
 
 class _EmptyCard extends StatelessWidget {
   const _EmptyCard({required this.text});

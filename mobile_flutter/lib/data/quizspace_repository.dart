@@ -142,7 +142,10 @@ class QuizSpaceRepository {
 
   Future<void> signInWithGoogle() async {
     if (!_googleInitialized) {
-      await GoogleSignIn.instance.initialize();
+      const serverClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+      await GoogleSignIn.instance.initialize(
+        serverClientId: serverClientId.isEmpty ? null : serverClientId,
+      );
       _googleInitialized = true;
     }
 

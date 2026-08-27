@@ -4,6 +4,7 @@ import '../data/quizspace_repository.dart';
 import '../models/profile_models.dart';
 import '../widgets/permissions_sheet.dart';
 import '../widgets/profile_badge_rail.dart';
+import '../widgets/native_ui.dart';
 import 'admin_overview_screen.dart';
 import 'analytics_screen.dart';
 import 'discover_screen.dart';
@@ -87,8 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: RefreshIndicator(
+    return RefreshIndicator(
         onRefresh: _load,
         color: const Color(0xFFD8B4FE),
         backgroundColor: const Color(0xFF151B31),
@@ -110,7 +110,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _ProfileContent(profile: _profile!, repository: widget.repository, onSignOut: _signOut, onEdit: () => _editProfile(_profile!))
           ],
         ),
-      ),
     );
   }
 }
@@ -128,35 +127,24 @@ class _ProfileContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Card(
-          color: const Color(0xFF151B31),
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 34,
-                  backgroundColor: const Color(0xFF7C3AED).withValues(alpha: 0.3),
-                  backgroundImage: profile.photoUrl.isEmpty ? null : NetworkImage(profile.photoUrl),
-                  child: profile.photoUrl.isEmpty ? const Icon(Icons.person_rounded, size: 34, color: Color(0xFFE9D5FF)) : null,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(profile.name.isEmpty ? 'عضو QuizSpace' : profile.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-                      if (profile.customId.isNotEmpty) Text('@${profile.customId}', style: TextStyle(color: Colors.white.withValues(alpha: 0.58))),
-                      if (profile.bio.isNotEmpty) ...[const SizedBox(height: 6), Text(profile.bio, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: 0.65), height: 1.35))],
-                    ],
-                  ),
-                ),
-                IconButton(onPressed: onEdit, tooltip: 'تعديل البروفايل', icon: const Icon(Icons.edit_rounded)),
-              ],
-            ),
-          ),
+        NativeCard(
+          padding: const EdgeInsets.all(18),
+          gradient: const LinearGradient(colors: [Color(0xFF242B58), Color(0xFF111A31)], begin: Alignment.topRight, end: Alignment.bottomLeft),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              NativeAvatar(photoUrl: profile.photoUrl, radius: 34),
+              const SizedBox(width: 14),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(profile.name.isEmpty ? 'عضو QuizSpace' : profile.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                if (profile.customId.isNotEmpty) Text('@${profile.customId}', style: TextStyle(color: Colors.white.withValues(alpha: .58))),
+                if (profile.location.isNotEmpty) ...[const SizedBox(height: 5), Row(children: [Icon(Icons.location_on_outlined, size: 15, color: Colors.white.withValues(alpha: .55)), const SizedBox(width: 4), Expanded(child: Text(profile.location, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: .62), fontSize: 12)))])],
+              ])),
+              IconButton(onPressed: onEdit, tooltip: 'تعديل البروفايل', icon: const Icon(Icons.edit_rounded)),
+            ]),
+            if (profile.bio.isNotEmpty) ...[const SizedBox(height: 14), Text(profile.bio, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white.withValues(alpha: .7), height: 1.4))],
+            const SizedBox(height: 14),
+            NativeStatusPill(label: profile.isFounder ? 'مؤسس QuizSpace' : profile.isPremium ? 'عضو Premium' : 'عضو في مساحة التعلّم', icon: profile.isFounder || profile.isPremium ? Icons.workspace_premium_rounded : Icons.school_outlined, color: profile.isFounder || profile.isPremium ? NativeColors.gold : NativeColors.cyan),
+          ]),
         ),
         const SizedBox(height: 16),
         ProfileBadgeRail(profile: profile),

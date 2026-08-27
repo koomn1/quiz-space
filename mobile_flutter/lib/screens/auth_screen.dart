@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../data/quizspace_repository.dart';
 
@@ -61,6 +62,8 @@ class _AuthScreenState extends State<AuthScreen> {
     String? nextError;
     try {
       await widget.repository.signInWithGoogle();
+    } on GoogleSignInException catch (error) {
+      nextError = googleSignInErrorMessage(error);
     } on FirebaseAuthException catch (error) {
       nextError = _firebaseErrorMessage(error.code, google: true);
     } catch (_) {
@@ -463,6 +466,25 @@ class _MessageBanner extends StatelessWidget {
   }
 }
 
+String googleSignInErrorMessage(GoogleSignInException error) {
+  switch (error.code) {
+    case GoogleSignInExceptionCode.canceled:
+      return '';
+    case GoogleSignInExceptionCode.clientConfigurationError:
+      return 'إعداد Google للتطبيق غير مكتمل. نزّل النسخة الأخيرة بعد ضبط شهادة Android وجرّب مرة أخرى.';
+    case GoogleSignInExceptionCode.providerConfigurationError:
+      return 'خدمة Google غير متاحة على الجهاز حاليًا. تأكد من تحديث Google Play services ثم حاول مرة أخرى.';
+    case GoogleSignInExceptionCode.uiUnavailable:
+      return 'تعذر فتح اختيار حساب Google الآن. اقفل أي نافذة تسجيل مفتوحة وحاول مرة أخرى.';
+    case GoogleSignInExceptionCode.interrupted:
+      return '';
+    case GoogleSignInExceptionCode.userMismatch:
+      return 'اختار حساب Google آخر أو سجّل خروجًا من الحساب الحالي ثم حاول مرة أخرى.';
+    case GoogleSignInExceptionCode.unknownError:
+      return 'تعذر تسجيل الدخول بحساب Google. تأكد من اتصال الإنترنت وحاول مرة أخرى.';
+  }
+}
+
 String _firebaseErrorMessage(String code, {bool register = false, bool google = false}) {
   if (code == 'email-not-verified') return 'الحساب غير مؤكّد. افتح رسالة التأكيد في بريدك ثم جرّب تسجيل الدخول.';
   if (code == 'user-disabled') return 'الحساب متوقف حاليًا. تواصل مع الدعم.';
@@ -471,6 +493,8 @@ String _firebaseErrorMessage(String code, {bool register = false, bool google = 
   if (code == 'weak-password') return 'اختَر كلمة مرور أقوى من 6 أحرف.';
   if (code == 'invalid-email') return 'اكتب بريدًا إلكترونيًا صحيحًا.';
   if (code == 'network-request-failed') return 'مفيش اتصال بالإنترنت. راجع الشبكة وحاول مرة أخرى.';
+  if (code == 'missing-google-id-token') return 'Google ما رجّعش رمز التحقق. حدّث التطبيق وحاول مرة أخرى.';
+  if (code == 'account-exists-with-different-credential') return 'البريد ده مرتبط بطريقة دخول أخرى. استخدم البريد وكلمة المرور أو اربط Google من نفس الحساب.';
   if (google) return 'تعذر تسجيل الدخول بحساب Google. تأكد من إعداد Firebase وحاول مرة أخرى.';
   return register ? 'تعذر إنشاء الحساب الآن. راجع البيانات وحاول مرة أخرى.' : 'تعذر تسجيل الدخول الآن. راجع البيانات وحاول مرة أخرى.';
 }

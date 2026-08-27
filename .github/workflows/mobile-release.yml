@@ -85,6 +85,27 @@ jobs:
           printf '%s' "$FIREBASE_ANDROID_CONFIG_JSON" > config/google-services.json
           python3 tool/prepare_android_firebase.py
 
+      - name: Resolve Google server client ID without exposing it
+        shell: bash
+        run: |
+          set -euo pipefail
+          GOOGLE_SERVER_CLIENT_ID=$(python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(Path('config/google-services.json').read_text(encoding='utf-8'))
+          packages = [item.get('client_info', {}).get('android_client_info', {}).get('package_name') for item in data.get('client', [])]
+          if 'com.quizspace.badawy' not in packages:
+              raise SystemExit('Firebase config does not contain the Native package com.quizspace.badawy')
+          ids = [oauth.get('client_id') for item in data.get('client', []) for oauth in item.get('oauth_client', []) if oauth.get('client_type') == 3 and oauth.get('client_id')]
+          if not ids:
+              raise SystemExit('Firebase config is missing the Web OAuth client required for Google ID tokens')
+          print(ids[0])
+          PY
+          )
+          echo "::add-mask::$GOOGLE_SERVER_CLIENT_ID"
+          echo "GOOGLE_SERVER_CLIENT_ID=$GOOGLE_SERVER_CLIENT_ID" >> "$GITHUB_ENV"
+
       - name: Verify Android signing secret
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -150,6 +171,7 @@ jobs:
           --dart-define=SUPABASE_URL=$SUPABASE_URL
           --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
           --dart-define=AI_WORKER_URL=$AI_WORKER_URL
+          --dart-define=GOOGLE_SERVER_CLIENT_ID=$GOOGLE_SERVER_CLIENT_ID
 
       - name: Verify signing continuity
         shell: bash
