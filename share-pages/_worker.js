@@ -68,8 +68,11 @@ function renderMetadataPage(url) {
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
+    if (request.method === 'GET' && url.pathname === '/.well-known/assetlinks.json' && env?.ASSETS) {
+      return env.ASSETS.fetch(request);
+    }
     if (request.method !== 'GET' || !SHARE_PATHS.has(url.pathname)) {
       return new Response('Not found', { status: 404 });
     }
