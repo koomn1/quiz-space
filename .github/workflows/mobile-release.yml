@@ -149,8 +149,10 @@ jobs:
             exit 0
           fi
           curl -fsSL "$latest_url" -o /tmp/previous-quizspace.apk
-          current_cert=$(apksigner verify --print-certs build/app/outputs/flutter-apk/app-release.apk | awk -F': ' '/SHA-256 digest:/ {print $2; exit}')
-          previous_cert=$(apksigner verify --print-certs /tmp/previous-quizspace.apk | awk -F': ' '/SHA-256 digest:/ {print $2; exit}')
+          apksigner_path=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n1)
+          test -x "$apksigner_path"
+          current_cert=$("$apksigner_path" verify --print-certs build/app/outputs/flutter-apk/app-release.apk | awk -F': ' '/SHA-256 digest:/ {print $2; exit}')
+          previous_cert=$("$apksigner_path" verify --print-certs /tmp/previous-quizspace.apk | awk -F': ' '/SHA-256 digest:/ {print $2; exit}')
           test -n "$current_cert" && test -n "$previous_cert"
           if [ "$current_cert" != "$previous_cert" ]; then
             echo 'Signing certificate changed; refusing to publish an APK that cannot update the installed app.'
