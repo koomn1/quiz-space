@@ -15,6 +15,10 @@ flutter run \
 
 المفتاح المستخدم هنا هو Supabase anon key العام فقط. لا تستخدم service-role key أو أي مفتاح إداري داخل التطبيق أو داخل مستودع GitHub.
 
+## Google OAuth
+
+من إعدادات Supabase Auth فعّل مزود Google وأضف عميل Android الخاص بالتطبيق مع بصمة SHA-1 الخاصة بالبناء. أضف redirect URL التالي إلى Additional Redirect URLs: `io.quizspace.mobile://login-callback`. يجب أيضًا تسجيل Client ID في إعدادات Google Provider داخل Supabase. الـworkflow يضيف intent-filter تلقائيًا إلى AndroidManifest، لكن إعداد provider وGoogle Cloud يتم مرة واحدة في لوحة Supabase/Google.
+
 ## البيانات والصلاحيات
 
 يقرأ التطبيق بيانات المستخدم المسجل من جداول `users` و`quizzes` و`completions`، ويستخدم RPC `get_quiz_takers_unique` لقائمة الحلّالين. كل الطلبات تمر من عميل Supabase الموثّق وتظل خاضعة لـRLS والصلاحيات الموجودة في المشروع؛ لا توجد بيانات mock أو ترقيات صلاحيات من الواجهة.

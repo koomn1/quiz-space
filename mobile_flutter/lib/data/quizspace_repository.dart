@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/profile_models.dart';
 
@@ -11,12 +12,30 @@ class QuizSpaceRepository {
 
   User? get currentUser => client.auth.currentUser;
 
+  static const googleRedirectUri = 'io.quizspace.mobile://login-callback';
+
   Future<void> signIn({required String email, required String password}) async {
-    await client.auth.signInWithPassword(email: email.trim(), password: password);
+    final response = await client.auth.signInWithPassword(email: email.trim(), password: password);
+    final user = response.user;
+    if (user == null) throw AuthException('LOGIN_FAILED');
+    if (user.emailConfirmedAt == null) {
+      await client.auth.signOut(scope: SignOutScope.local);
+      throw AuthException('EMAIL_NOT_CONFIRMED');
+    }
   }
 
   Future<void> signUp({required String email, required String password}) async {
-    await client.auth.signUp(email: email.trim(), password: password);
+    final response = await client.auth.signUp(email: email.trim(), password: password);
+    if (response.user == null) throw AuthException('SIGNUP_FAILED');
+  }
+
+  Future<void> signInWithGoogle() async {
+    await client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: googleRedirectUri,
+      authScreenLaunchMode: LaunchMode.externalApplication,
+      queryParams: const {'prompt': 'select_account'},
+    );
   }
 
   Future<void> signOut() => client.auth.signOut();

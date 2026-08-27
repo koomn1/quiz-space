@@ -18,6 +18,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passwordController = TextEditingController();
   bool _isRegister = false;
   bool _loading = false;
+  bool _googleLoading = false;
   String? _error;
   String? _success;
 
@@ -26,6 +27,24 @@ class _AuthScreenState extends State<AuthScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _signInWithGoogle() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _googleLoading = true;
+      _error = null;
+      _success = null;
+    });
+    try {
+      await widget.repository.signInWithGoogle();
+    } on AuthException catch (error) {
+      if (mounted) setState(() => _error = error.message == 'EMAIL_NOT_CONFIRMED' ? 'بريدك الإلكتروني غير مؤكد. راجع رسالة التأكيد ثم حاول مرة أخرى.' : 'تعذر فتح Google. تأكد من تفعيل Google في Supabase ثم حاول مرة أخرى.');
+    } catch (_) {
+      if (mounted) setState(() => _error = 'تعذر فتح تسجيل Google الآن. تحقق من اتصال الإنترنت وحاول مرة أخرى.');
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
+    }
   }
 
   Future<void> _submit() async {
@@ -51,8 +70,8 @@ class _AuthScreenState extends State<AuthScreen> {
           password: _passwordController.text,
         );
       }
-    } on AuthException {
-      if (mounted) setState(() => _error = 'تعذر إتمام العملية. راجع البريد وكلمة المرور وحاول مرة أخرى.');
+    } on AuthException catch (error) {
+      if (mounted) setState(() => _error = error.message == 'EMAIL_NOT_CONFIRMED' ? 'بريدك الإلكتروني غير مؤكد. راجع رسالة التأكيد ثم حاول مرة أخرى.' : _isRegister ? 'تعذر إنشاء الحساب. تأكد من البريد وكلمة المرور وحاول مرة أخرى.' : 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
     } catch (_) {
       if (mounted) setState(() => _error = 'حدث خطأ مؤقت في الاتصال. حاول مرة أخرى.');
     } finally {
@@ -116,14 +135,23 @@ class _AuthScreenState extends State<AuthScreen> {
                             ],
                             const SizedBox(height: 20),
                             FilledButton.icon(
-                              onPressed: _loading ? null : _submit,
+                              onPressed: _loading || _googleLoading ? null : _submit,
                               icon: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.arrow_forward_rounded),
                               label: Text(_isRegister ? 'إنشاء الحساب' : 'تسجيل الدخول'),
                               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
                             ),
+                            const SizedBox(height: 14),
+                            Row(children: [Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.14))), Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text('أو', style: TextStyle(color: Colors.white.withValues(alpha: 0.52)))), Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.14)))]),
+                            const SizedBox(height: 14),
+                            OutlinedButton.icon(
+                              onPressed: _loading || _googleLoading ? null : _signInWithGoogle,
+                              icon: _googleLoading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const _GoogleMark(),
+                              label: Text(_googleLoading ? 'جارٍ فتح Google...' : 'المتابعة باستخدام Google'),
+                              style: OutlinedButton.styleFrom(foregroundColor: Colors.white, minimumSize: const Size.fromHeight(52), side: BorderSide(color: Colors.white.withValues(alpha: 0.22)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                            ),
                             const SizedBox(height: 8),
                             TextButton(
-                              onPressed: _loading ? null : () => setState(() { _isRegister = !_isRegister; _error = null; _success = null; }),
+                              onPressed: _loading || _googleLoading ? null : () => setState(() { _isRegister = !_isRegister; _error = null; _success = null; }),
                               child: Text(_isRegister ? 'لديك حساب؟ سجّل الدخول' : 'ليس لديك حساب؟ أنشئ حسابًا'),
                             ),
                           ],
@@ -140,6 +168,15 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
       ),
     );
+  }
+}
+
+class _GoogleMark extends StatelessWidget {
+  const _GoogleMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text('G', style: TextStyle(color: Color(0xFF4285F4), fontSize: 21, fontWeight: FontWeight.w900));
   }
 }
 
