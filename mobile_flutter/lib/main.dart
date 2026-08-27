@@ -16,7 +16,7 @@ Future<void> main() async {
     return;
   }
 
-  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
   runApp(const QuizSpaceApp());
 }
 
