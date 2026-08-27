@@ -191,7 +191,7 @@ async function loadProfile(context: ServiceContext, appUid: string): Promise<Rec
   const [userResult, quizResult, completionResult] = await Promise.all([
     context.client
       .from("users")
-      .select("uid, custom_id, name, bio, location, photo_url, is_premium, is_founder, plan_name, xp")
+      .select("uid, custom_id, name, bio, location, photo_url, is_premium, is_founder, is_admin, plan_name, xp")
       .eq("uid", appUid)
       .limit(1),
     context.client
@@ -325,6 +325,18 @@ async function createQuiz(context: ServiceContext, appUid: string, claims: Fireb
   }).select("id, title, description, questions, category, time_limit, creator_name, total_plays, avg_rating, distribution_routing, creator_id").single();
   if (inserted.error || !inserted.data) throw new Error("quiz_create_failed");
   return inserted.data as Record<string, unknown>;
+}
+
+async function loadAdminOverview(context: ServiceContext, appUid: string): Promise<Record<string, number>> {
+  const admin = await context.client.from("users").select("is_admin").eq("uid", appUid).limit(1);
+  if (admin.error || admin.data?.length !== 1 || admin.data[0].is_admin !== true) throw new Error("admin_required");
+  const [users, quizzes, completions] = await Promise.all([
+    context.client.from("users").select("uid", { count: "exact", head: true }),
+    context.client.from("quizzes").select("id", { count: "exact", head: true }),
+    context.client.from("completions").select("id", { count: "exact", head: true }),
+  ]);
+  if (users.error || quizzes.error || completions.error) throw new Error("admin_overview_failed");
+  return { users: users.count ?? 0, quizzes: quizzes.count ?? 0, completions: completions.count ?? 0 };
 }
 
 async function loadNotificationPreferences(context: ServiceContext, appUid: string): Promise<Record<string, boolean>> {
@@ -495,6 +507,10 @@ Deno.serve(async (request: Request) => {
       return response({ preferences: await loadNotificationPreferences(context, identity.uid) });
     }
 
+    if (action === "admin_overview") {
+      return response({ overview: await loadAdminOverview(context, identity.uid) });
+    }
+
     return genericFailure(400);
   } catch (error) {
     console.error("mobile-firebase-session failed", error instanceof Error ? error.message : "unknown");
@@ -508,6 +524,8 @@ Deno.serve(async (request: Request) => {
     if (message === "profile_update_failed") return response({ error: "تعذر حفظ بيانات البروفايل الآن." }, 500);
     if (message === "public_quizzes_failed") return response({ error: "تعذر تحميل الاختبارات العامة الآن." }, 500);
     if (message === "notification_preferences_failed") return response({ error: "تعذر تحميل تفضيلات الإشعارات الآن." }, 500);
+    if (message === "admin_required") return response({ error: "الصلاحية الإدارية مطلوبة." }, 403);
+    if (message === "admin_overview_failed") return response({ error: "تعذر تحميل مؤشرات الإدارة الآن." }, 500);
     if (message === "server_configuration_missing") return genericFailure(503);
     return genericFailure(500);
   }

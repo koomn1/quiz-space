@@ -8,6 +8,16 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../models/profile_models.dart';
 import '../models/quiz_models.dart';
 
+class AdminOverview {
+  const AdminOverview({required this.users, required this.quizzes, required this.completions});
+
+  final int users;
+  final int quizzes;
+  final int completions;
+
+  factory AdminOverview.fromMap(Map<String, dynamic> map) => AdminOverview(users: _asInt(map['users']), quizzes: _asInt(map['quizzes']), completions: _asInt(map['completions']));
+}
+
 class NotificationPreferences {
   const NotificationPreferences({this.emailAlerts = true, this.rankUpdates = true, this.weeklyReports = false, this.pushEnabled = true});
 
@@ -60,6 +70,13 @@ class QuizSpaceRepository {
     final notice = _pendingAuthNotice;
     _pendingAuthNotice = null;
     return notice;
+  }
+
+  Future<AdminOverview> loadAdminOverview() async {
+    final payload = await _invokeMobileSession(action: 'admin_overview');
+    final overview = _asMap(payload['overview']);
+    if (overview == null) throw const MobileSessionException('الصلاحية الإدارية مطلوبة.');
+    return AdminOverview.fromMap(overview);
   }
 
   Future<NotificationPreferences> loadNotificationPreferences() async {

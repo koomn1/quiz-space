@@ -60,6 +60,7 @@ class ProfileModel {
     required this.photoUrl,
     required this.isPremium,
     required this.isFounder,
+    this.isAdmin = false,
     required this.xp,
     required this.createdQuizzes,
     required this.completions,
@@ -73,6 +74,7 @@ class ProfileModel {
   final String photoUrl;
   final bool isPremium;
   final bool isFounder;
+  final bool isAdmin;
   final int xp;
   final List<QuizModel> createdQuizzes;
   final List<CompletionModel> completions;
@@ -103,6 +105,7 @@ class ProfileModel {
       photoUrl: (user['photo_url'] ?? '').toString(),
       isPremium: user['is_premium'] == true,
       isFounder: user['is_founder'] == true,
+      isAdmin: user['is_admin'] == true,
       xp: _asInt(user['xp']),
       createdQuizzes: quizzes.map(QuizModel.fromMap).where((item) => item.id.isNotEmpty).toList(growable: false),
       completions: completions.map(CompletionModel.fromMap).toList(growable: false),

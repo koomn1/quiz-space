@@ -4,6 +4,7 @@ import '../data/quizspace_repository.dart';
 import '../models/profile_models.dart';
 import '../widgets/permissions_sheet.dart';
 import '../widgets/profile_badge_rail.dart';
+import 'admin_overview_screen.dart';
 import 'analytics_screen.dart';
 import 'discover_screen.dart';
 import 'settings_screen.dart';
@@ -174,6 +175,10 @@ class _ProfileContent extends StatelessWidget {
             _Stat(label: 'الحلول', value: '${profile.quizzesTaken}', icon: Icons.task_alt_rounded),
           ],
         ),
+        if (profile.isAdmin) ...[
+          const SizedBox(height: 22),
+          FilledButton.icon(onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AdminOverviewScreen(repository: repository))), icon: const Icon(Icons.admin_panel_settings_outlined), label: const Text('لوحة السوبر أدمن'), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)))),
+        ],
         const SizedBox(height: 22),
         OutlinedButton.icon(
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => DiscoverScreen(repository: repository))),
