@@ -136,6 +136,18 @@ class QuizSpaceRepository {
     );
   }
 
+  Future<List<QuizModel>> loadPublicQuizzes({String search = '', String category = '', int limit = 20}) async {
+    final payload = await _invokeMobileSession(
+      action: 'public_quizzes',
+      extra: {
+        'search': search.trim().substring(0, search.trim().length > 120 ? 120 : search.trim().length),
+        'category': category.trim().substring(0, category.trim().length > 80 ? 80 : category.trim().length),
+        'limit': limit.clamp(1, 40),
+      },
+    );
+    return _asListOfMaps(payload['quizzes']).map(QuizModel.fromMap).where((item) => item.id.isNotEmpty).toList(growable: false);
+  }
+
   Future<QuizDetailModel> loadQuizDetails(String quizId) async {
     final normalizedQuizId = quizId.trim();
     if (normalizedQuizId.isEmpty) throw const MobileSessionException('رقم الاختبار غير صحيح.');

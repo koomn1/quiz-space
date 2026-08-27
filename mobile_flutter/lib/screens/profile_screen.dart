@@ -5,6 +5,7 @@ import '../models/profile_models.dart';
 import '../widgets/permissions_sheet.dart';
 import '../widgets/profile_badge_rail.dart';
 import 'analytics_screen.dart';
+import 'discover_screen.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -174,6 +175,13 @@ class _ProfileContent extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 22),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => DiscoverScreen(repository: repository))),
+          icon: const Icon(Icons.explore_outlined),
+          label: const Text('اكتشف اختبارات عامة'),
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+        ),
+        const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AnalyticsScreen(repository: repository))),
           icon: const Icon(Icons.insights_outlined),

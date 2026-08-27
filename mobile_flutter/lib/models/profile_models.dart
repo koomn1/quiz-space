@@ -3,17 +3,29 @@ class QuizModel {
     required this.id,
     required this.title,
     this.description = '',
+    this.creatorName = '',
+    this.category = 'عام',
+    this.totalPlays = 0,
+    this.averageRating = 0,
   });
 
   final String id;
   final String title;
   final String description;
+  final String creatorName;
+  final String category;
+  final int totalPlays;
+  final double averageRating;
 
   factory QuizModel.fromMap(Map<String, dynamic> map) {
     return QuizModel(
       id: (map['id'] ?? '').toString(),
       title: (map['title'] ?? 'اختبار بدون اسم').toString(),
       description: (map['description'] ?? '').toString(),
+      creatorName: (map['creator_name'] ?? map['creatorName'] ?? '').toString(),
+      category: (map['category'] ?? 'عام').toString(),
+      totalPlays: _asInt(map['total_plays'] ?? map['totalPlays']),
+      averageRating: _asDouble(map['avg_rating'] ?? map['averageRating']),
     );
   }
 }
@@ -122,6 +134,11 @@ class TakerModel {
       lastAttemptAt: DateTime.tryParse((map['last_attempt_at'] ?? map['created_at'] ?? '').toString()),
     );
   }
+}
+
+double _asDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
 }
 
 int _asInt(dynamic value) {

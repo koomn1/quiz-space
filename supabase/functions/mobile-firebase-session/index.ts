@@ -284,6 +284,24 @@ async function loadQuizDetails(context: ServiceContext, appUid: string, quizId: 
   };
 }
 
+async function loadPublicQuizzes(context: ServiceContext, body: Record<string, unknown>): Promise<Record<string, unknown>[]> {
+  const search = boundedString(body.search, 120);
+  const category = boundedString(body.category, MAX_CATEGORY_LENGTH);
+  const requestedLimit = Number(body.limit);
+  const limit = Number.isInteger(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 40) : 20;
+  let query = context.client
+    .from("quizzes")
+    .select("id, title, description, category, creator_name, total_plays, avg_rating, created_at")
+    .eq("distribution_routing", "public")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (category) query = query.eq("category", category);
+  if (search) query = query.ilike("title", `%${escapeLike(search)}%`);
+  const result = await query;
+  if (result.error) throw new Error("public_quizzes_failed");
+  return (result.data ?? []) as Record<string, unknown>[];
+}
+
 async function createQuiz(context: ServiceContext, appUid: string, claims: FirebaseClaims, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const title = boundedString(body.title, 160);
   const description = boundedString(body.description, MAX_DESCRIPTION_LENGTH);
@@ -423,6 +441,10 @@ Deno.serve(async (request: Request) => {
       return response({ takers: await loadQuizTakers(context, identity.uid, quizId) });
     }
 
+    if (action === "public_quizzes") {
+      return response({ quizzes: await loadPublicQuizzes(context, body) });
+    }
+
     if (action === "quiz_detail") {
       const quizId = boundedString(body.quiz_id, MAX_QUIZ_ID_LENGTH);
       if (!quizId) return genericFailure(400);
@@ -452,6 +474,7 @@ Deno.serve(async (request: Request) => {
     if (message === "attempt_save_failed") return response({ error: "تعذر حفظ المحاولة الآن. حاول مرة أخرى." }, 500);
     if (message === "invalid_profile") return response({ error: "بيانات البروفايل غير صالحة." }, 400);
     if (message === "profile_update_failed") return response({ error: "تعذر حفظ بيانات البروفايل الآن." }, 500);
+    if (message === "public_quizzes_failed") return response({ error: "تعذر تحميل الاختبارات العامة الآن." }, 500);
     if (message === "server_configuration_missing") return genericFailure(503);
     return genericFailure(500);
   }
