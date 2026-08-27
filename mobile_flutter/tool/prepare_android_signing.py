@@ -42,6 +42,15 @@ if (keystorePropertiesFile.exists()) {
         raise SystemExit('Android buildTypes block is missing')
     text = text[:build_types.start()] + signing + text[build_types.start():]
     text = text.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = signingConfigs.getByName("release")', 1)
+    if 'isMinifyEnabled = true' not in text:
+        build_types_start = text.find('buildTypes {')
+        build_types_text = text[build_types_start:] if build_types_start >= 0 else ''
+        release_match = re.search(r'(?m)^(\s*release\s*\{)', build_types_text)
+        if release_match:
+            indent = release_match.group(1)[: -len('release {')] + '    '
+            hardening = f'\n{indent}isMinifyEnabled = true\n{indent}isShrinkResources = true\n{indent}proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")'
+            absolute_end = build_types_start + release_match.end()
+            text = text[:absolute_end] + hardening + text[absolute_end:]
 else:
     imports = 'import java.util.Properties\nimport java.io.FileInputStream\n\n'
     if 'import java.util.Properties' not in text:
@@ -68,6 +77,19 @@ if (keystorePropertiesFile.exists()) {
         raise SystemExit('Android buildTypes block is missing')
     text = text[:build_types.start()] + signing + text[build_types.start():]
     text = text.replace('signingConfig signingConfigs.debug', 'signingConfig signingConfigs.release', 1)
+    if 'minifyEnabled true' not in text:
+        build_types_start = text.find('buildTypes {')
+        build_types_text = text[build_types_start:] if build_types_start >= 0 else ''
+        release_match = re.search(r'(?m)^(\s*release\s*\{)', build_types_text)
+        if release_match:
+            indent = release_match.group(1)[: -len('release {')] + '    '
+            hardening = f'\n{indent}minifyEnabled true\n{indent}shrinkResources true\n{indent}proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"'
+            absolute_end = build_types_start + release_match.end()
+            text = text[:absolute_end] + hardening + text[absolute_end:]
+
+proguard_rules = android / 'app' / 'proguard-rules.pro'
+if not proguard_rules.exists():
+    proguard_rules.write_text('# QuizSpace keeps release rules minimal; do not add secrets here.\n', encoding='utf-8')
 
 app_gradle.write_text(text, encoding='utf-8')
-print(f'Configured release signing in {app_gradle}')
+print(f'Configured release signing and R8 hardening in {app_gradle}')

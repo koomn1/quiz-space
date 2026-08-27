@@ -18,6 +18,7 @@ import android.provider.Settings
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
@@ -25,9 +26,12 @@ import java.io.File
 class MainActivity : FlutterActivity() {
     private val permissionChannelName = "io.quizspace.mobile/permissions"
     private val updateChannelName = "io.quizspace.mobile/update"
+    private val deepLinkChannelName = "io.quizspace.mobile/deep-links"
     private val permissionRequestCode = 8172
     private val updatePreferencesName = "quizspace_update_download"
     private var pendingPermissionResult: MethodChannel.Result? = null
+    private var deepLinkEvents: EventChannel.EventSink? = null
+    private var pendingDeepLink: String? = null
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -47,6 +51,21 @@ class MainActivity : FlutterActivity() {
             }
         }
 
+        intent?.dataString?.let { pendingDeepLink = it }
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, deepLinkChannelName).setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                deepLinkEvents = events
+                pendingDeepLink?.let {
+                    events?.success(it)
+                    pendingDeepLink = null
+                }
+            }
+
+            override fun onCancel(arguments: Any?) {
+                deepLinkEvents = null
+            }
+        })
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, updateChannelName).setMethodCallHandler { call, result ->
             when (call.method) {
                 "status" -> result.success(queryDownload(call.argument<String>("version") ?: ""))
@@ -54,6 +73,18 @@ class MainActivity : FlutterActivity() {
                 "clear" -> clearUpdate(call.argument<String>("version"), result)
                 else -> result.notImplemented()
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val link = intent.dataString?.trim().orEmpty()
+        if (link.isEmpty()) return
+        if (deepLinkEvents != null) {
+            deepLinkEvents?.success(link)
+        } else {
+            pendingDeepLink = link
         }
     }
 

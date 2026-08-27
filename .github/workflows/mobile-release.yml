@@ -144,6 +144,16 @@ jobs:
           EOF
           python3 tool/prepare_android_signing.py
 
+      - name: Verify Android release hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle_file=$(find android/app -maxdepth 1 -type f \( -name 'build.gradle' -o -name 'build.gradle.kts' \) | head -n1)
+          test -n "$gradle_file"
+          grep -Eq 'minifyEnabled true|isMinifyEnabled = true' "$gradle_file"
+          grep -Eq 'shrinkResources true|isShrinkResources = true' "$gradle_file"
+          echo 'R8 minification and resource shrinking are enabled for release.'
+
       - name: Configure Android permissions and update deep link
         run: python3 tool/patch_android_manifest.py android/app/src/main/AndroidManifest.xml
 

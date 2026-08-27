@@ -29,6 +29,49 @@ for permission in permissions:
             raise SystemExit('The application entry was not found in AndroidManifest.xml')
         text = text[:marker_index] + declaration + text[marker_index:]
 
+if 'android:host="quiz-space-app.pages.dev"' not in text:
+    activity_marker = '<activity'
+    activity_index = text.find(activity_marker)
+    if activity_index == -1:
+        raise SystemExit('The main activity entry was not found in AndroidManifest.xml')
+    activity_end = text.find('>', activity_index)
+    if activity_end == -1:
+        raise SystemExit('The main activity opening tag is malformed')
+    activity_opening = text[activity_index:activity_end + 1]
+    if 'android:launchMode=' not in activity_opening:
+        activity_opening = activity_opening[:-1] + ' android:launchMode="singleTop">'
+        text = text[:activity_index] + activity_opening + text[activity_end + 1:]
+        activity_end = activity_index + len(activity_opening) - 1
+    intent_filter = '''
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="quiz-space-app.pages.dev" />
+            </intent-filter>'''
+    text = text[:activity_end + 1] + intent_filter + text[activity_end + 1:]
+
+if 'android:host="quiz-space-share.pages.dev"' not in text:
+    activity_marker = '<activity'
+    activity_index = text.find(activity_marker)
+    if activity_index == -1:
+        raise SystemExit('The main activity entry was not found in AndroidManifest.xml')
+    activity_end = text.find('>', activity_index)
+    if activity_end == -1:
+        raise SystemExit('The main activity opening tag is malformed')
+    intent_filter = '''
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="quiz-space-share.pages.dev" />
+            </intent-filter>'''
+    text = text[:activity_end + 1] + intent_filter + text[activity_end + 1:]
+
 if 'android:scheme="io.quizspace.mobile"' not in text:
     activity_marker = '<activity'
     activity_index = text.find(activity_marker)

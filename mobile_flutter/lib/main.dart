@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:firebase_core/firebase_core.dart';
@@ -9,6 +9,7 @@ import 'data/quizspace_repository.dart';
 import 'screens/auth_screen.dart';
 import 'screens/native_app_shell.dart';
 import 'widgets/update_gate.dart';
+import 'services/deep_link_service.dart';
 
 const _background = Color(0xFF080D1C);
 const _surface = Color(0xFF121A31);
@@ -18,7 +19,6 @@ const _primaryStrong = Color(0xFF7C3AED);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
@@ -98,7 +98,7 @@ class QuizSpaceApp extends StatelessWidget {
           floatingLabelStyle: const TextStyle(color: _primary),
         ),
       ),
-      home: configurationMissing ? const _ConfigurationScreen() : const UpdateGate(child: _AuthGate()),
+      home: configurationMissing ? const _ConfigurationScreen() : const _InternetRequiredGate(child: UpdateGate(child: _AuthGate())),
     );
   }
 }
@@ -119,6 +119,7 @@ class _AuthGateState extends State<_AuthGate> {
   @override
   void initState() {
     super.initState();
+    DeepLinkService.instance.start();
     _repository = QuizSpaceRepository(
       supabaseUrl: const String.fromEnvironment('SUPABASE_URL'),
       supabaseAnonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
@@ -146,6 +147,67 @@ class _AuthGateState extends State<_AuthGate> {
     if (user == null) return AuthScreen(repository: _repository);
 
     return NativeAppShell(repository: _repository);
+  }
+}
+
+class _InternetRequiredGate extends StatefulWidget {
+  const _InternetRequiredGate({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_InternetRequiredGate> createState() => _InternetRequiredGateState();
+}
+
+class _InternetRequiredGateState extends State<_InternetRequiredGate> {
+  bool _checking = true;
+  bool _online = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkConnection();
+  }
+
+  Future<void> _checkConnection() async {
+    if (mounted) setState(() => _checking = true);
+    var online = false;
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
+    try {
+      final request = await client.getUrl(Uri.parse('https://quiz-space-app.pages.dev/')).timeout(const Duration(seconds: 7));
+      final response = await request.close().timeout(const Duration(seconds: 7));
+      await response.drain<void>();
+      online = true;
+    } catch (_) {
+      online = false;
+    } finally {
+      client.close(force: true);
+    }
+    if (mounted) setState(() { _online = online; _checking = false; });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_checking) return const _AuthLoadingView(label: 'بنتأكد من الاتصال بالإنترنت...');
+    if (_online) return widget.child;
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Image.asset('assets/quizspace-logo.webp', width: 86, height: 86),
+              const SizedBox(height: 20),
+              const Text('الاتصال بالإنترنت مطلوب', textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 10),
+              Text('QuizSpace بيحمّل بيانات الحساب والاختبارات مباشرة من السيرفر. اتصل بالإنترنت ثم جرّب تاني.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: .68), height: 1.5)),
+              const SizedBox(height: 20),
+              FilledButton.icon(onPressed: _checkConnection, icon: const Icon(Icons.refresh_rounded), label: const Text('إعادة المحاولة'), style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50))),
+            ]),
+          ),
+        ),
+      ),
+    );
   }
 }
 

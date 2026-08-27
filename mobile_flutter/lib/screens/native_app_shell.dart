@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../data/quizspace_repository.dart';
+import '../services/deep_link_service.dart';
 import '../widgets/native_ui.dart';
 import 'cosmo_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'quiz_creator_screen.dart';
 import 'quiz_library_screen.dart';
+import 'quiz_solve_screen.dart';
 
 class NativeAppShell extends StatefulWidget {
   const NativeAppShell({super.key, required this.repository});
@@ -19,6 +23,31 @@ class NativeAppShell extends StatefulWidget {
 
 class _NativeAppShellState extends State<NativeAppShell> {
   int _selectedIndex = 0;
+  StreamSubscription<String>? _deepLinkSubscription;
+  String? _lastHandledQuizId;
+
+  @override
+  void initState() {
+    super.initState();
+    _deepLinkSubscription = DeepLinkService.instance.links.listen(_handleDeepLink);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pending = DeepLinkService.instance.takePendingLink();
+      if (pending != null) _handleDeepLink(pending);
+    });
+  }
+
+  @override
+  void dispose() {
+    _deepLinkSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _handleDeepLink(String rawLink) async {
+    final quizId = quizIdFromLink(rawLink);
+    if (quizId == null || quizId.isEmpty || quizId == _lastHandledQuizId || !mounted) return;
+    _lastHandledQuizId = quizId;
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuizSolveScreen(repository: widget.repository, quizId: quizId)));
+  }
 
   static const _titles = ['الرئيسية', 'اختباراتي', 'إنشاء اختبار', 'Cosmo', 'حسابي'];
 
