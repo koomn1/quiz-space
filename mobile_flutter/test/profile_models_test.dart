@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import '../lib/models/profile_models.dart';
+import 'package:quizspace_mobile/models/profile_models.dart';
 
 void main() {
   test('computes accuracy from valid completion rows only', () {

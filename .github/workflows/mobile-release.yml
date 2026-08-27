@@ -37,6 +37,9 @@ jobs:
       - name: Generate native Android project files
         run: flutter create --platforms=android --project-name quizspace_mobile --org com.quizspace .
 
+      - name: Remove generated placeholder test
+        run: rm -f test/widget_test.dart
+
       - name: Resolve packages
         run: flutter pub get
 
