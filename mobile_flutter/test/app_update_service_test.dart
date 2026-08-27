@@ -35,6 +35,14 @@ void main() {
     });
   });
 
+  group('Native release gate', () {
+    test('does not treat the rejected v2 WebView release as Native', () {
+      expect(compareVersions('2.0.3', AppUpdateService.minimumNativeVersion), lessThan(0));
+      expect(compareVersions('3.0.0', AppUpdateService.minimumNativeVersion), 0);
+      expect(compareVersions('3.0.1', AppUpdateService.minimumNativeVersion), greaterThan(0));
+    });
+  });
+
   group('compareVersions', () {
     test('compares semantic versions numerically', () {
       expect(compareVersions('1.10.0', '1.9.9'), greaterThan(0));
