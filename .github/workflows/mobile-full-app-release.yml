@@ -111,6 +111,9 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: pnpm build
 
+      - name: Remove compressed web sidecars from APK assets
+        run: find dist -type f \( -name '*.gz' -o -name '*.br' \) -delete
+
       - name: Sync website into Android wrapper
         run: pnpm exec cap sync android
 
