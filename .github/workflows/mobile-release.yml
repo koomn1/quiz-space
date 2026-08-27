@@ -1,0 +1,82 @@
+name: Mobile Flutter Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'GitHub release tag'
+        required: true
+        default: 'mobile-v1.0.0'
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mobile-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Analyze, test, build APK, and publish release
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile_flutter
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.3'
+          channel: stable
+          cache: true
+
+      - name: Resolve packages
+        run: flutter pub get
+
+      - name: Analyze Dart code
+        run: flutter analyze
+
+      - name: Run Dart and widget tests
+        run: flutter test
+
+      - name: Build release APK
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: >-
+          flutter build apk --release
+          --dart-define=SUPABASE_URL=$SUPABASE_URL
+          --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+
+      - name: Prepare release files
+        id: release_files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ../release-artifacts
+          cp build/app/outputs/flutter-apk/app-release.apk ../release-artifacts/quizspace-mobile.apk
+          (cd ../release-artifacts && sha256sum quizspace-mobile.apk > quizspace-mobile.apk.sha256)
+          echo "apk_path=release-artifacts/quizspace-mobile.apk" >> "$GITHUB_OUTPUT"
+          echo "checksum_path=release-artifacts/quizspace-mobile.apk.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: QuizSpace Mobile ${{ inputs.release_tag }}
+          generate_release_notes: true
+          files: |
+            ${{ steps.release_files.outputs.apk_path }}
+            ${{ steps.release_files.outputs.checksum_path }}
+          body: |
+            نسخة Android أصلية من QuizSpace، وليست WebView.
+
+            التثبيت: نزّل `quizspace-mobile.apk` على جهاز Android، وافتح الملف بعد السماح بتثبيت التطبيقات من هذا المصدر.
+
+            للتحقق من الملف، استخدم قيمة SHA-256 الموجودة في `quizspace-mobile.apk.sha256`.
+
+            هذه النسخة تستخدم Supabase Auth والجلسة الآمنة، وتعرض البروفايل والاختبارات المنشورة وقائمة الأعضاء في BottomSheet فوري. لا تشمل نشرًا على App Store أو توقيع iOS.

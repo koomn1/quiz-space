@@ -1,0 +1,160 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../data/quizspace_repository.dart';
+
+class AuthScreen extends StatefulWidget {
+  const AuthScreen({super.key, required this.repository});
+
+  final QuizSpaceRepository repository;
+
+  @override
+  State<AuthScreen> createState() => _AuthScreenState();
+}
+
+class _AuthScreenState extends State<AuthScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isRegister = false;
+  bool _loading = false;
+  String? _error;
+  String? _success;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _loading = true;
+      _error = null;
+      _success = null;
+    });
+
+    try {
+      if (_isRegister) {
+        await widget.repository.signUp(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+        if (!mounted) return;
+        setState(() => _success = 'تم إنشاء الحساب. إذا ظهر طلب تأكيد، راجع بريدك ثم سجّل الدخول.');
+      } else {
+        await widget.repository.signIn(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
+      }
+    } on AuthException {
+      if (mounted) setState(() => _error = 'تعذر إتمام العملية. راجع البريد وكلمة المرور وحاول مرة أخرى.');
+    } catch (_) {
+      if (mounted) setState(() => _error = 'حدث خطأ مؤقت في الاتصال. حاول مرة أخرى.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(child: Image.asset('assets/quizspace-logo.webp', width: 92, height: 92)),
+                  const SizedBox(height: 20),
+                  const Text('QuizSpace', textAlign: TextAlign.center, style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: 0.4)),
+                  const SizedBox(height: 8),
+                  Text(_isRegister ? 'أنشئ حسابك وابدأ التعلم' : 'مرحبًا بعودتك', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.68), fontSize: 16)),
+                  const SizedBox(height: 30),
+                  Card(
+                    color: colors.surface.withValues(alpha: 0.94),
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(22),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              autofillHints: const [AutofillHints.email],
+                              decoration: const InputDecoration(labelText: 'البريد الإلكتروني', prefixIcon: Icon(Icons.mail_outline), border: OutlineInputBorder()),
+                              validator: (value) => value == null || !value.contains('@') ? 'اكتب بريدًا إلكترونيًا صحيحًا' : null,
+                            ),
+                            const SizedBox(height: 14),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: true,
+                              autofillHints: const [AutofillHints.password],
+                              decoration: const InputDecoration(labelText: 'كلمة المرور', prefixIcon: Icon(Icons.lock_outline), border: OutlineInputBorder()),
+                              validator: (value) => value == null || value.length < 6 ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : null,
+                              onFieldSubmitted: (_) => _submit(),
+                            ),
+                            if (_error != null) ...[
+                              const SizedBox(height: 14),
+                              _MessageBanner(text: _error!, color: colors.error),
+                            ],
+                            if (_success != null) ...[
+                              const SizedBox(height: 14),
+                              _MessageBanner(text: _success!, color: colors.tertiary),
+                            ],
+                            const SizedBox(height: 20),
+                            FilledButton.icon(
+                              onPressed: _loading ? null : _submit,
+                              icon: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.arrow_forward_rounded),
+                              label: Text(_isRegister ? 'إنشاء الحساب' : 'تسجيل الدخول'),
+                              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: _loading ? null : () => setState(() { _isRegister = !_isRegister; _error = null; _success = null; }),
+                              child: Text(_isRegister ? 'لديك حساب؟ سجّل الدخول' : 'ليس لديك حساب؟ أنشئ حسابًا'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Text('بياناتك محمية بجلسة Supabase، والتطبيق لا يضع مفاتيح إدارية داخله.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.48), fontSize: 12, height: 1.4)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MessageBanner extends StatelessWidget {
+  const _MessageBanner({required this.text, required this.color});
+
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.35))),
+      child: Text(text, style: TextStyle(color: color, height: 1.35)),
+    );
+  }
+}
