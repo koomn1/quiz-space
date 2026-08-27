@@ -81,19 +81,23 @@ class _UpdateGateState extends State<UpdateGate> with WidgetsBindingObserver {
       await _service.downloadAndInstall(
         update,
         onProgress: (received, total) {
-          if (mounted) setState(() {
-            _received = received;
-            _total = total;
-          });
+          if (mounted) {
+            setState(() {
+              _received = received;
+              _total = total;
+            });
+          }
         },
       );
     } on StateError catch (error) {
-      if (mounted) setState(() {
-        _installPermissionBlocked = error.message == 'INSTALL_PERMISSION_REQUIRED';
-        _error = _installPermissionBlocked
-            ? 'السماح بالتثبيت مطلوب من إعدادات Android. فعّله ثم اضغط تحديث مرة أخرى.'
-            : 'تعذر بدء تثبيت التحديث.';
-      });
+      if (mounted) {
+        setState(() {
+          _installPermissionBlocked = error.message == 'INSTALL_PERMISSION_REQUIRED';
+          _error = _installPermissionBlocked
+              ? 'السماح بالتثبيت مطلوب من إعدادات Android. فعّله ثم اضغط تحديث مرة أخرى.'
+              : 'تعذر بدء تثبيت التحديث.';
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _error = 'تعذر تنزيل التحديث أو التحقق منه. حاول مرة أخرى.');
     } finally {
