@@ -75,6 +75,25 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    if (!email.contains('@')) {
+      setState(() => _error = 'اكتب بريدك الإلكتروني الأول عشان نرسل رابط الاستعادة.');
+      return;
+    }
+    setState(() { _loading = true; _error = null; _success = null; });
+    try {
+      await widget.repository.sendPasswordReset(email: email);
+      if (mounted) setState(() => _success = 'اتبعث رابط إعادة تعيين كلمة المرور على بريدك الإلكتروني.');
+    } on FirebaseAuthException catch (error) {
+      if (mounted) setState(() => _error = _firebaseErrorMessage(error.code));
+    } catch (_) {
+      if (mounted) setState(() => _error = 'تعذر إرسال رابط الاستعادة. حاول مرة أخرى.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     FocusManager.instance.primaryFocus?.unfocus();
@@ -201,6 +220,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                         validator: (value) => value == null || value.length < 6 ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : null,
                                         onFieldSubmitted: (_) => _submit(),
                                       ),
+                                      if (!_isRegister)
+                                        Align(alignment: AlignmentDirectional.centerStart, child: TextButton(onPressed: busy ? null : _resetPassword, child: const Text('نسيت كلمة المرور؟'))),
                                       if (_error != null) ...[
                                         const SizedBox(height: 16),
                                         _MessageBanner(text: _error!, color: colors.error, icon: Icons.error_outline_rounded),

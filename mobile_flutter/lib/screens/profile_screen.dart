@@ -4,6 +4,7 @@ import '../data/quizspace_repository.dart';
 import '../models/profile_models.dart';
 import '../widgets/permissions_sheet.dart';
 import '../widgets/profile_badge_rail.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, required this.repository});
@@ -103,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             else if (_error != null)
               _ErrorCard(onRetry: _load)
             else if (_profile != null)
-              _ProfileContent(profile: _profile!, onSignOut: _signOut, onEdit: () => _editProfile(_profile!))
+              _ProfileContent(profile: _profile!, repository: widget.repository, onSignOut: _signOut, onEdit: () => _editProfile(_profile!))
           ],
         ),
       ),
@@ -112,9 +113,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 class _ProfileContent extends StatelessWidget {
-  const _ProfileContent({required this.profile, required this.onSignOut, required this.onEdit});
+  const _ProfileContent({required this.profile, required this.repository, required this.onSignOut, required this.onEdit});
 
   final ProfileModel profile;
+  final QuizSpaceRepository repository;
   final Future<void> Function() onSignOut;
   final VoidCallback onEdit;
 
@@ -171,6 +173,13 @@ class _ProfileContent extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 22),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsScreen(repository: repository))),
+          icon: const Icon(Icons.settings_outlined),
+          label: const Text('الإعدادات'),
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+        ),
+        const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: () => showModalBottomSheet<void>(
             context: context,

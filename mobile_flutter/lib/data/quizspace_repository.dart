@@ -46,6 +46,12 @@ class QuizSpaceRepository {
     return notice;
   }
 
+  Future<void> sendPasswordReset({required String email}) async {
+    final normalizedEmail = email.trim();
+    if (!normalizedEmail.contains('@')) throw const MobileSessionException('اكتب بريدًا إلكترونيًا صحيحًا.');
+    await firebase.FirebaseAuth.instance.sendPasswordResetEmail(email: normalizedEmail);
+  }
+
   Future<void> signIn({required String email, required String password}) async {
     final credential = await firebase.FirebaseAuth.instance.signInWithEmailAndPassword(
       email: email.trim(),
