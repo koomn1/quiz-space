@@ -92,7 +92,7 @@ jobs:
           storePassword=$ANDROID_KEYSTORE_PASSWORD
           keyPassword=$ANDROID_KEY_PASSWORD
           keyAlias=$ANDROID_KEY_ALIAS
-          storeFile=upload-keystore.jks
+          storeFile=../upload-keystore.jks
           EOF
           python3 tool/prepare_android_signing.py
 
