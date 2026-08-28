@@ -83,32 +83,11 @@ jobs:
           echo "version_code=$((3000000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_OUTPUT"
 
       - name: Resolve Google web client ID without exposing it
-        env:
-          FIREBASE_ANDROID_CONFIG_JSON: ${{ secrets.FIREBASE_ANDROID_CONFIG_JSON }}
         run: |
           set -euo pipefail
-          test -n "$FIREBASE_ANDROID_CONFIG_JSON"
-          GOOGLE_WEB_CLIENT_ID=$(python3 - <<'PY'
-          import json
-          import os
-          data = json.loads(os.environ['FIREBASE_ANDROID_CONFIG_JSON'])
-          matching_clients = [
-              item for item in data.get('client', [])
-              if item.get('client_info', {}).get('android_client_info', {}).get('package_name') == 'com.quizspace.badawy'
-          ]
-          if not matching_clients:
-              raise SystemExit('Firebase config does not contain com.quizspace.badawy')
-          ids = [
-              oauth.get('client_id')
-              for item in matching_clients
-              for oauth in item.get('oauth_client', [])
-              if oauth.get('client_type') == 3 and oauth.get('client_id')
-          ]
-          if len(set(ids)) != 1:
-              raise SystemExit('Firebase config must contain exactly one Web OAuth client for com.quizspace.badawy')
-          print(ids[0])
-          PY
-          )
+          # Must match Supabase Authentication > Sign In / Providers > Google.
+          # This is a public OAuth client identifier, not a secret.
+          GOOGLE_WEB_CLIENT_ID='477977939453-r97ukj1rh0meukc8hdngv1u0sn8htbn2.apps.googleusercontent.com'
           echo "::add-mask::$GOOGLE_WEB_CLIENT_ID"
           echo "VITE_GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID" >> "$GITHUB_ENV"
 
