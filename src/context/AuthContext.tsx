@@ -380,7 +380,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return true;
       } catch (cause) {
         const code = typeof cause === 'object' && cause !== null && 'code' in cause ? String((cause as { code?: unknown }).code) : '';
-        if (code === ErrorCode.SignInCanceled) return false;
+        if (code === ErrorCode.SignInCanceled) {
+          const detail = cause instanceof Error ? cause.message.trim() : '';
+          // Credential Manager can encode provider/OAuth configuration errors
+          // as SIGN_IN_CANCELED. Treat only an empty/generic cancellation as
+          // a user cancel; preserve actionable configuration failures.
+          if (!detail || detail === ErrorCode.SignInCanceled || detail.toLowerCase() === 'canceled' || detail.toLowerCase() === 'cancelled') {
+            return false;
+          }
+          console.error('Google credential flow returned a cancellation detail', detail.slice(0, 240));
+          throw new Error('اختيار الحساب لم يكتمل بسبب إعداد Google في التطبيق. تأكد من OAuth وSHA-1/SHA-256 ثم حاول مرة أخرى.');
+        }
         if (code === ErrorCode.NoCredentialAvailable) throw new Error('لا يوجد حساب Google متاح على هذا الجهاز.');
         if (code === ErrorCode.ProviderConfigurationError) throw new Error('إعداد Google للتطبيق غير مكتمل. تأكد من شهادة Android ثم أعد المحاولة.');
         if (cause instanceof Error && cause.message === 'GOOGLE_ID_TOKEN_MISSING') throw new Error('لم يرجع Google رمز تسجيل صالح. أعد اختيار الحساب.');

@@ -683,9 +683,9 @@ export default function App() {
             const senderName = msg.sender_name || (lang === 'ar' ? 'مستخدم' : 'Scholar');
             const text = msg.text || '';
 
-            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            if (typeof window !== 'undefined' && window.Notification?.permission === 'granted') {
               try {
-                new Notification(lang === 'ar' ? `رسالة جديدة من ${senderName} 💬` : `New message from ${senderName} 💬`, {
+                new window.Notification(lang === 'ar' ? `رسالة جديدة من ${senderName} 💬` : `New message from ${senderName} 💬`, {
                   body: text.length > 70 ? text.substring(0, 70) + '...' : text,
                   icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.webp`
                 });
