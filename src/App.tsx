@@ -807,8 +807,13 @@ export default function App() {
       return;
     }
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user as any;
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Never await Supabase/database work directly inside onAuthStateChange.
+      // Holding the auth callback lock can make native signInWithIdToken appear
+      // to hang immediately after the Google account picker returns.
+      window.setTimeout(() => {
+        void (async () => {
+          const user = session?.user as any;
       const isEmailIdentity = Boolean(
         user?.app_metadata?.provider === 'email' ||
         user?.identities?.some((identity: any) => identity.provider === 'email'),
@@ -954,11 +959,11 @@ export default function App() {
           });
           setIsStatsLoaded(true);
         }
-      } else {
-        setIsUserPremium(false);
-        setUserPlanName('');
-        setUserPhoto(null);
-        setIsGuestSandbox(true);
+          } else {
+            setIsUserPremium(false);
+            setUserPlanName('');
+            setUserPhoto(null);
+            setIsGuestSandbox(true);
         // Guest user fallback - do not reuse a real account id without an
         // active Supabase session, otherwise writes can fail or look signed in.
         let storedUserId = localStorage.getItem('quiz_userId');
@@ -972,10 +977,12 @@ export default function App() {
           storedUserName = guestIdentity.name;
           localStorage.setItem('quiz_userName', storedUserName);
         }
-        setUserId(storedUserId);
-        setUserName(storedUserName);
-        setIsStatsLoaded(true);
-      }
+            setUserId(storedUserId);
+            setUserName(storedUserName);
+            setIsStatsLoaded(true);
+          }
+        })();
+      }, 0);
     });
 
     return () => authListener.subscription.unsubscribe();

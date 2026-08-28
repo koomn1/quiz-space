@@ -16,6 +16,12 @@ describe('Quiz Space App authentication success contract', () => {
     expect(source).toContain('setUserId(user.id)');
   });
 
+  it('defers database work outside the Supabase auth callback lock', () => {
+    expect(source).toContain('Never await Supabase/database work directly inside onAuthStateChange.');
+    expect(source).toContain('window.setTimeout(() => {');
+    expect(source).toContain('void (async () => {');
+  });
+
   it('delegates Google login to the shared AuthContext flow', () => {
     expect(source).toContain('const signedIn = await authContext.signInWithGoogle();');
     expect(source).not.toContain('supabase.auth.signInWithOAuth({');
