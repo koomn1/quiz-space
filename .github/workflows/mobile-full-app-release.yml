@@ -104,8 +104,9 @@ jobs:
           echo "::add-mask::$GOOGLE_WEB_CLIENT_ID"
           echo "VITE_GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID" >> "$GITHUB_ENV"
 
-      - name: Build web assets
+      - name: Build web assets for Android wrapper
         env:
+          DEPLOY_TARGET: cloudflare-pages
           VITE_APP_VERSION: ${{ steps.release_meta.outputs.version_name }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}

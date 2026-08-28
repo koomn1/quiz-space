@@ -345,21 +345,27 @@ export default function Classrooms({
   // Fetch PostgreSQL Classrooms & Students
   const fetchClassroomsData = async () => {
     try {
-      const { data: d1 } = await supabase.from('classrooms').select('*');
-      if (d1 && d1.length > 0) setClassrooms(d1.map(c => ({
+      const [classroomsResult, studentsResult] = await Promise.all([
+        supabase.from('classrooms').select('*'),
+        supabase.from('classroom_students').select('*'),
+      ]);
+      if (classroomsResult.error) throw classroomsResult.error;
+      if (studentsResult.error) throw studentsResult.error;
+
+      setClassrooms((classroomsResult.data || []).map(c => ({
         id: c.id, name: c.name, code: c.code, createdAt: c.created_at,
         createdBy: c.created_by, creatorName: c.creator_name,
         allowStudentMessages: c.allow_student_messages, allowStudentMedia: c.allow_student_media
       })));
-      
-      const { data: d2 } = await supabase.from('classroom_students').select('*');
-      if (d2 && d2.length > 0) setClassroomStudents(d2.map(s => ({
+      setClassroomStudents((studentsResult.data || []).map(s => ({
         id: s.id, classCode: s.class_code, classId: s.class_id, studentId: s.student_id,
         studentName: s.student_name, studentPhoto: s.student_photo, joinedAt: s.joined_at,
-        completedQuizzes: s.completed_quizzes, avgScore: s.avg_score, lastActive: s.last_active, role: s.role
+        completedQuizzes: Number(s.completed_quizzes || 0), avgScore: Number(s.avg_score || 0),
+        lastActive: s.last_active, role: s.role
       })));
     } catch (err) {
       console.error('Error fetching classrooms data:', err);
+      setErrorText(isAr ? 'تعذر تحميل الفصول والطلاب. تحقق من الاتصال ثم أعد المحاولة.' : 'Classrooms could not be loaded. Check your connection and try again.');
     }
   };
 
@@ -590,22 +596,23 @@ export default function Classrooms({
         throw new Error(isAr ? 'تعذر الانضمام. راجع كود الفصل وحاول مرة أخرى.' : 'Could not join the classroom. Check the code and try again.');
       }
 
-      const { data: freshClassrooms } = await supabase.from('classrooms').select('*');
-      if (freshClassrooms) {
-        const mapped = freshClassrooms.map(c => ({
-          id: c.id, name: c.name, code: c.code, createdAt: c.created_at,
-          createdBy: c.created_by, creatorName: c.creator_name,
-          allowStudentMessages: c.allow_student_messages, allowStudentMedia: c.allow_student_media
-        }));
-        setClassrooms(mapped);
-        const joinedClass = mapped.find(c => c.code.toUpperCase() === targetCode);
-        if (joinedClass) {
-          playChimeSound('correct');
-          setActiveClassroomView(joinedClass);
-          setSuccessText(isAr ? 'تم الانضمام للفصل الدراسي بنجاح!' : 'Joined classroom successfully!');
-          setClassCodeInput('');
-        }
-      }
+      const mappedJoinedClass: Classroom = {
+        id: String(joinedClass.id),
+        name: String(joinedClass.name || ''),
+        code: String(joinedClass.code || targetCode),
+        createdAt: String(joinedClass.created_at || new Date().toISOString()),
+        createdBy: String(joinedClass.created_by || ''),
+        creatorName: String(joinedClass.creator_name || ''),
+        allowStudentMessages: joinedClass.allow_student_messages !== false,
+        allowStudentMedia: joinedClass.allow_student_media !== false,
+      };
+      setClassrooms((previous) => [mappedJoinedClass, ...previous.filter((item) => item.id !== mappedJoinedClass.id)]);
+      setActiveClassroomView(mappedJoinedClass);
+      setActiveWorkspaceTab('overview');
+      playChimeSound('correct');
+      setSuccessText(isAr ? 'تم الانضمام للفصل الدراسي بنجاح!' : 'Joined classroom successfully!');
+      setClassCodeInput('');
+      void fetchClassroomsData();
     } catch (err: any) {
       console.error(err);
       setErrorText(err.message || 'Error joining classroom');
@@ -1004,7 +1011,7 @@ export default function Classrooms({
 
   const canManageAttendance = Boolean(activeClassroomView && activeClassroomView.createdBy === currentUserId);
   const classroomAttendanceStudents = activeClassroomView
-    ? classroomStudents.filter((student) => student.classCode === activeClassroomView.code)
+    ? classroomStudents.filter((student) => student.classId === activeClassroomView.id || student.classCode === activeClassroomView.code)
     : [];
   const attendanceVisibleStudents = canManageAttendance
     ? classroomAttendanceStudents

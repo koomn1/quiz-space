@@ -9,6 +9,7 @@ import { recordPushNotificationOpen } from './lib/db';
 import { supabase } from './lib/supabaseClient';
 import { ServiceWorkerUpdatePrompt } from './components/ServiceWorkerUpdatePrompt.tsx';
 import { NativeAppUpdatePrompt } from './components/NativeAppUpdatePrompt.tsx';
+import { AppRuntimeBoundary } from './components/AppRuntimeBoundary.tsx';
 import './index.css';
 
 async function completeNativeAuthCallback(rawUrl: string) {
@@ -72,9 +73,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <App />
-        <ServiceWorkerUpdatePrompt />
-        <NativeAppUpdatePrompt />
+        <AppRuntimeBoundary>
+          <App />
+          <ServiceWorkerUpdatePrompt />
+          <NativeAppUpdatePrompt />
+        </AppRuntimeBoundary>
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,
