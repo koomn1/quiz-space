@@ -29,6 +29,19 @@ for permission in permissions:
             raise SystemExit('The application entry was not found in AndroidManifest.xml')
         text = text[:marker_index] + declaration + text[marker_index:]
 
+# Keep Android App Links limited to quiz-sharing routes. The website host must not
+# capture OAuth callbacks or ordinary website navigation.
+text = re.sub(
+    r'(<data\s+android:scheme="https"\s+android:host="quiz-space-app\.pages\.dev")(?!\s+android:pathPrefix)(\s*/>)',
+    r'\1 android:pathPrefix="/share/quiz"\2',
+    text,
+)
+text = re.sub(
+    r'(<data\s+android:scheme="https"\s+android:host="quiz-space-share\.pages\.dev")(?!\s+android:pathPrefix)(\s*/>)',
+    r'\1 android:pathPrefix="/share/quiz"\2',
+    text,
+)
+
 if 'android:host="quiz-space-app.pages.dev"' not in text:
     activity_marker = '<activity'
     activity_index = text.find(activity_marker)
@@ -49,7 +62,8 @@ if 'android:host="quiz-space-app.pages.dev"' not in text:
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="quiz-space-app.pages.dev" />
+                    android:host="quiz-space-app.pages.dev"
+                    android:pathPrefix="/share/quiz" />
             </intent-filter>'''
     text = text[:activity_end + 1] + intent_filter + text[activity_end + 1:]
 
@@ -68,7 +82,8 @@ if 'android:host="quiz-space-share.pages.dev"' not in text:
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="quiz-space-share.pages.dev" />
+                    android:host="quiz-space-share.pages.dev"
+                    android:pathPrefix="/share/quiz" />
             </intent-filter>'''
     text = text[:activity_end + 1] + intent_filter + text[activity_end + 1:]
 
