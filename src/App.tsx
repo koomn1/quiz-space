@@ -60,7 +60,6 @@ import { generateCoolStudentName } from './lib/nameGenerator';
 import { getOrCreateGuestIdentity } from './lib/guestIdentity';
 import { startWebVitalsReporting } from './lib/performanceTelemetry';
 import { getOnboardingTourStorageKey, shouldShowOnboardingTour } from './lib/onboardingState';
-import { getAuthRedirectUrl } from './lib/authRedirect';
 import { useAuth } from './context/AuthContext';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -810,7 +809,11 @@ export default function App() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const user = session?.user as any;
-      if (user && !user.email_confirmed_at) {
+      const isEmailIdentity = Boolean(
+        user?.app_metadata?.provider === 'email' ||
+        user?.identities?.some((identity: any) => identity.provider === 'email'),
+      );
+      if (user && !user.email_confirmed_at && isEmailIdentity) {
         await supabase.auth.signOut({ scope: 'local' });
         setIsStatsLoaded(true);
         return;
@@ -1119,37 +1122,21 @@ export default function App() {
     }
   };
 
-  // Google Sign-In via Supabase OAuth
+  // Google Sign-In uses the shared AuthContext. On Android this opens the
+  // native account picker; the web fallback remains inside AuthContext.
   const handleGoogleLogin = async () => {
     try {
       setPopupBlocked(false);
       setNetworkFailedError(false);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/'),
-        },
-      });
-      if (error) throw error;
-    } catch (e: any) {
-      console.error('Google Sign In Error:', e);
-      if (
-        (e.message && (
-          e.message.indexOf('popup-blocked') !== -1 ||
-          e.message.indexOf('popup_blocked') !== -1 ||
-          e.message.indexOf('Popup blocked') !== -1 ||
-          e.message.indexOf('auth/popup-blocked') !== -1
-        ))
-      ) {
-        setPopupBlocked(true);
-      } else if (
-        e.code === 'auth/network-request-failed' || 
-        (e.message && e.message.includes('network-request-failed'))
-      ) {
-        setNetworkFailedError(true);
-      } else if (e.code !== 'auth/popup-closed-by-user') {
-        alert(lang === 'ar' ? 'حدث خطأ أثناء تسجيل الدخول بواسطة جوجل: ' + e.message : 'An error occurred during Google sign in: ' + e.message);
+      const signedIn = await authContext.signInWithGoogle();
+      if (signedIn) {
+        setAuthRedirectQuizId(null);
+        setLoginRedirectTab(null);
       }
+    } catch (e: any) {
+      console.error('Google Sign In Error:', e?.message || 'unknown');
+      const message = e?.message || (lang === 'ar' ? 'تعذر تسجيل الدخول بجوجل حالياً.' : 'Google sign-in is unavailable right now.');
+      alert(message);
     }
   };
 

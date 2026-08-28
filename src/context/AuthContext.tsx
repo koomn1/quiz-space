@@ -28,7 +28,7 @@ interface AuthContextType {
   clearPasswordRecovery: () => void;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ status: 'SUCCESS' | 'MFA_REQUIRED' }>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<boolean>;
   verifyEmailCode: (email: string, code: string) => Promise<void>;
   resendEmailVerification: (email: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
@@ -120,16 +120,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   useEffect(() => {
+    let syncGeneration = 0;
+
     const syncSession = async (nextSession: Session | null) => {
+      const generation = ++syncGeneration;
       const nextUser = nextSession?.user;
-      if (nextUser && !nextUser.email_confirmed_at) {
-        await supabase.auth.signOut({ scope: 'local' });
-        setSession(null);
-        setUser(null);
-        return;
+      const isEmailIdentity = Boolean(
+        nextUser?.app_metadata?.provider === 'email' ||
+        nextUser?.identities?.some((identity) => identity.provider === 'email'),
+      );
+
+      try {
+        if (nextUser && !nextUser.email_confirmed_at && isEmailIdentity) {
+          await supabase.auth.signOut({ scope: 'local' });
+          setSession(null);
+          setUser(null);
+          return;
+        }
+
+        if (generation !== syncGeneration) return;
+        setSession(nextSession);
+        if (!nextUser) {
+          setUser(null);
+          return;
+        }
+
+        try {
+          const resolvedUser = await fetchAppUser(nextUser);
+          if (generation === syncGeneration) setUser(resolvedUser);
+        } catch (error) {
+          // A profile-row/RLS failure must not make a valid Auth session look
+          // like a failed login. App.tsx has its own guarded stats fallback.
+          console.error('Profile bootstrap failed after authentication', error instanceof Error ? error.message : 'unknown');
+          if (generation !== syncGeneration) return;
+          const fallbackName = nextUser.user_metadata?.full_name || nextUser.user_metadata?.name || nextUser.email?.split('@')[0] || 'طالب متميز';
+          setUser({
+            uid: nextUser.id,
+            email: nextUser.email || '',
+            name: fallbackName,
+            photoURL: nextUser.user_metadata?.avatar_url || nextUser.user_metadata?.picture || getDefaultAvatar(fallbackName),
+            planName: 'Free',
+            isPremium: false,
+          });
+        }
+      } finally {
+        if (generation === syncGeneration) setLoading(false);
       }
-      setSession(nextSession);
-      setUser(nextUser ? await fetchAppUser(nextUser) : null);
     };
 
     const handleOAuthRedirectTokens = async (rawUrl: string) => {
@@ -170,10 +206,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
       if (event === 'SIGNED_OUT') setPasswordRecovery(false);
-      await syncSession(nextSession);
+      // Supabase recommends not awaiting network/database work directly in
+      // the auth callback; defer it to avoid blocking the session lock.
+      window.setTimeout(() => { void syncSession(nextSession); }, 0);
     });
 
     return () => {
@@ -281,7 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { status: 'SUCCESS' };
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<boolean> => {
     if (Capacitor.isNativePlatform()) {
       const clientId = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID?.trim();
       if (!clientId) throw new Error('إعداد Google Native غير مكتمل. أعد بناء التطبيق من خلال الإصدار الرسمي.');
@@ -297,10 +335,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           token: result.idToken,
         });
         if (error || !data.session) throw new Error('تعذر إنشاء جلسة QuizSpace بعد اختيار الحساب.');
-        return;
+        return true;
       } catch (cause) {
         const code = typeof cause === 'object' && cause !== null && 'code' in cause ? String((cause as { code?: unknown }).code) : '';
-        if (code === ErrorCode.SignInCanceled) return;
+        if (code === ErrorCode.SignInCanceled) return false;
         if (code === ErrorCode.NoCredentialAvailable) throw new Error('لا يوجد حساب Google متاح على هذا الجهاز.');
         if (code === ErrorCode.ProviderConfigurationError) throw new Error('إعداد Google للتطبيق غير مكتمل. تأكد من شهادة Android ثم أعد المحاولة.');
         if (cause instanceof Error && cause.message === 'GOOGLE_ID_TOKEN_MISSING') throw new Error('لم يرجع Google رمز تسجيل صالح. أعد اختيار الحساب.');
@@ -320,6 +358,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) {
       throw new Error('تعذر فتح تسجيل الدخول بجوجل. تحقق من تفعيل مزود Google ثم حاول مرة أخرى.');
     }
+    return true;
   };
 
   const verifyMfaCode = async (code: string) => {

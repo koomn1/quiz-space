@@ -16,10 +16,10 @@ describe('Quiz Space App authentication success contract', () => {
     expect(source).toContain('setUserId(user.id)');
   });
 
-  it('uses the shared safe callback builder for Google login', () => {
-    expect(source).toContain("import { getAuthRedirectUrl } from './lib/authRedirect';");
-    expect(source).toContain("redirectTo: getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/')");
-    expect(source).not.toContain("redirectTo: window.location.origin + (import.meta.env.BASE_URL || '/')");
+  it('delegates Google login to the shared AuthContext flow', () => {
+    expect(source).toContain('const signedIn = await authContext.signInWithGoogle();');
+    expect(source).not.toContain('supabase.auth.signInWithOAuth({');
+    expect(source).not.toContain('redirectTo: window.location.origin + (import.meta.env.BASE_URL || \'/\')');
   });
 
   it('shows the splash on primary-root loads but not on inner routes or auth refreshes', () => {

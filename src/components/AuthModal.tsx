@@ -169,12 +169,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   };
 
   const handleGoogleSignIn = async () => {
+    if (googleLoading || loading) return;
     setGoogleLoading(true);
     setError('');
+    setSuccess('');
     try {
-      await signInWithGoogle();
+      const signedIn = await signInWithGoogle();
+      if (signedIn) onClose();
     } catch (err: any) {
       setError(err?.message || 'تعذر فتح تسجيل الدخول بجوجل. حاول مرة أخرى.');
+    } finally {
       setGoogleLoading(false);
     }
   };
