@@ -42,6 +42,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 let nativeGoogleInitialized = false;
 
+function withAuthTimeout<T>(promise: Promise<T>, timeoutMs: number, code: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(code)), timeoutMs);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 const APP_USER_COLUMNS = 'uid, email, name, photo_url, custom_id, is_premium, plan_name';
 
 async function fetchAppUser(authUser: User): Promise<AppUser> {
@@ -346,13 +362,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await GoogleSignIn.initialize({ clientId });
           nativeGoogleInitialized = true;
         }
-        const result = await GoogleSignIn.signIn();
+        const result = await withAuthTimeout(GoogleSignIn.signIn(), 30_000, 'GOOGLE_SIGN_IN_TIMEOUT');
         if (!result.idToken) throw new Error('GOOGLE_ID_TOKEN_MISSING');
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: 'google',
-          token: result.idToken,
-        });
-        if (error || !data.session) throw new Error('تعذر إنشاء جلسة QuizSpace بعد اختيار الحساب.');
+        const { data, error } = await withAuthTimeout(
+          supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: result.idToken,
+          }),
+          20_000,
+          'SUPABASE_GOOGLE_TIMEOUT',
+        );
+        if (error) {
+          console.error('Supabase Google exchange failed', { code: error.code, status: error.status });
+          throw new Error(`SUPABASE_GOOGLE_AUTH:${error.code || 'unknown'}`);
+        }
+        if (!data.session) throw new Error('SUPABASE_GOOGLE_NO_SESSION');
         return true;
       } catch (cause) {
         const code = typeof cause === 'object' && cause !== null && 'code' in cause ? String((cause as { code?: unknown }).code) : '';
@@ -360,8 +384,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (code === ErrorCode.NoCredentialAvailable) throw new Error('لا يوجد حساب Google متاح على هذا الجهاز.');
         if (code === ErrorCode.ProviderConfigurationError) throw new Error('إعداد Google للتطبيق غير مكتمل. تأكد من شهادة Android ثم أعد المحاولة.');
         if (cause instanceof Error && cause.message === 'GOOGLE_ID_TOKEN_MISSING') throw new Error('لم يرجع Google رمز تسجيل صالح. أعد اختيار الحساب.');
-        console.error('Native Google sign-in failed', code || 'unknown');
-        throw new Error('تعذر تسجيل الدخول باستخدام Google حاليًا. حاول مرة أخرى.');
+        if (cause instanceof Error && cause.message === 'GOOGLE_SIGN_IN_TIMEOUT') throw new Error('لم يرجع Google نتيجة اختيار الحساب خلال المهلة. افتح اختيار الحساب وحاول مرة أخرى.');
+        if (cause instanceof Error && cause.message === 'SUPABASE_GOOGLE_TIMEOUT') throw new Error('تم اختيار الحساب، لكن خادم تسجيل QuizSpace لم يرد خلال المهلة. تحقق من الإنترنت وحاول مرة أخرى.');
+        if (cause instanceof Error && cause.message === 'SUPABASE_GOOGLE_NO_SESSION') throw new Error('تم اختيار الحساب، لكن لم تعد جلسة QuizSpace. حاول مرة أخرى.');
+        if (cause instanceof Error && cause.message.startsWith('SUPABASE_GOOGLE_AUTH:')) throw new Error('تم اختيار الحساب، لكن رفض خادم QuizSpace تسجيل الدخول. حاول مرة أخرى أو استخدم البريد وكلمة المرور.');
+        console.error('Native Google sign-in failed', code || 'unknown', cause instanceof Error ? cause.message : 'unknown');
+        throw new Error('تعذر إكمال تسجيل الدخول بجوجل. اختر الحساب مرة أخرى أو استخدم البريد وكلمة المرور.');
       }
     }
 

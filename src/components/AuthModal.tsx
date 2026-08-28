@@ -175,7 +175,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
     setSuccess('');
     try {
       const signedIn = await signInWithGoogle();
-      if (signedIn) onClose();
+      if (signedIn) {
+        onClose();
+      } else {
+        setError('تم إلغاء اختيار حساب Google أو لم يرجع التطبيق بنتيجة. اضغط المحاولة مرة أخرى.');
+      }
     } catch (err: any) {
       setError(err?.message || 'تعذر فتح تسجيل الدخول بجوجل. حاول مرة أخرى.');
     } finally {
