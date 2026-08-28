@@ -26,6 +26,7 @@ export interface LatestMobileRelease {
   version: string;
   apkUrl: string;
   checksumUrl: string;
+  checksumSha256?: string;
 }
 
 const RELEASES_URL = 'https://api.github.com/repos/koomn1/quiz-space/releases/latest';
@@ -70,14 +71,17 @@ export async function findLatestMobileRelease(signal?: AbortSignal): Promise<Lat
     headers: { Accept: 'application/vnd.github+json' },
   });
   if (!response.ok) throw new Error('تعذر فحص تحديث التطبيق الآن.');
-  const release = await response.json() as { tag_name?: string; assets?: Array<{ name?: string; browser_download_url?: string }> };
+  const release = await response.json() as { tag_name?: string; assets?: Array<{ name?: string; browser_download_url?: string; digest?: string }> };
   const tagName = (release.tag_name || '').trim();
   const version = tagName.replace(/^mobile-v/i, '');
   const apk = release.assets?.find((asset) => asset.name === 'quizspace-mobile.apk')?.browser_download_url;
-  const checksum = release.assets?.find((asset) => asset.name === 'quizspace-mobile.apk.sha256')?.browser_download_url;
+  const checksumAsset = release.assets?.find((asset) => asset.name === 'quizspace-mobile.apk.sha256');
+  const checksum = checksumAsset?.browser_download_url;
+  const apkAsset = release.assets?.find((asset) => asset.name === 'quizspace-mobile.apk');
+  const checksumSha256 = (apkAsset?.digest || '').replace(/^sha256:/i, '').match(/^[a-f0-9]{64}$/i)?.[0].toLowerCase();
   if (!tagName || !isAtLeastNativeVersion(version) || !apk || !checksum) return null;
   if (!isTrustedDownloadUrl(apk) || !isTrustedDownloadUrl(checksum)) return null;
-  return { tagName, version, apkUrl: apk, checksumUrl: checksum };
+  return { tagName, version, apkUrl: apk, checksumUrl: checksum, checksumSha256 };
 }
 
 export async function fetchExpectedSha256(url: string): Promise<string> {

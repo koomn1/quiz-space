@@ -130,7 +130,7 @@ export function NativeAppUpdatePrompt() {
     setInstalling(true);
     setError('');
     try {
-      const expected = await fetchExpectedSha256(release.checksumUrl);
+      const expected = release.checksumSha256 || await fetchExpectedSha256(release.checksumUrl);
       const actual = (await QuizSpaceUpdate.sha256({ fileName: download?.fileName || fileName })).sha256.toLowerCase();
       if (actual !== expected) throw new Error('فشل التحقق من سلامة التحديث. أعد التنزيل.');
       await QuizSpaceUpdate.openInstaller({ fileName: download?.fileName || fileName });
