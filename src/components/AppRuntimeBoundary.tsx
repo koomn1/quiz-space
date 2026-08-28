@@ -1,17 +1,28 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 type Props = { children: ReactNode };
-type State = { hasError: boolean };
+type State = { hasError: boolean; errorMessage: string };
+
+function safeRuntimeErrorCode(message: string): string {
+  const normalized = message.trim().replace(/\s+/g, ' ').slice(0, 180);
+  return normalized || 'UNKNOWN_RUNTIME_ERROR';
+}
 
 export class AppRuntimeBoundary extends Component<Props, State> {
-  state: State = { hasError: false };
+  state: State = { hasError: false, errorMessage: '' };
 
-  static getDerivedStateFromError(): State {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, errorMessage: safeRuntimeErrorCode(error?.message || '') };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('QuizSpace runtime error', error.message, info.componentStack);
+    const errorCode = safeRuntimeErrorCode(error?.message || '');
+    try {
+      window.localStorage.setItem('quizspace_last_runtime_error', JSON.stringify({ errorCode, at: new Date().toISOString() }));
+    } catch {
+      // Diagnostics must never create a second runtime failure.
+    }
+    console.error('QuizSpace runtime error', errorCode, info.componentStack);
   }
 
   private retry = () => {
@@ -41,6 +52,9 @@ export class AppRuntimeBoundary extends Component<Props, State> {
           <h1 style={{ margin: 0, fontSize: 24 }}>حصل عطل مؤقت</h1>
           <p style={{ margin: 0, lineHeight: 1.8, color: '#cbd5e1' }}>
             التطبيق لسه بيحاول يجهز البيانات. اضغط إعادة المحاولة، وتأكد إن الإنترنت شغال.
+          </p>
+          <p dir="ltr" style={{ margin: 0, maxWidth: 380, overflowWrap: 'anywhere', fontSize: 12, lineHeight: 1.6, color: '#94a3b8' }}>
+            {this.state.errorMessage || 'UNKNOWN_RUNTIME_ERROR'}
           </p>
           <button
             type="button"

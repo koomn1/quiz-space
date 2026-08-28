@@ -807,12 +807,15 @@ export default function App() {
       return;
     }
 
+    let authSyncGeneration = 0;
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const generation = ++authSyncGeneration;
       // Never await Supabase/database work directly inside onAuthStateChange.
       // Holding the auth callback lock can make native signInWithIdToken appear
       // to hang immediately after the Google account picker returns.
       window.setTimeout(() => {
         void (async () => {
+          if (generation !== authSyncGeneration) return;
           const user = session?.user as any;
       const isEmailIdentity = Boolean(
         user?.app_metadata?.provider === 'email' ||
@@ -983,9 +986,8 @@ export default function App() {
             setIsStatsLoaded(true);
           }
         })();
-      }, 0);
+            }, 0);
     });
-
     return () => authListener.subscription.unsubscribe();
   }, []);  // Initialize Account and check URL routes on start
 

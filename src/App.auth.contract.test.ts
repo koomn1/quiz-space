@@ -22,6 +22,12 @@ describe('Quiz Space App authentication success contract', () => {
     expect(source).toContain('void (async () => {');
   });
 
+  it('ignores stale auth events that arrive after a newer session event', () => {
+    expect(source).toContain('let authSyncGeneration = 0;');
+    expect(source).toContain('const generation = ++authSyncGeneration;');
+    expect(source).toContain('if (generation !== authSyncGeneration) return;');
+  });
+
   it('delegates Google login to the shared AuthContext flow', () => {
     expect(source).toContain('const signedIn = await authContext.signInWithGoogle();');
     expect(source).not.toContain('supabase.auth.signInWithOAuth({');
