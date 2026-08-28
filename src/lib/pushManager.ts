@@ -10,10 +10,13 @@ export async function registerPushNotifications(userId: string): Promise<'grante
     const registration = await registerQuizSpaceServiceWorker();
     if (!registration) return 'default';
 
-    let permission = Notification.permission;
+    // Android Capacitor WebView may not expose the browser Notification
+    // constructor. Use the guarded window property only after the feature
+    // detection above; never reference the global name directly.
+    let permission = window.Notification?.permission || 'default';
 
-    if (permission === 'default') {
-      permission = await Notification.requestPermission();
+    if (permission === 'default' && window.Notification) {
+      permission = await window.Notification.requestPermission();
     }
 
     if (permission === 'granted') {
