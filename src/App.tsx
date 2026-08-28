@@ -875,9 +875,9 @@ export default function App() {
           }
         }
         
-        if (!onboarded) {
-          setShowPostRegisterModal(true);
-        }
+        // The onboarding modal is opened only after the authenticated profile
+        // and initial stats have finished loading. Rendering it during the
+        // auth callback can mask a valid login with a runtime/bootstrap error.
 
         // Success logged in chime sound
         playNotificationSound('chime');
@@ -958,6 +958,7 @@ export default function App() {
             }
           });
           setIsStatsLoaded(true);
+          if (!onboarded) setShowPostRegisterModal(true);
         }
           } else {
             setIsUserPremium(false);
