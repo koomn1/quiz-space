@@ -112,6 +112,24 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
   };
 }
 
+const PROFILE_BOOTSTRAP_TIMEOUT_MS = 12_000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error('PROFILE_BOOTSTRAP_TIMEOUT')), timeoutMs);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -146,7 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         try {
-          const resolvedUser = await fetchAppUser(nextUser);
+          const resolvedUser = await withTimeout(fetchAppUser(nextUser), PROFILE_BOOTSTRAP_TIMEOUT_MS);
           if (generation === syncGeneration) setUser(resolvedUser);
         } catch (error) {
           // A profile-row/RLS failure must not make a valid Auth session look

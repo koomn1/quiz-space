@@ -15,4 +15,11 @@ describe('Quiz Space password recovery auth contract', () => {
   it('does not reveal whether a submitted email belongs to an account', () => {
     expect(source).toContain('تعذر إرسال رابط الاستعادة حالياً. حاول مرة أخرى بعد قليل.');
   });
+
+  it('bounds profile bootstrap and preserves a fallback user after profile failures', () => {
+    expect(source).toContain('PROFILE_BOOTSTRAP_TIMEOUT_MS = 12_000');
+    expect(source).toContain('withTimeout(fetchAppUser(nextUser), PROFILE_BOOTSTRAP_TIMEOUT_MS)');
+    expect(source).toContain('Profile bootstrap failed after authentication');
+    expect(source).toContain('setUser({');
+  });
 });
