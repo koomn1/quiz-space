@@ -92,12 +92,20 @@ jobs:
           import json
           import os
           data = json.loads(os.environ['FIREBASE_ANDROID_CONFIG_JSON'])
-          packages = [item.get('client_info', {}).get('android_client_info', {}).get('package_name') for item in data.get('client', [])]
-          if 'com.quizspace.badawy' not in packages:
+          matching_clients = [
+              item for item in data.get('client', [])
+              if item.get('client_info', {}).get('android_client_info', {}).get('package_name') == 'com.quizspace.badawy'
+          ]
+          if not matching_clients:
               raise SystemExit('Firebase config does not contain com.quizspace.badawy')
-          ids = [oauth.get('client_id') for item in data.get('client', []) for oauth in item.get('oauth_client', []) if oauth.get('client_type') == 3 and oauth.get('client_id')]
-          if not ids:
-              raise SystemExit('Firebase config is missing the Web OAuth client')
+          ids = [
+              oauth.get('client_id')
+              for item in matching_clients
+              for oauth in item.get('oauth_client', [])
+              if oauth.get('client_type') == 3 and oauth.get('client_id')
+          ]
+          if len(set(ids)) != 1:
+              raise SystemExit('Firebase config must contain exactly one Web OAuth client for com.quizspace.badawy')
           print(ids[0])
           PY
           )
@@ -133,6 +141,9 @@ jobs:
             exit 1
           fi
           keytool -list -keystore /tmp/quizspace-upload-keystore.jks -storepass "$ANDROID_KEYSTORE_PASSWORD" >/dev/null
+          echo 'Release certificate fingerprints (public OAuth identifiers):'
+          keytool -list -v -keystore /tmp/quizspace-upload-keystore.jks -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
+            | awk -F': ' '/Owner:|SHA1:|SHA256:/ {print $1 ": " $2}'
 
       - name: Configure Android release signing
         env:
