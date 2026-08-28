@@ -514,7 +514,7 @@ export default function App() {
   // Show push banner only after login if permission is not granted and banner not dismissed for this session
   React.useEffect(() => {
     if (!userId || userId.startsWith('user-guest')) return;
-    const perm = Notification.permission;
+    const perm = typeof window !== 'undefined' && window.Notification ? window.Notification.permission : 'default';
     const dismissed = localStorage.getItem('quiz_push_banner_dismissed') === 'true';
     setShowPushBanner(perm !== 'granted' && !dismissed);
   }, [userId]);

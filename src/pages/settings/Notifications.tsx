@@ -39,7 +39,8 @@ export default function Notifications({ lang }: NotificationsProps) {
       setRankUpdates(preferences.rankUpdates);
       setWeeklyReports(preferences.weeklyReports);
       setPushEnabled(preferences.pushEnabled);
-      setIsLeaderboardPushEnabled(preferences.pushEnabled && Notification.permission === 'granted');
+      const browserPushGranted = typeof window !== 'undefined' && window.Notification?.permission === 'granted';
+      setIsLeaderboardPushEnabled(preferences.pushEnabled && browserPushGranted);
     };
 
     void loadPreferences();
