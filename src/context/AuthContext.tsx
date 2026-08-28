@@ -373,8 +373,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           'SUPABASE_GOOGLE_TIMEOUT',
         );
         if (error) {
-          const providerCode = String(error.code || 'unknown').trim().slice(0, 80);
-          console.error('Supabase Google exchange failed', { code: providerCode, status: error.status });
+          const rawMessage = String(error.message || '').toLowerCase();
+          const providerCode = String(
+            error.code ||
+            (rawMessage.includes('provider') && (rawMessage.includes('disabled') || rawMessage.includes('not enabled')) ? 'provider_disabled' : '') ||
+            (rawMessage.includes('audience') || rawMessage.includes('client id') || rawMessage.includes('invalid id token') ? 'invalid_credentials' : '') ||
+            (rawMessage.includes('jwt') ? 'bad_jwt' : '') ||
+            (rawMessage.includes('callback') ? 'bad_oauth_callback' : '') ||
+            `http_${error.status || 'unknown'}`,
+          ).trim().slice(0, 80);
+          console.error('Supabase Google exchange failed', { code: providerCode, status: error.status, message: String(error.message || '').slice(0, 240) });
           throw new Error(`SUPABASE_GOOGLE_AUTH:${providerCode}`);
         }
         if (!data.session) throw new Error('SUPABASE_GOOGLE_NO_SESSION');
@@ -404,6 +412,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (providerCode === 'invalid_credentials' || providerCode === 'bad_jwt') throw new Error('تم اختيار الحساب، لكن Google Web Client ID في التطبيق لا يطابق المعرّف المضاف في Supabase. حدّث إعداد Google ثم أعد بناء التطبيق.');
           if (providerCode === 'bad_oauth_callback') throw new Error('تم اختيار الحساب، لكن إعداد OAuth في Supabase غير مكتمل. راجع Google Client ID وSecret ثم أعد المحاولة.');
           console.error('Unhandled Supabase Google provider error', providerCode);
+          if (providerCode.startsWith('http_')) throw new Error('تم اختيار الحساب، لكن خادم QuizSpace رفض جلسة Google. تحقق من تفعيل Google في Supabase وتطابق Google Web Client ID ثم حاول مرة أخرى.');
           throw new Error(`تم اختيار الحساب، لكن رفض خادم QuizSpace تسجيل الدخول (${providerCode}).`);
         }
         console.error('Native Google sign-in failed', code || 'unknown', cause instanceof Error ? cause.message : 'unknown');
