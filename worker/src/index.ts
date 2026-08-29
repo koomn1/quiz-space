@@ -1033,7 +1033,7 @@ ${extraInstruction}`;
               env,
               messages,
               models,
-              { max_tokens: 4_000, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number },
+              { timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number },
             );
             aiModel = result.model;
             text = result.text;
@@ -1048,7 +1048,7 @@ ${extraInstruction}`;
               messages,
               models,
               undefined,
-              { max_tokens: 4_000, timeoutMs: 30_000 },
+              { timeoutMs: 30_000 },
             );
             aiModel = models[0];
           }
