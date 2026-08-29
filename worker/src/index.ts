@@ -76,7 +76,7 @@ const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
 ];
-const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000;
+  const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000;
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
 
@@ -1033,7 +1033,7 @@ ${extraInstruction}`;
               env,
               messages,
               models,
-              { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number },
+              { max_tokens: 4_000, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number },
             );
             aiModel = result.model;
             text = result.text;
@@ -1048,7 +1048,7 @@ ${extraInstruction}`;
               messages,
               models,
               undefined,
-              { max_tokens: 7_000, temperature: 0.1, timeoutMs: 30_000 },
+              { max_tokens: 4_000, timeoutMs: 30_000 },
             );
             aiModel = models[0];
           }
