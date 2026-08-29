@@ -35,7 +35,7 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('persist: false');
     expect(source).toContain('await prepareAndSolveExtractedQuiz(result);');
     expect(source).toContain('حل الاختبار بعد الاستخراج');
-    expect(source).toContain("currentPage: 'quiz-creator-post-extraction-solving'");
+    expect(source).toContain("currentPage: 'quiz-creator-solving'");
     expect(source).toContain('const overlayProgress = isProcessingOcr ? ocrProgress : generationProgress;');
     expect(source).toContain('const maxConcurrentBatches = 3;');
     expect(source).toContain('const maxSolveAttempts = 2;');

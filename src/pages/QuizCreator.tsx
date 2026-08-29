@@ -930,9 +930,10 @@ export default function QuizCreator({
 الأسئلة:
 ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف المصدر النصي للتحقق فقط:\n${sourceContext}` : ''}`;
       const requestOptions = {
-        currentPage: 'quiz-creator-post-extraction-solving',
+        // Use the stable general AI route; the client still performs strict
+        // answer-review validation before applying any answer.
+        currentPage: 'quiz-creator-solving',
         siteStatus: 'QuizSpace يعمل بشكل طبيعي',
-        expectedAnswerCount: objectiveQuestions.length,
         systemInstruction: isAr
             ? 'أنت مراجع إجابات أكاديمي شديد الدقة. أعد JSON صغيرًا يحتوي على questionIndex وcorrectIndex وشرح قصير لكل سؤال موضوعي. لا تكتب نصًا خارج JSON، ولا تختر الخيار الأول افتراضيًا، ولا تضع شرحًا غير مستند.'
           : 'You are a strict academic answer verifier. Return only compact JSON with questionIndex, correctIndex, and a brief evidence-based explanation for every objective question. Never default to the first option, invent an explanation, or add text outside JSON.',
