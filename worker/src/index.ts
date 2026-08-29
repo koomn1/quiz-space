@@ -482,7 +482,15 @@ async function callOpenRouter(
         } : {}),
       }),
     });
-    if (!r.ok) throw new AiProviderError(aiErrorCategoryFromStatus(r.status), 'openrouter', model, r.status);
+    if (!r.ok) {
+      const providerBody = await r.text().catch(() => '');
+      console.warn('OpenRouter request rejected', {
+        model,
+        status: r.status,
+        detail: providerBody.replace(/sk-[A-Za-z0-9_-]+/g, '[redacted]').replace(/\s+/g, ' ').slice(0, 300),
+      });
+      throw new AiProviderError(aiErrorCategoryFromStatus(r.status), 'openrouter', model, r.status);
+    }
     let d: any;
     try {
       d = await r.json();
@@ -1024,7 +1032,7 @@ ${extraInstruction}`;
             env,
             messages,
             models,
-            { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, response_format: { type: 'json_object' as const }, expectedAnswerCount: expectedAnswerCount as number },
+            { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number },
           );
           aiModel = result.model;
           text = result.text;
