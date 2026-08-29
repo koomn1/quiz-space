@@ -92,7 +92,9 @@ describe('dynamic vision chunk planning', () => {
     expect(indexSource).toContain('Promise.any(primaryModels.map(model => callAnswerReviewModel(env, messages, model, options)))');
     expect(indexSource).toContain('strict answer count/index contract');
     expect(indexSource).toContain('models.slice(primaryModels.length)');
-    expect(indexSource).toContain('if (isAnswerReview) {\n          const result = await callOpenRouterWithParallelAnswerReviewFallback(');
+    expect(indexSource).toContain('if (isAnswerReview) {');
+    expect(indexSource).toContain('callOpenRouterWithParallelAnswerReviewFallback(');
+    expect(indexSource).toContain('Answer-review contract recovery activated');
   });
 
   it('applies the source title fallback after literal text extraction returns', () => {

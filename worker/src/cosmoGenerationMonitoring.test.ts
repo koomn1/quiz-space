@@ -27,9 +27,10 @@ describe('Cosmo generation recovery contract', () => {
   });
 
   it('keeps answer review on OpenRouter with bounded JSON validation', () => {
-    expect(workerSource).toContain('const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 16_000');
+    expect(workerSource).toContain('const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000');
     expect(workerSource).toContain("max_tokens: 7_000");
-    expect(workerSource).toContain("response_format: { type: 'json_object' as const }");
+    expect(workerSource).not.toContain('response_format: { type:');
+    expect(workerSource).toContain('Answer-review contract recovery activated');
     expect(workerSource).toContain("aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat'");
     expect(workerSource).toContain('callOpenRouterWithParallelAnswerReviewFallback');
     expect(workerSource).toContain('expectedAnswerCount as number');

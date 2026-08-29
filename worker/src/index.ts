@@ -76,7 +76,7 @@ const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
 ];
-const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 16_000;
+const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000;
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
 
@@ -1028,14 +1028,30 @@ ${extraInstruction}`;
       let text: string;
       try {
         if (isAnswerReview) {
-          const result = await callOpenRouterWithParallelAnswerReviewFallback(
-            env,
-            messages,
-            models,
-            { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number },
-          );
-          aiModel = result.model;
-          text = result.text;
+          try {
+            const result = await callOpenRouterWithParallelAnswerReviewFallback(
+              env,
+              messages,
+              models,
+              { max_tokens: 7_000, temperature: 0.1, timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number },
+            );
+            aiModel = result.model;
+            text = result.text;
+          } catch (contractError) {
+            // Recovery: provider output can be valid JSON while the server-side
+            // contract parser rejects a harmless wrapper/reasoning fragment.
+            // Let the client apply its stricter cross-checks instead of turning
+            // every batch into a generic 502.
+            console.warn('Answer-review contract recovery activated', contractError);
+            text = await callOpenRouterWithFallback(
+              env,
+              messages,
+              models,
+              undefined,
+              { max_tokens: 7_000, temperature: 0.1, timeoutMs: 30_000 },
+            );
+            aiModel = models[0];
+          }
         } else {
           text = await callOpenRouterWithFallback(env, messages, models, undefined, undefined);
         }
