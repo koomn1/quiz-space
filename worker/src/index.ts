@@ -376,6 +376,7 @@ interface OpenRouterRequestOptions {
   timeoutMs?: number;
   response_format?: { type: 'json_object' };
   expectedAnswerCount?: number;
+  allowPartial?: boolean;
 }
 
 type AiErrorCategory = 'timeout' | 'rate_limit' | 'http_4xx' | 'http_5xx' | 'invalid_response' | 'empty_response' | 'provider_error';
@@ -408,7 +409,7 @@ function safeAiErrorCategory(error: unknown): AiErrorCategory {
   return 'provider_error';
 }
 
-export function validateAnswerReviewResponse(text: string, expectedAnswerCount: number, model?: string): string {
+export function validateAnswerReviewResponse(text: string, expectedAnswerCount: number, model?: string, options: { allowPartial?: boolean } = {}): string {
   if (!Number.isInteger(expectedAnswerCount) || expectedAnswerCount < 1 || expectedAnswerCount > 8) {
     throw new AiProviderError('invalid_response', 'answer-review-contract', model);
   }
@@ -430,7 +431,8 @@ export function validateAnswerReviewResponse(text: string, expectedAnswerCount: 
     }
   }
   const answers = record && Array.isArray(record.answers) ? record.answers : null;
-  if (!answers || answers.length !== expectedAnswerCount) {
+  const allowPartial = options.allowPartial === true;
+  if (!answers || answers.length < 1 || answers.length > expectedAnswerCount || (!allowPartial && answers.length !== expectedAnswerCount)) {
     throw new AiProviderError('invalid_response', 'answer-review-contract', model);
   }
   const indexes = new Set<number>();
@@ -439,7 +441,7 @@ export function validateAnswerReviewResponse(text: string, expectedAnswerCount: 
       throw new AiProviderError('invalid_response', 'answer-review-contract', model);
     }
     const item = answer as Record<string, unknown>;
-    if (!Number.isInteger(item.questionIndex) || indexes.has(item.questionIndex as number)) {
+    if (!Number.isInteger(item.questionIndex) || (item.questionIndex as number) < 1 || (item.questionIndex as number) > expectedAnswerCount || indexes.has(item.questionIndex as number)) {
       throw new AiProviderError('invalid_response', 'answer-review-contract', model);
     }
     if (!Number.isInteger(item.correctIndex) || (item.correctIndex as number) < 0 || (item.correctIndex as number) > 9) {
@@ -500,7 +502,7 @@ async function callOpenRouter(
     const text = providerContentToText(d.choices?.[0]?.message?.content ?? d.choices?.[0]?.text ?? d.text ?? d.output ?? d.result);
     if (!text) throw new AiProviderError('empty_response', 'openrouter', model);
     return options?.expectedAnswerCount
-      ? validateAnswerReviewResponse(text, options.expectedAnswerCount, model)
+      ? validateAnswerReviewResponse(text, options.expectedAnswerCount, model, { allowPartial: options.allowPartial })
       : text;
   } catch (error) {
     if (error instanceof AiProviderError) throw error;
@@ -990,7 +992,7 @@ ${extraInstruction}`;
 
       if (path === '/api/ai/openrouter') {
       if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid request' }, 400, headers);
-      const isAnswerReviewRequest = body.currentPage === 'quiz-creator-post-extraction-solving';
+      const isAnswerReviewRequest = body.currentPage === 'quiz-creator-solving' || body.currentPage === 'quiz-creator-post-extraction-solving';
       const expectedAnswerCount = Number.isInteger(body.expectedAnswerCount) && body.expectedAnswerCount >= 1 && body.expectedAnswerCount <= 8
         ? body.expectedAnswerCount
         : undefined;
@@ -1033,7 +1035,7 @@ ${extraInstruction}`;
               env,
               messages,
               models,
-              { timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number },
+              { timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number, allowPartial: true },
             );
             aiModel = result.model;
             text = result.text;
@@ -1150,7 +1152,7 @@ ${extraInstruction}`;
     const message = aiOperation === 'generation'
       ? 'Quiz generation providers are temporarily unavailable. Please retry shortly.'
       : 'AI provider request failed. Please retry shortly.';
-    return json({ error: message }, 502, headers);
+      return json({ error: message, errorCategory: safeAiErrorCategory(error), retryable: true }, 502, headers);
   }
 }
 

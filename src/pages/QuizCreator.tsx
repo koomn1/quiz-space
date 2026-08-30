@@ -935,6 +935,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         // Use the stable general AI route; the client still performs strict
         // answer-review validation before applying any answer.
         currentPage: 'quiz-creator-solving',
+        expectedAnswerCount: objectiveQuestions.length,
         siteStatus: 'QuizSpace يعمل بشكل طبيعي',
         systemInstruction: isAr
             ? 'أنت مراجع إجابات أكاديمي شديد الدقة. أعد JSON صغيرًا يحتوي على questionIndex وcorrectIndex وشرح قصير لكل سؤال موضوعي. لا تكتب نصًا خارج JSON، ولا تختر الخيار الأول افتراضيًا، ولا تضع شرحًا غير مستند.'

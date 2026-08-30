@@ -32,9 +32,19 @@ afterEach(() => {
 });
 
 describe('answer review protocol', () => {
-  it('accepts a compact complete response and rejects a partial response', () => {
-    expect(validateAnswerReviewResponse(validResponse(), 1, 'test-model')).toContain('\"answers\"');
-    expect(() => validateAnswerReviewResponse('{\"answers\":[]}', 1, 'test-model')).toThrow();
+  it('accepts a compact complete response and rejects an empty response', () => {
+    expect(validateAnswerReviewResponse(validResponse(), 1, 'test-model')).toContain('"answers"');
+    expect(() => validateAnswerReviewResponse('{"answers":[]}', 1, 'test-model')).toThrow();
+  });
+
+  it('accepts a non-empty partial response when explicitly enabled', () => {
+    const partial = JSON.stringify({ answers: [{ questionIndex: 2, correctIndex: 1 }] });
+    expect(validateAnswerReviewResponse(partial, 6, 'test-model', { allowPartial: true })).toContain('"questionIndex":2');
+    expect(() => validateAnswerReviewResponse(partial, 6, 'test-model')).toThrow();
+  });
+
+  it('rejects answer indexes outside the requested batch', () => {
+    expect(() => validateAnswerReviewResponse(JSON.stringify({ answers: [{ questionIndex: 7, correctIndex: 0 }] }), 6, 'test-model', { allowPartial: true })).toThrow();
   });
 
   it('finds the valid JSON after an incomplete reasoning object', () => {
@@ -56,7 +66,7 @@ describe('answer review protocol', () => {
       env,
       [{ role: 'user', content: 'review' }],
       ['model-a', 'model-b'],
-      { expectedAnswerCount: 1, timeoutMs: 500, response_format: { type: 'json_object' } },
+      { expectedAnswerCount: 1, timeoutMs: 500, response_format: { type: 'json_object' }, allowPartial: true },
     );
 
     expect(result.model).toBe('model-b');
@@ -70,7 +80,7 @@ describe('answer review protocol', () => {
       env,
       [{ role: 'user', content: 'review' }],
       ['model-a', 'model-b', 'model-c'],
-      { expectedAnswerCount: 1, timeoutMs: 500, response_format: { type: 'json_object' } },
+      { expectedAnswerCount: 1, timeoutMs: 500, response_format: { type: 'json_object' }, allowPartial: true },
     )).rejects.toThrow();
   });
 });
