@@ -890,8 +890,10 @@ export default function QuizCreator({
         : normalizedSourceText;
     // Keep each request under the worker's 20k prompt limit while running a
     // small number of requests concurrently for large quizzes.
-    const batchSize = 8;
-    const maxConcurrentBatches = 3;
+    // Six questions keeps the prompt focused while five concurrent batches
+    // reduce wall-clock time for long quizzes without flooding the provider.
+    const batchSize = 6;
+    const maxConcurrentBatches = 5;
     // Two bounded attempts are enough before recovery; the Worker already has
     // its own model fallback, so a third client retry multiplies peak latency.
     const maxSolveAttempts = 2;
