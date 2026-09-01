@@ -200,6 +200,8 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
   const [result, setResult] = React.useState<any>(null);
   const [alreadyPlayed, setAlreadyPlayed] = React.useState(false);
   const [checkingAvailability, setCheckingAvailability] = React.useState(true);
+  const pendingResultRef = React.useRef<any>(null);
+  const finishSpinTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const segments = [
     { label: 1, color: '#06b6d4' },
@@ -229,6 +231,21 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
     return () => { active = false; };
   }, []);
 
+  const finishSpin = React.useCallback(() => {
+    const pending = pendingResultRef.current;
+    if (!pending) return;
+    pendingResultRef.current = null;
+    if (finishSpinTimerRef.current) clearTimeout(finishSpinTimerRef.current);
+    setSpinning(false);
+    setAlreadyPlayed(true);
+    onRewardsChanged();
+    setResult(pending);
+  }, [onRewardsChanged]);
+
+  React.useEffect(() => () => {
+    if (finishSpinTimerRef.current) clearTimeout(finishSpinTimerRef.current);
+  }, []);
+
   const spin = async () => {
     if (spinning || alreadyPlayed || checkingAvailability) return;
     setCheckingAvailability(true);
@@ -250,15 +267,13 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
       const targetCenter = targetIndex * segmentAngle + segmentAngle / 2;
       const extraSpins = 6 + Math.floor(Math.random() * 3);
       const targetAngle = (360 - targetCenter + 360) % 360;
+      pendingResultRef.current = { ...response, wheelLabel: segments[targetIndex].label };
       setAngle((current) => current + extraSpins * 360 + targetAngle);
       setSpinning(true);
       setCheckingAvailability(false);
-
-      await new Promise((resolve) => setTimeout(resolve, 4100));
-      setSpinning(false);
-      setAlreadyPlayed(true);
-      onRewardsChanged();
-      setResult({ ...response, wheelLabel: segments[targetIndex].label });
+      // transitionend is the primary completion signal; the timer protects
+      // reduced-motion/browser edge cases without revealing the result early.
+      finishSpinTimerRef.current = setTimeout(finishSpin, 4_450);
     } catch (error: any) {
       setSpinning(false);
       setResult({ success: false, message: error?.message || (lang === 'ar' ? 'تعذر تشغيل العجلة الآن.' : 'The wheel could not be started right now.') });
@@ -279,13 +294,15 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
             <div className="h-0 w-0 border-x-[17px] border-t-[32px] border-x-transparent border-t-rose-600" />
             <div className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 rounded-full bg-white/60" />
           </div>
-          <div className="relative h-full w-full rounded-full border-[10px] border-slate-900/90 p-1 shadow-[0_0_55px_-12px_rgba(139,92,246,0.7)] transition-transform duration-[4100ms] [transition-timing-function:cubic-bezier(0.12,0.8,0.15,1)] motion-reduce:transition-none" style={{ transform: `rotate(${angle}deg)`, background: wheelBackground }} role="img" aria-label={lang === 'ar' ? 'عجلة جوائز من 1 إلى 50 نقطة' : 'Prize wheel from 1 to 50 points'}>
-            <div className="absolute inset-0 rounded-full bg-white/5" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/30 via-transparent to-cyan-400/25 blur-xl" aria-hidden="true" />
+          <div onTransitionEnd={(event) => { if (event.propertyName === 'transform' && spinning) finishSpin(); }} className="relative h-full w-full rounded-full border-[10px] border-slate-950/95 p-1 shadow-[0_0_0_4px_rgba(255,255,255,.18),0_0_55px_-8px_rgba(139,92,246,0.95)] transition-transform duration-[4300ms] [transition-timing-function:cubic-bezier(0.12,0.8,0.15,1)] motion-reduce:transition-none" style={{ transform: `rotate(${angle}deg)`, background: wheelBackground }} role="img" aria-label={lang === 'ar' ? 'عجلة جوائز من 1 إلى 50 نقطة' : 'Prize wheel from 1 to 50 points'}>
+            <div className="pointer-events-none absolute inset-0 rounded-full border-2 border-white/40" aria-hidden="true" />
+            <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_25%,rgba(255,255,255,.38),transparent_25%),linear-gradient(135deg,rgba(255,255,255,.14),transparent_45%,rgba(0,0,0,.16))]" />
             {segments.map((segment, index) => {
               const center = index * segmentAngle + segmentAngle / 2;
               return <div key={segment.label} className="absolute inset-0" style={{ transform: `rotate(${center}deg)` }}><span className="absolute left-1/2 top-5 -translate-x-1/2 text-lg font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,.55)]" style={{ transform: `rotate(-${center}deg)` }}>{segment.label}</span></div>;
             })}
-            <div className="absolute inset-0 m-auto flex h-20 w-20 items-center justify-center rounded-full border-8 border-slate-900 bg-white shadow-xl dark:bg-slate-100"><div className="h-5 w-5 rounded-full bg-gradient-to-br from-violet-600 to-cyan-500 shadow-[0_0_0_5px_rgba(255,255,255,.45)]" /></div>
+            <div className="absolute inset-0 m-auto flex h-20 w-20 items-center justify-center rounded-full border-8 border-slate-950 bg-gradient-to-br from-white to-slate-200 shadow-[0_6px_18px_rgba(0,0,0,.35)]"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 via-fuchsia-500 to-cyan-400 shadow-[0_0_0_5px_rgba(255,255,255,.55),0_0_22px_rgba(139,92,246,.75)]"><Trophy className="h-5 w-5 text-white" /></div></div>
           </div>
         </div>
 
