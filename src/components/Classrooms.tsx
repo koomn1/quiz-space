@@ -54,6 +54,8 @@ import {
   extractYouTubeId,
   getClassroomAttendanceRecords,
   markClassroomAttendance,
+  getTeacherQuizProgress,
+  type TeacherQuizProgressRow,
 } from '../lib/db';
 import { canPersistAuthenticatedData } from '../lib/userAccess';
 import { 
@@ -262,6 +264,9 @@ export default function Classrooms({
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [quizProgress, setQuizProgress] = useState<Record<string, TeacherQuizProgressRow[]>>({});
+  const [quizProgressLoading, setQuizProgressLoading] = useState<Record<string, boolean>>({});
+  const [quizProgressErrors, setQuizProgressErrors] = useState<Record<string, string>>({});
 
   // Local state managers
   const [classCodeInput, setClassCodeInput] = useState('');
@@ -447,6 +452,36 @@ export default function Classrooms({
       clearInterval(interval);
     };
   }, [activeClassroomView, currentUserId, isAr]);
+
+  // Teacher-only quiz progress is loaded separately so one failed report never hides the classroom.
+  useEffect(() => {
+    if (!activeClassroomView || activeClassroomView.createdBy !== currentUserId) {
+      setQuizProgress({});
+      return;
+    }
+    const classroomQuizIds = allQuizzes.filter(q => q.classroomId === activeClassroomView.id).map(q => q.id);
+    let cancelled = false;
+    const loadProgress = async () => {
+      await Promise.all(classroomQuizIds.map(async quizId => {
+        if (cancelled) return;
+        setQuizProgressLoading(prev => ({ ...prev, [quizId]: true }));
+        try {
+          const rows = await getTeacherQuizProgress(quizId);
+          if (!cancelled) {
+            setQuizProgress(prev => ({ ...prev, [quizId]: rows }));
+            setQuizProgressErrors(prev => { const next = { ...prev }; delete next[quizId]; return next; });
+          }
+        } catch (error) {
+          console.error('Teacher quiz progress failed:', error);
+          if (!cancelled) setQuizProgressErrors(prev => ({ ...prev, [quizId]: isAr ? 'تعذر تحميل تقرير الحل' : 'Progress report unavailable' }));
+        } finally {
+          if (!cancelled) setQuizProgressLoading(prev => ({ ...prev, [quizId]: false }));
+        }
+      }));
+    };
+    void loadProgress();
+    return () => { cancelled = true; };
+  }, [activeClassroomView?.id, activeClassroomView?.createdBy, currentUserId, allQuizzes, isAr]);
 
   // Load assignments, submissions, announcements & shared files from Supabase
   // whenever a classroom is opened. Nothing here touches localStorage.
@@ -1743,6 +1778,37 @@ export default function Classrooms({
                               <span>{cq.questions?.length || 0} {isAr ? 'أسئلة' : 'Questions'}</span>
                               <span>{cq.timeLimit ? `${cq.timeLimit} ${isAr ? 'دقيقة' : 'min'}` : (isAr ? 'بلا وقت' : 'No limit')}</span>
                             </div>
+                            {isTeacher && activeClassroomView.createdBy === currentUserId && (() => {
+                              const rows = quizProgress[cq.id] || [];
+                              const solved = rows.filter(row => row.completed).length;
+                              const pending = rows.length - solved;
+                              return (
+                                <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+                                  <div className="flex items-center justify-between text-[10px] font-bold">
+                                    <span className="text-emerald-400">{isAr ? `حلوا: ${solved}` : `Solved: ${solved}`}</span>
+                                    <span className="text-amber-400">{isAr ? `لم يحلوا: ${pending}` : `Not solved: ${pending}`}</span>
+                                  </div>
+                                  {quizProgressLoading[cq.id] ? (
+                                    <div className="text-[10px] text-slate-500 animate-pulse">{isAr ? 'جارٍ تحميل تقرير الطلاب...' : 'Loading student report...'}</div>
+                                  ) : quizProgressErrors[cq.id] ? (
+                                    <div className="text-[10px] text-rose-400">{quizProgressErrors[cq.id]}</div>
+                                  ) : rows.length > 0 ? (
+                                    <div className="max-h-32 overflow-y-auto space-y-1">
+                                      {rows.map(row => (
+                                        <div key={`${cq.id}-${row.studentId}`} className="flex items-center justify-between gap-2 text-[10px]">
+                                          <span className="truncate text-slate-300">{row.studentName}</span>
+                                          <span className={row.completed ? 'text-emerald-400' : 'text-slate-500'}>
+                                            {row.completed ? `${row.score ?? 0}/${row.totalQuestions ?? cq.questions?.length ?? 0}` : (isAr ? 'لم يحل' : 'Pending')}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="text-[10px] text-slate-500">{isAr ? 'لا يوجد طلاب مسجلون بعد.' : 'No enrolled students yet.'}</div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                             <button
                               onClick={() => onStartQuiz && onStartQuiz(cq.id)}
                               className="w-full py-2.5 bg-slate-950 border border-slate-800 hover:border-purple-500/40 hover:text-white rounded-xl text-xs font-black text-slate-400 transition-all cursor-pointer"

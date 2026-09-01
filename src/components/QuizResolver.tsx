@@ -10,6 +10,7 @@ import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText
 import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
+import { gradeEssayWithAI } from '../services/aiWorkerClient';
 import { getApiUrl } from '../lib/origin';
 import { isGuestIdentity } from '../lib/guestIdentity';
 import { fetchWithAuth } from '../lib/authFetch';
@@ -125,6 +126,7 @@ export default function QuizResolver({
   const [essayAnswerText, setEssayAnswerText] = React.useState('');
   const [essayAssessed, setEssayAssessed] = React.useState<boolean | null>(null);
   const [essayAssessments, setEssayAssessments] = React.useState<Record<number, boolean>>({});
+  const [essayGrading, setEssayGrading] = React.useState<Record<number, boolean>>({});
   const [score, setScore] = React.useState(0);
   const [isQuizCompleted, setIsQuizCompleted] = React.useState(false);
   const [hasShaken, setHasShaken] = React.useState(false);
@@ -203,6 +205,27 @@ export default function QuizResolver({
       setAiFlashcardExplanations(prev => ({ ...prev, [qId]: isAr ? 'خطأ في الاتصال بالمعلم الذكي.' : 'Error contacting the AI Tutor.' }));
     } finally {
       setAiFlashcardLoading(prev => ({ ...prev, [qId]: false }));
+    }
+  };
+
+  const gradeEssayAnswer = async (questionIndex: number, question: Question, answer: string) => {
+    setEssayGrading(prev => ({ ...prev, [questionIndex]: true }));
+    try {
+      const result = await gradeEssayWithAI(question.text, question.correctAnswer || '', answer);
+      const correct = result.correct === true;
+      setEssayAssessments(prev => ({ ...prev, [questionIndex]: correct }));
+      setEssayAssessed(correct);
+      if (correct) {
+        setScore(prev => prev + 1);
+        confetti({ particleCount: 60, spread: 50 });
+        playNotificationSound('success');
+      }
+    } catch (error) {
+      console.error('Essay grading failed:', error);
+      setEssayAssessments(prev => ({ ...prev, [questionIndex]: false }));
+      setEssayAssessed(false);
+    } finally {
+      setEssayGrading(prev => ({ ...prev, [questionIndex]: false }));
     }
   };
 
@@ -1268,6 +1291,8 @@ export default function QuizResolver({
                         nextAnswers[currentIdx] = essayAnswerText.trim();
                         setEssayAnswers(nextAnswers);
                         setIsAnswersFrozen(true);
+                        setEssayAssessed(null);
+                        void gradeEssayAnswer(currentIdx, currentQuestion, essayAnswerText.trim());
                       }}
                       className="w-full py-4 bg-primary hover:bg-primary-hover disabled:opacity-40 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
                     >
@@ -1288,35 +1313,10 @@ export default function QuizResolver({
                       </div>
                     </div>
 
-                    {essayAssessed === null ? (
-                      <div className="p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-dashed border-primary/20 space-y-3">
-                        <p className="text-xs font-bold text-slate-750 dark:text-slate-200 text-center">بمقارنة صياغتك للأفكار الفائتة، هل ترى أن إجابتك صحيحة ومقبولة؟</p>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEssayAssessed(true);
-                              setEssayAssessments(prev => ({ ...prev, [currentIdx]: true }));
-                              setScore(prev => prev + 1);
-                              confetti({ particleCount: 60, spread: 50 });
-                              playNotificationSound('success');
-                            }}
-                            className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition-all cursor-pointer text-center"
-                          >
-                            ✅ إجابتي ملائمة وقريبة للنموذج (+1)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEssayAssessed(false);
-                              setEssayAssessments(prev => ({ ...prev, [currentIdx]: false }));
-                            }}
-                            className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-650 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition-all cursor-pointer text-center"
-                          >
-                            ❌ إجابتي غير متناسقة أو خاطئة (0)
-                          </button>
-                        </div>
-                      </div>
+                    {essayGrading[currentIdx] ? (
+                      <div className="p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-dashed border-primary/20 text-center text-xs font-bold text-primary animate-pulse">جارٍ تصحيح الإجابة المقالية بالذكاء الاصطناعي...</div>
+                    ) : essayAssessed === null ? (
+                      <div className="p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-dashed border-primary/20 text-center text-xs font-bold text-primary animate-pulse">جاري التحقق من صحة الإجابة تلقائياً...</div>
                     ) : (
                       <div className="p-3.5 rounded-xl border border-dotted border-slate-300/60 text-center text-xs font-semibold bg-slate-50 dark:bg-slate-900/40">
                         {essayAssessed ? (

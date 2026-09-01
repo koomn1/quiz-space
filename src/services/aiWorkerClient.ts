@@ -204,6 +204,17 @@ export async function generateQuizWithProvider(
   }
 }
 
+export interface EssayGradeResult {
+  correct: boolean;
+  confidence: number;
+  reason: string;
+  provider: string;
+}
+
+export async function gradeEssayWithAI(question: string, modelAnswer: string, studentAnswer: string): Promise<EssayGradeResult> {
+  return workerRequest<EssayGradeResult>('/api/ai/grade-essay', { question, modelAnswer, studentAnswer }, 15_000);
+}
+
 export async function explainWithAI(
   questionText: string,
   options: string[],

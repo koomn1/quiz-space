@@ -15,6 +15,7 @@ import {
 
 export interface Env {
   OPENROUTER_API_KEY: string;
+  GEMINI_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   ALLOWED_ORIGIN: string;
@@ -574,6 +575,46 @@ export async function callOpenRouterWithParallelAnswerReviewFallback(
   }
 }
 
+async function callGeminiJson(env: Env, prompt: string, timeoutMs = 8_000): Promise<string> {
+  if (!env.GEMINI_API_KEY) throw new AiProviderError('provider_error', 'gemini', 'gemini-2.5-flash');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0, maxOutputTokens: 300, responseMimeType: 'application/json' },
+      }),
+    });
+    if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'gemini', 'gemini-2.5-flash', response.status);
+    const payload: any = await response.json();
+    const text = payload.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
+    if (!text) throw new AiProviderError('empty_response', 'gemini', 'gemini-2.5-flash');
+    return text;
+  } catch (error) {
+    if (error instanceof AiProviderError) throw error;
+    if (error instanceof DOMException && error.name === 'AbortError') throw new AiProviderError('timeout', 'gemini', 'gemini-2.5-flash');
+    throw new AiProviderError('provider_error', 'gemini', 'gemini-2.5-flash');
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function gradeEssayWithFallback(env: Env, question: string, modelAnswer: string, studentAnswer: string): Promise<any> {
+  const prompt = `قيّم إجابة الطالب بسرعة وبصرامة من ناحية صحة المعنى فقط. لا تكافئ الإجابة الفارغة أو التي تناقض النموذج. اعتبرها صحيحة فقط إذا تضمنت الفكرة الأساسية للنموذج بوضوح، وإلا فهي خاطئة. أعد JSON فقط بهذا الشكل: {"correct":true,"confidence":0.0,"reason":"سبب قصير"}. السؤال: ${question.slice(0, 5000)}\nالإجابة النموذجية: ${modelAnswer.slice(0, 4000)}\nإجابة الطالب: ${studentAnswer.slice(0, 4000)}`;
+  try {
+    const result = extractJson(await callGeminiJson(env, prompt, 8_000)) as any;
+    return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '' , provider: 'gemini' };
+  } catch (geminiError) {
+    console.warn('Gemini essay grading failed; using OpenRouter fallback:', geminiError);
+    const result = extractJson(await callOpenRouterWithFallback(env, [{ role: 'user', content: prompt }], OPENROUTER_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 10_000 })) as any;
+    return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '', provider: 'openrouter' };
+  }
+}
+
 async function providerText(
   _provider: Provider,
   prompt: string,
@@ -827,6 +868,16 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
 
         return json(result, 200, headers);
       }
+
+    if (path === '/api/ai/grade-essay') {
+      if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);
+      if (typeof body.question !== 'string' || body.question.length < 1 || body.question.length > 8_000 || typeof body.modelAnswer !== 'string' || body.modelAnswer.length < 1 || body.modelAnswer.length > 5_000 || typeof body.studentAnswer !== 'string' || body.studentAnswer.length > 8_000) {
+        return json({ error: 'Invalid essay grading request' }, 400, headers);
+      }
+      if (!body.studentAnswer.trim()) return json({ correct: false, confidence: 1, reason: 'Empty answer', provider: 'deterministic' }, 200, headers);
+      const result = await gradeEssayWithFallback(env, body.question, body.modelAnswer, body.studentAnswer);
+      return json(result, 200, headers);
+    }
 
     if (path === '/api/ai/explain') {
       if (typeof body.questionText !== 'string' || body.questionText.length === 0 || body.questionText.length > 8_000 || !Array.isArray(body.options) || body.options.length > 20 || body.options.some((option: unknown) => typeof option !== 'string' || option.length > 1_000) || typeof body.correctAnswer !== 'string' || body.correctAnswer.length > 2_000) {

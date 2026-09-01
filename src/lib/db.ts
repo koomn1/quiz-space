@@ -1671,6 +1671,33 @@ export async function getCompletionsByQuizId(quizId: string): Promise<QuizComple
   return [];
 }
 
+export interface TeacherQuizProgressRow {
+  studentId: string;
+  studentName: string;
+  studentPhoto?: string;
+  completed: boolean;
+  score: number | null;
+  totalQuestions: number | null;
+  completedAt?: string;
+  attemptsCount: number;
+}
+
+export async function getTeacherQuizProgress(quizId: string): Promise<TeacherQuizProgressRow[]> {
+  if (!isSupabaseConfigured || !quizId) return [];
+  const { data, error } = await supabase.rpc('get_teacher_quiz_progress', { p_quiz_id: quizId });
+  if (error) throw error;
+  return (Array.isArray(data) ? data : []).map((row: any) => ({
+    studentId: String(row.student_id || ''),
+    studentName: String(row.student_name || 'طالب'),
+    studentPhoto: row.student_photo || undefined,
+    completed: row.completed === true,
+    score: row.score == null ? null : Number(row.score),
+    totalQuestions: row.total_questions == null ? null : Number(row.total_questions),
+    completedAt: row.completed_at || undefined,
+    attemptsCount: Number(row.attempts_count || 0),
+  }));
+}
+
 export async function getQuizTakersUnique(quizId: string): Promise<QuizCompletion[]> {
   // Returns one row per solver: best score + attempt count (deduplicates repeat solvers)
   if (isSupabaseConfigured) {
