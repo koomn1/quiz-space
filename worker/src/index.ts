@@ -871,10 +871,10 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
 
     if (path === '/api/ai/grade-essay') {
       if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);
-      if (typeof body.question !== 'string' || body.question.length < 1 || body.question.length > 8_000 || typeof body.modelAnswer !== 'string' || body.modelAnswer.length < 1 || body.modelAnswer.length > 5_000 || typeof body.studentAnswer !== 'string' || body.studentAnswer.length > 8_000) {
+      if (typeof body.question !== 'string' || body.question.length < 1 || body.question.length > 8_000 || typeof body.modelAnswer !== 'string' || body.modelAnswer.length > 5_000 || typeof body.studentAnswer !== 'string' || body.studentAnswer.length > 8_000) {
         return json({ error: 'Invalid essay grading request' }, 400, headers);
       }
-      if (!body.studentAnswer.trim()) return json({ correct: false, confidence: 1, reason: 'Empty answer', provider: 'deterministic' }, 200, headers);
+      if (!body.studentAnswer.trim() || !body.modelAnswer.trim()) return json({ correct: false, confidence: 1, reason: 'Missing answer content', provider: 'deterministic' }, 200, headers);
       const result = await gradeEssayWithFallback(env, body.question, body.modelAnswer, body.studentAnswer);
       return json(result, 200, headers);
     }
