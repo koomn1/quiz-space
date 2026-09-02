@@ -385,9 +385,28 @@ export default function LandingPage({
         </div>
       )}
 
+      {/* Student action cockpit: one clear next step plus fast routes, without duplicating the daily quiz card. */}
+      <div className="gsap-fade-section mt-10 rounded-[2rem] border border-violet-200/70 bg-gradient-to-br from-violet-50 via-white to-cyan-50 p-5 shadow-sm dark:border-violet-900/40 dark:from-violet-950/30 dark:via-slate-900 dark:to-cyan-950/20 sm:p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 text-white shadow-lg shadow-violet-500/20"><Rocket className="h-6 w-6" /></div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-violet-600 dark:text-violet-300">{isAr ? 'خطوتك التالية' : 'Your next step'}</p>
+              <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-white">{isGuest ? (isAr ? 'ابدأ رحلتك التعليمية' : 'Start your learning journey') : (isAr ? 'اختر تحديًا وابدأ الآن' : 'Pick a challenge and start now')}</h3>
+              <p className="mt-1 text-xs font-bold leading-6 text-slate-500 dark:text-slate-400">{isAr ? 'لا تترك لوحة التحكم تعرض أرقامًا فقط؛ اختر إجراءً واحدًا وأنجزه الآن.' : 'Turn the dashboard into an action: choose one focused task and complete it now.'}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:min-w-[31rem]">
+            {dailyQuiz && !isGuest && <button type="button" onClick={() => document.getElementById('daily-quiz-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-violet-600 px-3 py-2.5 text-xs font-black text-white shadow-md shadow-violet-500/20 transition hover:-translate-y-0.5 hover:bg-violet-500"><BrainCircuit className="h-4 w-4" />{isAr ? 'سؤال اليوم' : 'Daily question'}</button>}
+            <button type="button" onClick={() => document.getElementById('quizzes-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-cyan-200 bg-white px-3 py-2.5 text-xs font-black text-cyan-700 transition hover:-translate-y-0.5 hover:border-cyan-400 dark:border-cyan-900/50 dark:bg-slate-900 dark:text-cyan-300"><Search className="h-4 w-4" />{isAr ? 'استكشف اختبارًا' : 'Explore quizzes'}</button>
+            <button type="button" onClick={isGuest ? onLoginClick : onCreateQuizTab} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-3 py-2.5 text-xs font-black text-violet-700 transition hover:-translate-y-0.5 hover:border-violet-400 dark:border-violet-900/50 dark:bg-slate-900 dark:text-violet-300"><Sparkles className="h-4 w-4" />{isGuest ? (isAr ? 'سجّل للمتابعة' : 'Sign in to continue') : (isAr ? 'أنشئ اختبارًا' : 'Create a quiz')}</button>
+          </div>
+        </div>
+      </div>
+
       {/* Daily challenge stays visible directly above the first quiz. */}
       {dailyQuiz && (
-        <div className="gsap-fade-section mt-10">
+        <div id="daily-quiz-card" className="gsap-fade-section mt-10">
           <DailyQuizCard
             lang={lang}
             userId={dailyQuiz.userId}
