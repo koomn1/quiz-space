@@ -2985,6 +2985,15 @@ export async function recordMotivationUsageEvent(tab: MotivationUsageTab, eventT
   if (error) throw error;
 }
 
+export async function claimDailyEngagementReward(activity: 'notifications_opened' | 'daily_notification_action') {
+  const { data, error } = await supabase.rpc('claim_daily_engagement_reward', { p_activity: activity });
+  if (error) return { points_awarded: 0, message: error.message };
+  if (typeof window !== 'undefined' && Number(data?.points_awarded || 0) > 0) {
+    window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+  }
+  return data || { points_awarded: 0 };
+}
+
 export async function getMotivationUsageSummary(days = 30): Promise<MotivationUsageSummary> {
   const safeDays = Math.max(7, Math.min(90, Math.round(days)));
   const { data, error } = await supabase.rpc('get_motivation_usage_summary', { p_days: safeDays });

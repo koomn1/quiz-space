@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Award, Bell, BookOpenCheck, CheckCheck, GraduationCap, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { getNotificationGroup, matchesNotificationFilter, NotificationGroup } from '../lib/notificationPresentation';
-import { getDailyBrainChallenge, getLearningStreakStatus, getMotivationStatus } from '../lib/db';
+import { claimDailyEngagementReward, getDailyBrainChallenge, getLearningStreakStatus, getMotivationStatus } from '../lib/db';
 import { hasUsedLuckySpinToday } from '../lib/motivationData';
 
 type Notification = {
@@ -47,6 +47,9 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
       const visibleDaily = daily.filter((notification) => !dismissed.has(notification.id));
       setDailyNotifications(visibleDaily);
       const spotlightKey = `quizspace_daily_spotlight:${userId}:${today}`;
+      if (visibleDaily.length > 0) {
+        void claimDailyEngagementReward('notifications_opened').catch(() => undefined);
+      }
       if (visibleDaily.length > 0 && !localStorage.getItem(spotlightKey)) {
         setIsOpen(true);
         localStorage.setItem(spotlightKey, 'shown');
@@ -122,6 +125,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
     const daily = dailyNotifications.find((notification) => notification.id === notificationId);
     if (daily) {
       dismissDailyNotifications([notificationId]);
+      void claimDailyEngagementReward('daily_notification_action').catch(() => undefined);
       return;
     }
     const current = notifications.find((notification) => notification.id === notificationId);
