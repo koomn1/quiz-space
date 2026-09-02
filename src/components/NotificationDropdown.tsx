@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Award, Bell, BookOpenCheck, CheckCheck, GraduationCap, Loader2, ShieldCheck } from 'lucide-react';
+import { Award, Bell, BookOpenCheck, CheckCheck, GraduationCap, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { getNotificationGroup, matchesNotificationFilter, NotificationGroup } from '../lib/notificationPresentation';
 import { getDailyBrainChallenge, getLearningStreakStatus, getMotivationStatus } from '../lib/db';
@@ -44,7 +44,13 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
       if (!hasUsedLuckySpinToday(motivation)) daily.push({ id: `daily-lucky-${today}`, title: isAr ? 'عجلة الحظ متاحة اليوم' : 'Lucky wheel is ready today', body: isAr ? 'لديك دورة مجانية اليوم. افتح العجلة وجرب حظك.' : 'Your free daily spin is ready. Open the wheel and try your luck.', type: 'daily_reward', is_read: false, created_at: new Date().toISOString() });
       if (Number(brain?.attempts_remaining ?? 1) > 0) daily.push({ id: `daily-brain-${today}`, title: isAr ? 'السؤال اليومي جاهز' : 'Daily question is ready', body: isAr ? 'أجب عن سؤال اليوم واحصل على مكافأتك.' : 'Answer today’s question and earn your reward.', type: 'daily_learning', is_read: false, created_at: new Date().toISOString() });
       if (streak && !streak.checkedInToday) daily.push({ id: `daily-streak-${today}`, title: isAr ? 'سجّل حضورك اليومي' : 'Keep your daily streak', body: isAr ? 'سجّل دخولك اليوم للحفاظ على سلسلة التعلم.' : 'Check in today to keep your learning streak alive.', type: 'daily_learning', is_read: false, created_at: new Date().toISOString() });
-      setDailyNotifications(daily.filter((notification) => !dismissed.has(notification.id)));
+      const visibleDaily = daily.filter((notification) => !dismissed.has(notification.id));
+      setDailyNotifications(visibleDaily);
+      const spotlightKey = `quizspace_daily_spotlight:${userId}:${today}`;
+      if (visibleDaily.length > 0 && !localStorage.getItem(spotlightKey)) {
+        setIsOpen(true);
+        localStorage.setItem(spotlightKey, 'shown');
+      }
     } catch (err) {
       console.warn('Error loading notifications:', err);
     } finally {
@@ -178,6 +184,17 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
             )}
           </div>
 
+          {dailyNotifications.length > 0 && (
+            <div className="mt-3 rounded-2xl border border-violet-200/70 bg-gradient-to-br from-violet-600 via-indigo-600 to-cyan-600 p-3 text-white shadow-lg shadow-violet-500/20">
+              <div className="flex items-start gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/15"><Sparkles className="h-4 w-4" /></div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-100">{isAr ? 'تحديثات اليوم' : 'Today’s updates'}</p>
+                  <p className="mt-1 text-xs font-bold leading-5 text-white/90">{isAr ? 'أنشطة جديدة جاهزة لك اليوم. اختر نشاطًا وابدأ مباشرة.' : 'Fresh activities are ready for you today. Pick one and start now.'}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="mt-3 flex gap-1 overflow-x-auto pb-1" role="tablist" aria-label={isAr ? 'تصفية الإشعارات' : 'Filter notifications'}>
             {([
               ['all', isAr ? 'الكل' : 'All', Bell],
@@ -202,14 +219,16 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
                   type="button"
                   key={notif.id}
                   onClick={() => void markNotificationAsRead(notif.id)}
-                  className={`flex flex-col gap-1 rounded-2xl p-3 text-start transition ${
-                    notif.is_read
-                      ? 'bg-slate-50 dark:bg-slate-800/40 opacity-75'
-                      : 'border border-violet-100 bg-violet-50/70 hover:border-violet-300 dark:border-violet-900/40 dark:bg-violet-950/30'
+                  className={`flex flex-col gap-1 rounded-2xl p-3 text-start transition hover:-translate-y-0.5 hover:shadow-sm ${
+                    notif.id.startsWith('daily-')
+                      ? 'border border-violet-200 bg-gradient-to-br from-violet-50 to-cyan-50 shadow-sm dark:border-violet-800/50 dark:from-violet-950/40 dark:to-cyan-950/20'
+                      : notif.is_read
+                        ? 'bg-slate-50 dark:bg-slate-800/40 opacity-75'
+                        : 'border border-violet-100 bg-violet-50/70 hover:border-violet-300 dark:border-violet-900/40 dark:bg-violet-950/30'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-2 text-xs font-black text-slate-900 dark:text-white">{getGroupIcon(notif.type)}<span className="truncate">{notif.title}</span></span>
+                    <span className="flex min-w-0 items-center gap-2 text-xs font-black text-slate-900 dark:text-white">{getGroupIcon(notif.type)}<span className="truncate">{notif.title}</span>{notif.id.startsWith('daily-') && <span className="shrink-0 rounded-full bg-violet-600 px-1.5 py-0.5 text-[8px] font-black text-white">{isAr ? 'اليوم' : 'TODAY'}</span>}</span>
                     <span className="text-[10px] text-slate-400">
                       {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
