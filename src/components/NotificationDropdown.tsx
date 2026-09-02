@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Award, Bell, BookOpenCheck, CheckCheck, GraduationCap, Loader2, ShieldCheck } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { getNotificationGroup, matchesNotificationFilter, NotificationGroup } from '../lib/notificationPresentation';
+import { getDailyBrainChallenge, getLearningStreakStatus, getMotivationStatus } from '../lib/db';
+import { hasUsedLuckySpinToday } from '../lib/motivationData';
 
 type Notification = {
   id: string;
@@ -17,6 +19,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dailyNotifications, setDailyNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<NotificationGroup>('all');
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -26,22 +29,28 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
     if (!userId || userId.startsWith('user-')) return;
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      const today = new Date().toISOString().slice(0, 10);
+      const [notificationResult, motivation, brain, streak] = await Promise.all([
+        supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+        getMotivationStatus().catch(() => null),
+        getDailyBrainChallenge().catch(() => null),
+        getLearningStreakStatus().catch(() => null),
+      ]);
+      if (!notificationResult.error && notificationResult.data) setNotifications(notificationResult.data);
 
-      if (!error && data) {
-        setNotifications(data);
-      }
+      const dismissedKey = `quizspace_daily_notifications:${userId}:${today}`;
+      const dismissed = new Set(JSON.parse(localStorage.getItem(dismissedKey) || '[]') as string[]);
+      const daily: Notification[] = [];
+      if (!hasUsedLuckySpinToday(motivation)) daily.push({ id: `daily-lucky-${today}`, title: isAr ? 'عجلة الحظ متاحة اليوم' : 'Lucky wheel is ready today', body: isAr ? 'لديك دورة مجانية اليوم. افتح العجلة وجرب حظك.' : 'Your free daily spin is ready. Open the wheel and try your luck.', type: 'daily_reward', is_read: false, created_at: new Date().toISOString() });
+      if (Number(brain?.attempts_remaining ?? 1) > 0) daily.push({ id: `daily-brain-${today}`, title: isAr ? 'السؤال اليومي جاهز' : 'Daily question is ready', body: isAr ? 'أجب عن سؤال اليوم واحصل على مكافأتك.' : 'Answer today’s question and earn your reward.', type: 'daily_learning', is_read: false, created_at: new Date().toISOString() });
+      if (streak && !streak.checkedInToday) daily.push({ id: `daily-streak-${today}`, title: isAr ? 'سجّل حضورك اليومي' : 'Keep your daily streak', body: isAr ? 'سجّل دخولك اليوم للحفاظ على سلسلة التعلم.' : 'Check in today to keep your learning streak alive.', type: 'daily_learning', is_read: false, created_at: new Date().toISOString() });
+      setDailyNotifications(daily.filter((notification) => !dismissed.has(notification.id)));
     } catch (err) {
       console.warn('Error loading notifications:', err);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, isAr]);
 
   useEffect(() => {
     loadNotifications();
@@ -75,7 +84,17 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const dismissDailyNotifications = (ids: string[]) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `quizspace_daily_notifications:${userId}:${today}`;
+    const existing = new Set(JSON.parse(localStorage.getItem(key) || '[]') as string[]);
+    ids.forEach((id) => existing.add(id));
+    localStorage.setItem(key, JSON.stringify([...existing]));
+    setDailyNotifications((previous) => previous.filter((notification) => !ids.includes(notification.id)));
+  };
+
   const markAllAsRead = async () => {
+    dismissDailyNotifications(dailyNotifications.map((notification) => notification.id));
     try {
       await supabase
         .from('notifications')
@@ -89,10 +108,16 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
     }
   };
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
-  const filteredNotifications = notifications.filter((notification) => matchesNotificationFilter(notification.type, filter));
+  const unreadCount = notifications.filter((n) => !n.is_read).length + dailyNotifications.length;
+  const allNotifications = [...dailyNotifications, ...notifications];
+  const filteredNotifications = allNotifications.filter((notification) => matchesNotificationFilter(notification.type, filter));
 
   const markNotificationAsRead = async (notificationId: string) => {
+    const daily = dailyNotifications.find((notification) => notification.id === notificationId);
+    if (daily) {
+      dismissDailyNotifications([notificationId]);
+      return;
+    }
     const current = notifications.find((notification) => notification.id === notificationId);
     if (!current || current.is_read) return;
     try {
