@@ -1755,8 +1755,47 @@ export default function Classrooms({
                         </div>
                       );
                     }
+                    const enrolledStudents = classroomStudents.filter((student) => student.classCode === activeClassroomView.code);
+                    const assignedCount = enrolledStudents.length * classroomQuizzes.length;
+                    const solvedCount = classroomQuizzes.reduce((total, quiz) => total + (quizProgress[quiz.id] || []).filter((row) => row.completed).length, 0);
+                    const completedRows = classroomQuizzes.flatMap((quiz) => (quizProgress[quiz.id] || []).filter((row) => row.completed));
+                    const pendingCount = Math.max(0, assignedCount - solvedCount);
+                    const completionRate = assignedCount > 0 ? Math.round((solvedCount / assignedCount) * 100) : 0;
+                    const averageScore = completedRows.length > 0
+                      ? Math.round(completedRows.reduce((sum, row) => sum + ((Number(row.score || 0) / Math.max(1, Number(row.totalQuestions || 1))) * 100), 0) / completedRows.length)
+                      : 0;
+                    const successRate = completedRows.length > 0
+                      ? Math.round((completedRows.filter((row) => (Number(row.score || 0) / Math.max(1, Number(row.totalQuestions || 1))) >= 0.5).length / completedRows.length) * 100)
+                      : 0;
                     return (
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                      <>
+                        {isTeacher && activeClassroomView.createdBy === currentUserId && (
+                          <div className="mb-6 rounded-3xl border border-purple-500/20 bg-gradient-to-br from-slate-950 via-indigo-950/40 to-purple-950/40 p-4 shadow-xl sm:p-5">
+                            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <div className="flex items-center gap-2 text-sm font-black text-white"><BarChart2 className="h-4 w-4 text-purple-300" />{isAr ? 'ملخص أداء الفصل' : 'Class performance snapshot'}</div>
+                                <p className="mt-1 text-[11px] text-slate-400">{isAr ? 'أرقام سريعة مبنية على الطلاب المسجلين وتقارير الاختبارات المحمّلة.' : 'Quick figures based on enrolled students and loaded quiz reports.'}</p>
+                              </div>
+                              <span className="rounded-full border border-purple-400/20 bg-purple-400/10 px-3 py-1 text-[10px] font-black text-purple-200">{enrolledStudents.length} {isAr ? 'طلاب' : 'students'} · {classroomQuizzes.length} {isAr ? 'اختبارات' : 'quizzes'}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                              {[
+                                { label: isAr ? 'نسبة الحل' : 'Completion rate', value: `${completionRate}%`, detail: `${solvedCount}/${assignedCount || 0}`, icon: CheckCircle, color: 'text-emerald-300', bar: 'bg-emerald-400', width: completionRate },
+                                { label: isAr ? 'بانتظار الحل' : 'Awaiting solution', value: String(pendingCount), detail: isAr ? 'من إجمالي التكليفات' : 'assigned slots', icon: Clock, color: 'text-amber-300', bar: 'bg-amber-400', width: assignedCount ? Math.round((pendingCount / assignedCount) * 100) : 0 },
+                                { label: isAr ? 'متوسط الدرجات' : 'Average score', value: `${averageScore}%`, detail: `${completedRows.length} ${isAr ? 'نتائج' : 'results'}`, icon: Target, color: 'text-cyan-300', bar: 'bg-cyan-400', width: averageScore },
+                                { label: isAr ? 'نسبة النجاح' : 'Pass rate', value: `${successRate}%`, detail: isAr ? 'من الذين حلوا' : 'of completed attempts', icon: Award, color: 'text-violet-300', bar: 'bg-violet-400', width: successRate },
+                              ].map((stat) => (
+                                <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                                  <div className="flex items-center justify-between gap-2"><stat.icon className={`h-4 w-4 ${stat.color}`} /><span className="text-[10px] font-bold text-slate-500">{stat.detail}</span></div>
+                                  <div className="mt-2 text-xl font-black text-white">{stat.value}</div>
+                                  <div className="mt-1 text-[10px] font-bold text-slate-400">{stat.label}</div>
+                                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-800"><div className={`h-full rounded-full ${stat.bar} transition-all duration-700`} style={{ width: `${Math.min(100, Math.max(0, stat.width))}%` }} /></div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {classroomQuizzes.map((cq) => (
                           <div key={cq.id} className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl space-y-4">
                             <div className="flex items-center justify-between">
@@ -1817,7 +1856,8 @@ export default function Classrooms({
                             </button>
                           </div>
                         ))}
-                      </div>
+                        </div>
+                      </>
                     );
                   })()}
                 </div>
