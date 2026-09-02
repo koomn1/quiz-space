@@ -23,3 +23,18 @@ jobs:
           SUPABASE_FUNCTION_URL: https://eqfrxrsstatryaetgerw.supabase.co/functions/v1
           PROMOTION_CRON_SECRET: ${{ secrets.PROMOTION_CRON_SECRET }}
         run: node scripts/send_scheduled_promotion.mjs
+
+      - name: Send daily engagement reminders
+        env:
+          SUPABASE_FUNCTION_URL: https://eqfrxrsstatryaetgerw.supabase.co/functions/v1
+          PROMOTION_CRON_SECRET: ${{ secrets.PROMOTION_CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          status=$(curl -sS -o /tmp/daily-reminders.json -w '%{http_code}' \
+            -X POST "${SUPABASE_FUNCTION_URL}/send-daily-engagement-reminders" \
+            -H "x-promotion-cron-secret: ${PROMOTION_CRON_SECRET}" \
+            -H 'Content-Type: application/json' \
+            --data '{}')
+          echo "Daily engagement reminders HTTP status: ${status}"
+          cat /tmp/daily-reminders.json
+          test "${status}" = '200'
