@@ -9,7 +9,7 @@ interface WorkerError {
   error?: string;
 }
 
-const AI_REQUEST_TIMEOUT_MS = 45_000;
+const AI_REQUEST_TIMEOUT_MS = 90_000;
 const AI_STREAM_TIMEOUT_MS = 60_000;
 const AI_STREAM_FALLBACK_TIMEOUT_MS = 30_000;
 

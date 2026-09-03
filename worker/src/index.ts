@@ -52,6 +52,8 @@ const OPENROUTER_TEXT_FALLBACKS = [
   'nvidia/nemotron-3-super-120b-a12b:free',
   'z-ai/glm-5.2:free',
   'minimax/minimax-m3:free',
+  'minimax/minimax-m2.7:free',
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
   'qwen/qwen3.7-flash',
   'google/gemini-2.5-flash',
   'mistralai/mistral-small-3.1-24b-instruct',

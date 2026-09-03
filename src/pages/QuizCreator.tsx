@@ -1587,23 +1587,30 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         }
 
         // Provider overload (429/503) is a transient burst, not a dead end —
-        // one delayed retry rescues most of these without any user action.
+        // automatic spaced retries rescue most of these without any user action.
         const runFallbackGeneration = async (params: any) => {
-          try {
-            return await generateAndSaveQuiz(params);
-          } catch (genErr: any) {
-            const genMsg = String(genErr?.message || genErr || '');
-            const isTransient = /overloaded|rate limit|429|503|busy|timeout|timed out/i.test(genMsg);
-            if (!isTransient) throw genErr;
-            setOcrProgress(prev => prev ? {
-              ...prev,
-              message: isAr
-                ? 'المحرك الذكي مشغول لحظياً بسبب الضغط؛ جاري إعادة المحاولة تلقائياً...'
-                : 'AI engine is briefly busy under load; retrying automatically...'
-            } : prev);
-            await new Promise(resolve => setTimeout(resolve, 6000));
-            return await generateAndSaveQuiz(params);
+          const delays = [0, 15000, 30000];
+          let lastErr: any;
+          for (let attempt = 0; attempt < delays.length; attempt++) {
+            if (delays[attempt] > 0) {
+              setOcrProgress(prev => prev ? {
+                ...prev,
+                message: isAr
+                  ? `محرك التوليد مشغول بسبب الضغط؛ محاولة تلقائية ${attempt + 1} من ${delays.length} بعد لحظات...`
+                  : `AI engine is busy under load; automatic retry ${attempt + 1} of ${delays.length} in a moment...`
+              } : prev);
+              await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+            }
+            try {
+              return await generateAndSaveQuiz(params);
+            } catch (genErr: any) {
+              lastErr = genErr;
+              const genMsg = String(genErr?.message || genErr || '');
+              const isTransient = /overloaded|rate limit|429|503|busy|timeout|timed out|unavailable/i.test(genMsg);
+              if (!isTransient) throw genErr;
+            }
           }
+          throw lastErr;
         };
 
         let fallbackResult: any;
