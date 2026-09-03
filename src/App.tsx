@@ -465,7 +465,11 @@ export default function App() {
   
   const [darkMode, setDarkMode] = React.useState(() => {
     const savedTheme = localStorage.getItem('quiz_theme');
-    return savedTheme ? savedTheme === 'dark' : true;
+    if (!savedTheme) {
+      localStorage.setItem('quiz_theme', 'dark');
+      return true;
+    }
+    return savedTheme !== 'light';
   });
   const [colorTheme, setColorTheme] = React.useState(() => localStorage.getItem('quiz_color_theme') || 'indigo');
 

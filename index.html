@@ -1,6 +1,21 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="dark">
   <head>
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('quiz_theme');
+          if (theme === 'light') {
+            document.documentElement.classList.remove('dark');
+          } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('quiz_theme', 'dark');
+          }
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
     <script>
       (function () {
         var hostname = window.location.hostname.toLowerCase();
