@@ -116,6 +116,7 @@ interface LandingPageProps {
   isLoading: boolean;
   currentUserEmail?: string | null;
   currentUserId?: string | null;
+  isAdmin?: boolean;
   onRefresh: () => void;
   onStartQuiz: (quizId: string) => void;
   onCreateQuizTab: () => void;
@@ -174,6 +175,7 @@ export default function LandingPage({
   isLoading,
   currentUserEmail,
   currentUserId,
+  isAdmin = false,
   onRefresh,
   onStartQuiz,
   onCreateQuizTab,
@@ -556,6 +558,7 @@ export default function LandingPage({
                   t={t}
                   currentUserEmail={currentUserEmail}
                   currentUserId={currentUserId}
+                  isAdmin={isAdmin}
                   onStartQuiz={onStartQuiz}
                   onShareQuiz={onShareQuiz}
                   onEditQuiz={onEditQuiz}

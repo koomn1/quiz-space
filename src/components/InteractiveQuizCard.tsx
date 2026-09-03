@@ -42,13 +42,16 @@ export function InteractiveQuizCard({
 }: InteractiveQuizCardProps) {
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
   const canEdit = !isGuest && (isAdminProp || quiz.creatorId === currentUserId);
+  // Solver identities and scores are sensitive platform-wide data. Only the
+  // server-authorized super-admin view may access the attempts panel.
+  const canViewAttempts = !isGuest && isAdminProp === true;
   const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
   const [attemptsOpen, setAttemptsOpen] = useState(false);
   const [attemptsLoading, setAttemptsLoading] = useState(false);
 
   const openAttempts = async (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (!canEdit) return;
+    if (!canViewAttempts) return;
     setAttemptsOpen(true);
     setAttemptsLoading(true);
     try {
@@ -71,7 +74,7 @@ export function InteractiveQuizCard({
   };
 
   const exportAttemptsCsv = () => {
-    if (!canEdit || attemptsLoading || attempts.length === 0) return;
+    if (!canViewAttempts || attemptsLoading || attempts.length === 0) return;
     const headers = isAr ? ['اسم العضو', 'الدرجة', 'إجمالي الأسئلة', 'تاريخ الحل'] : ['Member', 'Score', 'Total Questions', 'Solved At'];
     const escapeCsv = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
     const rows = attempts.map((attempt) => [attempt.takerName, attempt.score, attempt.totalQuestions, attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : '']);
@@ -80,7 +83,7 @@ export function InteractiveQuizCard({
   };
 
   const exportAttemptsExcel = () => {
-    if (!canEdit || attemptsLoading || attempts.length === 0) return;
+    if (!canViewAttempts || attemptsLoading || attempts.length === 0) return;
     const headers = isAr ? ['اسم العضو', 'الدرجة', 'إجمالي الأسئلة', 'تاريخ الحل'] : ['Member', 'Score', 'Total Questions', 'Solved At'];
     const escapeHtml = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const cells = (row: unknown[]) => row.map((value) => `<td>${escapeHtml(value)}</td>`).join('');
@@ -160,7 +163,7 @@ export function InteractiveQuizCard({
                 />
               </span>
               <span>•</span>
-              <button type="button" onClick={openAttempts} disabled={!canEdit} className={canEdit ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canEdit ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
+              <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className={canViewAttempts ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canViewAttempts ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
             </div>
           </div>
         </div>
@@ -296,7 +299,7 @@ export function InteractiveQuizCard({
               />
             </span>
             <span className="text-slate-300 dark:text-slate-700 font-normal select-none">•</span>
-            <button type="button" onClick={openAttempts} disabled={!canEdit} className={canEdit ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canEdit ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
+            <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className={canViewAttempts ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canViewAttempts ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
           </div>
         </div>
 

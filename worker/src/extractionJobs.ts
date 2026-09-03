@@ -570,6 +570,12 @@ async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: strin
   }
 }
 
+function documentVisionPrompt(job: ExtractionJobRow): string {
+  if (job.extraction_mode === 'generate') {
+    return `${generatePrompt(job.requested_question_count || 20, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. أعد JSON صالحاً فقط.`;
+  }
+  return extractionPrompt(job.custom_instruction);
+}
 async function extractPdfVision(
   source: Uint8Array,
   job: ExtractionJobRow,
@@ -598,7 +604,7 @@ async function extractPdfVision(
       const request = await callOpenRouterWithFallback(env, [{
         role: 'user',
         content: [
-          { type: 'text', text: extractionPrompt(job.custom_instruction) },
+          { type: 'text', text: documentVisionPrompt(job) },
           { type: 'file', file: { filename: `pages-${start + offset + 1}.pdf`, file_data: `data:application/pdf;base64,${fileBase64}` } },
         ],
       }], VISION_MODEL_FALLBACKS);

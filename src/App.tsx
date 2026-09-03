@@ -1654,6 +1654,7 @@ export default function App() {
                   isLoading={isLoadingQuizzes}
                   currentUserEmail={userEmail}
                   currentUserId={userId}
+                  isAdmin={isAdminUser}
                   planName={userPlanName}
                   isPremium={isUserPremium}
                   onRefresh={fetchQuizzesList}
@@ -1706,6 +1707,7 @@ export default function App() {
                   quizzes={quizzes}
                   userId={userId}
                   lang={lang}
+                  isAdmin={isAdminUser}
                   onStartQuiz={handleStartQuiz}
                   onEditQuiz={(quiz) => {
                     setQuizToEdit(quiz);

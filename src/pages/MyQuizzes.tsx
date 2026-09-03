@@ -10,6 +10,7 @@ interface MyQuizzesProps {
   quizzes: Quiz[];
   userId: string;
   lang: 'ar' | 'en';
+  isAdmin?: boolean;
   onStartQuiz: (id: string) => void;
   onEditQuiz: (quiz: Quiz) => void;
   onDeleteQuiz: (id: string) => void;
@@ -22,6 +23,7 @@ export function MyQuizzes({
   quizzes,
   userId,
   lang,
+  isAdmin = false,
   onStartQuiz,
   onEditQuiz,
   onDeleteQuiz,
@@ -80,6 +82,7 @@ export function MyQuizzes({
                 t={t}
                 currentUserEmail={userEmail}
                 currentUserId={userId}
+                isAdmin={isAdmin}
                 onStartQuiz={onStartQuiz}
                 onShareQuiz={onShareQuiz}
                 onEditQuiz={onEditQuiz}

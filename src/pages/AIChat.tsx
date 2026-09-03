@@ -1237,14 +1237,14 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                   aria-label={isAr ? 'إرسال' : 'Send'}
                   className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90"
                   style={{
-                    background: isAnalyzing ? 'rgba(16,163,127,0.14)' : (inputText.trim() || selectedAttachment) ? '#ffffff' : theme.SEND_IDLE,
-                    border: isAnalyzing ? `1px solid ${ACCENT}66` : 'none',
-                    color: isAnalyzing ? ACCENT : (inputText.trim() || selectedAttachment) ? '#111827' : '#ffffff',
+                    background: isAnalyzing ? 'rgba(16,163,127,0.14)' : (inputText.trim() || selectedAttachment) ? ACCENT : theme.SEND_IDLE,
+                    border: isAnalyzing ? `1px solid ${ACCENT}66` : (inputText.trim() || selectedAttachment) ? `1px solid ${ACCENT}` : 'none',
+                    color: isAnalyzing ? ACCENT : (inputText.trim() || selectedAttachment) ? '#07111f' : '#ffffff',
                     cursor: isAnalyzing ? 'wait' : 'pointer',
                     transform: isAnalyzing ? 'scale(.94)' : undefined,
                   }}
                 >
-                  <Send className="w-5 h-5" style={{ color: (inputText.trim() || selectedAttachment) && !isAnalyzing ? theme.SEND_ACTIVE_FG : '#ffffff' }} />
+                  <Send className="w-5 h-5" strokeWidth={2.8} style={{ color: (inputText.trim() || selectedAttachment) && !isAnalyzing ? '#07111f' : '#ffffff' }} />
                 </button>
               </div>
             </div>
