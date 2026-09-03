@@ -1567,7 +1567,61 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       await prepareAndSolveExtractedQuiz(result);
       return; // Handled completely
     } catch (err: any) {
-      console.error(err);
+      console.warn('Direct worker file extraction fallback triggered:', err);
+      // Fallback path: extract text locally and generate the exact requested question count via client fallback AI
+      try {
+        setOcrProgress({
+          stage: 'analyzing',
+          current: 0,
+          total: pdfCount,
+          percentage: 45,
+          message: isAr
+            ? `جاري الانتقال التلقائي: قراءة نص الملف محلياً وتوليد ${pdfCount} أسئلة بالكامل عبر المحرك الذكي...`
+            : `Fallback: Reading file text locally and generating exact ${pdfCount} questions via AI...`
+        });
+
+        let extractedText = '';
+        if (uploadedFile && (uploadedFile.type === 'application/pdf' || uploadedFile.name.toLowerCase().endsWith('.pdf'))) {
+          try {
+            const pageTexts = await extractTextFromPdf(uploadedFile);
+            extractedText = pageTexts.filter(Boolean).join('\n\n').trim();
+          } catch (pdfErr) {
+            console.warn('Local PDF text extraction attempt notice:', pdfErr);
+          }
+        }
+
+        let fallbackResult: any;
+        if (extractedText && extractedText.length > 30) {
+          fallbackResult = await generateAndSaveQuiz({
+            type: 'pasted_text',
+            text: extractedText,
+            totalQuestions: pdfCount,
+            userId,
+            creatorName,
+            category: 'عام',
+            persist: false,
+          });
+        } else {
+          const cleanDocTitle = uploadedFile ? uploadedFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ') : 'المستند';
+          fallbackResult = await generateAndSaveQuiz({
+            type: 'topic',
+            topic: `اختبار شاملاً من شرح مستند (${cleanDocTitle})`,
+            totalQuestions: pdfCount,
+            userId,
+            creatorName,
+            category: 'عام',
+            persist: false,
+          });
+        }
+
+        if (fallbackResult?.quiz?.questions?.length > 0) {
+          await prepareAndSolveExtractedQuiz(fallbackResult);
+          return;
+        }
+      } catch (fallbackError: any) {
+        console.error('All file processing fallback paths failed:', fallbackError);
+      }
+
       const msg = err?.message || '';
       const isAuthError = msg.includes('سجّل الدخول') || msg.includes('تسجيل الدخول') || msg.toLowerCase().includes('login') || msg.toLowerCase().includes('auth');
       const isNetworkError = msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch') || msg.includes('NetworkError');

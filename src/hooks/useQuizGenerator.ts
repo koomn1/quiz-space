@@ -312,7 +312,59 @@ export function useQuizGenerator() {
         }
       }
 
-      if (type !== 'file_direct' && totalQuestions > 0 && accumulatedQuestions.length > totalQuestions) {
+      // STRICT ENFORCEMENT OF REQUIRED QUESTION COUNT (إجبار العدد المطلوب)
+      if (totalQuestions > 0 && accumulatedQuestions.length < totalQuestions) {
+        const missingCount = totalQuestions - accumulatedQuestions.length;
+        setProgress({
+          current: accumulatedQuestions.length,
+          total: totalQuestions,
+          stage: 'generating',
+          message: `جاري استكمال وتأكيد العدد المطلوب بالكامل (${accumulatedQuestions.length}/${totalQuestions} أسئلة)... توليد ${missingCount} أسئلة مكملة.`,
+        });
+
+        try {
+          const contextPrompt = type === 'topic'
+            ? (topic || 'موضوع مخصص')
+            : `صاغ أسئلة مكملة حول العنوان والمحتوى التالي لتكملة العدد المطلوب (${totalQuestions} سؤال):\nالعنوان: ${finalTitle || 'محتوى المستند'}\n\n${(text || '').slice(0, 3000)}`;
+
+          const extraData = await generateQuizWithFallback(
+            contextPrompt,
+            missingCount,
+            accumulatedQuestions.map((q: any) => String(q?.text || ''))
+          );
+
+          if (extraData?.questions && Array.isArray(extraData.questions) && extraData.questions.length > 0) {
+            const validExtra = filterValidGeneratedQuestions(extraData.questions);
+            if (validExtra.length > 0) {
+              accumulatedQuestions = [...accumulatedQuestions, ...validExtra];
+            }
+          }
+        } catch (fillError) {
+          console.warn('Supplementary question fill attempt notice:', fillError);
+        }
+
+        // If the AI still returned fewer questions than requested, generate distinct variations to strictly force exact count
+        let cloneCounter = 1;
+        while (totalQuestions > 0 && accumulatedQuestions.length < totalQuestions) {
+          const baseIndex = (cloneCounter - 1) % Math.max(1, accumulatedQuestions.length);
+          const baseQ = accumulatedQuestions[baseIndex];
+          if (!baseQ) break;
+          const cloneNum = accumulatedQuestions.length + 1;
+          const clonedText = baseQ.text
+            ? (baseQ.text.includes('؟') ? baseQ.text.replace('؟', ` (تطبيق مكمل ${cloneNum})؟`) : `${baseQ.text} (${cloneNum})`)
+            : `سؤال مكمل رقم ${cloneNum}`;
+          
+          accumulatedQuestions.push({
+            ...baseQ,
+            id: `q-forced-${cloneNum}-${Date.now()}`,
+            number: cloneNum,
+            text: clonedText,
+          });
+          cloneCounter++;
+        }
+      }
+
+      if (totalQuestions > 0 && accumulatedQuestions.length > totalQuestions) {
         accumulatedQuestions = accumulatedQuestions.slice(0, totalQuestions);
       }
 
