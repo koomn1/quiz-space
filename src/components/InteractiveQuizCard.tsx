@@ -6,6 +6,8 @@ import { PremiumNameTag } from './PremiumNameTag';
 import ParallaxTiltCard from './ParallaxTiltCard';
 import { getQuizTakersUnique } from '../lib/db';
 import { QuizCompletion } from '../types';
+import { createPortal } from 'react-dom';
+// Keep the modal and print window independent from transformed/overflow-hidden card ancestors.
 
 interface InteractiveQuizCardProps {
   quiz: Quiz;
@@ -62,8 +64,12 @@ export function InteractiveQuizCard({
   };
 
   const printQuiz = () => {
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer');
+    // Open synchronously from the click handler, then wait until the new
+    // document has loaded before invoking print. Calling print immediately
+    // after document.write can produce a blank print preview on mobile Chrome.
+    const printWindow = window.open('about:blank', '_blank');
     if (!printWindow) return;
+
     const escapeHtml = (value: unknown) => String(value ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -77,12 +83,24 @@ export function InteractiveQuizCard({
         : '<div class="answer-line"></div>';
       return `<section class="question"><h2>${index + 1}. ${escapeHtml(question.text)}</h2>${options}</section>`;
     }).join('');
-    printWindow.document.write(`<!doctype html><html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${escapeHtml(quiz.title)}</title><style>
+    const html = `<!doctype html><html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${escapeHtml(quiz.title)}</title><style>
       *{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#111827;max-width:850px;margin:0 auto;padding:36px;line-height:1.7}h1{font-size:26px;margin:0 0 8px;color:#312e81}p{color:#475569;margin:0 0 28px}.question{break-inside:avoid;border-bottom:1px solid #e2e8f0;padding:18px 0}.question h2{font-size:17px;margin:0 0 10px}.options{margin:0;padding-inline-start:28px}.options li{padding:4px 0}.answer-line{height:70px;border-bottom:1px solid #94a3b8;margin-top:16px}@media print{body{padding:0;max-width:none}.question{break-inside:avoid}}
-    </style></head><body><h1>${escapeHtml(quiz.title)}</h1><p>${escapeHtml(quiz.description)}</p>${questionsHtml}</body></html>`);
+    </style></head><body><h1>${escapeHtml(quiz.title)}</h1><p>${escapeHtml(quiz.description)}</p>${questionsHtml}</body></html>`;
+
+    let printed = false;
+    const printWhenReady = () => {
+      if (printed || printWindow.closed) return;
+      printed = true;
+      printWindow.focus();
+      printWindow.print();
+    };
+    printWindow.onafterprint = () => printWindow.close();
+    printWindow.onload = printWhenReady;
+    printWindow.document.open();
+    printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.focus();
-    window.setTimeout(() => printWindow.print(), 250);
+    // Some mobile browsers do not emit load again for document.write().
+    window.setTimeout(printWhenReady, 500);
   };
 
   const downloadFile = (filename: string, content: string, mimeType: string) => {
@@ -116,11 +134,25 @@ export function InteractiveQuizCard({
     downloadFile(`${quiz.title || 'quiz'}-members.xls`, html, 'application/vnd.ms-excel;charset=utf-8');
   };
 
-  const attemptsPanel = attemptsOpen ? (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onClick={() => setAttemptsOpen(false)}>
+  React.useEffect(() => {
+    if (!attemptsOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setAttemptsOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [attemptsOpen]);
+
+  const attemptsPanel = attemptsOpen && typeof document !== 'undefined' ? createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onClick={() => setAttemptsOpen(false)} role="dialog" aria-modal="true" aria-labelledby={`attempts-title-${quiz.id}`}>
       <div className="w-full max-w-lg max-h-[min(640px,90vh)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900" onClick={(e) => e.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
-          <div><h3 className="font-black text-slate-800 dark:text-white">{isAr ? 'الأعضاء الذين حلوا الاختبار' : 'Members who solved this quiz'}</h3><p className="mt-1 text-xs text-slate-500">{quiz.title}</p></div>
+          <div><h3 id={`attempts-title-${quiz.id}`} className="font-black text-slate-800 dark:text-white">{isAr ? 'الأعضاء الذين حلوا الاختبار' : 'Members who solved this quiz'}</h3><p className="mt-1 text-xs text-slate-500">{quiz.title}</p></div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={exportAttemptsCsv} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-2 text-[11px] font-black text-emerald-600 transition-colors hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400" title="CSV"><Download className="h-3.5 w-3.5" />CSV</button>
             <button type="button" onClick={exportAttemptsExcel} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 px-3 py-2 text-[11px] font-black text-blue-600 transition-colors hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-blue-400" title="Excel"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
@@ -131,7 +163,8 @@ export function InteractiveQuizCard({
           {attemptsLoading ? <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" />{isAr ? 'جاري تحميل الأعضاء...' : 'Loading members...'}</div> : attempts.length === 0 ? <p className="py-12 text-center text-sm text-slate-500">{isAr ? 'لا توجد محاولات مسجلة بعد.' : 'No recorded attempts yet.'}</p> : <div className="space-y-2">{attempts.map((attempt) => <div key={attempt.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50"><div><p className="font-bold text-slate-800 dark:text-slate-100">{attempt.takerName || (isAr ? 'عضو' : 'Member')}</p><p className="text-[11px] text-slate-500">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p></div><span className="rounded-lg bg-primary/10 px-2 py-1 text-xs font-black text-primary">{attempt.score}/{attempt.totalQuestions}</span></div>)}</div>}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   ) : null;
 
   if (view === 'list') {
