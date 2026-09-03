@@ -739,9 +739,9 @@ export default function UserProfile({
         undefined, // gender
         undefined, // birthdate
         undefined, // onboarded
-        // Persist the frame picked in this modal — previously the selection
-        // only updated local state and never reached the database.
-        editFrameId || undefined, // activeFrameId
+        // active_frame_id is intentionally NOT passed here: the users-table
+        // policy rejects direct frame writes even for owned frames — activation
+        // must go through activate_reward_frame() below.
       );
 
       // The active frame is a reward entitlement, so its ownership is verified
@@ -813,7 +813,7 @@ export default function UserProfile({
       const errorMessage = e?.message || String(e);
       // The database enforces frame ownership on activation; guide the user
       // to the store instead of surfacing the raw policy message.
-      if (/owned inventory/i.test(errorMessage)) {
+      if (/owned inventory|not own|غير مملوك|يجب أن تملك/i.test(errorMessage)) {
         showToast('error', isAr
           ? 'تعذر تفعيل هذا الفريم: لازم تكون مالكه أولاً — افتح متجر النقاط واستلمه أو اشتريه ثم أعد الاختيار.'
           : 'Could not activate this frame: you must own it first — open the rewards store to claim or buy it, then pick it again.');
