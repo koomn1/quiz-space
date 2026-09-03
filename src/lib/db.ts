@@ -2846,17 +2846,53 @@ export function extractYouTubeId(url: string): string {
 // ===== Motivation Hub Functions =====
 // Free limited engagement features (lucky spin, mystery box, brain challenge, etc.)
 
+// Some revisions of the get_motivation_status RPC raise SQLSTATE 22023
+// ("time zone ... not recognized") from inside the function body, which turns
+// every motivation hub load into a 400. The claim/streak RPCs still enforce all
+// real limits server-side, so a neutral locally-computed status only keeps the
+// UI usable — it never grants anything the server would refuse.
+let motivationStatusFallbackWarned = false;
+
+function buildLocalMotivationStatusFallback() {
+  const hour = new Date().getHours();
+  return {
+    streak: null,
+    lucky_spin: false,
+    mystery_box: true,
+    brain_challenge: { attempts_today: 0, correct: 0 },
+    referrals_used: 0,
+    happy_hour: {
+      is_happy_hour: hour >= 18 && hour < 20,
+      multiplier: 2.0,
+      start_hour: 18,
+      end_hour: 20,
+    },
+  };
+}
+
 export async function getMotivationStatus() {
   const user = supabase.auth.getUser();
   const { data: { user: authUser } } = await user;
   if (!authUser) throw new Error('Not authenticated');
 
   const { data, error } = await supabase.rpc('get_motivation_status');
-  if (error) {
-    console.error('get_motivation_status error:', error);
-    return null;
+  if (!error) return data;
+
+  const code = (error as any)?.code;
+  const message = String((error as any)?.message || '');
+  const isTimezoneError = code === '22023' || /time zone/i.test(message);
+  if (isTimezoneError) {
+    // Retry once with an explicit safe zone in case the deployed revision
+    // accepts a zone argument; a missing overload (PGRST202) is ignored below.
+    const retry = await supabase.rpc('get_motivation_status', { p_timezone: 'UTC' });
+    if (!retry.error) return retry.data;
   }
-  return data;
+
+  if (!motivationStatusFallbackWarned) {
+    motivationStatusFallbackWarned = true;
+    console.warn('get_motivation_status unavailable; using local fallback status.', code || message);
+  }
+  return buildLocalMotivationStatusFallback();
 }
 
 export async function claimLuckySpin() {

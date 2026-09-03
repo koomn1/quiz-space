@@ -12,9 +12,9 @@ describe('institution white-label export contract', () => {
   });
 
   it('substitutes the institution name throughout the PDF without changing personal exports', () => {
-    expect(pdf).toContain("branding?.institutionName || 'Quiz Space'");
-    expect(pdf).toContain("branding?.institutionName || 'منصة Quiz Space'");
-    expect(pdf).toContain("branding?.institutionName ? 'ورقة أسئلة مؤسسية — بدون حلول أو إجابات'");
+    expect(pdf).toContain("branding?.institutionName || 'Quiz Space — نموذج اختبار رسمي'");
+    expect(pdf).toContain("branding?.institutionName || 'منصة Quiz Space التعليمية'");
+    expect(pdf).toContain("branding?.institutionName ? 'ورقة أسئلة نموذجية وموثقة'");
     expect(resolver).toContain('getInstitutionExportBrandForQuiz(quiz.id)');
   });
 });

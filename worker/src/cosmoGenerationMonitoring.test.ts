@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest';
 const workerSource = readFileSync(resolve(process.cwd(), 'worker/src/index.ts'), 'utf8');
 
 describe('Cosmo generation recovery contract', () => {
-  it('uses Qwen 3.7 Flash as the fast Arabic-capable primary Cosmo route', () => {
-    expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'qwen/qwen3.7-flash'");
+  it('uses Gemini 2.0 Flash as the fast Arabic-capable primary Cosmo route', () => {
+    expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'google/gemini-2.0-flash-001'");
     expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
     expect(workerSource).toContain("'nvidia/nemotron-3.5-lightning:free'");
     expect(workerSource).toContain("'mistralai/mistral-small-3.1-24b-instruct'");
-    expect(workerSource).toContain("'qwen/qwen3.5-122b-a10b'");
+    expect(workerSource).toContain("'openai/gpt-oss-120b:free'");
   });
 
   it('uses the resilient OpenRouter model sequence for quiz generation', () => {

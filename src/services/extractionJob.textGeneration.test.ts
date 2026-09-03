@@ -44,7 +44,7 @@ describe('narrative text generation in extraction jobs', () => {
     expect(request.messages[0].content).toContain('محتوى الملف المصدر');
     expect(request.messages[0].content).toContain('Gravity keeps planets in orbit');
     expect(JSON.stringify(request.messages[0].content)).not.toContain('image_url');
-    expect(result.provider).toBe('nvidia/nemotron-3-super-120b-a12b:free');
+    expect(result.provider).toBe('openai/gpt-oss-120b:free');
     expect(result.questions).toHaveLength(1);
   });
 });

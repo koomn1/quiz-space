@@ -1564,6 +1564,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     } catch (err: any) {
       console.warn('Direct worker file extraction fallback triggered:', err);
       // Fallback path: extract text locally and generate the exact requested question count via client fallback AI
+      let extractedText = '';
       try {
         setOcrProgress({
           stage: 'analyzing',
@@ -1575,7 +1576,6 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
             : `Fallback: Reading file text locally and generating exact ${pdfCount} questions via AI...`
         });
 
-        let extractedText = '';
         if (uploadedFile && (uploadedFile.type === 'application/pdf' || uploadedFile.name.toLowerCase().endsWith('.pdf'))) {
           try {
             const pageTexts = await extractTextFromPdf(uploadedFile);
@@ -1585,9 +1585,29 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           }
         }
 
+        // Provider overload (429/503) is a transient burst, not a dead end —
+        // one delayed retry rescues most of these without any user action.
+        const runFallbackGeneration = async (params: any) => {
+          try {
+            return await generateAndSaveQuiz(params);
+          } catch (genErr: any) {
+            const genMsg = String(genErr?.message || genErr || '');
+            const isTransient = /overloaded|rate limit|429|503|busy|timeout|timed out/i.test(genMsg);
+            if (!isTransient) throw genErr;
+            setOcrProgress(prev => prev ? {
+              ...prev,
+              message: isAr
+                ? 'المحرك الذكي مشغول لحظياً بسبب الضغط؛ جاري إعادة المحاولة تلقائياً...'
+                : 'AI engine is briefly busy under load; retrying automatically...'
+            } : prev);
+            await new Promise(resolve => setTimeout(resolve, 6000));
+            return await generateAndSaveQuiz(params);
+          }
+        };
+
         let fallbackResult: any;
         if (extractedText && extractedText.length > 30) {
-          fallbackResult = await generateAndSaveQuiz({
+          fallbackResult = await runFallbackGeneration({
             type: 'pasted_text',
             text: extractedText,
             totalQuestions: pdfCount,
@@ -1598,7 +1618,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           });
         } else {
           const cleanDocTitle = uploadedFile ? uploadedFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ') : 'المستند';
-          fallbackResult = await generateAndSaveQuiz({
+          fallbackResult = await runFallbackGeneration({
             type: 'topic',
             topic: `اختبار شاملاً من شرح مستند (${cleanDocTitle})`,
             totalQuestions: pdfCount,
@@ -1614,16 +1634,32 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           return;
         }
       } catch (fallbackError: any) {
-        console.error('All file processing fallback paths failed:', fallbackError);
+        console.warn('All file processing fallback paths failed:', fallbackError);
         if (fallbackError?.message) {
           err = fallbackError;
         }
       }
 
+      // The file itself was read fine — only the AI engine refused. Never show
+      // "corrupt file" in that case: hand the extracted text to the paste tab
+      // so a single later click finishes the job.
+      if (extractedText && extractedText.length > 30) {
+        const busyMessage = isAr
+          ? `تمت قراءة الملف بنجاح (${extractedText.length} حرفاً) لكن محرك التوليد مشغول حالياً بسبب الضغط العالي. لصقنا نص الملف تلقائياً في تبويب «لصق نصوص PDF» — عد بعد لحظات واضغط توليد وسيعمل مباشرة.`
+          : `The file was read successfully (${extractedText.length} characters), but the AI engine is busy under heavy load. We pasted its text into the “Paste PDF text” tab — come back in a moment and press generate.`;
+        setPastedText(extractedText);
+        setActiveMode('paste');
+        setOcrError(busyMessage);
+        setPasteError(busyMessage);
+        setIsProcessingOcr(false);
+        setOcrProgress(null);
+        return;
+      }
+
       const rawMsg = String(err?.message || err || '');
       const isAuthError = rawMsg.includes('سجّل الدخول') || rawMsg.includes('تسجيل الدخول') || rawMsg.toLowerCase().includes('login') || rawMsg.toLowerCase().includes('auth');
       const isNetworkError = rawMsg.includes('fetch') || rawMsg.includes('network') || rawMsg.includes('Failed to fetch') || rawMsg.includes('NetworkError');
-      const isOverloadedError = rawMsg.includes('overloaded') || rawMsg.includes('rate limit') || rawMsg.includes('429') || rawMsg.includes('503') || rawMsg.includes('busy');
+      const isOverloadedError = rawMsg.includes('overloaded') || rawMsg.includes('rate limit') || rawMsg.includes('429') || rawMsg.includes('503') || rawMsg.includes('busy') || rawMsg.includes('مشغول') || rawMsg.includes('الضغط') || rawMsg.includes('وقت لاحق');
 
       let userFriendlyMessage = err?.message || (isAr
         ? 'تعذر إكمال استخراج الأسئلة من الملف. تأكد من أن الملف سليم ومفهوم، ثم أعد المحاولة.'
