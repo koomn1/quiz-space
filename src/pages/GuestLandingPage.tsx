@@ -65,7 +65,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white" dir={isAr ? 'rtl' : 'ltr'}>
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#061027] via-[#16255c] to-[#3b176c] px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-16">
+      <section className="relative overflow-hidden light-hero bg-gradient-to-br from-[#061027] via-[#16255c] to-[#3b176c] px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-16">
         <div className="pointer-events-none absolute -right-24 top-0 h-80 w-80 rounded-full bg-cyan-400/20 blur-[120px]" />
         <div className="pointer-events-none absolute -bottom-28 -left-20 h-80 w-80 rounded-full bg-violet-500/30 blur-[120px]" />
 

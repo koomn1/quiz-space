@@ -854,13 +854,34 @@ html:not(.dark) .light-readable-ui [class~="placeholder-slate-500"]::placeholder
 
 
 /* Intentional dark hero surfaces keep their high-contrast light typography in light mode. */
-html:not(.dark) .light-readable-ui .light-hero [class~="text-white"] {
+html:not(.dark) .light-readable-ui .light-hero [class~="text-white"],
+html:not(.dark) .light-readable-ui [class*="from-[#061027]"] [class~="text-white"],
+html:not(.dark) .light-readable-ui [class*="bg-[#061027]"] [class~="text-white"] {
   color: #ffffff !important;
 }
 
+html:not(.dark) .light-readable-ui .light-hero [class~="text-slate-100"],
+html:not(.dark) .light-readable-ui [class*="from-[#061027]"] [class~="text-slate-100"],
+html:not(.dark) .light-readable-ui [class*="bg-[#061027]"] [class~="text-slate-100"] {
+  color: #f1f5f9 !important;
+}
+
+html:not(.dark) .light-readable-ui .light-hero [class~="text-slate-200"],
+html:not(.dark) .light-readable-ui [class*="from-[#061027]"] [class~="text-slate-200"],
+html:not(.dark) .light-readable-ui [class*="bg-[#061027]"] [class~="text-slate-200"] {
+  color: #e2e8f0 !important;
+}
+
 html:not(.dark) .light-readable-ui .light-hero [class~="text-slate-300"],
-html:not(.dark) .light-readable-ui .light-hero [class~="text-slate-200"] {
+html:not(.dark) .light-readable-ui [class*="from-[#061027]"] [class~="text-slate-300"],
+html:not(.dark) .light-readable-ui [class*="bg-[#061027]"] [class~="text-slate-300"] {
   color: #cbd5e1 !important;
+}
+
+html:not(.dark) .light-readable-ui .light-hero [class~="text-indigo-100"],
+html:not(.dark) .light-readable-ui [class*="from-[#061027]"] [class~="text-indigo-100"],
+html:not(.dark) .light-readable-ui [class*="bg-[#061027]"] [class~="text-indigo-100"] {
+  color: #e0e7ff !important;
 }
 
 html:not(.dark) .light-readable-ui .light-hero [class~="bg-white/5"] {
