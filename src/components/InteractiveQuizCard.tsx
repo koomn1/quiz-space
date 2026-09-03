@@ -255,7 +255,7 @@ export function InteractiveQuizCard({
             <Printer className="w-3.5 h-3.5" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute end-0 top-10 z-[80] w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="absolute end-0 bottom-full mb-2 z-[90] w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
               <button type="button" onClick={downloadPdf} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تحويل إلى PDF' : 'Export to PDF'}</button>
               <button type="button" onClick={() => { setExportMenuOpen(false); printQuiz(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
             </div>
@@ -458,7 +458,7 @@ export function InteractiveQuizCard({
             <ChevronDown className="h-3.5 w-3.5" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute end-0 top-12 z-[80] w-48 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
               <button type="button" onClick={downloadPdf} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تحويل إلى PDF' : 'Export to PDF'}</button>
               <button type="button" onClick={() => { setExportMenuOpen(false); printQuiz(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
             </div>
