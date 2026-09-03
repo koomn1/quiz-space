@@ -75,6 +75,15 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
   { id: 'girl-basketball-science-v3', label: 'Basketball & Science', labelAr: 'كرة سلة وعلوم', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/avatar-girl-basketball-scientist-v3.webp') },
   { id: 'boy-photo-journalist-v3', label: 'Student Photographer', labelAr: 'مصور المدرسة', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/avatar-boy-photo-journalist-v3.webp') },
   { id: 'girl-cyclist-coder-v3', label: 'Cyclist Coder', labelAr: 'مستكشفة البرمجة', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/avatar-girl-cyclist-coder-v3.webp') },
+  // Crisp vector avatars — always sharp at every size and theme.
+  { id: 'svg-boy-astronaut', label: 'Astronaut', labelAr: 'رائد فضاء', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/svg-avatars/svg-boy-astronaut.svg') },
+  { id: 'svg-boy-king', label: 'Golden King', labelAr: 'الملك الذهبي', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/svg-avatars/svg-boy-king.svg') },
+  { id: 'svg-boy-ninja', label: 'Shadow Ninja', labelAr: 'النينجا الشبح', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/svg-avatars/svg-boy-ninja.svg') },
+  { id: 'svg-boy-wizard', label: 'Wizard', labelAr: 'الساحر', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/svg-avatars/svg-boy-wizard.svg') },
+  { id: 'svg-boy-robot', label: 'Cyber Bot', labelAr: 'الروبوت السيبراني', gender: 'boy', url: profileAssetUrl('clean-assets-replacement/svg-avatars/svg-boy-robot.svg') },
+  { id: 'svg-girl-queen', label: 'Rose Queen', labelAr: 'ملكة الورد', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/svg-avatars/svg-girl-queen.svg') },
+  { id: 'svg-girl-star', label: 'Super Star', labelAr: 'النجمة الساطعة', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/svg-avatars/svg-girl-star.svg') },
+  { id: 'svg-girl-butterfly', label: 'Nature Spirit', labelAr: 'روح الطبيعة', gender: 'girl', url: profileAssetUrl('clean-assets-replacement/svg-avatars/svg-girl-butterfly.svg') },
 ];
 
 export const AVATAR_PRESET_URLS = AVATAR_PRESETS.map((avatar) => avatar.url);
@@ -135,6 +144,30 @@ export const FREE_PROFILE_FRAMES: ProfileFrame[] = [
     css_class: 'frame-aurora-glass',
     is_free: true,
   },
+  {
+    id: 'frame_aurora_neon',
+    name: 'Neon Aurora',
+    name_ar: 'الشفق النيوني',
+    image_url: profileAssetUrl('clean-assets-replacement/svg-avatars/frame-aurora-neon.svg'),
+    css_class: 'frame-aurora-neon',
+    is_free: true,
+  },
+  {
+    id: 'frame_royal_ember',
+    name: 'Royal Ember',
+    name_ar: 'الجمر الملكي',
+    image_url: profileAssetUrl('clean-assets-replacement/svg-avatars/frame-royal-ember.svg'),
+    css_class: 'frame-royal-ember',
+    is_free: true,
+  },
+  {
+    id: 'frame_cosmic_pulse',
+    name: 'Cosmic Pulse',
+    name_ar: 'نبض الكون',
+    image_url: profileAssetUrl('clean-assets-replacement/svg-avatars/frame-cosmic-pulse.svg'),
+    css_class: 'frame-cosmic-pulse',
+    is_free: true,
+  },
 ];
 
 export const FRAME_ASSET_OVERRIDES: Record<string, string> = {
@@ -166,6 +199,9 @@ export const FRAME_ASSET_OVERRIDES: Record<string, string> = {
   frame_stone_moon: profileAssetUrl('clean-assets-replacement/frame-stone-moon-transparent.webp'),
   frame_ice_glacier: profileAssetUrl('clean-assets-replacement/frame-ice-glacier-transparent.webp'),
   frame_ice_frost: profileAssetUrl('clean-assets-replacement/frame-ice-frost-transparent.webp'),
+  frame_aurora_neon: profileAssetUrl('clean-assets-replacement/svg-avatars/frame-aurora-neon.svg'),
+  frame_royal_ember: profileAssetUrl('clean-assets-replacement/svg-avatars/frame-royal-ember.svg'),
+  frame_cosmic_pulse: profileAssetUrl('clean-assets-replacement/svg-avatars/frame-cosmic-pulse.svg'),
 };
 
 export function uniqueProfileFrames<T extends { id?: string | null; image_url?: string | null }>(frames: T[]): T[] {

@@ -51,6 +51,9 @@ const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
   'frame-dragon-spirit': { animation: 'frame-rotate 10s linear infinite' },
   'frame-galaxy': { animation: 'frame-pulse 4s ease-in-out infinite' },
   'frame-crystal-luxe': { animation: 'frame-shimmer 3s linear infinite' },
+  'frame-aurora-neon': { animation: 'frame-shimmer 3s linear infinite' },
+  'frame-royal-ember': { animation: 'frame-pulse 4s ease-in-out infinite' },
+  'frame-cosmic-pulse': { animation: 'frame-rotate 10s linear infinite' },
 };
 
 const COVER_PREVIEW_STYLES: Record<string, React.CSSProperties> = {
@@ -727,10 +730,13 @@ export default function UserProfile({
 
       // The active frame is a reward entitlement, so its ownership is verified
       // by a dedicated server-side RPC rather than generic profile updates.
+      // Free catalog frames ship with the app (no inventory row), so they skip
+      // the ownership RPC and persist through the profile update below.
       const previousFrameId = profileData?.activeFrameId || '';
       if (editFrameId !== previousFrameId) {
+        const isFreeFrameSelection = FREE_PROFILE_FRAMES.some((frame) => frame.id === editFrameId);
         const frameResponse = editFrameId
-          ? await activateRewardFrame(editFrameId)
+          ? (isFreeFrameSelection ? { success: true } : await activateRewardFrame(editFrameId))
           : await deactivateRewardFrame();
         if (!frameResponse?.success) throw new Error(frameResponse?.message || 'Unable to save the selected frame.');
         localStorage.setItem('quizspace_active_frame', editFrameId);

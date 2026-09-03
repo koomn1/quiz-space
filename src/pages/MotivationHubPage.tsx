@@ -268,7 +268,12 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
       const extraSpins = 6 + Math.floor(Math.random() * 3);
       const targetAngle = (360 - targetCenter + 360) % 360;
       pendingResultRef.current = { ...response, wheelLabel: segments[targetIndex].label };
-      setAngle((current) => current + extraSpins * 360 + targetAngle);
+      // Keep only whole laps from the previous spin so the final angle always
+      // lands mod-360 on the server-secured segment, even after back-to-back days.
+      setAngle((current) => {
+        const wholeLaps = current - (current % 360);
+        return wholeLaps + extraSpins * 360 + targetAngle;
+      });
       setSpinning(true);
       setCheckingAvailability(false);
       // transitionend is the primary completion signal; the timer protects
@@ -295,7 +300,7 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
             <div className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 rounded-full bg-white/60" />
           </div>
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/30 via-transparent to-cyan-400/25 blur-xl" aria-hidden="true" />
-          <div onTransitionEnd={(event) => { if (event.propertyName === 'transform' && spinning) finishSpin(); }} className="relative h-full w-full rounded-full border-[10px] border-slate-950/95 p-1 shadow-[0_0_0_4px_rgba(255,255,255,.18),0_0_55px_-8px_rgba(139,92,246,0.95)] transition-transform duration-[4300ms] [transition-timing-function:cubic-bezier(0.12,0.8,0.15,1)] motion-reduce:transition-none" style={{ transform: `rotate(${angle}deg)`, background: wheelBackground }} role="img" aria-label={lang === 'ar' ? 'عجلة جوائز من 1 إلى 50 نقطة' : 'Prize wheel from 1 to 50 points'}>
+          <div onTransitionEnd={(event) => { if (event.target === event.currentTarget && event.propertyName === 'transform' && spinning) finishSpin(); }} className="relative h-full w-full rounded-full border-[10px] border-slate-950/95 p-1 shadow-[0_0_0_4px_rgba(255,255,255,.18),0_0_55px_-8px_rgba(139,92,246,0.95)] will-change-transform" style={{ transform: `rotate(${angle}deg)`, background: wheelBackground, transition: spinning ? 'transform 4.3s cubic-bezier(0.12, 0.8, 0.15, 1)' : 'none' }} role="img" aria-label={lang === 'ar' ? 'عجلة جوائز من 1 إلى 50 نقطة' : 'Prize wheel from 1 to 50 points'}>
             <div className="pointer-events-none absolute inset-0 rounded-full border-2 border-white/40" aria-hidden="true" />
             <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_25%,rgba(255,255,255,.38),transparent_25%),linear-gradient(135deg,rgba(255,255,255,.14),transparent_45%,rgba(0,0,0,.16))]" />
             {segments.map((segment, index) => {

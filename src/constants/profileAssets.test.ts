@@ -9,7 +9,7 @@ import {
 } from './profileAssets';
 
 describe('profile asset catalog', () => {
-  it('exposes fifteen distinct replacement avatars with distinct IDs and URLs', () => {
+  it('exposes twenty-three distinct replacement avatars with distinct IDs and URLs', () => {
     expect(AVATAR_PRESETS.map((avatar) => avatar.id)).toEqual([
       'boy-robotics',
       'girl-pottery',
@@ -26,17 +26,31 @@ describe('profile asset catalog', () => {
       'girl-basketball-science-v3',
       'boy-photo-journalist-v3',
       'girl-cyclist-coder-v3',
+      'svg-boy-astronaut',
+      'svg-boy-king',
+      'svg-boy-ninja',
+      'svg-boy-wizard',
+      'svg-boy-robot',
+      'svg-girl-queen',
+      'svg-girl-star',
+      'svg-girl-butterfly',
     ]);
-    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.id)).size).toBe(15);
-    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.url)).size).toBe(15);
+    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.id)).size).toBe(23);
+    expect(new Set(AVATAR_PRESETS.map((avatar) => avatar.url)).size).toBe(23);
     expect(AVATAR_PRESETS.every((avatar) => avatar.url.includes('/clean-assets-replacement/'))).toBe(true);
-    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'boy')).toHaveLength(7);
-    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'girl')).toHaveLength(8);
+    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'boy')).toHaveLength(12);
+    expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'girl')).toHaveLength(11);
   });
 
-  it('keeps two free frames available and maps them to replacement WebPs', () => {
-    expect(FREE_PROFILE_FRAMES.map((frame) => frame.id)).toEqual(['frame_free_1', 'frame_free_2']);
-    expect(uniqueProfileFrames(FREE_PROFILE_FRAMES)).toHaveLength(2);
+  it('keeps five free frames available and maps them to replacement assets', () => {
+    expect(FREE_PROFILE_FRAMES.map((frame) => frame.id)).toEqual([
+      'frame_free_1',
+      'frame_free_2',
+      'frame_aurora_neon',
+      'frame_royal_ember',
+      'frame_cosmic_pulse',
+    ]);
+    expect(uniqueProfileFrames(FREE_PROFILE_FRAMES)).toHaveLength(5);
     expect(FREE_PROFILE_FRAMES.every((frame) => frame.image_url.includes('/clean-assets-replacement/'))).toBe(true);
   });
 
@@ -92,6 +106,6 @@ describe('profile asset catalog', () => {
     ];
     expect(allProfileAssets.every((asset) => asset.includes('/clean-assets-replacement/'))).toBe(true);
     expect(allProfileAssets.every((asset) => !asset.startsWith('/manus-storage/'))).toBe(true);
-    expect(allProfileAssets.every((asset) => asset.endsWith('.webp'))).toBe(true);
+    expect(allProfileAssets.every((asset) => asset.endsWith('.webp') || asset.endsWith('.svg'))).toBe(true);
   });
 });
