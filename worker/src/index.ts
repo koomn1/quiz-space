@@ -44,28 +44,27 @@ type Provider = 'openrouter';
 // and is inexpensive enough for frequent educational chat. The previous free
 // Qwen 235B identifier is no longer listed by OpenRouter, so it was replaced
 // with a live production model and a quality-focused Qwen fallback sequence.
-const OPENROUTER_TEXT_MODEL = 'qwen/qwen3.7-flash';
-const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
-// Keep Arabic-oriented Qwen models first. Mistral Small 3.1 is a multilingual,
-// low-latency bridge for streamed answers when a Qwen route cannot begin a
-// stream, before the system reaches generic emergency fallbacks.
+const OPENROUTER_TEXT_MODEL = 'google/gemini-2.0-flash-001';
+const OPENROUTER_VISION_MODEL = 'google/gemini-2.0-flash-001';
 const OPENROUTER_TEXT_FALLBACKS = [
+  'google/gemini-2.0-flash-001',
+  'google/gemini-1.5-flash',
+  'google/gemini-2.5-flash',
   'qwen/qwen3.7-flash',
   'mistralai/mistral-small-3.1-24b-instruct',
-  'qwen/qwen3-32b',
-  'qwen/qwen3.5-122b-a10b',
   'nvidia/nemotron-3.5-lightning:free',
-  'openai/gpt-oss-20b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
+  'openai/gpt-4o-mini',
 ];
-// Streaming needs to show a first token quickly. Nemotron 3.5 Lightning
-// returned an Arabic first chunk in production in about 1.5 seconds, while
-// Qwen remains the quality-first default for structured and non-stream work.
 const OPENROUTER_STREAM_TEXT_MODELS = [
-  'nvidia/nemotron-3.5-lightning:free',
+  'google/gemini-2.0-flash-001',
+  'google/gemini-1.5-flash',
   ...OPENROUTER_TEXT_FALLBACKS,
 ];
-const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'google/gemma-4-26b-a4b-it:free'];
+const OPENROUTER_VISION_FALLBACKS = [
+  'google/gemini-2.0-flash-001',
+  'google/gemma-4-31b-it:free',
+  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+];
 // Post-extraction answer review is a bounded JSON task. Use a short,
 // quality-first sequence so one slow provider cannot block every batch.
 const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [

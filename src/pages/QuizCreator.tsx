@@ -602,6 +602,7 @@ export default function QuizCreator({
   // AI Prompt/Topic state
   const [aiTopic, setAiTopic] = React.useState('');
   const [aiCount, setAiCount] = React.useState(5);
+  const [preferredQuestionType, setPreferredQuestionType] = React.useState<'mixed' | 'mcq' | 'tf' | 'essay'>('mixed');
   const [isGeneratingAi, setIsGeneratingAi] = React.useState(false);
   const [aiError, setAiError] = React.useState<string | null>(null);
   
@@ -1489,6 +1490,16 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const initData = { fileUri: base64Clean, fileUploadName: uploadedFile.name, totalPages: 1 };
       const { fileUri, fileUploadName, totalPages } = initData;
 
+      let typePromptSuffix = '';
+      if (preferredQuestionType === 'mcq') {
+        typePromptSuffix = ' (شرط حاسم: صاغ جميع الأسئلة بصيغة اختيار من متعدد mcq مع 4 خيارات لكل سؤال).';
+      } else if (preferredQuestionType === 'tf') {
+        typePromptSuffix = ' (شرط حاسم: صاغ جميع الأسئلة بصيغة صح وخطأ tf مع تحديد الإجابة الصحيحة).';
+      } else if (preferredQuestionType === 'essay') {
+        typePromptSuffix = ' (شرط حاسم: صاغ جميع الأسئلة بصيغة أسئلة مقالية essay وشرح الإجابة).';
+      }
+      const effectiveInstruction = (fileCustomPrompt || '') + typePromptSuffix;
+
       // Step 2: Extract ready-made questions first. If the document is explanatory
       // text without explicit questions, automatically retry in generation mode.
       if (isGenerating) return;
@@ -1502,7 +1513,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           mimeType: uploadedFile.type || 'application/octet-stream',
           totalPages,
           extractionMode,
-          customInstruction: fileCustomPrompt,
+          customInstruction: effectiveInstruction || undefined,
           totalQuestions: pdfCount,
           userId,
           creatorName,
@@ -1526,7 +1537,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           mimeType: uploadedFile.type || 'application/octet-stream',
           totalPages,
           extractionMode: 'generate',
-          customInstruction: fileCustomPrompt || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
+          customInstruction: effectiveInstruction || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
           totalQuestions: pdfCount,
           userId,
           creatorName,
@@ -1554,7 +1565,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           mimeType: uploadedFile.type || 'application/octet-stream',
           totalPages,
           extractionMode: 'generate',
-          customInstruction: fileCustomPrompt || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
+          customInstruction: effectiveInstruction || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
           totalQuestions: pdfCount,
           userId,
           creatorName,
@@ -1640,6 +1651,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
   // Call AI generative backend with batching loop
   const handleGenerateAiQuiz = async () => {
+    if (uploadedFile) {
+      return handleProcessDocument();
+    }
     if (!aiTopic.trim()) {
       setAiError('يرجى تحديد موضوع الاختبار لتوليد الأسئلة.');
       return;
@@ -1660,10 +1674,19 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     setIsGeneratingAi(true);
     setAiError(null);
 
+    let typePromptSuffix = '';
+    if (preferredQuestionType === 'mcq') {
+      typePromptSuffix = '\n\n[شرط حاسم: صاغ جميع الأسئلة بصيغة اختيار من متعدد mcq فقط مع 4 خيارات لكل سؤال وتحديد الإجابة الصحيحة].';
+    } else if (preferredQuestionType === 'tf') {
+      typePromptSuffix = '\n\n[شرط حاسم: صاغ جميع الأسئلة بصيغة صح وخطأ tf فقط مع تحديد الإجابة الصحيحة].';
+    } else if (preferredQuestionType === 'essay') {
+      typePromptSuffix = '\n\n[شرط حاسم: صاغ جميع الأسئلة بصيغة أسئلة مقالية essay فقط وشرح الإجابة النموذجية].';
+    }
+
     try {
       const result = await generateAndSaveQuiz({
         type: 'topic',
-        topic: aiTopic.trim(),
+        topic: aiTopic.trim() + typePromptSuffix,
         totalQuestions: aiCount,
         userId,
         creatorName,
@@ -2349,6 +2372,39 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                   })}
                 </div>
               </div>
+
+              {/* Question Type Selector UI */}
+              <div className="space-y-2 text-right pt-1" dir="rtl">
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block pb-1">
+                  {isAr ? 'نوع الأسئلة المطلوبة:' : 'Preferred Question Types:'}
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {[
+                    { id: 'mixed', label: isAr ? 'كل الأنواع (مدمج)' : 'Mixed Types', icon: '🔮', desc: isAr ? 'اختيار من متعدد + صح وخطأ + مقالي' : 'MCQ + T/F + Essay' },
+                    { id: 'mcq', label: isAr ? 'اختيار من متعدد' : 'Multiple Choice', icon: '🎯', desc: isAr ? 'خيارات متعددة 4 إجابات' : '4-Option MCQs' },
+                    { id: 'tf', label: isAr ? 'صح وخطأ فقط' : 'True / False', icon: '⚡', desc: isAr ? 'عبارات صح أو خطأ' : 'True or False' },
+                    { id: 'essay', label: isAr ? 'مقالي فقط' : 'Essay Questions', icon: '✍️', desc: isAr ? 'أسئلة مع إجابات نموذجية' : 'Written Essays' },
+                  ].map((typeOpt) => {
+                    const isSelected = preferredQuestionType === typeOpt.id;
+                    return (
+                      <button
+                        key={typeOpt.id}
+                        type="button"
+                        onClick={() => setPreferredQuestionType(typeOpt.id as any)}
+                        className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
+                          isSelected
+                            ? 'border-violet-500 bg-violet-500/10 text-violet-600 dark:text-violet-400 ring-2 ring-violet-500/20 font-black shadow-xs'
+                            : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <span className="text-lg mb-1">{typeOpt.icon}</span>
+                        <span className="text-xs font-extrabold">{typeOpt.label}</span>
+                        <span className="text-[9px] text-slate-600 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">{typeOpt.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {renderErrorMsg(aiError)}
@@ -2817,6 +2873,41 @@ A computer is a digital electronic machine...
                 </div>
               </div>
             )}
+
+            {/* Question Type Selector UI for Document Upload */}
+            {uploadedFile && (
+              <div className="space-y-2 text-right p-4 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-2xl animate-fade-in" dir="rtl">
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block pb-1">
+                    {isAr ? 'نوع الأسئلة المراد استخراجها أو صياغتها:' : 'Preferred Question Types from File:'}
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {[
+                      { id: 'mixed', label: isAr ? 'كل الأنواع (شامل)' : 'Mixed Types', icon: '🔮', desc: isAr ? 'اختيار من متعدد + صح وخطأ + مقالي' : 'MCQ + T/F + Essay' },
+                      { id: 'mcq', label: isAr ? 'اختيار من متعدد' : 'Multiple Choice', icon: '🎯', desc: isAr ? 'خيارات متعددة 4 إجابات' : '4-Option MCQs' },
+                      { id: 'tf', label: isAr ? 'صح وخطأ فقط' : 'True / False', icon: '⚡', desc: isAr ? 'عبارات صح أو خطأ' : 'True or False' },
+                      { id: 'essay', label: isAr ? 'مقالي فقط' : 'Essay Questions', icon: '✍️', desc: isAr ? 'أسئلة مع إجابات نموذجية' : 'Written Essays' },
+                    ].map((typeOpt) => {
+                      const isSelected = preferredQuestionType === typeOpt.id;
+                      return (
+                        <button
+                          key={typeOpt.id}
+                          type="button"
+                          onClick={() => setPreferredQuestionType(typeOpt.id as any)}
+                          className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
+                            isSelected
+                              ? 'border-violet-500 bg-violet-500/10 text-violet-600 dark:text-violet-400 ring-2 ring-violet-500/20 font-black shadow-xs'
+                              : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                          }`}
+                        >
+                          <span className="text-lg mb-1">{typeOpt.icon}</span>
+                          <span className="text-xs font-extrabold">{typeOpt.label}</span>
+                          <span className="text-[9px] text-slate-600 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">{typeOpt.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
             {/* Chat discussion file prompt box (As requested) */}
             {uploadedFile && (
