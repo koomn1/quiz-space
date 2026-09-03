@@ -63,32 +63,17 @@ function isGenericExtractionTitle(title?: string): boolean {
   return ['extracted quiz', 'اختبار مستخرج', 'اختبار مستخرج من الملف'].includes(String(title || '').trim().toLocaleLowerCase());
 }
 
-// Function to load pdf.js from CDN dynamically
-const loadPdfJS = (): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    if ((window as any).pdfjsLib) {
-      resolve((window as any).pdfjsLib);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
-    script.onload = () => {
-      const pdfjs = (window as any).pdfjsLib;
-      pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-      resolve(pdfjs);
-    };
-    script.onerror = () => {
-      reject(new Error('فشل تحميل مكتبة قارئ الـ PDF من الخادم الخارجي.'));
-    };
-    document.body.appendChild(script);
-  });
-};
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
+
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
+}
 
 // Extracts text page-by-page from an uploaded PDF
 const extractTextFromPdf = async (file: File): Promise<string[]> => {
-  const pdfjs = await loadPdfJS();
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const pageTexts: string[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -119,9 +104,8 @@ const extractHybridPagesFromPdf = async (
   file: File, 
   onPageProgress: (pageIndex: number, totalPages: number, pageType: 'text' | 'image') => void
 ): Promise<HybridPagePart[]> => {
-  const pdfjs = await loadPdfJS();
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const pages: HybridPagePart[] = [];
   
   for (let i = 1; i <= pdf.numPages; i++) {
