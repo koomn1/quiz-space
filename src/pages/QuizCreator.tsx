@@ -1432,8 +1432,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
   };
 
   // Call Direct Document Upload & AI Processing (Fast & Powerful Files API with Sequential Batch extraction)
-  const handleProcessDocument = async () => {
+  const handleProcessDocument = async (modeOverride?: 'literal' | 'generate') => {
     if (!uploadedFile) return;
+    const activeExtractionMode = modeOverride || extractionMode;
     if (isGenerating) return;
     if (userPlan !== 'Gold' && userPlan !== 'Diamond' && fileUses <= 0) {
       setShowPaywallOcr(true);
@@ -1496,7 +1497,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           sourceFile: uploadedFile,
           mimeType: uploadedFile.type || 'application/octet-stream',
           totalPages,
-          extractionMode,
+          extractionMode: activeExtractionMode,
           customInstruction: effectiveInstruction || undefined,
           totalQuestions: pdfCount,
           userId,
@@ -1505,7 +1506,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           persist: false,
         });
       } catch (extractionError: any) {
-        if (extractionMode !== 'literal') throw extractionError;
+        if (activeExtractionMode !== 'literal') throw extractionError;
         setExtractionMode('generate');
         setOcrProgress(prev => prev ? {
           ...prev,
@@ -1533,7 +1534,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const hasUsableQuestions = Array.isArray(result?.quiz?.questions) && result.quiz.questions.some((question: any) =>
         question?.type === 'essay' || (Array.isArray(question?.options) && question.options.filter((option: unknown) => typeof option === 'string' && option.trim()).length >= 2)
       );
-      if (!hasUsableQuestions && extractionMode === 'literal') {
+      if (!hasUsableQuestions && activeExtractionMode === 'literal') {
         setExtractionMode('generate');
         setOcrProgress(prev => prev ? {
           ...prev,
@@ -1682,9 +1683,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
   // Call AI generative backend with batching loop
   const handleGenerateAiQuiz = async () => {
-    if (uploadedFile) {
-      return handleProcessDocument();
-    }
+    // Generate is a fully independent mode: it always builds questions from the
+    // typed topic. File processing lives in its own tab with its own buttons.
     if (!aiTopic.trim()) {
       setAiError('يرجى تحديد موضوع الاختبار لتوليد الأسئلة.');
       return;
@@ -2794,64 +2794,6 @@ A computer is a digital electronic machine...
 
             {renderErrorMsg(ocrError)}
 
-            {uploadedFile && (
-              <div className="space-y-3 p-5 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/80 rounded-3xl text-right animate-fade-in space-y-4">
-                <label className="text-xs font-black text-slate-600 dark:text-slate-350 block border-b border-slate-200/50 dark:border-slate-800 pb-2">
-                  🔮 نمط استخراج الأسئلة من الملف:
-                </label>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3" dir="rtl">
-                  <button
-                    type="button"
-                    onClick={() => setExtractionMode('literal')}
-                    className={`flex items-start gap-3 p-4 rounded-2xl border text-right transition-all cursor-pointer ${
-                      extractionMode === 'literal'
-                        ? 'border-emerald-500 bg-emerald-500/[0.03] dark:bg-emerald-500/[0.015] shadow-xs'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:bg-slate-100/50'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 ${
-                      extractionMode === 'literal' ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600'
-                    }`}>
-                      {extractionMode === 'literal' && <Check className="w-3 h-3 stroke-[3]" />}
-                    </div>
-                    <div className="flex-1 space-y-0.5">
-                      <div className={`text-xs font-extrabold ${extractionMode === 'literal' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                        استخراج حرفي فائق الأمانة (أسئلة فقط)
-                      </div>
-                      <div className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1">
-                        استخراج وحفظ الأسئلة الموجودة بالفعل في مستندك بدقة ١٠٠٪ دون زيادة أو توليد إضافي. (مثالي لأوراق الامتحانات والواجبات).
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setExtractionMode('generate')}
-                    className={`flex items-start gap-3 p-4 rounded-2xl border text-right transition-all cursor-pointer ${
-                      extractionMode === 'generate'
-                        ? 'border-violet-500 bg-violet-500/[0.03] dark:bg-violet-500/[0.015] shadow-xs'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:bg-slate-100/50'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center mt-0.5 ${
-                      extractionMode === 'generate' ? 'border-violet-500 bg-violet-500 text-white' : 'border-slate-300 dark:border-slate-600'
-                    }`}>
-                      {extractionMode === 'generate' && <Check className="w-3 h-3 stroke-[3]" />}
-                    </div>
-                    <div className="flex-1 space-y-0.5">
-                      <div className={`text-xs font-extrabold ${extractionMode === 'generate' ? 'text-violet-600 dark:text-violet-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                        صياغة وتوليد ذكي شامل الكورس
-                      </div>
-                      <div className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1">
-                        قراءة الشروحات وتوليد أسئلة وتدريبات جديدة ممتازة تغطي كافة الفصول بذكاء من خلال صياغة المحول.
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            )}
-
             {uploadedFile && (fileType === 'pdf' || fileType === 'document') && (
               <div className="space-y-3 p-4 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-2xl text-right animate-fade-in">
                 <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block pb-1">عدد الأسئلة المطلوب استخراجها من الملف الدراسي:</label>
@@ -3181,33 +3123,89 @@ A computer is a digital electronic machine...
             )}
 
             {uploadedFile && (
-              <button
-                onClick={() => {
-                  if (userPlan !== 'Gold' && userPlan !== 'Diamond' && fileUses <= 0) {
-                    setShowPaywallOcr(true);
-                    return;
-                  }
-                  handleProcessDocument();
-                }}
-                disabled={isProcessingOcr || isGenerating}
-                className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl text-white font-bold transition-all disabled:opacity-50 cursor-pointer shadow-md select-none active:scale-[0.99] ${
-                  (userPlan !== 'Gold' && userPlan !== 'Diamond' && fileUses <= 0)
-                    ? 'bg-slate-400 dark:bg-slate-700 hover:bg-slate-500 shadow-none'
-                    : 'bg-primary hover:bg-primary-hover shadow-primary/10'
-                }`}
-              >
-                {isProcessingOcr ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>جاري تحضير واستيراد الاختبار المتتابع بالتفصيل...</span>
-                  </>
-                ) : (
-                  <>
-                    <Camera className="w-4 h-4" />
-                    <span>ابدأ معالجة وتوليد الأسئلة فوراً بالذكاء الاصطناعي المعزز</span>
-                  </>
-                )}
-              </button>
+              <div className="space-y-3" dir="rtl">
+                <label className="block text-xs font-black text-slate-600 dark:text-slate-350 border-b border-slate-200/50 dark:border-slate-800 pb-2">
+                  ⚡ اختار الوضع المناسب لك — وضعان مستقلان تماماً:
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Mode 1: literal extraction — existing questions only */}
+                  <div className={`flex flex-col p-4 rounded-2xl border text-right transition-all ${
+                    isProcessingOcr && extractionMode === 'literal'
+                      ? 'border-emerald-500 bg-emerald-500/[0.04] shadow-xs'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-emerald-500/10 text-base leading-none">📄</span>
+                      <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">استخراج الأسئلة الموجودة بالملف</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
+                      استخراج حرفي أمين للأسئلة الموجودة بالفعل في مستندك دون زيادة أو توليد إضافي — مثالي لأوراق الامتحانات والواجبات.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (userPlan !== 'Gold' && userPlan !== 'Diamond' && fileUses <= 0) {
+                          setShowPaywallOcr(true);
+                          return;
+                        }
+                        setExtractionMode('literal');
+                        handleProcessDocument('literal');
+                      }}
+                      disabled={isProcessingOcr || isGenerating}
+                      className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-xs font-black transition-all disabled:opacity-50 cursor-pointer shadow-md select-none active:scale-[0.99] bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/10"
+                    >
+                      {isProcessingOcr && extractionMode === 'literal' ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>جاري الاستخراج الحرفي للأسئلة...</span>
+                        </>
+                      ) : (
+                        <span>استخرج الأسئلة الموجودة فقط</span>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Mode 2: Generate — AI question generation from the file */}
+                  <div className={`flex flex-col p-4 rounded-2xl border text-right transition-all ${
+                    isProcessingOcr && extractionMode === 'generate'
+                      ? 'border-violet-500 bg-violet-500/[0.04] shadow-xs'
+                      : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-violet-500/10 text-base leading-none">✨</span>
+                      <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">Generate — توليد بالذكاء الاصطناعي</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
+                      هنا تستخدم قدرات الـAI في توليد أسئلة وتدريبات جديدة شاملة من محتوى الملف — مثالي للشروحات والكورسات.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (userPlan !== 'Gold' && userPlan !== 'Diamond' && fileUses <= 0) {
+                          setShowPaywallOcr(true);
+                          return;
+                        }
+                        setExtractionMode('generate');
+                        handleProcessDocument('generate');
+                      }}
+                      disabled={isProcessingOcr || isGenerating}
+                      className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white text-xs font-black transition-all disabled:opacity-50 cursor-pointer shadow-md select-none active:scale-[0.99] bg-primary hover:bg-primary-hover shadow-primary/10"
+                    >
+                      {isProcessingOcr && extractionMode === 'generate' ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>جاري التوليد بالذكاء الاصطناعي...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          <span>Generate الآن</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
