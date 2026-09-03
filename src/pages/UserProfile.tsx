@@ -726,6 +726,9 @@ export default function UserProfile({
         undefined, // gender
         undefined, // birthdate
         undefined, // onboarded
+        // Persist the frame picked in this modal — previously the selection
+        // only updated local state and never reached the database.
+        editFrameId || undefined, // activeFrameId
       );
 
       // The active frame is a reward entitlement, so its ownership is verified
