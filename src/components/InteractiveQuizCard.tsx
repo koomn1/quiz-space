@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Quiz } from '../types';
-import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet } from 'lucide-react';
+import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet, Printer } from 'lucide-react';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag } from './PremiumNameTag';
 import ParallaxTiltCard from './ParallaxTiltCard';
@@ -59,6 +59,30 @@ export function InteractiveQuizCard({
     } finally {
       setAttemptsLoading(false);
     }
+  };
+
+  const printQuiz = () => {
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer');
+    if (!printWindow) return;
+    const escapeHtml = (value: unknown) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+    const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+    const questionsHtml = questions.map((question, index) => {
+      const options = Array.isArray(question.options) && question.options.length
+        ? `<ol class="options" type="A">${question.options.map((option) => `<li>${escapeHtml(option)}</li>`).join('')}</ol>`
+        : '<div class="answer-line"></div>';
+      return `<section class="question"><h2>${index + 1}. ${escapeHtml(question.text)}</h2>${options}</section>`;
+    }).join('');
+    printWindow.document.write(`<!doctype html><html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${escapeHtml(quiz.title)}</title><style>
+      *{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#111827;max-width:850px;margin:0 auto;padding:36px;line-height:1.7}h1{font-size:26px;margin:0 0 8px;color:#312e81}p{color:#475569;margin:0 0 28px}.question{break-inside:avoid;border-bottom:1px solid #e2e8f0;padding:18px 0}.question h2{font-size:17px;margin:0 0 10px}.options{margin:0;padding-inline-start:28px}.options li{padding:4px 0}.answer-line{height:70px;border-bottom:1px solid #94a3b8;margin-top:16px}@media print{body{padding:0;max-width:none}.question{break-inside:avoid}}
+    </style></head><body><h1>${escapeHtml(quiz.title)}</h1><p>${escapeHtml(quiz.description)}</p>${questionsHtml}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    window.setTimeout(() => printWindow.print(), 250);
   };
 
   const downloadFile = (filename: string, content: string, mimeType: string) => {
@@ -171,6 +195,16 @@ export function InteractiveQuizCard({
         {/* Right section: Action Buttons */}
         <div className="flex items-center gap-2 shrink-0 justify-end mt-2 md:mt-0">
           <div className="flex items-center gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                printQuiz();
+              }}
+              className="p-1.5 w-8 h-8 flex items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/60 transition-colors cursor-pointer border border-violet-200/60 dark:border-violet-800/50"
+              title={isAr ? 'طباعة أو حفظ PDF' : 'Print or save as PDF'}
+            >
+              <Printer className="w-3.5 h-3.5" />
+            </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -355,12 +389,23 @@ export function InteractiveQuizCard({
           )}
         </div>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onStartQuiz(quiz.id);
-          }}
-          className="group/play flex items-center justify-center gap-1.5 px-5 h-10 rounded-xl bg-gradient-to-r from-primary to-violet-500 hover:from-primary-hover hover:to-violet-400 text-white font-black text-xs transition-all hover:scale-105 duration-300 shadow-md shadow-primary/20 hover:shadow-primary/40 cursor-pointer active:scale-95 overflow-hidden relative"
+                  <button
+            onClick={(e) => {
+              e.stopPropagation();
+              printQuiz();
+            }}
+            className="flex items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 font-black text-xs transition-all hover:scale-105 cursor-pointer border border-violet-200/60 dark:border-violet-800/50"
+            title={isAr ? 'طباعة أو حفظ PDF' : 'Print or save as PDF'}
+          >
+            <Printer className="w-4 h-4" />
+            <span className="hidden sm:inline">{isAr ? 'PDF / طباعة' : 'PDF / Print'}</span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onStartQuiz(quiz.id);
+            }}
+            className="group/play flex items-center justify-center gap-1.5 px-5 h-10 rounded-xl bg-gradient-to-r from-primary to-violet-500 hover:from-primary-hover hover:to-violet-400 text-white font-black text-xs transition-all hover:scale-105 duration-300 shadow-md shadow-primary/20 hover:shadow-primary/40 cursor-pointer active:scale-95 overflow-hidden relative"
         >
           <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/play:translate-y-0 transition-transform duration-300" />
           <span className="relative z-10">{t?.startPlayBtn || (isAr ? 'ابدأ اللعب' : 'Start Play')}</span>
