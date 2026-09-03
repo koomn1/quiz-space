@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Quiz } from '../types';
-import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet, Printer } from 'lucide-react';
+import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet, Printer, ChevronDown } from 'lucide-react';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag } from './PremiumNameTag';
 import ParallaxTiltCard from './ParallaxTiltCard';
 import { getQuizTakersUnique } from '../lib/db';
 import { QuizCompletion } from '../types';
 import { createPortal } from 'react-dom';
+import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
 // Keep the modal and print window independent from transformed/overflow-hidden card ancestors.
 
 interface InteractiveQuizCardProps {
@@ -50,6 +51,20 @@ export function InteractiveQuizCard({
   const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
   const [attemptsOpen, setAttemptsOpen] = useState(false);
   const [attemptsLoading, setAttemptsLoading] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+
+  const downloadPdf = async () => {
+    setExportMenuOpen(false);
+    try {
+      const branding = quiz.creatorName ? { institutionName: quiz.creatorName } : null;
+      const bytes = await createQuizPdfBytes(quiz, branding);
+      downloadQuizPdfBytes(bytes, getQuizPdfFileName(quiz, branding));
+    } catch (error) {
+      console.error('Quiz PDF export failed:', error);
+      window.alert(isAr ? 'تعذر إنشاء ملف PDF حالياً. حاول مرة أخرى.' : 'Could not create the PDF right now. Please try again.');
+    }
+  };
+
 
   const openAttempts = async (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -227,17 +242,24 @@ export function InteractiveQuizCard({
 
         {/* Right section: Action Buttons */}
         <div className="flex items-center gap-2 shrink-0 justify-end mt-2 md:mt-0">
-          <div className="flex items-center gap-1">
+          <div className="relative flex items-center gap-1">
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                printQuiz();
-              }}
-              className="p-1.5 w-8 h-8 flex items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/60 transition-colors cursor-pointer border border-violet-200/60 dark:border-violet-800/50"
-              title={isAr ? 'طباعة أو حفظ PDF' : 'Print or save as PDF'}
-            >
-              <Printer className="w-3.5 h-3.5" />
-            </button>
+              setExportMenuOpen((open) => !open);
+              }
+            }
+            className="p-1.5 w-8 h-8 flex items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-900/60 transition-colors cursor-pointer border border-violet-200/60 dark:border-violet-800/50"
+            title={isAr ? 'تحويل إلى PDF أو طباعة' : 'Export PDF or print'}
+          >
+            <Printer className="w-3.5 h-3.5" />
+          </button>
+          {exportMenuOpen && (
+            <div className="absolute end-0 top-10 z-[80] w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
+              <button type="button" onClick={downloadPdf} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تحويل إلى PDF' : 'Export to PDF'}</button>
+              <button type="button" onClick={() => { setExportMenuOpen(false); printQuiz(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
+            </div>
+          )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -374,7 +396,7 @@ export function InteractiveQuizCard({
 
       {/* Clean, spacious action footer that NEVER overflows horizontally */}
       <div 
-        className="border-t border-slate-100 dark:border-slate-800/60 pt-4 mt-5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 w-full"
+        className="relative border-t border-slate-100 dark:border-slate-800/60 pt-4 mt-5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 w-full"
         style={{ transform: 'translateZ(20px)', transformStyle: 'preserve-3d' }}
       >
         <div className="flex items-center gap-1.5 shrink-0 flex-nowrap" style={{ transform: 'translateZ(10px)' }}>
@@ -425,14 +447,22 @@ export function InteractiveQuizCard({
                   <button
             onClick={(e) => {
               e.stopPropagation();
-              printQuiz();
-            }}
+              setExportMenuOpen((open) => !open);
+              }
+            }
             className="flex items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 font-black text-xs transition-all hover:scale-105 cursor-pointer border border-violet-200/60 dark:border-violet-800/50"
-            title={isAr ? 'طباعة أو حفظ PDF' : 'Print or save as PDF'}
+            title={isAr ? 'تحويل إلى PDF أو طباعة' : 'Export PDF or print'}
           >
             <Printer className="w-4 h-4" />
             <span className="hidden sm:inline">{isAr ? 'PDF / طباعة' : 'PDF / Print'}</span>
+            <ChevronDown className="h-3.5 w-3.5" />
           </button>
+          {exportMenuOpen && (
+            <div className="absolute end-0 top-12 z-[80] w-48 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
+              <button type="button" onClick={downloadPdf} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تحويل إلى PDF' : 'Export to PDF'}</button>
+              <button type="button" onClick={() => { setExportMenuOpen(false); printQuiz(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
+            </div>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation();

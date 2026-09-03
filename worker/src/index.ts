@@ -1,6 +1,7 @@
 import * as mammoth from 'mammoth';
 import { handleStreamingExtraction } from './streaming';
 import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
+import JSZip from 'jszip';
 import {
   createOrGetExtractionJob,
   getExtractionJob,
@@ -575,7 +576,7 @@ export async function callOpenRouterWithParallelAnswerReviewFallback(
   }
 }
 
-async function callGeminiJson(env: Env, prompt: string, timeoutMs = 8_000): Promise<string> {
+async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000, maxOutputTokens = 300): Promise<string> {
   if (!env.GEMINI_API_KEY) throw new AiProviderError('provider_error', 'gemini', 'gemini-2.5-flash');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -585,8 +586,8 @@ async function callGeminiJson(env: Env, prompt: string, timeoutMs = 8_000): Prom
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0, maxOutputTokens: 300, responseMimeType: 'application/json' },
+        contents: [{ role: 'user', parts }],
+        generationConfig: { temperature: 0, maxOutputTokens, responseMimeType: 'application/json' },
       }),
     });
     if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'gemini', 'gemini-2.5-flash', response.status);
@@ -601,6 +602,31 @@ async function callGeminiJson(env: Env, prompt: string, timeoutMs = 8_000): Prom
   } finally {
     clearTimeout(timeout);
   }
+}
+async function callGeminiJson(env: Env, prompt: string, timeoutMs = 8_000): Promise<string> {
+  return callGeminiJsonWithParts(env, [{ text: prompt }], timeoutMs, 300);
+}
+
+async function extractPowerPointText(data: Uint8Array): Promise<string> {
+  const archive = await JSZip.loadAsync(data);
+  const slideFiles = Object.keys(archive.files)
+    .filter((name) => /^ppt\/slides\/slide\d+\.xml$/i.test(name))
+    .sort((a, b) => Number(a.match(/slide(\d+)/i)?.[1] || 0) - Number(b.match(/slide(\d+)/i)?.[1] || 0));
+  const decodeXml = (value: string) => value
+    .replace(/<a:t[^>]*>([\s\S]*?)<\/a:t>/gi, '$1\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/\s+/g, ' ').trim();
+  const slides: string[] = [];
+  for (const name of slideFiles) {
+    const file = archive.file(name);
+    if (!file) continue;
+    const xml = await file.async('text');
+    const text = decodeXml(xml);
+    if (text) slides.push(text);
+  }
+  return slides.map((text, index) => `الشريحة ${index + 1}:\n${text}`).join('\n\n');
 }
 
 async function gradeEssayWithFallback(env: Env, question: string, modelAnswer: string, studentAnswer: string): Promise<any> {
@@ -1001,7 +1027,30 @@ ${extraInstruction}`;
         }
       }
 
-      // Fallback for non-literal mode or failed extraction
+      // Generate mode is intentionally routed through Gemini multimodal. This
+      // lets Gemini read explanations inside images, PDFs and PPTX files and
+      // turn them into new questions. The literal branch above is untouched.
+      if (!isLiteral) {
+        const generatedPrompt = quizPrompt('the attached source document', body.amount, []);
+        try {
+          const fileData = Uint8Array.from(atob(body.fileBase64), c => c.charCodeAt(0));
+          const isPowerPoint = body.mimeType.includes('presentationml') || body.mimeType.includes('powerpoint');
+          if (isPowerPoint) {
+            const slideText = await extractPowerPointText(fileData);
+            if (!slideText.trim()) throw new Error('PowerPoint contains no readable slide text');
+            const text = await callGeminiJson(env, `${generatedPrompt}\n\nمحتوى الشرائح:\n${slideText.slice(0, 120000)}`, 45_000);
+            return json(extractJson(text), 200, headers);
+          }
+          const text = await callGeminiJsonWithParts(env, [
+            { text: generatedPrompt },
+            { inline_data: { mime_type: body.mimeType || 'application/octet-stream', data: body.fileBase64 } },
+          ], 45_000, 6_000);
+          return json(extractJson(text), 200, headers);
+        } catch (geminiError) {
+          console.warn('Gemini document generation failed; using existing OpenRouter fallback:', geminiError);
+        }
+      }
+      // Fallback for literal mode or failed Gemini generation.
       const prompt = isLiteral ? losslessPrompt : quizPrompt("document content", body.amount, []);
       const text = await callOpenRouterWithFallback(env, [{
         role: 'user',

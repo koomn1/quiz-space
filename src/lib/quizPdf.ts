@@ -24,6 +24,8 @@ type PdfDocument = jsPDF;
 export interface QuizPdfBranding {
   institutionName: string;
   primaryColor?: string | null;
+  studentName?: string | null;
+  score?: number | null;
 }
 
 function registerArabicFont(pdf: PdfDocument) {
@@ -197,7 +199,9 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
 
   const title = normaliseText(quiz.title) || 'اختبار جديد';
   const description = normaliseText(quiz.description);
-  const metadata = `عدد الأسئلة: ${quiz.questions.length}  |  الاسم: ____________________`;
+  const studentLabel = branding?.studentName?.trim() || '____________________';
+  const scoreLabel = typeof branding?.score === 'number' ? `${branding.score} / ${quiz.questions.length}` : '____ / ' + quiz.questions.length;
+  const metadata = `اسم الطالب: ${studentLabel}  |  الدرجة: ${scoreLabel}  |  عدد الأسئلة: ${quiz.questions.length}`;
   const titleLines = pdf.splitTextToSize(title, CONTENT_WIDTH - 28) as string[];
   const descriptionLines = description ? (pdf.splitTextToSize(description, CONTENT_WIDTH - 28) as string[]) : [];
   const infoHeight = 22 + titleLines.length * 24 + descriptionLines.length * 18 + 30;
@@ -267,15 +271,26 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
       optionHeight = rowHeights.reduce((sum, value) => sum + value + 8, 0);
     }
 
-    ensureSpace(questionHeight + imageHeight + optionHeight + 12);
+    ensureSpace(questionHeight + imageHeight + optionHeight + 50);
     const cardTop = y;
-    const cardHeight = questionHeight + imageHeight + optionHeight + 18;
+    const cardHeight = questionHeight + imageHeight + optionHeight + 50;
     pdf.setFillColor(255, 255, 255);
     pdf.setDrawColor(226, 232, 240);
     pdf.setLineWidth(0.8);
     pdf.roundedRect(MARGIN, cardTop, CONTENT_WIDTH, cardHeight, 8, 8, 'FD');
-
-    y = cardTop + 24;
+    pdf.setFillColor(...brandColor);
+    pdf.roundedRect(MARGIN, cardTop, CONTENT_WIDTH, 27, 8, 8, 'F');
+    pdf.setFillColor(...brandColor);
+    pdf.rect(MARGIN, cardTop + 13, CONTENT_WIDTH, 14, 'F');
+    pdf.setFont('Cairo', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(`السؤال ${index + 1}`, CONTENT_RIGHT - 14, cardTop + 18, {
+      align: 'right',
+      isInputRtl: true,
+      isOutputRtl: true,
+    });
+    y = cardTop + 42;
     pdf.setFont('Cairo', 'bold');
     pdf.setFontSize(13);
     pdf.setTextColor(15, 23, 42);

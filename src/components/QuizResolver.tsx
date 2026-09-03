@@ -784,10 +784,12 @@ export default function QuizResolver({
           console.warn('Institutional PDF branding was unavailable; using standard export.', brandError);
         }
       }
-      const pdfBranding = institutionalBrand ? {
-        institutionName: institutionalBrand.institutionName,
-        primaryColor: institutionalBrand.primaryColor,
-      } : null;
+      const pdfBranding = {
+        institutionName: institutionalBrand?.institutionName || quiz.creatorName || 'منصة Quiz Space',
+        primaryColor: institutionalBrand?.primaryColor || null,
+        studentName: userName || null,
+        score: isQuizCompleted ? score : null,
+      };
       const bytes = await createQuizPdfBytes(quiz, pdfBranding);
       const fileName = getQuizPdfFileName(quiz, pdfBranding);
       let historySaved = false;
