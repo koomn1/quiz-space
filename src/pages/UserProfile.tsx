@@ -49,8 +49,21 @@ import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, resolveProfileI
 
 const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
   'frame-dragon-spirit': { animation: 'frame-rotate 10s linear infinite' },
+  'frame-legendary-dragon': { animation: 'frame-rotate 10s linear infinite' },
   'frame-galaxy': { animation: 'frame-pulse 4s ease-in-out infinite' },
   'frame-crystal-luxe': { animation: 'frame-shimmer 3s linear infinite' },
+  'frame-neon-orbit': { animation: 'frame-rotate 8s linear infinite' },
+  'frame-cyber-punk': { animation: 'frame-shimmer 2.6s linear infinite' },
+  'frame-star-crown': { animation: 'frame-pulse 3.4s ease-in-out infinite' },
+  'frame-diamond-comet': { animation: 'frame-rotate 12s linear infinite' },
+  'frame-diamond-crown': { animation: 'frame-shimmer 3.2s linear infinite' },
+  'frame-diamond-halo': { animation: 'frame-pulse 4.4s ease-in-out infinite' },
+  'frame-royal-gold': { animation: 'frame-shimmer 3.6s linear infinite' },
+  'frame-ice-glacier': { animation: 'frame-pulse 5s ease-in-out infinite' },
+  'frame-ice-frost': { animation: 'frame-shimmer 4s linear infinite' },
+  'frame-stone-moon': { animation: 'frame-rotate 14s linear infinite' },
+  'frame-ramadan-gold': { animation: 'frame-pulse 4.6s ease-in-out infinite' },
+  'frame-nature-leaf': { animation: 'frame-pulse 5.2s ease-in-out infinite' },
   'frame-aurora-neon': { animation: 'frame-shimmer 3s linear infinite' },
   'frame-royal-ember': { animation: 'frame-pulse 4s ease-in-out infinite' },
   'frame-cosmic-pulse': { animation: 'frame-rotate 10s linear infinite' },
@@ -798,6 +811,15 @@ export default function UserProfile({
     } catch (e: any) {
       console.error(e);
       const errorMessage = e?.message || String(e);
+      // The database enforces frame ownership on activation; guide the user
+      // to the store instead of surfacing the raw policy message.
+      if (/owned inventory/i.test(errorMessage)) {
+        showToast('error', isAr
+          ? 'تعذر تفعيل هذا الفريم: لازم تكون مالكه أولاً — افتح متجر النقاط واستلمه أو اشتريه ثم أعد الاختيار.'
+          : 'Could not activate this frame: you must own it first — open the rewards store to claim or buy it, then pick it again.');
+        setIsSaving(false);
+        return;
+      }
       showToast('error', 
         isAr
           ? `حدث خطأ أثناء حفظ التعديلات: ${errorMessage}`
