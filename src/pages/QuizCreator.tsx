@@ -1633,16 +1633,24 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         console.error('All file processing fallback paths failed:', fallbackError);
       }
 
-      const msg = err?.message || '';
-      const isAuthError = msg.includes('سجّل الدخول') || msg.includes('تسجيل الدخول') || msg.toLowerCase().includes('login') || msg.toLowerCase().includes('auth');
-      const isNetworkError = msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch') || msg.includes('NetworkError');
-      setOcrError(
-        isAuthError
-          ? (isAr ? 'يجب تسجيل الدخول أولاً لاستخدام معالجة الملفات بالذكاء الاصطناعي.' : 'Please sign in first to use AI file processing.')
-          : isNetworkError
-            ? (isAr ? 'تعذر الاتصال بخادم الذكاء الاصطناعي. تحقق من اتصال الإنترنت وأعد المحاولة.' : 'Could not reach the AI server. Check your connection and retry.')
-            : (msg || (isAr ? 'عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي لمعالجة هذا الملف.' : 'Error communicating with AI services for direct upload.'))
-      );
+      const rawMsg = String(err?.message || err || '');
+      const isAuthError = rawMsg.includes('سجّل الدخول') || rawMsg.includes('تسجيل الدخول') || rawMsg.toLowerCase().includes('login') || rawMsg.toLowerCase().includes('auth');
+      const isNetworkError = rawMsg.includes('fetch') || rawMsg.includes('network') || rawMsg.includes('Failed to fetch') || rawMsg.includes('NetworkError');
+      const isOverloadedError = rawMsg.includes('overloaded') || rawMsg.includes('rate limit') || rawMsg.includes('429') || rawMsg.includes('503') || rawMsg.includes('busy');
+
+      let userFriendlyMessage = isAr
+        ? 'تعذر إكمال استخراج الأسئلة من الملف. تأكد من أن الملف سليم ومفهوم، ثم أعد المحاولة.'
+        : 'Could not complete question extraction. Please make sure the file is valid and retry.';
+
+      if (isAuthError) {
+        userFriendlyMessage = isAr ? 'يجب تسجيل الدخول أولاً لاستخدام معالجة الملفات بالذكاء الاصطناعي.' : 'Please sign in first to use AI file processing.';
+      } else if (isNetworkError) {
+        userFriendlyMessage = isAr ? 'تعذر الاتصال بخادم الذكاء الاصطناعي. تحقق من اتصال الإنترنت وأعد المحاولة.' : 'Could not reach the AI server. Check your connection and retry.';
+      } else if (isOverloadedError) {
+        userFriendlyMessage = isAr ? 'المحرك الذكي مشغول حالياً بسبب الضغط العالي. أعد المحاولة بعد بضع ثوانٍ.' : 'The AI model is currently busy under heavy load. Please retry in a few seconds.';
+      }
+
+      setOcrError(userFriendlyMessage);
       setIsProcessingOcr(false);
       setOcrProgress(null);
       return;
