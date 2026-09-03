@@ -463,7 +463,10 @@ export default function App() {
   const [isLoadingQuizzes, setIsLoadingQuizzes] = React.useState(true);
 
   
-  const [darkMode, setDarkMode] = React.useState(() => localStorage.getItem('quiz_theme') === 'dark');
+  const [darkMode, setDarkMode] = React.useState(() => {
+    const savedTheme = localStorage.getItem('quiz_theme');
+    return savedTheme ? savedTheme === 'dark' : true;
+  });
   const [colorTheme, setColorTheme] = React.useState(() => localStorage.getItem('quiz_color_theme') || 'indigo');
 
   // i18n & Push API properties setup

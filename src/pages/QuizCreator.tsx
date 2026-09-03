@@ -1568,7 +1568,16 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       return; // Handled completely
     } catch (err: any) {
       console.error(err);
-      setOcrError(err.message || (isAr ? 'عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي لمعالجة هذا الملف.' : 'Error communicating with AI services for direct upload.'));
+      const msg = err?.message || '';
+      const isAuthError = msg.includes('سجّل الدخول') || msg.includes('تسجيل الدخول') || msg.toLowerCase().includes('login') || msg.toLowerCase().includes('auth');
+      const isNetworkError = msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch') || msg.includes('NetworkError');
+      setOcrError(
+        isAuthError
+          ? (isAr ? 'يجب تسجيل الدخول أولاً لاستخدام معالجة الملفات بالذكاء الاصطناعي.' : 'Please sign in first to use AI file processing.')
+          : isNetworkError
+            ? (isAr ? 'تعذر الاتصال بخادم الذكاء الاصطناعي. تحقق من اتصال الإنترنت وأعد المحاولة.' : 'Could not reach the AI server. Check your connection and retry.')
+            : (msg || (isAr ? 'عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي لمعالجة هذا الملف.' : 'Error communicating with AI services for direct upload.'))
+      );
       setIsProcessingOcr(false);
       setOcrProgress(null);
       return;
@@ -1621,7 +1630,16 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       setAiTopic('');
     } catch (err: any) {
       console.error(err);
-      setAiError(err.message || 'عذراً، حدث خطأ في محرك الذكاء الاصطناعي.');
+      const msg = err?.message || '';
+      const isAuthError = msg.includes('سجّل الدخول') || msg.includes('تسجيل الدخول') || msg.toLowerCase().includes('login') || msg.toLowerCase().includes('auth');
+      const isNetworkError = msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch') || msg.includes('NetworkError');
+      setAiError(
+        isAuthError
+          ? (isAr ? 'يجب تسجيل الدخول أولاً لاستخدام التوليد الذكي.' : 'Please sign in first to use AI generation.')
+          : isNetworkError
+            ? (isAr ? 'تعذر الاتصال بخادم الذكاء الاصطناعي. تحقق من اتصال الإنترنت وأعد المحاولة.' : 'Could not reach the AI server. Check your connection and retry.')
+            : (msg || 'عذراً، حدث خطأ في محرك الذكاء الاصطناعي.')
+      );
     } finally {
       setIsGeneratingAi(false);
     }

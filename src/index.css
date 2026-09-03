@@ -731,12 +731,12 @@ html:not(.dark) .light-readable-ui [class~="text-white"],
 html:not(.dark) .light-readable-ui [class~="text-slate-100"],
 html:not(.dark) .light-readable-ui [class~="text-slate-200"],
 html:not(.dark) .light-readable-ui [class~="text-slate-300"],
-html:not(.dark) .light-readable-ui [class~="text-slate-400"],
-html:not(.dark) .light-readable-ui [class~="text-slate-500"],
-html:not(.dark) .light-readable-ui [class~="text-slate-600"] {
-  color: #334155 !important;
+html:not(.dark) .light-readable-ui [class~="text-slate-400"] {
+  color: #1e293b !important;
 }
 
+html:not(.dark) .light-readable-ui [class~="text-slate-500"],
+html:not(.dark) .light-readable-ui [class~="text-slate-600"],
 html:not(.dark) .light-readable-ui [class~="text-slate-700"],
 html:not(.dark) .light-readable-ui [class~="text-slate-800"],
 html:not(.dark) .light-readable-ui [class~="text-slate-900"] {
@@ -789,9 +789,19 @@ html:not(.dark) .light-readable-ui [class*="bg-gradient"][class~="text-white"],
 html:not(.dark) .light-readable-ui [class~="bg-purple-600"][class~="text-white"],
 html:not(.dark) .light-readable-ui [class~="bg-purple-700"][class~="text-white"],
 html:not(.dark) .light-readable-ui [class~="bg-indigo-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-indigo-700"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-violet-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-violet-700"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-blue-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-blue-700"][class~="text-white"],
 html:not(.dark) .light-readable-ui [class~="bg-emerald-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-emerald-700"][class~="text-white"],
 html:not(.dark) .light-readable-ui [class~="bg-red-600"][class~="text-white"],
-html:not(.dark) .light-readable-ui [class~="bg-rose-600"][class~="text-white"] {
+html:not(.dark) .light-readable-ui [class~="bg-red-700"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-rose-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui [class~="bg-amber-600"][class~="text-white"],
+html:not(.dark) .light-readable-ui button[class~="text-white"][class*="bg-"],
+html:not(.dark) .light-readable-ui [role="button"][class~="text-white"][class*="bg-"] {
   color: #ffffff !important;
 }
 

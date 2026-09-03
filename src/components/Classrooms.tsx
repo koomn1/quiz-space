@@ -350,6 +350,14 @@ export default function Classrooms({
   // Fetch PostgreSQL Classrooms & Students
   const fetchClassroomsData = async () => {
     try {
+      // Skip Supabase query if using placeholder credentials
+      const sbUrl = import.meta.env.VITE_SUPABASE_URL || '';
+      if (!sbUrl || sbUrl.includes('placeholder')) {
+        setErrorText(isAr
+          ? 'لم يتم ربط قاعدة البيانات بعد. سجّل الدخول بحساب حقيقي لعرض الفصول.'
+          : 'Database is not connected. Sign in with a real account to view classrooms.');
+        return;
+      }
       const [classroomsResult, studentsResult] = await Promise.all([
         supabase.from('classrooms').select('*'),
         supabase.from('classroom_students').select('*'),
@@ -1237,7 +1245,7 @@ export default function Classrooms({
         {myCreatedClasses.length === 0 && enrolledClasses.length === 0 && (
           <div className="text-center py-6 text-slate-600 border border-dashed border-slate-800 rounded-2xl">
             <GraduationCap className="w-8 h-8 mx-auto text-slate-800 mb-1 animate-pulse" />
-            <p className="text-[10px]">{isAr ? 'لم تنضم لأي فصول بعد.' : 'No enrolled classes.'}</p>
+            <p className="text-[10px]">{isAr ? 'لم تنضم لأي فصول بعد. سجّل الدخول أولاً لعرض فصولك.' : 'No enrolled classes. Sign in first to view your classrooms.'}</p>
           </div>
         )}
       </div>

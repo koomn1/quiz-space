@@ -14,9 +14,25 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](#-الرخصة)
+[![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](#-الترخيص)
 
 </div>
+
+---
+
+## ⚠️ ملكية المشروع وحقوق النشر
+
+> **هذا المشروع ملكية خاصة ومحمي بالكامل.**
+>
+> جميع حقوق الملكية الفكرية لمنصة **QuizSpace** محفوظة حصرياً لمالكها:
+>
+> ### 👤 **Youssef Badawy**
+>
+> ❌ هذا المشروع **ليس مفتوح المصدر (Not Open Source)**
+> ❌ **يُحظر** نسخ، استنساخ، تعديل، توزيع، أو إعادة نشر أي جزء من الكود بدون إذن كتابي مسبق
+> ❌ **يُحظر** استخدام الكود لأي أغراض تجارية أو شخصية بدون ترخيص رسمي
+>
+> أي انتهاك لحقوق الملكية سيتم التعامل معه قانونياً.
 
 ---
 
@@ -43,10 +59,6 @@
 * شات بوت ذكي متمرس في شرح المناهج وتفكيك المسائل الأكاديمية الصعبة.
 * يدعم رؤية الكمبيوتر (Computer Vision) لتحليل ورقات الإجابة والرسومات الرسمية.
 * محادثات محفوظة بشكل دائم ومؤمنة سحابياً.
-
-### 🎥 تجربة بصريات فضائية سينمائية
-* شاشات سبلاش تفاعلية متجاوبة ذاتياً مع أجهزة الديسكتوب والهواتف المحمولة (`splash-desktop` & `splash-mobile`).
-* تخزين سحابي محلي متقدم (Service Worker Cache-First) للوسائط لتشغيل خاطف وبدون استهلاك للبيانات.
 
 ---
 
@@ -76,49 +88,16 @@ graph TD
 
 ---
 
-## 🚀 التشغيل والتطوير المحلي (Getting Started)
+## 📄 الترخيص (License)
 
-### المتطلبات الأساسية
-- **Node.js** إصدار `v20.0.0` أو أحدث.
-- **npm** أو **pnpm**.
+**جميع الحقوق محفوظة © 2024-2026 Youssef Badawy**
 
-### 1. استنساخ المشروع وتثبيت الحزم
-```bash
-git clone https://github.com/your-username/quiz-space.git
-cd quiz-space
-npm install
-```
-
-### 2. إعداد متغيرات البيئة (`.env`)
-قم بأنشأ ملف `.env` في المجلد الرئيسي وإضافة البيانات التالية:
-```env
-VITE_SUPABASE_URL=https://your-supabase-url.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-VITE_AI_WORKER_URL=http://localhost:8787
-```
-
-### 3. تشغيل خادم التطوير
-```bash
-npm run dev
-```
-
-### 4. تشغيل خادم الذكاء الاصطناعي (Cloudflare Worker)
-```bash
-cd worker
-npm install
-npx wrangler dev
-```
-
----
-
-## 📄 الرخصة (License)
-
-المشروع مرخص تحت رخصة **MIT** المفتوحة المصدر.
+هذا المشروع **ملكية خاصة ومغلق المصدر**. لا يُسمح بالاستنساخ أو النسخ أو التوزيع أو التعديل بأي شكل من الأشكال بدون إذن كتابي صريح من المالك.
 
 ---
 
 <div align="center">
 
-**تم التطوير بحب وشغف لتقديم أفضل تجربة تعليمية متميزة 🚀**
+**تم التطوير بواسطة Youssef Badawy 🚀**
 
 </div>

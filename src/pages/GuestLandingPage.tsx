@@ -83,13 +83,13 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
 
           <div className="grid items-center gap-12 py-14 lg:grid-cols-[1.05fr_.95fr] lg:py-24">
             <div className="text-center lg:text-right">
-              <p className="mb-5 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-indigo-100 backdrop-blur-sm">
+              <p className="mb-5 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-sm">
                 {isAr ? 'مساحة منظمة للتعلم والاختبارات والتقدم' : 'A focused home for learning, quizzes, and progress'}
               </p>
               <h1 className="text-4xl font-black leading-[1.18] tracking-tight text-white sm:text-6xl">
                 {isAr ? 'QuizSpace — كل ما تحتاجه لتجربة تعلم أكثر وضوحاً وتحفيزاً.' : 'QuizSpace — everything you need for a clearer, more motivating learning journey.'}
               </h1>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-indigo-100 sm:text-lg lg:mx-0">
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-100 sm:text-lg lg:mx-0">
                 {isAr
                   ? 'QuizSpace يجمع الاختبارات، التحديات، والجوائز في تجربة واحدة مصممة للطلاب والمعلمين والمؤسسات.'
                   : 'QuizSpace brings quizzes, challenges, and rewards into one experience for students, educators, and institutions.'}
@@ -122,7 +122,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
               />
               <div className="absolute bottom-7 right-7 rounded-xl border border-white/20 bg-slate-950/75 px-4 py-3 text-right text-xs text-white shadow-xl backdrop-blur-md">
                 <p className="font-black">{isAr ? 'لوحة واحدة لكل ما يهمك' : 'One dashboard for what matters'}</p>
-                <p className="mt-1 text-slate-300">{isAr ? 'اختبارات، مهام، ومتابعة تقدمك' : 'Quizzes, tasks, and progress tracking'}</p>
+                <p className="mt-1 text-slate-200">{isAr ? 'اختبارات، مهام، ومتابعة تقدمك' : 'Quizzes, tasks, and progress tracking'}</p>
               </div>
             </div>
           </div>
