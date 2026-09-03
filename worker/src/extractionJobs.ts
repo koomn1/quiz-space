@@ -83,22 +83,20 @@ export interface VisionChunkPlan {
   reason: 'standard' | 'large-document' | 'raster-heavy';
 }
 const TEXT_MODEL_FALLBACKS = [
-  'openai/gpt-oss-120b:free',
-  'google/gemini-2.0-flash-001',
-  'google/gemini-1.5-flash',
-  'qwen/qwen3.7-flash',
-  'mistralai/mistral-small-3.1-24b-instruct',
   'nvidia/nemotron-3.5-lightning:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
-  'openai/gpt-oss-20b:free',
-  'qwen/qwen3-235b-a22b:free',
+  'z-ai/glm-5.2:free',
+  'minimax/minimax-m3:free',
+  'qwen/qwen3.7-flash',
+  'google/gemini-2.5-flash',
+  'mistralai/mistral-small-3.1-24b-instruct',
+  'openai/gpt-4o-mini',
 ];
 const VISION_MODEL_FALLBACKS = [
-  'google/gemini-2.0-flash-001',
-  'google/gemini-1.5-flash',
   'google/gemma-4-31b-it:free',
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
+  'google/gemini-2.5-flash',
 ];
 
 export function sourceFileBaseName(sourceFileName: string | null | undefined): string {

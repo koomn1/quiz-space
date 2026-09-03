@@ -5,12 +5,14 @@ import { describe, expect, it } from 'vitest';
 const workerSource = readFileSync(resolve(process.cwd(), 'worker/src/index.ts'), 'utf8');
 
 describe('Cosmo generation recovery contract', () => {
-  it('uses Gemini 2.0 Flash as the fast Arabic-capable primary Cosmo route', () => {
-    expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'google/gemini-2.0-flash-001'");
+  it('uses live free-first OpenRouter models as the primary Cosmo route', () => {
+    expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free'");
     expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
-    expect(workerSource).toContain("'nvidia/nemotron-3.5-lightning:free'");
+    expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
     expect(workerSource).toContain("'mistralai/mistral-small-3.1-24b-instruct'");
-    expect(workerSource).toContain("'openai/gpt-oss-120b:free'");
+    expect(workerSource).toContain("'z-ai/glm-5.2:free'");
+    expect(workerSource).not.toContain("'google/gemini-2.0-flash-001'");
+    expect(workerSource).not.toContain("'openai/gpt-oss-120b:free'");
   });
 
   it('uses the resilient OpenRouter model sequence for quiz generation', () => {

@@ -40,35 +40,37 @@ type Provider = 'openrouter';
 // Default text + vision models used when calling OpenRouter. OpenRouter is
 // a single API that proxies many underlying models — change these two
 // constants to switch models without touching any other code.
-// Qwen 3.7 Flash is the default for Cosmo: it supports Arabic, starts quickly,
-// and is inexpensive enough for frequent educational chat. The previous free
-// Qwen 235B identifier is no longer listed by OpenRouter, so it was replaced
-// with a live production model and a quality-focused Qwen fallback sequence.
-const OPENROUTER_TEXT_MODEL = 'google/gemini-2.0-flash-001';
-const OPENROUTER_VISION_MODEL = 'google/gemini-2.0-flash-001';
+// Chains are live-model-verified against the public /api/v1/models catalog
+// and free models come first, so generation keeps working even when the
+// OpenRouter key has no credit left. Retired IDs (google/gemini-2.0-flash-001,
+// google/gemini-1.5-flash, openai/gpt-oss-*, qwen3-235b-a22b:free) now return
+// http 4xx for every call and must not be reintroduced.
+const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free';
+const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
 const OPENROUTER_TEXT_FALLBACKS = [
-  'openai/gpt-oss-120b:free',
-  'google/gemini-2.0-flash-001',
-  'google/gemini-1.5-flash',
-  'google/gemini-2.5-flash',
-  'qwen/qwen3.7-flash',
-  'mistralai/mistral-small-3.1-24b-instruct',
   'nvidia/nemotron-3.5-lightning:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'z-ai/glm-5.2:free',
+  'minimax/minimax-m3:free',
+  'qwen/qwen3.7-flash',
+  'google/gemini-2.5-flash',
+  'mistralai/mistral-small-3.1-24b-instruct',
   'openai/gpt-4o-mini',
 ];
 const OPENROUTER_STREAM_TEXT_MODELS = [
-  'google/gemini-2.0-flash-001',
-  'google/gemini-1.5-flash',
+  OPENROUTER_TEXT_MODEL,
   ...OPENROUTER_TEXT_FALLBACKS,
 ];
 const OPENROUTER_VISION_FALLBACKS = [
-  'google/gemini-2.0-flash-001',
   'google/gemma-4-31b-it:free',
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+  'google/gemma-4-26b-a4b-it:free',
+  'google/gemini-2.5-flash',
 ];
 // Post-extraction answer review is a bounded JSON task. Use a short,
 // quality-first sequence so one slow provider cannot block every batch.
 const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
+  'nvidia/nemotron-3.5-lightning:free',
   'qwen/qwen3.7-flash',
   'openai/gpt-4o-mini',
   'mistralai/mistral-small-3.1-24b-instruct',
@@ -1101,10 +1103,10 @@ ${extraInstruction}`;
         OPENROUTER_TEXT_MODEL,
         OPENROUTER_VISION_MODEL,
         'openai/gpt-4o-mini',
-        'anthropic/claude-3.5-haiku',
         'qwen/qwen-2.5-72b-instruct',
-        'openai/gpt-oss-20b:free',
-        'qwen/qwen3-235b-a22b:free',
+        'nvidia/nemotron-3-super-120b-a12b:free',
+        'z-ai/glm-5.2:free',
+        'google/gemini-2.5-flash',
       ];
       const model = allowedModels.includes(body.model) ? body.model : OPENROUTER_TEXT_MODEL;
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];

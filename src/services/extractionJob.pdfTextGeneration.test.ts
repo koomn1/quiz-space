@@ -52,7 +52,7 @@ describe('text PDF generation in extraction jobs', () => {
     expect(request.messages[0].content).toContain('محتوى الملف المصدر');
     expect(request.messages[0].content).toContain('Gravity keeps planets in orbit');
     expect(JSON.stringify(request.messages[0].content)).not.toContain('file_data');
-    expect(result.provider).toBe('openai/gpt-oss-120b:free');
+    expect(result.provider).toBe('nvidia/nemotron-3.5-lightning:free');
     expect(result.questions).toHaveLength(1);
   });
 
@@ -91,7 +91,7 @@ describe('text PDF generation in extraction jobs', () => {
     );
 
     expect(callCount).toBe(2);
-    expect(result.provider).toBe('google/gemini-2.0-flash-001');
+    expect(result.provider).toBe('nvidia/nemotron-3-super-120b-a12b:free');
     expect(result.questions).toHaveLength(1);
   });
 });
