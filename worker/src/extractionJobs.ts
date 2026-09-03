@@ -83,6 +83,7 @@ export interface VisionChunkPlan {
   reason: 'standard' | 'large-document' | 'raster-heavy';
 }
 const TEXT_MODEL_FALLBACKS = [
+  'openai/gpt-oss-120b:free',
   'google/gemini-2.0-flash-001',
   'google/gemini-1.5-flash',
   'qwen/qwen3.7-flash',

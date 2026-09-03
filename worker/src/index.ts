@@ -47,6 +47,7 @@ type Provider = 'openrouter';
 const OPENROUTER_TEXT_MODEL = 'google/gemini-2.0-flash-001';
 const OPENROUTER_VISION_MODEL = 'google/gemini-2.0-flash-001';
 const OPENROUTER_TEXT_FALLBACKS = [
+  'openai/gpt-oss-120b:free',
   'google/gemini-2.0-flash-001',
   'google/gemini-1.5-flash',
   'google/gemini-2.5-flash',
