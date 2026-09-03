@@ -1615,6 +1615,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         }
       } catch (fallbackError: any) {
         console.error('All file processing fallback paths failed:', fallbackError);
+        if (fallbackError?.message) {
+          err = fallbackError;
+        }
       }
 
       const rawMsg = String(err?.message || err || '');
@@ -1622,9 +1625,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const isNetworkError = rawMsg.includes('fetch') || rawMsg.includes('network') || rawMsg.includes('Failed to fetch') || rawMsg.includes('NetworkError');
       const isOverloadedError = rawMsg.includes('overloaded') || rawMsg.includes('rate limit') || rawMsg.includes('429') || rawMsg.includes('503') || rawMsg.includes('busy');
 
-      let userFriendlyMessage = isAr
+      let userFriendlyMessage = err?.message || (isAr
         ? 'تعذر إكمال استخراج الأسئلة من الملف. تأكد من أن الملف سليم ومفهوم، ثم أعد المحاولة.'
-        : 'Could not complete question extraction. Please make sure the file is valid and retry.';
+        : 'Could not complete question extraction. Please make sure the file is valid and retry.');
 
       if (isAuthError) {
         userFriendlyMessage = isAr ? 'يجب تسجيل الدخول أولاً لاستخدام معالجة الملفات بالذكاء الاصطناعي.' : 'Please sign in first to use AI file processing.';

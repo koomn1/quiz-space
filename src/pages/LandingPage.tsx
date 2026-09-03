@@ -267,27 +267,31 @@ export default function LandingPage({
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    const tl = gsap.timeline();
-    tl.fromTo('.gsap-hero-title-1', { opacity: 0, y: 50, rotateX: -20 }, { opacity: 1, y: 0, rotateX: 0, duration: 1, ease: 'power4.out' })
-      .fromTo('.gsap-hero-title-2', { opacity: 0, y: 50, rotateX: -20 }, { opacity: 1, y: 0, rotateX: 0, duration: 1, ease: 'power4.out' }, '-=0.8')
-      .fromTo('.gsap-hero-desc', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.6')
-      .fromTo('.gsap-hero-btns', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.5)' }, '-=0.4');
+    if (containerRef.current?.querySelector('.gsap-hero-title-1')) {
+      const tl = gsap.timeline();
+      tl.fromTo('.gsap-hero-title-1', { opacity: 0, y: 50, rotateX: -20 }, { opacity: 1, y: 0, rotateX: 0, duration: 1, ease: 'power4.out' })
+        .fromTo('.gsap-hero-title-2', { opacity: 0, y: 50, rotateX: -20 }, { opacity: 1, y: 0, rotateX: 0, duration: 1, ease: 'power4.out' }, '-=0.8')
+        .fromTo('.gsap-hero-desc', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.6')
+        .fromTo('.gsap-hero-btns', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.5)' }, '-=0.4');
+    }
 
-    gsap.fromTo('.gsap-stat-card', 
-      { opacity: 0, y: 40, scale: 0.9 },
-      { 
-        opacity: 1, 
-        y: 0, 
-        scale: 1, 
-        duration: 0.6, 
-        stagger: 0.1, 
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: '.gsap-stats-container',
-          start: 'top 85%',
+    if (containerRef.current?.querySelector('.gsap-stat-card')) {
+      gsap.fromTo('.gsap-stat-card', 
+        { opacity: 0, y: 40, scale: 0.9 },
+        { 
+          opacity: 1, 
+          y: 0, 
+          scale: 1, 
+          duration: 0.6, 
+          stagger: 0.1, 
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: '.gsap-stats-container',
+            start: 'top 85%',
+          }
         }
-      }
-    );
+      );
+    }
 
     gsap.utils.toArray('.gsap-fade-section').forEach((section: any) => {
       gsap.fromTo(section,
