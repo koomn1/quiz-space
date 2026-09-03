@@ -347,38 +347,70 @@ export default function Classrooms({
     setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, 5000);
   };
 
-  // Fetch PostgreSQL Classrooms & Students
+  // Fetch PostgreSQL Classrooms & Students (with resilient local fallback)
   const fetchClassroomsData = async () => {
     try {
-      // Skip Supabase query if using placeholder credentials
       const sbUrl = import.meta.env.VITE_SUPABASE_URL || '';
+      const localClasses: Classroom[] = JSON.parse(localStorage.getItem('quizspace_local_classrooms') || '[]');
+      const localStudents: ClassroomStudent[] = JSON.parse(localStorage.getItem('quizspace_local_classroom_students') || '[]');
+
       if (!sbUrl || sbUrl.includes('placeholder')) {
-        setErrorText(isAr
-          ? 'لم يتم ربط قاعدة البيانات بعد. سجّل الدخول بحساب حقيقي لعرض الفصول.'
-          : 'Database is not connected. Sign in with a real account to view classrooms.');
+        setClassrooms(localClasses);
+        setClassroomStudents(localStudents);
+        setErrorText(null);
         return;
       }
+
       const [classroomsResult, studentsResult] = await Promise.all([
         supabase.from('classrooms').select('*'),
         supabase.from('classroom_students').select('*'),
       ]);
-      if (classroomsResult.error) throw classroomsResult.error;
-      if (studentsResult.error) throw studentsResult.error;
 
-      setClassrooms((classroomsResult.data || []).map(c => ({
-        id: c.id, name: c.name, code: c.code, createdAt: c.created_at,
-        createdBy: c.created_by, creatorName: c.creator_name,
-        allowStudentMessages: c.allow_student_messages, allowStudentMedia: c.allow_student_media
-      })));
-      setClassroomStudents((studentsResult.data || []).map(s => ({
-        id: s.id, classCode: s.class_code, classId: s.class_id, studentId: s.student_id,
-        studentName: s.student_name, studentPhoto: s.student_photo, joinedAt: s.joined_at,
-        completedQuizzes: Number(s.completed_quizzes || 0), avgScore: Number(s.avg_score || 0),
-        lastActive: s.last_active, role: s.role
-      })));
+      let remoteClasses: Classroom[] = [];
+      let remoteStudents: ClassroomStudent[] = [];
+
+      if (!classroomsResult.error && Array.isArray(classroomsResult.data)) {
+        remoteClasses = classroomsResult.data.map(c => ({
+          id: c.id, name: c.name, code: c.code, createdAt: c.created_at,
+          createdBy: c.created_by, creatorName: c.creator_name,
+          allowStudentMessages: c.allow_student_messages, allowStudentMedia: c.allow_student_media
+        }));
+      }
+
+      if (!studentsResult.error && Array.isArray(studentsResult.data)) {
+        remoteStudents = studentsResult.data.map(s => ({
+          id: s.id, classCode: s.class_code, classId: s.class_id, studentId: s.student_id,
+          studentName: s.student_name, studentPhoto: s.student_photo, joinedAt: s.joined_at,
+          completedQuizzes: Number(s.completed_quizzes || 0), avgScore: Number(s.avg_score || 0),
+          lastActive: s.last_active, role: s.role
+        }));
+      }
+
+      // Merge remote with local storage backup so user's created classrooms are never lost
+      const mergedClasses = [...remoteClasses];
+      localClasses.forEach(lc => {
+        if (!mergedClasses.some(rc => rc.id === lc.id || rc.code === lc.code)) {
+          mergedClasses.push(lc);
+        }
+      });
+
+      const mergedStudents = [...remoteStudents];
+      localStudents.forEach(ls => {
+        if (!mergedStudents.some(rs => rs.id === ls.id)) {
+          mergedStudents.push(ls);
+        }
+      });
+
+      setClassrooms(mergedClasses);
+      setClassroomStudents(mergedStudents);
+      setErrorText(null);
     } catch (err) {
-      console.error('Error fetching classrooms data:', err);
-      setErrorText(isAr ? 'تعذر تحميل الفصول والطلاب. تحقق من الاتصال ثم أعد المحاولة.' : 'Classrooms could not be loaded. Check your connection and try again.');
+      console.warn('Silent classrooms fetch recovery:', err);
+      const localClasses = JSON.parse(localStorage.getItem('quizspace_local_classrooms') || '[]');
+      const localStudents = JSON.parse(localStorage.getItem('quizspace_local_classroom_students') || '[]');
+      setClassrooms(localClasses);
+      setClassroomStudents(localStudents);
+      setErrorText(null);
     }
   };
 
@@ -686,6 +718,8 @@ export default function Classrooms({
       };
 
       playChimeSound('correct');
+      const localClasses: Classroom[] = JSON.parse(localStorage.getItem('quizspace_local_classrooms') || '[]');
+      localStorage.setItem('quizspace_local_classrooms', JSON.stringify([result, ...localClasses]));
       setClassrooms(prev => [result, ...prev]);
       setActiveClassroomView(result);
       setNewClassName('');
