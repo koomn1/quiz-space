@@ -282,26 +282,26 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
   return (
     <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
           <span>📩</span>
           <span>{isAr ? 'صندوق الرسائل والمحادثات المباشرة' : 'Direct Messages & Inbox'}</span>
         </h2>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
           {isAr ? 'تواصل مباشرة مع زملائك ومعلمي المنصة لتبادل الحلول ومناقشة الاختبارات.' : 'Connect directly with classmates and teachers to exchange hints and discuss academic quizzes.'}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 bg-[#080c14] border border-slate-800/60 rounded-3xl overflow-hidden h-[calc(100dvh-140px)] min-h-[550px] shadow-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 bg-white dark:bg-[#080c14] border border-slate-200 dark:border-slate-800/60 rounded-3xl overflow-hidden h-[calc(100dvh-140px)] min-h-[550px] shadow-2xl">
         
         {/* Chat Sidebar / User Search (4 Cols) */}
-        <div className="md:col-span-4 border-b md:border-b-0 md:border-l border-slate-800/60 p-5 space-y-4 flex flex-col bg-[#0b0f19] h-full overflow-hidden">
+        <div className="md:col-span-4 border-b md:border-b-0 md:border-l border-slate-200 dark:border-slate-800/60 p-5 space-y-4 flex flex-col bg-slate-50 dark:bg-[#0b0f19] h-full overflow-hidden">
           <div className="relative">
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isAr ? 'ابحث عن زميل أو معلم...' : 'Search members...'}
-              className="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-2.5 pl-4 pr-10 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-primary/50 transition-all text-right"
+              className="w-full bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 pl-4 pr-10 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-primary/50 transition-all text-right"
               style={{ direction: isAr ? 'rtl' : 'ltr' }}
             />
             <Search className="w-3.5 h-3.5 text-slate-500 absolute top-3 right-3" />
@@ -328,12 +328,12 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                   onClick={() => setSelectedRecipient(member)}
                   className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer border ${
                     selectedRecipient?.uid === member.uid 
-                      ? 'bg-primary/10 border-primary/30 text-white font-bold' 
-                      : 'hover:bg-slate-800/30 bg-transparent border-transparent text-slate-300'
+                      ? 'bg-primary/10 border-primary/30 text-slate-900 dark:text-white font-bold'
+                      : 'hover:bg-slate-100 dark:hover:bg-slate-800/30 bg-transparent border-transparent text-slate-700 dark:text-slate-300'
                   }`}
                   style={{ direction: isAr ? 'rtl' : 'ltr' }}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/50 flex items-center justify-center overflow-hidden shrink-0 text-slate-200">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center overflow-hidden shrink-0 text-slate-700 dark:text-slate-200">
                     <img 
                       src={member.avatar_url || FALLBACK_AVATAR} 
                       alt={member.name} 
@@ -353,7 +353,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                         showTooltip={false} 
                       />
                     </div>
-                    <p className={`text-[9px] truncate mt-0.5 ${selectedRecipient?.uid === member.uid ? 'text-indigo-200' : 'text-slate-500'} leading-snug`}>
+                    <p className={`text-[9px] truncate mt-0.5 ${selectedRecipient?.uid === member.uid ? 'text-indigo-700 dark:text-indigo-200' : 'text-slate-500'} leading-snug`}>
                       {member.bio || (isAr ? 'طالب متميز في أكاديمية كويز' : 'Enthusiastic Quiz Space member')}
                     </p>
                   </div>
@@ -363,7 +363,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                     </span>
                   )}
                   {member.isPremium && (
-                    <span className="text-[8px] bg-amber-400/10 text-amber-300 border border-amber-400/20 px-1 py-0.5 rounded-md font-bold self-start mt-0.5">VIP</span>
+                    <span className="text-[8px] bg-amber-100 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-400/20 px-1 py-0.5 rounded-md font-bold self-start mt-0.5">VIP</span>
                   )}
                 </button>
               ))
@@ -372,11 +372,11 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
         </div>
 
         {/* Chat Window (8 Cols) */}
-        <div className="md:col-span-8 flex flex-col bg-[#060911] h-full overflow-hidden relative">
+        <div className="md:col-span-8 flex flex-col bg-slate-50 dark:bg-[#060911] h-full overflow-hidden relative">
           {selectedRecipient ? (
             <div className="flex flex-col h-full relative">
               {/* Header */}
-              <header className="shrink-0 p-4 border-b border-slate-800/60 bg-slate-950/40 backdrop-blur-md flex items-center justify-between z-10" dir={isAr ? 'rtl' : 'ltr'}>
+              <header className="shrink-0 p-4 border-b border-slate-200 dark:border-slate-800/60 bg-white/70 dark:bg-slate-950/40 backdrop-blur-md flex items-center justify-between z-10" dir={isAr ? 'rtl' : 'ltr'}>
                 <div className="flex items-center gap-3 text-right">
                   <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center overflow-hidden text-white">
                     <img 
@@ -387,7 +387,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h3 className="text-xs font-bold text-white">{selectedRecipient.name}</h3>
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-white">{selectedRecipient.name}</h3>
                       <UserBadge 
                         tier={
                           selectedRecipient.uid === COSMO_ADMIN_UID || selectedRecipient.badgeSymbol === '🤖' ? 'enterprise' :
@@ -417,7 +417,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center space-y-3 select-none">
-                    <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500">
                       <MessageSquare className="w-5 h-5" />
                     </div>
                     <div className="space-y-1">
@@ -434,7 +434,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                         className={`flex gap-3 sm:gap-4 w-full ${isOwn ? 'justify-end' : 'justify-start'}`}
                       >
                         {!isOwn && (
-                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-slate-800 border border-slate-700/50 text-slate-300 shadow-xs text-xs font-bold uppercase overflow-hidden">
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 shadow-xs text-xs font-bold uppercase overflow-hidden">
                             {selectedRecipient.avatar_url ? (
                               <img 
                                 src={selectedRecipient.avatar_url} 
@@ -457,7 +457,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                             </div>
                           ) : (
                             <div className="text-right max-w-none flex flex-col gap-2" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                              <p className="text-[14px] sm:text-[15px] leading-[1.7] text-slate-200 whitespace-pre-line">
+                              <p className="text-[14px] sm:text-[15px] leading-[1.7] text-slate-800 dark:text-slate-200 whitespace-pre-line">
                                 {msg.text}
                               </p>
                             </div>
@@ -471,7 +471,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                               <button
                                 type="button"
                                 onClick={() => handleDeleteMessage(msg.id)}
-                                className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-semibold text-rose-300/80 hover:text-rose-200 hover:bg-rose-500/10 transition-colors"
+                                className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-semibold text-rose-500 dark:text-rose-300/80 hover:text-rose-600 dark:hover:text-rose-200 hover:bg-rose-500/10 transition-colors"
                                 title={isAr ? 'حذف الرسالة' : 'Delete message'}
                               >
                                 <Trash2 className="w-3 h-3" />
@@ -482,7 +482,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                         </div>
 
                         {isOwn && (
-                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-indigo-950/60 border border-indigo-900/50 shadow-xs text-xs overflow-hidden">
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-indigo-100 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900/50 shadow-xs text-xs overflow-hidden">
                             {userPhoto ? (
                               <img 
                                 src={userPhoto} 
@@ -490,7 +490,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                                 className="w-full h-full object-cover" 
                               />
                             ) : (
-                              <span className="font-bold text-indigo-200">{userName ? userName.substring(0, 1) : '👤'}</span>
+                              <span className="font-bold text-indigo-700 dark:text-indigo-200">{userName ? userName.substring(0, 1) : '👤'}</span>
                             )}
                           </div>
                         )}
@@ -507,9 +507,9 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                className="sticky bottom-0 z-20 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-[#060911] via-[#060911]/95 to-transparent shrink-0"
+                className="sticky bottom-0 z-20 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent dark:from-[#060911] dark:via-[#060911]/95 dark:to-transparent shrink-0"
               >
-                <div className="max-w-3xl mx-auto flex items-end gap-2 bg-slate-900 border border-slate-800 rounded-3xl shadow-lg px-2 py-2 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <div className="max-w-3xl mx-auto flex items-end gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg px-2 py-2 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                   <textarea
                     ref={textareaRef}
                     rows={1}
@@ -526,13 +526,13 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                       }
                     }}
                     placeholder={isAr ? 'اكتب رسالتك المباشرة هنا...' : 'Type your message here...'}
-                    className="flex-1 resize-none bg-transparent outline-none text-sm py-2 max-h-40 leading-relaxed text-white placeholder-slate-500"
+                    className="flex-1 resize-none bg-transparent outline-none text-sm py-2 max-h-40 leading-relaxed text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                     style={{ direction: isAr ? 'rtl' : 'ltr' }}
                   />
                   <button
                     type="submit"
                     disabled={!inputText.trim()}
-                    className="p-2.5 rounded-full bg-primary hover:bg-primary-hover disabled:bg-slate-800 disabled:text-slate-600 text-white shrink-0 transition-all cursor-pointer"
+                    className="p-2.5 rounded-full bg-primary hover:bg-primary-hover disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-600 text-white shrink-0 transition-all cursor-pointer"
                   >
                     <Send className="w-4 h-4 shrink-0" />
                   </button>
@@ -541,11 +541,11 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4 select-none">
-              <div className="w-12 h-12 rounded-xl bg-slate-900/60 border border-slate-800/60 flex items-center justify-center text-slate-400">
+              <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60 flex items-center justify-center text-slate-400">
                 <MessageSquare className="w-5 h-5 text-indigo-400" />
               </div>
               <div className="space-y-1 max-w-xs">
-                <h3 className="text-xs font-bold text-white">{isAr ? 'المحادثات المباشرة الآمنة' : 'Secure Direct Conversations'}</h3>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white">{isAr ? 'المحادثات المباشرة الآمنة' : 'Secure Direct Conversations'}</h3>
                 <p className="text-[10px] text-slate-500 leading-relaxed">
                   {isAr ? 'حدد أي مستخدم من القائمة الجانبية لبدء التراسل المباشر ومناقشة تفاصيل الاختبارات والواجبات.' : 'Select any active scholar from the left sidebar to start exchanging direct answers, hints or questions.'}
                 </p>

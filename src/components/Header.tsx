@@ -188,7 +188,7 @@ export default function Header({
 	                  ) : (
 	                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary"><User className="h-4 w-4" /></span>
 	                  )}
-	                  <span className="max-w-24 truncate text-xs font-black text-slate-700 dark:text-slate-100">{userName || (lang === 'ar' ? 'حسابي' : 'My account')}</span>
+	                  <span className="max-w-36 truncate text-xs font-black text-slate-700 dark:text-slate-100">{userName || (lang === 'ar' ? 'حسابي' : 'My account')}</span>
 	                </button>
 	              )}
 

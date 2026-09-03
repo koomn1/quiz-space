@@ -451,10 +451,9 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
       <div key={item.id} className="flex flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
         <div className={`relative mb-4 flex h-28 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br ${item.css_class === 'frame-fire' ? 'from-orange-500 to-rose-600' : item.css_class === 'frame-crystal-luxe' ? 'from-cyan-400 to-indigo-600' : item.css_class === 'frame-star-crown' ? 'from-amber-400 to-yellow-600' : item.css_class === 'frame-diamond-comet' || item.css_class === 'frame-diamond-crown' ? 'from-sky-400 to-violet-700' : 'from-violet-500 to-fuchsia-600'}`}>
           <div className="relative z-10 h-16 w-16 rounded-full border-4 border-white/90 bg-slate-900/35 shadow-[0_0_0_5px_rgba(255,255,255,.22)] flex items-center justify-center overflow-hidden">
-            {itemImageUrl ? (
-              <img src={itemImageUrl} alt="" onError={(event) => { event.currentTarget.style.display = 'none'; }} className="absolute inset-0 h-full w-full object-cover scale-110" />
-            ) : (
-              <Sparkles className="h-6 w-6 text-white/50" />
+            <Sparkles className="absolute h-6 w-6 text-white/50" />
+            {itemImageUrl && (
+              <img src={itemImageUrl} alt="" onError={(event) => { event.currentTarget.style.opacity = '0'; }} className="absolute inset-0 h-full w-full object-cover scale-110" />
             )}
           </div>
           {locked && <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/55 text-white"><Lock className="h-6 w-6" /></div>}
@@ -503,7 +502,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
             {offers.map((item: any) => {
               const offerImage = item.image_url ? resolveFrameAsset(item) : null;
               return <div key={item.id} className="relative flex flex-col rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-md dark:border-rose-900/50 dark:from-rose-950/30 dark:via-slate-900 dark:to-amber-950/20">
-                {offerImage && <div className="mb-4 flex h-28 items-center justify-center overflow-hidden rounded-2xl bg-white/70 p-3 dark:bg-slate-950/30"><img src={offerImage} alt="" loading="lazy" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} /></div>}
+                {offerImage && <div className="relative mb-4 flex h-28 items-center justify-center overflow-hidden rounded-2xl bg-white/70 p-3 dark:bg-slate-950/30"><Sparkles className="absolute h-8 w-8 text-rose-300" /><img src={offerImage} alt="" loading="lazy" className="relative h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} /></div>}
                 {item.badge_text && (
                   <span className="absolute top-4 start-4 rounded-full bg-rose-600 px-3 py-1 text-[10px] font-black text-white shadow-sm">
                     {item.badge_text}
@@ -559,7 +558,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
                   ? `${payment.amount.toLocaleString()} ${t.points} · ${t.buy}`
                   : (lang === 'ar' ? 'غير متاح' : 'Unavailable');
             return <div key={item.id} className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900">
-              <div className="flex h-20 items-center justify-center overflow-hidden rounded-2xl bg-emerald-50 p-2 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">{bundleImage ? <img src={bundleImage} alt="" loading="lazy" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} /> : <Sparkles className="h-6 w-6" />}</div>
+              <div className="relative flex h-20 items-center justify-center overflow-hidden rounded-2xl bg-emerald-50 p-2 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"><Sparkles className="absolute h-6 w-6 opacity-70" />{bundleImage && <img src={bundleImage} alt="" loading="lazy" className="relative h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} />}</div>
               <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{getStoreBundleBenefitLabel(item, lang)}</p>
               <button type="button" disabled={!isPurchasable || busy === item.id} onClick={() => void handleStoreAction(item)} className="mt-5 w-full rounded-2xl bg-emerald-600 px-3 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45">

@@ -774,7 +774,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
             </div>
           </div>
         ) : (
-          posts.map(post => {
+          posts.filter(post => String(post.text || '').trim()).map(post => {
             const isAdmin = isAdminProp === true;
             return (
               <CommunityPostCard
@@ -1082,7 +1082,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
     <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black font-display text-white">{isAr ? '🏆 شارات التوثيق المستحقة' : 'My Accomplishments & Trophies'}</h2>
+          <h2 className="text-2xl font-black font-display text-slate-900 dark:text-white">{isAr ? '🏆 شارات التوثيق المستحقة' : 'My Accomplishments & Trophies'}</h2>
           <p className="text-xs text-slate-400 mt-1">{isAr ? 'احصد نقاط المعرفة (XP) وافتح بطاقات الإنجاز لتتوج بلقب بروفيسور الفضاء.' : 'Compile academic XP points, unlock custom status cards & raise your rank to space professor.'}</p>
         </div>
 
@@ -1102,7 +1102,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
       <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent border border-indigo-500/15 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5">
           <span className="text-lg animate-bounce">⚡</span>
-          <span className="text-slate-300 font-extrabold leading-relaxed">
+          <span className="text-slate-700 dark:text-slate-300 font-extrabold leading-relaxed">
             {isAr ? 'تم دمج حركات غامرة مستقلة! اضغط على أي بطاقة شارة بالأسفل لتجربة لوحة الاحتفال ثلاثية الأبعاد.' : 'Immersive motion integrated! Click any badge below to launch details and celebratory playback.'}
           </span>
         </div>
@@ -1518,7 +1518,7 @@ export function SettingsSection({
       </div>
 
       {/* Main viewport with transition effect */}
-      <div className="bg-[#0e0a1f]/80 backdrop-blur-2xl border border-[#3d1d6d]/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden min-h-[450px]">
+      <div className="bg-white/95 dark:bg-[#0e0a1f]/80 backdrop-blur-2xl border border-slate-200 dark:border-[#3d1d6d]/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden min-h-[450px]">
         
         {/* TAB 1: البيانات الأساسية */}
         {activeTab === 1 && (
@@ -1529,7 +1529,7 @@ export function SettingsSection({
             className="space-y-6"
           >
             <div>
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <span className="text-xl">📝</span>
                 <span>{isAr ? 'البيانات الأساسية للملف الشخصي' : 'Basic Profile Information'}</span>
               </h3>
@@ -1540,69 +1540,69 @@ export function SettingsSection({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-300 block">
+                <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'الاسم الكامل:' : 'Full Name / Display Name:'}
                 </label>
                 <input 
                   type="text" 
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-white outline-none transition-all"
+                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all"
                   style={{ textAlign: isAr ? 'right' : 'left' }}
                   placeholder={isAr ? 'أدخل اسمك المعروض' : 'Enter your name'}
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-300 block">
+                <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'اسم المستخدم (معرّف فريد):' : 'Username / Unique ID:'}
                 </label>
                 <input 
                   type="text" 
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-white outline-none transition-all"
+                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all"
                   style={{ textAlign: isAr ? 'right' : 'left' }}
                   placeholder={isAr ? 'مثال: ahmed_teacher' : 'e.g. ahmed_teacher'}
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-300 block">
+                <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'رقم الهاتف المتنقل:' : 'Phone Number:'}
                 </label>
                 <input 
                   type="tel" 
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-white outline-none transition-all font-mono"
+                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all font-mono"
                   style={{ textAlign: isAr ? 'right' : 'left' }}
                   placeholder="+966 50 000 0000"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-300 block">
+                <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'البريد الإلكتروني (غير قابل للتعديل):' : 'Email Address (Read-only):'}
                 </label>
                 <input 
                   type="email" 
                   value={currentUserEmail || ''}
                   disabled
-                  className="w-full bg-slate-950/40 opacity-60 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-400 outline-none cursor-not-allowed"
+                  className="w-full bg-slate-100 dark:bg-slate-950/40 opacity-60 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed"
                   style={{ textAlign: isAr ? 'right' : 'left' }}
                 />
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <label className="text-xs font-black text-slate-300 block">
+                <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'نبذة تعريفية (Bio):' : 'Biography:'}
                 </label>
                 <textarea 
                   value={bioInput}
                   onChange={(e) => setBioInput(e.target.value)}
                   rows={3}
-                  className="w-full bg-slate-950/80 border border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-white outline-none transition-all resize-none"
+                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all resize-none"
                   style={{ textAlign: isAr ? 'right' : 'left' }}
                   placeholder={isAr ? 'اكتب نبذة قصيرة عن تخصصك أو اهتماماتك...' : 'Tell us about your background or subjects you teach...'}
                 />
@@ -1643,7 +1643,7 @@ export function SettingsSection({
             className="space-y-6"
           >
             <div>
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <span className="text-xl">🔒</span>
                 <span>{isAr ? 'إدارة الأمان والجلسات' : 'Security Settings & Active Sessions'}</span>
               </h3>
@@ -1669,7 +1669,7 @@ export function SettingsSection({
             {/* Theme & Prefs block */}
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <span className="text-xl">🎨</span>
                   <span>{isAr ? 'تخصيص المظهر وتفضيلات النظام' : 'Visual Customization & System Preferences'}</span>
                 </h3>
@@ -1680,7 +1680,7 @@ export function SettingsSection({
 
               {/* Theme color cards */}
               <div className="space-y-3">
-                <label className="text-xs font-black text-slate-300 block">
+                <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'السمة اللونية للنظام (بريميوم):' : 'System Color Theme (Premium):'}
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -1808,7 +1808,7 @@ export function SettingsSection({
             {/* Google Drive connected accounts connection */}
             <div className="pt-6 border-t border-slate-800 space-y-4">
               <div>
-                <h4 className="text-sm font-black text-white">{isAr ? 'الحسابات السحابية المرتبطة' : 'Linked Cloud Accounts'}</h4>
+                <h4 className="text-sm font-black text-slate-900 dark:text-white">{isAr ? 'الحسابات السحابية المرتبطة' : 'Linked Cloud Accounts'}</h4>
                 <p className="text-[10px] text-slate-400 mt-1">
                   {isAr ? 'اربط حساب Google Drive لرفع مخرجات الاختبارات وملفات المراجعة مباشرة لسحابتك' : 'Authorize Google Drive integration to sync materials and student notes instantly'}
                 </p>
@@ -1856,7 +1856,7 @@ export function SettingsSection({
         {activeTab === 4 && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-black text-white flex items-center gap-2">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <span className="text-xl">🔔</span>
                 <span>{isAr ? 'تفضيلات الإشعارات' : 'Notification Preferences'}</span>
               </h3>
