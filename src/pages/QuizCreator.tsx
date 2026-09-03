@@ -700,7 +700,7 @@ export default function QuizCreator({
     );
     
     return (
-      <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-650 dark:text-red-400 text-xs font-medium flex flex-col sm:flex-row items-center justify-between gap-3 text-right w-full" dir="rtl">
+      <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-xs font-medium flex flex-col sm:flex-row items-center justify-between gap-3 text-right w-full" dir="rtl">
         <div className="flex-1">
           {errorStr}
         </div>
@@ -1489,23 +1489,79 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const initData = { fileUri: base64Clean, fileUploadName: uploadedFile.name, totalPages: 1 };
       const { fileUri, fileUploadName, totalPages } = initData;
 
-  // Step 2: Trigger the batch generation / auto-detect scan via our hook mutation!
-  if (isGenerating) return;
-  const result = await generateAndSaveQuiz({
-        type: 'file_direct',
-        fileUri,
-        fileUploadName,
-        sourceFile: uploadedFile,
-        mimeType: uploadedFile.type || 'application/octet-stream',
-        totalPages,
-        extractionMode,
-        customInstruction: fileCustomPrompt,
-        totalQuestions: pdfCount,
-        userId,
-        creatorName,
-        category: 'عام',
-        persist: false,
-      });
+      // Step 2: Extract ready-made questions first. If the document is explanatory
+      // text without explicit questions, automatically retry in generation mode.
+      if (isGenerating) return;
+      let result;
+      try {
+        result = await generateAndSaveQuiz({
+          type: 'file_direct',
+          fileUri,
+          fileUploadName,
+          sourceFile: uploadedFile,
+          mimeType: uploadedFile.type || 'application/octet-stream',
+          totalPages,
+          extractionMode,
+          customInstruction: fileCustomPrompt,
+          totalQuestions: pdfCount,
+          userId,
+          creatorName,
+          category: 'عام',
+          persist: false,
+        });
+      } catch (extractionError: any) {
+        if (extractionMode !== 'literal') throw extractionError;
+        setExtractionMode('generate');
+        setOcrProgress(prev => prev ? {
+          ...prev,
+          stage: 'analyzing',
+          percentage: 30,
+          message: 'لم نجد أسئلة جاهزة؛ جاري صياغة أسئلة جديدة من شرح الملف تلقائيًا...'
+        } : prev);
+        result = await generateAndSaveQuiz({
+          type: 'file_direct',
+          fileUri,
+          fileUploadName,
+          sourceFile: uploadedFile,
+          mimeType: uploadedFile.type || 'application/octet-stream',
+          totalPages,
+          extractionMode: 'generate',
+          customInstruction: fileCustomPrompt || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
+          totalQuestions: pdfCount,
+          userId,
+          creatorName,
+          category: 'عام',
+          persist: false,
+        });
+      }
+
+      const hasUsableQuestions = Array.isArray(result?.quiz?.questions) && result.quiz.questions.some((question: any) =>
+        question?.type === 'essay' || (Array.isArray(question?.options) && question.options.filter((option: unknown) => typeof option === 'string' && option.trim()).length >= 2)
+      );
+      if (!hasUsableQuestions && extractionMode === 'literal') {
+        setExtractionMode('generate');
+        setOcrProgress(prev => prev ? {
+          ...prev,
+          stage: 'analyzing',
+          percentage: 30,
+          message: 'لم نجد أسئلة جاهزة؛ جاري صياغة أسئلة جديدة من شرح الملف تلقائيًا...'
+        } : prev);
+        result = await generateAndSaveQuiz({
+          type: 'file_direct',
+          fileUri,
+          fileUploadName,
+          sourceFile: uploadedFile,
+          mimeType: uploadedFile.type || 'application/octet-stream',
+          totalPages,
+          extractionMode: 'generate',
+          customInstruction: fileCustomPrompt || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
+          totalQuestions: pdfCount,
+          userId,
+          creatorName,
+          category: 'عام',
+          persist: false,
+        });
+      }
 
       // Step 3: Extraction is complete; now solve and verify answers as a separate phase.
       await prepareAndSolveExtractedQuiz(result);
@@ -2152,7 +2208,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                   <h3 className="font-display font-black text-xl text-slate-800 dark:text-slate-100 tracking-tight">توليد اختبار فوري بالذكاء الاصطناعي التوليدي</h3>
                   {renderUsesIndicator(sentenceUses)}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                   اكتب أي موضوع ترغب في إنشاء أسئلة حوله وسيقوم محرك الذكاء الاصطناعي بصياغتها وحفظها في المسودة لتراجعها وتعدلها قبل النشر النهائي.
                 </p>
               </div>
@@ -2201,7 +2257,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                             <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-violet-600 dark:text-violet-400' : 'text-slate-700 dark:text-slate-300'}`}>
                               {opt.label}
                             </div>
-                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">
+                            <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
                               {opt.sub}
                             </div>
                           </div>
@@ -2288,7 +2344,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                   <h3 className="font-display font-black text-xl text-slate-800 dark:text-slate-100 tracking-tight">تحويل النصوص المنسوخة (كتب ومستندات)</h3>
                   {renderUsesIndicator(bookUses)}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                   انسخ المادة العلمية أو الصفحات التي قمت بنسخها من ملفات الـ PDF أو المحاضرات والكتب، ثم الصقها هنا مباشرة. سيقوم الذكاء الاصطناعي بصياغة أسئلة اختبار دقيقة فوراً وبنفس لغة الفقرات المرفقة تماماً.
                 </p>
               </div>
@@ -2339,7 +2395,7 @@ A computer is a digital electronic machine...
                             <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-violet-600 dark:text-violet-400' : 'text-slate-700 dark:text-slate-300'}`}>
                               {opt.label}
                             </div>
-                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">
+                            <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
                               {opt.sub}
                             </div>
                           </div>
@@ -2429,7 +2485,7 @@ A computer is a digital electronic machine...
                   <h3 className="font-display font-black text-xl text-slate-800 dark:text-slate-100 tracking-tight">استخراج الأسئلة من صورة أو ملف PDF أو Word دراسي</h3>
                   {renderUsesIndicator(fileUses)}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                   هل لديك صورة لورقة امتحان أو كشكول دراسي أو ملف PDF/Word؟ ارفعه هنا، وسيقوم الذكاء الاصطناعي بقراءة واستخلاص كامل الأسئلة لتسوية مسودتها فوراً.
                 </p>
               </div>
@@ -2473,7 +2529,7 @@ A computer is a digital electronic machine...
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{isAr ? 'اختر ملفاً من جهازك' : 'Choose file from device'}</p>
-                      <p className="text-[11px] text-slate-400 font-medium font-sans">{isAr ? 'اسحب وأسقط صورة أو ملف PDF/Word هنا' : 'Drag & drop an image, PDF, or Word file here'}</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium font-sans">{isAr ? 'اسحب وأسقط صورة أو ملف PDF/Word هنا' : 'Drag & drop an image, PDF, or Word file here'}</p>
                     </div>
                   </label>
                 </div>
@@ -2668,7 +2724,7 @@ A computer is a digital electronic machine...
                             <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-violet-600 dark:text-violet-400' : 'text-slate-700 dark:text-slate-300'}`}>
                               {opt.label}
                             </div>
-                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">
+                            <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
                               {opt.sub}
                             </div>
                           </div>
@@ -2700,7 +2756,7 @@ A computer is a digital electronic machine...
                   </div>
                 </div>
 
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal">
+                <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-normal">
                   أخبر الذكاء الاصطناعي عما تريد استخراجه أو التركيز عليه من هذا الملف تحديداً (مثلاً: رتبها، استبعد مقدمات الفصول، ركز على أسئلة الامتحان فقط، إلخ).
                 </p>
 
@@ -2850,9 +2906,9 @@ A computer is a digital electronic machine...
 
                 {/* Sub-components tracker: monitors processed, pending and active batches */}
                 {ocrBatches && ocrBatches.length > 0 && (
-                  <div className="pt-2 border-t border-slate-205 dark:border-slate-800/80 space-y-2.5 text-right" dir="rtl">
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 space-y-2.5 text-right" dir="rtl">
                     <label className="text-xs font-black text-slate-600 dark:text-slate-400 flex items-center justify-between">
-                      <span className="text-[10px] text-slate-400 font-normal">مراقبة الاستخراج التتابعي الذكي</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-normal">مراقبة الاستخراج التتابعي الذكي</span>
                       <span>تتبع استمرار العمل بالأقسام الكلية</span>
                     </label>
 
@@ -2922,7 +2978,7 @@ A computer is a digital electronic machine...
                   </div>
                 )}
 
-                <div className="text-[10px] text-slate-400 dark:text-slate-500 text-right leading-relaxed pt-1.5 border-t border-slate-200/50 dark:border-slate-800/80">
+                <div className="text-[10px] text-slate-600 dark:text-slate-400 text-right leading-relaxed pt-1.5 border-t border-slate-200/50 dark:border-slate-800/80">
                   {isAr 
                     ? '💡 بفضل نظام الاستخراج التتابعي الذكي المتوفر لـ Premium، نقسم الأسئلة لجرعات مريحة، مما يمنع انقطاع أو كسل الذكاء الاصطناعي ويأتي بالدروس كاملة.'
                     : '💡 Sequential processing splits assignments into micro-batches to bypass model limits and ensure full comprehensive coverage of long books.'}

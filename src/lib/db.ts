@@ -3123,6 +3123,15 @@ export async function createRewardPointsOrder(itemId: string, paymentMethod: 'vo
   return data;
 }
 
+export async function getAdminOverviewSnapshot() {
+  const { data, error } = await supabase.rpc('get_admin_overview_snapshot');
+  if (error) throw error;
+  return {
+    classrooms: Array.isArray(data?.classrooms) ? data.classrooms : [],
+    students: Array.isArray(data?.students) ? data.students : [],
+  };
+}
+
 export async function getRewardPaymentSettings() {
   const { data, error } = await supabase.from('reward_payment_settings').select('vodafone_number, instapay_handle, instapay_link').eq('id', 'default').maybeSingle();
   if (error) throw error;

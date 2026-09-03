@@ -168,7 +168,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
       </button>
 
       {isOpen && (
-        <div role="dialog" aria-label={isAr ? 'مركز الإشعارات' : 'Notification centre'} className={`absolute ${isAr ? 'left-0 sm:left-auto sm:right-0' : 'right-0 sm:right-auto sm:left-0'} mt-3 w-[min(24rem,calc(100vw-1.5rem))] rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-2xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 z-[150] animate-in fade-in zoom-in-95 duration-200`}>
+        <div role="dialog" aria-label={isAr ? 'مركز الإشعارات' : 'Notification centre'} className={`fixed inset-x-3 top-20 z-[150] max-h-[calc(100dvh-6rem)] w-auto max-w-none overflow-hidden rounded-3xl border border-slate-200 bg-white p-3 shadow-2xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 sm:absolute sm:inset-x-auto sm:top-full sm:mt-3 sm:max-h-[min(42rem,calc(100dvh-7rem))] sm:w-[min(24rem,calc(100vw-1.5rem))] sm:p-4 ${isAr ? 'sm:right-0' : 'sm:left-0'} animate-in fade-in zoom-in-95 duration-200`}>
           <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <Bell className="h-4 w-4 text-violet-600" />
@@ -208,7 +208,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
             ] as const).map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={filter === id} onClick={() => setFilter(id)} className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black transition-colors ${filter === id ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}
           </div>
 
-          <div className="mt-3 max-h-80 overflow-y-auto space-y-2.5 pr-1">
+          <div className="mt-3 max-h-[calc(100dvh-19rem)] min-h-0 overflow-y-auto overscroll-contain space-y-2.5 pr-1 [scrollbar-width:thin] sm:max-h-80">
             {loading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-violet-600" />

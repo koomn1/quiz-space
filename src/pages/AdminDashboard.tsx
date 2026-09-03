@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, BarChart3, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2, ArrowUpRight, RefreshCw, UserRoundCheck } from 'lucide-react';
 import { Quiz } from '../types';
-import { getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings } from '../lib/db';
+import { getAdminOverviewSnapshot, getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
 import AdminRewardCatalogPanel from '../components/AdminRewardCatalogPanel';
 import { getApiUrl } from '../lib/origin';
@@ -197,11 +197,10 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
       setIsLoadingOverview(true);
       setOverviewLoadError(null);
 
-      const [profilesResult, couponsResult, classroomsResult, studentsResult] = await Promise.allSettled([
+      const [profilesResult, couponsResult, overviewResult] = await Promise.allSettled([
         getAllProfiles(),
         getCoupons(),
-        supabase.from('classrooms').select('*'),
-        supabase.from('classroom_students').select('*'),
+        getAdminOverviewSnapshot(),
       ]);
 
       if (!isMounted) return;
@@ -221,8 +220,8 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
         console.error('Error loading coupons:', couponsResult.reason);
       }
 
-      if (classroomsResult.status === 'fulfilled' && !classroomsResult.value.error) {
-        const data = classroomsResult.value.data || [];
+      if (overviewResult.status === 'fulfilled') {
+        const data = overviewResult.value.classrooms || [];
         setAdminClassrooms(data.map((classroom: any) => ({
           ...classroom,
           createdAt: classroom.created_at || classroom.createdAt,
@@ -230,11 +229,11 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
         })));
       } else {
         hasLoadFailure = true;
-        console.error('Error fetching admin classrooms:', classroomsResult.status === 'rejected' ? classroomsResult.reason : classroomsResult.value.error);
+        console.error('Error fetching admin overview snapshot:', overviewResult.reason);
       }
 
-      if (studentsResult.status === 'fulfilled' && !studentsResult.value.error) {
-        const data = studentsResult.value.data || [];
+      if (overviewResult.status === 'fulfilled') {
+        const data = overviewResult.value.students || [];
         setAdminStudents(data.map((student: any) => ({
           ...student,
           classCode: student.class_code || student.classCode,
@@ -244,7 +243,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
         })));
       } else {
         hasLoadFailure = true;
-        console.error('Error fetching admin students:', studentsResult.status === 'rejected' ? studentsResult.reason : studentsResult.value.error);
+        console.error('Error fetching admin students from snapshot:', overviewResult.reason);
       }
 
       if (hasLoadFailure) {
