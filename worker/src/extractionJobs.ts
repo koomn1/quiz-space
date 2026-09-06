@@ -87,18 +87,20 @@ const TEXT_MODEL_FALLBACKS = [
   'nvidia/nemotron-3-super-120b-a12b:free',
   'z-ai/glm-5.2:free',
   'minimax/minimax-m3:free',
-  'minimax/minimax-m2.7:free',
+  'inclusionai/ling-3.0-flash-sante:free',
   'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'qwen/qwen3.7-flash',
-  'google/gemini-2.5-flash',
-  'mistralai/mistral-small-3.1-24b-instruct',
-  'openai/gpt-4o-mini',
+  'minimax/minimax-m2.7:free',
+  'qwen/qwen3.8-flash',
+  'google/gemini-3.8-flash',
+  'openai/gpt-5-mini',
 ];
 const VISION_MODEL_FALLBACKS = [
   'google/gemma-4-31b-it:free',
+  'thinkingmachines/inkling-small:free',
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
-  'google/gemini-2.5-flash',
+  'dots-studio/dots-3-note-preview:free',
+  'google/gemini-3.8-flash',
 ];
 
 export function sourceFileBaseName(sourceFileName: string | null | undefined): string {

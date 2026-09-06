@@ -9,10 +9,17 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free'");
     expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
     expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
-    expect(workerSource).toContain("'mistralai/mistral-small-3.1-24b-instruct'");
+    expect(workerSource).toContain("'inclusionai/ling-3.0-flash-sante:free'");
     expect(workerSource).toContain("'z-ai/glm-5.2:free'");
+    expect(workerSource).toContain("'qwen/qwen3.8-flash'");
+    expect(workerSource).toContain("'google/gemini-3.8-flash'");
+    expect(workerSource).toContain("'openai/gpt-5-mini'");
     expect(workerSource).not.toContain("'google/gemini-2.0-flash-001'");
     expect(workerSource).not.toContain("'openai/gpt-oss-120b:free'");
+    expect(workerSource).not.toContain("'mistralai/mistral-small-3.1-24b-instruct'");
+    expect(workerSource).not.toContain("'openai/gpt-4o-mini'");
+    expect(workerSource).not.toContain("'qwen/qwen3.7-flash'");
+    expect(workerSource).not.toContain("'google/gemini-2.5-flash'");
   });
 
   it('uses the resilient OpenRouter model sequence for quiz generation', () => {
