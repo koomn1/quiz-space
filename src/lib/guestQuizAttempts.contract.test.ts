@@ -1,10 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { migrationSql } from '../testHelpers/migrationSql';
 
-const migration = readFileSync(
-  new URL('../../supabase/migrations/20260824160000_guest_quiz_attempts.sql', import.meta.url),
-  'utf8',
-);
+const migration = migrationSql('supabase/migrations/20260824160000_guest_quiz_attempts.sql');
 
 describe('guest quiz attempts migration contract', () => {
   it('keeps guest attempts isolated from user profiles and deduplicates retries', () => {

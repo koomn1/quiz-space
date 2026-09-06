@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { migrationSql } from '../testHelpers/migrationSql';
 import { describe, expect, it } from 'vitest';
 
-const migration = readFileSync(new URL('../../supabase/migrations/20260819_revoke_handle_new_user_execute.sql', import.meta.url), 'utf8');
-const exportBrandMigration = readFileSync(new URL('../../supabase/migrations/20260819_institution_white_label_export.sql', import.meta.url), 'utf8');
+const migration = migrationSql('supabase/migrations/20260819_revoke_handle_new_user_execute.sql');
+const exportBrandMigration = migrationSql('supabase/migrations/20260819_institution_white_label_export.sql');
 
 describe('sensitive function execution grants', () => {
   it('keeps the trigger-only user bootstrap function out of client RPC roles', () => {

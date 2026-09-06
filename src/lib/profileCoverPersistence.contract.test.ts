@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
+import { migrationSql } from '../testHelpers/migrationSql';
 import { describe, expect, it } from 'vitest';
 
 const dbSource = readFileSync(new URL('./db.ts', import.meta.url), 'utf8');
 const profileSource = readFileSync(new URL('../pages/UserProfile.tsx', import.meta.url), 'utf8');
-const migrationSource = readFileSync(new URL('../../supabase/migrations/20260819_add_users_cover_url.sql', import.meta.url), 'utf8');
+const migrationSource = migrationSql('supabase/migrations/20260819_add_users_cover_url.sql');
 
 describe('profile cover persistence contract', () => {
   it('keeps partial sign-in profile synchronization from overwriting profile customization', () => {

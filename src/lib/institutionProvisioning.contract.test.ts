@@ -1,10 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { migrationSql } from '../testHelpers/migrationSql';
 
-const migration = readFileSync(
-  new URL('../../supabase/migrations/20260818_fix_diamond_workspace_auto_provision_audit.sql', import.meta.url),
-  'utf8',
-);
+const migration = migrationSql('supabase/migrations/20260818_fix_diamond_workspace_auto_provision_audit.sql');
 
 describe('Diamond institution auto-provisioning', () => {
   it('writes an allowed audit action without weakening the Diamond entitlement check', () => {

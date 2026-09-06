@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { migrationSql } from '../testHelpers/migrationSql';
 import { readFileSync } from 'node:fs';
 
 const adminSource = readFileSync(new URL('../components/AdminSubscriptions.tsx', import.meta.url), 'utf8');
 const billingSource = readFileSync(new URL('../components/BillingSection.tsx', import.meta.url), 'utf8');
 const dbSource = readFileSync(new URL('./db.ts', import.meta.url), 'utf8');
 const profileSource = readFileSync(new URL('../pages/UserProfile.tsx', import.meta.url), 'utf8');
-const migrationSource = readFileSync(new URL('../../supabase/migrations/20260817_trial_offers_persistence.sql', import.meta.url), 'utf8');
-const approvalMigrationSource = readFileSync(new URL('../../supabase/migrations/20260817_secure_premium_request_approval.sql', import.meta.url), 'utf8');
+const migrationSource = migrationSql('supabase/migrations/20260817_trial_offers_persistence.sql');
+const approvalMigrationSource = migrationSql('supabase/migrations/20260817_secure_premium_request_approval.sql');
 
 describe('central trial-offer configuration contract', () => {
   it('stores fixed trial durations in a protected Supabase table and RPC', () => {

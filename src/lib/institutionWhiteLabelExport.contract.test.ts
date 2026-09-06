@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
+import { migrationSql } from '../testHelpers/migrationSql';
 import { describe, expect, it } from 'vitest';
 
-const migration = readFileSync(new URL('../../supabase/migrations/20260819_institution_white_label_export.sql', import.meta.url), 'utf8');
+const migration = migrationSql('supabase/migrations/20260819_institution_white_label_export.sql');
 const pdf = readFileSync(new URL('./quizPdf.ts', import.meta.url), 'utf8');
 const resolver = readFileSync(new URL('../components/QuizResolver.tsx', import.meta.url), 'utf8');
 

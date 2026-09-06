@@ -1,10 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { migrationSql } from '../testHelpers/migrationSql';
 
-const migration = readFileSync(
-  new URL('../../supabase/migrations/20260818_grant_institution_read_access.sql', import.meta.url),
-  'utf8',
-);
+const migration = migrationSql('supabase/migrations/20260818_grant_institution_read_access.sql');
 
 describe('Institution workspace read access', () => {
   it('grants reads only to authenticated users while leaving RLS as the scope guard', () => {

@@ -1,23 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { migrationSql } from '../testHelpers/migrationSql';
 
-const workspaceMigration = readFileSync(
-  resolve(process.cwd(), 'supabase/migrations/20260816_institutional_diamond_workspace.sql'),
-  'utf8',
-);
-const idempotencyMigration = readFileSync(
-  resolve(process.cwd(), 'supabase/migrations/20260817_institution_activation_idempotency.sql'),
-  'utf8',
-);
-const hardeningMigration = readFileSync(
-  resolve(process.cwd(), 'supabase/migrations/20260818_harden_institution_function_surface.sql'),
-  'utf8',
-);
-const entitlementRecoveryMigration = readFileSync(
-  resolve(process.cwd(), 'supabase/migrations/20260817_diamond_workspace_entitlement_recovery.sql'),
-  'utf8',
-);
+const workspaceMigration = migrationSql('supabase/migrations/20260816_institutional_diamond_workspace.sql');
+const idempotencyMigration = migrationSql('supabase/migrations/20260817_institution_activation_idempotency.sql');
+const hardeningMigration = migrationSql('supabase/migrations/20260818_harden_institution_function_surface.sql');
+const entitlementRecoveryMigration = migrationSql('supabase/migrations/20260817_diamond_workspace_entitlement_recovery.sql');
 
 describe('institutional Diamond security contract', () => {
   it('enables RLS for institution records, seats, and audit events', () => {

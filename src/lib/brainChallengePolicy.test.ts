@@ -1,15 +1,13 @@
 import { readFileSync } from 'node:fs';
+import { migrationSql } from '../testHelpers/migrationSql';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const migrationPath = resolve(
-  process.cwd(),
-  'supabase/migrations/20260835_secure_single_brain_challenge_attempt.sql',
-);
+const migrationPath = 'supabase/migrations/20260835_secure_single_brain_challenge_attempt.sql';
 
 describe('daily brain-challenge policy', () => {
   it('uses a user-and-day claim key to enforce a single attempt safely', () => {
-    const migration = readFileSync(migrationPath, 'utf8');
+    const migration = migrationSql('supabase/migrations/20260835_secure_single_brain_challenge_attempt.sql');
 
     expect(migration).toContain('brain_challenge_daily_claims');
     expect(migration).toContain('PRIMARY KEY (user_id, challenge_date)');
@@ -18,7 +16,7 @@ describe('daily brain-challenge policy', () => {
   });
 
   it('prevents direct client inserts that could bypass the server policy', () => {
-    const migration = readFileSync(migrationPath, 'utf8');
+    const migration = migrationSql('supabase/migrations/20260835_secure_single_brain_challenge_attempt.sql');
 
     expect(migration).toContain('DROP POLICY IF EXISTS "Users can insert own attempts"');
     expect(migration).toContain("'attempts_remaining', 0");

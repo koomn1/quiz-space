@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
+import { migrationSql } from '../testHelpers/migrationSql';
 import { describe, expect, it } from 'vitest';
 
-const migration = readFileSync(new URL('../../supabase/migrations/20260819_institution_learning_gap_analytics.sql', import.meta.url), 'utf8');
+const migration = migrationSql('supabase/migrations/20260819_institution_learning_gap_analytics.sql');
 const dataLayer = readFileSync(new URL('./institutions.ts', import.meta.url), 'utf8');
 const panel = readFileSync(new URL('../components/InstitutionLearningGapsPanel.tsx', import.meta.url), 'utf8');
 

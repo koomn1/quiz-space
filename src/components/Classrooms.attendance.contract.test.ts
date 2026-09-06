@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { migrationSql } from '../testHelpers/migrationSql';
 import { describe, expect, it } from 'vitest';
 
 describe('Classrooms attendance register contract', () => {
@@ -15,7 +16,7 @@ describe('Classrooms attendance register contract', () => {
   it('limits a learner to the personal attendance row in the UI and RLS policy', async () => {
     const [componentSource, migrationSource] = await Promise.all([
       readFile(new URL('./Classrooms.tsx', import.meta.url), 'utf8'),
-      readFile(new URL('../../supabase/migrations/20260821_classroom_attendance_register.sql', import.meta.url), 'utf8'),
+      migrationSql('supabase/migrations/20260821_classroom_attendance_register.sql'),
     ]);
 
     expect(componentSource).toContain('attendanceVisibleStudents');
