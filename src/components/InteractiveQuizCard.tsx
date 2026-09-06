@@ -396,7 +396,7 @@ export function InteractiveQuizCard({
 
       {/* Clean, spacious action footer that NEVER overflows horizontally */}
       <div 
-        className="relative border-t border-slate-100 dark:border-slate-800/60 pt-4 mt-5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 w-full"
+        className="relative border-t border-slate-100 dark:border-slate-800/60 pt-4 mt-5 flex flex-wrap items-center justify-between gap-x-2 gap-y-3 w-full"
         style={{ transform: 'translateZ(20px)', transformStyle: 'preserve-3d' }}
       >
         <div className="flex items-center gap-1.5 shrink-0 flex-nowrap" style={{ transform: 'translateZ(10px)' }}>
@@ -450,7 +450,7 @@ export function InteractiveQuizCard({
               setExportMenuOpen((open) => !open);
               }
             }
-            className="flex items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 font-black text-xs transition-all hover:scale-105 cursor-pointer border border-violet-200/60 dark:border-violet-800/50"
+            className="flex shrink-0 whitespace-nowrap items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 font-black text-xs transition-all hover:scale-105 cursor-pointer border border-violet-200/60 dark:border-violet-800/50"
             title={isAr ? 'تحويل إلى PDF أو طباعة' : 'Export PDF or print'}
           >
             <Printer className="w-4 h-4" />
@@ -468,7 +468,7 @@ export function InteractiveQuizCard({
               e.stopPropagation();
               onStartQuiz(quiz.id);
             }}
-            className="group/play flex items-center justify-center gap-1.5 px-5 h-10 rounded-xl bg-gradient-to-r from-primary to-violet-500 hover:from-primary-hover hover:to-violet-400 text-white font-black text-xs transition-all hover:scale-105 duration-300 shadow-md shadow-primary/20 hover:shadow-primary/40 cursor-pointer active:scale-95 overflow-hidden relative"
+            className="group/play flex grow shrink-0 whitespace-nowrap items-center justify-center gap-1.5 px-5 h-10 rounded-xl bg-gradient-to-r from-primary to-violet-500 hover:from-primary-hover hover:to-violet-400 text-white font-black text-xs transition-all hover:scale-105 duration-300 shadow-md shadow-primary/20 hover:shadow-primary/40 cursor-pointer active:scale-95 overflow-hidden relative"
         >
           <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/play:translate-y-0 transition-transform duration-300" />
           <span className="relative z-10">{t?.startPlayBtn || (isAr ? 'ابدأ اللعب' : 'Start Play')}</span>
