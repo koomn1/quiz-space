@@ -253,8 +253,11 @@ Rules:
 ${customInstruction?.trim() ? `Additional instructions: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
-function generatePrompt(amount: number, customInstruction?: string | null): string {
-  return `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف. حافظ على لغة المستند ومعلوماته ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
+function generatePrompt(amount: number | null | undefined, customInstruction?: string | null): string {
+  const scopeInstruction = Number.isInteger(amount) && Number(amount) > 0
+    ? `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف.`
+    : 'اقرأ محتوى المحاضرة بالكامل وأنشئ سؤالاً لكل نقطة أو معلومة أو مفهوم مهم يمكن أن يأتي منه سؤال. لا تضع حداً ثابتاً لعدد الأسئلة ولا تتوقف عند رقم افتراضي؛ غطِّ كل الأجزاء القابلة للسؤال، مع إزالة التكرار فقط.';
+  return `${scopeInstruction} حافظ على لغة المستند ومعلوماته ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
 function parseJson(text: string): any {
@@ -622,7 +625,7 @@ async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: strin
 
 function documentVisionPrompt(job: ExtractionJobRow): string {
   if (job.extraction_mode === 'generate') {
-    return `${generatePrompt(job.requested_question_count || 20, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. أعد JSON صالحاً فقط.`;
+    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. أعد JSON صالحاً فقط.`;
   }
   return extractionPrompt(job.custom_instruction);
 }
@@ -670,7 +673,7 @@ async function extractPdfVision(
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
   const normalizedQuestions = normalizeQuestions(questions);
   const finalQuestions = job.extraction_mode === 'generate'
-    ? normalizedQuestions.slice(0, job.requested_question_count || 20)
+    ? job.requested_question_count ? normalizedQuestions.slice(0, job.requested_question_count) : normalizedQuestions
     : normalizedQuestions;
   return { title: deriveQuizTitle(job.source_file_name), description: `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`, questions: finalQuestions, provider: [...providers].join(', '), chunks: chunks.length };
 }
@@ -719,7 +722,7 @@ async function generateQuestionsFromText(
   env: ExtractionJobEnv,
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
-  const requestedCount = job.requested_question_count || 20;
+  const requestedCount = job.requested_question_count || null;
   const prompt = `${generatePrompt(requestedCount, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`;
   const messages = [{ role: 'user', content: prompt }];
     let lastError: unknown;
@@ -730,7 +733,7 @@ async function generateQuestionsFromText(
       const quiz = parseJson(await callGeminiJsonForGeneration(env, prompt));
       const questions = normalizeQuestions(quiz);
       if (questions.length > 0) {
-        const limitedQuestions = questions.slice(0, requestedCount);
+        const limitedQuestions = requestedCount ? questions.slice(0, requestedCount) : questions;
         await onProgress(1, 1, limitedQuestions.length);
         return {
           title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
@@ -755,7 +758,7 @@ async function generateQuestionsFromText(
       const quiz = parseJson(response.text);
       const questions = normalizeQuestions(quiz);
       if (!questions.length) throw new Error('The document did not contain any valid questions.');
-      const limitedQuestions = questions.slice(0, requestedCount);
+      const limitedQuestions = requestedCount ? questions.slice(0, requestedCount) : questions;
       await onProgress(1, 1, limitedQuestions.length);
       return {
         title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
@@ -838,7 +841,7 @@ export async function extractJobQuiz(
 
   const prompt = isLiteral
     ? extractionPrompt(job.custom_instruction)
-    : generatePrompt(job.requested_question_count || 20, job.custom_instruction);
+    : generatePrompt(job.requested_question_count, job.custom_instruction);
   const base64 = base64FromBytes(source);
   const content = mimeType === 'application/pdf' || mimeType.includes('powerpoint')
     ? [{ type: 'text', text: prompt }, { type: 'file', file: { filename: 'uploaded-document', file_data: `data:${mimeType};base64,${base64}` } }]
@@ -848,7 +851,7 @@ export async function extractJobQuiz(
   const questions = normalizeQuestions(quiz);
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
   const finalQuestions = job.extraction_mode === 'generate'
-    ? questions.slice(0, job.requested_question_count || 20)
+    ? job.requested_question_count ? questions.slice(0, job.requested_question_count) : questions
     : questions;
   await onProgress(1, 1, finalQuestions.length);
   return {
