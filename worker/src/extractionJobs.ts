@@ -1,9 +1,11 @@
 import mammoth from 'mammoth';
 import { PDFDocument } from 'pdf-lib';
 import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
+import JSZip from 'jszip';
 
 export interface ExtractionJobEnv {
   OPENROUTER_API_KEY: string;
+  GEMINI_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
 }
@@ -82,6 +84,44 @@ export interface VisionChunkPlan {
   estimatedChunkCount: number;
   reason: 'standard' | 'large-document' | 'raster-heavy';
 }
+async function callGeminiJsonForGeneration(env: ExtractionJobEnv, prompt: string): Promise<string> {
+  if (!env.GEMINI_API_KEY) throw new Error('Gemini is not configured');
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 6000, responseMimeType: 'application/json' },
+    }),
+  });
+  if (!response.ok) throw new Error(`Gemini generation failed: ${response.status}`);
+  const payload: any = await response.json();
+  const text = payload.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
+  if (!text) throw new Error('Gemini returned an empty response');
+  return text;
+}
+
+async function extractPowerPointText(source: Uint8Array): Promise<string> {
+  const archive = await JSZip.loadAsync(source);
+  const slideFiles = Object.keys(archive.files)
+    .filter(name => /^ppt\/slides\/slide\d+\.xml$/i.test(name))
+    .sort((a, b) => Number(a.match(/slide(\d+)/i)?.[1] || 0) - Number(b.match(/slide(\d+)/i)?.[1] || 0));
+  const clean = (xml: string) => xml
+    .replace(/<a:t[^>]*>([\s\S]*?)<\/a:t>/gi, '$1\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/\s+/g, ' ').trim();
+  const slides: string[] = [];
+  for (const name of slideFiles) {
+    const file = archive.file(name);
+    if (!file) continue;
+    const text = clean(await file.async('text'));
+    if (text) slides.push(text);
+  }
+  return slides.map((text, index) => `الشريحة ${index + 1}:\n${text}`).join('\n\n');
+}
+
 const TEXT_MODEL_FALLBACKS = [
   'nvidia/nemotron-3.5-lightning:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
@@ -628,7 +668,11 @@ async function extractPdfVision(
     }
   }
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
-  return { title: deriveQuizTitle(job.source_file_name), description: `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`, questions: normalizeQuestions(questions), provider: [...providers].join(', '), chunks: chunks.length };
+  const normalizedQuestions = normalizeQuestions(questions);
+  const finalQuestions = job.extraction_mode === 'generate'
+    ? normalizedQuestions.slice(0, job.requested_question_count || 20)
+    : normalizedQuestions;
+  return { title: deriveQuizTitle(job.source_file_name), description: `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`, questions: finalQuestions, provider: [...providers].join(', '), chunks: chunks.length };
 }
 
 export function shouldUseVisionForLargeScannedPdf(pageCount: number, sampledText: string): boolean {
@@ -675,13 +719,34 @@ async function generateQuestionsFromText(
   env: ExtractionJobEnv,
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
-  const messages = [{
-    role: 'user',
-    content: `${generatePrompt(job.requested_question_count || 20, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`,
-  }];
-  let lastError: unknown;
-
+  const requestedCount = job.requested_question_count || 20;
+  const prompt = `${generatePrompt(requestedCount, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`;
+  const messages = [{ role: 'user', content: prompt }];
+    let lastError: unknown;
+  // Generated questions from explanatory material use Gemini first. Literal
+  // extraction never enters this function, so its behaviour remains unchanged.
+  if (job.extraction_mode === 'generate') {
+    try {
+      const quiz = parseJson(await callGeminiJsonForGeneration(env, prompt));
+      const questions = normalizeQuestions(quiz);
+      if (questions.length > 0) {
+        const limitedQuestions = questions.slice(0, requestedCount);
+        await onProgress(1, 1, limitedQuestions.length);
+        return {
+          title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
+          description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+          questions: limitedQuestions,
+          provider: 'gemini-2.5-flash',
+          chunks: 1,
+        };
+      }
+    } catch (error) {
+      lastError = error;
+      console.warn('Gemini document generation failed; trying text fallback.', error);
+    }
+  }
   // A provider can return HTTP 200 with prose or malformed JSON. That is not a
+
   // successful extraction, so treat parsing and validation as part of the
   // fallback boundary instead of failing the whole job after one response.
   for (const model of TEXT_MODEL_FALLBACKS) {
@@ -690,11 +755,12 @@ async function generateQuestionsFromText(
       const quiz = parseJson(response.text);
       const questions = normalizeQuestions(quiz);
       if (!questions.length) throw new Error('The document did not contain any valid questions.');
-      await onProgress(1, 1, questions.length);
+      const limitedQuestions = questions.slice(0, requestedCount);
+      await onProgress(1, 1, limitedQuestions.length);
       return {
         title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
-        description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-        questions,
+        description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+        questions: limitedQuestions,
         provider: response.model,
         chunks: 1,
       };
@@ -750,10 +816,11 @@ export async function extractJobQuiz(
     text = result.value;
   } else if (mimeType.includes('spreadsheetml') || mimeType.includes('ms-excel')) {
     throw new Error('Spreadsheet uploads are temporarily unavailable while the secure parser is being deployed.');
-  } else if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
+    } else if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
     text = new TextDecoder().decode(source);
+  } else if (mimeType.includes('presentationml') || mimeType.includes('powerpoint')) {
+    text = await extractPowerPointText(source);
   }
-
   if (text.trim()) {
     if (isLiteral) {
       const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
@@ -780,11 +847,14 @@ export async function extractJobQuiz(
   const quiz = parseJson(response.text);
   const questions = normalizeQuestions(quiz);
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
-  await onProgress(1, 1, questions.length);
+  const finalQuestions = job.extraction_mode === 'generate'
+    ? questions.slice(0, job.requested_question_count || 20)
+    : questions;
+  await onProgress(1, 1, finalQuestions.length);
   return {
     title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
     description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-    questions,
+    questions: finalQuestions,
     provider: response.model,
     chunks: 1,
   };
