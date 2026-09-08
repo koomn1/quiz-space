@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport } from '../lib/db';
+import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { gradeEssayWithAI } from '../services/aiWorkerClient';
@@ -271,6 +271,39 @@ export default function QuizResolver({
     if (onQuizLockChange) onQuizLockChange(isQuizCompleted && !hasRatedQuiz);
   }, [isQuizCompleted, hasRatedQuiz, onQuizLockChange]);
 
+  const answerTextForQuestion = React.useCallback((question: Question, index: number): string => {
+    if (question.type === 'essay') return (essayAnswers[index] || '').trim();
+    const selected = userAnswers[index];
+    if (typeof selected !== 'number' || selected < 0) return '';
+    return question.options?.[selected] || String(selected + 1);
+  }, [essayAnswers, userAnswers]);
+
+  const correctTextForQuestion = React.useCallback((question: Question): string => {
+    if (question.type === 'essay') return (question.correctAnswer || '').trim();
+    return question.options?.[question.correctIndex] || String(question.correctIndex + 1);
+  }, []);
+
+  const persistIncorrectAnswers = React.useCallback(async () => {
+    if (!userId || isGuest || isDailyQuiz || !quiz) return;
+    const failedQuestions = quiz.questions.flatMap((question, index) => {
+      const isCorrect = question.type === 'essay'
+        ? essayAssessments[index] === true
+        : userAnswers[index] === question.correctIndex;
+      return isCorrect ? [] : [{ question, index }];
+    });
+    await Promise.all(failedQuestions.map(({ question, index }) => upsertQuizErrorBankItem({
+      userId,
+      quizId,
+      quizTitle: quiz.title,
+      question,
+      userAnswer: answerTextForQuestion(question, index),
+      correctAnswer: correctTextForQuestion(question),
+    }).catch((error) => {
+      console.warn('Error Bank logging skipped for one question:', error);
+      return null;
+    })));
+  }, [answerTextForQuestion, correctTextForQuestion, essayAssessments, isDailyQuiz, isGuest, quiz, quizId, userAnswers, userId]);
+
   // Play premium success sound when quiz finishes & trigger auto-save + route lock
   React.useEffect(() => {
     if (isQuizCompleted) {
@@ -284,6 +317,7 @@ export default function QuizResolver({
 
       const autoSave = async () => {
         try {
+          await persistIncorrectAnswers();
           // Daily challenges are not available to guests through the normal entry flow.
           // If a stale/direct URL reaches this component, release the route lock instead
           // of leaving the guest trapped in an unsaved results overlay.
@@ -333,7 +367,7 @@ export default function QuizResolver({
         onQuizLockChange(false);
       }
     }
-  }, [isQuizCompleted, quizId, userId, takerName, userName, score, hasRatedQuiz, isDailyQuiz, isGuest, quiz?.questions.length, onQuizLockChange]);
+  }, [isQuizCompleted, quizId, userId, takerName, userName, score, hasRatedQuiz, isDailyQuiz, isGuest, quiz?.questions.length, onQuizLockChange, persistIncorrectAnswers]);
 
   // Intercept and block all navigation popstate, back gestures, and close actions when in results overlay
   React.useEffect(() => {

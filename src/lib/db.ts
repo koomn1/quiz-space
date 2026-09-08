@@ -3240,3 +3240,60 @@ export async function getGroupChallengeProgress(challengeId: string) {
   if (error) throw error;
   return data;
 }
+
+export interface QuizErrorBankItem {
+  id: string;
+  user_id: string;
+  quiz_id: string;
+  quiz_title: string;
+  question_id: string;
+  question: Question;
+  user_answer: string;
+  correct_answer: string;
+  mistake_count: number;
+  last_attempted_at: string;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function upsertQuizErrorBankItem(params: {
+  userId: string;
+  quizId: string;
+  quizTitle: string;
+  question: Question;
+  userAnswer: string;
+  correctAnswer: string;
+}): Promise<QuizErrorBankItem | null> {
+  if (!params.userId || params.userId === 'anonymous' || params.userId.startsWith('guest-')) return null;
+  const { data, error } = await supabase.rpc('upsert_quiz_error_bank_item', {
+    p_user_id: params.userId,
+    p_quiz_id: params.quizId,
+    p_quiz_title: params.quizTitle,
+    p_question_id: params.question.id,
+    p_question: params.question,
+    p_user_answer: params.userAnswer,
+    p_correct_answer: params.correctAnswer,
+  });
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) as QuizErrorBankItem | null;
+}
+
+export async function getQuizErrorBank(userId: string, includeResolved = false): Promise<QuizErrorBankItem[]> {
+  if (!userId || userId === 'anonymous' || userId.startsWith('guest-')) return [];
+  let query = supabase.from('quiz_error_bank').select('*').eq('user_id', userId).order('last_attempted_at', { ascending: false });
+  if (!includeResolved) query = query.is('resolved_at', null);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []) as QuizErrorBankItem[];
+}
+
+export async function resolveQuizErrorBankItem(id: string): Promise<void> {
+  const { error } = await supabase.rpc('resolve_quiz_error_bank_item', { p_id: id });
+  if (error) throw error;
+}
+
+export async function clearResolvedQuizErrorBank(): Promise<void> {
+  const { error } = await supabase.rpc('clear_resolved_quiz_error_bank');
+  if (error) throw error;
+}

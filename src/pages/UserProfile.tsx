@@ -1,5 +1,6 @@
 import CosmicLoader from "../components/CosmicLoader";
 import React from "react";
+import ErrorBank from "../components/ErrorBank";
 import { PdfExportRecord, Quiz, QuizCompletion, UserStats, getUserRoleAndPlan } from "../types";
 import {
   Award,
@@ -34,6 +35,7 @@ import {
   Loader2,
   Download,
   Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { activateRewardFrame, deactivateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems, getPdfExportHistory, getPdfExportSignedUrl, isTrialSubscription } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
@@ -329,7 +331,7 @@ export default function UserProfile({
   const [coverText, setCoverText] = React.useState("");
 
   const [activeTab, setActiveTab] = React.useState<
-    "overview" | "quizzes" | "achievements" | "exports"
+    "overview" | "quizzes" | "achievements" | "exports" | "errors"
   >("overview");
   const [pdfExports, setPdfExports] = React.useState<PdfExportRecord[]>([]);
   const [isPdfExportsLoading, setIsPdfExportsLoading] = React.useState(false);
@@ -2206,6 +2208,19 @@ export default function UserProfile({
             </button>
             {isOwnProfile && (
               <button
+                onClick={() => setActiveTab("errors")}
+                className={`min-w-max px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors flex items-center gap-1.5 ${
+                  activeTab === "errors"
+                    ? "bg-primary text-white shadow-md shadow-primary/10"
+                    : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                }`}
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                {isAr ? "بنك الأخطاء" : "Error Bank"}
+              </button>
+            )}
+            {isOwnProfile && (
+              <button
                 onClick={() => setActiveTab("exports")}
                 className={`min-w-max px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors flex items-center gap-1.5 ${
                   activeTab === "exports"
@@ -2418,6 +2433,11 @@ export default function UserProfile({
             </div>
           )}
 
+          {activeTab === "errors" && isOwnProfile && (
+            <div className="animate-fade-in">
+              <ErrorBank userId={profileId} isAr={isAr} />
+            </div>
+          )}
           {activeTab === "exports" && isOwnProfile && (
             <div className="space-y-6 animate-fade-in">
               <section className="relative overflow-hidden rounded-3xl border border-indigo-200/70 bg-gradient-to-br from-indigo-50 via-white to-violet-50 p-5 shadow-sm dark:border-indigo-500/20 dark:from-indigo-950/50 dark:via-slate-900 dark:to-violet-950/40 md:p-7">
