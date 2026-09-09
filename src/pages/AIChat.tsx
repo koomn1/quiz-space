@@ -9,6 +9,9 @@ import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAICh
 import { Image as ImageIcon, FileText, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
 import { profileAssetUrl } from '../constants/profileAssets';
 import ProfileAvatar from '../components/ProfileAvatar';
+import { ThinkingOrb as LibraryThinkingOrb, type OrbState } from 'thinking-orbs';
+import { BorderBeam } from 'border-beam';
+import { Liquid } from 'liquid-gooey';
 const COSMO_AVATAR = profileAssetUrl('avatars/cosmo-cartoon.webp');
 
 /* ═══════════════════════════════════════════════════════════
@@ -156,6 +159,7 @@ function usePalette(darkMode: boolean) {
       SCROLL_THUMB: 'rgba(255,255,255,0.1)',
       SCROLL_THUMB_HOVER: 'rgba(255,255,255,0.18)',
       INPUT_BG: '#363636',
+      IS_DARK: true,
     };
   }
   return {
@@ -176,6 +180,7 @@ function usePalette(darkMode: boolean) {
     SCROLL_THUMB: 'rgba(0,0,0,0.12)',
     SCROLL_THUMB_HOVER: 'rgba(0,0,0,0.2)',
     INPUT_BG: '#ffffff',
+    IS_DARK: false,
   };
 }
 
@@ -464,39 +469,39 @@ function StreamingRow({ text, theme }: { text: string; theme: Palette }) {
   );
 }
 
-/* ─── Thinking row (orb + typewriter label) ────────────── */
+/* ─── Thinking row: Libraries.dev Orb with all nine activity states ─── */
 function ThinkingRow({ isAr, theme }: { isAr: boolean; theme: Palette }) {
   const rowRef = useRef<HTMLDivElement>(null);
-  const labelRef = useRef<HTMLSpanElement>(null);
-
+  const [orbState, setOrbState] = useState<OrbState>('working');
+  const orbStates: OrbState[] = ['working', 'searching', 'solving', 'listening', 'connecting', 'weaving', 'composing', 'breathing', 'shaping'];
+  const labels: Record<OrbState, { ar: string; en: string }> = {
+    working: { ar: 'كوزمو بيشتغل على طلبك...', en: 'Cosmo is working on your request...' },
+    searching: { ar: 'كوزمو بيدوّر على المعلومات...', en: 'Cosmo is searching for information...' },
+    solving: { ar: 'كوزمو بيحلل ويستنتج...', en: 'Cosmo is solving and reasoning...' },
+    listening: { ar: 'كوزمو بيسمع سؤالك...', en: 'Cosmo is listening...' },
+    connecting: { ar: 'كوزمو بيربط الأفكار...', en: 'Cosmo is connecting ideas...' },
+    weaving: { ar: 'كوزمو بينسج إجابة مترابطة...', en: 'Cosmo is weaving the answer...' },
+    composing: { ar: 'كوزمو بيكتب الرد...', en: 'Cosmo is composing the reply...' },
+    breathing: { ar: 'كوزمو بيراجع الرد...', en: 'Cosmo is reviewing the reply...' },
+    shaping: { ar: 'كوزمو بيظبط الإجابة...', en: 'Cosmo is shaping the answer...' },
+  };
   useEffect(() => {
     if (!rowRef.current) return;
     gsap.from(rowRef.current, { y: 18, opacity: 0, duration: 0.4, ease: 'power3.out' });
-
-    if (!labelRef.current) return;
-    const text = isAr ? 'كوزمو AI بيفكر...' : 'Cosmo AI is thinking...';
-    labelRef.current.textContent = '';
-    let i = 0;
-    const id = setInterval(() => {
-      if (!labelRef.current) return clearInterval(id);
-      labelRef.current.textContent = text.slice(0, i + 1);
-      i++;
-      if (i >= text.length) clearInterval(id);
-    }, 60);
-    return () => clearInterval(id);
-  }, [isAr]);
-
+    const id = window.setInterval(() => setOrbState(current => orbStates[(orbStates.indexOf(current) + 1) % orbStates.length]), 1450);
+    return () => window.clearInterval(id);
+  }, []);
   return (
     <div ref={rowRef} className="flex items-start gap-4">
       <AssistantAvatar />
       <div className="flex-1">
         <p className="text-sm font-semibold mb-1" style={{ color: theme.FG }}>{ASSISTANT_NAME_EN}</p>
         <div className="flex items-center gap-3">
-          <div style={{ width: 44, height: 44, flexShrink: 0 }}>
-            <ThinkingOrb />
+          <div className="flex items-center justify-center rounded-2xl" style={{ width: 64, height: 64, flexShrink: 0, background: theme.CARD, border: `1px solid ${ACCENT}33` }}>
+            <LibraryThinkingOrb state={orbState} size={64} theme={theme.IS_DARK ? 'dark' : 'light'} aria-label={isAr ? 'كوزمو يفكر' : 'Cosmo is thinking'} />
           </div>
           <div className="flex flex-col gap-1">
-            <span ref={labelRef} className="text-sm font-medium" style={{ color: ACCENT }} />
+            <span className="text-sm font-medium" style={{ color: ACCENT }}>{isAr ? labels[orbState].ar : labels[orbState].en}</span>
             <span className="text-xs" style={{ color: theme.SUBTLE_TEXT }}>
               {isAr ? 'يحلل سؤالك ويجهز إجابة مناسبة' : 'Analyzing your question…'}
             </span>
@@ -1195,6 +1200,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                 <button onClick={() => setSelectedAttachment(null)} className="p-1 rounded-full shadow-lg" style={{ background: '#ef4444', color: 'white' }}><X size={12} /></button>
               </div>
             )}
+            <BorderBeam size="md" colorVariant="colorful" strength={0.72} active={!isAnalyzing} theme={darkMode ? 'dark' : 'light'}>
             <div className="rounded-3xl overflow-hidden"
               style={{ background: theme.CARD, border: `1px solid ${theme.BORDER}` }}>
 
@@ -1230,24 +1236,34 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                   <input type="file" ref={fileInputRef} accept=".pdf,.md,.txt,application/pdf,text/markdown,text/plain" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
                 </div>
 
-                <button
-                  ref={sendBtnRef}
-                  onClick={() => sendMessage()}
-                  disabled={(!inputText.trim() && !selectedAttachment) || isAnalyzing}
-                  aria-label={isAr ? 'إرسال' : 'Send'}
-                  className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90"
-                  style={{
-                    background: isAnalyzing ? 'rgba(16,163,127,0.14)' : (inputText.trim() || selectedAttachment) ? ACCENT : theme.SEND_IDLE,
-                    border: isAnalyzing ? `1px solid ${ACCENT}66` : (inputText.trim() || selectedAttachment) ? `1px solid ${ACCENT}` : 'none',
-                    color: isAnalyzing ? ACCENT : (inputText.trim() || selectedAttachment) ? '#07111f' : '#ffffff',
-                    cursor: isAnalyzing ? 'wait' : 'pointer',
-                    transform: isAnalyzing ? 'scale(.94)' : undefined,
-                  }}
-                >
-                  <Send className="w-5 h-5" strokeWidth={2.8} style={{ color: (inputText.trim() || selectedAttachment) && !isAnalyzing ? '#07111f' : '#ffffff' }} />
-                </button>
+                <Liquid blur={6} contrast={18} fill={darkMode ? '#182b3a' : '#ffffff'} className="flex items-center">
+                  <Liquid.Item effect="morph" transition="bouncy">
+                    <button
+                      ref={sendBtnRef}
+                      onClick={() => sendMessage()}
+                      disabled={(!inputText.trim() && !selectedAttachment) || isAnalyzing}
+                      aria-label={isAr ? 'إرسال' : 'Send'}
+                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90"
+                      style={{
+                        background: isAnalyzing ? 'rgba(16,163,127,0.14)' : (inputText.trim() || selectedAttachment) ? ACCENT : theme.SEND_IDLE,
+                        border: isAnalyzing ? `1px solid ${ACCENT}66` : (inputText.trim() || selectedAttachment) ? `1px solid ${ACCENT}` : 'none',
+                        color: isAnalyzing ? ACCENT : (inputText.trim() || selectedAttachment) ? '#07111f' : '#ffffff',
+                        cursor: isAnalyzing ? 'wait' : 'pointer',
+                        transform: isAnalyzing ? 'scale(.94)' : undefined,
+                      }}
+                    >
+                      <Send className="w-5 h-5" strokeWidth={2.8} style={{ color: (inputText.trim() || selectedAttachment) && !isAnalyzing ? '#07111f' : '#ffffff' }} />
+                    </button>
+                  </Liquid.Item>
+                  <Liquid.Item x={isAnalyzing ? -8 : 0} y={isAnalyzing ? -2 : 0} effect="move" transition="bouncy">
+                    <span className="hidden sm:flex items-center justify-center w-5 h-5" aria-hidden="true">
+                      <LibraryThinkingOrb state={isAnalyzing ? 'composing' : 'breathing'} size={20} theme={darkMode ? 'dark' : 'light'} paused={!isAnalyzing} />
+                    </span>
+                  </Liquid.Item>
+                </Liquid>
               </div>
             </div>
+            </BorderBeam>
 
             <p className="text-center text-xs mt-3" style={{ color: theme.SUBTLE_TEXT }}>
               {isAr
