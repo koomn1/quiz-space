@@ -230,7 +230,7 @@ jobs:
       - name: Install Playwright Chromium
         run: |
           # Avoid stale Google Chrome package indexes on hosted runners.
-          sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.list.save
+          sudo grep -RIl 'dl.google.com/linux/chrome' /etc/apt/sources.list.d /etc/apt/sources.list 2>/dev/null | sudo xargs -r rm -f || true
           pnpm exec playwright install --with-deps chromium
 
       - name: Run Public Profile Asset E2E
