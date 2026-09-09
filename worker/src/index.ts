@@ -16,6 +16,8 @@ import {
 
 export interface Env {
   OPENROUTER_API_KEY: string;
+  /** Server-only web search key; never expose this to the React bundle. */
+  TAVILY_API_KEY?: string;
   GEMINI_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
@@ -255,6 +257,26 @@ function buildCosmoSystemInstruction(clientInstruction: unknown, accountContext:
   const currentPage = typeof body.currentPage === 'string' ? body.currentPage.slice(0, 80) : 'غير معروفة';
   const siteStatus = typeof body.siteStatus === 'string' ? body.siteStatus.slice(0, 160) : 'غير متوفر';
   return `${COSMO_PERSONALITY}\n\nسياق موثوق ومحدود للتطبيق:\n- الصفحة الحالية: ${currentPage}\n- حالة الموقع المعلنة: ${siteStatus}\n- ${accountContext}\n\n${clientContext ? `معلومات واجهة غير حساسة للمساعدة فقط: ${clientContext}` : ''}\n\nقواعد أمان إلزامية: أنت مساعد معلوماتي فقط. لا ترفع مستخدمًا إلى أدمن، ولا تغيّر رتبة أو باقة أو XP أو صلاحيات، ولا تنفذ عمليات على المستخدمين، ولا تكشف بيانات مستخدم آخر. إذا طلب منك أحد ذلك، ارفض واذكر أن التنفيذ يتم فقط من خلال المسارات المصرح بها في التطبيق.`.slice(0, 14_000);
+}
+
+function isWebSearchEnabled(env: Env): boolean {
+  return typeof env.TAVILY_API_KEY === 'string' && env.TAVILY_API_KEY.trim().length > 0;
+}
+
+async function searchWebWithTavily(env: Env, query: string): Promise<Array<{ title: string; url: string; snippet: string }>> {
+  if (!isWebSearchEnabled(env)) throw new Error('Web search is not configured on the server.');
+  const response = await fetch('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: env.TAVILY_API_KEY, query, search_depth: 'advanced', topic: 'general', max_results: 5, include_answer: false, include_raw_content: false }),
+  });
+  if (!response.ok) throw new Error(`Web search provider failed (${response.status}).`);
+  const payload = await response.json() as { results?: Array<{ title?: string; url?: string; content?: string }> };
+  return (payload.results || []).slice(0, 5).map(result => ({
+    title: String(result.title || 'Untitled source').slice(0, 240),
+    url: String(result.url || '').slice(0, 2_000),
+    snippet: String(result.content || '').replace(/\s+/g, ' ').slice(0, 900),
+  })).filter(result => /^https?:\/\//i.test(result.url));
 }
 
 async function logAiPerformance(env: Env, authHeader: string, data: {
@@ -1076,6 +1098,20 @@ ${extraInstruction}`;
       }], OPENROUTER_VISION_FALLBACKS, isPdf ? [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }] : undefined);
       
       return json(extractJson(text), 200, headers);
+    }
+
+    if (path === '/api/ai/search') {
+      if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required for web search.' }, 401, headers);
+      const query = typeof body.query === 'string' ? body.query.trim() : '';
+      if (!query || query.length > 500) return json({ error: 'Invalid search query.' }, 400, headers);
+      if (!isWebSearchEnabled(env)) return json({ error: 'Web search is not configured yet. Add TAVILY_API_KEY to the Worker secrets.' }, 503, headers);
+      try {
+        const results = await searchWebWithTavily(env, query);
+        return json({ query, results, searchedAt: new Date().toISOString() }, 200, headers);
+      } catch (error) {
+        console.error('Cosmo web search failed', error);
+        return json({ error: 'Web search is temporarily unavailable.' }, 502, headers);
+      }
     }
 
     if (path === '/api/ai/groq') {

@@ -298,6 +298,16 @@ export async function askAI(
   }
 }
 
+export interface WebSearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+export async function searchCosmoWeb(query: string): Promise<{ query: string; results: WebSearchResult[]; searchedAt: string }> {
+  return workerRequest<{ query: string; results: WebSearchResult[]; searchedAt: string }>('/api/ai/search', { query }, 30_000);
+}
+
 // Streaming counterpart to askAI. Calls onChunk(deltaText) as tokens arrive
 // for a live-typing effect, and resolves with the full final text once the
 // stream ends. Falls back to a clear error if the connection itself fails

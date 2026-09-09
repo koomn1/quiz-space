@@ -290,6 +290,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || secrets.VITE_OPENROUTER_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
         run: |
           set -euo pipefail
           sync_secret() {
@@ -301,6 +302,7 @@ jobs:
           }
           sync_secret OPENROUTER_API_KEY
           sync_secret GEMINI_API_KEY
+          sync_secret TAVILY_API_KEY
       - name: Deploy AI Worker
         working-directory: worker
         env:

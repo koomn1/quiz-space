@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { askAI, askAIStream } from '../services/aiWorkerClient';
+import { askAI, askAIStream, searchCosmoWeb } from '../services/aiWorkerClient';
 import { generateQuizWithFallback, validateAndCleanQuiz } from '../hooks/useQuizzes';
 import { GeneratedQuiz } from '../types';
 import { createQuiz } from '../lib/db';
@@ -715,9 +715,21 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
     try {
       const aiMsgId = (Date.now() + 1).toString();
+      const wantsWebSearch = /(?:ابحث|بحث|على الإنترنت|علي الانترنت|آخر الأخبار|اخر الاخبار|مصادر|search|research|latest news|on the web)/i.test(trimmed);
+      let promptForCosmo = trimmed;
+      if (wantsWebSearch) {
+        try {
+          const web = await searchCosmoWeb(trimmed);
+          const sourceContext = web.results.map((result, index) => `[${index + 1}] ${result.title}\nURL: ${result.url}\n${result.snippet}`).join('\n\n');
+          promptForCosmo = `${trimmed}\n\nاستخدم نتائج البحث الحديثة التالية فقط عند الحاجة. اذكر المصادر بروابطها، وميّز بوضوح بين ما وجدته في المصادر وما هو استنتاج. لا تخترع معلومات غير موجودة في النتائج.\n\n${sourceContext || 'لم تُرجع أداة البحث نتائج.'}`;
+        } catch (searchError) {
+          console.warn('Cosmo web search unavailable', searchError);
+          promptForCosmo = `${trimmed}\n\nملاحظة: طُلب بحث مباشر، لكن أداة البحث غير متاحة حالياً. أخبر المستخدم بوضوح أنك لم تتمكن من التحقق الحي، ولا تقدّم معلومات حديثة على أنها مؤكدة.`;
+        }
+      }
 
       const { text: fullText } = await askAIStream(
-        trimmed,
+        promptForCosmo,
         {
           history: messages.slice(-6).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', text: m.text })),
           systemInstruction: cosmoSystemInstruction,
