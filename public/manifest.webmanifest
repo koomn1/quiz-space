@@ -1,0 +1,19 @@
+{
+  "name": "Quiz Space | كويز سبيس",
+  "short_name": "Quiz Space",
+  "description": "منصة Quiz Space للتعلم وصناعة الاختبارات والمراجعة الذكية.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./#/dashboard/landing",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#0b0824",
+  "theme_color": "#0b0824",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "./brand/quizspace-icon-192.webp", "sizes": "192x192", "type": "image/webp", "purpose": "any maskable" },
+    { "src": "./brand/quizspace-logo-512.webp", "sizes": "512x512", "type": "image/webp", "purpose": "any maskable" }
+  ],
+  "categories": ["education", "productivity"]
+}

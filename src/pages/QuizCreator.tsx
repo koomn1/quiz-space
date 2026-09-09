@@ -598,6 +598,7 @@ export default function QuizCreator({
   // Saving state
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
+  const [previewDraft, setPreviewDraft] = React.useState<{ title: string; description: string; questions: Question[] } | null>(null);
 
   // Drag over states for file uploads
   const [dragActive, setDragActive] = React.useState(false);
@@ -1918,7 +1919,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
   const handlePublishQuiz = async (
     questionsOverride?: Question[],
     metadataOverride?: { title?: string; description?: string },
-    options?: { keepCreatorOpen?: boolean },
+    options?: { keepCreatorOpen?: boolean; skipPreview?: boolean },
   ): Promise<boolean> => {
     const effectiveTitle = metadataOverride?.title ?? title;
     const effectiveDescription = metadataOverride?.description ?? description;
@@ -1957,6 +1958,11 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         return;
       }
 
+      if (!options?.skipPreview) {
+        setPreviewDraft({ title: effectiveTitle.trim(), description: effectiveDescription.trim(), questions: sanitizedQuestions as Question[] });
+        setIsSaving(false);
+        return false;
+      }
       // A failed AI pass is only an advisory state once the user has explicitly
       // reviewed every answer. The structural validation above remains mandatory.
       if (manualSolveOnlyNotice) {
@@ -2120,6 +2126,53 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
   return (
     <>
+      {previewDraft && (
+        <OverlayPortal>
+          <div className="fixed inset-0 z-[10020] flex items-center justify-center overflow-y-auto bg-slate-950/85 p-3 backdrop-blur-xl sm:p-6" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="my-auto flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-[30px] border border-violet-300/20 bg-[#0b1020] text-white shadow-[0_0_80px_rgba(124,58,237,0.28)]">
+              <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-gradient-to-l from-violet-600/20 to-transparent px-5 py-4 sm:px-7">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-violet-300">QuizSpace Preview</p>
+                  <h2 className="mt-1 text-xl font-black sm:text-2xl">معاينة الاختبار قبل الحفظ</h2>
+                  <p className="mt-1 text-xs text-slate-400">راجع الأسئلة والإجابات، ثم اعتمد الاختبار أو ارجع للتعديل.</p>
+                </div>
+                <button type="button" onClick={() => setPreviewDraft(null)} className="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-slate-300 transition hover:bg-white/10">إغلاق</button>
+              </div>
+              <div className="grid shrink-0 grid-cols-2 gap-3 border-b border-white/10 p-4 sm:grid-cols-4 sm:px-7">
+                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">العنوان</span><strong className="mt-1 block truncate text-sm">{previewDraft.title}</strong></div>
+                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">عدد الأسئلة</span><strong className="mt-1 block text-lg text-violet-300">{previewDraft.questions.length}</strong></div>
+                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">اختيار من متعدد</span><strong className="mt-1 block text-lg text-cyan-300">{previewDraft.questions.filter(q => q.type === 'mcq').length}</strong></div>
+                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">مقالي / صح وخطأ</span><strong className="mt-1 block text-lg text-amber-300">{previewDraft.questions.filter(q => q.type !== 'mcq').length}</strong></div>
+              </div>
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-7">
+                {previewDraft.questions.map((question, index) => {
+                  const hasAnswer = question.type === 'essay' || (typeof question.correctIndex === 'number' && question.correctIndex >= 0 && (question.type !== 'mcq' || Boolean(question.options?.[question.correctIndex]?.trim())));
+                  return (
+                    <article key={question.id || index} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-violet-400/40">
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-500/20 text-xs font-black text-violet-200">{index + 1}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-white/[0.07] px-2.5 py-1 text-[10px] font-bold text-slate-300">{question.type === 'mcq' ? 'اختيار من متعدد' : question.type === 'tf' ? 'صح / خطأ' : 'مقالي'}</span>
+                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${hasAnswer ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>{hasAnswer ? 'إجابة مؤكدة' : 'يحتاج مراجعة'}</span>
+                          </div>
+                          <p className="whitespace-pre-wrap text-sm font-bold leading-7 text-white">{question.text}</p>
+                          {question.type === 'mcq' && <div className="mt-3 grid gap-2 sm:grid-cols-2">{(question.options || []).map((option, optionIndex) => <div key={optionIndex} className={`rounded-xl border px-3 py-2 text-xs ${optionIndex === question.correctIndex ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200' : 'border-white/10 bg-black/10 text-slate-300'}`}><span className="ml-1 font-black">{String.fromCharCode(65 + optionIndex)}.</span>{option || 'خيار فارغ'}</div>)}</div>}
+                          {question.explanation && <p className="mt-3 border-t border-white/10 pt-3 text-xs leading-6 text-slate-400">الشرح: {question.explanation}</p>}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-white/10 bg-black/15 p-4 sm:flex-row sm:justify-between sm:px-7">
+                <button type="button" onClick={() => setPreviewDraft(null)} className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-black text-slate-200 transition hover:bg-white/10">العودة للتعديل</button>
+                <button type="button" onClick={async () => { const draft = previewDraft; const saved = await handlePublishQuiz(draft.questions, { title: draft.title, description: draft.description }, { skipPreview: true }); if (saved) setPreviewDraft(null); }} disabled={isSaving} className="rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-violet-600/25 transition hover:brightness-110 disabled:opacity-50">اعتماد وحفظ الاختبار</button>
+              </div>
+            </div>
+          </div>
+        </OverlayPortal>
+      )}
       {showResumeExtractedDraft && pendingExtractedDraft && (
         <OverlayPortal>
           <div className="fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-md" role="dialog" aria-modal="true" dir={isAr ? 'rtl' : 'ltr'}>

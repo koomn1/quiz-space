@@ -22,7 +22,7 @@ describe('service worker update contract', () => {
   });
 
   it('versions profile asset caches and precaches the current avatar set', () => {
-    expect(workerSource).toContain("const CACHE_VERSION = 'v3'");
+    expect(workerSource).toContain("const CACHE_VERSION = 'v4'");
     expect(workerSource).toContain('avatar-boy-football-analyst-v2.webp');
     expect(workerSource).toContain('avatar-girl-astronomy-v2.webp');
   });

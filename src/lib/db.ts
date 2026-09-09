@@ -4,7 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { Quiz, QuizCompletion, UserStats, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, PdfExportRecord, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab } from '../types';
+import { Quiz, QuizCompletion, UserStats, Question, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, PdfExportRecord, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, normalizeBadgeColor, normalizeBadgeTier, normalizeNameColor, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
 import { resolveProfileImageUrl } from '../constants/profileAssets';

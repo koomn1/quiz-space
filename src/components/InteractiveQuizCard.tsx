@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Quiz } from '../types';
-import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet, Printer, ChevronDown } from 'lucide-react';
+import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet, Printer, ChevronDown, Eye, CheckCircle2 } from 'lucide-react';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag } from './PremiumNameTag';
 import ParallaxTiltCard from './ParallaxTiltCard';
@@ -52,6 +52,7 @@ export function InteractiveQuizCard({
   const [attemptsOpen, setAttemptsOpen] = useState(false);
   const [attemptsLoading, setAttemptsLoading] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const downloadPdf = async () => {
     setExportMenuOpen(false);
@@ -94,13 +95,13 @@ export function InteractiveQuizCard({
     const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
     const questionsHtml = questions.map((question, index) => {
       const options = Array.isArray(question.options) && question.options.length
-        ? `<ol class="options" type="A">${question.options.map((option) => `<li>${escapeHtml(option)}</li>`).join('')}</ol>`
-        : '<div class="answer-line"></div>';
-      return `<section class="question"><h2>${index + 1}. ${escapeHtml(question.text)}</h2>${options}</section>`;
+        ? `<table class="options-table"><tbody>${question.options.map((option, optionIndex) => `<tr><td class="choice-box">□</td><td class="choice-label">${String.fromCharCode(65 + optionIndex)}.</td><td>${escapeHtml(option)}</td></tr>`).join('')}</tbody></table>`
+        : '<div class="answer-area"><span>إجابة الطالب / Student answer</span></div>';
+      return `<table class="question-table"><tbody><tr><td class="question-number">${index + 1}</td><td><div class="question-text">${escapeHtml(question.text)}</div>${options}</td></tr></tbody></table>`;
     }).join('');
     const html = `<!doctype html><html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${escapeHtml(quiz.title)}</title><style>
-      *{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#111827;max-width:850px;margin:0 auto;padding:36px;line-height:1.7}h1{font-size:26px;margin:0 0 8px;color:#312e81}p{color:#475569;margin:0 0 28px}.question{break-inside:avoid;border-bottom:1px solid #e2e8f0;padding:18px 0}.question h2{font-size:17px;margin:0 0 10px}.options{margin:0;padding-inline-start:28px}.options li{padding:4px 0}.answer-line{height:70px;border-bottom:1px solid #94a3b8;margin-top:16px}@media print{body{padding:0;max-width:none}.question{break-inside:avoid}}
-    </style></head><body><h1>${escapeHtml(quiz.title)}</h1><p>${escapeHtml(quiz.description)}</p>${questionsHtml}</body></html>`;
+      *{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#111827;max-width:900px;margin:0 auto;padding:28px;line-height:1.65;background:#fff}header{border-bottom:3px solid #4f46e5;padding-bottom:18px;margin-bottom:18px}h1{font-size:26px;margin:0 0 5px;color:#312e81}p{color:#475569;margin:0 0 18px}.meta{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:16px 0 22px}.meta div{border:1px solid #cbd5e1;border-radius:8px;min-height:42px;padding:8px 10px;font-size:12px;color:#475569}.meta strong{color:#111827;display:block;font-size:10px;margin-bottom:3px}.question-table{width:100%;border-collapse:separate;border-spacing:0;margin:0 0 14px;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;break-inside:avoid}.question-table td{vertical-align:top}.question-number{width:42px;background:#eef2ff;color:#3730a3;font-size:18px;font-weight:bold;text-align:center;padding:14px 8px;border-left:1px solid #cbd5e1}.question-text{font-size:15px;font-weight:bold;padding:13px 14px 8px}.options-table{width:100%;border-collapse:collapse;margin:0 14px 13px;width:calc(100% - 28px);font-size:12px}.options-table td{border:1px solid #e2e8f0;padding:7px 8px}.choice-box{width:26px;text-align:center;font-size:18px}.choice-label{width:28px;color:#4f46e5;font-weight:bold}.answer-area{height:88px;border:1px dashed #94a3b8;border-radius:7px;margin:4px 14px 14px;padding:9px;color:#94a3b8;font-size:11px}.footer-note{margin-top:18px;text-align:center;font-size:10px;color:#94a3b8}@media print{body{padding:0;max-width:none}.question-table{break-inside:avoid}header{margin-top:0}.meta div{min-height:38px}}
+    </style></head><body><header><h1>${escapeHtml(quiz.title)}</h1><p>${escapeHtml(quiz.description || '')}</p></header><section class="meta"><div><strong>اسم الطالب / Student name</strong></div><div><strong>الدرجة / Score</strong></div><div><strong>التاريخ / Date</strong></div></section>${questionsHtml}<p class="footer-note">Quiz Space · ${questions.length} questions</p></body></html>`;
 
     let printed = false;
     const printWhenReady = () => {
@@ -182,6 +183,25 @@ export function InteractiveQuizCard({
     document.body,
   ) : null;
 
+  const previewPanel = previewOpen && typeof document !== 'undefined' ? createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onClick={() => setPreviewOpen(false)} role="dialog" aria-modal="true" aria-labelledby={`quiz-preview-title-${quiz.id}`}>
+      <div className="max-h-[min(760px,92vh)] w-full max-w-2xl overflow-hidden rounded-[28px] border border-violet-200 bg-white shadow-2xl dark:border-violet-500/20 dark:bg-slate-950" onClick={(event) => event.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-violet-50 to-indigo-50 px-5 py-4 dark:border-slate-800 dark:from-violet-950/40 dark:to-indigo-950/30">
+          <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-600 dark:text-violet-300">{isAr ? 'معاينة الاختبار' : 'Quiz preview'}</p><h3 id={`quiz-preview-title-${quiz.id}`} className="mt-1 text-lg font-black text-slate-900 dark:text-white">{quiz.title}</h3></div>
+          <button type="button" onClick={() => setPreviewOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-white/70 dark:hover:bg-slate-800" aria-label={isAr ? 'إغلاق المعاينة' : 'Close preview'}><X className="h-5 w-5" /></button>
+        </div>
+        <div className="max-h-[calc(min(760px,92vh)-80px)] overflow-y-auto p-5">
+          <div className="mb-5 grid grid-cols-3 gap-2 text-center"><div className="rounded-2xl bg-violet-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'الأسئلة' : 'Questions'}</p><p className="mt-1 text-lg font-black text-violet-600">{quiz.questions.length}</p></div><div className="rounded-2xl bg-amber-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'التقييم' : 'Rating'}</p><p className="mt-1 text-lg font-black text-amber-600">{quiz.ratingsCount ? `${quiz.avgRating} ★` : '—'}</p></div><div className="rounded-2xl bg-emerald-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'المحاولات' : 'Plays'}</p><p className="mt-1 text-lg font-black text-emerald-600">{quiz.totalPlays || 0}</p></div></div>
+          {quiz.description && <p className="mb-5 rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-600 dark:bg-slate-900 dark:text-slate-300">{quiz.description}</p>}
+          <div className="space-y-3">{quiz.questions.slice(0, 3).map((question, index) => <div key={question.id || index} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800"><div className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-xs font-black text-white">{index + 1}</span><div className="min-w-0 flex-1"><p className="font-bold leading-7 text-slate-800 dark:text-slate-100">{question.text}</p>{Array.isArray(question.options) && question.options.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2">{question.options.slice(0, 4).map((option, optionIndex) => <span key={`${option}-${optionIndex}`} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-300"><span className="font-black text-violet-500">{String.fromCharCode(65 + optionIndex)}</span>{option}</span>)}</div>}{question.type === 'essay' && <span className="mt-3 inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-1 text-[10px] font-black text-amber-600"><CheckCircle2 className="h-3 w-3" />{isAr ? 'سؤال مقالي' : 'Essay question'}</span>}</div></div></div>)}</div>
+          {quiz.questions.length > 3 && <p className="mt-4 text-center text-xs font-bold text-slate-500">{isAr ? `تظهر أول 3 أسئلة فقط في المعاينة — إجمالي ${quiz.questions.length} سؤالاً.` : `Showing the first 3 questions — ${quiz.questions.length} questions total.`}</p>}
+          <button type="button" onClick={() => { setPreviewOpen(false); onStartQuiz(quiz.id); }} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-violet-500 py-3.5 text-sm font-black text-white shadow-lg shadow-primary/20"><Play className="h-4 w-4 fill-white" />{isAr ? 'ابدأ الاختبار الآن' : 'Start quiz now'}</button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  ) : null;
+
   if (view === 'list') {
     return (
       <>
@@ -256,7 +276,8 @@ export function InteractiveQuizCard({
           </button>
           {exportMenuOpen && (
             <div className="absolute end-0 bottom-full mb-2 z-[90] w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
-              <button type="button" onClick={downloadPdf} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تحويل إلى PDF' : 'Export to PDF'}</button>
+              <button type="button" onClick={() => { setExportMenuOpen(false); setPreviewOpen(true); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Eye className="h-4 w-4 text-violet-500" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
+              <button type="button" onClick={downloadPdf} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تصدير PDF احترافي' : 'Export professional PDF'}</button>
               <button type="button" onClick={() => { setExportMenuOpen(false); printQuiz(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
             </div>
           )}
@@ -311,6 +332,7 @@ export function InteractiveQuizCard({
         </div>
       </ParallaxTiltCard>
       {attemptsPanel}
+    {previewPanel}
       </>
     );
   }
@@ -459,7 +481,8 @@ export function InteractiveQuizCard({
           </button>
           {exportMenuOpen && (
             <div className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
-              <button type="button" onClick={downloadPdf} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تحويل إلى PDF' : 'Export to PDF'}</button>
+              <button type="button" onClick={() => { setExportMenuOpen(false); setPreviewOpen(true); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Eye className="h-4 w-4 text-violet-500" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
+              <button type="button" onClick={downloadPdf} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تصدير PDF احترافي' : 'Export professional PDF'}</button>
               <button type="button" onClick={() => { setExportMenuOpen(false); printQuiz(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
             </div>
           )}
@@ -478,6 +501,7 @@ export function InteractiveQuizCard({
       </div>
     </ParallaxTiltCard>
     {attemptsPanel}
+    {previewPanel}
     </>
   );
 }

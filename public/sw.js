@@ -1,9 +1,17 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
+const APP_CACHE = `quiz-space-app-${CACHE_VERSION}`;
 const VIDEO_CACHE = `quiz-space-videos-${CACHE_VERSION}`;
 const PROFILE_ASSET_CACHE = `quiz-space-profile-assets-${CACHE_VERSION}`;
 const APP_PATH = new URL('./', self.registration.scope).pathname.replace(/\/$/, '');
 const appAsset = (path) => `${APP_PATH}${path}`;
 const DEFAULT_CLASSROOMS_URL = `${APP_PATH}/#/classrooms`;
+const APP_SHELL = [
+  appAsset('/'),
+  appAsset('/index.html'),
+  appAsset('/manifest.webmanifest'),
+  appAsset('/brand/quizspace-icon-192.webp'),
+  appAsset('/brand/quizspace-logo-512.webp'),
+];
 const VIDEOS_TO_PRECACHE = [
   appAsset('/videos/splash-intro.mp4'),
   appAsset('/videos/splash-desktop.mp4'),
@@ -55,6 +63,7 @@ async function cacheProfileAssets() {
 
 self.addEventListener('install', (event) => {
   event.waitUntil(Promise.all([
+    caches.open(APP_CACHE).then((cache) => cache.addAll(APP_SHELL).catch(() => {/* keep install non-fatal */})),
     caches.open(VIDEO_CACHE).then((cache) =>
       cache.addAll(VIDEOS_TO_PRECACHE).catch(() => {/* non-fatal */})
     ),
@@ -67,6 +76,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => Promise.all(
       keys
         .filter((key) => (
+          (key.startsWith('quiz-space-app-') && key !== APP_CACHE) ||
           (key.startsWith('quiz-space-videos-') && key !== VIDEO_CACHE) ||
           (key.startsWith('quiz-space-profile-assets-') && key !== PROFILE_ASSET_CACHE)
         ))
@@ -77,21 +87,41 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
   const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) return;
+
+  const isNavigation = event.request.mode === 'navigate';
   const isVideo = requestUrl.pathname.includes('/videos/') && /\.(mp4|webm)$/i.test(requestUrl.pathname);
   const isProfileAsset = requestUrl.pathname.includes('/clean-assets-replacement/') && /\.(webp|png|jpe?g)$/i.test(requestUrl.pathname);
-  if (!isVideo && !isProfileAsset) return;
+  const isStaticAsset = /\/(assets|brand|images|backgrounds|showcase|covers)\//.test(requestUrl.pathname) || requestUrl.pathname.endsWith('/manifest.webmanifest');
 
-  const cacheName = isProfileAsset ? PROFILE_ASSET_CACHE : VIDEO_CACHE;
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        if (response.ok) caches.open(APP_CACHE).then((cache) => cache.put(appAsset('/index.html'), response.clone())).catch(() => {});
+        return response;
+      }).catch(async () => {
+        const cache = await caches.open(APP_CACHE);
+        return (await cache.match(appAsset('/index.html'))) || (await cache.match(appAsset('/'))) || Response.error();
+      })
+    );
+    return;
+  }
+
+  if (!isVideo && !isProfileAsset && !isStaticAsset) return;
+  const cacheName = isProfileAsset ? PROFILE_ASSET_CACHE : isVideo ? VIDEO_CACHE : APP_CACHE;
   event.respondWith(
     caches.open(cacheName).then(async (cache) => {
       const cached = await cache.match(event.request, { ignoreSearch: true });
       if (cached) return cached;
-      const response = await fetch(event.request);
-      if (response.ok) {
-        cache.put(event.request, response.clone()).catch(() => {/* storage quota */});
+      try {
+        const response = await fetch(event.request);
+        if (response.ok) cache.put(event.request, response.clone()).catch(() => {});
+        return response;
+      } catch {
+        return cached || Response.error();
       }
-      return response;
     })
   );
 });

@@ -4,7 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie
 } from 'recharts';
 import { 
-  Activity, TrendingUp, Users, Award, BookOpen, Clock, BarChart3, CheckCircle2, Star, Calendar, RefreshCw, ChevronRight, Play, GraduationCap, Flame, Sparkles
+  Activity, TrendingUp, Users, Award, BookOpen, Clock, BarChart3, CheckCircle2, Star, Calendar, RefreshCw, ChevronRight, Play, GraduationCap, Flame, Sparkles, Target, ShieldCheck
 } from 'lucide-react';
 
 interface AnalyticsDashboardProps {
@@ -94,6 +94,32 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
   }));
 
   const COLORS = ['#6366f1', '#a855f7', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'];
+
+  const teacherQuizPerformance = myCreatedQuizzes.map((quiz) => {
+    const attempts = globalPlaysOnMyQuizzes.filter((completion) => completion.quizId === quiz.id);
+    const validAttempts = attempts.filter((completion) => completion.totalQuestions > 0);
+    const averageAccuracy = validAttempts.length > 0
+      ? Math.round(validAttempts.reduce((sum, completion) => sum + (completion.score / completion.totalQuestions) * 100, 0) / validAttempts.length)
+      : 0;
+    const passRate = validAttempts.length > 0
+      ? Math.round((validAttempts.filter((completion) => completion.score / completion.totalQuestions >= 0.5).length / validAttempts.length) * 100)
+      : 0;
+    return {
+      quiz,
+      attempts,
+      studentCount: new Set(attempts.map((completion) => completion.takerId).filter(Boolean)).size,
+      averageAccuracy,
+      passRate,
+      bestAccuracy: validAttempts.length > 0 ? Math.max(...validAttempts.map((completion) => Math.round((completion.score / completion.totalQuestions) * 100))) : 0,
+    };
+  });
+  const totalTeacherAttempts = teacherQuizPerformance.reduce((sum, item) => sum + item.attempts.length, 0);
+  const totalTeacherStudents = new Set(globalPlaysOnMyQuizzes.map((completion) => completion.takerId).filter(Boolean)).size;
+  const teacherAverageAccuracy = teacherQuizPerformance.filter((item) => item.attempts.length > 0).length > 0
+    ? Math.round(teacherQuizPerformance.filter((item) => item.attempts.length > 0).reduce((sum, item) => sum + item.averageAccuracy, 0) / teacherQuizPerformance.filter((item) => item.attempts.length > 0).length)
+    : 0;
+  const hardestTeacherQuiz = [...teacherQuizPerformance].filter((item) => item.attempts.length > 0).sort((a, b) => a.averageAccuracy - b.averageAccuracy)[0];
+  const mostEngagedTeacherQuiz = [...teacherQuizPerformance].sort((a, b) => b.attempts.length - a.attempts.length)[0];
 
   if (isLoading) {
     return (
@@ -507,6 +533,31 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 </div>
 
               </div>
+            )}
+
+            {myCreatedQuizzes.length > 0 && (
+              <section className="space-y-5 rounded-[28px] border border-indigo-200/80 bg-gradient-to-br from-indigo-50/80 via-white to-violet-50/70 p-5 shadow-sm dark:border-indigo-500/20 dark:from-indigo-950/40 dark:via-slate-950/60 dark:to-violet-950/30 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-300"><Target className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">{isAr ? 'قراءة المدرّس' : 'Teacher intelligence'}</span></div>
+                    <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-white">{isAr ? 'أين يحتاج طلابك إلى دعم؟' : 'Where do your students need support?'}</h3>
+                  </div>
+                  <span className="rounded-xl bg-white/80 px-3 py-2 text-xs font-black text-indigo-700 shadow-sm dark:bg-slate-950/70 dark:text-indigo-300">{totalTeacherStudents} {isAr ? 'طلاب فريدون' : 'unique students'}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {[
+                    { label: isAr ? 'متوسط دقة الطلاب' : 'Student accuracy', value: `${teacherAverageAccuracy}%`, icon: <ShieldCheck className="h-4 w-4 text-emerald-500" /> },
+                    { label: isAr ? 'إجمالي المحاولات' : 'Total attempts', value: totalTeacherAttempts, icon: <Users className="h-4 w-4 text-violet-500" /> },
+                    { label: isAr ? 'يحتاج مراجعة' : 'Needs review', value: hardestTeacherQuiz?.quiz.title || (isAr ? 'لا توجد بيانات' : 'No data'), icon: <Target className="h-4 w-4 text-amber-500" /> },
+                  ].map((item) => <div key={item.label} className="rounded-2xl border border-white/80 bg-white/80 p-4 dark:border-slate-800/80 dark:bg-slate-950/50"><div className="flex items-center gap-2 text-[10px] font-black text-slate-500 dark:text-slate-400">{item.icon}{item.label}</div><p className="mt-2 truncate text-base font-black text-slate-900 dark:text-white" title={String(item.value)}>{item.value}</p></div>)}
+                </div>
+                <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-950/60">
+                  <table className="w-full min-w-[640px] text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
+                    <thead><tr className="border-b border-slate-100 bg-slate-50/80 text-[10px] font-black text-slate-500 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400"><th className="px-4 py-3">{isAr ? 'الاختبار' : 'Quiz'}</th><th className="px-4 py-3">{isAr ? 'طلاب' : 'Students'}</th><th className="px-4 py-3">{isAr ? 'محاولات' : 'Attempts'}</th><th className="px-4 py-3">{isAr ? 'الدقة' : 'Accuracy'}</th><th className="px-4 py-3">{isAr ? 'الاجتياز' : 'Pass rate'}</th></tr></thead>
+                    <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700 dark:divide-slate-800 dark:text-slate-200">{teacherQuizPerformance.map((item) => <tr key={item.quiz.id} className="transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20"><td className="max-w-[230px] truncate px-4 py-3" title={item.quiz.title}>{item.quiz.title}</td><td className="px-4 py-3 font-mono">{item.studentCount}</td><td className="px-4 py-3 font-mono">{item.attempts.length}</td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 font-mono ${item.averageAccuracy < 50 ? 'bg-rose-500/10 text-rose-600' : item.averageAccuracy < 80 ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>{item.averageAccuracy}%</span></td><td className="px-4 py-3 font-mono">{item.passRate}%</td></tr>)}</tbody>
+                  </table>
+                </div>
+              </section>
             )}
 
             {/* AUTHORING QUIZZES LOG */}
