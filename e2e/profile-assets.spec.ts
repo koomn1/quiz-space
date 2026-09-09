@@ -77,7 +77,7 @@ test.describe('published profile asset delivery', () => {
         const timeout = window.setTimeout(() => resolve({ active: true, count: 0 }), 60_000);
         channel.port1.onmessage = async () => {
           window.clearTimeout(timeout);
-          const cache = await caches.open('quiz-space-profile-assets-v3');
+          const cache = await caches.open('quiz-space-profile-assets-v4');
           resolve({ active: true, count: (await cache.keys()).length });
         };
         active.postMessage({ type: 'PRECACHE_PROFILE_ASSETS' }, [channel.port2]);
@@ -86,7 +86,7 @@ test.describe('published profile asset delivery', () => {
     expect(cacheState).toEqual({ active: true, count: assetNames.length });
 
     const cachedPaths = await page.evaluate(async () => {
-      const cache = await caches.open('quiz-space-profile-assets-v3');
+      const cache = await caches.open('quiz-space-profile-assets-v4');
       const requests = await cache.keys();
       return requests.map((request) => new URL(request.url).pathname);
     });
