@@ -9,12 +9,12 @@
   --font-mono: "JetBrains Mono", monospace;
   
   /* Dynamic Theme Colors mapping to CSS Variables */
-  --color-primary: var(--theme-primary, #7c3aed);
-  --color-primary-hover: var(--theme-primary-hover, #6d28d9);
-  --color-primary-light: var(--theme-primary-light, #f3e8ff);
-  --color-primary-dark: var(--theme-primary-dark, #4c1d95);
-  --color-gradient-from: var(--theme-gradient-from, #7c3aed);
-  --color-gradient-to: var(--theme-gradient-to, #c084fc);
+  --color-primary: var(--theme-primary, #0f6b4f);
+  --color-primary-hover: var(--theme-primary-hover, #064b37);
+  --color-primary-light: var(--theme-primary-light, #CDFC8A);
+  --color-primary-dark: var(--theme-primary-dark, #022E21);
+  --color-gradient-from: var(--theme-gradient-from, #CDFC8A);
+  --color-gradient-to: var(--theme-gradient-to, #0f6b4f);
 
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-bounce-subtle: bounce-subtle 1.5s ease-in-out infinite;
@@ -66,14 +66,14 @@
 
 html, body {
   font-family: var(--font-sans);
-  background-color: #f8fafc;
-  direction: rtl; /* Setting text direction to Arabic by default */
-  color: #0f172a;
+  background-color: #f7fbe9;
+  direction: rtl;
+  color: #022E21;
 }
 
 html.dark, body.dark {
-  background-color: #020617; /* Deeper dark mode */
-  color: #f8fafc;
+  background-color: #022E21;
+  color: #f3fbe5;
 }
 
 /* Cinematic Theme Toggle Transition - Ensures gorgeous, lag-free smooth fade on all components */
@@ -126,7 +126,7 @@ a {
   color: transparent;
 }
 .text-gradient-cosmic {
-  background: linear-gradient(135deg, #7C3AED, #A855F7, #C084FC, #7C3AED);
+  background: linear-gradient(135deg, #022E21, #0f6b4f, #CDFC8A, #022E21);
   background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -201,7 +201,7 @@ a {
   border-radius: inherit;
   background: radial-gradient(
     300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(124, 58, 237, 0.08),
+    rgba(15, 107, 79, 0.08),
     transparent 40%
   );
   opacity: 0;
@@ -213,7 +213,7 @@ a {
 .dark .glass-panel::before, .dark .glass-card::before {
   background: radial-gradient(
     300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(139, 92, 246, 0.15),
+    rgba(205, 252, 138, 0.15),
     transparent 40%
   );
 }

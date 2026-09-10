@@ -22,7 +22,9 @@ const COSMO_AVATAR = profileAssetUrl('avatars/cosmo-cartoon.webp');
 
 const ASSISTANT_NAME_AR = 'Cosmo AI';
 const ASSISTANT_NAME_EN = 'Cosmo AI';
-const ACCENT = '#10a37f';
+const ACCENT = '#0f6b4f';
+const LIME = '#CDFC8A';
+const TEAL = '#022E21';
 const COSMO_QUIZ_MIN_COUNT = 3;
 const COSMO_QUIZ_MAX_COUNT = 100;
 const COSMO_QUIZ_BATCH_SIZE = 25;
@@ -154,8 +156,8 @@ function usePalette(darkMode: boolean) {
       SUBTLE_TEXT: '#6b6b76',
       OVERLAY_BG: '#2f2f2f',
       OVERLAY_BACKDROP: 'rgba(10,10,10,0.75)',
-      SEND_IDLE: '#10a37f',
-      SEND_ACTIVE_FG: '#212121',
+      SEND_IDLE: '#0f6b4f',
+      SEND_ACTIVE_FG: '#CDFC8A',
       SCROLL_THUMB: 'rgba(255,255,255,0.1)',
       SCROLL_THUMB_HOVER: 'rgba(255,255,255,0.18)',
       INPUT_BG: '#363636',
@@ -175,8 +177,8 @@ function usePalette(darkMode: boolean) {
     SUBTLE_TEXT: '#a1a1aa',
     OVERLAY_BG: '#ffffff',
     OVERLAY_BACKDROP: 'rgba(247,247,248,0.8)',
-    SEND_IDLE: '#10a37f',
-    SEND_ACTIVE_FG: '#ffffff',
+    SEND_IDLE: '#0f6b4f',
+    SEND_ACTIVE_FG: '#022E21',
     SCROLL_THUMB: 'rgba(0,0,0,0.12)',
     SCROLL_THUMB_HOVER: 'rgba(0,0,0,0.2)',
     INPUT_BG: '#ffffff',
@@ -470,10 +472,9 @@ function StreamingRow({ text, theme }: { text: string; theme: Palette }) {
 }
 
 /* ─── Thinking row: Libraries.dev Orb with all nine activity states ─── */
-function ThinkingRow({ isAr, theme }: { isAr: boolean; theme: Palette }) {
+function ThinkingRow({ isAr, theme, state = 'working' }: { isAr: boolean; theme: Palette; state?: OrbState }) {
   const rowRef = useRef<HTMLDivElement>(null);
-  const [orbState, setOrbState] = useState<OrbState>('working');
-  const orbStates: OrbState[] = ['working', 'searching', 'solving', 'listening', 'connecting', 'weaving', 'composing', 'breathing', 'shaping'];
+  const orbState = state;
   const labels: Record<OrbState, { ar: string; en: string }> = {
     working: { ar: 'كوزمو بيشتغل على طلبك...', en: 'Cosmo is working on your request...' },
     searching: { ar: 'كوزمو بيدوّر على المعلومات...', en: 'Cosmo is searching for information...' },
@@ -488,8 +489,7 @@ function ThinkingRow({ isAr, theme }: { isAr: boolean; theme: Palette }) {
   useEffect(() => {
     if (!rowRef.current) return;
     gsap.from(rowRef.current, { y: 18, opacity: 0, duration: 0.4, ease: 'power3.out' });
-    const id = window.setInterval(() => setOrbState(current => orbStates[(orbStates.indexOf(current) + 1) % orbStates.length]), 1450);
-    return () => window.clearInterval(id);
+    return undefined;
   }, []);
   return (
     <div ref={rowRef} className="flex items-start gap-4">
@@ -568,10 +568,12 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [isQuizGenerationError, setIsQuizGenerationError] = useState(false);
   const [quickSuggestions, setQuickSuggestions] = useState<QuickSuggestion[]>([]);
+  const [activityState, setActivityState] = useState<OrbState>('working');
 
   // Sidebar & Conversations
   const [conversations, setConversations] = useState<AIChatConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const draftKey = activeConversationId ? `${localChatKey(userId)}-draft-${activeConversationId}` : `${localChatKey(userId)}-draft-new`;
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' ? true : window.innerWidth >= 768);
   const [convSearchQuery, setConvSearchQuery] = useState('');
   const [renamingConvId, setRenamingConvId] = useState<string | null>(null);
@@ -614,6 +616,34 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       })));
     })();
   }, [activeConversationId, userId]);
+
+  /* Restore and persist drafts independently from sent messages. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try { setInputText(localStorage.getItem(draftKey) || ''); } catch { setInputText(''); }
+    requestAnimationFrame(() => { if (textareaRef.current) textareaRef.current.style.height = 'auto'; });
+  }, [draftKey]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const timer = window.setTimeout(() => {
+      try {
+        if (inputText.trim()) localStorage.setItem(draftKey, inputText);
+        else localStorage.removeItem(draftKey);
+      } catch { /* storage can be unavailable */ }
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [draftKey, inputText]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (sidebarRef.current && !sidebarRef.current.contains(target)) setSidebarOpen(false);
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  }, [sidebarOpen]);
 
   /* auto-scroll */
   useEffect(() => {
@@ -717,6 +747,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       const aiMsgId = (Date.now() + 1).toString();
       const wantsWebSearch = /(?:ابحث|بحث|على الإنترنت|علي الانترنت|آخر الأخبار|اخر الاخبار|مصادر|search|research|latest news|on the web)/i.test(trimmed);
       let promptForCosmo = trimmed;
+      setActivityState(wantsWebSearch ? 'searching' : 'solving');
       if (wantsWebSearch) {
         try {
           const web = await searchCosmoWeb(trimmed);
@@ -738,6 +769,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
           attachment: selectedAttachment ? { data: selectedAttachment.data, mimeType: selectedAttachment.mimeType, name: selectedAttachment.name, kind: selectedAttachment.kind } : undefined,
         },
         (_delta, fullTextSoFar) => {
+          setActivityState('composing');
           setStreamingText(fullTextSoFar);
         }
       );
@@ -769,6 +801,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       if (userId && currentConvId) await saveAIChatMessage(userId, 'cosmo', fullText, false, currentConvId);
       setLastError(null);
       setIsQuizGenerationError(false);
+      try { localStorage.removeItem(draftKey); } catch { /* storage can be unavailable */ }
     } catch (err) {
       console.error(err);
       setLastError(isAr ? 'للأسف حصل خطأ في الاتصال. اضغط على الزرار عشان نعيد المحاولة.' : 'Connection failed — tap the button to retry.');
@@ -1054,8 +1087,10 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
         </div>
       </aside>
 
+      {sidebarOpen && <button aria-label={isAr ? 'إغلاق القائمة' : 'Close sidebar'} onClick={() => setSidebarOpen(false)} className="absolute inset-0 z-20 bg-black/20 md:hidden" />}
+
       {/* ── Main ── */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10">
 
         {/* top bar */}
         <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b" style={{ borderColor: theme.BORDER_SOFT }}>
@@ -1166,7 +1201,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                 </div>
               )}
 
-              {isAnalyzing && (streamingText ? <StreamingRow text={streamingText} theme={theme} /> : <ThinkingRow isAr={isAr} theme={theme} />)}
+              {isAnalyzing && (streamingText ? <StreamingRow text={streamingText} theme={theme} /> : <ThinkingRow isAr={isAr} theme={theme} state={activityState} />)}
 
               {lastError && !isAnalyzing && (
                 <div className="flex flex-col items-center gap-2 py-3">
