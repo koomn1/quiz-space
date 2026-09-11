@@ -44,6 +44,7 @@ const OPENROUTER_TEXT_FALLBACKS = [
 ];
 const OPENROUTER_STREAM_TEXT_MODELS = [
   OPENROUTER_TEXT_MODEL,
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
   ...OPENROUTER_TEXT_FALLBACKS,
 ];
 const OPENROUTER_VISION_FALLBACKS = [
@@ -472,7 +473,7 @@ export async function callOpenRouterWithParallelAnswerReviewFallback(
   }
 }
 
-async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000, maxOutputTokens = 300): Promise<string> {
+async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000, maxOutputTokens = 300, responseMimeType = 'application/json'): Promise<string> {
   if (!env.GEMINI_API_KEY) throw new AiProviderError('provider_error', 'gemini', 'gemini-3.6-flash');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -483,7 +484,11 @@ async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts }],
-        generationConfig: { temperature: 0, maxOutputTokens, responseMimeType: 'application/json' },
+        generationConfig: {
+          temperature: responseMimeType === 'application/json' ? 0 : 0.7,
+          maxOutputTokens,
+          ...(responseMimeType ? { responseMimeType } : {}),
+        },
       }),
     });
     if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'gemini', 'gemini-3.6-flash', response.status);
@@ -500,7 +505,7 @@ async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000
   }
 }
 async function callGeminiJson(env: Env, prompt: string, timeoutMs = 8_000): Promise<string> {
-  return callGeminiJsonWithParts(env, [{ text: prompt }], timeoutMs, 300);
+  return callGeminiJsonWithParts(env, [{ text: prompt }], timeoutMs, 300, 'application/json');
 }
 
 async function extractPowerPointText(data: Uint8Array): Promise<string> {
@@ -1025,6 +1030,8 @@ ${extraInstruction}`;
       if (isAnswerReviewRequest && expectedAnswerCount === undefined) return json({ error: 'Invalid answer-review contract' }, 400, headers);
       const allowedModels = [
         OPENROUTER_TEXT_MODEL,
+        'nvidia/nemotron-3-ultra-550b-a55b:free',
+        'nvidia/nemotron-3-ultra-550b-a55b',
         OPENROUTER_VISION_MODEL,
         'nvidia/nemotron-3-super-120b-a12b:free',
         'z-ai/glm-5.2:free',
@@ -1050,7 +1057,7 @@ ${extraInstruction}`;
         ? (hasAttachment ? OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS : OPENROUTER_ANSWER_REVIEW_FALLBACKS)
         : hasAttachment
           ? OPENROUTER_VISION_FALLBACKS
-          : (allowedModels.includes(body.model) ? [body.model, ...OPENROUTER_TEXT_FALLBACKS] : OPENROUTER_TEXT_FALLBACKS);
+          : (allowedModels.includes(body.model) ? [body.model, 'nvidia/nemotron-3-ultra-550b-a55b:free', ...OPENROUTER_TEXT_FALLBACKS] : ['nvidia/nemotron-3-ultra-550b-a55b:free', ...OPENROUTER_TEXT_FALLBACKS]);
       aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat';
       aiProvider = 'openrouter';
       let text: string;
@@ -1084,9 +1091,14 @@ ${extraInstruction}`;
           text = await callOpenRouterWithFallback(env, messages, models, undefined, undefined);
         }
       } catch (openRouterError) {
-        // Do not fall back to a different provider. OpenRouter already tries
-        // multiple models and preserves one telemetry provider label.
-        throw openRouterError;
+        if (!isAnswerReview && env.GEMINI_API_KEY) {
+          console.warn('Cosmo OpenRouter failed; falling back to Gemini:', openRouterError);
+          text = await callGeminiJsonWithParts(env, [{ text: `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\nUser: ${body.prompt}` }], 30_000, 4_000, 'text/plain');
+          aiProvider = 'gemini';
+          aiModel = 'gemini-3.6-flash';
+        } else {
+          throw openRouterError;
+        }
       }
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {
