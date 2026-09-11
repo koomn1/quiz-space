@@ -21,6 +21,8 @@ export interface Env {
   GEMINI_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
+  /** Optional server-only key used only by queue consumers; never sent to clients. */
+  SUPABASE_SERVICE_ROLE_KEY?: string;
   ALLOWED_ORIGIN: string;
   EXTRACTION_JOBS: {
     send(message: ExtractionQueueMessage): Promise<void>;
@@ -33,7 +35,8 @@ interface WorkerExecutionContext {
 
 interface ExtractionQueueMessage {
   jobId: string;
-  authHeader: string;
+  /** Legacy queue messages may carry a user token; new messages rely on the server key. */
+  authHeader?: string;
   chunkId?: string;
 }
 
@@ -219,7 +222,12 @@ function publicExtractionJob(job: ExtractionJobRow) {
 
 async function enqueueExtractionJob(env: Env, authHeader: string, jobId: string): Promise<void> {
   if (!authHeader.startsWith('Bearer ')) throw new Error('Missing authenticated job token');
-  await env.EXTRACTION_JOBS.send({ jobId, authHeader });
+  // Prefer the server-only key. Until it is configured, retain a temporary
+  // compatibility fallback so existing deployments do not stop processing jobs.
+  await env.EXTRACTION_JOBS.send({
+    jobId,
+    ...(env.SUPABASE_SERVICE_ROLE_KEY ? {} : { authHeader }),
+  });
 }
 
 async function scheduleExtractionJob(env: Env, authHeader: string, jobId: string): Promise<void> {
@@ -1311,15 +1319,18 @@ export default {
     retry: (options?: { delaySeconds?: number }) => void;
   }> }, env: Env): Promise<void> {
     for (const message of batch.messages) {
-      const { jobId, authHeader, chunkId } = message.body || {} as ExtractionQueueMessage;
-      if (!jobId || !authHeader?.startsWith('Bearer ')) {
+      const { jobId, authHeader: queuedAuthHeader, chunkId } = message.body || {} as ExtractionQueueMessage;
+      const workerAuthHeader = env.SUPABASE_SERVICE_ROLE_KEY
+        ? `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`
+        : queuedAuthHeader;
+      if (!jobId || !workerAuthHeader?.startsWith('Bearer ')) {
         console.warn('Discarding malformed extraction queue message.');
         message.ack();
         continue;
       }
       if (chunkId) {
         const attempts = message.attempts || 1;
-        const outcome = await processExtractionJobChunk(env, authHeader, jobId, chunkId, attempts);
+        const outcome = await processExtractionJobChunk(env, workerAuthHeader, jobId, chunkId, attempts);
         if (outcome === 'retry') {
           const delaySeconds = visionChunkRetryDelaySeconds(attempts);
           message.retry({ delaySeconds });
@@ -1328,8 +1339,12 @@ export default {
         message.ack();
         continue;
       }
-      await processExtractionJob(env, authHeader, jobId, async (parentJobId, chunkIds) => {
-        await Promise.all(chunkIds.map(id => env.EXTRACTION_JOBS.send({ jobId: parentJobId, chunkId: id, authHeader })));
+      await processExtractionJob(env, workerAuthHeader, jobId, async (parentJobId, chunkIds) => {
+        await Promise.all(chunkIds.map(id => env.EXTRACTION_JOBS.send({
+          jobId: parentJobId,
+          chunkId: id,
+          ...(env.SUPABASE_SERVICE_ROLE_KEY ? {} : { authHeader: workerAuthHeader }),
+        })));
       });
       message.ack();
     }
