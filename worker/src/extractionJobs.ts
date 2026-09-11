@@ -261,13 +261,21 @@ function generatePrompt(amount: number | null | undefined, customInstruction?: s
 }
 
 function parseJson(text: string): any {
-  let cleaned = text.trim();
-  const objectStart = cleaned.indexOf('{');
-  const arrayStart = cleaned.indexOf('[');
-  const starts = [objectStart, arrayStart].filter(index => index >= 0);
-  if (starts.length) cleaned = cleaned.slice(Math.min(...starts));
-  if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3).trimEnd();
-  return JSON.parse(cleaned);
+  const raw = String(text || '').trim();
+  const candidates = [
+    raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim(),
+    raw,
+  ];
+  for (const candidate of candidates) {
+    try { return JSON.parse(candidate); } catch { /* try the embedded JSON below */ }
+    const starts = [candidate.indexOf('{'), candidate.indexOf('[')].filter(index => index >= 0);
+    for (const start of starts.length ? [Math.min(...starts)] : []) {
+      const embedded = candidate.slice(start).replace(/\s*```$/i, '').trim();
+      try { return JSON.parse(embedded); } catch { /* try next format */ }
+      try { return JSON.parse(embedded.replace(/,\s*([}\]])/g, '$1')); } catch { /* continue */ }
+    }
+  }
+  throw new Error('AI returned invalid JSON.');
 }
 
 function base64FromBytes(bytes: Uint8Array): string {
@@ -302,7 +310,18 @@ function resolveCorrectIndex(raw: any, options: string[], type: 'mcq' | 'tf'): n
 }
 
 function normalizeQuestions(value: unknown): any[] {
-  const source = Array.isArray(value) ? value : Array.isArray((value as any)?.questions) ? (value as any).questions : [];
+  const container: any = value && typeof value === 'object' ? value as any : null;
+  const source = Array.isArray(value)
+    ? value
+    : Array.isArray(container?.questions)
+      ? container.questions
+      : Array.isArray(container?.items)
+        ? container.items
+        : Array.isArray(container?.data)
+          ? container.data
+          : Array.isArray(container?.quiz?.questions)
+            ? container.quiz.questions
+            : [];
   const seen = new Set<string>();
   const questions: any[] = [];
   for (const raw of source) {
@@ -312,13 +331,13 @@ function normalizeQuestions(value: unknown): any[] {
     const key = text.replace(/\s+/g, ' ').toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    const declaredType = String((raw as any).type || '').toLowerCase();
+    const declaredType = String((raw as any).type ?? (raw as any).questionType ?? (raw as any).kind ?? '').toLowerCase();
     const type = declaredType === 'tf' || declaredType === 'true_false' || declaredType === 'true/false'
       ? 'tf'
       : declaredType === 'essay' || declaredType === 'short_answer' || declaredType === 'open'
         ? 'essay'
         : 'mcq';
-    const rawOptions = (raw as any).options ?? (raw as any).choices ?? (raw as any).answers;
+    const rawOptions = (raw as any).options ?? (raw as any).choices ?? (raw as any).answers ?? (raw as any).choiceList;
     const options = Array.isArray(rawOptions)
       ? rawOptions.map((option: unknown) => String(typeof option === 'object' && option !== null ? ((option as any).text ?? (option as any).label ?? '') : option ?? '').trim()).filter(Boolean)
       : [];
