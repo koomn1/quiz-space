@@ -473,11 +473,11 @@ export async function callOpenRouterWithParallelAnswerReviewFallback(
 }
 
 async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000, maxOutputTokens = 300): Promise<string> {
-  if (!env.GEMINI_API_KEY) throw new AiProviderError('provider_error', 'gemini', 'gemini-2.5-flash');
+  if (!env.GEMINI_API_KEY) throw new AiProviderError('provider_error', 'gemini', 'gemini-3.6-flash');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
       method: 'POST',
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
@@ -486,15 +486,15 @@ async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000
         generationConfig: { temperature: 0, maxOutputTokens, responseMimeType: 'application/json' },
       }),
     });
-    if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'gemini', 'gemini-2.5-flash', response.status);
+    if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'gemini', 'gemini-3.6-flash', response.status);
     const payload: any = await response.json();
     const text = payload.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
-    if (!text) throw new AiProviderError('empty_response', 'gemini', 'gemini-2.5-flash');
+    if (!text) throw new AiProviderError('empty_response', 'gemini', 'gemini-3.6-flash');
     return text;
   } catch (error) {
     if (error instanceof AiProviderError) throw error;
-    if (error instanceof DOMException && error.name === 'AbortError') throw new AiProviderError('timeout', 'gemini', 'gemini-2.5-flash');
-    throw new AiProviderError('provider_error', 'gemini', 'gemini-2.5-flash');
+    if (error instanceof DOMException && error.name === 'AbortError') throw new AiProviderError('timeout', 'gemini', 'gemini-3.6-flash');
+    throw new AiProviderError('provider_error', 'gemini', 'gemini-3.6-flash');
   } finally {
     clearTimeout(timeout);
   }
@@ -543,13 +543,21 @@ async function providerText(
   env: Env,
   options: { timeoutMs?: number } = {},
 ): Promise<string> {
-  return callOpenRouterWithFallback(
-    env,
-    [{ role: 'user', content: prompt }],
-    OPENROUTER_TEXT_FALLBACKS,
-    undefined,
-    { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs },
-  );
+  try {
+    return await callOpenRouterWithFallback(
+      env,
+      [{ role: 'user', content: prompt }],
+      OPENROUTER_TEXT_FALLBACKS,
+      undefined,
+      { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs },
+    );
+  } catch (openRouterError) {
+    if (env.GEMINI_API_KEY) {
+      console.warn('OpenRouter generation failed or exhausted, using Gemini fallback:', openRouterError);
+      return await callGeminiJsonWithParts(env, [{ text: prompt }], 45_000, 8_000);
+    }
+    throw openRouterError;
+  }
 }
 
 function safeAiErrorMessage(error: unknown): string {

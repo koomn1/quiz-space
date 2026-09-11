@@ -89,7 +89,7 @@ async function callGeminiJsonForGeneration(env: ExtractionJobEnv, prompt: string
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 12_000);
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
     signal: controller.signal,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
