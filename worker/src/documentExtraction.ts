@@ -21,8 +21,9 @@ export interface DocumentExtractionProgress {
 
 const DOCUMENT_EXTRACTION_MODELS = [
   'nvidia/nemotron-3.5-lightning:free',
-  'openai/gpt-oss-20b:free',
-  'qwen/qwen3-235b-a22b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'z-ai/glm-5.2:free',
+  'qwen/qwen3.8-flash',
 ];
 
 const DOCUMENT_SINGLE_REQUEST_LIMIT = 500_000;
@@ -117,7 +118,7 @@ function normalizeQuestions(raw: any): any[] {
   return questions;
 }
 
-const MODEL_TIMEOUT_MS = 20_000;
+const MODEL_TIMEOUT_MS = 40_000;
 
 /**
  * Last-resort parser for conventional exam layouts. It is intentionally strict:

@@ -37,7 +37,7 @@ export interface Env {
 }
 
 const OPENROUTER_VISION_FALLBACKS = ['google/gemma-4-31b-it:free', 'thinkingmachines/inkling-small:free', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', 'google/gemma-4-26b-a4b-it:free', 'dots-studio/dots-3-note-preview:free', 'google/gemini-3.8-flash'];
-const VISION_MODEL_TIMEOUT_MS = 20_000;
+const VISION_MODEL_TIMEOUT_MS = 45_000;
 
 function extractJson(text: string): unknown {
   const cleaned = text.replace(/^```json\s*|^```|```$/gim, '').trim();

@@ -66,7 +66,7 @@ export interface CreateExtractionJobInput {
 const BUCKET = 'quiz-extraction-uploads';
 const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
 const LEASE_MS = 5 * 60 * 1000;
-const VISION_MODEL_TIMEOUT_MS = 20_000;
+const VISION_MODEL_TIMEOUT_MS = 45_000;
 const LARGE_PDF_PAGE_THRESHOLD = 20;
 const PDF_TEXT_SAMPLE_PAGES = 3;
 export const VISION_CHUNK_PAGE_COUNT = 5;
@@ -133,6 +133,7 @@ const TEXT_MODEL_FALLBACKS = [
   'nvidia/nemotron-3.5-lightning:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
   'z-ai/glm-5.2:free',
+  'qwen/qwen3.8-flash',
 ];
 const VISION_MODEL_FALLBACKS = [
   'google/gemma-4-31b-it:free',
