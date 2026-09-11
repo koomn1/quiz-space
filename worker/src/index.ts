@@ -38,16 +38,9 @@ type Provider = 'openrouter';
 const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free';
 const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
 const OPENROUTER_TEXT_FALLBACKS = [
-  'nvidia/nemotron-3.5-lightning:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
   'z-ai/glm-5.2:free',
-  'minimax/minimax-m3:free',
-  'inclusionai/ling-3.0-flash-sante:free',
-  'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'minimax/minimax-m2.7:free',
   'qwen/qwen3.8-flash',
-  'google/gemini-3.8-flash',
-  'openai/gpt-5-mini',
 ];
 const OPENROUTER_STREAM_TEXT_MODELS = [
   OPENROUTER_TEXT_MODEL,

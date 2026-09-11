@@ -4,8 +4,6 @@ export const COSMO_MODELS = [
   'nvidia/nemotron-3.5-lightning:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
   'z-ai/glm-5.2:free',
-  'qwen/qwen3.8-flash',
-  'openai/gpt-5-mini',
 ];
 
 export class AiServiceError extends Error {
@@ -25,7 +23,7 @@ export async function generateText(env: Env, messages: Array<{ role: string; con
   const models = options.models?.length ? options.models : COSMO_MODELS;
   let lastError = 'No AI model accepted the request.';
   for (const model of models) {
-    const timeout = timeoutSignal(options.timeoutMs || 30_000);
+    const timeout = timeoutSignal(options.timeoutMs || 15_000);
     try {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
