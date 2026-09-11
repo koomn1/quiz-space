@@ -307,7 +307,7 @@ function normalizeQuestions(value: unknown): any[] {
   const questions: any[] = [];
   for (const raw of source) {
     if (!raw || typeof raw !== 'object') continue;
-    const text = String((raw as any).text ?? (raw as any).question ?? '').trim();
+    const text = String((raw as any).text ?? (raw as any).question ?? (raw as any).questionText ?? (raw as any).prompt ?? '').trim();
     if (!text) continue;
     const key = text.replace(/\s+/g, ' ').toLowerCase();
     if (seen.has(key)) continue;
@@ -318,8 +318,9 @@ function normalizeQuestions(value: unknown): any[] {
       : declaredType === 'essay' || declaredType === 'short_answer' || declaredType === 'open'
         ? 'essay'
         : 'mcq';
-    const options = Array.isArray((raw as any).options)
-      ? (raw as any).options.map((option: unknown) => String(option ?? '').trim()).filter(Boolean)
+    const rawOptions = (raw as any).options ?? (raw as any).choices ?? (raw as any).answers;
+    const options = Array.isArray(rawOptions)
+      ? rawOptions.map((option: unknown) => String(typeof option === 'object' && option !== null ? ((option as any).text ?? (option as any).label ?? '') : option ?? '').trim()).filter(Boolean)
       : [];
     questions.push({
       number: Number.isInteger(Number((raw as any).number)) && Number((raw as any).number) > 0 ? Number((raw as any).number) : questions.length + 1,
@@ -327,7 +328,7 @@ function normalizeQuestions(value: unknown): any[] {
       type,
       options: type === 'essay' ? [] : options,
       correctIndex: type === 'essay' ? -1 : resolveCorrectIndex(raw, options, type),
-      correctAnswer: (raw as any).correctAnswer == null ? '' : String((raw as any).correctAnswer),
+      correctAnswer: (raw as any).correctAnswer ?? (raw as any).correct_answer ?? (raw as any).answer ?? (raw as any).correctOption ?? '',
       explanation: (raw as any).explanation == null ? '' : String((raw as any).explanation),
     });
   }

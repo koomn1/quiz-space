@@ -145,7 +145,19 @@ export async function createExtractionJob(options: CreateExtractionJobOptions): 
     }
   }
 
-  const mimeType = options.file.type || 'application/pdf';
+  const extension = options.file.name.split('.').pop()?.toLowerCase();
+  const inferredMimeType = extension === 'docx'
+    ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    : extension === 'doc'
+      ? 'application/msword'
+      : extension === 'pdf'
+        ? 'application/pdf'
+        : extension === 'txt'
+          ? 'text/plain'
+          : extension === 'md'
+            ? 'text/markdown'
+            : options.file.type;
+  const mimeType = inferredMimeType || 'application/pdf';
   const storagePath = `${user.id}/${crypto.randomUUID()}/${safeFileName(options.file.name)}`;
   const { error: uploadError } = await supabase.storage
     .from(EXTRACTION_UPLOAD_BUCKET)
