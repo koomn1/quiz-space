@@ -743,35 +743,17 @@ async function generateQuestionsFromText(
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
   const requestedCount = job.requested_question_count || null;
-  const prompt = `${generatePrompt(requestedCount, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`;
-  const messages = [{ role: 'user', content: prompt }];
-    let lastError: unknown;
-  // Generated questions from explanatory material use Gemini first. Literal
-  // extraction never enters this function, so its behaviour remains unchanged.
-  if (job.extraction_mode === 'generate') {
-    try {
-      const quiz = parseJson(await callGeminiJsonForGeneration(env, prompt));
-      const questions = normalizeQuestions(quiz);
-      if (questions.length > 0) {
-        const limitedQuestions = requestedCount ? questions.slice(0, requestedCount) : questions;
-        await onProgress(1, 1, limitedQuestions.length);
-        return {
-          title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
-          description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-          questions: limitedQuestions,
-          provider: 'gemini-2.5-flash',
-          chunks: 1,
-        };
-      }
-    } catch (error) {
-      lastError = error;
-      console.warn('Gemini document generation failed; trying text fallback.', error);
-    }
-  }
-  // A provider can return HTTP 200 with prose or malformed JSON. That is not a
-
-  // successful extraction, so treat parsing and validation as part of the
-  // fallback boundary instead of failing the whole job after one response.
+    const prompt = `${generatePrompt(requestedCount, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`;
+  const messages = [
+    {
+      role: 'system',
+      content: 'أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ المادة كاملة، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواها فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.',
+    },
+    { role: 'user', content: prompt },
+  ];
+  let lastError: unknown;
+  // Use the same OpenRouter chat-style invocation as Cosmo. The only difference
+  // is the system instruction and structured quiz response contract above.
   for (const model of TEXT_MODEL_FALLBACKS) {
     try {
       const response = await callOpenRouterWithFallback(env, messages, [model], { maxTokens: 4_000, temperature: 0.2 });
