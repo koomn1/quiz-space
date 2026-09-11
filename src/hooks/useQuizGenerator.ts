@@ -255,7 +255,7 @@ export function useQuizGenerator() {
               eta,
             ].filter(Boolean).join(' '),
           });
-          await new Promise(resolve => window.setTimeout(resolve, 2000));
+          await new Promise(resolve => window.setTimeout(resolve, 700));
           job = await getExtractionJob(job.id);
         }
         if (!data) throw new Error('انتهت مهلة متابعة الاستخراج. افتح صفحة إنشاء الاختبار مجدداً لاستئناف المهمة.');

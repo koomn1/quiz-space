@@ -86,7 +86,11 @@ export interface VisionChunkPlan {
 }
 async function callGeminiJsonForGeneration(env: ExtractionJobEnv, prompt: string): Promise<string> {
   if (!env.GEMINI_API_KEY) throw new Error('Gemini is not configured');
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12_000);
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
+    signal: controller.signal,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -97,8 +101,11 @@ async function callGeminiJsonForGeneration(env: ExtractionJobEnv, prompt: string
   if (!response.ok) throw new Error(`Gemini generation failed: ${response.status}`);
   const payload: any = await response.json();
   const text = payload.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
-  if (!text) throw new Error('Gemini returned an empty response');
-  return text;
+    if (!text) throw new Error('Gemini returned an empty response');
+    return text;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function extractPowerPointText(source: Uint8Array): Promise<string> {
@@ -126,13 +133,6 @@ const TEXT_MODEL_FALLBACKS = [
   'nvidia/nemotron-3.5-lightning:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
   'z-ai/glm-5.2:free',
-  'minimax/minimax-m3:free',
-  'inclusionai/ling-3.0-flash-sante:free',
-  'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'minimax/minimax-m2.7:free',
-  'qwen/qwen3.8-flash',
-  'google/gemini-3.8-flash',
-  'openai/gpt-5-mini',
 ];
 const VISION_MODEL_FALLBACKS = [
   'google/gemma-4-31b-it:free',
