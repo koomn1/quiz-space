@@ -58,7 +58,7 @@ function withAuthTimeout<T>(promise: Promise<T>, timeoutMs: number, code: string
   });
 }
 
-const APP_USER_COLUMNS = 'uid, email, name, photo_url, custom_id, is_premium, plan_name';
+const APP_USER_COLUMNS = 'uid, email, name, photo_url, custom_id, is_premium, plan_name, renewal_date';
 
 async function fetchAppUser(authUser: User): Promise<AppUser> {
   const metaName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.user_metadata?.preferred_username || (authUser.email ? authUser.email.split('@')[0] : '') || 'طالب متميز';
@@ -107,6 +107,10 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
     }
   }
 
+  const { data: membershipData } = await supabase.rpc('get_my_membership_status');
+  const membership = Array.isArray(membershipData) ? membershipData[0] : membershipData;
+  const fallbackMembershipActive = Boolean(data?.is_premium) && (!data?.renewal_date || new Date(data.renewal_date).getTime() > Date.now());
+
   // Ensure every user has at least a default avatar
   let finalPhotoURL = data?.photo_url || metaPhoto;
   if (!finalPhotoURL || finalPhotoURL === '') {
@@ -123,8 +127,8 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
     name: resolvedName,
     photoURL: finalPhotoURL,
     customId: data?.custom_id || '',
-    isPremium: data?.is_premium || false,
-    planName: data?.plan_name || 'Free',
+    isPremium: membership?.is_premium ?? fallbackMembershipActive,
+    planName: membership?.plan_name || (fallbackMembershipActive ? data?.plan_name : 'Free') || 'Free',
   };
 }
 

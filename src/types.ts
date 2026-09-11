@@ -394,6 +394,8 @@ export interface UserStats {
   planId?: string;
   planName?: string;
   renewalDate?: string;
+  membershipStatus?: 'free' | 'active' | 'expired';
+  isMembershipExpired?: boolean;
   isLifetime?: boolean;
   isFounder?: boolean;
   isSuspended?: boolean;

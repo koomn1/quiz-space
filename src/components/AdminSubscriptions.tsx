@@ -90,6 +90,7 @@ export default function AdminSubscriptions({
 
   const [selectedUser, setSelectedUser] = useState<UserStats | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
+  const [subscriptionRenewalDate, setSubscriptionRenewalDate] = useState<string>("");
 
   // Coupons States
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -148,6 +149,9 @@ export default function AdminSubscriptions({
         isPremium: p.is_premium || p.isPremium || false,
         planName: p.plan_name || p.planName || "Free",
         planId: p.plan_id || p.planId || undefined,
+        renewalDate: p.renewal_date || p.renewalDate || undefined,
+        membershipStatus: p.membership_status || (p.is_membership_expired ? 'expired' : ((p.is_premium || p.isPremium) ? 'active' : 'free')),
+        isMembershipExpired: Boolean(p.is_membership_expired),
         badgeSymbol: (p.is_premium || p.isPremium) ? "✔" : "",
         createdQuizzes: [],
         completions: [],
@@ -416,7 +420,12 @@ export default function AdminSubscriptions({
         return;
       }
 
-      const { error } = await updateUserSubscription(selectedUser.userId, targetIsPremium, targetPlanName);
+      const isLifetime = Boolean(plan?.isLifetime || plan?.badgeStyle === 'lifetime');
+      const isFounder = Boolean(plan?.badgeStyle === 'founder');
+      const renewalDate = targetIsPremium && !isLifetime && !isFounder && subscriptionRenewalDate
+        ? new Date(`${subscriptionRenewalDate}T23:59:59`).toISOString()
+        : undefined;
+      const { error } = await updateUserSubscription(selectedUser.userId, targetIsPremium, targetPlanName, plan?.id, isLifetime, isFounder, renewalDate);
 
       if (!error) {
         alert(
@@ -436,6 +445,9 @@ export default function AdminSubscriptions({
                 planName: "Free",
                 isLifetime: false,
                 isFounder: false,
+                renewalDate: undefined,
+                membershipStatus: 'free' as const,
+                isMembershipExpired: false,
               };
             }
             return {
@@ -445,6 +457,9 @@ export default function AdminSubscriptions({
               planName: plan.name,
               isLifetime: plan.badgeStyle === "lifetime" || plan.isLifetime,
               isFounder: plan.badgeStyle === "founder",
+              renewalDate,
+              membershipStatus: 'active' as const,
+              isMembershipExpired: false,
             };
           }
           return u;
@@ -454,6 +469,7 @@ export default function AdminSubscriptions({
         setSelectedUser(
           updatedUsers.find((u) => u.userId === selectedUser.userId) || null,
         );
+        setSubscriptionRenewalDate(renewalDate ? renewalDate.slice(0, 10) : '');
         // Refresh with all database info too
         loadRealData();
       } else {
@@ -735,9 +751,10 @@ export default function AdminSubscriptions({
                   <th className="px-4 py-3">{isAr ? "المستخدم" : "User"}</th>
                   <th className="px-4 py-3">{isAr ? "الخطة" : "Plan"}</th>
                   <th className="px-4 py-3 text-center">
-                    {isAr ? "حالة" : "Status"}
-                  </th>
-                  <th className="px-4 py-3 text-center">
+                        {isAr ? "حالة" : "Status"}
+                      </th>
+                      <th className="px-4 py-3">{isAr ? "ينتهي في" : "Expires"}</th>
+                      <th className="px-4 py-3 text-center">
                     {isAr ? "إجراءات" : "Actions"}
                   </th>
                 </tr>
@@ -767,20 +784,25 @@ export default function AdminSubscriptions({
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`px-2 py-1 text-[10px] font-bold rounded-md ${user.isSuspended ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"}`}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-md ${user.isSuspended || user.isMembershipExpired ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"}`}
                       >
                         {user.isSuspended
                           ? isAr
                             ? "موقوف"
                             : "Suspended"
-                          : isAr
-                            ? "نشط"
-                            : "Active"}
+                          : user.isMembershipExpired
+                            ? (isAr ? "منتهية" : "Expired")
+                            : isAr
+                              ? "نشط"
+                              : "Active"}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-slate-500">
+                      {user.renewalDate ? new Date(user.renewalDate).toLocaleString(isAr ? 'ar-EG' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }) : user.isLifetime || user.isFounder ? (isAr ? 'بدون انتهاء' : 'No expiry') : '—'}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button
-                        onClick={() => setSelectedUser(user)}
+                        onClick={() => { setSelectedUser(user); setSelectedPlanId(user.planId || ''); setSubscriptionRenewalDate(user.renewalDate ? user.renewalDate.slice(0, 10) : ''); }}
                         className="px-3 py-1 bg-blue-500/10 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-500/20"
                       >
                         {isAr ? "إدارة" : "Manage"}
@@ -859,9 +881,12 @@ export default function AdminSubscriptions({
                 <label className="text-xs font-bold text-slate-500">
                   {isAr ? "تاريخ الانتهاء" : "Expiry Date"}
                 </label>
-                <input
+                  <input
                   type="date"
-                  className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary"
+                  value={subscriptionRenewalDate}
+                  onChange={(e) => setSubscriptionRenewalDate(e.target.value)}
+                  disabled={selectedUser.isLifetime || selectedUser.isFounder}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">

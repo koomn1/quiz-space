@@ -866,6 +866,13 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       userError = publicProfile.error;
     }
     if (userError) console.error(`Error loading profile for ${userId}:`, userError.message);
+    if (isOwnProfile && !userError) {
+      const { data: membershipData } = await supabase.rpc('get_my_membership_status');
+      const membership = Array.isArray(membershipData) ? membershipData[0] : membershipData;
+      if (membership) {
+        userRow = { ...userRow, is_premium: membership.is_premium, plan_name: membership.plan_name, membership_status: membership.membership_status, is_membership_expired: membership.is_expired };
+      }
+    }
     const { data: createdQuizzes } = await supabase.from('quizzes').select('*').eq('creator_id', userId).order('created_at', { ascending: false });
     let completions: any[] = [];
     if (isOwnProfile) {
@@ -1285,16 +1292,17 @@ export async function releaseDailyQuizRefresh(tier: DailyQuizTier): Promise<void
 }
 
 export async function checkUserPremiumStatus(userId: string): Promise<boolean> {
-  if (!userId) return false;
-  if (!isSupabaseConfigured) return false;
-
+  if (!userId || !isSupabaseConfigured) return false;
   try {
-    const { data, error } = await supabase.from('users').select('is_premium').eq('uid', userId).single();
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData.user?.id !== userId) return false;
+    const { data, error } = await supabase.rpc('get_my_membership_status');
     if (error) {
       console.error('Error checking premium status:', error);
       return false;
     }
-    return !!data?.is_premium;
+    const membership = Array.isArray(data) ? data[0] : data;
+    return Boolean(membership?.is_premium);
   } catch (e) {
     console.error('Error checking premium status:', e);
     return false;
@@ -1996,6 +2004,15 @@ export async function recordPushNotificationOpen(eventId: string): Promise<void>
   }
 }
 
+export async function getMyClassroomsSnapshot() {
+  const { data, error } = await supabase.rpc('get_my_classrooms_snapshot');
+  if (error) throw error;
+  return {
+    classrooms: Array.isArray(data?.classrooms) ? data.classrooms : [],
+    students: Array.isArray(data?.students) ? data.students : [],
+  };
+}
+
 export async function sendPushEvent(payload: { title: string; body: string; url?: string; category: 'classroom' | 'community' | 'quiz' | 'system'; classId?: string }): Promise<number> {
   if (!isSupabaseConfigured) return 0;
   try {
@@ -2186,16 +2203,17 @@ export async function updateUserSubscription(userId: string, isPremium: boolean,
   if (!isSupabaseConfigured) {
     return { error: new Error('Supabase is not configured; cannot update subscription.') };
   }
-  const { error } = await supabase.from('users').update({
-    is_premium: isPremium,
-    plan_name: planName,
-    plan_id: planId || null,
-    is_lifetime: isLifetime || false,
-    is_founder: isFounder || false,
-    renewal_date: renewalDate || (isPremium ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null),
-  }).eq('uid', userId);
+  const { data, error } = await supabase.rpc('admin_update_user_subscription', {
+    p_user_id: userId,
+    p_is_premium: isPremium,
+    p_plan_name: planName,
+    p_plan_id: planId || null,
+    p_is_lifetime: Boolean(isLifetime),
+    p_is_founder: Boolean(isFounder),
+    p_renewal_date: renewalDate || null,
+  });
   if (error) console.error('Error updating user subscription:', error);
-  return { error };
+  return { data, error };
 }
 
 // ---------------- SUBSCRIPTION PLANS (SUPABASE DIRECT) ----------------
