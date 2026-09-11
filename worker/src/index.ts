@@ -16,6 +16,10 @@ import {
 import { getAccountProfile, getCosmoAccountContext, getUserId, hasPaidCosmoAccess } from './auth';
 import { enqueueExtractionJob, scheduleExtractionJob } from './queue';
 import { publicExtractionJob, type Env, type ExtractionQueueMessage, type WorkerExecutionContext } from './platform';
+import { handleAuthRoutes } from './authRoutes';
+import { handleCosmoRoutes } from './cosmoRoutes';
+import { handleExtractionRoutes } from './extractionRoutes';
+import { finishTask, retryDelaySeconds } from './taskLedger';
 export type { Env, ExtractionQueueMessage, WorkerExecutionContext } from './platform';
 
 type Provider = 'openrouter';
@@ -697,6 +701,14 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   let aiModel: string | undefined;
 
   try {
+    const routeContext = { request, env, headers, userId, authHeader, startTime };
+    const authRouteResponse = await handleAuthRoutes(routeContext);
+    if (authRouteResponse) return authRouteResponse;
+    const extractionRouteResponse = await handleExtractionRoutes(routeContext);
+    if (extractionRouteResponse) return extractionRouteResponse;
+    const cosmoRouteResponse = await handleCosmoRoutes(routeContext);
+    if (cosmoRouteResponse) return cosmoRouteResponse;
+
     if (isExtractionJobRead) {
       if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);
 
@@ -1178,7 +1190,7 @@ export default {
     retry: (options?: { delaySeconds?: number }) => void;
   }> }, env: Env): Promise<void> {
     for (const message of batch.messages) {
-      const { jobId, authHeader: queuedAuthHeader, chunkId } = message.body || {} as ExtractionQueueMessage;
+      const { jobId, authHeader: queuedAuthHeader, chunkId, taskId } = message.body || {} as ExtractionQueueMessage;
       const workerAuthHeader = env.SUPABASE_SERVICE_ROLE_KEY
         ? `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`
         : queuedAuthHeader;
@@ -1192,20 +1204,32 @@ export default {
         const outcome = await processExtractionJobChunk(env, workerAuthHeader, jobId, chunkId, attempts);
         if (outcome === 'retry') {
           const delaySeconds = visionChunkRetryDelaySeconds(attempts);
+          if (taskId && attempts >= 3) await finishTask(env, workerAuthHeader, taskId, 'dead_letter', 'Extraction chunk exceeded the retry limit.');
           message.retry({ delaySeconds });
           continue;
         }
+        if (taskId) await finishTask(env, workerAuthHeader, taskId, 'succeeded');
         message.ack();
         continue;
       }
-      await processExtractionJob(env, workerAuthHeader, jobId, async (parentJobId, chunkIds) => {
-        await Promise.all(chunkIds.map(id => env.EXTRACTION_JOBS.send({
-          jobId: parentJobId,
-          chunkId: id,
-          ...(env.SUPABASE_SERVICE_ROLE_KEY ? {} : { authHeader: workerAuthHeader }),
-        })));
-      });
-      message.ack();
+      const attempts = message.attempts || 1;
+      try {
+        await processExtractionJob(env, workerAuthHeader, jobId, async (parentJobId, chunkIds) => {
+          await Promise.all(chunkIds.map(id => env.EXTRACTION_JOBS.send({
+            jobId: parentJobId,
+            chunkId: id,
+            ...(taskId ? { taskId } : {}),
+            ...(env.SUPABASE_SERVICE_ROLE_KEY ? {} : { authHeader: workerAuthHeader }),
+          })));
+        });
+        if (taskId) await finishTask(env, workerAuthHeader, taskId, 'succeeded');
+        message.ack();
+      } catch (error) {
+        const retryable = attempts < 3;
+        if (taskId) await finishTask(env, workerAuthHeader, taskId, retryable ? 'failed' : 'dead_letter', String(error));
+        if (retryable) message.retry({ delaySeconds: retryDelaySeconds(attempts) });
+        else message.ack();
+      }
     }
   },
 };

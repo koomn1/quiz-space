@@ -3,6 +3,9 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const workerSource = readFileSync(resolve(process.cwd(), 'worker/src/index.ts'), 'utf8');
+const authSource = readFileSync(resolve(process.cwd(), 'worker/src/auth.ts'), 'utf8');
+const cosmoRoutesSource = readFileSync(resolve(process.cwd(), 'worker/src/cosmoRoutes.ts'), 'utf8');
+const routeSources = [workerSource, authSource, cosmoRoutesSource].join('\n');
 
 describe('Cosmo generation recovery contract', () => {
   it('uses live free-first OpenRouter models as the primary Cosmo route', () => {
@@ -71,11 +74,11 @@ describe('Cosmo generation recovery contract', () => {
   });
 
   it('enforces paid entitlement on question explanations before calling the AI provider', () => {
-    expect(workerSource).toContain('async function hasPaidCosmoAccess');
+    expect(routeSources).toContain('export async function hasPaidCosmoAccess');
     expect(workerSource).toContain("if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);");
     expect(workerSource).toContain("if (!(await hasPaidCosmoAccess(request, env, userId))) return json({ error: 'Cosmo explanations require an active paid plan.' }, 403, headers);");
-    expect(workerSource).toContain('&limit=1');
-    expect(workerSource).toContain("Boolean(profile?.is_premium) || isPaidCosmoPlan(profile?.plan_name)");
+    expect(routeSources).toContain('&limit=1');
+    expect(routeSources).toContain("Boolean(profile?.is_premium) || isPaidCosmoPlan(profile?.plan_name)");
   });
 
   it('bounds explanation inputs before constructing the provider prompt', () => {

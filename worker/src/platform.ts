@@ -24,6 +24,7 @@ export interface ExtractionQueueMessage {
   /** Legacy queue messages may carry a user token; new messages rely on the server key. */
   authHeader?: string;
   chunkId?: string;
+  taskId?: string;
 }
 
 export function supabaseBaseUrl(env: Env): string {
