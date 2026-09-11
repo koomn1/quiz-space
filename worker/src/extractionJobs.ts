@@ -260,6 +260,32 @@ function generatePrompt(amount: number | null | undefined, customInstruction?: s
   return `${scopeInstruction} حافظ على لغة المستند ومعلوماته ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
+function extractBalancedJson(text: string, start: number): string | null {
+  const opening = text[start];
+  if (opening !== '{' && opening !== '[') return null;
+  const stack = [opening];
+  let quoted = false;
+  let escaped = false;
+  for (let index = start + 1; index < text.length; index += 1) {
+    const char = text[index];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (char === '\\') escaped = true;
+      else if (char === '"') quoted = false;
+      continue;
+    }
+    if (char === '"') { quoted = true; continue; }
+    if (char === '{' || char === '[') stack.push(char);
+    else if (char === '}' || char === ']') {
+      const expected = char === '}' ? '{' : '[';
+      if (stack.at(-1) !== expected) return null;
+      stack.pop();
+      if (!stack.length) return text.slice(start, index + 1);
+    }
+  }
+  return null;
+}
+
 function parseJson(text: string): any {
   const raw = String(text || '').trim();
   const candidates = [
@@ -267,11 +293,12 @@ function parseJson(text: string): any {
     raw,
   ];
   for (const candidate of candidates) {
-    try { return JSON.parse(candidate); } catch { /* try the embedded JSON below */ }
-    const starts = [candidate.indexOf('{'), candidate.indexOf('[')].filter(index => index >= 0);
-    for (const start of starts.length ? [Math.min(...starts)] : []) {
-      const embedded = candidate.slice(start).replace(/\s*```$/i, '').trim();
-      try { return JSON.parse(embedded); } catch { /* try next format */ }
+    try { return JSON.parse(candidate); } catch { /* try an embedded response */ }
+    const starts = [candidate.indexOf('{'), candidate.indexOf('[')].filter(index => index >= 0).sort((a, b) => a - b);
+    for (const start of starts) {
+      const embedded = extractBalancedJson(candidate, start);
+      if (!embedded) continue;
+      try { return JSON.parse(embedded); } catch { /* try a trailing-comma repair */ }
       try { return JSON.parse(embedded.replace(/,\s*([}\]])/g, '$1')); } catch { /* continue */ }
     }
   }
