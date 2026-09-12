@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { askAI, askAIStream, searchCosmoWeb } from '../services/aiWorkerClient';
+import { askAI, askAIStream, searchCosmoWeb, generateQuizFromFileStreaming, generateQuizFromFileWithFallback } from '../services/aiWorkerClient';
 import { generateQuizWithFallback, validateAndCleanQuiz } from '../hooks/useQuizzes';
 import { GeneratedQuiz } from '../types';
 import { createQuiz } from '../lib/db';
@@ -565,6 +565,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const [pendingQuiz, setPendingQuiz] = useState<{ topic: string; amount: number; difficulty: string } | null>(null);
+  const [pendingQuizAttachment, setPendingQuizAttachment] = useState<ChatAttachment | null>(null);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [isQuizGenerationError, setIsQuizGenerationError] = useState(false);
   const [quickSuggestions, setQuickSuggestions] = useState<QuickSuggestion[]>([]);
@@ -679,13 +680,20 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     if (isAnalyzing) return;
 
     const requestedQuiz = parseQuizRequest(trimmed);
+    const requestedFileQuiz = Boolean(selectedAttachment && requestedQuiz && /(?:ملف|المرفق|المرفق ده|منه|from\s+(?:this\s+)?file|attachment)/i.test(trimmed));
     if (requestedQuiz && !pendingQuiz) {
       setPendingQuiz(requestedQuiz);
+      if (requestedFileQuiz) setPendingQuizAttachment(selectedAttachment);
+      else setPendingQuizAttachment(null);
       setMessages(prev => [...prev,
         { id: Date.now().toString(), role: 'user', text: trimmed, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) },
         { id: `${Date.now()}-confirm`, role: 'assistant', text: isAr
-          ? `أقدر أجهز لك اختبارًا في **${requestedQuiz.topic}** من **${requestedQuiz.amount} أسئلة** بمستوى **${requestedQuiz.difficulty}**. راجع الإعدادات بالأسفل واضغط تأكيد للتوليد.`
-          : `I can prepare a **${requestedQuiz.topic}** quiz with **${requestedQuiz.amount} questions** at **${requestedQuiz.difficulty}** level. Review the settings below and confirm to generate it.`, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }
+          ? requestedFileQuiz
+            ? `هحوّل الملف المرفق إلى كويز حقيقي داخل المنصة، وليس أسئلة داخل الشات: **${requestedQuiz.amount} سؤال** بمستوى **${requestedQuiz.difficulty}**. اضغط تأكيد للبدء.`
+            : `أقدر أجهز لك اختبارًا في **${requestedQuiz.topic}** من **${requestedQuiz.amount} أسئلة** بمستوى **${requestedQuiz.difficulty}**. راجع الإعدادات بالأسفل واضغط تأكيد للتوليد.`
+          : requestedFileQuiz
+            ? `I will turn the attached file into a real quiz inside the platform—not chat text: **${requestedQuiz.amount} questions** at **${requestedQuiz.difficulty}** level. Confirm to start.`
+            : `I can prepare a **${requestedQuiz.topic}** quiz with **${requestedQuiz.amount} questions** at **${requestedQuiz.difficulty}** level. Review the settings below and confirm to generate it.`, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }
       ]);
       setInputText('');
       return;
@@ -818,8 +826,30 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     setLastError(null);
     setIsQuizGenerationError(false);
     try {
-      const generated = await generateCosmoQuizInBatches(pendingQuiz.topic, pendingQuiz.amount);
-      const verified = validateAndCleanQuiz(generated);
+      setActivityState(pendingQuizAttachment ? 'working' : 'solving');
+      const generated = pendingQuizAttachment
+        ? pendingQuizAttachment.mimeType === 'application/pdf'
+          ? await generateQuizFromFileStreaming(
+              pendingQuizAttachment.data,
+              pendingQuizAttachment.mimeType,
+              `أنشئ كويزًا داخل المنصة من الملف المرفق. استخرج الأسئلة كما هي بدقة، واحتفظ بالاختيارات والإجابات. المطلوب ${pendingQuiz.amount} سؤالًا كحد أقصى. مستوى الأسئلة: ${pendingQuiz.difficulty}. لا تكتب شرحًا أو أسئلة في رد محادثة؛ أعد بيانات الكويز فقط.`,
+              progress => {
+                setActivityState(progress.type === 'complete' ? 'composing' : 'working');
+              },
+              'literal',
+            )
+          : await generateQuizFromFileWithFallback(
+              pendingQuizAttachment.data,
+              pendingQuizAttachment.mimeType,
+              pendingQuiz.amount,
+              `أنشئ كويزًا داخل المنصة من الملف المرفق. المطلوب ${pendingQuiz.amount} سؤالًا كحد أقصى، بمستوى ${pendingQuiz.difficulty}. أعد بيانات الكويز فقط.`,
+              'generate',
+            )
+        : await generateCosmoQuizInBatches(pendingQuiz.topic, pendingQuiz.amount);
+      const limitedGenerated = pendingQuizAttachment
+        ? { ...generated, questions: generated.questions.slice(0, pendingQuiz.amount) }
+        : generated;
+      const verified = validateAndCleanQuiz(limitedGenerated);
       const saved = await createQuiz({
         title: verified.title,
         description: verified.description,
@@ -841,6 +871,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       });
       setMessages(prev => [...prev, { id: `${Date.now()}-created`, role: 'assistant', text: isAr ? `تم إنشاء الاختبار **${saved.title}** بنجاح. هتقدر تبدأه دلوقتي.` : `The quiz **${saved.title}** was created successfully. You can start it now.`, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }]);
       setPendingQuiz(null);
+      setPendingQuizAttachment(null);
       onOpenGeneratedQuiz?.(saved.id);
     } catch (error) {
       console.error('Cosmo quiz generation failed', error);
@@ -851,6 +882,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
         : (providerUnavailable ? 'The quiz provider is temporarily busy. Retry shortly; your quiz settings are preserved.' : 'The quiz could not be created right now. Retry; your quiz settings are preserved.'));
       setIsQuizGenerationError(true);
     } finally {
+      setActivityState('breathing');
       setIsGeneratingQuiz(false);
     }
   };

@@ -139,8 +139,16 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
           if (pdfText.trim().length > 40) {
             // Send a heartbeat before the model call so a slow provider never
             // leaves the client showing the initial 0/100 state indefinitely.
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'init', totalChunks: 1, totalPages: pageCount })}\n\n`));
-            const result = await extractQuestionsFromText(pdfText, env, customInstruction);
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'init', totalChunks: Math.max(1, Math.ceil(pdfText.length / 120_000)), totalPages: pageCount })}\n\n`));
+            const result = await extractQuestionsFromText(pdfText, env, customInstruction, async progress => {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                type: 'progress',
+                processed: progress.processed,
+                total: progress.total,
+                questionsExtracted: progress.questionsExtracted,
+                percentage: Math.round((progress.processed / Math.max(1, progress.total)) * 100),
+              })}\n\n`));
+            });
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'progress', processed: result.chunks, total: result.chunks, questionsExtracted: result.questions.length, percentage: 100 })}\n\n`));
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'complete', quiz: { title: result.title, description: result.description, questions: result.questions } })}\n\n`));
             await logAiPerformance(env, authHeader, {

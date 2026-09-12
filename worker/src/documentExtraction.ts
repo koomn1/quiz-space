@@ -26,18 +26,42 @@ const DOCUMENT_EXTRACTION_MODELS = [
   'qwen/qwen3.8-flash',
 ];
 
-const DOCUMENT_SINGLE_REQUEST_LIMIT = 500_000;
-const EXTRACTION_OPTIONS = { max_tokens: 16_000, temperature: 0.1 };
+// Keep each provider request bounded: one huge 100–200 question prompt is slow,
+// exceeds output limits easily, and makes the whole extraction fail atomically.
+const DOCUMENT_SINGLE_REQUEST_LIMIT = 120_000;
+const EXTRACTION_OPTIONS = { max_tokens: 12_000, temperature: 0.1 };
 
 function extractJson(text: string): unknown {
-  let cleaned = text.trim();
-  const objectStart = cleaned.indexOf('{');
-  const arrayStart = cleaned.indexOf('[');
-  const starts = [objectStart, arrayStart].filter(index => index >= 0);
-  const jsonStart = starts.length ? Math.min(...starts) : -1;
-  if (jsonStart > 0) cleaned = cleaned.slice(jsonStart);
-  if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3).trimEnd();
-  return JSON.parse(cleaned);
+  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+  const candidates: unknown[] = [];
+  for (let start = 0; start < cleaned.length; start += 1) {
+    const char = cleaned[start];
+    if (char !== '{' && char !== '[') continue;
+    const stack: string[] = [];
+    let inString = false;
+    let escaped = false;
+    for (let index = start; index < cleaned.length; index += 1) {
+      const current = cleaned[index];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (current === '\\\\') escaped = true;
+        else if (current === '"') inString = false;
+        continue;
+      }
+      if (current === '"') { inString = true; continue; }
+      if (current === '{' || current === '[') stack.push(current);
+      else if (current === '}' || current === ']') {
+        const opening = stack.pop();
+        if ((current === '}' && opening !== '{') || (current === ']' && opening !== '[')) break;
+        if (stack.length === 0) {
+          try { candidates.push(JSON.parse(cleaned.slice(start, index + 1))); } catch { /* try the next balanced candidate */ }
+          break;
+        }
+      }
+    }
+  }
+  if (candidates.length > 0) return candidates[candidates.length - 1];
+  throw new Error('No valid JSON object or array found in model response.');
 }
 
 function buildPrompt(text: string, customInstruction?: string): string {
@@ -118,7 +142,7 @@ function normalizeQuestions(raw: any): any[] {
   return questions;
 }
 
-const MODEL_TIMEOUT_MS = 40_000;
+const MODEL_TIMEOUT_MS = 35_000;
 
 /**
  * Last-resort parser for conventional exam layouts. It is intentionally strict:
@@ -268,19 +292,29 @@ export async function extractQuestionsFromText(
   const rawResponses: string[] = [];
   const parsedResults: any[] = [];
   const modelsUsed = new Set<string>();
-  const CONCURRENCY = chunks.length === 1 ? 1 : 2;
+  // Three bounded requests reduce wall-clock time while avoiding provider bursts.
+  const CONCURRENCY = chunks.length === 1 ? 1 : 3;
   let processed = 0;
 
   for (let start = 0; start < chunks.length; start += CONCURRENCY) {
     const batch = chunks.slice(start, start + CONCURRENCY);
-    const batchResults = await Promise.all(batch.map(chunk => callModel(chunk, env, customInstruction)));
-    for (const result of batchResults) {
-      rawResponses.push(result.raw);
-      modelsUsed.add(result.model);
+    const batchResults = await Promise.all(batch.map(async (chunk) => {
       try {
-        parsedResults.push(extractJson(result.raw));
+        return { result: await callModel(chunk, env, customInstruction) };
       } catch (error) {
-        console.error('Document extraction response was not valid JSON; trying the local literal parser.', error);
+        console.error('Document extraction chunk failed; continuing with remaining chunks.', error);
+        return { error };
+      }
+    }));
+    for (const item of batchResults) {
+      if (item.result) {
+        rawResponses.push(item.result.raw);
+        modelsUsed.add(item.result.model);
+        try {
+          parsedResults.push(extractJson(item.result.raw));
+        } catch (error) {
+          console.error('Document extraction response was not valid JSON; trying the local literal parser.', error);
+        }
       }
       processed += 1;
       if (onProgress) {
