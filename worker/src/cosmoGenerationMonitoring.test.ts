@@ -8,7 +8,15 @@ const cosmoRoutesSource = readFileSync(resolve(process.cwd(), 'worker/src/cosmoR
 const routeSources = [workerSource, authSource, cosmoRoutesSource].join('\n');
 
 describe('Cosmo generation recovery contract', () => {
-  it('uses live free-first OpenRouter models as the primary Cosmo route', () => {
+  it('uses Groq Llama as the primary text route with OpenRouter fallback', () => {
+    expect(workerSource).toContain("const GROQ_TEXT_MODEL = 'llama-3.3-70b-versatile'");
+    expect(workerSource).toContain('if (env.GROQ_API_KEY && !hasMultimodalContent)');
+    expect(workerSource).toContain('falling back to OpenRouter');
+    expect(workerSource).toContain('https://api.groq.com/openai/v1/chat/completions');
+    expect(workerSource).toContain("selectedProvider = 'groq'");
+  });
+
+  it('keeps live free-first OpenRouter models as the fallback route', () => {
     expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free'");
     expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
     expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
@@ -54,10 +62,10 @@ describe('Cosmo generation recovery contract', () => {
   it('does not contain direct provider endpoints or direct-provider telemetry', () => {
     expect(workerSource).toContain("type Provider = 'openrouter'");
     expect(workerSource).not.toContain('api.deepseek.com');
-    expect(workerSource).not.toContain('api.groq.com');
+    expect(workerSource).toContain('api.groq.com');
     expect(workerSource).not.toContain('api.openai.com');
     expect(workerSource).not.toContain("provider: 'deepseek'");
-    expect(workerSource).not.toContain("provider: 'groq'");
+    expect(workerSource).not.toContain("provider: 'direct'");
     expect(workerSource).not.toContain("provider: 'direct'");
   });
 

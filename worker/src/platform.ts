@@ -1,6 +1,8 @@
 import type { ExtractionJobRow } from './extractionJobs';
 
 export interface Env {
+  /** Primary text-generation provider; optional locally, required in production for Groq-first routing. */
+  GROQ_API_KEY?: string;
   OPENROUTER_API_KEY: string;
   /** Server-only web search key; never expose this to the React bundle. */
   TAVILY_API_KEY?: string;

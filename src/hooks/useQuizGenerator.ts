@@ -25,6 +25,13 @@ export function formatExtractionEta(createdAt: string, processedChunks: number, 
   return `الوقت المتبقي التقريبي: نحو ${Math.ceil(remainingSeconds / 60)} دقيقة.`;
 }
 
+// The topic/text generation API requires a positive amount. The UI uses zero
+// as its automatic sentinel, so resolve it before entering the batching loops.
+export function normalizeGenerationQuestionCount(totalQuestions: number): number {
+  const requested = Number(totalQuestions);
+  return Number.isInteger(requested) && requested > 0 ? Math.min(requested, 500) : 10;
+}
+
 export function useQuizGenerator() {
   const queryClient = useQueryClient();
   const [progress, setProgress] = React.useState<ProgressState | null>(null);
@@ -67,9 +74,13 @@ export function useQuizGenerator() {
         persist = true,
       } = params;
 
+      const generationQuestionCount = type === 'file_direct'
+        ? totalQuestions
+        : normalizeGenerationQuestionCount(totalQuestions);
+
       setProgress({
         current: 0,
-        total: totalQuestions,
+        total: generationQuestionCount,
         stage: 'generating',
         message: type === 'file_direct'
           ? `جاري قراءة الملف «${fileUploadName || sourceFile?.name || 'المستند المرفوع'}» وتحضير محتواه...`
@@ -84,14 +95,14 @@ export function useQuizGenerator() {
       const BATCH_SIZE = 40;
 
       if (type === 'topic') {
-        const totalBatches = Math.ceil(totalQuestions / BATCH_SIZE);
+        const totalBatches = Math.ceil(generationQuestionCount / BATCH_SIZE);
         for (let i = 0; i < totalBatches; i++) {
-          const currentBatchSize = Math.min(BATCH_SIZE, totalQuestions - i * BATCH_SIZE);
+          const currentBatchSize = Math.min(BATCH_SIZE, generationQuestionCount - i * BATCH_SIZE);
           setProgress({
             current: i * BATCH_SIZE,
-            total: totalQuestions,
+            total: generationQuestionCount,
             stage: 'generating',
-            message: `جاري الاتصال بالمزود لتوليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${totalQuestions} سؤال)... قد يتأخر الرد قليلًا دون أن تتوقف العملية.`,
+            message: `جاري الاتصال بالمزود لتوليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${generationQuestionCount} سؤال)... قد يتأخر الرد قليلًا دون أن تتوقف العملية.`,
           });
 
           let data: GeneratedQuiz | null = null;
@@ -146,14 +157,14 @@ export function useQuizGenerator() {
           }
         }
       } else if (type === 'pasted_text') {
-        const totalBatches = Math.ceil(totalQuestions / BATCH_SIZE);
+        const totalBatches = Math.ceil(generationQuestionCount / BATCH_SIZE);
         for (let i = 0; i < totalBatches; i++) {
-          const currentBatchSize = Math.min(BATCH_SIZE, totalQuestions - i * BATCH_SIZE);
+          const currentBatchSize = Math.min(BATCH_SIZE, generationQuestionCount - i * BATCH_SIZE);
           setProgress({
             current: i * BATCH_SIZE,
-            total: totalQuestions,
+            total: generationQuestionCount,
             stage: 'generating',
-            message: `جاري تحليل النص وتوليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${totalQuestions} سؤال)...`,
+            message: `جاري تحليل النص وتوليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${generationQuestionCount} سؤال)...`,
           });
 
           let data: GeneratedQuiz | null = null;
@@ -304,7 +315,7 @@ export function useQuizGenerator() {
             console.warn('Gaps detected in question numbering:', gaps);
             setProgress({
               current: accumulatedQuestions.length,
-              total: Math.max(totalQuestions, accumulatedQuestions.length),
+              total: Math.max(generationQuestionCount, accumulatedQuestions.length),
               stage: 'generating',
               message: `تم استخراج ${accumulatedQuestions.length} سؤالاً مع تصحيح ترقيم الأسئلة تلقائياً...`,
             });
@@ -313,19 +324,19 @@ export function useQuizGenerator() {
       }
 
       // STRICT ENFORCEMENT OF REQUIRED QUESTION COUNT (إجبار العدد المطلوب)
-      if (totalQuestions > 0 && accumulatedQuestions.length < totalQuestions) {
-        const missingCount = totalQuestions - accumulatedQuestions.length;
+      if (generationQuestionCount > 0 && accumulatedQuestions.length < generationQuestionCount) {
+        const missingCount = generationQuestionCount - accumulatedQuestions.length;
         setProgress({
           current: accumulatedQuestions.length,
-          total: totalQuestions,
+          total: generationQuestionCount,
           stage: 'generating',
-          message: `جاري استكمال وتأكيد العدد المطلوب بالكامل (${accumulatedQuestions.length}/${totalQuestions} أسئلة)... توليد ${missingCount} أسئلة مكملة.`,
+          message: `جاري استكمال وتأكيد العدد المطلوب بالكامل (${accumulatedQuestions.length}/${generationQuestionCount} أسئلة)... توليد ${missingCount} أسئلة مكملة.`,
         });
 
         try {
           const contextPrompt = type === 'topic'
             ? (topic || 'موضوع مخصص')
-            : `صاغ أسئلة مكملة حول العنوان والمحتوى التالي لتكملة العدد المطلوب (${totalQuestions} سؤال):\nالعنوان: ${finalTitle || 'محتوى المستند'}\n\n${(text || '').slice(0, 3000)}`;
+            : `صاغ أسئلة مكملة حول العنوان والمحتوى التالي لتكملة العدد المطلوب (${generationQuestionCount} سؤال):\nالعنوان: ${finalTitle || 'محتوى المستند'}\n\n${(text || '').slice(0, 3000)}`;
 
           const extraData = await generateQuizWithFallback(
             contextPrompt,
@@ -345,7 +356,7 @@ export function useQuizGenerator() {
 
         // If the AI still returned fewer questions than requested, generate distinct variations to strictly force exact count
         let cloneCounter = 1;
-        while (totalQuestions > 0 && accumulatedQuestions.length < totalQuestions) {
+        while (generationQuestionCount > 0 && accumulatedQuestions.length < generationQuestionCount) {
           const baseIndex = (cloneCounter - 1) % Math.max(1, accumulatedQuestions.length);
           const baseQ = accumulatedQuestions[baseIndex];
           if (!baseQ) break;
@@ -364,8 +375,8 @@ export function useQuizGenerator() {
         }
       }
 
-      if (totalQuestions > 0 && accumulatedQuestions.length > totalQuestions) {
-        accumulatedQuestions = accumulatedQuestions.slice(0, totalQuestions);
+      if (generationQuestionCount > 0 && accumulatedQuestions.length > generationQuestionCount) {
+        accumulatedQuestions = accumulatedQuestions.slice(0, generationQuestionCount);
       }
 
       if (accumulatedQuestions.length === 0) {
@@ -373,8 +384,8 @@ export function useQuizGenerator() {
       }
 
       setProgress({
-        current: totalQuestions,
-        total: totalQuestions,
+        current: generationQuestionCount,
+        total: generationQuestionCount,
         stage: 'saving',
         message: 'جاري حفظ الاختبار بالكامل في قاعدة البيانات...',
       });
@@ -408,8 +419,8 @@ export function useQuizGenerator() {
 
       if (!persist) {
         setProgress({
-          current: totalQuestions,
-          total: totalQuestions,
+          current: generationQuestionCount,
+          total: generationQuestionCount,
           percentage: 100,
           stage: 'solving',
           message: 'اكتمل استخراج الملف. الآن تبدأ مرحلة حل الاختبار ومراجعة الإجابات بدقة...',
@@ -447,8 +458,8 @@ export function useQuizGenerator() {
       });
 
       setProgress({
-        current: totalQuestions,
-        total: totalQuestions,
+        current: generationQuestionCount,
+        total: generationQuestionCount,
         stage: 'complete',
         message: 'تم توليد وحفظ الاختبار بنجاح! ✨',
       });

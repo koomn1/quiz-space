@@ -69,6 +69,8 @@ const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemini-3.8-flash',
 ];
+const GROQ_TEXT_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
   const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000;
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
@@ -426,6 +428,41 @@ async function callOpenRouterWithFallback(
   options?: OpenRouterRequestOptions,
 ): Promise<string> {
   let lastError: any = null;
+  const hasMultimodalContent = messages.some(message => Array.isArray(message?.content));
+  if (env.GROQ_API_KEY && !hasMultimodalContent) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), options?.timeoutMs ?? 30_000);
+      try {
+        const response = await fetch(GROQ_API_URL, {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.GROQ_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: GROQ_TEXT_MODEL,
+            messages,
+            max_tokens: options?.max_tokens,
+            temperature: options?.temperature,
+          }),
+        });
+        if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'groq', GROQ_TEXT_MODEL, response.status);
+        const payload = await response.json() as any;
+        const text = providerContentToText(payload.choices?.[0]?.message?.content ?? payload.choices?.[0]?.text);
+        if (!text) throw new AiProviderError('empty_response', 'groq', GROQ_TEXT_MODEL);
+        return options?.expectedAnswerCount
+          ? validateAnswerReviewResponse(text, options.expectedAnswerCount, GROQ_TEXT_MODEL, { allowPartial: options.allowPartial })
+          : text;
+      } finally {
+        clearTimeout(timeout);
+      }
+    } catch (error) {
+      lastError = error;
+      console.warn('Groq primary model failed; falling back to OpenRouter:', error);
+    }
+  }
   for (const model of models) {
     try {
       return await callOpenRouter(env, messages, model, plugins, options);
@@ -1131,8 +1168,28 @@ ${extraInstruction}`;
       // streaming UI makes).
       let upstream: Response | null = null;
       let selectedModel = '';
+      let selectedProvider = 'openrouter';
       let lastErr: any = null;
+      if (!hasAttachment && env.GROQ_API_KEY) {
+        try {
+          const r = await fetch(GROQ_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
+            body: JSON.stringify({ model: GROQ_TEXT_MODEL, messages, stream: true }),
+          });
+          if (r.ok && r.body) {
+            upstream = r;
+            selectedModel = GROQ_TEXT_MODEL;
+            selectedProvider = 'groq';
+          } else {
+            lastErr = await r.text();
+          }
+        } catch (err) {
+          lastErr = err;
+        }
+      }
       for (const model of candidates) {
+        if (upstream) break;
         try {
           const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -1158,7 +1215,7 @@ ${extraInstruction}`;
         await logAiPerformance(env, authHeader, {
           user_id: userId,
           operation: 'cosmo_chat_stream',
-          provider: 'openrouter',
+          provider: selectedProvider,
           model: selectedModel || OPENROUTER_TEXT_MODEL,
           status: 'success',
           latency_ms: Date.now() - startTime,

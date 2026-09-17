@@ -288,6 +288,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || secrets.VITE_OPENROUTER_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
@@ -302,6 +303,7 @@ jobs:
             fi
           }
           sync_secret OPENROUTER_API_KEY
+          sync_secret GROQ_API_KEY
           sync_secret GEMINI_API_KEY
           sync_secret TAVILY_API_KEY
           sync_secret SUPABASE_SERVICE_ROLE_KEY

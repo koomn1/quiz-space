@@ -1,11 +1,13 @@
 import type { Env } from './platform';
 
 export const COSMO_MODELS = [
-  'nvidia/nemotron-3-ultra-550b-a55b:free',
   'nvidia/nemotron-3.5-lightning:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
   'z-ai/glm-5.2:free',
+  'qwen/qwen3.8-flash',
+  'openai/gpt-5-mini',
 ];
+export const GROQ_TEXT_MODEL = 'llama-3.3-70b-versatile';
 
 export class AiServiceError extends Error {
   constructor(message: string, readonly retryable = true) {
@@ -22,18 +24,20 @@ function timeoutSignal(timeoutMs: number): { signal: AbortSignal; dispose: () =>
 
 export async function generateText(env: Env, messages: Array<{ role: string; content: unknown }>, options: { models?: string[]; timeoutMs?: number } = {}): Promise<{ text: string; model: string }> {
   const models = options.models?.length ? options.models : COSMO_MODELS;
+  const groqFirst = Boolean(env.GROQ_API_KEY) && !messages.some(message => Array.isArray(message.content));
+  const candidates = groqFirst ? [GROQ_TEXT_MODEL, ...models] : models;
   let lastError = 'No AI model accepted the request.';
-  for (const model of models) {
-    const timeout = timeoutSignal(options.timeoutMs || 15_000);
+  for (const model of candidates) {
+    const timeout = timeoutSignal(options.timeoutMs || 30_000);
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const isGroq = model === GROQ_TEXT_MODEL && Boolean(env.GROQ_API_KEY);
+      const response = await fetch(isGroq ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         signal: timeout.signal,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://quizspace.app',
-          'X-Title': 'QuizSpace',
+          Authorization: `Bearer ${isGroq ? env.GROQ_API_KEY : env.OPENROUTER_API_KEY}`,
+          ...(isGroq ? {} : { 'HTTP-Referer': 'https://quizspace.app', 'X-Title': 'QuizSpace' }),
         },
         body: JSON.stringify({ model, messages, temperature: 0.2 }),
       });
