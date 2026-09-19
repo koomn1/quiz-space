@@ -257,10 +257,10 @@ ${customInstruction?.trim() ? `Additional instructions: ${customInstruction.trim
 function generatePrompt(amount: number | null | undefined, customInstruction?: string | null): string {
   const scopeInstruction = Number.isInteger(amount) && Number(amount) > 0
     ? `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف.`
-    : 'اقرأ محتوى المحاضرة بالكامل وأنشئ سؤالاً لكل نقطة أو معلومة أو مفهوم مهم يمكن أن يأتي منه سؤال. لا تضع حداً ثابتاً لعدد الأسئلة ولا تتوقف عند رقم افتراضي؛ غطِّ كل الأجزاء القابلة للسؤال، مع إزالة التكرار فقط.';
+    : 'اقرأ محتوى الملف بالكامل، فقرةً فقرةً وعنواناً عنواناً، وأنشئ أكبر عدد ممكن من الأسئلة عالية الجودة: سؤالاً مستقلاً لكل حقيقة أو تعريف أو علاقة أو خطوة أو مثال أو مفهوم مهم يمكن أن يأتي منه سؤال. لا تستخدم 10 أسئلة كحد افتراضي، ولا تختصر الملف في ملخص، ولا تتوقف حتى تغطي جميع الأجزاء القابلة للسؤال. أزل التكرار الحقيقي فقط، واحتفظ بالأسئلة المختلفة حتى لو كانت من نفس الفصل.';
   return `${scopeInstruction}
 
-قاعدة اللغة إلزامية: حدّد لغة المحتوى المصدر نفسه من النص أو الصفحات المرفقة، ولا تحدد اللغة بناءً على هذه التعليمات أو لغة المستخدم. إذا كان المحتوى باللغة الإنجليزية فأخرج الاختبار بالكامل باللغة الإنجليزية، وإذا كان باللغة العربية فأخرجه بالكامل باللغة العربية. اكتب العنوان والوصف ونصوص الأسئلة والاختيارات والإجابات والتفسيرات باللغة نفسها، ولا تترجم المحتوى ولا تخلط العربية والإنجليزية إلا إذا كان المصطلح نفسه جزءاً أصيلاً من المصدر. إذا كان الملف متعدد اللغات، استخدم اللغة الغالبة في المحتوى مع الحفاظ على المصطلحات الأصلية الضرورية. هذه القاعدة تنطبق على التوليد من النص وعلى الصفحات المصورة أو الممسوحة ضوئياً.
+قاعدة اللغة إلزامية وأعلى أولوية: اكتشف لغة المحتوى المصدر نفسه أولاً من النص أو الصفحات، ثم أخرج العنوان والوصف والأسئلة والاختيارات والإجابات والتفسيرات باللغة الغالبة نفسها. إذا كان الملف إنجليزياً فكل الناتج إنجليزي، وإذا كان عربياً فكل الناتج عربي. لا تستخدم العربية بسبب لغة التعليمات أو لغة المستخدم، ولا تترجم المصدر ولا تخلط اللغتين إلا للمصطلح الأصلي الضروري. إذا كان الملف متعدد اللغات استخدم لغة المحتوى الغالبة. راجع اللغة قبل إخراج JSON.
 
 حافظ على معلومات المصدر ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية (لا تغيّر لغة الإخراج المحددة من المصدر): ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
@@ -712,7 +712,7 @@ async function extractPdfVision(
           { type: 'text', text: documentVisionPrompt(job) },
           { type: 'file', file: { filename: `pages-${start + offset + 1}.pdf`, file_data: `data:application/pdf;base64,${fileBase64}` } },
         ],
-      }], VISION_MODEL_FALLBACKS);
+      }], VISION_MODEL_FALLBACKS, { maxTokens: 12_000, temperature: 0.15 });
       return { model: request.model, quiz: parseJson(request.text) };
     }));
     for (const result of results) {
@@ -776,19 +776,16 @@ async function generateQuestionsFromText(
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
   const requestedCount = job.requested_question_count || null;
     const prompt = `${generatePrompt(requestedCount, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`;
-  const messages = [
-    {
-      role: 'system',
-      content: 'أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ المادة كاملة، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواها فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.',
-    },
-    { role: 'user', content: prompt },
-  ];
+  const messages = [{
+    role: 'user',
+    content: `أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ المادة كاملة، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواها فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.\n\n${prompt}`,
+  }];
   let lastError: unknown;
   // Use the same OpenRouter chat-style invocation as Cosmo. The only difference
   // is the system instruction and structured quiz response contract above.
   for (const model of TEXT_MODEL_FALLBACKS) {
     try {
-      const response = await callOpenRouterWithFallback(env, messages, [model], { maxTokens: 4_000, temperature: 0.2 });
+      const response = await callOpenRouterWithFallback(env, messages, [model], { maxTokens: 12_000, temperature: 0.2 });
       const quiz = parseJson(response.text);
       const questions = normalizeQuestions(quiz);
       if (!questions.length) throw new Error('The document did not contain any valid questions.');
