@@ -9,7 +9,7 @@ const routeSources = [workerSource, authSource, cosmoRoutesSource].join('\n');
 
 describe('Cosmo generation recovery contract', () => {
   it('uses Groq Llama as the primary text route with OpenRouter fallback', () => {
-    expect(workerSource).toContain("const GROQ_TEXT_MODEL = 'llama-3.3-70b-versatile'");
+    expect(workerSource).toContain("const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b'");
     expect(workerSource).toContain('if (env.GROQ_API_KEY && !hasMultimodalContent)');
     expect(workerSource).toContain('falling back to OpenRouter');
     expect(workerSource).toContain('https://api.groq.com/openai/v1/chat/completions');

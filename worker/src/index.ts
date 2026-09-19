@@ -69,7 +69,9 @@ const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemini-3.8-flash',
 ];
-const GROQ_TEXT_MODEL = 'llama-3.3-70b-versatile';
+// llama-3.3-70b-versatile was shut down by Groq on 2026-08-16.
+// GPT-OSS 20B is the fast, low-cost production replacement for routine text work.
+const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
   const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000;
 const OPENROUTER_SITE_URL = 'https://quizspace.app';

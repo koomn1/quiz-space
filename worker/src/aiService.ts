@@ -7,7 +7,7 @@ export const COSMO_MODELS = [
   'qwen/qwen3.8-flash',
   'openai/gpt-5-mini',
 ];
-export const GROQ_TEXT_MODEL = 'llama-3.3-70b-versatile';
+export const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
 
 export class AiServiceError extends Error {
   constructor(message: string, readonly retryable = true) {
