@@ -22,7 +22,7 @@ import { handleExtractionRoutes } from './extractionRoutes';
 import { finishTask, retryDelaySeconds } from './taskLedger';
 export type { Env, ExtractionQueueMessage, WorkerExecutionContext } from './platform';
 
-type Provider = 'openrouter';
+type Provider = 'groq' | 'openrouter';
 
 // Default text + vision models used when calling OpenRouter. OpenRouter is
 // a single API that proxies many underlying models — change these two
@@ -582,11 +582,18 @@ async function gradeEssayWithFallback(env: Env, question: string, modelAnswer: s
 }
 
 async function providerText(
-  _provider: Provider,
+  provider: Provider,
   prompt: string,
   env: Env,
   options: { timeoutMs?: number } = {},
 ): Promise<string> {
+  if (provider === 'groq') {
+    try {
+      return await callGroq(env, [{ role: 'user', content: prompt }], options);
+    } catch (error) {
+      console.warn('Groq request failed; using OpenRouter fallback:', error);
+    }
+  }
   try {
     return await callOpenRouterWithFallback(
       env,
@@ -601,6 +608,35 @@ async function providerText(
       return await callGeminiJsonWithParts(env, [{ text: prompt }], 45_000, 8_000);
     }
     throw openRouterError;
+  }
+}
+
+async function callGroq(
+  env: Env,
+  messages: any[],
+  options: { timeoutMs?: number } = {},
+): Promise<string> {
+  if (!env.GROQ_API_KEY) throw new AiProviderError('provider_error', 'groq', GROQ_TEXT_MODEL);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 30_000);
+  try {
+    const response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
+      body: JSON.stringify({ model: GROQ_TEXT_MODEL, messages, temperature: 0.35, max_tokens: 8_000 }),
+    });
+    if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'groq', GROQ_TEXT_MODEL, response.status);
+    const payload: any = await response.json();
+    const text = providerContentToText(payload.choices?.[0]?.message?.content);
+    if (!text) throw new AiProviderError('empty_response', 'groq', GROQ_TEXT_MODEL);
+    return text;
+  } catch (error) {
+    if (error instanceof AiProviderError) throw error;
+    if (error instanceof DOMException && error.name === 'AbortError') throw new AiProviderError('timeout', 'groq', GROQ_TEXT_MODEL);
+    throw new AiProviderError('provider_error', 'groq', GROQ_TEXT_MODEL);
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -803,7 +839,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
         aiOperation = 'generation';
         aiProvider = typeof body.provider === 'string' ? body.provider : 'unknown';
         const provider = body.provider as Provider;
-        if (provider !== 'openrouter' || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
+        if ((provider !== 'groq' && provider !== 'openrouter') || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
           return json({ error: 'Invalid generation request' }, 400, headers);
         }
         const baseQuestions = Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : [];
@@ -818,7 +854,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
         while (missing > 0 && retries < 2) {
           retries++;
           try {
-            const remainder = await providerText('openrouter', quizPrompt(
+            const remainder = await providerText(provider, quizPrompt(
               `${body.topic} — أكمل الاختبار السابق بالأسئلة الناقصة فقط دون تكرار، وأجب بعدد ${missing} سؤال بالضبط`,
               missing,
               [...baseQuestions, ...((result?.questions || []).map((q: any) => String(q.text || '')))].slice(-200)
@@ -1039,14 +1075,20 @@ ${extraInstruction}`;
     }
 
     if (path === '/api/ai/groq') {
-      // Backward-compatible alias for older web clients. It never calls Groq;
-      // all requests are routed through the OpenRouter model fallback.
+      // Backward-compatible alias for older web clients: Groq first, then
+      // OpenRouter if Groq is unavailable.
       if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid request' }, 400, headers);
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];
       const messages: any[] = [];
       if (typeof body.systemInstruction === 'string') messages.push({ role: 'system', content: body.systemInstruction.slice(0, 10_000) });
       messages.push(...history, { role: 'user', content: body.prompt });
-      const text = await callOpenRouterWithFallback(env, messages, OPENROUTER_TEXT_FALLBACKS);
+      let text: string;
+      try {
+        text = await callGroq(env, messages);
+      } catch (error) {
+        console.warn('Groq chat request failed; using OpenRouter fallback:', error);
+        text = await callOpenRouterWithFallback(env, messages, OPENROUTER_TEXT_FALLBACKS);
+      }
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {
           user_id: userId,

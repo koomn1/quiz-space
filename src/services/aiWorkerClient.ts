@@ -3,7 +3,7 @@ import { getApiUrl } from '../lib/origin';
 import { GeneratedQuiz } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
-export type AiProvider = 'openrouter';
+export type AiProvider = 'groq' | 'openrouter';
 
 interface WorkerError {
   error?: string;
