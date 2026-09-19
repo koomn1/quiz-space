@@ -20,13 +20,13 @@ jobs:
           node-version: '22'
       - name: Send rotating promotion
         env:
-          SUPABASE_FUNCTION_URL: https://eqfrxrsstatryaetgerw.supabase.co/functions/v1
+          SUPABASE_FUNCTION_URL: ${{ secrets.SUPABASE_FUNCTION_URL }}
           PROMOTION_CRON_SECRET: ${{ secrets.PROMOTION_CRON_SECRET }}
         run: node scripts/send_scheduled_promotion.mjs
 
       - name: Send daily engagement reminders
         env:
-          SUPABASE_FUNCTION_URL: https://eqfrxrsstatryaetgerw.supabase.co/functions/v1
+          SUPABASE_FUNCTION_URL: ${{ secrets.SUPABASE_FUNCTION_URL }}
           PROMOTION_CRON_SECRET: ${{ secrets.PROMOTION_CRON_SECRET }}
         run: |
           set -euo pipefail
