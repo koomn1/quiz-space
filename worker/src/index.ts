@@ -253,7 +253,7 @@ function extractJson(text: string, depth = 0): unknown {
   throw new Error('AI provider returned invalid JSON.');
 }
 
-function quizPrompt(topic: string, amount: number, previous: string[]): string {
+function quizPrompt(topic: string, amount: number, previous: string[], automatic = false): string {
   const exclusions = previous.length ? `\nلا تكرر هذه الأسئلة: ${previous.join(' | ')}` : '';
   const requiresArabic = /[\u0621-\u064A]/u.test(topic);
   const languageConstraint = requiresArabic
@@ -262,7 +262,10 @@ function quizPrompt(topic: string, amount: number, previous: string[]): string {
   // esbuild 0.25+ refuses template literals containing three consecutive
   // backticks (code-fence markers), so build the prompt without fences.
   const fence = String.fromCharCode(96, 96, 96); // ```
-  return (`أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.` + exclusions + languageConstraint + `
+  const countInstruction = automatic
+    ? `أنشئ عدداً مناسباً من الأسئلة حسب كثافة وأهمية المحتوى، بحد أقصى ${amount} سؤالاً. لا تضف أسئلة مكررة أو حشواً للوصول إلى الحد، ويمكن أن يكون العدد أقل إذا كان المحتوى لا يستحق المزيد.`
+    : `أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة)`;
+  return (`${countInstruction} عن: ${topic}.` + exclusions + languageConstraint + `
 نوّع أنواع الأسئلة: اختيار من متعدد (mcq) وصح/خطأ (tf) وأسئلة مقالية (essay) حسب الموضوع.
 أجب بـ JSON صالح فقط محاط بوسم ${fence}json ... ${fence} وفق الشكل التالي:
 {"title":"عنوان الاختبار","description":"وصف الاختبار","questions":[
@@ -842,14 +845,18 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
         if ((provider !== 'groq' && provider !== 'openrouter') || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
           return json({ error: 'Invalid generation request' }, 400, headers);
         }
+        const automatic = body.automatic === true;
         const baseQuestions = Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : [];
-        let text = await providerText(provider, quizPrompt(body.topic, body.amount, baseQuestions), env);
+        let text = await providerText(provider, quizPrompt(body.topic, body.amount, baseQuestions, automatic), env);
         let result = extractJson(text) as any;
         // Models occasionally stop early and return fewer questions than
         // requested — retry up to 2 times, asking explicitly for the missing
         // remainder so the returned quiz honors the requested count.
-        let missing = Number.isInteger(body.amount) && Array.isArray(result?.questions)
-          ? body.amount - result.questions.length : body.amount;
+        let missing = automatic
+          ? 0
+          : Number.isInteger(body.amount) && Array.isArray(result?.questions)
+            ? body.amount - result.questions.length
+            : body.amount;
         let retries = 0;
         while (missing > 0 && retries < 2) {
           retries++;
@@ -857,7 +864,8 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
             const remainder = await providerText(provider, quizPrompt(
               `${body.topic} — أكمل الاختبار السابق بالأسئلة الناقصة فقط دون تكرار، وأجب بعدد ${missing} سؤال بالضبط`,
               missing,
-              [...baseQuestions, ...((result?.questions || []).map((q: any) => String(q.text || '')))].slice(-200)
+              [...baseQuestions, ...((result?.questions || []).map((q: any) => String(q.text || '')))].slice(-200),
+              false
             ), env);
             const extra = extractJson(remainder) as any;
             if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
@@ -871,7 +879,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
           } catch { break; }
         }
 
-        if (!Array.isArray(result?.questions) || result.questions.length < body.amount) {
+        if (!Array.isArray(result?.questions) || (!automatic && result.questions.length < body.amount)) {
           throw new Error('Generation did not return the requested number of questions.');
         }
         result.questions = result.questions.slice(0, body.amount);

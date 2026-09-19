@@ -203,6 +203,7 @@ export async function generateQuizWithProvider(
   topic: string,
   amount: number,
   alreadyGeneratedQuestions: string[] = [],
+  automatic = false,
 ): Promise<GeneratedQuiz> {
   try {
     return await workerRequest<GeneratedQuiz>('/api/ai/generate', {
@@ -210,6 +211,7 @@ export async function generateQuizWithProvider(
       topic,
       amount,
       alreadyGeneratedQuestions,
+      automatic,
     });
   } catch (err) {
     throw err;

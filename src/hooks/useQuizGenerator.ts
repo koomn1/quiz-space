@@ -26,11 +26,11 @@ export function formatExtractionEta(createdAt: string, processedChunks: number, 
 }
 
 // The topic/text generation API requires a positive amount. The UI uses zero
-// as its automatic sentinel; use the platform maximum as a coverage ceiling
-// rather than silently converting automatic mode into ten questions.
+// as its automatic sentinel; 40 is only a safety ceiling sent to the AI, while
+// automatic mode explicitly lets the AI choose the useful count below it.
 export function normalizeGenerationQuestionCount(totalQuestions: number): number {
   const requested = Number(totalQuestions);
-  return Number.isInteger(requested) && requested > 0 ? Math.min(requested, 500) : 500;
+  return Number.isInteger(requested) && requested > 0 ? Math.min(requested, 500) : 40;
 }
 
 export function useQuizGenerator() {
@@ -75,6 +75,7 @@ export function useQuizGenerator() {
         persist = true,
       } = params;
 
+      const automaticCount = totalQuestions <= 0 && type !== 'file_direct';
       const generationQuestionCount = type === 'file_direct'
         ? totalQuestions
         : normalizeGenerationQuestionCount(totalQuestions);
@@ -111,7 +112,8 @@ export function useQuizGenerator() {
             data = await generateQuizWithFallback(
               topic || '',
               currentBatchSize,
-              accumulatedQuestions.map(q => q.text)
+              accumulatedQuestions.map(q => q.text),
+              automaticCount
             );
           } catch (error) {
             lastGenerationError = error instanceof Error ? error : new Error(String(error));
@@ -123,7 +125,8 @@ export function useQuizGenerator() {
               const retry = await generateQuizWithFallback(
                 topic || '',
                 currentBatchSize,
-                accumulatedQuestions.map(q => q.text)
+                accumulatedQuestions.map(q => q.text),
+                automaticCount
               );
               if (retry.questions && retry.questions.length > 0) {
                 data = retry;
@@ -135,12 +138,13 @@ export function useQuizGenerator() {
           // Models occasionally return fewer questions than requested —
           // retry the batch once, asking for the exact missing remainder.
           const returned = data?.questions ? data.questions.length : 0;
-          if (returned > 0 && returned < currentBatchSize && data) {
+          if (!automaticCount && returned > 0 && returned < currentBatchSize && data) {
             try {
               const extra = await generateQuizWithFallback(
                 topic || '',
                 currentBatchSize - returned,
-                [...accumulatedQuestions.map(q => q.text), ...data.questions.map((q: any) => String(q.text || ''))].slice(-200)
+                [...accumulatedQuestions.map(q => q.text), ...data.questions.map((q: any) => String(q.text || ''))].slice(-200),
+                automaticCount
               );
               if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
                 data.questions = [...data.questions, ...extra.questions];
@@ -173,7 +177,8 @@ export function useQuizGenerator() {
             data = await generateQuizWithFallback(
               `النص المصدر للأسئلة:\n\n${text}`,
               currentBatchSize,
-              accumulatedQuestions.map(q => q.text)
+              accumulatedQuestions.map(q => q.text),
+              automaticCount
             );
           } catch (error) {
             lastGenerationError = error instanceof Error ? error : new Error(String(error));
@@ -185,7 +190,8 @@ export function useQuizGenerator() {
               const retry = await generateQuizWithFallback(
                 `النص المصدر للأسئلة:\n\n${text}`,
                 currentBatchSize,
-                accumulatedQuestions.map(q => q.text)
+                accumulatedQuestions.map(q => q.text),
+                automaticCount
               );
               if (retry.questions && retry.questions.length > 0) {
                 data = retry;
@@ -195,12 +201,13 @@ export function useQuizGenerator() {
             }
           }
           const returned2 = data?.questions ? data.questions.length : 0;
-          if (returned2 > 0 && returned2 < currentBatchSize && data) {
+          if (!automaticCount && returned2 > 0 && returned2 < currentBatchSize && data) {
             try {
               const extra = await generateQuizWithFallback(
                 `النص المصدر للأسئلة:\n\n${text}`,
                 currentBatchSize - returned2,
-                [...accumulatedQuestions.map(q => q.text), ...data.questions.map((q: any) => String(q.text || ''))].slice(-200)
+                [...accumulatedQuestions.map(q => q.text), ...data.questions.map((q: any) => String(q.text || ''))].slice(-200),
+                automaticCount
               );
               if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
                 data.questions = [...data.questions, ...extra.questions];
@@ -325,7 +332,7 @@ export function useQuizGenerator() {
       }
 
       // STRICT ENFORCEMENT OF REQUIRED QUESTION COUNT (إجبار العدد المطلوب)
-      if (generationQuestionCount > 0 && accumulatedQuestions.length < generationQuestionCount) {
+      if (!automaticCount && generationQuestionCount > 0 && accumulatedQuestions.length < generationQuestionCount) {
         const missingCount = generationQuestionCount - accumulatedQuestions.length;
         setProgress({
           current: accumulatedQuestions.length,

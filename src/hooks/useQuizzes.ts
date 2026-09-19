@@ -128,11 +128,12 @@ const PROVIDER_TIMEOUT_MS = 35_000;
 export async function generateQuizWithFallback(
   topic: string,
   amount: number,
-  alreadyGeneratedQuestions?: string[]
+  alreadyGeneratedQuestions?: string[],
+  automatic = false,
 ): Promise<GeneratedQuiz> {
   const enforceArabic = requiresArabicGeneration(topic);
   const providers = [
-    { key: 'groq → openrouter', run: () => generateWithOpenRouter(topic, amount, alreadyGeneratedQuestions) },
+    { key: 'groq → openrouter', run: () => generateWithOpenRouter(topic, amount, alreadyGeneratedQuestions, automatic) },
   ];
 
   const errors: string[] = [];
