@@ -26,10 +26,11 @@ export function formatExtractionEta(createdAt: string, processedChunks: number, 
 }
 
 // The topic/text generation API requires a positive amount. The UI uses zero
-// as its automatic sentinel, so resolve it before entering the batching loops.
+// as its automatic sentinel; use the platform maximum as a coverage ceiling
+// rather than silently converting automatic mode into ten questions.
 export function normalizeGenerationQuestionCount(totalQuestions: number): number {
   const requested = Number(totalQuestions);
-  return Number.isInteger(requested) && requested > 0 ? Math.min(requested, 500) : 10;
+  return Number.isInteger(requested) && requested > 0 ? Math.min(requested, 500) : 500;
 }
 
 export function useQuizGenerator() {
