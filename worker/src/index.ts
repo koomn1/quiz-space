@@ -13,7 +13,7 @@ import {
   visionChunkRetryDelaySeconds,
   type ExtractionJobRow,
 } from './extractionJobs';
-import { getAccountProfile, getCosmoAccountContext, getUserId, hasPaidCosmoAccess } from './auth';
+import { getAccountProfile, getCosmoAccountContext, getUserId, hasPaidCosmoAccess, SupabaseConfigurationError } from './auth';
 import { enqueueExtractionJob, scheduleExtractionJob } from './queue';
 import { publicExtractionJob, type Env, type ExtractionQueueMessage, type WorkerExecutionContext } from './platform';
 import { handleAuthRoutes } from './authRoutes';
@@ -738,7 +738,16 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   if (request.method !== 'POST' && !isExtractionJobRead) return json({ error: 'Method not allowed' }, 405, headers);
       // Cosmo is available to guests as a limited preview. Authenticated users
       // still receive their real user id for persistence/performance logging.
-      const userId = (await getUserId(request, env)) || 'guest';
+      let userId: string | null;
+      try {
+        userId = await getUserId(request, env);
+      } catch (error) {
+        if (error instanceof SupabaseConfigurationError) {
+          return json({ error: 'Server authentication is not configured.' }, 500, headers);
+        }
+        throw error;
+      }
+      userId ||= 'guest';
   const authHeader = request.headers.get('Authorization') || '';
   const startTime = Date.now();
   let aiOperation = 'request';
