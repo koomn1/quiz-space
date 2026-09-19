@@ -48,6 +48,7 @@
     "qrcode": "^1.5.4",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "react-is": "^19.3.0",
     "recharts": "^3.8.1",
     "tailwindcss": "^4.1.14",
     "thinking-orbs": "^0.3.1",

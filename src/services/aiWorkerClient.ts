@@ -9,7 +9,10 @@ interface WorkerError {
   error?: string;
 }
 
-const AI_REQUEST_TIMEOUT_MS = 90_000;
+// A 40-question JSON response may legitimately need more than a minute when
+// OpenRouter rotates through fallback models. Keep the client alive long
+// enough for the Worker to finish instead of surfacing a false cancellation.
+const AI_REQUEST_TIMEOUT_MS = 150_000;
 const AI_STREAM_TIMEOUT_MS = 60_000;
 const AI_STREAM_FALLBACK_TIMEOUT_MS = 30_000;
 

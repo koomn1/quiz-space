@@ -123,7 +123,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
-const PROVIDER_TIMEOUT_MS = 35_000;
+// The Worker owns provider fallback and can spend up to 30 seconds per model.
+// A shorter UI race rejects a still-valid request and leaves it running, which
+// is the source of intermittent "request cancelled" reports under load.
+const PROVIDER_TIMEOUT_MS = 165_000;
 
 export async function generateQuizWithFallback(
   topic: string,

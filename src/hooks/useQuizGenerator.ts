@@ -25,12 +25,49 @@ export function formatExtractionEta(createdAt: string, processedChunks: number, 
   return `الوقت المتبقي التقريبي: نحو ${Math.ceil(remainingSeconds / 60)} دقيقة.`;
 }
 
-// The topic/text generation API requires a positive amount. The UI uses zero
-// as its automatic sentinel; 40 is only a safety ceiling sent to the AI, while
-// automatic mode explicitly lets the AI choose the useful count below it.
+// Zero is the UI sentinel for automatic count; the Worker still needs a
+// positive safety amount while allowing the model to choose the useful count.
 export function normalizeGenerationQuestionCount(totalQuestions: number): number {
   const requested = Number(totalQuestions);
   return Number.isInteger(requested) && requested > 0 ? Math.min(requested, 500) : 40;
+}
+
+async function generateQuestionBatches(options: {
+  prompt: string;
+  totalQuestions: number;
+  batchSize: number;
+  excludedQuestions: string[];
+  automatic: boolean;
+  onProgress: (completed: number, totalBatches: number, batchNumber: number) => void;
+}): Promise<{ questions: any[]; title: string; description: string; lastError: Error | null }> {
+  const batchCount = Math.ceil(options.totalQuestions / options.batchSize);
+  const results: Array<{ index: number; data: GeneratedQuiz | null; error: Error | null }> = [];
+  let nextIndex = 0;
+
+  // Two concurrent requests cut the wall-clock time for 100–200 questions
+  // without flooding OpenRouter or creating an unbounded browser queue.
+  const worker = async () => {
+    while (nextIndex < batchCount) {
+      const index = nextIndex++;
+      const amount = Math.min(options.batchSize, options.totalQuestions - index * options.batchSize);
+      options.onProgress(index * options.batchSize, batchCount, index + 1);
+      try {
+        const data = await generateQuizWithFallback(options.prompt, amount, options.excludedQuestions, options.automatic);
+        results.push({ index, data, error: null });
+      } catch (error) {
+        results.push({ index, data: null, error: error instanceof Error ? error : new Error(String(error)) });
+      }
+    }
+  };
+
+  await Promise.all(Array.from({ length: Math.min(2, batchCount) }, () => worker()));
+  results.sort((a, b) => a.index - b.index);
+  return {
+    questions: results.flatMap(result => result.data?.questions || []),
+    title: results.find(result => result.data?.title)?.data?.title || '',
+    description: results.find(result => result.data?.description)?.data?.description || '',
+    lastError: results.find(result => result.error)?.error || null,
+  };
 }
 
 export function useQuizGenerator() {
@@ -97,132 +134,41 @@ export function useQuizGenerator() {
       const BATCH_SIZE = 40;
 
       if (type === 'topic') {
-        const totalBatches = Math.ceil(generationQuestionCount / BATCH_SIZE);
-        for (let i = 0; i < totalBatches; i++) {
-          const currentBatchSize = Math.min(BATCH_SIZE, generationQuestionCount - i * BATCH_SIZE);
-          setProgress({
-            current: i * BATCH_SIZE,
+        const generated = await generateQuestionBatches({
+          prompt: topic || '',
+          totalQuestions: generationQuestionCount,
+          batchSize: BATCH_SIZE,
+          excludedQuestions: [],
+          automatic: automaticCount,
+          onProgress: (current, totalBatches, batchNumber) => setProgress({
+            current,
             total: generationQuestionCount,
             stage: 'generating',
-            message: `جاري الاتصال بالمزود لتوليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${generationQuestionCount} سؤال)... قد يتأخر الرد قليلًا دون أن تتوقف العملية.`,
-          });
-
-          let data: GeneratedQuiz | null = null;
-          try {
-            data = await generateQuizWithFallback(
-              topic || '',
-              currentBatchSize,
-              accumulatedQuestions.map(q => q.text),
-              automaticCount
-            );
-          } catch (error) {
-            lastGenerationError = error instanceof Error ? error : new Error(String(error));
-          }
-          
-          // If the batch failed entirely (no questions returned), retry with providers
-          if (!data?.questions || data.questions.length === 0) {
-            try {
-              const retry = await generateQuizWithFallback(
-                topic || '',
-                currentBatchSize,
-                accumulatedQuestions.map(q => q.text),
-                automaticCount
-              );
-              if (retry.questions && retry.questions.length > 0) {
-                data = retry;
-              }
-            } catch (error) {
-              lastGenerationError = error instanceof Error ? error : new Error(String(error));
-            }
-          }
-          // Models occasionally return fewer questions than requested —
-          // retry the batch once, asking for the exact missing remainder.
-          const returned = data?.questions ? data.questions.length : 0;
-          if (!automaticCount && returned > 0 && returned < currentBatchSize && data) {
-            try {
-              const extra = await generateQuizWithFallback(
-                topic || '',
-                currentBatchSize - returned,
-                [...accumulatedQuestions.map(q => q.text), ...data.questions.map((q: any) => String(q.text || ''))].slice(-200),
-                automaticCount
-              );
-              if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
-                data.questions = [...data.questions, ...extra.questions];
-              }
-            } catch (error) {
-              lastGenerationError = error instanceof Error ? error : new Error(String(error));
-            }
-          }
-
-          if (data?.questions && Array.isArray(data.questions)) {
-            if (!finalTitle && data.title) finalTitle = data.title;
-            if (!finalDescription && data.description) finalDescription = data.description;
-            
-            accumulatedQuestions = [...accumulatedQuestions, ...data.questions];
-          }
-        }
+            message: `جاري توليد الدفعة ${batchNumber} من ${totalBatches} (${current}/${generationQuestionCount} سؤال)...`,
+          }),
+        });
+        accumulatedQuestions = generated.questions;
+        finalTitle = generated.title;
+        finalDescription = generated.description;
+        lastGenerationError = generated.lastError;
       } else if (type === 'pasted_text') {
-        const totalBatches = Math.ceil(generationQuestionCount / BATCH_SIZE);
-        for (let i = 0; i < totalBatches; i++) {
-          const currentBatchSize = Math.min(BATCH_SIZE, generationQuestionCount - i * BATCH_SIZE);
-          setProgress({
-            current: i * BATCH_SIZE,
+        const generated = await generateQuestionBatches({
+          prompt: `النص المصدر للأسئلة:\n\n${text}`,
+          totalQuestions: generationQuestionCount,
+          batchSize: BATCH_SIZE,
+          excludedQuestions: [],
+          automatic: automaticCount,
+          onProgress: (current, totalBatches, batchNumber) => setProgress({
+            current,
             total: generationQuestionCount,
             stage: 'generating',
-            message: `جاري تحليل النص وتوليد الدفعة ${i + 1} من ${totalBatches} (${i * BATCH_SIZE}/${generationQuestionCount} سؤال)...`,
-          });
-
-          let data: GeneratedQuiz | null = null;
-          try {
-            data = await generateQuizWithFallback(
-              `النص المصدر للأسئلة:\n\n${text}`,
-              currentBatchSize,
-              accumulatedQuestions.map(q => q.text),
-              automaticCount
-            );
-          } catch (error) {
-            lastGenerationError = error instanceof Error ? error : new Error(String(error));
-          }
-          
-          // If the batch failed entirely, retry once more
-          if (!data?.questions || data.questions.length === 0) {
-            try {
-              const retry = await generateQuizWithFallback(
-                `النص المصدر للأسئلة:\n\n${text}`,
-                currentBatchSize,
-                accumulatedQuestions.map(q => q.text),
-                automaticCount
-              );
-              if (retry.questions && retry.questions.length > 0) {
-                data = retry;
-              }
-            } catch (error) {
-              lastGenerationError = error instanceof Error ? error : new Error(String(error));
-            }
-          }
-          const returned2 = data?.questions ? data.questions.length : 0;
-          if (!automaticCount && returned2 > 0 && returned2 < currentBatchSize && data) {
-            try {
-              const extra = await generateQuizWithFallback(
-                `النص المصدر للأسئلة:\n\n${text}`,
-                currentBatchSize - returned2,
-                [...accumulatedQuestions.map(q => q.text), ...data.questions.map((q: any) => String(q.text || ''))].slice(-200),
-                automaticCount
-              );
-              if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
-                data.questions = [...data.questions, ...extra.questions];
-              }
-            } catch (error) {
-              lastGenerationError = error instanceof Error ? error : new Error(String(error));
-            }
-          }
-
-          if (data?.questions && Array.isArray(data.questions)) {
-            if (!finalTitle && data.title) finalTitle = data.title;
-            if (!finalDescription && data.description) finalDescription = data.description;
-            accumulatedQuestions = [...accumulatedQuestions, ...data.questions];
-          }
-        }
+            message: `جاري تحليل النص وتوليد الدفعة ${batchNumber} من ${totalBatches} (${current}/${generationQuestionCount} سؤال)...`,
+          }),
+        });
+        accumulatedQuestions = generated.questions;
+        finalTitle = generated.title;
+        finalDescription = generated.description;
+        lastGenerationError = generated.lastError;
       } else if (type === 'file_direct') {
         setProgress({
           current: 0,
@@ -392,7 +338,7 @@ export function useQuizGenerator() {
       }
 
       setProgress({
-        current: generationQuestionCount,
+        current: accumulatedQuestions.length,
         total: generationQuestionCount,
         stage: 'saving',
         message: 'جاري حفظ الاختبار بالكامل في قاعدة البيانات...',
@@ -427,7 +373,7 @@ export function useQuizGenerator() {
 
       if (!persist) {
         setProgress({
-          current: generationQuestionCount,
+          current: accumulatedQuestions.length,
           total: generationQuestionCount,
           percentage: 100,
           stage: 'solving',
@@ -466,7 +412,7 @@ export function useQuizGenerator() {
       });
 
       setProgress({
-        current: generationQuestionCount,
+        current: accumulatedQuestions.length,
         total: generationQuestionCount,
         stage: 'complete',
         message: 'تم توليد وحفظ الاختبار بنجاح! ✨',
