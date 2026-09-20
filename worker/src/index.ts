@@ -280,6 +280,8 @@ interface OpenRouterRequestOptions {
   max_tokens?: number;
   temperature?: number;
   timeoutMs?: number;
+  useGroq?: boolean;
+  validateText?: (text: string) => void;
   response_format?: { type: 'json_object' };
   expectedAnswerCount?: number;
   allowPartial?: boolean;
@@ -434,7 +436,7 @@ async function callOpenRouterWithFallback(
 ): Promise<string> {
   let lastError: any = null;
   const hasMultimodalContent = messages.some(message => Array.isArray(message?.content));
-  if (env.GROQ_API_KEY && !hasMultimodalContent) {
+  if (env.GROQ_API_KEY && options?.useGroq !== false && !hasMultimodalContent) {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), options?.timeoutMs ?? 30_000);
@@ -457,6 +459,7 @@ async function callOpenRouterWithFallback(
         const payload = await response.json() as any;
         const text = providerContentToText(payload.choices?.[0]?.message?.content ?? payload.choices?.[0]?.text);
         if (!text) throw new AiProviderError('empty_response', 'groq', GROQ_TEXT_MODEL);
+        options?.validateText?.(text);
         return options?.expectedAnswerCount
           ? validateAnswerReviewResponse(text, options.expectedAnswerCount, GROQ_TEXT_MODEL, { allowPartial: options.allowPartial })
           : text;
@@ -470,7 +473,9 @@ async function callOpenRouterWithFallback(
   }
   for (const model of models) {
     try {
-      return await callOpenRouter(env, messages, model, plugins, options);
+      const text = await callOpenRouter(env, messages, model, plugins, options);
+      options?.validateText?.(text);
+      return text;
     } catch (err) {
       lastError = err;
       console.warn(`OpenRouter model ${model} failed, trying next:`, err);
@@ -588,7 +593,7 @@ async function providerText(
   provider: Provider,
   prompt: string,
   env: Env,
-  options: { timeoutMs?: number } = {},
+  options: { timeoutMs?: number; validateText?: (text: string) => void } = {},
 ): Promise<string> {
   if (provider === 'groq') {
     try {
@@ -603,7 +608,7 @@ async function providerText(
       [{ role: 'user', content: prompt }],
       OPENROUTER_TEXT_FALLBACKS,
       undefined,
-      { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs },
+      { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs, useGroq: false, validateText: options.validateText },
     );
   } catch (openRouterError) {
     if (env.GEMINI_API_KEY) {
@@ -617,7 +622,7 @@ async function providerText(
 async function callGroq(
   env: Env,
   messages: any[],
-  options: { timeoutMs?: number } = {},
+  options: { timeoutMs?: number; validateText?: (text: string) => void } = {},
 ): Promise<string> {
   if (!env.GROQ_API_KEY) throw new AiProviderError('provider_error', 'groq', GROQ_TEXT_MODEL);
   const controller = new AbortController();
@@ -633,6 +638,7 @@ async function callGroq(
     const payload: any = await response.json();
     const text = providerContentToText(payload.choices?.[0]?.message?.content);
     if (!text) throw new AiProviderError('empty_response', 'groq', GROQ_TEXT_MODEL);
+    options.validateText?.(text);
     return text;
   } catch (error) {
     if (error instanceof AiProviderError) throw error;
@@ -847,7 +853,14 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
         }
         const automatic = body.automatic === true;
         const baseQuestions = Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : [];
-        let text = await providerText(provider, quizPrompt(body.topic, body.amount, baseQuestions, automatic), env);
+        let text = await providerText(provider, quizPrompt(body.topic, body.amount, baseQuestions, automatic), env, {
+          validateText: value => {
+            const parsed = extractJson(value) as any;
+            if (!Array.isArray(parsed?.questions) || parsed.questions.length === 0) {
+              throw new Error('AI returned no usable quiz questions.');
+            }
+          },
+        });
         let result = extractJson(text) as any;
         // Models occasionally stop early and return fewer questions than
         // requested — retry up to 2 times, asking explicitly for the missing
