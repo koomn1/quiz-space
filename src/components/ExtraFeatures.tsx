@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Quiz, QuizCompletion } from '../types';
 import { translations } from '../lib/i18n';
+import { THEME_PRESETS } from '../lib/themePresets';
 import { 
   getCommunityPosts, 
   createCommunityPost, 
@@ -1403,14 +1404,17 @@ export function SettingsSection({
     }
   };
 
-  const themes = [
-    { id: 'indigo', name: isAr ? 'داكن (بنفسجي فضائي)' : 'Space Purple', color: 'from-violet-500 via-purple-600 to-pink-500' },
-    { id: 'light', name: isAr ? 'فاتح (أبيض رصين)' : 'Minimalist Light', color: 'from-blue-500 via-indigo-600 to-violet-600' },
-    { id: 'sky', name: isAr ? 'داكن (أزرق محيطي)' : 'Ocean Blue', color: 'from-sky-400 via-cyan-500 to-blue-600' },
-    { id: 'emerald', name: isAr ? 'داكن (أخضر زمردي)' : 'Emerald Green', color: 'from-emerald-400 via-teal-500 to-green-600' },
-    { id: 'sunset', name: isAr ? 'داكن (برتقالي الشمس)' : 'Sunset Orange', color: 'from-orange-400 via-amber-500 to-rose-600' },
-    { id: 'pastelp', name: isAr ? 'فاتح (وردي باستيل)' : 'Pastel Pink', color: 'from-pink-300 via-rose-300 to-pink-400' }
-  ];
+  const themes = THEME_PRESETS.map((theme) => ({
+    id: theme.id,
+    name: theme.id === 'indigo' ? (isAr ? 'داكن (بنفسجي فضائي)' : 'Space Purple')
+      : theme.id === 'light' ? (isAr ? 'فاتح (أبيض رصين)' : 'Minimalist Light')
+        : theme.id === 'sky' ? (isAr ? 'داكن (أزرق محيطي)' : 'Ocean Blue')
+          : theme.id === 'emerald' ? (isAr ? 'داكن (أخضر زمردي)' : 'Emerald Green')
+            : theme.id === 'sunset' ? (isAr ? 'داكن (برتقالي الشمس)' : 'Sunset Orange')
+              : theme.id === 'pastelp' ? (isAr ? 'فاتح (وردي باستيل)' : 'Pastel Pink')
+                : (isAr ? 'ذهبي العسل' : 'Golden Honey'),
+    color: theme.swatch,
+  }));
 
   const handleMuteToggle = () => {
     const next = !soundMuted;

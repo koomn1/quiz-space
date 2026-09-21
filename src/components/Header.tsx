@@ -14,6 +14,7 @@ import HeaderMessages from './HeaderMessages';
 import { UserBadge } from './UserBadge';
 import { NotificationDropdown } from './NotificationDropdown';
 import { getRewardsSummary } from '../lib/db';
+import { THEME_PRESETS } from '../lib/themePresets';
 
 interface HeaderProps {
   currentTab: string;
@@ -108,13 +109,18 @@ export default function Header({
     return num.toLocaleString();
   };
 
-  const themes = [
-    { id: 'indigo', name: t.themeIndigo, emoji: '🌌', color: 'from-indigo-500 to-purple-600' },
-    { id: 'emerald', name: t.themeEmerald, emoji: '🌿', color: 'from-teal-500 to-emerald-600' },
-    { id: 'sunset', name: t.themeSunset, emoji: '🌅', color: 'from-rose-500 to-orange-500' },
-    { id: 'sky', name: t.themeSky, emoji: '💙', color: 'from-sky-500 to-cyan-500' },
-    { id: 'honey', name: t.themeHoney, emoji: '🍯', color: 'from-amber-500 to-yellow-500' }
-  ];
+  const themes = THEME_PRESETS.map((theme) => ({
+    ...theme,
+    name: theme.id === 'indigo' ? t.themeIndigo
+      : theme.id === 'emerald' ? t.themeEmerald
+        : theme.id === 'sunset' ? t.themeSunset
+          : theme.id === 'sky' ? t.themeSky
+            : theme.id === 'honey' ? t.themeHoney
+              : theme.id === 'light' ? (lang === 'ar' ? 'فاتح أنيق' : 'Elegant Light')
+                : (lang === 'ar' ? 'وردي باستيل' : 'Pastel Pink'),
+    color: theme.swatch,
+    emoji: theme.id === 'honey' ? '🍯' : theme.id === 'emerald' ? '🌿' : theme.id === 'sunset' ? '🌅' : theme.id === 'sky' ? '💙' : theme.id === 'pastelp' ? '🌸' : theme.id === 'light' ? '☀️' : '🌌',
+  }));
 
   const saveName = () => {
     if (tempName.trim()) {
