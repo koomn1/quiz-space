@@ -326,7 +326,7 @@ function normalizeAnswerText(value: unknown): string {
     .normalize('NFKC')
     .replace(/[\\u064B-\\u065F\\u0670]/g, '')
     .replace(/[.,،؛:!?؟"'`()\\[\\]{}]/g, '')
-    .replace(/\\s+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
     .toLocaleLowerCase();
 }
@@ -812,67 +812,104 @@ async function generateQuestionsFromText(
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
   const requestedCount = job.requested_question_count || null;
-  const sourceText = text.slice(0, 500_000);
-  const basePrompt = `${generatePrompt(requestedCount, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${sourceText}`;
-  const buildMessages = (instruction: string) => [{
-    role: 'user',
-    content: `You are Cosmo, an educational quiz generator. Follow the SOURCE-LANGUAGE LOCK exactly. Read the complete source, generate questions from the source only, and return valid JSON only.\n\n${instruction}`,
-  }];
-  let lastError: unknown;
-  try {
-    const firstResponse = await callOpenRouterWithFallback(env, buildMessages(basePrompt), TEXT_MODEL_FALLBACKS, {
-      maxTokens: 8_000,
-      temperature: 0.2,
-      validateText: text => {
-        const parsed = parseJson(text);
-        if (!normalizeQuestions(parsed).length) throw new Error('Provider returned no usable questions.');
-      },
-    });
-    const firstQuiz = parseJson(firstResponse.text);
-    let allQuestions = normalizeQuestions(firstQuiz);
-    if (!allQuestions.length) throw new Error('The document did not contain any valid questions.');
+  const MAX_GENERATED_QUESTIONS = 500;
+  const CHUNK_TARGET_CHARS = 45_000;
+  const CHUNK_OVERLAP_CHARS = 1_500;
+  const COMPLETION_PASSES = 2;
 
-    // Automatic mode has no requested count. Ask for continuation passes with
-    // the exact same prompt and source-language lock instead of accepting the
-    // provider's common ten-question default.
-    if (!requestedCount) {
-      for (let pass = 0; pass < 2 && allQuestions.length < 500; pass += 1) {
-        const existing = allQuestions.map((question, index) => `${index + 1}. ${question.text}`).join('\n');
-        const continuationPrompt = `${basePrompt}\n\nCONTINUATION PASS ${pass + 1}: create additional, non-duplicate questions from source sections not covered yet. Do not repeat any question below. Keep the source language.\nAlready generated:\n${existing.slice(-80_000)}`;
-        try {
-          const continuation = await callOpenRouterWithFallback(env, buildMessages(continuationPrompt), TEXT_MODEL_FALLBACKS, {
-            maxTokens: 8_000,
-            temperature: 0.2,
-            validateText: text => { parseJson(text); },
-          });
-          const extra = normalizeQuestions(parseJson(continuation.text));
-          const seen = new Set(allQuestions.map(question => question.text.replace(/\s+/g, ' ').toLowerCase()));
-          allQuestions = [...allQuestions, ...extra.filter(question => {
-            const key = question.text.replace(/\s+/g, ' ').toLowerCase();
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          })];
-        } catch (error) {
-          console.warn('Automatic continuation pass failed; keeping completed questions:', error);
-          break;
-        }
+  // Split only the generation path. Literal extraction continues to receive the
+  // original complete text and its own question-mapping logic below.
+  const chunks: string[] = [];
+  let cursor = 0;
+  while (cursor < text.length) {
+    const hardEnd = Math.min(text.length, cursor + CHUNK_TARGET_CHARS);
+    let end = hardEnd;
+    if (hardEnd < text.length) {
+      const paragraphBreak = text.lastIndexOf('\n\n', hardEnd);
+      const sentenceBreak = text.lastIndexOf('. ', hardEnd);
+      const preferredBreak = paragraphBreak > cursor + CHUNK_TARGET_CHARS * 0.65
+        ? paragraphBreak + 2
+        : sentenceBreak > cursor + CHUNK_TARGET_CHARS * 0.65
+          ? sentenceBreak + 2
+          : hardEnd;
+      end = Math.min(text.length, preferredBreak);
+    }
+    const chunk = text.slice(cursor, end).trim();
+    if (chunk) chunks.push(chunk);
+    if (end >= text.length) break;
+    cursor = Math.max(cursor + 1, end - CHUNK_OVERLAP_CHARS);
+  }
+  if (!chunks.length) throw new Error('The document did not contain any usable text.');
+
+  const buildMessages = (source: string, amount: number | null, chunkIndex: number, pass: number) => {
+    const amountInstruction = amount
+      ? `أنشئ ${amount} سؤالاً بالضبط إن كانت المعلومات الموجودة في هذا الجزء تسمح بذلك. إذا كان الجزء لا يحتوي معلومات كافية، أنشئ كل الأسئلة الموثوقة الممكنة فقط.`
+      : 'أنشئ كل الأسئلة الموثوقة الممكنة من هذا الجزء، وغطِّ كل معلومة أو مفهوم قابل للسؤال دون حد افتراضي أو ملخص عام.';
+    const continuation = pass > 0
+      ? `هذه محاولة استكمال رقم ${pass}. أنشئ أسئلة جديدة فقط، ولا تكرر أي سؤال سبق إنتاجه من أجزاء الملف الأخرى.`
+      : 'هذه هي المحاولة الأساسية لهذا الجزء.';
+    return [{
+      role: 'user',
+      content: `You are Cosmo, an educational quiz generator. Preserve the source language exactly, especially Arabic. Use only facts present in the source. Return valid JSON only in the requested quiz format.\n\n${amountInstruction}\n${continuation}\nهذا الجزء رقم ${chunkIndex + 1} من ${chunks.length}:\n\n${source}`,
+    }];
+  };
+
+  let allQuestions: any[] = [];
+  let firstQuiz: any = null;
+  const providers = new Set<string>();
+  let lastError: unknown;
+  const seen = new Set<string>();
+  const appendQuestions = (questions: any[]) => {
+    for (const question of questions) {
+      const key = String(question.text || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      allQuestions.push(question);
+    }
+  };
+
+  for (let pass = 0; pass <= (requestedCount ? COMPLETION_PASSES : 0); pass += 1) {
+    if (allQuestions.length >= (requestedCount || MAX_GENERATED_QUESTIONS)) break;
+    for (let index = 0; index < chunks.length; index += 1) {
+      if (allQuestions.length >= (requestedCount || MAX_GENERATED_QUESTIONS)) break;
+      const remainingChunks = chunks.length - index;
+      const remainingQuestions = requestedCount ? Math.max(1, requestedCount - allQuestions.length) : null;
+      const chunkTarget = remainingQuestions ? Math.max(1, Math.ceil(remainingQuestions / remainingChunks)) : null;
+      try {
+        const response = await callOpenRouterWithFallback(
+          env,
+          buildMessages(chunks[index], chunkTarget, index, pass),
+          TEXT_MODEL_FALLBACKS,
+          {
+            maxTokens: requestedCount ? Math.min(12_000, Math.max(2_000, (chunkTarget || 10) * 650)) : 12_000,
+            temperature: 0.15,
+            validateText: value => {
+              if (!normalizeQuestions(parseJson(value)).length) throw new Error('Provider returned no usable questions.');
+            },
+          },
+        );
+        providers.add(response.model);
+        const parsed = parseJson(response.text);
+        if (!firstQuiz) firstQuiz = parsed;
+        appendQuestions(normalizeQuestions(parsed));
+        await onProgress(Math.min(chunks.length, index + 1), chunks.length, allQuestions.length);
+      } catch (error) {
+        lastError = error;
+        console.warn(`Text generation chunk ${index + 1}/${chunks.length} failed on pass ${pass + 1}.`, error);
       }
     }
-    const finalQuestions = requestedCount ? allQuestions.slice(0, requestedCount) : allQuestions.slice(0, 500);
-    await onProgress(1, 1, finalQuestions.length);
-    return {
-      title: !isGenericQuizTitle(firstQuiz?.title) ? String(firstQuiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
-      description: typeof firstQuiz?.description === 'string' && firstQuiz.description.trim() ? firstQuiz.description.trim() : `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-      questions: finalQuestions,
-      provider: firstResponse.model,
-      chunks: 1,
-    };
-  } catch (error) {
-    lastError = error;
   }
 
-  throw lastError instanceof Error ? lastError : new Error('All text extraction models failed.');
+  if (!allQuestions.length) throw lastError instanceof Error ? lastError : new Error('The document did not contain any valid questions.');
+  const finalQuestions = requestedCount ? allQuestions.slice(0, requestedCount) : allQuestions.slice(0, MAX_GENERATED_QUESTIONS);
+  await onProgress(chunks.length, chunks.length, finalQuestions.length);
+  return {
+    title: !isGenericQuizTitle(firstQuiz?.title) ? String(firstQuiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
+    description: typeof firstQuiz?.description === 'string' && firstQuiz.description.trim() ? firstQuiz.description.trim() : `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+    questions: finalQuestions,
+    provider: [...providers].join(', ') || 'openrouter',
+    chunks: chunks.length,
+  };
 }
 
 export async function extractJobQuiz(

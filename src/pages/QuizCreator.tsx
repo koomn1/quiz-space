@@ -252,7 +252,7 @@ const cropBase64Image = (base64Str: string, box: number[]): Promise<string> => {
 };
 
 const COUNT_OPTIONS_WITH_AUTO = [
-  { value: 0, label: 'تحديد تلقائي بذكاء الآلة', sub: 'استخراج كافة الأسئلة المتاحة بالكامل', icon: '✨', highlight: true },
+  { value: 0, label: 'كل الأسئلة المحتملة من الملف', sub: 'تغطية كاملة للمحتوى دون عدد ثابت', icon: '✨', highlight: true },
   { value: 3, label: '3 أسئلة', sub: 'سريعة وخفيفة لتقييم خاطف', icon: '⚡' },
   { value: 5, label: '5 أسئلة', sub: 'قياسية متوازنة وشاملة الكفاءة', icon: '📊' },
   { value: 10, label: '10 أسئلة', sub: 'متكاملة ومترابطة للموضوع', icon: '🎯' },
@@ -1506,7 +1506,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           totalPages,
           extractionMode: activeExtractionMode,
           customInstruction: effectiveInstruction || undefined,
-          totalQuestions: activeExtractionMode === 'generate' ? 0 : pdfCount,
+          // 0 means all possible questions; a positive value requests that exact count.
+          totalQuestions: pdfCount,
           userId,
           creatorName,
           category: 'عام',
@@ -1530,7 +1531,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           totalPages,
           extractionMode: 'generate',
           customInstruction: effectiveInstruction || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
-          totalQuestions: 0,
+          totalQuestions: pdfCount,
           userId,
           creatorName,
           category: 'عام',
@@ -1558,7 +1559,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           totalPages,
           extractionMode: 'generate',
           customInstruction: effectiveInstruction || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
-          totalQuestions: 0,
+          totalQuestions: pdfCount,
           userId,
           creatorName,
           category: 'عام',
