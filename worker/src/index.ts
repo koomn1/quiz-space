@@ -780,7 +780,8 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   }
 
   const isExtractionJobRead = request.method === 'GET' && (path === '/api/ai/extraction-jobs' || /^\/api\/ai\/extraction-jobs\/[0-9a-f-]{36}$/i.test(path));
-  if (request.method !== 'POST' && !isExtractionJobRead) return json({ error: 'Method not allowed' }, 405, headers);
+  const isAuthRead = request.method === 'GET' && (path === '/api/auth/health' || path === '/api/auth/session');
+  if (request.method !== 'POST' && !isExtractionJobRead && !isAuthRead) return json({ error: 'Method not allowed' }, 405, headers);
       // Cosmo is available to guests as a limited preview. Authenticated users
       // still receive their real user id for persistence/performance logging.
       const userId = (await getUserId(request, env)) || 'guest';
