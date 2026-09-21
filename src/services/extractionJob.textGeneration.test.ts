@@ -41,9 +41,9 @@ describe('narrative text generation in extraction jobs', () => {
     );
 
     const request = JSON.parse(String(requestBody));
-    expect(request.messages[0].content).toContain('محتوى الملف المصدر');
-    expect(request.messages[0].content).toContain('Gravity keeps planets in orbit');
-    expect(JSON.stringify(request.messages[0].content)).not.toContain('image_url');
+    expect(request.messages[1].content).toContain('محتوى الملف المصدر');
+    expect(request.messages[1].content).toContain('Gravity keeps planets in orbit');
+    expect(JSON.stringify(request.messages[1].content)).not.toContain('image_url');
     expect(result.provider).toBe('nvidia/nemotron-3.5-lightning:free');
     expect(result.questions).toHaveLength(1);
   });

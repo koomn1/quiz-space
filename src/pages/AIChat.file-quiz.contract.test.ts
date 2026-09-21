@@ -7,8 +7,9 @@ const source = readFileSync(resolve(process.cwd(), 'src/pages/AIChat.tsx'), 'utf
 describe('Cosmo file quiz flow contract', () => {
   it('routes attached-file quiz requests to the file quiz generator', () => {
     expect(source).toContain('requestedFileQuiz');
-    expect(source).toContain('generateQuizFromFileStreaming');
     expect(source).toContain('generateQuizFromFileWithFallback');
+    expect(source).toContain("'generate'");
+    expect(source).toContain('حافظ على لغة الملف أو النص المستخرج');
   });
 
   it('persists the generated file quiz and opens it in the platform', () => {

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { askAI, askAIStream, searchCosmoWeb, generateQuizFromFileStreaming, generateQuizFromFileWithFallback } from '../services/aiWorkerClient';
+import { askAI, askAIStream, searchCosmoWeb, generateQuizFromFileWithFallback } from '../services/aiWorkerClient';
 import { generateQuizWithFallback, validateAndCleanQuiz } from '../hooks/useQuizzes';
 import { GeneratedQuiz } from '../types';
 import { createQuiz } from '../lib/db';
@@ -828,23 +828,13 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     try {
       setActivityState(pendingQuizAttachment ? 'working' : 'solving');
       const generated = pendingQuizAttachment
-        ? pendingQuizAttachment.mimeType === 'application/pdf'
-          ? await generateQuizFromFileStreaming(
-              pendingQuizAttachment.data,
-              pendingQuizAttachment.mimeType,
-              `أنشئ كويزًا داخل المنصة من الملف المرفق. استخرج الأسئلة كما هي بدقة، واحتفظ بالاختيارات والإجابات. المطلوب ${pendingQuiz.amount} سؤالًا كحد أقصى. مستوى الأسئلة: ${pendingQuiz.difficulty}. لا تكتب شرحًا أو أسئلة في رد محادثة؛ أعد بيانات الكويز فقط.`,
-              progress => {
-                setActivityState(progress.type === 'complete' ? 'composing' : 'working');
-              },
-              'literal',
-            )
-          : await generateQuizFromFileWithFallback(
-              pendingQuizAttachment.data,
-              pendingQuizAttachment.mimeType,
-              pendingQuiz.amount,
-              `أنشئ كويزًا داخل المنصة من الملف المرفق. المطلوب ${pendingQuiz.amount} سؤالًا كحد أقصى، بمستوى ${pendingQuiz.difficulty}. أعد بيانات الكويز فقط.`,
-              'generate',
-            )
+        ? await generateQuizFromFileWithFallback(
+            pendingQuizAttachment.data,
+            pendingQuizAttachment.mimeType,
+            pendingQuiz.amount,
+            `أنشئ كويزًا داخل المنصة من الملف المرفق. المطلوب ${pendingQuiz.amount} سؤالًا كحد أقصى، بمستوى ${pendingQuiz.difficulty}. حافظ على لغة الملف أو النص المستخرج: إذا كان المصدر بالعربية فأخرج الكويز بالعربية، وإذا كان بالإنجليزية فأخرجه بالإنجليزية. أعد بيانات الكويز فقط.`,
+            'generate',
+          )
         : await generateCosmoQuizInBatches(pendingQuiz.topic, pendingQuiz.amount);
       const limitedGenerated = pendingQuizAttachment
         ? { ...generated, questions: generated.questions.slice(0, pendingQuiz.amount) }
@@ -948,8 +938,8 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     if (!file) return;
     const isImage = file.type.startsWith('image/');
     const isDocument = file.type === 'application/pdf' || file.type === 'text/markdown' || file.type === 'text/plain' || /\.(pdf|md|txt)$/i.test(file.name);
-    if ((!isImage && !isDocument) || file.size > 10 * 1024 * 1024) {
-      setLastError(isAr ? 'الملف غير مدعوم أو أكبر من 10 ميجابايت.' : 'Unsupported file or file is larger than 10 MB.');
+    if ((!isImage && !isDocument) || file.size > 25 * 1024 * 1024) {
+      setLastError(isAr ? 'الملف غير مدعوم أو أكبر من 25 ميجابايت.' : 'Unsupported file or file is larger than 25 MB.');
       return;
     }
     const reader = new FileReader();

@@ -256,9 +256,12 @@ function extractJson(text: string, depth = 0): unknown {
 function quizPrompt(topic: string, amount: number, previous: string[]): string {
   const exclusions = previous.length ? `\nلا تكرر هذه الأسئلة: ${previous.join(' | ')}` : '';
   const requiresArabic = /[\u0621-\u064A]/u.test(topic);
+  const requiresEnglish = !requiresArabic && /[A-Za-z]/.test(topic) && topic !== 'the attached source document' && topic !== 'document content';
   const languageConstraint = requiresArabic
     ? '\nتقييد اللغة: اكتب العنوان والوصف ونصوص الأسئلة والخيارات والإجابات والشروح بالعربية الفصحى فقط. لا تستخدم كلمات أو حروفاً من لغات أخرى. الاستثناء الوحيد هو الاختصارات العلمية اللاتينية الضرورية، وتكون بحروف كبيرة فقط مثل NASA أو DNA.'
-    : '';
+    : requiresEnglish
+      ? '\nLanguage constraint: write the title, description, questions, options, answers, and explanations in English.'
+      : '\nLanguage constraint: detect the dominant language of the attached source and write the entire quiz in that same language. Do not translate it into another language.';
   // esbuild 0.25+ refuses template literals containing three consecutive
   // backticks (code-fence markers), so build the prompt without fences.
   const fence = String.fromCharCode(96, 96, 96); // ```
@@ -545,6 +548,18 @@ async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000
 }
 async function callGeminiJson(env: Env, prompt: string, timeoutMs = 8_000): Promise<string> {
   return callGeminiJsonWithParts(env, [{ text: prompt }], timeoutMs, 300, 'application/json');
+}
+
+function toGeminiParts(content: unknown): any[] {
+  if (typeof content === 'string') return [{ text: content }];
+  if (!Array.isArray(content)) return [];
+  return (content as any[]).flatMap((part: any): any[] => {
+    if (part?.type === 'text' && typeof part.text === 'string') return [{ text: part.text }];
+    const url = part?.type === 'image_url' ? part.image_url?.url : part?.type === 'file' ? part.file?.file_data : '';
+    if (typeof url !== 'string' || !url.startsWith('data:')) return [];
+    const match = url.match(/^data:([^;]+);base64,(.+)$/s);
+    return match ? [{ inlineData: { mimeType: match[1], data: match[2] } }] : [];
+  });
 }
 
 async function extractPowerPointText(data: Uint8Array): Promise<string> {
@@ -881,7 +896,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
     }
 
     if (path === '/api/ai/generate-file/stream') {
-      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 15_000_000 || typeof body.mimeType !== 'string') {
+      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 40_000_000 || typeof body.mimeType !== 'string') {
         return json({ error: 'Invalid file generation request' }, 400, headers);
       }
       return handleStreamingExtraction(
@@ -897,7 +912,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
     }
 
     if (path === '/api/ai/generate-file') {
-      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 15_000_000 || typeof body.mimeType !== 'string' || !Number.isInteger(body.amount) || body.amount < 0 || body.amount > 500) {
+      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 40_000_000 || typeof body.mimeType !== 'string' || !Number.isInteger(body.amount) || body.amount < 0 || body.amount > 500) {
         return json({ error: 'Invalid file generation request' }, 400, headers);
       }
       
@@ -1000,6 +1015,13 @@ ${extraInstruction}`;
         try {
           const fileData = Uint8Array.from(atob(body.fileBase64), c => c.charCodeAt(0));
           const isPowerPoint = body.mimeType.includes('presentationml') || body.mimeType.includes('powerpoint');
+          if (isPdf) {
+            const pdfText = await extractPdfTextContent(fileData);
+            if (pdfText.trim().length > 40) {
+              const text = await providerText('openrouter', `${generatedPrompt}\n\nمحتوى الملف المصدر:\n${pdfText.slice(0, 500_000)}`, env, { timeoutMs: 60_000 });
+              return json(extractJson(text), 200, headers);
+            }
+          }
           if (isPowerPoint) {
             const slideText = await extractPowerPointText(fileData);
             if (!slideText.trim()) throw new Error('PowerPoint contains no readable slide text');
@@ -1008,7 +1030,7 @@ ${extraInstruction}`;
           }
           const text = await callGeminiJsonWithParts(env, [
             { text: generatedPrompt },
-            { inline_data: { mime_type: body.mimeType || 'application/octet-stream', data: body.fileBase64 } },
+            { inlineData: { mimeType: body.mimeType || 'application/octet-stream', data: body.fileBase64 } },
           ], 45_000, 6_000);
           return json(extractJson(text), 200, headers);
         } catch (geminiError) {
@@ -1141,7 +1163,16 @@ ${extraInstruction}`;
       } catch (openRouterError) {
         if (!isAnswerReview && env.GEMINI_API_KEY) {
           console.warn('Cosmo OpenRouter failed; falling back to Gemini:', openRouterError);
-          text = await callGeminiJsonWithParts(env, [{ text: `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\nUser: ${body.prompt}` }], 30_000, 4_000, 'text/plain');
+          text = await callGeminiJsonWithParts(
+            env,
+            [
+              { text: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) },
+              ...toGeminiParts(buildCosmoUserContent(body)),
+            ],
+            60_000,
+            4_000,
+            'text/plain',
+          );
           aiProvider = 'gemini';
           aiModel = 'gemini-3.6-flash';
         } else {

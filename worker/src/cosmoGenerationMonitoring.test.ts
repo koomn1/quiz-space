@@ -20,7 +20,6 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free'");
     expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
     expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
-    expect(workerSource).toContain("'inclusionai/ling-3.0-flash-sante:free'");
     expect(workerSource).toContain("'z-ai/glm-5.2:free'");
     expect(workerSource).toContain("'qwen/qwen3.8-flash'");
     expect(workerSource).toContain("'google/gemini-3.8-flash'");
@@ -34,7 +33,7 @@ describe('Cosmo generation recovery contract', () => {
   });
 
   it('uses the resilient OpenRouter model sequence for quiz generation', () => {
-    expect(workerSource).toContain('return callOpenRouterWithFallback(');
+    expect(workerSource).toContain('callOpenRouterWithFallback(');
     expect(workerSource).toContain('OPENROUTER_TEXT_FALLBACKS');
     expect(workerSource).toContain('max_tokens: 8_000');
   });
@@ -56,7 +55,7 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('callOpenRouterWithParallelAnswerReviewFallback');
     expect(workerSource).toContain('expectedAnswerCount as number');
     expect(workerSource).toContain('errorCategory: safeAiErrorCategory(error)');
-    expect(workerSource).toContain('Do not fall back to a different provider.');
+    expect(workerSource).toContain('OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS');
   });
 
   it('does not contain direct provider endpoints or direct-provider telemetry', () => {

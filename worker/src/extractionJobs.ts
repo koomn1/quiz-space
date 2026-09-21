@@ -223,8 +223,25 @@ function cleanMessage(value: unknown): string {
   return 'تعذر إكمال استخراج الأسئلة من الملف. تأكد من أن الملف سليم ثم أعد المحاولة.';
 }
 
+export function detectSourceLanguage(text: string): 'ar' | 'en' | 'unknown' {
+  const sample = String(text || '').slice(0, 120_000);
+  const arabic = (sample.match(/[\u0600-\u06ff]/g) || []).length;
+  const latin = (sample.match(/[A-Za-z]/g) || []).length;
+  if (arabic >= 8 && arabic >= latin * 0.2) return 'ar';
+  if (latin >= 8 && latin >= arabic * 0.2) return 'en';
+  return 'unknown';
+}
+
+export function sourceLanguageInstruction(text = ''): string {
+  const language = detectSourceLanguage(text);
+  if (language === 'ar') return 'اكتب العنوان والوصف وجميع الأسئلة والخيارات والإجابات والشروح بالعربية، بنفس لغة المصدر. لا تترجم المحتوى إلى الإنجليزية.';
+  if (language === 'en') return 'Write the title, description, questions, options, answers, and explanations in English, matching the source language. Do not translate the content into Arabic.';
+  return 'Detect the dominant language of the source and write the entire quiz in that same language. Do not translate it into another language.';
+}
+
 function extractionPrompt(customInstruction?: string | null): string {
   return `You are a lossless document extraction engine.
+${sourceLanguageInstruction()}
 Extract EVERY question exactly as written.
 
 Rules:
@@ -254,11 +271,11 @@ Rules:
 ${customInstruction?.trim() ? `Additional instructions: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
-function generatePrompt(amount: number | null | undefined, customInstruction?: string | null): string {
+function generatePrompt(amount: number | null | undefined, customInstruction?: string | null, sourceText = ''): string {
   const scopeInstruction = Number.isInteger(amount) && Number(amount) > 0
     ? `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف.`
     : 'اقرأ محتوى المحاضرة بالكامل وأنشئ سؤالاً لكل نقطة أو معلومة أو مفهوم مهم يمكن أن يأتي منه سؤال. لا تضع حداً ثابتاً لعدد الأسئلة ولا تتوقف عند رقم افتراضي؛ غطِّ كل الأجزاء القابلة للسؤال، مع إزالة التكرار فقط.';
-  return `${scopeInstruction} حافظ على لغة المستند ومعلوماته ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
+  return `${scopeInstruction} ${sourceLanguageInstruction(sourceText)} حافظ على معلومات المستند ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
 function extractBalancedJson(text: string, start: number): string | null {
@@ -771,7 +788,7 @@ async function generateQuestionsFromText(
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
   const requestedCount = job.requested_question_count || null;
-    const prompt = `${generatePrompt(requestedCount, job.custom_instruction)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`;
+    const prompt = `${generatePrompt(requestedCount, job.custom_instruction, text)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`;
   const messages = [
     {
       role: 'system',
