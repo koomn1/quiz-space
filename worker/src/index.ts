@@ -730,7 +730,7 @@ async function renderQuizSharePage(request: Request, env: Env): Promise<Response
   return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'index, follow' } });
 }
 
-function buildCosmoUserContent(body: any): any {
+async function buildCosmoUserContent(body: any): Promise<any> {
   const prompt = typeof body.prompt === 'string' ? body.prompt : '';
   const attachment = body.attachment;
   const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
@@ -748,6 +748,16 @@ function buildCosmoUserContent(body: any): any {
   if (data && (mimeType === 'text/plain' || mimeType === 'text/markdown' || /\.(md|txt)$/i.test(name))) {
     const decoded = decodeBase64Utf8(data).slice(0, 120_000);
     return `${prompt}\n\nمحتوى الملف (${name}):\n${decoded}`;
+  }
+  if (data && (mimeType.includes('wordprocessingml') || mimeType === 'application/msword' || /\.(docx?|rtf)$/i.test(name))) {
+    try {
+      const bytes = Uint8Array.from(atob(data), character => character.charCodeAt(0));
+      const extracted = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
+      const decoded = extracted.value.replace(/\s+/g, ' ').trim().slice(0, 180_000);
+      if (decoded) return `${prompt}\n\nمحتوى الملف المرفق (${name}):\n${decoded}`;
+    } catch (error) {
+      console.warn('Cosmo DOCX attachment extraction failed:', error);
+    }
   }
   return prompt;
 }
@@ -1168,7 +1178,7 @@ ${extraInstruction}`;
       messages.push(...history);
       const hasAttachment = hasCosmoAttachment(body);
       const hasImageAttachment = hasCosmoImageAttachment(body);
-      messages.push({ role: 'user', content: buildCosmoUserContent(body) });
+      messages.push({ role: 'user', content: await buildCosmoUserContent(body) });
       // Route to the vision model whenever an image is actually attached —
       // checking the model NAME for the substring 'vision' silently broke
       // this once the models were swapped to ones whose names don't contain
@@ -1247,7 +1257,7 @@ ${extraInstruction}`;
       messages.push(...history);
       const hasAttachment = hasCosmoAttachment(body);
       const hasImageAttachment = hasCosmoImageAttachment(body);
-      messages.push({ role: 'user', content: buildCosmoUserContent(body) });
+      messages.push({ role: 'user', content: await buildCosmoUserContent(body) });
 
       const candidates = hasAttachment ? OPENROUTER_VISION_FALLBACKS : OPENROUTER_STREAM_TEXT_MODELS;
       // Fallback only applies to picking which model actually starts
