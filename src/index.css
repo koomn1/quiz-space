@@ -1079,3 +1079,98 @@ html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-400"] {
   background: color-mix(in srgb, var(--app-surface-raised) 68%, transparent) !important;
   border-color: var(--app-border) !important;
 }
+
+
+/* ========================================================================
+   Flat Glass UI
+   Glass surfaces are theme-aware and deliberately avoid perspective/tilt.
+   ======================================================================== */
+:root {
+  --glass-bg: color-mix(in srgb, var(--app-surface) 72%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--app-surface) 90%, transparent);
+  --glass-border: color-mix(in srgb, var(--app-border-strong) 70%, transparent);
+  --glass-highlight: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --glass-blur: 18px;
+  --glass-shadow: var(--app-shadow);
+}
+
+.dark {
+  --glass-bg: color-mix(in srgb, var(--app-surface-raised) 70%, transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--app-surface-raised) 92%, transparent);
+}
+
+.glass-surface,
+.glass-card,
+.glass-panel,
+.glass-modal,
+.glass-dropdown {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+}
+
+.glass-modal,
+.glass-dropdown {
+  background: var(--glass-bg-strong) !important;
+}
+
+.glass-input {
+  background: color-mix(in srgb, var(--app-surface) 62%, transparent) !important;
+  border: 1px solid var(--glass-border);
+  color: var(--app-text);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-input:focus {
+  border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+  box-shadow: 0 0 0 4px var(--app-primary-soft);
+  outline: none;
+}
+
+.glass-button {
+  background: color-mix(in srgb, var(--app-surface) 58%, transparent);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 10%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-flat-hover {
+  transform: none !important;
+  transform-style: flat !important;
+  perspective: none !important;
+  transition: border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease !important;
+}
+
+.glass-flat-hover:hover,
+.glass-flat-hover:focus-within {
+  transform: none !important;
+  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--glass-border));
+  box-shadow: 0 18px 42px -24px color-mix(in srgb, var(--color-primary) 42%, transparent), 0 0 28px color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+/* Legacy names remain safe: cards/buttons no longer jump, rotate, or use a
+   fake 3D offset on hover. */
+.card-3d,
+.card-3d:hover,
+.card-3d:active,
+.btn-3d,
+.btn-3d:hover,
+.btn-3d:active {
+  transform: none !important;
+  transform-style: flat !important;
+  perspective: none !important;
+}
+
+.card-3d {
+  border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+.card-3d:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--glass-border)) !important;
+  box-shadow: 0 18px 42px -24px color-mix(in srgb, var(--color-primary) 42%, transparent) !important;
+}

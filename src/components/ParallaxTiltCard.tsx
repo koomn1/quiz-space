@@ -36,25 +36,14 @@ export default function ParallaxTiltCard({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    const xPct = (mouseX / width) - 0.5;
-    const yPct = (mouseY / height) - 0.5;
-
-    const rX = -yPct * 15; 
-    const rY = xPct * 15;  
-
     setGlareX((mouseX / width) * 100);
     setGlareY((mouseY / height) * 100);
 
     gsap.to(card, {
-      rotateX: rX,
-      rotateY: rY,
-      scale: 1.025,
-      boxShadow: '0 20px 42px -18px rgba(0, 0, 0, 0.42), 0 0 32px rgba(99, 102, 241, 0.16)',
-      duration: 0.18,
+      boxShadow: '0 18px 42px -24px color-mix(in srgb, var(--color-primary) 42%, transparent), 0 0 28px color-mix(in srgb, var(--color-primary) 14%, transparent)',
+      duration: 0.22,
       ease: 'power2.out',
       overwrite: 'auto',
-      transformPerspective: 1000,
-      transformOrigin: 'center center'
     });
   });
 
@@ -66,10 +55,7 @@ export default function ParallaxTiltCard({
     setIsHovered(false);
     if (!cardRef.current) return;
     gsap.to(cardRef.current, {
-      rotateX: 0,
-      rotateY: 0,
-      scale: 1,
-      boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)',
+      boxShadow: 'var(--app-shadow)',
       duration: 0.55,
       ease: 'power3.out',
       overwrite: 'auto'
@@ -79,15 +65,11 @@ export default function ParallaxTiltCard({
   useGSAP(() => {
     if (cardRef.current) {
       const sideOffset = idx !== undefined ? (idx % 2 === 0 ? -50 : 50) : 0;
-      const initialRotateY = idx !== undefined ? (idx % 2 === 0 ? -8 : 8) : 0;
-
       gsap.fromTo(cardRef.current, 
-        { opacity: 0, x: sideOffset, rotateY: initialRotateY, scale: 0.94, filter: 'blur(3px)' }, 
+        { opacity: 0, x: sideOffset, filter: 'blur(3px)' }, 
         { 
           opacity: 1, 
           x: 0, 
-          rotateY: 0, 
-          scale: 1, 
           filter: 'blur(0px)',
           duration: 0.8, 
           delay: Math.min((idx % 3) * 0.05, 0.15), 
@@ -109,23 +91,19 @@ export default function ParallaxTiltCard({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
-      className={`group relative duration-350 cursor-pointer ${className}`}
-      style={{
-        transformStyle: 'preserve-3d',
-      }}
+      className={`group relative duration-350 cursor-pointer glass-card glass-flat-hover ${className}`}
     >
-      {/* DynamicGlowing 3D Border outline overlay */}
+      {/* Flat theme-aware focus border; intentionally no perspective or 3D transform. */}
       <div 
         className="absolute inset-0 rounded-3xl border border-primary/25 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none"
-        style={{ transform: 'translateZ(3px)', zIndex: 10 }}
+        style={{ zIndex: 10 }}
       />
 
-      {/* 3D Glass Flare Effect overlay */}
+      {/* Flat Glass flare follows the pointer without moving the card. */}
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-3xl" 
         style={{
           background: `radial-gradient(circle 220px at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.15), transparent)`,
-          transform: 'translateZ(2px)',
           zIndex: 5
         }}
       />
