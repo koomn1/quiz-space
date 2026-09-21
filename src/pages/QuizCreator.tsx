@@ -851,9 +851,9 @@ export default function QuizCreator({
     if (!attachment) {
       throw new Error('لا يمكن تشغيل مرحلة حل الاختبار بعد الاستخراج بدون الملف الأصلي. أعد رفع الملف للمراجعة الآمنة.');
     }
-    if (attachment.kind !== 'image' && attachment.mimeType !== 'application/pdf') {
-      throw new Error('مرحلة حل الاختبار بعد الاستخراج تدعم ملفات PDF والصور فقط حاليًا. يمكنك مراجعة أسئلة ملف Office يدويًا دون تخمين.');
-    }
+    // The worker can now read PDF, DOC/DOCX, text, and image attachments.
+    // Do not reject Office documents here: they need the same source-grounded
+    // answer review as PDFs, not a forced manual-solving fallback.
 
     const solvedQuestions = draftQuestions.map(question => {
       const next = { ...question };
@@ -1478,11 +1478,25 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       // Convert to base64
       const base64Data = await convertToBase64(uploadedFile);
       const base64Clean = base64Data.split(',')[1]; // Strip data URL prefix
+      // Android Chrome can report an empty File.type for Office documents.
+      // Infer it from the extension so extraction and answer review receive the
+      // original DOCX/PDF/PPTX contract instead of being mislabeled as a PDF.
+      const lowerFileName = uploadedFile.name.toLowerCase();
+      const inferredMimeType = uploadedFile.type || (
+        lowerFileName.endsWith('.pdf') ? 'application/pdf' :
+        lowerFileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+        lowerFileName.endsWith('.doc') ? 'application/msword' :
+        lowerFileName.endsWith('.pptx') ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' :
+        lowerFileName.endsWith('.ppt') ? 'application/vnd.ms-powerpoint' :
+        lowerFileName.endsWith('.txt') ? 'text/plain' :
+        lowerFileName.endsWith('.md') ? 'text/markdown' :
+        'application/octet-stream'
+      );
       extractedAttachmentRef.current = {
         data: base64Clean,
-        mimeType: uploadedFile.type || 'application/pdf',
+        mimeType: inferredMimeType,
         name: uploadedFile.name,
-        kind: uploadedFile.type.startsWith('image/') ? 'image' : 'file',
+        kind: inferredMimeType.startsWith('image/') ? 'image' : 'file',
       };
 
       // We handle document initialization locally now in serverless
@@ -1502,7 +1516,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           fileUri,
           fileUploadName,
           sourceFile: uploadedFile,
-          mimeType: uploadedFile.type || 'application/octet-stream',
+          mimeType: inferredMimeType,
           totalPages,
           extractionMode: activeExtractionMode,
           customInstruction: effectiveInstruction || undefined,
@@ -1527,7 +1541,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           fileUri,
           fileUploadName,
           sourceFile: uploadedFile,
-          mimeType: uploadedFile.type || 'application/octet-stream',
+          mimeType: inferredMimeType,
           totalPages,
           extractionMode: 'generate',
           customInstruction: effectiveInstruction || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
@@ -1555,7 +1569,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           fileUri,
           fileUploadName,
           sourceFile: uploadedFile,
-          mimeType: uploadedFile.type || 'application/octet-stream',
+          mimeType: inferredMimeType,
           totalPages,
           extractionMode: 'generate',
           customInstruction: effectiveInstruction || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
