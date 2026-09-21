@@ -66,14 +66,62 @@
 
 html, body {
   font-family: var(--font-sans);
-  background-color: #f7fbe9;
+  background-color: var(--app-bg);
   direction: rtl;
-  color: #022E21;
+  color: var(--app-text);
 }
 
-html.dark, body.dark {
-  background-color: #022E21;
-  color: #f3fbe5;
+:root {
+  color-scheme: light;
+  --app-bg: #f7f8fc;
+  --app-surface: #ffffff;
+  --app-surface-raised: #f8fafc;
+  --app-surface-muted: #f1f5f9;
+  --app-text: #172033;
+  --app-text-muted: #64748b;
+  --app-border: rgba(148, 163, 184, 0.25);
+  --app-border-strong: rgba(100, 116, 139, 0.38);
+  --app-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+  --app-primary-soft: color-mix(in srgb, var(--color-primary) 11%, transparent);
+  --app-primary-softer: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+:root.dark,
+body.dark {
+  color-scheme: dark;
+  --app-bg: #020617;
+  --app-surface: #0f172a;
+  --app-surface-raised: #172033;
+  --app-surface-muted: #1e293b;
+  --app-text: #f8fafc;
+  --app-text-muted: #94a3b8;
+  --app-border: rgba(148, 163, 184, 0.18);
+  --app-border-strong: rgba(148, 163, 184, 0.32);
+  --app-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+/* Semantic surfaces: use these classes for new containers instead of fixed
+   slate/white colors. They automatically follow light/dark and the selected
+   accent palette. */
+.theme-page { background: var(--app-bg); color: var(--app-text); }
+.theme-surface { background: var(--app-surface); color: var(--app-text); border-color: var(--app-border); }
+.theme-surface-raised { background: var(--app-surface-raised); color: var(--app-text); border-color: var(--app-border); }
+.theme-surface-muted { background: var(--app-surface-muted); color: var(--app-text); border-color: var(--app-border); }
+.theme-border { border-color: var(--app-border); }
+.theme-muted { color: var(--app-text-muted); }
+.theme-accent-soft { background: var(--app-primary-soft); color: var(--color-primary); }
+.theme-accent-border { border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); }
+.theme-chrome { background: color-mix(in srgb, var(--app-surface) 94%, transparent); border-color: var(--app-border); box-shadow: var(--app-shadow); }
+
+/* Shared glass components now derive their tint from the active theme. */
+.glass-panel, .glass-card {
+  background: color-mix(in srgb, var(--app-surface) 72%, transparent);
+  border-color: color-mix(in srgb, var(--app-border-strong) 70%, transparent);
+  box-shadow: var(--app-shadow), inset 0 0 0 1px color-mix(in srgb, var(--app-surface) 35%, transparent);
+}
+.dark .glass-panel, .dark .glass-card {
+  background: color-mix(in srgb, var(--app-surface-raised) 68%, transparent);
+  border-color: var(--app-border);
 }
 
 /* Short, targeted theme transition: avoid a long, expensive repaint on mobile. */
@@ -1004,4 +1052,30 @@ html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-400"] {
     margin: 1rem !important;
     max-width: calc(100vw - 2rem) !important;
   }
+}
+
+
+/* Theme system final overrides: keep legacy glass components synchronized. */
+.theme-chrome {
+  background: color-mix(in srgb, var(--app-surface) 94%, transparent) !important;
+  border-color: var(--app-border) !important;
+  box-shadow: var(--app-shadow) !important;
+}
+.theme-surface {
+  background-color: var(--app-surface) !important;
+  color: var(--app-text);
+  border-color: var(--app-border);
+}
+.theme-page {
+  background-color: var(--app-bg) !important;
+  color: var(--app-text);
+}
+.glass-panel, .glass-card {
+  background: color-mix(in srgb, var(--app-surface) 72%, transparent) !important;
+  border-color: var(--app-border) !important;
+  box-shadow: var(--app-shadow), inset 0 0 0 1px color-mix(in srgb, var(--app-surface) 35%, transparent) !important;
+}
+.dark .glass-panel, .dark .glass-card {
+  background: color-mix(in srgb, var(--app-surface-raised) 68%, transparent) !important;
+  border-color: var(--app-border) !important;
 }

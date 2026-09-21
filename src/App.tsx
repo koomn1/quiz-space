@@ -733,12 +733,13 @@ export default function App() {
     localStorage.setItem('quiz_color_theme', colorTheme);
 
     const root = document.documentElement;
+    root.dataset.colorTheme = selected.id;
+    root.style.setProperty('--theme-gradient-from', selected.gradientFrom);
+    root.style.setProperty('--theme-gradient-to', selected.gradientTo);
     root.style.setProperty('--theme-primary', selected.primary);
     root.style.setProperty('--theme-primary-hover', selected.primaryHover);
     root.style.setProperty('--theme-primary-light', selected.primaryLight);
     root.style.setProperty('--theme-primary-dark', selected.primaryDark);
-    root.style.setProperty('--theme-gradient-from', selected.gradientFrom);
-    root.style.setProperty('--theme-gradient-to', selected.gradientTo);
   }, [colorTheme]);
 
   // Trigger the tour only after the account-backed onboarding state has loaded.
@@ -1430,11 +1431,7 @@ export default function App() {
           />}
 
           <div
-          className={`light-readable-ui min-h-dvh w-full max-w-none overflow-x-hidden transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : ''} ${
-            darkMode
-              ? 'bg-[#020617] text-slate-100'
-              : 'bg-[#f8fafc] text-slate-800'
-          }`}
+          className={`light-readable-ui theme-page min-h-dvh w-full max-w-none overflow-x-hidden transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : ''}`}
         >
           <PremiumCursor />
       
@@ -1600,7 +1597,7 @@ export default function App() {
         
 
         {/* Main page frame wrapping */}
-        <main ref={mainContainerRef} className={`${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (isNotFoundTab ? 'flex-1 w-full min-h-0 p-0 relative z-10' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10'))}`}>
+        <main ref={mainContainerRef} className={`theme-page ${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (isNotFoundTab ? 'flex-1 w-full min-h-0 p-0 relative z-10' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10'))}`}>
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (
@@ -2006,7 +2003,7 @@ export default function App() {
 
       {/* Footer copyright — hidden on the Cosmo chat page so the chat
           surface stays edge-to-edge under the fixed header */}
-      <footer className={`w-full border-t border-slate-100 dark:border-slate-800 bg-white/60 dark:bg-[#090d16] py-6 text-center text-xs text-slate-400 dark:text-slate-500 font-medium print:hidden transition-colors ${isCosmoTab ? 'hidden' : ''}`}>
+      <footer className={`theme-surface w-full border-t py-6 text-center text-xs theme-muted font-medium print:hidden transition-colors ${isCosmoTab ? 'hidden' : ''}`}>
         <p>{lang === 'ar' ? 'جميع الحقوق محفوظة لموقع Quiz Space © 2026 - بواسطة يوسف بدوي' : 'All rights reserved © 2026 Quiz Space - Built by Youssef Badawy'}</p>
       </footer>
 
