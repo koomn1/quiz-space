@@ -730,6 +730,88 @@ async function renderQuizSharePage(request: Request, env: Env): Promise<Response
   return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'index, follow' } });
 }
 
+async function generateQuizFromDocumentText(
+  sourceText: string,
+  amount: number,
+  customInstruction: string,
+  env: Env,
+): Promise<any> {
+  const target = Math.min(500, Math.max(1, amount));
+  const chunkSize = 45_000;
+  const overlap = 1_500;
+  const chunks: string[] = [];
+  let cursor = 0;
+  while (cursor < sourceText.length) {
+    const hardEnd = Math.min(sourceText.length, cursor + chunkSize);
+    let end = hardEnd;
+    if (hardEnd < sourceText.length) {
+      const paragraphBreak = sourceText.lastIndexOf('\n\n', hardEnd);
+      const sentenceBreak = sourceText.lastIndexOf('. ', hardEnd);
+      end = paragraphBreak > cursor + chunkSize * 0.65
+        ? paragraphBreak + 2
+        : sentenceBreak > cursor + chunkSize * 0.65
+          ? sentenceBreak + 2
+          : hardEnd;
+    }
+    const chunk = sourceText.slice(cursor, end).trim();
+    if (chunk) chunks.push(chunk);
+    if (end >= sourceText.length) break;
+    cursor = Math.max(cursor + 1, end - overlap);
+  }
+  if (!chunks.length) throw new Error('The document contains no readable text');
+
+  const questions: any[] = [];
+  const seen = new Set<string>();
+  let title = '';
+  let description = '';
+  let lastError: unknown;
+  const append = (value: any) => {
+    const items = Array.isArray(value) ? value : Array.isArray(value?.questions) ? value.questions : [];
+    for (const item of items) {
+      if (!item || typeof item !== 'object') continue;
+      const text = String(item.text || item.question || item.prompt || '').trim();
+      const key = text.replace(/\s+/g, ' ').toLocaleLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      questions.push({ ...item, text });
+    }
+  };
+
+  // Three passes let short model responses fill the exact requested count
+  // without sending the entire document in one oversized prompt.
+  for (let pass = 0; pass < 3 && questions.length < target; pass += 1) {
+    for (let index = 0; index < chunks.length && questions.length < target; index += 1) {
+      const remainingChunks = chunks.length - index;
+      const remaining = target - questions.length;
+      const chunkAmount = Math.max(1, Math.ceil(remaining / remainingChunks));
+      const previous = questions.slice(-80).map(question => question.text);
+      const prompt = `${quizPrompt(`المعلومات الواردة في الجزء ${index + 1} من ${chunks.length} من الملف`, chunkAmount, previous)}\n${customInstruction ? `تعليمات إضافية: ${customInstruction.slice(0, 1500)}\n` : ''}هذه محاولة ${pass + 1}. استخرج الأسئلة من الجزء التالي فقط، ولا تخترع معلومات ولا تكرر سؤالاً سابقاً.\n\nمحتوى الجزء:\n${chunks[index]}`;
+      try {
+        const raw = await providerText('groq', prompt, env, {
+          timeoutMs: 45_000,
+          validateText: value => {
+            const parsed = extractJson(value) as any;
+            if (!Array.isArray(parsed?.questions) || !parsed.questions.length) throw new Error('Provider returned no quiz questions.');
+          },
+        });
+        const parsed = extractJson(raw) as any;
+        if (!title && typeof parsed?.title === 'string') title = parsed.title.trim();
+        if (!description && typeof parsed?.description === 'string') description = parsed.description.trim();
+        append(parsed);
+      } catch (error) {
+        lastError = error;
+        console.warn(`File quiz generation chunk ${index + 1}/${chunks.length} failed on pass ${pass + 1}.`, error);
+      }
+    }
+  }
+  if (!questions.length) throw lastError instanceof Error ? lastError : new Error('The document did not contain any valid questions.');
+  return {
+    title: title || 'اختبار من الملف المرفق',
+    description: description || 'اختبار مولد من كامل محتوى الملف المرفق.',
+    questions: questions.slice(0, target),
+  };
+}
+
 async function buildCosmoUserContent(body: any): Promise<any> {
   const prompt = typeof body.prompt === 'string' ? body.prompt : '';
   const attachment = body.attachment;
@@ -1059,37 +1141,26 @@ ${extraInstruction}`;
         }
       }
 
-      // Generate mode uses Groq first and OpenRouter as fallback. The literal
-      // extraction branch above is intentionally untouched.
+      // Generate mode uses the same full-document text ingestion as Cosmo chat.
+      // The literal extraction branch above remains intentionally untouched.
       if (!isLiteral) {
-        const generatedPrompt = quizPrompt('the attached source document', body.amount, []);
         try {
           const fileData = Uint8Array.from(atob(body.fileBase64), c => c.charCodeAt(0));
           const isWordDocument = body.mimeType.includes('wordprocessingml') || body.mimeType.includes('msword');
           const isTextDocument = body.mimeType === 'text/plain' || body.mimeType === 'text/markdown';
           const isPowerPoint = body.mimeType.includes('presentationml') || body.mimeType.includes('powerpoint');
-          if (isPdf || isWordDocument || isTextDocument || isPowerPoint) {
-            let sourceText = '';
-            if (isPdf) sourceText = await extractPdfTextContent(fileData);
-            else if (isWordDocument) sourceText = (await mammoth.extractRawText({ arrayBuffer: fileData.buffer })).value;
-            else if (isTextDocument) sourceText = decodeBase64Utf8(body.fileBase64);
-            else if (isPowerPoint) sourceText = await extractPowerPointText(fileData);
-            if (!sourceText.trim()) throw new Error('The document contains no readable text');
-            const text = await providerText('groq', `${generatedPrompt}\n\nمحتوى الملف:\n${sourceText.slice(0, 180_000)}`, env, { timeoutMs: 45_000 });
-            return json(extractJson(text), 200, headers);
+          let sourceText = '';
+          if (isPdf) sourceText = await extractPdfTextContent(fileData);
+          else if (isWordDocument) sourceText = (await mammoth.extractRawText({ arrayBuffer: fileData.buffer })).value;
+          else if (isTextDocument) sourceText = decodeBase64Utf8(body.fileBase64);
+          else if (isPowerPoint) sourceText = await extractPowerPointText(fileData);
+          if (sourceText.trim()) {
+            const quiz = await generateQuizFromDocumentText(sourceText, body.amount, typeof body.customInstruction === 'string' ? body.customInstruction : '', env);
+            return json(quiz, 200, headers);
           }
-          if (body.mimeType.startsWith('image/')) {
-            const text = await callGroq(env, [{
-              role: 'user',
-              content: [
-                { type: 'text', text: generatedPrompt },
-                { type: 'image_url', image_url: { url: `data:${body.mimeType};base64,${body.fileBase64}` } },
-              ],
-            }], { model: GROQ_VISION_MODEL, timeoutMs: 45_000 });
-            return json(extractJson(text), 200, headers);
-          }
+          throw new Error('The document contains no readable text');
         } catch (generationError) {
-          console.warn('Groq document generation failed; using OpenRouter fallback:', generationError);
+          console.warn('Full-document text generation failed; using OpenRouter file/image fallback:', generationError);
         }
       }
       // Fallback for literal mode or failed Groq/OpenRouter text generation.
