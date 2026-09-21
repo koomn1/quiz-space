@@ -947,7 +947,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const handleAttachmentFile = (file?: File) => {
     if (!file) return;
     const isImage = file.type.startsWith('image/');
-    const isDocument = file.type === 'application/pdf' || file.type === 'text/markdown' || file.type === 'text/plain' || /\.(pdf|md|txt)$/i.test(file.name);
+    const isDocument = file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'application/msword' || file.type === 'text/markdown' || file.type === 'text/plain' || /\.(pdf|docx|doc|md|txt)$/i.test(file.name);
     if ((!isImage && !isDocument) || file.size > 10 * 1024 * 1024) {
       setLastError(isAr ? 'الملف غير مدعوم أو أكبر من 10 ميجابايت.' : 'Unsupported file or file is larger than 10 MB.');
       return;
@@ -958,7 +958,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       const comma = dataUrl.indexOf(',');
       if (comma < 0) return;
       const lowerName = file.name.toLowerCase();
-      const mimeType = file.type || (lowerName.endsWith('.pdf') ? 'application/pdf' : lowerName.endsWith('.md') ? 'text/markdown' : 'text/plain');
+      const mimeType = file.type || (lowerName.endsWith('.pdf') ? 'application/pdf' : lowerName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : lowerName.endsWith('.doc') ? 'application/msword' : lowerName.endsWith('.md') ? 'text/markdown' : 'text/plain');
       setSelectedAttachment({ data: dataUrl.slice(comma + 1), mimeType, name: file.name, kind: isImage ? 'image' : 'file' });
       setLastError(null);
     };
@@ -1304,7 +1304,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
                     <ImageIcon className="w-4 h-4" /><span>{isAr ? 'صورة' : 'Image'}</span>
                   </button>
-                  <button onClick={() => fileInputRef.current?.click()} title={isAr ? 'إرفاق PDF أو MD أو TXT' : 'Attach PDF, MD or TXT'}
+                  <button onClick={() => fileInputRef.current?.click()} title={isAr ? 'إرفاق PDF أو DOCX أو MD أو TXT' : 'Attach PDF, DOCX, MD or TXT'}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
                     style={{ color: theme.MUTED }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
@@ -1312,7 +1312,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                     <FileText className="w-4 h-4" /><span>{isAr ? 'ملف' : 'File'}</span>
                   </button>
                   <input type="file" ref={imageInputRef} accept="image/*" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
-                  <input type="file" ref={fileInputRef} accept=".pdf,.md,.txt,application/pdf,text/markdown,text/plain" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
+                  <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/markdown,text/plain" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
                 </div>
 
                 <Liquid blur={6} contrast={18} fill={darkMode ? '#182b3a' : '#ffffff'} className="flex items-center">

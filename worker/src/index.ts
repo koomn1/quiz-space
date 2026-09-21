@@ -1049,30 +1049,40 @@ ${extraInstruction}`;
         }
       }
 
-      // Generate mode is intentionally routed through Gemini multimodal. This
-      // lets Gemini read explanations inside images, PDFs and PPTX files and
-      // turn them into new questions. The literal branch above is untouched.
+      // Generate mode uses Groq first and OpenRouter as fallback. The literal
+      // extraction branch above is intentionally untouched.
       if (!isLiteral) {
         const generatedPrompt = quizPrompt('the attached source document', body.amount, []);
         try {
           const fileData = Uint8Array.from(atob(body.fileBase64), c => c.charCodeAt(0));
+          const isWordDocument = body.mimeType.includes('wordprocessingml') || body.mimeType.includes('msword');
+          const isTextDocument = body.mimeType === 'text/plain' || body.mimeType === 'text/markdown';
           const isPowerPoint = body.mimeType.includes('presentationml') || body.mimeType.includes('powerpoint');
-          if (isPowerPoint) {
-            const slideText = await extractPowerPointText(fileData);
-            if (!slideText.trim()) throw new Error('PowerPoint contains no readable slide text');
-            const text = await callGeminiJson(env, `${generatedPrompt}\n\nمحتوى الشرائح:\n${slideText.slice(0, 120000)}`, 45_000);
+          if (isPdf || isWordDocument || isTextDocument || isPowerPoint) {
+            let sourceText = '';
+            if (isPdf) sourceText = await extractPdfTextContent(fileData);
+            else if (isWordDocument) sourceText = (await mammoth.extractRawText({ arrayBuffer: fileData.buffer })).value;
+            else if (isTextDocument) sourceText = decodeBase64Utf8(body.fileBase64);
+            else if (isPowerPoint) sourceText = await extractPowerPointText(fileData);
+            if (!sourceText.trim()) throw new Error('The document contains no readable text');
+            const text = await providerText('groq', `${generatedPrompt}\n\nمحتوى الملف:\n${sourceText.slice(0, 180_000)}`, env, { timeoutMs: 45_000 });
             return json(extractJson(text), 200, headers);
           }
-          const text = await callGeminiJsonWithParts(env, [
-            { text: generatedPrompt },
-            { inline_data: { mime_type: body.mimeType || 'application/octet-stream', data: body.fileBase64 } },
-          ], 45_000, 6_000);
-          return json(extractJson(text), 200, headers);
-        } catch (geminiError) {
-          console.warn('Gemini document generation failed; using existing OpenRouter fallback:', geminiError);
+          if (body.mimeType.startsWith('image/')) {
+            const text = await callGroq(env, [{
+              role: 'user',
+              content: [
+                { type: 'text', text: generatedPrompt },
+                { type: 'image_url', image_url: { url: `data:${body.mimeType};base64,${body.fileBase64}` } },
+              ],
+            }], { model: GROQ_VISION_MODEL, timeoutMs: 45_000 });
+            return json(extractJson(text), 200, headers);
+          }
+        } catch (generationError) {
+          console.warn('Groq document generation failed; using OpenRouter fallback:', generationError);
         }
       }
-      // Fallback for literal mode or failed Gemini generation.
+      // Fallback for literal mode or failed Groq/OpenRouter text generation.
       const prompt = isLiteral ? losslessPrompt : quizPrompt("document content", body.amount, []);
       const text = await callOpenRouterWithFallback(env, [{
         role: 'user',
