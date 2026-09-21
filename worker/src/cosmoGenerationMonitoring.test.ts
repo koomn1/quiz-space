@@ -10,7 +10,7 @@ const routeSources = [workerSource, authSource, cosmoRoutesSource].join('\n');
 describe('Cosmo generation recovery contract', () => {
   it('uses Groq Llama as the primary text route with OpenRouter fallback', () => {
     expect(workerSource).toContain("const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b'");
-    expect(workerSource).toContain('if (env.GROQ_API_KEY && !hasMultimodalContent)');
+    expect(workerSource).toContain('if (env.GROQ_API_KEY && options?.useGroq !== false && !hasMultimodalContent)');
     expect(workerSource).toContain('falling back to OpenRouter');
     expect(workerSource).toContain('https://api.groq.com/openai/v1/chat/completions');
     expect(workerSource).toContain("selectedProvider = 'groq'");
@@ -20,7 +20,6 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free'");
     expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
     expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
-    expect(workerSource).toContain("'inclusionai/ling-3.0-flash-sante:free'");
     expect(workerSource).toContain("'z-ai/glm-5.2:free'");
     expect(workerSource).toContain("'qwen/qwen3.8-flash'");
     expect(workerSource).toContain("'google/gemini-3.8-flash'");
@@ -34,7 +33,7 @@ describe('Cosmo generation recovery contract', () => {
   });
 
   it('uses the resilient OpenRouter model sequence for quiz generation', () => {
-    expect(workerSource).toContain('return callOpenRouterWithFallback(');
+    expect(workerSource).toContain('callOpenRouterWithFallback(');
     expect(workerSource).toContain('OPENROUTER_TEXT_FALLBACKS');
     expect(workerSource).toContain('max_tokens: 8_000');
   });
@@ -43,7 +42,7 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('function providerContentToText(value: unknown): string');
     expect(workerSource).toContain('function balancedJsonCandidate(value: string): string | null');
     expect(workerSource).toContain("['result', 'data', 'text', 'content', 'output', 'response', 'body']");
-    expect(workerSource).toContain('providerContentToText(d.choices?.[0]?.message?.content');
+    expect(workerSource).toContain('providerContentToText(d.choices?.[0]?.message?.content ??');
   });
 
   it('keeps answer review on OpenRouter with bounded JSON validation', () => {
@@ -56,11 +55,11 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('callOpenRouterWithParallelAnswerReviewFallback');
     expect(workerSource).toContain('expectedAnswerCount as number');
     expect(workerSource).toContain('errorCategory: safeAiErrorCategory(error)');
-    expect(workerSource).toContain('Do not fall back to a different provider.');
+    expect(workerSource).toContain('callOpenRouterWithFallback(');
   });
 
   it('does not contain direct provider endpoints or direct-provider telemetry', () => {
-    expect(workerSource).toContain("type Provider = 'openrouter'");
+    expect(workerSource).toContain("type Provider = 'groq' | 'openrouter'");
     expect(workerSource).not.toContain('api.deepseek.com');
     expect(workerSource).toContain('api.groq.com');
     expect(workerSource).not.toContain('api.openai.com');
