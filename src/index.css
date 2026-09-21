@@ -76,15 +76,13 @@ html.dark, body.dark {
   color: #f3fbe5;
 }
 
-/* Cinematic Theme Toggle Transition - Ensures gorgeous, lag-free smooth fade on all components */
+/* Short, targeted theme transition: avoid a long, expensive repaint on mobile. */
 .theme-transition,
 .theme-transition * {
-  transition: background-color 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              color 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              fill 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              stroke 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 450ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: background-color 160ms ease-out,
+              border-color 160ms ease-out,
+              color 160ms ease-out,
+              box-shadow 160ms ease-out !important;
 }
 
 button {

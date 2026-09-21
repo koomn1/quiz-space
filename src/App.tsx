@@ -471,6 +471,7 @@ export default function App() {
     }
     return savedTheme !== 'light';
   });
+  const hasAppliedThemeRef = React.useRef(false);
   const [colorTheme, setColorTheme] = React.useState(() => localStorage.getItem('quiz_color_theme') || 'indigo');
 
   // i18n & Push API properties setup
@@ -1053,13 +1054,13 @@ export default function App() {
     fetchQuizzesList();
   }, []);
 
-  // Sync dark theme document variables with cinematic transition class
+  // Apply the initial theme immediately; animate only user-triggered toggles.
   React.useEffect(() => {
     const root = document.documentElement;
-    root.classList.add('theme-transition');
-    const timeout = setTimeout(() => {
-      root.classList.remove('theme-transition');
-    }, 450);
+    const shouldAnimate = hasAppliedThemeRef.current;
+    hasAppliedThemeRef.current = true;
+    if (shouldAnimate) root.classList.add('theme-transition');
+    const timeout = shouldAnimate ? setTimeout(() => root.classList.remove('theme-transition'), 180) : undefined;
 
     if (darkMode) {
       root.classList.add('dark');
@@ -1069,7 +1070,10 @@ export default function App() {
       localStorage.setItem('quiz_theme', 'light');
     }
 
-    return () => clearTimeout(timeout);
+    return () => {
+      if (timeout) clearTimeout(timeout);
+      root.classList.remove('theme-transition');
+    };
   }, [darkMode]);
 
   // Fetch quizzes list from Firestore

@@ -46,13 +46,8 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
       if (streak && !streak.checkedInToday) daily.push({ id: `daily-streak-${today}`, title: isAr ? 'سجّل حضورك اليومي' : 'Keep your daily streak', body: isAr ? 'سجّل دخولك اليوم للحفاظ على سلسلة التعلم.' : 'Check in today to keep your learning streak alive.', type: 'daily_learning', is_read: false, created_at: new Date().toISOString() });
       const visibleDaily = daily.filter((notification) => !dismissed.has(notification.id));
       setDailyNotifications(visibleDaily);
-      const spotlightKey = `quizspace_daily_spotlight:${userId}:${today}`;
       if (visibleDaily.length > 0) {
         void claimDailyEngagementReward('notifications_opened').catch(() => undefined);
-      }
-      if (visibleDaily.length > 0 && !localStorage.getItem(spotlightKey)) {
-        setIsOpen(true);
-        localStorage.setItem(spotlightKey, 'shown');
       }
     } catch (err) {
       console.warn('Error loading notifications:', err);
