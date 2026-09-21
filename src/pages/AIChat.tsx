@@ -680,7 +680,9 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     if (isAnalyzing) return;
 
     const requestedQuiz = parseQuizRequest(trimmed);
-    const requestedFileQuiz = Boolean(selectedAttachment && requestedQuiz && /(?:ملف|المرفق|المرفق ده|منه|from\s+(?:this\s+)?file|attachment)/i.test(trimmed));
+    // Any quiz request made while a file is attached must use the in-app quiz
+    // creator and save a real quiz; never answer with quiz text in the chat.
+    const requestedFileQuiz = Boolean(selectedAttachment && requestedQuiz);
     if (requestedQuiz && !pendingQuiz) {
       setPendingQuiz(requestedQuiz);
       if (requestedFileQuiz) setPendingQuizAttachment(selectedAttachment);
