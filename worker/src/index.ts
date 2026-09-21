@@ -72,6 +72,7 @@ const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
 // llama-3.3-70b-versatile was shut down by Groq on 2026-08-16.
 // GPT-OSS 20B is the fast, low-cost production replacement for routine text work.
 const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
+const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
   const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000;
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
@@ -125,7 +126,7 @@ function buildCosmoSystemInstruction(clientInstruction: unknown, accountContext:
   const clientContext = typeof clientInstruction === 'string' ? clientInstruction.slice(0, 4_000) : '';
   const currentPage = typeof body.currentPage === 'string' ? body.currentPage.slice(0, 80) : 'غير معروفة';
   const siteStatus = typeof body.siteStatus === 'string' ? body.siteStatus.slice(0, 160) : 'غير متوفر';
-  return `${COSMO_PERSONALITY}\n\nسياق موثوق ومحدود للتطبيق:\n- الصفحة الحالية: ${currentPage}\n- حالة الموقع المعلنة: ${siteStatus}\n- ${accountContext}\n\n${clientContext ? `معلومات واجهة غير حساسة للمساعدة فقط: ${clientContext}` : ''}\n\nقواعد أمان إلزامية: أنت مساعد معلوماتي فقط. لا ترفع مستخدمًا إلى أدمن، ولا تغيّر رتبة أو باقة أو XP أو صلاحيات، ولا تنفذ عمليات على المستخدمين، ولا تكشف بيانات مستخدم آخر. إذا طلب منك أحد ذلك، ارفض واذكر أن التنفيذ يتم فقط من خلال المسارات المصرح بها في التطبيق.`.slice(0, 14_000);
+  return `${COSMO_PERSONALITY}\n\nسياق موثوق ومحدود للتطبيق:\n- الصفحة الحالية: ${currentPage}\n- حالة الموقع المعلنة: ${siteStatus}\n- ${accountContext}\n\n${clientContext ? `معلومات واجهة غير حساسة للمساعدة فقط: ${clientContext}` : ''}\n\nتعليمات المرفقات: إذا وُجدت صورة أو ملف PDF أو ملف نصي في رسالة المستخدم، اقرأ المرفق وحلله مباشرة قبل الرد. لا تقل إنك لا تستطيع رفع أو عرض الملفات، ولا تطلب من المستخدم نسخ المحتوى، ولا تدّعِ أن المرفق غير موجود. إذا كان الملف PDF فاقرأ محتواه من المرفق، وإذا كانت الصورة فاقرأ النص والعناصر الظاهرة فيها. إذا تعذر الوصول للمحتوى فعليًا فقط، اذكر سببًا تقنيًا واضحًا بدل رسالة عامة.\n\nقواعد أمان إلزامية: أنت مساعد معلوماتي فقط. لا ترفع مستخدمًا إلى أدمن، ولا تغيّر رتبة أو باقة أو XP أو صلاحيات، ولا تنفذ عمليات على المستخدمين، ولا تكشف بيانات مستخدم آخر. إذا طلب منك أحد ذلك، ارفض واذكر أن التنفيذ يتم فقط من خلال المسارات المصرح بها في التطبيق.`.slice(0, 14_000);
 }
 
 function isWebSearchEnabled(env: Env): boolean {
@@ -611,10 +612,8 @@ async function providerText(
       { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs, useGroq: false, validateText: options.validateText },
     );
   } catch (openRouterError) {
-    if (env.GEMINI_API_KEY) {
-      console.warn('OpenRouter generation failed or exhausted, using Gemini fallback:', openRouterError);
-      return await callGeminiJsonWithParts(env, [{ text: prompt }], 45_000, 8_000);
-    }
+    // The configured chain for quiz/Cosmo generation is intentionally Groq → OpenRouter.
+    // Do not silently switch to a third provider when both configured providers fail.
     throw openRouterError;
   }
 }
@@ -622,9 +621,10 @@ async function providerText(
 async function callGroq(
   env: Env,
   messages: any[],
-  options: { timeoutMs?: number; validateText?: (text: string) => void } = {},
+  options: { timeoutMs?: number; model?: string; validateText?: (text: string) => void } = {},
 ): Promise<string> {
-  if (!env.GROQ_API_KEY) throw new AiProviderError('provider_error', 'groq', GROQ_TEXT_MODEL);
+  const model = options.model || GROQ_TEXT_MODEL;
+  if (!env.GROQ_API_KEY) throw new AiProviderError('provider_error', 'groq', model);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 30_000);
   try {
@@ -632,18 +632,18 @@ async function callGroq(
       method: 'POST',
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-      body: JSON.stringify({ model: GROQ_TEXT_MODEL, messages, temperature: 0.35, max_tokens: 8_000 }),
+      body: JSON.stringify({ model, messages, temperature: 0.35, max_tokens: 8_000 }),
     });
-    if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'groq', GROQ_TEXT_MODEL, response.status);
+    if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'groq', model, response.status);
     const payload: any = await response.json();
     const text = providerContentToText(payload.choices?.[0]?.message?.content);
-    if (!text) throw new AiProviderError('empty_response', 'groq', GROQ_TEXT_MODEL);
+    if (!text) throw new AiProviderError('empty_response', 'groq', model);
     options.validateText?.(text);
     return text;
   } catch (error) {
     if (error instanceof AiProviderError) throw error;
-    if (error instanceof DOMException && error.name === 'AbortError') throw new AiProviderError('timeout', 'groq', GROQ_TEXT_MODEL);
-    throw new AiProviderError('provider_error', 'groq', GROQ_TEXT_MODEL);
+    if (error instanceof DOMException && error.name === 'AbortError') throw new AiProviderError('timeout', 'groq', model);
+    throw new AiProviderError('provider_error', 'groq', model);
   } finally {
     clearTimeout(timeout);
   }
@@ -757,6 +757,14 @@ function hasCosmoAttachment(body: any): boolean {
   const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
   const mimeType = attachment && typeof attachment.mimeType === 'string' ? attachment.mimeType : '';
   return Boolean((body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') || (data && mimeType && data.length <= 15_000_000));
+}
+
+function hasCosmoImageAttachment(body: any): boolean {
+  const attachment = body.attachment;
+  return Boolean(
+    (body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') ||
+    (attachment && typeof attachment.data === 'string' && typeof attachment.mimeType === 'string' && attachment.mimeType.startsWith('image/')),
+  );
 }
 
 async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext): Promise<Response> {
@@ -1149,6 +1157,7 @@ ${extraInstruction}`;
       messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
       const hasAttachment = hasCosmoAttachment(body);
+      const hasImageAttachment = hasCosmoImageAttachment(body);
       messages.push({ role: 'user', content: buildCosmoUserContent(body) });
       // Route to the vision model whenever an image is actually attached —
       // checking the model NAME for the substring 'vision' silently broke
@@ -1190,18 +1199,21 @@ ${extraInstruction}`;
             );
             aiModel = models[0];
           }
+        } else if (hasImageAttachment || !hasAttachment) {
+          try {
+            text = await callGroq(env, messages, { model: hasImageAttachment ? GROQ_VISION_MODEL : GROQ_TEXT_MODEL });
+            aiProvider = 'groq';
+            aiModel = hasImageAttachment ? GROQ_VISION_MODEL : GROQ_TEXT_MODEL;
+          } catch (groqError) {
+            console.warn('Cosmo Groq request failed; using OpenRouter fallback:', groqError);
+            text = await callOpenRouterWithFallback(env, messages, models, undefined, undefined);
+          }
         } else {
+          // Groq does not accept PDF file parts through its Chat Completions API.
           text = await callOpenRouterWithFallback(env, messages, models, undefined, undefined);
         }
       } catch (openRouterError) {
-        if (!isAnswerReview && env.GEMINI_API_KEY) {
-          console.warn('Cosmo OpenRouter failed; falling back to Gemini:', openRouterError);
-          text = await callGeminiJsonWithParts(env, [{ text: `${buildCosmoSystemInstruction(body.systemInstruction, accountContext, body)}\n\nUser: ${body.prompt}` }], 30_000, 4_000, 'text/plain');
-          aiProvider = 'gemini';
-          aiModel = 'gemini-3.6-flash';
-        } else {
-          throw openRouterError;
-        }
+        throw openRouterError;
       }
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {
@@ -1224,6 +1236,7 @@ ${extraInstruction}`;
       messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
       const hasAttachment = hasCosmoAttachment(body);
+      const hasImageAttachment = hasCosmoImageAttachment(body);
       messages.push({ role: 'user', content: buildCosmoUserContent(body) });
 
       const candidates = hasAttachment ? OPENROUTER_VISION_FALLBACKS : OPENROUTER_STREAM_TEXT_MODELS;
@@ -1236,16 +1249,17 @@ ${extraInstruction}`;
       let selectedModel = '';
       let selectedProvider = 'openrouter';
       let lastErr: any = null;
-      if (!hasAttachment && env.GROQ_API_KEY) {
+      if ((!hasAttachment || hasImageAttachment) && env.GROQ_API_KEY) {
         try {
+          const groqModel = hasImageAttachment ? GROQ_VISION_MODEL : GROQ_TEXT_MODEL;
           const r = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-            body: JSON.stringify({ model: GROQ_TEXT_MODEL, messages, stream: true }),
+            body: JSON.stringify({ model: groqModel, messages, stream: true }),
           });
           if (r.ok && r.body) {
             upstream = r;
-            selectedModel = GROQ_TEXT_MODEL;
+            selectedModel = groqModel;
             selectedProvider = 'groq';
           } else {
             lastErr = await r.text();

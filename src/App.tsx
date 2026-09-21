@@ -1673,10 +1673,12 @@ export default function App() {
                     handleSetTab('profile', false, creatorId);
                   }}
                   onDeleteQuiz={async (quizId) => {
+                    const preservedScrollY = window.scrollY;
                     try {
                       await deleteQuiz(quizId);
                       playNotificationSound('delete');
                       await fetchQuizzesList();
+                      window.requestAnimationFrame(() => window.scrollTo({ top: preservedScrollY, behavior: 'instant' }));
                     } catch (e) {
                       console.error(e);
                       alert(lang === 'ar' ? 'عذراً، فشل حذف الاختبار من خوادم قاعدة البيانات.' : 'Error, failed to remove quiz from server.');
@@ -1718,10 +1720,12 @@ export default function App() {
                     handleSetTab('create');
                   }}
                   onDeleteQuiz={async (quizId) => {
+                    const preservedScrollY = window.scrollY;
                     try {
                       await deleteQuiz(quizId);
                       playNotificationSound('delete');
                       await fetchQuizzesList();
+                      window.requestAnimationFrame(() => window.scrollTo({ top: preservedScrollY, behavior: 'instant' }));
                     } catch (e) {
                       console.error(e);
                       alert(lang === 'ar' ? 'عذراً، فشل الحذف.' : 'Delete failed.');
