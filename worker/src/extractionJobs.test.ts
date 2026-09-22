@@ -86,6 +86,13 @@ describe('dynamic vision chunk planning', () => {
     expect(extractionSource).toContain('never fabricate an answer or explanation');
   });
 
+  it('keeps file generation focused on understanding explanatory content while preserving literal mode', () => {
+    expect(extractionSource).toContain('هذه مهمة توليد أسئلة من مادة مصدر، وليست استخراجاً حرفياً');
+    expect(extractionSource).toContain('افحص كل صفحة بصرياً');
+    expect(extractionSource).toContain("const isLiteral = job.extraction_mode === 'literal';");
+    expect(extractionSource).toContain('return generateQuestionsFromText(text, job, env, onProgress);');
+  });
+
   it('races primary answer-review providers before using the bounded third fallback', () => {
     expect(indexSource).toContain('async function callOpenRouterWithParallelAnswerReviewFallback(');
     expect(indexSource).toContain("'openai/gpt-5-mini'");

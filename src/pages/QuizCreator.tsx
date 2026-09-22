@@ -3252,7 +3252,7 @@ A computer is a digital electronic machine...
                       <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">Generate — توليد بالذكاء الاصطناعي</span>
                     </div>
                     <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
-                      هنا تستخدم قدرات الـAI في توليد أسئلة وتدريبات جديدة شاملة من محتوى الملف — مثالي للشروحات والكورسات.
+                      يحلل الـAI محتوى الملف أو الصورة ويفهم الشرح والعناوين والجداول والرسوم، ثم يصيغ أسئلة جديدة دقيقة منه — بدون الحاجة لوجود أسئلة جاهزة داخل الملف.
                     </p>
                     <button
                       type="button"
@@ -3270,12 +3270,12 @@ A computer is a digital electronic machine...
                       {isProcessingOcr && extractionMode === 'generate' ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>جاري التوليد بالذكاء الاصطناعي...</span>
+                          <span>جاري فهم المحتوى وصياغة الأسئلة...</span>
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4" />
-                          <span>Generate الآن</span>
+                          <span>حلّل الملف وولّد الأسئلة</span>
                         </>
                       )}
                     </button>

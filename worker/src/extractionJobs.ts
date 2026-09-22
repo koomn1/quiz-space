@@ -259,11 +259,16 @@ ${customInstruction?.trim() ? `Additional instructions: ${customInstruction.trim
 
 function generatePrompt(amount: number | null | undefined, customInstruction?: string | null): string {
   const scopeInstruction = Number.isInteger(amount) && Number(amount) > 0
-    ? `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف.`
+    ? `حلل محتوى الملف أولاً، ثم أنشئ ${amount} سؤالاً فقط من المعلومات التي يدعمها الملف. لا تشترط وجود أسئلة مكتوبة مسبقاً.`
     : 'اقرأ محتوى الملف بالكامل، فقرةً فقرةً وعنواناً عنواناً، وأنشئ أكبر عدد ممكن من الأسئلة عالية الجودة: سؤالاً مستقلاً لكل حقيقة أو تعريف أو علاقة أو خطوة أو مثال أو مفهوم مهم يمكن أن يأتي منه سؤال. لا تستخدم 10 أسئلة كحد افتراضي، ولا تختصر الملف في ملخص، ولا تتوقف حتى تغطي جميع الأجزاء القابلة للسؤال. في الملف المتوسط أعد 25 سؤالاً أو أكثر متى كان المحتوى يسمح بذلك، وأعد كل الأسئلة المختلفة الممكنة حتى لو كانت من نفس الفصل. أزل التكرار الحقيقي فقط.';
-  return `SOURCE-LANGUAGE LOCK (highest priority): detect the dominant language of the source content before writing anything. Keep the title, description, questions, options, answers, and explanations in that same language. Never translate an English source into Arabic. Never translate an Arabic source into English. The language of these instructions and the user interface must not influence the output language. If the source is mixed, use its dominant language and preserve essential original terms.
+  return `أنت محلل محتوى تعليمي ومصمم اختبارات. هذه مهمة توليد أسئلة من مادة مصدر، وليست استخراجاً حرفياً لأسئلة جاهزة.
+قبل كتابة JSON، اقرأ المادة كاملة وافهم بنيتها داخلياً: العناوين، التعريفات، الحقائق، العلاقات بين المفاهيم، الخطوات، الأمثلة، الجداول، الأرقام، والتعليقات الموجودة داخل الصور أو الشرائح. اربط كل سؤال بجزء واضح من المصدر، ولا تعتمد على معرفتك الخارجية.
 
 ${scopeInstruction}
+
+في الصور والصفحات الممسوحة افحص النص المرئي والجداول والرسوم التوضيحية والتسميات بدقة. إذا كانت معلومة غير مقروءة أو غير مؤكدة، لا تستخدمها كسؤال. لا تقل إن الملف لا يحتوي أسئلة؛ المطلوب صياغة أسئلة جديدة من الشرح نفسه.
+نوّع الأسئلة بحسب ما يسمح به المحتوى بين الاختيار من متعدد، صح/خطأ، والمقالي. لا تجعل كل الإجابات في الخيار نفسه. اجعل المشتتات معقولة ومن نفس الموضوع، لكن لا تخترع معلومة غير موجودة. راجع كل سؤال وإجابته مرة ثانية مقابل المصدر، واحذف أي سؤال مكرر أو إجابة غير مؤكدة.
+SOURCE-LANGUAGE LOCK (highest priority): detect the dominant language of the source content before writing anything. Keep the title, description, questions, options, answers, and explanations in that same language. Never translate an English source into Arabic. Never translate an Arabic source into English. The language of these instructions and the user interface must not influence the output language. If the source is mixed, use its dominant language and preserve essential original terms.
 
 قاعدة اللغة إلزامية: اكتشف لغة المحتوى المصدر نفسه أولاً، ثم أخرج كل الناتج باللغة الغالبة نفسها. لا تستخدم العربية بسبب لغة التعليمات أو لغة المستخدم. راجع اللغة قبل إخراج JSON.
 
@@ -714,7 +719,7 @@ async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: strin
 
 function documentVisionPrompt(job: ExtractionJobRow): string {
   if (job.extraction_mode === 'generate') {
-    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. أعد JSON صالحاً فقط.`;
+    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nهذه صفحات أو صور مرفقة وليست نصاً عادياً: افحص كل صفحة بصرياً، واقرأ النص داخل الصور والجداول والعناوين والتسميات والرسوم. افهم تسلسل الشرح بين الصفحات قبل صياغة السؤال. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. أعد JSON صالحاً فقط.`;
   }
   return extractionPrompt(job.custom_instruction);
 }
