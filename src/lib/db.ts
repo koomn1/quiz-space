@@ -625,6 +625,33 @@ export async function submitGuestQuizAttempt(
   return result;
 }
 
+export async function updateQuizAttemptScore(completionId: string, score: number): Promise<boolean> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz score cannot be finalized.');
+  const { data, error } = await supabase.rpc('update_quiz_attempt_score', {
+    p_completion_id: completionId,
+    p_score: score,
+  });
+  if (error) throw new Error('تعذر تحديث الدرجة بعد مراجعة الإجابات.');
+  return data === true;
+}
+
+export async function updateGuestQuizAttemptScore(
+  completionId: string,
+  guestId: string,
+  clientAttemptKey: string,
+  score: number,
+): Promise<boolean> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz score cannot be finalized.');
+  const { data, error } = await supabase.rpc('update_guest_quiz_attempt_score', {
+    p_completion_id: completionId,
+    p_guest_id: guestId,
+    p_client_attempt_key: clientAttemptKey,
+    p_score: score,
+  });
+  if (error) throw new Error('تعذر تحديث الدرجة بعد مراجعة الإجابات.');
+  return data === true;
+}
+
 export async function updateGuestQuizAttemptReview(
   completionId: string,
   guestId: string,

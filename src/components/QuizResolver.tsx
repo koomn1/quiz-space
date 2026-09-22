@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem } from '../lib/db';
+import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateQuizAttemptScore, updateGuestQuizAttemptScore, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { gradeEssayWithAI } from '../services/aiWorkerClient';
@@ -142,6 +142,8 @@ export default function QuizResolver({
   const [feedback, setFeedback] = React.useState('');
   const [isSubmittingReview, setIsSubmittingReview] = React.useState(false);
   const [isReviewSubmitted, setIsReviewSubmitted] = React.useState(false);
+  const [isReviewMode, setIsReviewMode] = React.useState(false);
+  const [isReviewDirty, setIsReviewDirty] = React.useState(false);
 
   // Forced rating states
   const [savedCompletionId, setSavedCompletionId] = React.useState<string | null>(null);
@@ -226,6 +228,9 @@ export default function QuizResolver({
       setEssayAssessed(false);
     } finally {
       setEssayGrading(prev => ({ ...prev, [questionIndex]: false }));
+      if (quiz && questionIndex + 1 === quiz.questions.length) {
+        setIsQuizCompleted(true);
+      }
     }
   };
 
@@ -267,9 +272,11 @@ export default function QuizResolver({
     return () => { active = false; };
   }, [quizId, userId, isDailyQuiz]);
 
+  // Completing a quiz must never trap the student on the result screen.
+  // Rating is optional feedback, not a prerequisite for saving or leaving.
   React.useEffect(() => {
-    if (onQuizLockChange) onQuizLockChange(isQuizCompleted && !hasRatedQuiz);
-  }, [isQuizCompleted, hasRatedQuiz, onQuizLockChange]);
+    onQuizLockChange?.(false);
+  }, [onQuizLockChange]);
 
   const answerTextForQuestion = React.useCallback((question: Question, index: number): string => {
     if (question.type === 'essay') return (essayAnswers[index] || '').trim();
@@ -310,10 +317,6 @@ export default function QuizResolver({
       if (autoSaveStartedRef.current === attemptKeyRef.current) return;
       autoSaveStartedRef.current = attemptKeyRef.current;
       playNotificationSound('success');
-
-      if (onQuizLockChange) {
-        onQuizLockChange(!hasRatedQuiz);
-      }
 
       const autoSave = async () => {
         try {
@@ -367,37 +370,7 @@ export default function QuizResolver({
         onQuizLockChange(false);
       }
     }
-  }, [isQuizCompleted, quizId, userId, takerName, userName, score, hasRatedQuiz, isDailyQuiz, isGuest, quiz?.questions.length, onQuizLockChange, persistIncorrectAnswers]);
-
-  // Intercept and block all navigation popstate, back gestures, and close actions when in results overlay
-  React.useEffect(() => {
-    if (isQuizCompleted && !hasRatedQuiz && selectedRating === 0) {
-      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        e.preventDefault();
-        e.returnValue = isAr 
-          ? 'تقييم الاختبار مطلوب لحفظ درجاتك ولا يمكنك الخروج الآن!' 
-          : 'Rating the quiz is required to save your progress!';
-        return e.returnValue;
-      };
-
-      // Push history state to prevent student from navigating back or out of results overlay
-      window.history.pushState(null, '', window.location.href);
-      const handlePopState = (e: PopStateEvent) => {
-        window.history.pushState(null, '', window.location.href);
-        alert(isAr 
-          ? 'تنبيه إلزامي: يرجى اختيار تقييم بالنجوم (1-5) والضغط على "إنهاء وخروج" لحفظ درجاتك بنجاح.' 
-          : 'Mandatory: Please select a star rating (1-5) and click "Finish & Exit" to save your score.');
-      };
-
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      window.addEventListener('popstate', handlePopState);
-
-      return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-        window.removeEventListener('popstate', handlePopState);
-      };
-    }
-  }, [isQuizCompleted, hasRatedQuiz, selectedRating, isAr]);
+  }, [isQuizCompleted, quizId, userId, takerName, userName, score, isDailyQuiz, isGuest, quiz?.questions.length, onQuizLockChange, persistIncorrectAnswers]);
 
   // Fetch single Quiz on load with localStorage restore capability
   React.useEffect(() => {
@@ -615,6 +588,37 @@ export default function QuizResolver({
     const nextAnswers = [...userAnswers];
     nextAnswers[currentIdx] = idx;
     setUserAnswers(nextAnswers);
+
+    // The last answer completes the attempt immediately. The student can
+    // still review and edit answers before the explicit final hand-off.
+    if (currentIdx + 1 === quiz.questions.length) {
+      setIsQuizCompleted(true);
+    }
+  };
+
+  const calculateScore = React.useCallback((answers: number[]) => {
+    if (!quiz) return 0;
+    return quiz.questions.reduce((total, question, index) => {
+      if (question.type === 'essay') return total + (essayAssessments[index] === true ? 1 : 0);
+      return total + (answers[index] === question.correctIndex ? 1 : 0);
+    }, 0);
+  }, [essayAssessments, quiz]);
+
+  const handleReviewChoice = (questionIndex: number, optionIndex: number) => {
+    const nextAnswers = [...userAnswers];
+    nextAnswers[questionIndex] = optionIndex;
+    setUserAnswers(nextAnswers);
+    setScore(calculateScore(nextAnswers));
+    setIsReviewDirty(true);
+  };
+
+  const handleReviewEssay = (questionIndex: number, answer: string) => {
+    const nextAnswers = [...essayAnswers];
+    nextAnswers[questionIndex] = answer;
+    setEssayAnswers(nextAnswers);
+    setEssayAssessments((previous) => ({ ...previous, [questionIndex]: false }));
+    setScore(calculateScore(userAnswers));
+    setIsReviewDirty(true);
   };
 
   // Next question navigation
@@ -706,28 +710,38 @@ export default function QuizResolver({
       onGoHome();
       return;
     }
-    if (selectedRating === 0) return;
     setSaveError(null);
     setIsSubmittingReview(true);
 
     try {
       const finalName = takerName.trim() || userName.trim() || 'طالب متميز';
+
+      if (savedCompletionId && isReviewDirty && !isDailyQuiz) {
+        if (isGuest) {
+          await updateGuestQuizAttemptScore(savedCompletionId, userId, attemptKeyRef.current, score);
+        } else {
+          await updateQuizAttemptScore(savedCompletionId, score);
+        }
+        setIsReviewDirty(false);
+      }
       
       // Save rating attempt to Supabase
       if (savedCompletionId && !isDailyQuiz) {
-        if (isGuest) {
-          await updateGuestQuizAttemptReview(savedCompletionId, userId, selectedRating, feedbackText.trim());
-        } else {
-          await updateCompletionReview(savedCompletionId, selectedRating, feedbackText);
+        if (selectedRating > 0) {
+          if (isGuest) {
+            await updateGuestQuizAttemptReview(savedCompletionId, userId, selectedRating, feedbackText.trim());
+          } else {
+            await updateCompletionReview(savedCompletionId, selectedRating, feedbackText);
+          }
+          setHasRatedQuiz(true);
         }
-        setHasRatedQuiz(true);
       } else if (isGuest && !isDailyQuiz) {
         const result = await submitGuestQuizAttempt(quizId, {
           guestId: userId,
           guestName: finalName,
           score,
           clientAttemptKey: attemptKeyRef.current,
-          rating: selectedRating,
+          rating: selectedRating > 0 ? selectedRating : undefined,
           feedback: feedbackText.trim(),
         });
         const completionRow = Array.isArray(result) ? result[0] : result;
@@ -739,7 +753,7 @@ export default function QuizResolver({
           takerId: userId || 'anonymous',
           takerName: finalName,
           score,
-          rating: selectedRating,
+          rating: selectedRating > 0 ? selectedRating : undefined,
           feedback: feedbackText.trim(),
           totalQuestions: quiz.questions.length
         });
@@ -875,8 +889,9 @@ export default function QuizResolver({
             <span>الخروج للرئيسية</span>
           </button>
         ) : (
-          <div className="flex items-center gap-1.5 text-xs text-[#b175ff] font-extrabold animate-pulse">
-            <span>🔒 الجلسة مقيدة حتى إتمام التقييم</span>
+          <div className="flex items-center gap-1.5 text-xs text-primary font-extrabold">
+            <CheckCircle2 className="h-4 w-4" />
+            <span>{isAr ? 'تم حفظ المحاولة — يمكنك مراجعة إجاباتك قبل التسليم' : 'Attempt saved — review your answers before submitting'}</span>
           </div>
         )}
 
@@ -1530,6 +1545,57 @@ export default function QuizResolver({
               )}
             </div>
 
+            <button
+              type="button"
+              onClick={() => setIsReviewMode((current) => !current)}
+              className="mx-auto flex w-full max-w-xs items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-5 py-3 text-sm font-black text-primary transition hover:bg-primary/15 print:hidden"
+            >
+              <FileText className="h-4 w-4" />
+              <span>{isReviewMode ? (isAr ? 'إخفاء المراجعة' : 'Hide review') : (isAr ? 'مراجعة الإجابات وتعديلها' : 'Review and edit answers')}</span>
+            </button>
+
+            {isReviewMode && (
+              <div className="mx-auto w-full max-w-2xl space-y-4 rounded-3xl border border-primary/15 bg-[color-mix(in_srgb,var(--app-surface-tint)_82%,transparent)] p-4 text-right shadow-sm sm:p-6 print:hidden">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--app-border)] pb-3">
+                  <div>
+                    <h4 className="text-base font-black text-[var(--app-text)]">{isAr ? 'مراجعة كل الإجابات' : 'Review all answers'}</h4>
+                    <p className="mt-1 text-xs theme-muted">{isAr ? 'يمكنك تغيير أي اختيار قبل التسليم النهائي.' : 'Change any answer before the final submission.'}</p>
+                  </div>
+                  {isReviewDirty && <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[11px] font-bold text-amber-600">{isAr ? 'تم تعديل الإجابات' : 'Answers edited'}</span>}
+                </div>
+                {quiz.questions.map((question, questionIndex) => (
+                  <div key={question.id || questionIndex} className="theme-surface rounded-2xl border p-4 shadow-sm">
+                    <div className="mb-3 flex items-start gap-2">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">{questionIndex + 1}</span>
+                      <p className="text-sm font-bold leading-6 text-[var(--app-text)]">{question.text}</p>
+                    </div>
+                    {question.type === 'essay' ? (
+                      <textarea
+                        value={essayAnswers[questionIndex] || ''}
+                        onChange={(event) => handleReviewEssay(questionIndex, event.target.value)}
+                        rows={3}
+                        className="glass-input w-full rounded-xl p-3 text-sm"
+                        placeholder={isAr ? 'اكتب إجابتك هنا...' : 'Write your answer here...'}
+                      />
+                    ) : (
+                      <div className="grid gap-2">
+                        {(question.options || []).map((option, optionIndex) => (
+                          <button
+                            key={`${question.id || questionIndex}-${optionIndex}`}
+                            type="button"
+                            onClick={() => handleReviewChoice(questionIndex, optionIndex)}
+                            className={`rounded-xl border px-3 py-2.5 text-right text-xs font-semibold transition ${userAnswers[questionIndex] === optionIndex ? 'border-primary bg-primary/10 text-primary' : 'border-[var(--app-border)] bg-[var(--app-surface-raised)] text-[var(--app-text)] hover:border-primary/40'}`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {hasRatedQuiz && (
               <button
                 type="button"
@@ -1586,22 +1652,22 @@ export default function QuizResolver({
           {!hasRatedQuiz && (
           <>
           {/* Ratings & Star review submissions panel */}
-          <div className="bg-[#130b2b]/95 border-2 border-[#9b51e0]/60 p-6 sm:p-8 rounded-3xl shadow-[0_0_30px_rgba(155,81,224,0.35)] space-y-6 text-center select-none relative overflow-hidden print:hidden">
+          <div className="theme-surface border-2 border-primary/20 p-6 sm:p-8 rounded-3xl shadow-lg shadow-primary/10 space-y-6 text-center select-none relative overflow-hidden print:hidden">
             {/* Ambient Background Glows */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#9b51e0]/15 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
             
             <div className="space-y-2">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#b175ff]/10 text-[#b175ff] animate-pulse">
-                <Star className="w-6 h-6 fill-[#b175ff] text-[#b175ff]" />
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary">
+                <Star className="w-6 h-6 fill-primary text-primary" />
               </div>
-              <h4 className="font-display font-black text-lg text-white tracking-tight">
-                {isAr ? 'تقييم الاختبار إلزامي لحفظ النتيجة وإنهاء الجلسة ✨' : 'Rating is required to save results & finish session ✨'}
+              <h4 className="font-display font-black text-lg text-[var(--app-text)] tracking-tight">
+                {isAr ? 'شاركنا رأيك في الاختبار (اختياري) ✨' : 'Share your quiz feedback (optional) ✨'}
               </h4>
-              <p className="text-xs text-indigo-200/70 max-w-md mx-auto leading-relaxed">
+              <p className="text-xs theme-muted max-w-md mx-auto leading-relaxed">
                 {isAr 
-                  ? 'يرجى اختيار تقييم بالنجوم ودعم ومشاركة رأيك معنا لتفعيل زر الخروج وحفظ درجاتك في سجل الأداء بنجاح.' 
-                  : 'Please provide a star rating to enable the exit button and successfully save your final record.'}
+                  ? 'تم حفظ الدرجة تلقائياً عند الإجابة عن آخر سؤال. يمكنك إضافة تقييم أو التسليم والإنهاء مباشرة.'
+                  : 'Your score was saved automatically after the last answer. Add feedback or submit and finish directly.'}
               </p>
             </div>
 
@@ -1644,7 +1710,7 @@ export default function QuizResolver({
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 placeholder={isAr ? 'اكتب ما فادك أو ما يحتاج للتعديل في الاختبار...' : 'Write what was helpful or what needs improvements...'}
-                className="w-full bg-[#0a0518] border border-[#3d1d6d]/50 rounded-2xl p-3 text-xs text-slate-100 outline-none focus:border-[#b175ff] focus:ring-1 focus:ring-[#b175ff]/30 transition-all placeholder:text-slate-500"
+                className="glass-input w-full rounded-2xl p-3 text-xs outline-none transition-all placeholder:text-slate-500"
                 style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
               />
               {saveError && (
@@ -1671,11 +1737,11 @@ export default function QuizResolver({
             <div className="max-w-xs mx-auto pt-2">
               <button
                 onClick={handleFinalSubmitAndExit}
-                disabled={selectedRating === 0 || isSubmittingReview}
+                disabled={isSubmittingReview}
                 className={`w-full py-3.5 rounded-2xl font-black text-xs transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
                   selectedRating > 0
                     ? 'bg-gradient-to-r from-violet-600 via-primary to-pink-500 text-white shadow-[0_0_25px_rgba(124,58,237,0.5)] hover:scale-102 hover:shadow-[0_0_35px_rgba(124,58,237,0.7)] active:scale-98'
-                    : 'bg-slate-900 border border-slate-800 text-slate-500 cursor-not-allowed opacity-50'
+                    : 'bg-primary text-white hover:bg-primary-hover'
                 }`}
               >
                 {isSubmittingReview ? (
@@ -1686,7 +1752,7 @@ export default function QuizResolver({
                 ) : (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{isAr ? 'إنهاء وخروج ✨' : 'Finish & Exit ✨'}</span>
+                    <span>{isAr ? 'تسليم وإنهاء ✨' : 'Submit & Finish ✨'}</span>
                   </>
                 )}
               </button>
