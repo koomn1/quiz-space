@@ -136,7 +136,7 @@ export async function generateQuizWithFallback(
 ): Promise<GeneratedQuiz> {
   const enforceArabic = requiresArabicGeneration(topic);
   const providers = [
-    { key: 'groq → openrouter', run: () => generateWithOpenRouter(topic, amount, alreadyGeneratedQuestions, automatic) },
+    { key: 'openrouter', run: () => generateWithOpenRouter(topic, amount, alreadyGeneratedQuestions, automatic) },
   ];
 
   const errors: string[] = [];

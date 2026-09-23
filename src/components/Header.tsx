@@ -127,8 +127,8 @@ export default function Header({
   const isGuest = !userId || userId.startsWith('user-');
 
   return (
-    <header className="liquid-header fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 pointer-events-none bg-white/95 px-0 pb-2 pt-0 backdrop-blur-xl dark:bg-[#020617]/95 sm:pb-3">
-      <div className="w-full pointer-events-auto">
+    <header className="liquid-header fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 bg-white/95 px-0 pb-2 pt-0 backdrop-blur-xl dark:bg-[#020617]/95 sm:pb-3">
+      <div className="w-full">
         <div 
           className="liquid-header__bar flex min-w-0 items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white/90 dark:bg-slate-950/90 border-b border-slate-100 dark:border-slate-800/80 rounded-b-2xl px-3 sm:px-6 lg:px-10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
           

@@ -1673,7 +1673,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       // The file itself was read fine — only the AI engine refused. Never show
       // "corrupt file" in that case: hand the extracted text to the paste tab
       // so a single later click finishes the job.
-      if (extractedText && extractedText.length > 30) {
+      const rawFallbackMessage = String(err?.message || err || '');
+      const isTransientGenerationError = /overloaded|rate limit|429|503|busy|timeout|timed out|unavailable|مشغول|الضغط|وقت لاحق/i.test(rawFallbackMessage);
+      if (extractedText && extractedText.length > 30 && isTransientGenerationError) {
         const busyMessage = isAr
           ? `تمت قراءة الملف بنجاح (${extractedText.length} حرفاً) لكن محرك التوليد مشغول حالياً بسبب الضغط العالي. لصقنا نص الملف تلقائياً في تبويب «لصق نصوص PDF» — عد بعد لحظات واضغط توليد وسيعمل مباشرة.`
           : `The file was read successfully (${extractedText.length} characters), but the AI engine is busy under heavy load. We pasted its text into the “Paste PDF text” tab — come back in a moment and press generate.`;
