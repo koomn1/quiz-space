@@ -22,7 +22,6 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
     expect(workerSource).toContain("'z-ai/glm-5.2:free'");
     expect(workerSource).toContain("'qwen/qwen3.8-flash'");
-    expect(workerSource).toContain("'google/gemini-3.8-flash'");
     expect(workerSource).toContain("'openai/gpt-5-mini'");
     expect(workerSource).not.toContain("'google/gemini-2.0-flash-001'");
     expect(workerSource).not.toContain("'openai/gpt-oss-120b:free'");

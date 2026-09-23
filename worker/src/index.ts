@@ -29,10 +29,10 @@ type Provider = 'openrouter';
 // constants to switch models without touching any other code.
 // Chains are live-model-verified against the public /api/v1/models catalog
 // and free models come first, so generation keeps working even when the
-// OpenRouter key has no credit left. Retired IDs (google/gemini-2.0-flash-001,
-// google/gemini-1.5-flash, openai/gpt-oss-*, qwen3-235b-a22b:free) now return
+// OpenRouter key has no credit left. Retired IDs (openai/gpt-oss-*,
+// qwen3-235b-a22b:free) now return
 // http 4xx for every call and must not be reintroduced. Superseded paid
-// fallbacks (qwen/qwen3.7-flash, google/gemini-2.5-flash,
+// fallbacks (qwen/qwen3.7-flash,
 // mistralai/mistral-small-3.1-24b-instruct, openai/gpt-4o-mini) were replaced
 // by their current generations in the 2026-09 chain refresh.
 const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free';
@@ -47,28 +47,25 @@ const OPENROUTER_STREAM_TEXT_MODELS = [
   'nvidia/nemotron-3-ultra-550b-a55b:free',
   ...OPENROUTER_TEXT_FALLBACKS,
 ];
-const OPENROUTER_VISION_FALLBACKS = [
+  const OPENROUTER_VISION_FALLBACKS = [
   'google/gemma-4-31b-it:free',
   'thinkingmachines/inkling-small:free',
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
   'dots-studio/dots-3-note-preview:free',
-  'google/gemini-3.8-flash',
 ];
 // Post-extraction answer review is a bounded JSON task. Use a short,
 // quality-first sequence so one slow provider cannot block every batch.
-const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
-  'nvidia/nemotron-3.5-lightning:free',
-  'qwen/qwen3.8-flash',
-  'google/gemini-3.8-flash',
-  'openai/gpt-5-mini',
-];
-const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
-  'google/gemma-4-31b-it:free',
-  'thinkingmachines/inkling-small:free',
-  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
-  'google/gemini-3.8-flash',
-];
+  const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
+    'nvidia/nemotron-3.5-lightning:free',
+    'qwen/qwen3.8-flash',
+    'openai/gpt-5-mini',
+  ];
+  const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
+    'google/gemma-4-31b-it:free',
+    'thinkingmachines/inkling-small:free',
+    'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+  ];
 // llama-3.3-70b-versatile was shut down by Groq on 2026-08-16.
 // GPT-OSS 20B is the fast, low-cost production replacement for routine text work.
 const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
@@ -515,53 +512,6 @@ export async function callOpenRouterWithParallelAnswerReviewFallback(
   }
 }
 
-async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000, maxOutputTokens = 300, responseMimeType = 'application/json'): Promise<string> {
-  if (!env.GEMINI_API_KEY) throw new AiProviderError('provider_error', 'gemini', 'gemini-3.6-flash');
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts }],
-        generationConfig: {
-          temperature: responseMimeType === 'application/json' ? 0 : 0.7,
-          maxOutputTokens,
-          ...(responseMimeType ? { responseMimeType } : {}),
-        },
-      }),
-    });
-    if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'gemini', 'gemini-3.6-flash', response.status);
-    const payload: any = await response.json();
-    const text = payload.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
-    if (!text) throw new AiProviderError('empty_response', 'gemini', 'gemini-3.6-flash');
-    return text;
-  } catch (error) {
-    if (error instanceof AiProviderError) throw error;
-    if (error instanceof DOMException && error.name === 'AbortError') throw new AiProviderError('timeout', 'gemini', 'gemini-3.6-flash');
-    throw new AiProviderError('provider_error', 'gemini', 'gemini-3.6-flash');
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-async function callGeminiJson(env: Env, prompt: string, timeoutMs = 8_000): Promise<string> {
-  return callGeminiJsonWithParts(env, [{ text: prompt }], timeoutMs, 300, 'application/json');
-}
-
-function toGeminiParts(content: unknown): any[] {
-  if (typeof content === 'string') return [{ text: content }];
-  if (!Array.isArray(content)) return [];
-  return (content as any[]).flatMap((part: any): any[] => {
-    if (part?.type === 'text' && typeof part.text === 'string') return [{ text: part.text }];
-    const url = part?.type === 'image_url' ? part.image_url?.url : part?.type === 'file' ? part.file?.file_data : '';
-    if (typeof url !== 'string' || !url.startsWith('data:')) return [];
-    const match = url.match(/^data:([^;]+);base64,(.+)$/s);
-    return match ? [{ inlineData: { mimeType: match[1], data: match[2] } }] : [];
-  });
-}
-
 async function extractPowerPointText(data: Uint8Array): Promise<string> {
   const archive = await JSZip.loadAsync(data);
   const slideFiles = Object.keys(archive.files)
@@ -586,14 +536,8 @@ async function extractPowerPointText(data: Uint8Array): Promise<string> {
 
 async function gradeEssayWithFallback(env: Env, question: string, modelAnswer: string, studentAnswer: string): Promise<any> {
   const prompt = `قيّم إجابة الطالب بسرعة وبصرامة من ناحية صحة المعنى فقط. لا تكافئ الإجابة الفارغة أو التي تناقض النموذج. اعتبرها صحيحة فقط إذا تضمنت الفكرة الأساسية للنموذج بوضوح، وإلا فهي خاطئة. أعد JSON فقط بهذا الشكل: {"correct":true,"confidence":0.0,"reason":"سبب قصير"}. السؤال: ${question.slice(0, 5000)}\nالإجابة النموذجية: ${modelAnswer.slice(0, 4000)}\nإجابة الطالب: ${studentAnswer.slice(0, 4000)}`;
-  try {
-    const result = extractJson(await callGeminiJson(env, prompt, 8_000)) as any;
-    return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '' , provider: 'gemini' };
-  } catch (geminiError) {
-    console.warn('Gemini essay grading failed; using OpenRouter fallback:', geminiError);
-    const result = extractJson(await callOpenRouterWithFallback(env, [{ role: 'user', content: prompt }], OPENROUTER_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 10_000 })) as any;
-    return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '', provider: 'openrouter' };
-  }
+  const result = extractJson(await callOpenRouterWithFallback(env, [{ role: 'user', content: prompt }], OPENROUTER_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 10_000 })) as any;
+  return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '', provider: 'groq/openrouter' };
 }
 
 async function providerText(
@@ -611,10 +555,6 @@ async function providerText(
       { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs },
     );
   } catch (openRouterError) {
-    if (env.GEMINI_API_KEY) {
-      console.warn('OpenRouter generation failed or exhausted, using Gemini fallback:', openRouterError);
-      return await callGeminiJsonWithParts(env, [{ text: prompt }], 45_000, 8_000);
-    }
     throw openRouterError;
   }
 }
@@ -1007,9 +947,8 @@ ${extraInstruction}`;
         }
       }
 
-      // Generate mode is intentionally routed through Gemini multimodal. This
-      // lets Gemini read explanations inside images, PDFs and PPTX files and
-      // turn them into new questions. The literal branch above is untouched.
+      // Generate mode uses Groq for text content and OpenRouter for multimodal
+      // files. Direct Gemini calls are intentionally not part of the provider chain.
       if (!isLiteral) {
         const generatedPrompt = quizPrompt('the attached source document', body.amount, []);
         try {
@@ -1025,19 +964,16 @@ ${extraInstruction}`;
           if (isPowerPoint) {
             const slideText = await extractPowerPointText(fileData);
             if (!slideText.trim()) throw new Error('PowerPoint contains no readable slide text');
-            const text = await callGeminiJson(env, `${generatedPrompt}\n\nمحتوى الشرائح:\n${slideText.slice(0, 120000)}`, 45_000);
+            const text = await providerText('openrouter', `${generatedPrompt}\n\nمحتوى الشرائح:\n${slideText.slice(0, 120000)}`, env, { timeoutMs: 45_000 });
             return json(extractJson(text), 200, headers);
           }
-          const text = await callGeminiJsonWithParts(env, [
-            { text: generatedPrompt },
-            { inlineData: { mimeType: body.mimeType || 'application/octet-stream', data: body.fileBase64 } },
-          ], 45_000, 6_000);
-          return json(extractJson(text), 200, headers);
-        } catch (geminiError) {
-          console.warn('Gemini document generation failed; using existing OpenRouter fallback:', geminiError);
+          // Images and scanned PDFs require a multimodal OpenRouter model.
+          throw new Error('Text extraction unavailable; use the OpenRouter multimodal fallback.');
+        } catch (generationError) {
+          console.warn('Text document generation failed; using OpenRouter multimodal fallback:', generationError);
         }
       }
-      // Fallback for literal mode or failed Gemini generation.
+      // Fallback for literal mode or failed text generation.
       const prompt = isLiteral ? losslessPrompt : quizPrompt("document content", body.amount, []);
       const text = await callOpenRouterWithFallback(env, [{
         role: 'user',
@@ -1070,8 +1006,8 @@ ${extraInstruction}`;
     }
 
     if (path === '/api/ai/groq') {
-      // Backward-compatible alias for older web clients. It never calls Groq;
-      // all requests are routed through the OpenRouter model fallback.
+      // Backward-compatible alias for older web clients. It uses Groq first
+      // and falls back to OpenRouter through the shared text route.
       if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid request' }, 400, headers);
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];
       const messages: any[] = [];
@@ -1106,7 +1042,6 @@ ${extraInstruction}`;
         'nvidia/nemotron-3-super-120b-a12b:free',
         'z-ai/glm-5.2:free',
         'qwen/qwen3.8-flash',
-        'google/gemini-3.8-flash',
         'openai/gpt-5-mini',
       ];
       const model = allowedModels.includes(body.model) ? body.model : OPENROUTER_TEXT_MODEL;
@@ -1161,23 +1096,7 @@ ${extraInstruction}`;
           text = await callOpenRouterWithFallback(env, messages, models, undefined, undefined);
         }
       } catch (openRouterError) {
-        if (!isAnswerReview && env.GEMINI_API_KEY) {
-          console.warn('Cosmo OpenRouter failed; falling back to Gemini:', openRouterError);
-          text = await callGeminiJsonWithParts(
-            env,
-            [
-              { text: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) },
-              ...toGeminiParts(buildCosmoUserContent(body)),
-            ],
-            60_000,
-            4_000,
-            'text/plain',
-          );
-          aiProvider = 'gemini';
-          aiModel = 'gemini-3.6-flash';
-        } else {
-          throw openRouterError;
-        }
+        throw openRouterError;
       }
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {

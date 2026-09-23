@@ -61,6 +61,7 @@ import { getOrCreateGuestIdentity } from './lib/guestIdentity';
 import { startWebVitalsReporting } from './lib/performanceTelemetry';
 import { getOnboardingTourStorageKey, shouldShowOnboardingTour } from './lib/onboardingState';
 import { useAuth } from './context/AuthContext';
+import BottomNav from './components/BottomNav';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -1596,7 +1597,7 @@ export default function App() {
         
 
         {/* Main page frame wrapping */}
-        <main ref={mainContainerRef} className={`${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (isNotFoundTab ? 'flex-1 w-full min-h-0 p-0 relative z-10' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10'))}`}>
+        <main ref={mainContainerRef} className={`liquid-main ${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (isNotFoundTab ? 'flex-1 w-full min-h-0 p-0 relative z-10' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10'))}`}>
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (
@@ -2146,6 +2147,14 @@ export default function App() {
           </>
         )}
       
+
+      <BottomNav
+        currentTab={activeTab}
+        setTab={handleSetTab}
+        lang={lang}
+        isGuest={!userId || userId.startsWith('user-')}
+        hidden={isQuizLocked || isCosmoTab || !showAppHeader}
+      />
 
       {/* Support button removed as requested */}
       

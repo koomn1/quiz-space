@@ -5,7 +5,6 @@ import JSZip from 'jszip';
 
 export interface ExtractionJobEnv {
   OPENROUTER_API_KEY: string;
-  GEMINI_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
 }
@@ -84,30 +83,6 @@ export interface VisionChunkPlan {
   estimatedChunkCount: number;
   reason: 'standard' | 'large-document' | 'raster-heavy';
 }
-async function callGeminiJsonForGeneration(env: ExtractionJobEnv, prompt: string): Promise<string> {
-  if (!env.GEMINI_API_KEY) throw new Error('Gemini is not configured');
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12_000);
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
-    signal: controller.signal,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.1, maxOutputTokens: 6000, responseMimeType: 'application/json' },
-    }),
-  });
-  if (!response.ok) throw new Error(`Gemini generation failed: ${response.status}`);
-  const payload: any = await response.json();
-  const text = payload.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
-    if (!text) throw new Error('Gemini returned an empty response');
-    return text;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
 async function extractPowerPointText(source: Uint8Array): Promise<string> {
   const archive = await JSZip.loadAsync(source);
   const slideFiles = Object.keys(archive.files)
@@ -141,7 +116,6 @@ const VISION_MODEL_FALLBACKS = [
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
   'dots-studio/dots-3-note-preview:free',
-  'google/gemini-3.8-flash',
 ];
 
 export function sourceFileBaseName(sourceFileName: string | null | undefined): string {
