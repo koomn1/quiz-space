@@ -2112,7 +2112,7 @@ export default function App() {
               
               
               
-              className="fixed inset-0 bg-black/60 z-[9998] backdrop-blur-sm cursor-pointer" 
+              className="fixed inset-0 z-[9998] cursor-pointer bg-black/35"
               onClick={() => setIsSidebarOpen(false)} 
             />
 
