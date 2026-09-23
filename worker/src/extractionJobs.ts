@@ -4,9 +4,7 @@ import { extractPdfTextContent, extractQuestionsFromText } from './documentExtra
 import JSZip from 'jszip';
 
 export interface ExtractionJobEnv {
-  GROQ_API_KEY?: string;
   OPENROUTER_API_KEY: string;
-  GEMINI_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
 }
@@ -85,30 +83,6 @@ export interface VisionChunkPlan {
   estimatedChunkCount: number;
   reason: 'standard' | 'large-document' | 'raster-heavy';
 }
-async function callGeminiJsonForGeneration(env: ExtractionJobEnv, prompt: string): Promise<string> {
-  if (!env.GEMINI_API_KEY) throw new Error('Gemini is not configured');
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12_000);
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
-    signal: controller.signal,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.1, maxOutputTokens: 6000, responseMimeType: 'application/json' },
-    }),
-  });
-  if (!response.ok) throw new Error(`Gemini generation failed: ${response.status}`);
-  const payload: any = await response.json();
-  const text = payload.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
-    if (!text) throw new Error('Gemini returned an empty response');
-    return text;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
 async function extractPowerPointText(source: Uint8Array): Promise<string> {
   const archive = await JSZip.loadAsync(source);
   const slideFiles = Object.keys(archive.files)
@@ -142,10 +116,7 @@ const VISION_MODEL_FALLBACKS = [
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
   'dots-studio/dots-3-note-preview:free',
-  'google/gemini-3.8-flash',
 ];
-const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export function sourceFileBaseName(sourceFileName: string | null | undefined): string {
   const baseName = String(sourceFileName || '').split(/[\\/]/).pop() || '';
@@ -226,8 +197,25 @@ function cleanMessage(value: unknown): string {
   return 'تعذر إكمال استخراج الأسئلة من الملف. تأكد من أن الملف سليم ثم أعد المحاولة.';
 }
 
+export function detectSourceLanguage(text: string): 'ar' | 'en' | 'unknown' {
+  const sample = String(text || '').slice(0, 120_000);
+  const arabic = (sample.match(/[\u0600-\u06ff]/g) || []).length;
+  const latin = (sample.match(/[A-Za-z]/g) || []).length;
+  if (arabic >= 8 && arabic >= latin * 0.2) return 'ar';
+  if (latin >= 8 && latin >= arabic * 0.2) return 'en';
+  return 'unknown';
+}
+
+export function sourceLanguageInstruction(text = ''): string {
+  const language = detectSourceLanguage(text);
+  if (language === 'ar') return 'اكتب العنوان والوصف وجميع الأسئلة والخيارات والإجابات والشروح بالعربية، بنفس لغة المصدر. لا تترجم المحتوى إلى الإنجليزية.';
+  if (language === 'en') return 'Write the title, description, questions, options, answers, and explanations in English, matching the source language. Do not translate the content into Arabic.';
+  return 'Detect the dominant language of the source and write the entire quiz in that same language. Do not translate it into another language.';
+}
+
 function extractionPrompt(customInstruction?: string | null): string {
   return `You are a lossless document extraction engine.
+${sourceLanguageInstruction()}
 Extract EVERY question exactly as written.
 
 Rules:
@@ -257,22 +245,11 @@ Rules:
 ${customInstruction?.trim() ? `Additional instructions: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
-function generatePrompt(amount: number | null | undefined, customInstruction?: string | null): string {
+function generatePrompt(amount: number | null | undefined, customInstruction?: string | null, sourceText = ''): string {
   const scopeInstruction = Number.isInteger(amount) && Number(amount) > 0
-    ? `حلل محتوى الملف أولاً، ثم أنشئ ${amount} سؤالاً فقط من المعلومات التي يدعمها الملف. لا تشترط وجود أسئلة مكتوبة مسبقاً.`
-    : 'اقرأ محتوى الملف بالكامل، فقرةً فقرةً وعنواناً عنواناً، وأنشئ أكبر عدد ممكن من الأسئلة عالية الجودة: سؤالاً مستقلاً لكل حقيقة أو تعريف أو علاقة أو خطوة أو مثال أو مفهوم مهم يمكن أن يأتي منه سؤال. لا تستخدم 10 أسئلة كحد افتراضي، ولا تختصر الملف في ملخص، ولا تتوقف حتى تغطي جميع الأجزاء القابلة للسؤال. في الملف المتوسط أعد 25 سؤالاً أو أكثر متى كان المحتوى يسمح بذلك، وأعد كل الأسئلة المختلفة الممكنة حتى لو كانت من نفس الفصل. أزل التكرار الحقيقي فقط.';
-  return `أنت محلل محتوى تعليمي ومصمم اختبارات. هذه مهمة توليد أسئلة من مادة مصدر، وليست استخراجاً حرفياً لأسئلة جاهزة.
-قبل كتابة JSON، اقرأ المادة كاملة وافهم بنيتها داخلياً: العناوين، التعريفات، الحقائق، العلاقات بين المفاهيم، الخطوات، الأمثلة، الجداول، الأرقام، والتعليقات الموجودة داخل الصور أو الشرائح. اربط كل سؤال بجزء واضح من المصدر، ولا تعتمد على معرفتك الخارجية.
-
-${scopeInstruction}
-
-في الصور والصفحات الممسوحة افحص النص المرئي والجداول والرسوم التوضيحية والتسميات بدقة. إذا كانت معلومة غير مقروءة أو غير مؤكدة، لا تستخدمها كسؤال. لا تقل إن الملف لا يحتوي أسئلة؛ المطلوب صياغة أسئلة جديدة من الشرح نفسه.
-نوّع الأسئلة بحسب ما يسمح به المحتوى بين الاختيار من متعدد، صح/خطأ، والمقالي. لا تجعل كل الإجابات في الخيار نفسه. اجعل المشتتات معقولة ومن نفس الموضوع، لكن لا تخترع معلومة غير موجودة. راجع كل سؤال وإجابته مرة ثانية مقابل المصدر، واحذف أي سؤال مكرر أو إجابة غير مؤكدة.
-SOURCE-LANGUAGE LOCK (highest priority): detect the dominant language of the source content before writing anything. Keep the title, description, questions, options, answers, and explanations in that same language. Never translate an English source into Arabic. Never translate an Arabic source into English. The language of these instructions and the user interface must not influence the output language. If the source is mixed, use its dominant language and preserve essential original terms.
-
-قاعدة اللغة إلزامية: اكتشف لغة المحتوى المصدر نفسه أولاً، ثم أخرج كل الناتج باللغة الغالبة نفسها. لا تستخدم العربية بسبب لغة التعليمات أو لغة المستخدم. راجع اللغة قبل إخراج JSON.
-
-حافظ على معلومات المصدر ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية (لا تغيّر لغة الإخراج المحددة من المصدر): ${customInstruction.trim().slice(0, 2000)}` : ''}`;
+    ? `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف.`
+    : 'اقرأ محتوى المحاضرة بالكامل وأنشئ سؤالاً لكل نقطة أو معلومة أو مفهوم مهم يمكن أن يأتي منه سؤال. لا تضع حداً ثابتاً لعدد الأسئلة ولا تتوقف عند رقم افتراضي؛ غطِّ كل الأجزاء القابلة للسؤال، مع إزالة التكرار فقط.';
+  return `${scopeInstruction} ${sourceLanguageInstruction(sourceText)} حافظ على معلومات المستند ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
 function extractBalancedJson(text: string, start: number): string | null {
@@ -331,7 +308,7 @@ function normalizeAnswerText(value: unknown): string {
     .normalize('NFKC')
     .replace(/[\\u064B-\\u065F\\u0670]/g, '')
     .replace(/[.,،؛:!?؟"'`()\\[\\]{}]/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/\\s+/g, ' ')
     .trim()
     .toLocaleLowerCase();
 }
@@ -400,40 +377,9 @@ async function callOpenRouterWithFallback(
   env: ExtractionJobEnv,
   messages: any[],
   models: string[],
-  options?: { maxTokens?: number; temperature?: number; useGroq?: boolean; validateText?: (text: string) => void },
+  options?: { maxTokens?: number; temperature?: number },
 ): Promise<{ text: string; model: string }> {
   let lastError: unknown;
-  const hasMultimodalContent = messages.some(message => Array.isArray(message?.content));
-  if (env.GROQ_API_KEY && options?.useGroq !== false && !hasMultimodalContent) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), VISION_MODEL_TIMEOUT_MS);
-      try {
-        const response = await fetch(GROQ_API_URL, {
-          method: 'POST',
-          signal: controller.signal,
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-          body: JSON.stringify({
-            model: GROQ_TEXT_MODEL,
-            messages,
-            max_tokens: options?.maxTokens,
-            temperature: options?.temperature,
-          }),
-        });
-        if (!response.ok) throw new Error(`Groq failed: ${response.status}`);
-        const payload = await response.json() as any;
-        const text = payload.choices?.[0]?.message?.content;
-        if (typeof text !== 'string' || !text.trim()) throw new Error('Groq returned an empty response');
-        options?.validateText?.(text);
-        return { text, model: GROQ_TEXT_MODEL };
-      } finally {
-        clearTimeout(timeout);
-      }
-    } catch (error) {
-      lastError = error;
-      console.warn('Groq extraction generation failed; using OpenRouter fallback:', error);
-    }
-  }
   for (const model of models) {
     let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
@@ -459,7 +405,6 @@ async function callOpenRouterWithFallback(
       const data = await response.json() as any;
       const text = data.choices?.[0]?.message?.content;
       if (typeof text !== 'string' || !text.trim()) throw new Error(`OpenRouter ${model} returned an empty response`);
-      options?.validateText?.(text);
       return { text, model };
     } catch (error) {
       lastError = error;
@@ -719,7 +664,7 @@ async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: strin
 
 function documentVisionPrompt(job: ExtractionJobRow): string {
   if (job.extraction_mode === 'generate') {
-    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nهذه صفحات أو صور مرفقة وليست نصاً عادياً: افحص كل صفحة بصرياً، واقرأ النص داخل الصور والجداول والعناوين والتسميات والرسوم. افهم تسلسل الشرح بين الصفحات قبل صياغة السؤال. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. أعد JSON صالحاً فقط.`;
+    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. أعد JSON صالحاً فقط.`;
   }
   return extractionPrompt(job.custom_instruction);
 }
@@ -754,7 +699,7 @@ async function extractPdfVision(
           { type: 'text', text: documentVisionPrompt(job) },
           { type: 'file', file: { filename: `pages-${start + offset + 1}.pdf`, file_data: `data:application/pdf;base64,${fileBase64}` } },
         ],
-      }], VISION_MODEL_FALLBACKS, { maxTokens: 12_000, temperature: 0.15 });
+      }], VISION_MODEL_FALLBACKS);
       return { model: request.model, quiz: parseJson(request.text) };
     }));
     for (const result of results) {
@@ -817,104 +762,39 @@ async function generateQuestionsFromText(
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
   const requestedCount = job.requested_question_count || null;
-  const MAX_GENERATED_QUESTIONS = 500;
-  const CHUNK_TARGET_CHARS = 45_000;
-  const CHUNK_OVERLAP_CHARS = 1_500;
-  const COMPLETION_PASSES = 2;
-
-  // Split only the generation path. Literal extraction continues to receive the
-  // original complete text and its own question-mapping logic below.
-  const chunks: string[] = [];
-  let cursor = 0;
-  while (cursor < text.length) {
-    const hardEnd = Math.min(text.length, cursor + CHUNK_TARGET_CHARS);
-    let end = hardEnd;
-    if (hardEnd < text.length) {
-      const paragraphBreak = text.lastIndexOf('\n\n', hardEnd);
-      const sentenceBreak = text.lastIndexOf('. ', hardEnd);
-      const preferredBreak = paragraphBreak > cursor + CHUNK_TARGET_CHARS * 0.65
-        ? paragraphBreak + 2
-        : sentenceBreak > cursor + CHUNK_TARGET_CHARS * 0.65
-          ? sentenceBreak + 2
-          : hardEnd;
-      end = Math.min(text.length, preferredBreak);
-    }
-    const chunk = text.slice(cursor, end).trim();
-    if (chunk) chunks.push(chunk);
-    if (end >= text.length) break;
-    cursor = Math.max(cursor + 1, end - CHUNK_OVERLAP_CHARS);
-  }
-  if (!chunks.length) throw new Error('The document did not contain any usable text.');
-
-  const buildMessages = (source: string, amount: number | null, chunkIndex: number, pass: number) => {
-    const amountInstruction = amount
-      ? `أنشئ ${amount} سؤالاً بالضبط إن كانت المعلومات الموجودة في هذا الجزء تسمح بذلك. إذا كان الجزء لا يحتوي معلومات كافية، أنشئ كل الأسئلة الموثوقة الممكنة فقط.`
-      : 'أنشئ كل الأسئلة الموثوقة الممكنة من هذا الجزء، وغطِّ كل معلومة أو مفهوم قابل للسؤال دون حد افتراضي أو ملخص عام.';
-    const continuation = pass > 0
-      ? `هذه محاولة استكمال رقم ${pass}. أنشئ أسئلة جديدة فقط، ولا تكرر أي سؤال سبق إنتاجه من أجزاء الملف الأخرى.`
-      : 'هذه هي المحاولة الأساسية لهذا الجزء.';
-    return [{
-      role: 'user',
-      content: `You are Cosmo, an educational quiz generator. Preserve the source language exactly, especially Arabic. Use only facts present in the source. Return valid JSON only in the requested quiz format.\n\n${amountInstruction}\n${continuation}\nهذا الجزء رقم ${chunkIndex + 1} من ${chunks.length}:\n\n${source}`,
-    }];
-  };
-
-  let allQuestions: any[] = [];
-  let firstQuiz: any = null;
-  const providers = new Set<string>();
+    const prompt = `${generatePrompt(requestedCount, job.custom_instruction, text)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`;
+  const messages = [
+    {
+      role: 'system',
+      content: 'أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ المادة كاملة، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواها فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.',
+    },
+    { role: 'user', content: prompt },
+  ];
   let lastError: unknown;
-  const seen = new Set<string>();
-  const appendQuestions = (questions: any[]) => {
-    for (const question of questions) {
-      const key = String(question.text || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      allQuestions.push(question);
-    }
-  };
-
-  for (let pass = 0; pass <= (requestedCount ? COMPLETION_PASSES : 0); pass += 1) {
-    if (allQuestions.length >= (requestedCount || MAX_GENERATED_QUESTIONS)) break;
-    for (let index = 0; index < chunks.length; index += 1) {
-      if (allQuestions.length >= (requestedCount || MAX_GENERATED_QUESTIONS)) break;
-      const remainingChunks = chunks.length - index;
-      const remainingQuestions = requestedCount ? Math.max(1, requestedCount - allQuestions.length) : null;
-      const chunkTarget = remainingQuestions ? Math.max(1, Math.ceil(remainingQuestions / remainingChunks)) : null;
-      try {
-        const response = await callOpenRouterWithFallback(
-          env,
-          buildMessages(chunks[index], chunkTarget, index, pass),
-          TEXT_MODEL_FALLBACKS,
-          {
-            maxTokens: requestedCount ? Math.min(12_000, Math.max(2_000, (chunkTarget || 10) * 650)) : 12_000,
-            temperature: 0.15,
-            validateText: value => {
-              if (!normalizeQuestions(parseJson(value)).length) throw new Error('Provider returned no usable questions.');
-            },
-          },
-        );
-        providers.add(response.model);
-        const parsed = parseJson(response.text);
-        if (!firstQuiz) firstQuiz = parsed;
-        appendQuestions(normalizeQuestions(parsed));
-        await onProgress(Math.min(chunks.length, index + 1), chunks.length, allQuestions.length);
-      } catch (error) {
-        lastError = error;
-        console.warn(`Text generation chunk ${index + 1}/${chunks.length} failed on pass ${pass + 1}.`, error);
-      }
+  // Use the same OpenRouter chat-style invocation as Cosmo. The only difference
+  // is the system instruction and structured quiz response contract above.
+  for (const model of TEXT_MODEL_FALLBACKS) {
+    try {
+      const response = await callOpenRouterWithFallback(env, messages, [model], { maxTokens: 4_000, temperature: 0.2 });
+      const quiz = parseJson(response.text);
+      const questions = normalizeQuestions(quiz);
+      if (!questions.length) throw new Error('The document did not contain any valid questions.');
+      const limitedQuestions = requestedCount ? questions.slice(0, requestedCount) : questions;
+      await onProgress(1, 1, limitedQuestions.length);
+      return {
+        title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
+        description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+        questions: limitedQuestions,
+        provider: response.model,
+        chunks: 1,
+      };
+    } catch (error) {
+      lastError = error;
+      console.warn(`Text extraction model ${model} did not return a usable quiz; trying fallback.`, error);
     }
   }
 
-  if (!allQuestions.length) throw lastError instanceof Error ? lastError : new Error('The document did not contain any valid questions.');
-  const finalQuestions = requestedCount ? allQuestions.slice(0, requestedCount) : allQuestions.slice(0, MAX_GENERATED_QUESTIONS);
-  await onProgress(chunks.length, chunks.length, finalQuestions.length);
-  return {
-    title: !isGenericQuizTitle(firstQuiz?.title) ? String(firstQuiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
-    description: typeof firstQuiz?.description === 'string' && firstQuiz.description.trim() ? firstQuiz.description.trim() : `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-    questions: finalQuestions,
-    provider: [...providers].join(', ') || 'openrouter',
-    chunks: chunks.length,
-  };
+  throw lastError instanceof Error ? lastError : new Error('All text extraction models failed.');
 }
 
 export async function extractJobQuiz(

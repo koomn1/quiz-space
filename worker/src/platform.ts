@@ -6,7 +6,6 @@ export interface Env {
   OPENROUTER_API_KEY: string;
   /** Server-only web search key; never expose this to the React bundle. */
   TAVILY_API_KEY?: string;
-  GEMINI_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   /** Optional server-only key used only by queue consumers; never sent to clients. */

@@ -66,120 +66,33 @@
 
 html, body {
   font-family: var(--font-sans);
-  background-color: var(--app-bg);
+  background-color: #f7fbe9;
   direction: rtl;
-  color: var(--app-text);
+  color: #022E21;
 }
 
-:root {
-  color-scheme: light;
-  --app-bg: #f7f8fc;
-  --app-surface: #ffffff;
-  --app-surface-raised: #f8fafc;
-  --app-surface-muted: #f1f5f9;
-  --app-text: #172033;
-  --app-text-muted: #64748b;
-  --app-border: rgba(148, 163, 184, 0.25);
-  --app-border-strong: rgba(100, 116, 139, 0.38);
-  --app-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
-  --app-primary-soft: color-mix(in srgb, var(--color-primary) 11%, transparent);
-  --app-primary-softer: color-mix(in srgb, var(--color-primary) 5%, transparent);
-  --app-surface-tint: color-mix(in srgb, var(--app-surface) 96%, var(--color-primary) 4%);
+html.dark, body.dark {
+  background-color: #022E21;
+  color: #f3fbe5;
 }
 
-:root.dark,
-body.dark {
-  color-scheme: dark;
-  --app-bg: #020617;
-  --app-surface: #0f172a;
-  --app-surface-raised: #172033;
-  --app-surface-muted: #1e293b;
-  --app-text: #f8fafc;
-  --app-text-muted: #94a3b8;
-  --app-border: rgba(148, 163, 184, 0.18);
-  --app-border-strong: rgba(148, 163, 184, 0.32);
-  --app-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
-  --app-surface-tint: color-mix(in srgb, var(--app-surface) 92%, var(--color-primary) 8%);
-}
-
-/* Semantic surfaces: use these classes for new containers instead of fixed
-   slate/white colors. They automatically follow light/dark and the selected
-   accent palette. */
-.theme-page { background: var(--app-bg); color: var(--app-text); }
-.theme-surface { background: var(--app-surface-tint); color: var(--app-text); border-color: var(--app-border); }
-.theme-surface-raised { background: var(--app-surface-raised); color: var(--app-text); border-color: var(--app-border); }
-.theme-surface-muted { background: var(--app-surface-muted); color: var(--app-text); border-color: var(--app-border); }
-.theme-border { border-color: var(--app-border); }
-.theme-muted { color: var(--app-text-muted); }
-.theme-accent-soft { background: var(--app-primary-soft); color: var(--color-primary); }
-.theme-accent-border { border-color: color-mix(in srgb, var(--color-primary) 35%, transparent); }
-.theme-chrome { background: color-mix(in srgb, var(--app-surface) 94%, transparent); border-color: var(--app-border); box-shadow: var(--app-shadow); }
-
-/* Shared glass components now derive their tint from the active theme. */
-.glass-panel, .glass-card {
-  background: color-mix(in srgb, var(--app-surface) 72%, transparent);
-  border-color: color-mix(in srgb, var(--app-border-strong) 70%, transparent);
-  box-shadow: var(--app-shadow), inset 0 0 0 1px color-mix(in srgb, var(--app-surface) 35%, transparent);
-}
-.dark .glass-panel, .dark .glass-card {
-  background: color-mix(in srgb, var(--app-surface-raised) 68%, transparent);
-  border-color: var(--app-border);
-}
-
-/* Short, targeted theme transition: avoid a long, expensive repaint on mobile. */
+/* Cinematic Theme Toggle Transition - Ensures gorgeous, lag-free smooth fade on all components */
 .theme-transition,
 .theme-transition * {
-  transition: background-color 160ms ease-out,
-              border-color 160ms ease-out,
-              color 160ms ease-out,
-              box-shadow 160ms ease-out !important;
+  transition: background-color 450ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 450ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 450ms cubic-bezier(0.4, 0, 0.2, 1),
+              fill 450ms cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 450ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 450ms cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 button {
   @apply transition-all duration-300 active:scale-[0.96];
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  transform-style: flat;
-  perspective: none;
 }
 
 a {
   @apply transition-transform duration-300;
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  transform-style: flat;
-  perspective: none;
-}
-
-/* Smooth 2D interaction layer. It gives controls a polished response while
-   explicitly avoiding tilt, perspective, rotateX, and rotateY effects. */
-.smooth-transition,
-.smooth-hover,
-button,
-a,
-[role='button'] {
-  transition-property: color, background-color, border-color, box-shadow, opacity, filter, transform;
-  transition-duration: 240ms;
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  transform-style: flat;
-  perspective: none;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .smooth-hover:hover,
-  button:not(:disabled):hover,
-  [role='button']:not([aria-disabled='true']):hover {
-    filter: brightness(1.035);
-  }
-
-  .smooth-hover:hover {
-    box-shadow: 0 10px 26px color-mix(in srgb, var(--color-primary) 12%, transparent);
-  }
-}
-
-button:focus-visible,
-a:focus-visible,
-[role='button']:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 72%, transparent);
-  outline-offset: 3px;
 }
 
 /* Premium Typography Utilities */
@@ -1096,122 +1009,290 @@ html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-400"] {
 }
 
 
-/* Theme system final overrides: keep legacy glass components synchronized. */
-.theme-chrome {
-  background: color-mix(in srgb, var(--app-surface-tint) 94%, transparent) !important;
-  border-color: var(--app-border) !important;
-  box-shadow: var(--app-shadow) !important;
-}
-.theme-surface {
-  background-color: var(--app-surface-tint) !important;
-  color: var(--app-text);
-  border-color: var(--app-border);
-}
-.theme-page {
-  background-color: var(--app-bg) !important;
-  color: var(--app-text);
-}
-.glass-panel, .glass-card {
-  background: color-mix(in srgb, var(--app-surface-tint) 72%, transparent) !important;
-  border-color: var(--app-border) !important;
-  box-shadow: var(--app-shadow), inset 0 0 0 1px color-mix(in srgb, var(--app-surface) 35%, transparent) !important;
-}
-.dark .glass-panel, .dark .glass-card {
-  background: color-mix(in srgb, var(--app-surface-tint) 68%, var(--app-surface-raised)) !important;
-  border-color: var(--app-border) !important;
-}
-
-
 /* ========================================================================
-   Flat Glass UI
-   Glass surfaces are theme-aware and deliberately avoid perspective/tilt.
+   Quiz Space Liquid Glass system
+   Palette rationale: analogous cool blue/teal surfaces for calm focus, with
+   a restrained complementary coral only for destructive states. Text uses
+   explicit on-surface tokens so glass never reduces readability.
    ======================================================================== */
 :root {
-  --glass-bg: color-mix(in srgb, var(--app-surface) 72%, transparent);
-  --glass-bg-strong: color-mix(in srgb, var(--app-surface) 90%, transparent);
-  --glass-border: color-mix(in srgb, var(--app-border-strong) 70%, transparent);
-  --glass-highlight: color-mix(in srgb, var(--color-primary) 16%, transparent);
-  --glass-blur: 18px;
-  --glass-shadow: var(--app-shadow);
+  --lg-bg: #f3f7fb;
+  --lg-bg-deep: #e8f0f8;
+  --lg-surface: rgba(255, 255, 255, 0.78);
+  --lg-surface-strong: rgba(255, 255, 255, 0.92);
+  --lg-surface-muted: rgba(235, 242, 249, 0.76);
+  --lg-border: rgba(88, 111, 140, 0.18);
+  --lg-border-strong: rgba(88, 111, 140, 0.28);
+  --lg-text: #10233f;
+  --lg-text-muted: #52657e;
+  --lg-accent: #315bd6;
+  --lg-accent-soft: #e6edff;
+  --lg-secondary: #168f86;
+  --lg-danger: #c84b5b;
+  --lg-shadow: 0 18px 55px rgba(47, 76, 112, 0.10);
+  --lg-shadow-soft: 0 8px 26px rgba(47, 76, 112, 0.08);
 }
 
-.dark {
-  --glass-bg: color-mix(in srgb, var(--app-surface-raised) 70%, transparent);
-  --glass-bg-strong: color-mix(in srgb, var(--app-surface-raised) 92%, transparent);
+html.dark {
+  --lg-bg: #081321;
+  --lg-bg-deep: #0c1b2d;
+  --lg-surface: rgba(17, 33, 52, 0.72);
+  --lg-surface-strong: rgba(20, 39, 61, 0.9);
+  --lg-surface-muted: rgba(19, 37, 58, 0.62);
+  --lg-border: rgba(173, 201, 232, 0.16);
+  --lg-border-strong: rgba(173, 201, 232, 0.28);
+  --lg-text: #e8f1fb;
+  --lg-text-muted: #aabbd0;
+  --lg-accent: #8faeff;
+  --lg-accent-soft: rgba(91, 124, 229, 0.2);
+  --lg-secondary: #63c9bd;
+  --lg-danger: #ff9aa5;
+  --lg-shadow: 0 20px 60px rgba(0, 0, 0, 0.26);
+  --lg-shadow-soft: 0 10px 32px rgba(0, 0, 0, 0.18);
 }
 
-.glass-surface,
-.glass-card,
+html,
+body {
+  background: var(--lg-bg);
+  color: var(--lg-text);
+}
+
+.light-readable-ui {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(116, 164, 255, 0.14), transparent 32rem),
+    radial-gradient(circle at 92% 14%, rgba(76, 190, 174, 0.11), transparent 28rem),
+    var(--lg-bg) !important;
+}
+
+.dark .light-readable-ui {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(79, 111, 211, 0.17), transparent 34rem),
+    radial-gradient(circle at 94% 18%, rgba(26, 133, 132, 0.13), transparent 30rem),
+    var(--lg-bg) !important;
+}
+
+.liquid-header {
+  background: transparent !important;
+  padding: max(env(safe-area-inset-top), 0.5rem) 0.75rem 0 !important;
+}
+
+.liquid-header__bar {
+  max-width: 1440px;
+  margin: 0 auto;
+  min-height: 4.1rem;
+  border: 1px solid var(--lg-border) !important;
+  border-radius: 1.35rem !important;
+  background: var(--lg-surface) !important;
+  box-shadow: var(--lg-shadow-soft) !important;
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+}
+
+.liquid-sidebar {
+  color: var(--lg-text) !important;
+  background: var(--lg-surface-strong) !important;
+  border: 1px solid var(--lg-border) !important;
+  box-shadow: var(--lg-shadow) !important;
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+}
+
+.liquid-main {
+  width: min(100%, 1440px);
+  margin-inline: auto;
+}
+
+.liquid-container,
+.liquid-glass,
 .glass-panel,
-.glass-modal,
-.glass-dropdown {
-  background: var(--glass-bg) !important;
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(var(--glass-blur)) saturate(145%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(145%);
+.glass-card {
+  position: relative;
+  isolation: isolate;
+  background: var(--lg-surface) !important;
+  border: 1px solid var(--lg-border) !important;
+  box-shadow: var(--lg-shadow-soft) !important;
+  color: var(--lg-text);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
 }
 
-.glass-modal,
-.glass-dropdown {
-  background: var(--glass-bg-strong) !important;
+.liquid-container {
+  border-radius: 1.5rem;
+  padding: clamp(1rem, 2vw, 1.5rem);
 }
 
-.glass-input {
-  background: color-mix(in srgb, var(--app-surface) 62%, transparent) !important;
-  border: 1px solid var(--glass-border);
-  color: var(--app-text);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.liquid-glass,
+.glass-panel,
+.glass-card {
+  border-radius: 1.25rem;
 }
 
-.glass-input:focus {
-  border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
-  box-shadow: 0 0 0 4px var(--app-primary-soft);
-  outline: none;
+.liquid-container::after,
+.liquid-glass::after,
+.glass-panel::after,
+.glass-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,0.24), transparent 34%, rgba(49,91,214,0.035));
+  z-index: -1;
 }
 
-.glass-button {
-  background: color-mix(in srgb, var(--app-surface) 58%, transparent);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 10%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.dark .liquid-container::after,
+.dark .liquid-glass::after,
+.dark .glass-panel::after,
+.dark .glass-card::after {
+  background: linear-gradient(135deg, rgba(255,255,255,0.07), transparent 36%, rgba(143,174,255,0.05));
 }
 
-.glass-flat-hover {
-  transform: none !important;
-  transform-style: flat !important;
-  perspective: none !important;
-  transition: border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease !important;
+.liquid-container:hover,
+.liquid-glass:hover,
+.glass-panel:hover,
+.glass-card:hover {
+  border-color: var(--lg-border-strong) !important;
+  box-shadow: var(--lg-shadow) !important;
+  transform: translateY(-1px);
 }
 
-.glass-flat-hover:hover,
-.glass-flat-hover:focus-within {
-  transform: none !important;
-  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--glass-border));
-  box-shadow: 0 18px 42px -24px color-mix(in srgb, var(--color-primary) 42%, transparent), 0 0 28px color-mix(in srgb, var(--color-primary) 14%, transparent);
-}
-
-/* Legacy names remain safe: cards/buttons no longer jump, rotate, or use a
-   fake 3D offset on hover. */
+/* Replace the old 3D treatment with a calm, accessible 2D interaction. */
 .card-3d,
+.btn-3d {
+  transform: none !important;
+  border-width: 1px !important;
+  border-color: var(--lg-border) !important;
+  box-shadow: var(--lg-shadow-soft) !important;
+}
 .card-3d:hover,
+.btn-3d:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: var(--lg-shadow) !important;
+}
 .card-3d:active,
-.btn-3d,
-.btn-3d:hover,
 .btn-3d:active {
+  transform: scale(0.985) !important;
+}
+
+.liquid-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .liquid-main {
+    padding-bottom: 6.6rem !important;
+  }
+
+  .liquid-bottom-nav {
+    display: block;
+    position: fixed;
+    z-index: 70;
+    inset-inline: 0.75rem;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    pointer-events: none;
+  }
+
+  .liquid-bottom-nav__inner {
+    pointer-events: auto;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.25rem;
+    width: min(100%, 31rem);
+    margin-inline: auto;
+    padding: 0.42rem;
+    border: 1px solid var(--lg-border-strong);
+    border-radius: 1.45rem;
+    background: var(--lg-surface-strong);
+    box-shadow: var(--lg-shadow);
+    backdrop-filter: blur(24px) saturate(145%);
+    -webkit-backdrop-filter: blur(24px) saturate(145%);
+  }
+
+  .liquid-bottom-nav__item {
+    min-width: 0;
+    min-height: 3.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.18rem;
+    padding: 0.32rem 0.18rem;
+    border-radius: 1.05rem;
+    color: var(--lg-text-muted);
+    font-size: 0.64rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .liquid-bottom-nav__item:hover,
+  .liquid-bottom-nav__item:focus-visible {
+    color: var(--lg-accent);
+    background: var(--lg-accent-soft);
+  }
+
+  .liquid-bottom-nav__item.is-active {
+    color: var(--lg-accent);
+    background: var(--lg-accent-soft);
+  }
+
+  .liquid-bottom-nav__icon {
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.5rem;
+  }
+
+  .liquid-bottom-nav__icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    stroke-width: 1.9;
+  }
+}
+
+@media (min-width: 769px) {
+  .liquid-header {
+    padding-inline: 1rem !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-header__bar,
+  .liquid-sidebar,
+  .liquid-container,
+  .liquid-glass,
+  .glass-panel,
+  .glass-card,
+  .liquid-bottom-nav__inner {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--lg-surface-strong) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-container:hover,
+  .liquid-glass:hover,
+  .glass-panel:hover,
+  .glass-card:hover {
+    transform: none;
+  }
+}
+
+
+.liquid-quiz-card,
+.liquid-quiz-card:hover {
+  transform: none !important;
+}
+
+.liquid-quiz-card [style*="translateZ"] {
   transform: none !important;
   transform-style: flat !important;
-  perspective: none !important;
 }
 
-.card-3d {
-  border-color: var(--glass-border) !important;
-  box-shadow: var(--glass-shadow) !important;
+.liquid-quiz-card > div:first-child {
+  opacity: 0 !important;
 }
 
-.card-3d:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--glass-border)) !important;
-  box-shadow: 0 18px 42px -24px color-mix(in srgb, var(--color-primary) 42%, transparent) !important;
+.liquid-quiz-card:hover > div:first-child {
+  opacity: 0 !important;
 }

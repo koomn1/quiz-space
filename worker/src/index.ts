@@ -13,7 +13,7 @@ import {
   visionChunkRetryDelaySeconds,
   type ExtractionJobRow,
 } from './extractionJobs';
-import { getAccountProfile, getCosmoAccountContext, getUserId, hasPaidCosmoAccess } from './auth';
+import { getAccountProfile, getCosmoAccountContext, getUserId, hasPaidCosmoAccess, SupabaseConfigurationError } from './auth';
 import { enqueueExtractionJob, scheduleExtractionJob } from './queue';
 import { publicExtractionJob, type Env, type ExtractionQueueMessage, type WorkerExecutionContext } from './platform';
 import { handleAuthRoutes } from './authRoutes';
@@ -22,17 +22,17 @@ import { handleExtractionRoutes } from './extractionRoutes';
 import { finishTask, retryDelaySeconds } from './taskLedger';
 export type { Env, ExtractionQueueMessage, WorkerExecutionContext } from './platform';
 
-type Provider = 'groq' | 'openrouter';
+type Provider = 'openrouter';
 
 // Default text + vision models used when calling OpenRouter. OpenRouter is
 // a single API that proxies many underlying models — change these two
 // constants to switch models without touching any other code.
 // Chains are live-model-verified against the public /api/v1/models catalog
 // and free models come first, so generation keeps working even when the
-// OpenRouter key has no credit left. Retired IDs (google/gemini-2.0-flash-001,
-// google/gemini-1.5-flash, openai/gpt-oss-*, qwen3-235b-a22b:free) now return
+// OpenRouter key has no credit left. Retired IDs (openai/gpt-oss-*,
+// qwen3-235b-a22b:free) now return
 // http 4xx for every call and must not be reintroduced. Superseded paid
-// fallbacks (qwen/qwen3.7-flash, google/gemini-2.5-flash,
+// fallbacks (qwen/qwen3.7-flash,
 // mistralai/mistral-small-3.1-24b-instruct, openai/gpt-4o-mini) were replaced
 // by their current generations in the 2026-09 chain refresh.
 const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free';
@@ -47,32 +47,28 @@ const OPENROUTER_STREAM_TEXT_MODELS = [
   'nvidia/nemotron-3-ultra-550b-a55b:free',
   ...OPENROUTER_TEXT_FALLBACKS,
 ];
-const OPENROUTER_VISION_FALLBACKS = [
+  const OPENROUTER_VISION_FALLBACKS = [
   'google/gemma-4-31b-it:free',
   'thinkingmachines/inkling-small:free',
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
   'dots-studio/dots-3-note-preview:free',
-  'google/gemini-3.8-flash',
 ];
 // Post-extraction answer review is a bounded JSON task. Use a short,
 // quality-first sequence so one slow provider cannot block every batch.
-const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
-  'nvidia/nemotron-3.5-lightning:free',
-  'qwen/qwen3.8-flash',
-  'google/gemini-3.8-flash',
-  'openai/gpt-5-mini',
-];
-const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
-  'google/gemma-4-31b-it:free',
-  'thinkingmachines/inkling-small:free',
-  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
-  'google/gemini-3.8-flash',
-];
+  const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
+    'nvidia/nemotron-3.5-lightning:free',
+    'qwen/qwen3.8-flash',
+    'openai/gpt-5-mini',
+  ];
+  const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
+    'google/gemma-4-31b-it:free',
+    'thinkingmachines/inkling-small:free',
+    'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+  ];
 // llama-3.3-70b-versatile was shut down by Groq on 2026-08-16.
 // GPT-OSS 20B is the fast, low-cost production replacement for routine text work.
 const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
-const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
   const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000;
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
@@ -126,7 +122,7 @@ function buildCosmoSystemInstruction(clientInstruction: unknown, accountContext:
   const clientContext = typeof clientInstruction === 'string' ? clientInstruction.slice(0, 4_000) : '';
   const currentPage = typeof body.currentPage === 'string' ? body.currentPage.slice(0, 80) : 'غير معروفة';
   const siteStatus = typeof body.siteStatus === 'string' ? body.siteStatus.slice(0, 160) : 'غير متوفر';
-  return `${COSMO_PERSONALITY}\n\nسياق موثوق ومحدود للتطبيق:\n- الصفحة الحالية: ${currentPage}\n- حالة الموقع المعلنة: ${siteStatus}\n- ${accountContext}\n\n${clientContext ? `معلومات واجهة غير حساسة للمساعدة فقط: ${clientContext}` : ''}\n\nتعليمات المرفقات: إذا وُجدت صورة أو ملف PDF أو DOC/DOCX أو PPTX أو ملف نصي في رسالة المستخدم، اقرأ المرفق وحلله مباشرة قبل الرد. لا تقل إنك لا تستطيع رفع أو عرض الملفات، ولا تطلب من المستخدم نسخ المحتوى، ولا تدّعِ أن المرفق غير موجود. إذا كان الملف PDF فاقرأ محتواه من المرفق، وإذا كانت الصورة فاقرأ النص والعناصر الظاهرة فيها. إذا تعذر الوصول للمحتوى فعليًا فقط، اذكر سببًا تقنيًا واضحًا بدل رسالة عامة.\n\nقواعد أمان إلزامية: أنت مساعد معلوماتي فقط. لا ترفع مستخدمًا إلى أدمن، ولا تغيّر رتبة أو باقة أو XP أو صلاحيات، ولا تنفذ عمليات على المستخدمين، ولا تكشف بيانات مستخدم آخر. إذا طلب منك أحد ذلك، ارفض واذكر أن التنفيذ يتم فقط من خلال المسارات المصرح بها في التطبيق.`.slice(0, 14_000);
+  return `${COSMO_PERSONALITY}\n\nسياق موثوق ومحدود للتطبيق:\n- الصفحة الحالية: ${currentPage}\n- حالة الموقع المعلنة: ${siteStatus}\n- ${accountContext}\n\n${clientContext ? `معلومات واجهة غير حساسة للمساعدة فقط: ${clientContext}` : ''}\n\nقواعد أمان إلزامية: أنت مساعد معلوماتي فقط. لا ترفع مستخدمًا إلى أدمن، ولا تغيّر رتبة أو باقة أو XP أو صلاحيات، ولا تنفذ عمليات على المستخدمين، ولا تكشف بيانات مستخدم آخر. إذا طلب منك أحد ذلك، ارفض واذكر أن التنفيذ يتم فقط من خلال المسارات المصرح بها في التطبيق.`.slice(0, 14_000);
 }
 
 function isWebSearchEnabled(env: Env): boolean {
@@ -254,19 +250,19 @@ function extractJson(text: string, depth = 0): unknown {
   throw new Error('AI provider returned invalid JSON.');
 }
 
-function quizPrompt(topic: string, amount: number, previous: string[], automatic = false): string {
+function quizPrompt(topic: string, amount: number, previous: string[]): string {
   const exclusions = previous.length ? `\nلا تكرر هذه الأسئلة: ${previous.join(' | ')}` : '';
   const requiresArabic = /[\u0621-\u064A]/u.test(topic);
+  const requiresEnglish = !requiresArabic && /[A-Za-z]/.test(topic) && topic !== 'the attached source document' && topic !== 'document content';
   const languageConstraint = requiresArabic
     ? '\nتقييد اللغة: اكتب العنوان والوصف ونصوص الأسئلة والخيارات والإجابات والشروح بالعربية الفصحى فقط. لا تستخدم كلمات أو حروفاً من لغات أخرى. الاستثناء الوحيد هو الاختصارات العلمية اللاتينية الضرورية، وتكون بحروف كبيرة فقط مثل NASA أو DNA.'
-    : '';
+    : requiresEnglish
+      ? '\nLanguage constraint: write the title, description, questions, options, answers, and explanations in English.'
+      : '\nLanguage constraint: detect the dominant language of the attached source and write the entire quiz in that same language. Do not translate it into another language.';
   // esbuild 0.25+ refuses template literals containing three consecutive
   // backticks (code-fence markers), so build the prompt without fences.
   const fence = String.fromCharCode(96, 96, 96); // ```
-  const countInstruction = automatic
-    ? `أنشئ عدداً مناسباً من الأسئلة حسب كثافة وأهمية المحتوى، بحد أقصى ${amount} سؤالاً. لا تضف أسئلة مكررة أو حشواً للوصول إلى الحد، ويمكن أن يكون العدد أقل إذا كان المحتوى لا يستحق المزيد.`
-    : `أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة)`;
-  return (`${countInstruction} عن: ${topic}.` + exclusions + languageConstraint + `
+  return (`أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.` + exclusions + languageConstraint + `
 نوّع أنواع الأسئلة: اختيار من متعدد (mcq) وصح/خطأ (tf) وأسئلة مقالية (essay) حسب الموضوع.
 أجب بـ JSON صالح فقط محاط بوسم ${fence}json ... ${fence} وفق الشكل التالي:
 {"title":"عنوان الاختبار","description":"وصف الاختبار","questions":[
@@ -281,8 +277,6 @@ interface OpenRouterRequestOptions {
   max_tokens?: number;
   temperature?: number;
   timeoutMs?: number;
-  useGroq?: boolean;
-  validateText?: (text: string) => void;
   response_format?: { type: 'json_object' };
   expectedAnswerCount?: number;
   allowPartial?: boolean;
@@ -437,7 +431,7 @@ async function callOpenRouterWithFallback(
 ): Promise<string> {
   let lastError: any = null;
   const hasMultimodalContent = messages.some(message => Array.isArray(message?.content));
-  if (env.GROQ_API_KEY && options?.useGroq !== false && !hasMultimodalContent) {
+  if (env.GROQ_API_KEY && !hasMultimodalContent) {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), options?.timeoutMs ?? 30_000);
@@ -460,7 +454,6 @@ async function callOpenRouterWithFallback(
         const payload = await response.json() as any;
         const text = providerContentToText(payload.choices?.[0]?.message?.content ?? payload.choices?.[0]?.text);
         if (!text) throw new AiProviderError('empty_response', 'groq', GROQ_TEXT_MODEL);
-        options?.validateText?.(text);
         return options?.expectedAnswerCount
           ? validateAnswerReviewResponse(text, options.expectedAnswerCount, GROQ_TEXT_MODEL, { allowPartial: options.allowPartial })
           : text;
@@ -474,9 +467,7 @@ async function callOpenRouterWithFallback(
   }
   for (const model of models) {
     try {
-      const text = await callOpenRouter(env, messages, model, plugins, options);
-      options?.validateText?.(text);
-      return text;
+      return await callOpenRouter(env, messages, model, plugins, options);
     } catch (err) {
       lastError = err;
       console.warn(`OpenRouter model ${model} failed, trying next:`, err);
@@ -521,41 +512,6 @@ export async function callOpenRouterWithParallelAnswerReviewFallback(
   }
 }
 
-async function callGeminiJsonWithParts(env: Env, parts: any[], timeoutMs = 8_000, maxOutputTokens = 300, responseMimeType = 'application/json'): Promise<string> {
-  if (!env.GEMINI_API_KEY) throw new AiProviderError('provider_error', 'gemini', 'gemini-3.6-flash');
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts }],
-        generationConfig: {
-          temperature: responseMimeType === 'application/json' ? 0 : 0.7,
-          maxOutputTokens,
-          ...(responseMimeType ? { responseMimeType } : {}),
-        },
-      }),
-    });
-    if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'gemini', 'gemini-3.6-flash', response.status);
-    const payload: any = await response.json();
-    const text = payload.candidates?.[0]?.content?.parts?.map((part: any) => part.text || '').join('').trim();
-    if (!text) throw new AiProviderError('empty_response', 'gemini', 'gemini-3.6-flash');
-    return text;
-  } catch (error) {
-    if (error instanceof AiProviderError) throw error;
-    if (error instanceof DOMException && error.name === 'AbortError') throw new AiProviderError('timeout', 'gemini', 'gemini-3.6-flash');
-    throw new AiProviderError('provider_error', 'gemini', 'gemini-3.6-flash');
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-async function callGeminiJson(env: Env, prompt: string, timeoutMs = 8_000): Promise<string> {
-  return callGeminiJsonWithParts(env, [{ text: prompt }], timeoutMs, 300, 'application/json');
-}
-
 async function extractPowerPointText(data: Uint8Array): Promise<string> {
   const archive = await JSZip.loadAsync(data);
   const slideFiles = Object.keys(archive.files)
@@ -580,72 +536,26 @@ async function extractPowerPointText(data: Uint8Array): Promise<string> {
 
 async function gradeEssayWithFallback(env: Env, question: string, modelAnswer: string, studentAnswer: string): Promise<any> {
   const prompt = `قيّم إجابة الطالب بسرعة وبصرامة من ناحية صحة المعنى فقط. لا تكافئ الإجابة الفارغة أو التي تناقض النموذج. اعتبرها صحيحة فقط إذا تضمنت الفكرة الأساسية للنموذج بوضوح، وإلا فهي خاطئة. أعد JSON فقط بهذا الشكل: {"correct":true,"confidence":0.0,"reason":"سبب قصير"}. السؤال: ${question.slice(0, 5000)}\nالإجابة النموذجية: ${modelAnswer.slice(0, 4000)}\nإجابة الطالب: ${studentAnswer.slice(0, 4000)}`;
-  try {
-    const result = extractJson(await callGeminiJson(env, prompt, 8_000)) as any;
-    return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '' , provider: 'gemini' };
-  } catch (geminiError) {
-    console.warn('Gemini essay grading failed; using OpenRouter fallback:', geminiError);
-    const result = extractJson(await callOpenRouterWithFallback(env, [{ role: 'user', content: prompt }], OPENROUTER_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 10_000 })) as any;
-    return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '', provider: 'openrouter' };
-  }
+  const result = extractJson(await callOpenRouterWithFallback(env, [{ role: 'user', content: prompt }], OPENROUTER_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 10_000 })) as any;
+  return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '', provider: 'groq/openrouter' };
 }
 
 async function providerText(
-  provider: Provider,
+  _provider: Provider,
   prompt: string,
   env: Env,
-  options: { timeoutMs?: number; validateText?: (text: string) => void } = {},
+  options: { timeoutMs?: number } = {},
 ): Promise<string> {
-  if (provider === 'groq') {
-    try {
-      return await callGroq(env, [{ role: 'user', content: prompt }], options);
-    } catch (error) {
-      console.warn('Groq request failed; using OpenRouter fallback:', error);
-    }
-  }
   try {
     return await callOpenRouterWithFallback(
       env,
       [{ role: 'user', content: prompt }],
       OPENROUTER_TEXT_FALLBACKS,
       undefined,
-      { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs, useGroq: false, validateText: options.validateText },
+      { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs },
     );
   } catch (openRouterError) {
-    // The configured chain for quiz/Cosmo generation is intentionally Groq → OpenRouter.
-    // Do not silently switch to a third provider when both configured providers fail.
     throw openRouterError;
-  }
-}
-
-async function callGroq(
-  env: Env,
-  messages: any[],
-  options: { timeoutMs?: number; model?: string; validateText?: (text: string) => void } = {},
-): Promise<string> {
-  const model = options.model || GROQ_TEXT_MODEL;
-  if (!env.GROQ_API_KEY) throw new AiProviderError('provider_error', 'groq', model);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 30_000);
-  try {
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-      body: JSON.stringify({ model, messages, temperature: 0.35, max_tokens: 8_000 }),
-    });
-    if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'groq', model, response.status);
-    const payload: any = await response.json();
-    const text = providerContentToText(payload.choices?.[0]?.message?.content);
-    if (!text) throw new AiProviderError('empty_response', 'groq', model);
-    options.validateText?.(text);
-    return text;
-  } catch (error) {
-    if (error instanceof AiProviderError) throw error;
-    if (error instanceof DOMException && error.name === 'AbortError') throw new AiProviderError('timeout', 'groq', model);
-    throw new AiProviderError('provider_error', 'groq', model);
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
@@ -730,89 +640,7 @@ async function renderQuizSharePage(request: Request, env: Env): Promise<Response
   return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'index, follow' } });
 }
 
-async function generateQuizFromDocumentText(
-  sourceText: string,
-  amount: number,
-  customInstruction: string,
-  env: Env,
-): Promise<any> {
-  const target = Math.min(500, Math.max(1, amount));
-  const chunkSize = 45_000;
-  const overlap = 1_500;
-  const chunks: string[] = [];
-  let cursor = 0;
-  while (cursor < sourceText.length) {
-    const hardEnd = Math.min(sourceText.length, cursor + chunkSize);
-    let end = hardEnd;
-    if (hardEnd < sourceText.length) {
-      const paragraphBreak = sourceText.lastIndexOf('\n\n', hardEnd);
-      const sentenceBreak = sourceText.lastIndexOf('. ', hardEnd);
-      end = paragraphBreak > cursor + chunkSize * 0.65
-        ? paragraphBreak + 2
-        : sentenceBreak > cursor + chunkSize * 0.65
-          ? sentenceBreak + 2
-          : hardEnd;
-    }
-    const chunk = sourceText.slice(cursor, end).trim();
-    if (chunk) chunks.push(chunk);
-    if (end >= sourceText.length) break;
-    cursor = Math.max(cursor + 1, end - overlap);
-  }
-  if (!chunks.length) throw new Error('The document contains no readable text');
-
-  const questions: any[] = [];
-  const seen = new Set<string>();
-  let title = '';
-  let description = '';
-  let lastError: unknown;
-  const append = (value: any) => {
-    const items = Array.isArray(value) ? value : Array.isArray(value?.questions) ? value.questions : [];
-    for (const item of items) {
-      if (!item || typeof item !== 'object') continue;
-      const text = String(item.text || item.question || item.prompt || '').trim();
-      const key = text.replace(/\s+/g, ' ').toLocaleLowerCase();
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      questions.push({ ...item, text });
-    }
-  };
-
-  // Three passes let short model responses fill the exact requested count
-  // without sending the entire document in one oversized prompt.
-  for (let pass = 0; pass < 3 && questions.length < target; pass += 1) {
-    for (let index = 0; index < chunks.length && questions.length < target; index += 1) {
-      const remainingChunks = chunks.length - index;
-      const remaining = target - questions.length;
-      const chunkAmount = Math.max(1, Math.ceil(remaining / remainingChunks));
-      const previous = questions.slice(-80).map(question => question.text);
-      const prompt = `${quizPrompt(`المعلومات الواردة في الجزء ${index + 1} من ${chunks.length} من الملف`, chunkAmount, previous)}\n${customInstruction ? `تعليمات إضافية: ${customInstruction.slice(0, 1500)}\n` : ''}هذه محاولة ${pass + 1}. استخرج الأسئلة من الجزء التالي فقط، ولا تخترع معلومات ولا تكرر سؤالاً سابقاً.\n\nمحتوى الجزء:\n${chunks[index]}`;
-      try {
-        const raw = await providerText('groq', prompt, env, {
-          timeoutMs: 45_000,
-          validateText: value => {
-            const parsed = extractJson(value) as any;
-            if (!Array.isArray(parsed?.questions) || !parsed.questions.length) throw new Error('Provider returned no quiz questions.');
-          },
-        });
-        const parsed = extractJson(raw) as any;
-        if (!title && typeof parsed?.title === 'string') title = parsed.title.trim();
-        if (!description && typeof parsed?.description === 'string') description = parsed.description.trim();
-        append(parsed);
-      } catch (error) {
-        lastError = error;
-        console.warn(`File quiz generation chunk ${index + 1}/${chunks.length} failed on pass ${pass + 1}.`, error);
-      }
-    }
-  }
-  if (!questions.length) throw lastError instanceof Error ? lastError : new Error('The document did not contain any valid questions.');
-  return {
-    title: title || 'اختبار من الملف المرفق',
-    description: description || 'اختبار مولد من كامل محتوى الملف المرفق.',
-    questions: questions.slice(0, target),
-  };
-}
-
-async function buildCosmoUserContent(body: any): Promise<any> {
+function buildCosmoUserContent(body: any): any {
   const prompt = typeof body.prompt === 'string' ? body.prompt : '';
   const attachment = body.attachment;
   const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
@@ -831,16 +659,6 @@ async function buildCosmoUserContent(body: any): Promise<any> {
     const decoded = decodeBase64Utf8(data).slice(0, 120_000);
     return `${prompt}\n\nمحتوى الملف (${name}):\n${decoded}`;
   }
-  if (data && (mimeType.includes('wordprocessingml') || mimeType === 'application/msword' || /\.(docx?|rtf)$/i.test(name))) {
-    try {
-      const bytes = Uint8Array.from(atob(data), character => character.charCodeAt(0));
-      const extracted = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
-      const decoded = extracted.value.replace(/\s+/g, ' ').trim().slice(0, 180_000);
-      if (decoded) return `${prompt}\n\nمحتوى الملف المرفق (${name}):\n${decoded}`;
-    } catch (error) {
-      console.warn('Cosmo DOCX attachment extraction failed:', error);
-    }
-  }
   return prompt;
 }
 
@@ -849,14 +667,6 @@ function hasCosmoAttachment(body: any): boolean {
   const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
   const mimeType = attachment && typeof attachment.mimeType === 'string' ? attachment.mimeType : '';
   return Boolean((body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') || (data && mimeType && data.length <= 15_000_000));
-}
-
-function hasCosmoImageAttachment(body: any): boolean {
-  const attachment = body.attachment;
-  return Boolean(
-    (body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') ||
-    (attachment && typeof attachment.data === 'string' && typeof attachment.mimeType === 'string' && attachment.mimeType.startsWith('image/')),
-  );
 }
 
 async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext): Promise<Response> {
@@ -880,11 +690,19 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   }
 
   const isExtractionJobRead = request.method === 'GET' && (path === '/api/ai/extraction-jobs' || /^\/api\/ai\/extraction-jobs\/[0-9a-f-]{36}$/i.test(path));
-  const isAuthRead = request.method === 'GET' && (path === '/api/auth/health' || path === '/api/auth/session');
-  if (request.method !== 'POST' && !isExtractionJobRead && !isAuthRead) return json({ error: 'Method not allowed' }, 405, headers);
+  if (request.method !== 'POST' && !isExtractionJobRead) return json({ error: 'Method not allowed' }, 405, headers);
       // Cosmo is available to guests as a limited preview. Authenticated users
       // still receive their real user id for persistence/performance logging.
-      const userId = (await getUserId(request, env)) || 'guest';
+      let userId: string | null;
+      try {
+        userId = await getUserId(request, env);
+      } catch (error) {
+        if (error instanceof SupabaseConfigurationError) {
+          return json({ error: 'Server authentication is not configured.' }, 500, headers);
+        }
+        throw error;
+      }
+      userId ||= 'guest';
   const authHeader = request.headers.get('Authorization') || '';
   const startTime = Date.now();
   let aiOperation = 'request';
@@ -949,37 +767,25 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
         aiOperation = 'generation';
         aiProvider = typeof body.provider === 'string' ? body.provider : 'unknown';
         const provider = body.provider as Provider;
-        if ((provider !== 'groq' && provider !== 'openrouter') || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
+        if (provider !== 'openrouter' || typeof body.topic !== 'string' || !Number.isInteger(body.amount) || body.amount < 1 || body.amount > 500) {
           return json({ error: 'Invalid generation request' }, 400, headers);
         }
-        const automatic = body.automatic === true;
         const baseQuestions = Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : [];
-        let text = await providerText(provider, quizPrompt(body.topic, body.amount, baseQuestions, automatic), env, {
-          validateText: value => {
-            const parsed = extractJson(value) as any;
-            if (!Array.isArray(parsed?.questions) || parsed.questions.length === 0) {
-              throw new Error('AI returned no usable quiz questions.');
-            }
-          },
-        });
+        let text = await providerText(provider, quizPrompt(body.topic, body.amount, baseQuestions), env);
         let result = extractJson(text) as any;
         // Models occasionally stop early and return fewer questions than
         // requested — retry up to 2 times, asking explicitly for the missing
         // remainder so the returned quiz honors the requested count.
-        let missing = automatic
-          ? 0
-          : Number.isInteger(body.amount) && Array.isArray(result?.questions)
-            ? body.amount - result.questions.length
-            : body.amount;
+        let missing = Number.isInteger(body.amount) && Array.isArray(result?.questions)
+          ? body.amount - result.questions.length : body.amount;
         let retries = 0;
         while (missing > 0 && retries < 2) {
           retries++;
           try {
-            const remainder = await providerText(provider, quizPrompt(
+            const remainder = await providerText('openrouter', quizPrompt(
               `${body.topic} — أكمل الاختبار السابق بالأسئلة الناقصة فقط دون تكرار، وأجب بعدد ${missing} سؤال بالضبط`,
               missing,
-              [...baseQuestions, ...((result?.questions || []).map((q: any) => String(q.text || '')))].slice(-200),
-              false
+              [...baseQuestions, ...((result?.questions || []).map((q: any) => String(q.text || '')))].slice(-200)
             ), env);
             const extra = extractJson(remainder) as any;
             if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
@@ -993,7 +799,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
           } catch { break; }
         }
 
-        if (!Array.isArray(result?.questions) || (!automatic && result.questions.length < body.amount)) {
+        if (!Array.isArray(result?.questions) || result.questions.length < body.amount) {
           throw new Error('Generation did not return the requested number of questions.');
         }
         result.questions = result.questions.slice(0, body.amount);
@@ -1030,7 +836,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
     }
 
     if (path === '/api/ai/generate-file/stream') {
-      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 15_000_000 || typeof body.mimeType !== 'string') {
+      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 40_000_000 || typeof body.mimeType !== 'string') {
         return json({ error: 'Invalid file generation request' }, 400, headers);
       }
       return handleStreamingExtraction(
@@ -1046,7 +852,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
     }
 
     if (path === '/api/ai/generate-file') {
-      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 15_000_000 || typeof body.mimeType !== 'string' || !Number.isInteger(body.amount) || body.amount < 0 || body.amount > 500) {
+      if (typeof body.fileBase64 !== 'string' || body.fileBase64.length === 0 || body.fileBase64.length > 40_000_000 || typeof body.mimeType !== 'string' || !Number.isInteger(body.amount) || body.amount < 0 || body.amount > 500) {
         return json({ error: 'Invalid file generation request' }, 400, headers);
       }
       
@@ -1141,29 +947,33 @@ ${extraInstruction}`;
         }
       }
 
-      // Generate mode uses the same full-document text ingestion as Cosmo chat.
-      // The literal extraction branch above remains intentionally untouched.
+      // Generate mode uses Groq for text content and OpenRouter for multimodal
+      // files. Direct Gemini calls are intentionally not part of the provider chain.
       if (!isLiteral) {
+        const generatedPrompt = quizPrompt('the attached source document', body.amount, []);
         try {
           const fileData = Uint8Array.from(atob(body.fileBase64), c => c.charCodeAt(0));
-          const isWordDocument = body.mimeType.includes('wordprocessingml') || body.mimeType.includes('msword');
-          const isTextDocument = body.mimeType === 'text/plain' || body.mimeType === 'text/markdown';
           const isPowerPoint = body.mimeType.includes('presentationml') || body.mimeType.includes('powerpoint');
-          let sourceText = '';
-          if (isPdf) sourceText = await extractPdfTextContent(fileData);
-          else if (isWordDocument) sourceText = (await mammoth.extractRawText({ arrayBuffer: fileData.buffer })).value;
-          else if (isTextDocument) sourceText = decodeBase64Utf8(body.fileBase64);
-          else if (isPowerPoint) sourceText = await extractPowerPointText(fileData);
-          if (sourceText.trim()) {
-            const quiz = await generateQuizFromDocumentText(sourceText, body.amount, typeof body.customInstruction === 'string' ? body.customInstruction : '', env);
-            return json(quiz, 200, headers);
+          if (isPdf) {
+            const pdfText = await extractPdfTextContent(fileData);
+            if (pdfText.trim().length > 40) {
+              const text = await providerText('openrouter', `${generatedPrompt}\n\nمحتوى الملف المصدر:\n${pdfText.slice(0, 500_000)}`, env, { timeoutMs: 60_000 });
+              return json(extractJson(text), 200, headers);
+            }
           }
-          throw new Error('The document contains no readable text');
+          if (isPowerPoint) {
+            const slideText = await extractPowerPointText(fileData);
+            if (!slideText.trim()) throw new Error('PowerPoint contains no readable slide text');
+            const text = await providerText('openrouter', `${generatedPrompt}\n\nمحتوى الشرائح:\n${slideText.slice(0, 120000)}`, env, { timeoutMs: 45_000 });
+            return json(extractJson(text), 200, headers);
+          }
+          // Images and scanned PDFs require a multimodal OpenRouter model.
+          throw new Error('Text extraction unavailable; use the OpenRouter multimodal fallback.');
         } catch (generationError) {
-          console.warn('Full-document text generation failed; using OpenRouter file/image fallback:', generationError);
+          console.warn('Text document generation failed; using OpenRouter multimodal fallback:', generationError);
         }
       }
-      // Fallback for literal mode or failed Groq/OpenRouter text generation.
+      // Fallback for literal mode or failed text generation.
       const prompt = isLiteral ? losslessPrompt : quizPrompt("document content", body.amount, []);
       const text = await callOpenRouterWithFallback(env, [{
         role: 'user',
@@ -1196,20 +1006,14 @@ ${extraInstruction}`;
     }
 
     if (path === '/api/ai/groq') {
-      // Backward-compatible alias for older web clients: Groq first, then
-      // OpenRouter if Groq is unavailable.
+      // Backward-compatible alias for older web clients. It uses Groq first
+      // and falls back to OpenRouter through the shared text route.
       if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid request' }, 400, headers);
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];
       const messages: any[] = [];
       if (typeof body.systemInstruction === 'string') messages.push({ role: 'system', content: body.systemInstruction.slice(0, 10_000) });
       messages.push(...history, { role: 'user', content: body.prompt });
-      let text: string;
-      try {
-        text = await callGroq(env, messages);
-      } catch (error) {
-        console.warn('Groq chat request failed; using OpenRouter fallback:', error);
-        text = await callOpenRouterWithFallback(env, messages, OPENROUTER_TEXT_FALLBACKS);
-      }
+      const text = await callOpenRouterWithFallback(env, messages, OPENROUTER_TEXT_FALLBACKS);
       if (userId !== 'guest') {
         await logAiPerformance(env, authHeader, {
           user_id: userId,
@@ -1238,7 +1042,6 @@ ${extraInstruction}`;
         'nvidia/nemotron-3-super-120b-a12b:free',
         'z-ai/glm-5.2:free',
         'qwen/qwen3.8-flash',
-        'google/gemini-3.8-flash',
         'openai/gpt-5-mini',
       ];
       const model = allowedModels.includes(body.model) ? body.model : OPENROUTER_TEXT_MODEL;
@@ -1248,8 +1051,7 @@ ${extraInstruction}`;
       messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
       const hasAttachment = hasCosmoAttachment(body);
-      const hasImageAttachment = hasCosmoImageAttachment(body);
-      messages.push({ role: 'user', content: await buildCosmoUserContent(body) });
+      messages.push({ role: 'user', content: buildCosmoUserContent(body) });
       // Route to the vision model whenever an image is actually attached —
       // checking the model NAME for the substring 'vision' silently broke
       // this once the models were swapped to ones whose names don't contain
@@ -1290,17 +1092,7 @@ ${extraInstruction}`;
             );
             aiModel = models[0];
           }
-        } else if (hasImageAttachment || !hasAttachment) {
-          try {
-            text = await callGroq(env, messages, { model: hasImageAttachment ? GROQ_VISION_MODEL : GROQ_TEXT_MODEL });
-            aiProvider = 'groq';
-            aiModel = hasImageAttachment ? GROQ_VISION_MODEL : GROQ_TEXT_MODEL;
-          } catch (groqError) {
-            console.warn('Cosmo Groq request failed; using OpenRouter fallback:', groqError);
-            text = await callOpenRouterWithFallback(env, messages, models, undefined, undefined);
-          }
         } else {
-          // Groq does not accept PDF file parts through its Chat Completions API.
           text = await callOpenRouterWithFallback(env, messages, models, undefined, undefined);
         }
       } catch (openRouterError) {
@@ -1327,8 +1119,7 @@ ${extraInstruction}`;
       messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
       const hasAttachment = hasCosmoAttachment(body);
-      const hasImageAttachment = hasCosmoImageAttachment(body);
-      messages.push({ role: 'user', content: await buildCosmoUserContent(body) });
+      messages.push({ role: 'user', content: buildCosmoUserContent(body) });
 
       const candidates = hasAttachment ? OPENROUTER_VISION_FALLBACKS : OPENROUTER_STREAM_TEXT_MODELS;
       // Fallback only applies to picking which model actually starts
@@ -1340,17 +1131,16 @@ ${extraInstruction}`;
       let selectedModel = '';
       let selectedProvider = 'openrouter';
       let lastErr: any = null;
-      if ((!hasAttachment || hasImageAttachment) && env.GROQ_API_KEY) {
+      if (!hasAttachment && env.GROQ_API_KEY) {
         try {
-          const groqModel = hasImageAttachment ? GROQ_VISION_MODEL : GROQ_TEXT_MODEL;
           const r = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-            body: JSON.stringify({ model: groqModel, messages, stream: true }),
+            body: JSON.stringify({ model: GROQ_TEXT_MODEL, messages, stream: true }),
           });
           if (r.ok && r.body) {
             upstream = r;
-            selectedModel = groqModel;
+            selectedModel = GROQ_TEXT_MODEL;
             selectedProvider = 'groq';
           } else {
             lastErr = await r.text();

@@ -14,7 +14,6 @@ import HeaderMessages from './HeaderMessages';
 import { UserBadge } from './UserBadge';
 import { NotificationDropdown } from './NotificationDropdown';
 import { getRewardsSummary } from '../lib/db';
-import { THEME_PRESETS } from '../lib/themePresets';
 
 interface HeaderProps {
   currentTab: string;
@@ -109,18 +108,13 @@ export default function Header({
     return num.toLocaleString();
   };
 
-  const themes = THEME_PRESETS.map((theme) => ({
-    ...theme,
-    name: theme.id === 'indigo' ? t.themeIndigo
-      : theme.id === 'emerald' ? t.themeEmerald
-        : theme.id === 'sunset' ? t.themeSunset
-          : theme.id === 'sky' ? t.themeSky
-            : theme.id === 'honey' ? t.themeHoney
-              : theme.id === 'light' ? (lang === 'ar' ? 'فاتح أنيق' : 'Elegant Light')
-                : (lang === 'ar' ? 'وردي باستيل' : 'Pastel Pink'),
-    color: theme.swatch,
-    emoji: theme.id === 'honey' ? '🍯' : theme.id === 'emerald' ? '🌿' : theme.id === 'sunset' ? '🌅' : theme.id === 'sky' ? '💙' : theme.id === 'pastelp' ? '🌸' : theme.id === 'light' ? '☀️' : '🌌',
-  }));
+  const themes = [
+    { id: 'indigo', name: t.themeIndigo, emoji: '🌌', color: 'from-indigo-500 to-purple-600' },
+    { id: 'emerald', name: t.themeEmerald, emoji: '🌿', color: 'from-teal-500 to-emerald-600' },
+    { id: 'sunset', name: t.themeSunset, emoji: '🌅', color: 'from-rose-500 to-orange-500' },
+    { id: 'sky', name: t.themeSky, emoji: '💙', color: 'from-sky-500 to-cyan-500' },
+    { id: 'honey', name: t.themeHoney, emoji: '🍯', color: 'from-amber-500 to-yellow-500' }
+  ];
 
   const saveName = () => {
     if (tempName.trim()) {
@@ -133,10 +127,10 @@ export default function Header({
   const isGuest = !userId || userId.startsWith('user-');
 
   return (
-    <header className="theme-chrome fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 pointer-events-none px-0 pb-2 pt-0 backdrop-blur-xl sm:pb-3">
+    <header className="liquid-header fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 pointer-events-none bg-white/95 px-0 pb-2 pt-0 backdrop-blur-xl dark:bg-[#020617]/95 sm:pb-3">
       <div className="w-full pointer-events-auto">
         <div 
-          className="theme-surface flex min-w-0 items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 border-b rounded-b-2xl px-3 sm:px-6 lg:px-10 transition-all duration-500"
+          className="liquid-header__bar flex min-w-0 items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white/90 dark:bg-slate-950/90 border-b border-slate-100 dark:border-slate-800/80 rounded-b-2xl px-3 sm:px-6 lg:px-10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
           
           
           

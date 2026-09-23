@@ -335,6 +335,15 @@ export async function askAIStream(
   options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string },
   onChunk: (deltaText: string, fullTextSoFar: string) => void,
 ): Promise<{ text: string }> {
+  // Multimodal requests must use the regular Worker route. Streaming providers
+  // often accept the SSE connection before validating a PDF/file part, which
+  // caused Cosmo to answer that it could not read the attachment. The regular
+  // route keeps the complete image/PDF payload available for model fallback.
+  if (options.image || options.attachment) {
+    const result = await workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options }, AI_REQUEST_TIMEOUT_MS);
+    if (result.text) onChunk(result.text, result.text);
+    return result;
+  }
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), AI_STREAM_TIMEOUT_MS);
   let response: Response;

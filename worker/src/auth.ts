@@ -5,6 +5,13 @@ type MobileBootstrap = {
   profile?: { user?: Record<string, unknown> };
 };
 
+export class SupabaseConfigurationError extends Error {
+  constructor() {
+    super('Supabase is not configured for this Worker.');
+    this.name = 'SupabaseConfigurationError';
+  }
+}
+
 export async function getMobileBootstrap(request: Request, env: Env): Promise<MobileBootstrap | null> {
   const authorization = request.headers.get('Authorization');
   if (!authorization?.startsWith('Bearer ') || env.SUPABASE_URL.includes('placeholder')) return null;
@@ -30,7 +37,7 @@ export async function getMobileBootstrap(request: Request, env: Env): Promise<Mo
 export async function getUserId(request: Request, env: Env): Promise<string | null> {
   const authorization = request.headers.get('Authorization');
   if (!authorization?.startsWith('Bearer ')) return null;
-  if (env.SUPABASE_URL.includes('placeholder')) return 'placeholder-user';
+  if (env.SUPABASE_URL.includes('placeholder')) throw new SupabaseConfigurationError();
   const response = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1/user`, {
     headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: authorization },
   });
