@@ -42,6 +42,7 @@ import PopupBlockedModal from './components/PopupBlockedModal';
 import NetworkFailedModal from './components/NetworkFailedModal';
 import { PremiumCursor } from './components/PremiumCursor';
 import { PostRegisterOnboardingModal } from './components/PostRegisterOnboardingModal';
+import OverlayPortal from './components/OverlayPortal';
 import DailyQuizCard from './components/DailyQuizCard';
 const AIChat = lazyWithRetry(() => import('./pages/AIChat'), 'ai-chat');
 import SplashScreen from './components/SplashScreen';
@@ -1398,7 +1399,7 @@ export default function App() {
             setTab={handleSetTab}
             toggleSidebar={() => {
               if (!isQuizLocked) {
-                setIsSidebarOpen(!isSidebarOpen);
+                setIsSidebarOpen((open) => !open);
               }
             }}
             darkMode={darkMode}
@@ -2106,7 +2107,7 @@ export default function App() {
 
       
         {isSidebarOpen && !isQuizLocked && (
-          <>
+          <OverlayPortal>
             {/* Backdrop */}
             <div 
               
@@ -2142,7 +2143,7 @@ export default function App() {
                 badgeColor={(userStats as any)?.badgeColor}
               />                
             </div>
-          </>
+          </OverlayPortal>
         )}
       
 
