@@ -65,6 +65,9 @@ importers:
       jspdf:
         specifier: ^4.2.1
         version: 4.2.1
+      jszip:
+        specifier: ^3.10.2
+        version: 3.10.2
       liquid-gooey:
         specifier: ^0.2.1
         version: 0.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -2614,8 +2617,8 @@ packages:
   jspdf@4.2.1:
     resolution: {integrity: sha512-YyAXyvnmjTbR4bHQRLzex3CuINCDlQnBqoSYyjJwTP2x9jDLuKDzy7aKUl0hgx3uhcl7xzg32agn5vlie6HIlQ==}
 
-  jszip@3.10.1:
-    resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
+  jszip@3.10.2:
+    resolution: {integrity: sha512-3l+rb15IOWtUhU0H5MFqES/T6Kh7abYwjosBey/vD6hDt8zoEffkSC5Ws5SGtgVw3gBx2NEbhTeSW1+kWkpyTQ==}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -5979,7 +5982,7 @@ snapshots:
       dompurify: 3.4.13
       html2canvas: 1.4.1
 
-  jszip@3.10.1:
+  jszip@3.10.2:
     dependencies:
       lie: 3.3.0
       pako: 1.0.11
@@ -6105,7 +6108,7 @@ snapshots:
       base64-js: 1.5.1
       bluebird: 3.4.7
       dingbat-to-unicode: 1.0.1
-      jszip: 3.10.1
+      jszip: 3.10.2
       lop: 0.4.2
       path-is-absolute: 1.0.1
       underscore: 1.13.8
