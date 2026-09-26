@@ -39,7 +39,7 @@ const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free';
 const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
 const OPENROUTER_TEXT_FALLBACKS = [
   'nvidia/nemotron-3-super-120b-a12b:free',
-  'z-ai/glm-5.2:free',
+  'z-ai/glm-5.3-flash:free',
   'qwen/qwen3.8-flash',
 ];
 const OPENROUTER_STREAM_TEXT_MODELS = [
@@ -1040,7 +1040,7 @@ ${extraInstruction}`;
         'nvidia/nemotron-3-ultra-550b-a55b',
         OPENROUTER_VISION_MODEL,
         'nvidia/nemotron-3-super-120b-a12b:free',
-        'z-ai/glm-5.2:free',
+        'z-ai/glm-5.3-flash:free',
         'qwen/qwen3.8-flash',
         'openai/gpt-5-mini',
       ];
