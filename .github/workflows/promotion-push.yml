@@ -21,17 +21,24 @@ jobs:
       - name: Send rotating promotion
         env:
           SUPABASE_FUNCTION_URL: ${{ secrets.SUPABASE_FUNCTION_URL }}
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           PROMOTION_CRON_SECRET: ${{ secrets.PROMOTION_CRON_SECRET }}
         run: node scripts/send_scheduled_promotion.mjs
 
       - name: Send daily engagement reminders
         env:
           SUPABASE_FUNCTION_URL: ${{ secrets.SUPABASE_FUNCTION_URL }}
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           PROMOTION_CRON_SECRET: ${{ secrets.PROMOTION_CRON_SECRET }}
         run: |
           set -euo pipefail
+          function_url="${SUPABASE_FUNCTION_URL:-}"
+          if [[ -z "$function_url" ]]; then
+            function_url="${SUPABASE_URL%/}/functions/v1"
+          fi
+          [[ "$function_url" =~ ^https?:// ]] || { echo "Missing a valid Supabase Functions URL" >&2; exit 1; }
           status=$(curl -sS -o /tmp/daily-reminders.json -w '%{http_code}' \
-            -X POST "${SUPABASE_FUNCTION_URL}/send-daily-engagement-reminders" \
+            -X POST "${function_url}/send-daily-engagement-reminders" \
             -H "x-promotion-cron-secret: ${PROMOTION_CRON_SECRET}" \
             -H 'Content-Type: application/json' \
             --data '{}')

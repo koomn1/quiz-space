@@ -17,7 +17,16 @@ const messages = [
 ];
 const slot = Math.floor(Date.now() / (6 * 60 * 60 * 1000));
 const [title, body, url] = messages[slot % messages.length];
-const response = await fetch(`${process.env.SUPABASE_FUNCTION_URL}/send-promotion-push`, {
+const configuredFunctionUrl = String(process.env.SUPABASE_FUNCTION_URL || '').trim().replace(/\/+$/, '');
+const supabaseUrl = String(process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+const functionUrl = configuredFunctionUrl || (supabaseUrl ? `${supabaseUrl}/functions/v1` : '');
+if (!/^https?:\/\//i.test(functionUrl)) {
+  throw new Error('Missing a valid Supabase Functions URL. Set SUPABASE_FUNCTION_URL or SUPABASE_URL.');
+}
+if (!process.env.PROMOTION_CRON_SECRET) {
+  throw new Error('Missing PROMOTION_CRON_SECRET.');
+}
+const response = await fetch(`${functionUrl}/send-promotion-push`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', 'x-promotion-cron-secret': process.env.PROMOTION_CRON_SECRET },
   body: JSON.stringify({ title: `🎁 ${title}`, body, url, category: 'promotion' }),
