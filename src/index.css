@@ -1031,6 +1031,15 @@ html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-400"] {
   --lg-danger: #c84b5b;
   --lg-shadow: 0 18px 55px rgba(47, 76, 112, 0.10);
   --lg-shadow-soft: 0 8px 26px rgba(47, 76, 112, 0.08);
+  --app-page-bg: color-mix(in srgb, #f7fbff 94%, var(--theme-primary, #315bd6) 6%);
+  --app-surface: color-mix(in srgb, #ffffff 95%, var(--theme-primary, #315bd6) 5%);
+  --app-surface-strong: color-mix(in srgb, #ffffff 98%, var(--theme-primary, #315bd6) 2%);
+  --app-surface-raised: #ffffff;
+  --app-surface-tint: color-mix(in srgb, #eef4ff 86%, var(--theme-primary, #315bd6) 14%);
+  --app-border: color-mix(in srgb, #8ca4c0 24%, var(--theme-primary, #315bd6) 16%);
+  --app-border-strong: color-mix(in srgb, #6e89aa 32%, var(--theme-primary, #315bd6) 24%);
+  --app-text: #17233b;
+  --app-text-muted: #5e6f87;
 }
 
 html.dark {
@@ -1049,26 +1058,58 @@ html.dark {
   --lg-danger: #ff9aa5;
   --lg-shadow: 0 20px 60px rgba(0, 0, 0, 0.26);
   --lg-shadow-soft: 0 10px 32px rgba(0, 0, 0, 0.18);
+  --app-page-bg: color-mix(in srgb, #081321 91%, var(--theme-primary, #8faeff) 9%);
+  --app-surface: color-mix(in srgb, #122238 86%, var(--theme-primary, #8faeff) 14%);
+  --app-surface-strong: color-mix(in srgb, #142940 91%, var(--theme-primary, #8faeff) 9%);
+  --app-surface-raised: #172d46;
+  --app-surface-tint: color-mix(in srgb, #1b3552 78%, var(--theme-primary, #8faeff) 22%);
+  --app-border: color-mix(in srgb, #a9c4e5 20%, var(--theme-primary, #8faeff) 18%);
+  --app-border-strong: color-mix(in srgb, #b7d0ef 30%, var(--theme-primary, #8faeff) 24%);
+  --app-text: #edf5ff;
+  --app-text-muted: #afc0d5;
 }
 
 html,
 body {
-  background: var(--lg-bg);
-  color: var(--lg-text);
+  background: var(--app-page-bg);
+  color: var(--app-text);
+}
+
+.theme-page {
+  background: var(--app-page-bg);
+  color: var(--app-text);
+}
+
+.theme-surface {
+  background: var(--app-surface) !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-text);
+}
+
+.theme-muted {
+  color: var(--app-text-muted) !important;
+}
+
+.quiz-action-bar {
+  background: color-mix(in srgb, var(--app-surface-strong) 88%, var(--theme-primary, #315bd6) 12%);
+  border: 1px solid var(--app-border);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--theme-primary, #315bd6) 12%, transparent);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
 }
 
 .light-readable-ui {
   background:
     radial-gradient(circle at 8% 0%, rgba(116, 164, 255, 0.14), transparent 32rem),
     radial-gradient(circle at 92% 14%, rgba(76, 190, 174, 0.11), transparent 28rem),
-    var(--lg-bg) !important;
+    var(--app-page-bg) !important;
 }
 
 .dark .light-readable-ui {
   background:
     radial-gradient(circle at 10% 0%, rgba(79, 111, 211, 0.17), transparent 34rem),
     radial-gradient(circle at 94% 18%, rgba(26, 133, 132, 0.13), transparent 30rem),
-    var(--lg-bg) !important;
+    var(--app-page-bg) !important;
 }
 
 .liquid-header {
@@ -1080,21 +1121,37 @@ body {
   max-width: 1440px;
   margin: 0 auto;
   min-height: 4.1rem;
-  border: 1px solid var(--lg-border) !important;
+  border: 1px solid var(--app-border) !important;
   border-radius: 1.35rem !important;
-  background: var(--lg-surface) !important;
+  background: var(--app-surface) !important;
   box-shadow: var(--lg-shadow-soft) !important;
   backdrop-filter: blur(22px) saturate(135%);
   -webkit-backdrop-filter: blur(22px) saturate(135%);
+  overflow: hidden;
+  isolation: isolate;
+  clip-path: inset(0 round 1.35rem);
 }
 
 .liquid-sidebar {
-  color: var(--lg-text) !important;
-  background: var(--lg-surface-strong) !important;
-  border: 1px solid var(--lg-border) !important;
+  color: var(--app-text) !important;
+  background: var(--app-surface-strong) !important;
+  border: 1px solid var(--app-border) !important;
   box-shadow: var(--lg-shadow) !important;
   backdrop-filter: blur(24px) saturate(135%);
   -webkit-backdrop-filter: blur(24px) saturate(135%);
+}
+
+html:not(.dark) .liquid-sidebar [class*="bg-slate-900"],
+html:not(.dark) .liquid-sidebar [class*="bg-[#130b2b]"],
+html:not(.dark) .liquid-sidebar [class*="bg-[#1b0e3c]"] {
+  background: var(--app-surface) !important;
+  border-color: var(--app-border) !important;
+}
+
+html:not(.dark) .liquid-sidebar p[class~="text-white"],
+html:not(.dark) .liquid-sidebar span[class~="text-white"],
+html:not(.dark) .liquid-sidebar div[class~="text-white"] {
+  color: var(--app-text) !important;
 }
 
 .liquid-main {
@@ -1108,10 +1165,10 @@ body {
 .glass-card {
   position: relative;
   isolation: isolate;
-  background: var(--lg-surface) !important;
-  border: 1px solid var(--lg-border) !important;
+  background: var(--app-surface) !important;
+  border: 1px solid var(--app-border) !important;
   box-shadow: var(--lg-shadow-soft) !important;
-  color: var(--lg-text);
+  color: var(--app-text);
   backdrop-filter: blur(18px) saturate(125%);
   -webkit-backdrop-filter: blur(18px) saturate(125%);
 }

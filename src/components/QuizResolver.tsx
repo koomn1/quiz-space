@@ -1270,14 +1270,14 @@ export default function QuizResolver({
               
               
               
-              className={`relative p-4 sm:p-10 md:p-12 rounded-[2rem] bg-white/95 dark:bg-[#090d16]/70 backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] space-y-5 sm:space-y-10 transition-all duration-500 overflow-hidden ${
+              className={`theme-surface relative p-4 sm:p-10 md:p-12 rounded-[2rem] backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] space-y-5 sm:space-y-10 transition-all duration-500 overflow-hidden ${
                 hasShaken ? 'shake-question' : ''
               } ${
                 isAnswersFrozen 
                   ? (selectedIdx === currentQuestion.correctIndex 
                       ? 'border border-emerald-500/30 dark:border-emerald-500/20 shadow-[0_8px_40px_rgb(16,185,129,0.08)]' 
                       : 'border border-rose-500/30 dark:border-rose-500/20 shadow-[0_8px_40px_rgb(244,63,113,0.08)]')
-                  : 'border border-white/40 dark:border-slate-800/60 hover:shadow-[0_20px_60px_rgb(0,0,0,0.08)] hover:-translate-y-1'
+                  : 'border border-[var(--app-border)] hover:shadow-[0_20px_60px_rgb(0,0,0,0.08)] hover:-translate-y-1'
               }`}
             >
             {/* Live Countdowns or State Headers */}
@@ -1497,7 +1497,7 @@ export default function QuizResolver({
         
 
           {/* Action button bar */}
-          <div className="sticky bottom-2 z-10 -mx-1 flex justify-end rounded-2xl bg-[#090d16]/85 p-1 backdrop-blur-sm print:hidden sm:static sm:mx-0 sm:justify-end sm:bg-transparent sm:p-0">
+          <div className="quiz-action-bar sticky bottom-2 z-10 -mx-1 flex justify-end rounded-2xl p-1 print:hidden sm:static sm:mx-0 sm:justify-end sm:bg-transparent sm:p-0">
             {isAnswersFrozen && (
               <button
                 onClick={handleNextQuestion}

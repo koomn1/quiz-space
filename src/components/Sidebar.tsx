@@ -91,8 +91,8 @@ export default function Sidebar({
   const getNavIcon = (id: string, isActive: boolean) => {
     const size = 18;
     const colorClass = isActive 
-      ? 'text-[#b175ff] drop-shadow-[0_0_6px_rgba(177,117,255,0.8)]' 
-      : 'text-slate-400 group-hover:text-[#b175ff] transition-colors duration-200';
+      ? 'sidebar-nav-icon text-primary drop-shadow-[0_0_6px_var(--theme-primary)]'
+      : 'sidebar-nav-icon text-[var(--app-text-muted)] group-hover:text-primary transition-colors duration-200';
 
     switch (id) {
       case 'landing':
@@ -233,8 +233,8 @@ export default function Sidebar({
                 rel="noopener noreferrer"
                 className={`w-full flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${
                   isActive 
-                    ? 'text-white font-extrabold' 
-                    : 'hover:text-white text-slate-400 font-bold'
+                    ? 'text-[var(--app-text)] font-extrabold'
+                    : 'hover:text-primary text-[var(--app-text-muted)] font-bold'
                 }`}
                 style={{ direction: isAr ? 'rtl' : 'ltr' }}
               >
@@ -262,16 +262,16 @@ export default function Sidebar({
                 }
               }}
               className={`w-full flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${
-                isActive 
-                  ? 'text-white font-extrabold' 
-                  : 'hover:text-white text-slate-400 font-bold'
+                isActive
+                  ? 'text-[var(--app-text)] font-extrabold'
+                  : 'hover:text-primary text-[var(--app-text-muted)] font-bold'
               } ${isLocked ? 'opacity-80' : ''}`}
               style={{ direction: isAr ? 'rtl' : 'ltr' }}
             >
               {isActive && (
                 <div
                   
-                  className="absolute inset-0 bg-[#b175ff]/15 border border-[#b175ff]/35 shadow-lg shadow-[#b175ff]/5 rounded-xl -z-10"
+                  className="absolute inset-0 bg-primary/10 border border-primary/30 shadow-lg shadow-primary/10 rounded-xl -z-10"
                   
                 />
               )}
