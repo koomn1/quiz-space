@@ -19,6 +19,7 @@ describe('Cosmo generation recovery contract', () => {
   it('keeps live free-first OpenRouter models as the fallback route', () => {
     expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free'");
     expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
+    expect(workerSource).toContain("'qwen/qwen3.8-27b:free'");
     expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
     expect(workerSource).toContain("'z-ai/glm-5.3-flash:free'");
     expect(workerSource).toContain("'qwen/qwen3.8-flash'");

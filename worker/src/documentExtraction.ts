@@ -21,6 +21,7 @@ export interface DocumentExtractionProgress {
 
 const DOCUMENT_EXTRACTION_MODELS = [
   'nvidia/nemotron-3.5-lightning:free',
+  'qwen/qwen3.8-27b:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
   'z-ai/glm-5.3-flash:free',
   'qwen/qwen3.8-flash',
