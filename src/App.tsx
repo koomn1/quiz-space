@@ -2123,8 +2123,8 @@ export default function App() {
               
               
               
-              className={`fixed inset-y-0 ${lang === 'ar' ? 'right-0' : 'left-0'} z-[9999] w-64 glass-panel border-x shadow-2xl h-[100dvh] flex flex-col overflow-hidden transform-gpu`}
-              style={{ backfaceVisibility: 'hidden' }}
+              className={`fixed inset-y-0 ${lang === 'ar' ? 'right-0' : 'left-0'} z-[9999] w-64 h-[100dvh] flex flex-col overflow-hidden transform-gpu bg-[#0a0518] border-x border-[#3d1d6d]/60 shadow-2xl`}
+              style={{ backfaceVisibility: 'hidden', isolation: 'isolate' }}
             >
               <Sidebar 
                 currentTab={activeTab} 
