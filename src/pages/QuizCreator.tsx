@@ -612,6 +612,10 @@ export default function QuizCreator({
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const [previewDraft, setPreviewDraft] = React.useState<{ title: string; description: string; questions: Question[] } | null>(null);
+  // Keep this Hook with the component's stable state initialization. It used
+  // to live near the render tail, making it easy for future conditional paths
+  // to trigger React error #310 (a changed Hook order).
+  const [showIncompleteQuestions, setShowIncompleteQuestions] = React.useState(false);
 
   // Drag over states for file uploads
   const [dragActive, setDragActive] = React.useState(false);
@@ -2126,7 +2130,6 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
   };
 
   const incompleteQuestions = getInvalidQuizQuestions(questions);
-  const [showIncompleteQuestions, setShowIncompleteQuestions] = React.useState(false);
 
   const scrollToIncompleteQuestion = (index: number) => {
     setShowIncompleteQuestions(false);
