@@ -529,6 +529,17 @@ export default function QuizResolver({
     }
   }, [quiz, currentIdx, userAnswers, essayAnswers, essayAnswerText, essayAssessed, essayAssessments, score, isQuizCompleted, isAnswersFrozen, selectedIdx, timeLeft, quizId, userId]);
 
+  // Keep every Hook above conditional returns. The quiz starts in a loading
+  // state, so defining this callback below the loading/error returns caused
+  // React error #310 when the quiz data arrived.
+  const calculateScore = React.useCallback((answers: number[]) => {
+    if (!quiz) return 0;
+    return quiz.questions.reduce((total, question, index) => {
+      if (question.type === 'essay') return total + (essayAssessments[index] === true ? 1 : 0);
+      return total + (answers[index] === question.correctIndex ? 1 : 0);
+    }, 0);
+  }, [essayAssessments, quiz]);
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 max-w-xl mx-auto">
@@ -595,14 +606,6 @@ export default function QuizResolver({
       setIsQuizCompleted(true);
     }
   };
-
-  const calculateScore = React.useCallback((answers: number[]) => {
-    if (!quiz) return 0;
-    return quiz.questions.reduce((total, question, index) => {
-      if (question.type === 'essay') return total + (essayAssessments[index] === true ? 1 : 0);
-      return total + (answers[index] === question.correctIndex ? 1 : 0);
-    }, 0);
-  }, [essayAssessments, quiz]);
 
   const handleReviewChoice = (questionIndex: number, optionIndex: number) => {
     const nextAnswers = [...userAnswers];
