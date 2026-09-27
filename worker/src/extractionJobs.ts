@@ -330,6 +330,16 @@ function normalizeAnswerText(value: unknown): string {
     .toLocaleLowerCase();
 }
 
+function normalizeTrueFalseOptions(questionText: string, options: string[]): string[] {
+  const hasArabicQuestion = /[\u0600-\u06ff]/u.test(questionText);
+  const hasArabicOptions = options.some(option => /[\u0600-\u06ff]/u.test(option));
+  const hasLatinQuestion = /[A-Za-z]/.test(questionText);
+  const hasLatinOptions = options.some(option => /[A-Za-z]/.test(option));
+  if (hasLatinQuestion && hasArabicOptions) return ['True', 'False'];
+  if (hasArabicQuestion && hasLatinOptions) return ['صح', 'خطأ'];
+  return options;
+}
+
 function resolveCorrectIndex(raw: any, options: string[], type: 'mcq' | 'tf'): number {
   const suppliedIndex = Number(raw?.correctIndex);
   if (Number.isInteger(suppliedIndex) && suppliedIndex >= 0 && suppliedIndex < options.length) return suppliedIndex;
@@ -375,9 +385,10 @@ function normalizeQuestions(value: unknown, allowedTypes: AllowedQuestionType[] 
         : 'mcq';
     if (!allowedTypes.includes(type)) continue;
     const rawOptions = (raw as any).options ?? (raw as any).choices ?? (raw as any).answers ?? (raw as any).choiceList;
-    const options = Array.isArray(rawOptions)
+    const parsedOptions = Array.isArray(rawOptions)
       ? rawOptions.map((option: unknown) => String(typeof option === 'object' && option !== null ? ((option as any).text ?? (option as any).label ?? '') : option ?? '').trim()).filter(Boolean)
       : [];
+    const options = type === 'tf' ? normalizeTrueFalseOptions(text, parsedOptions) : parsedOptions;
     questions.push({
       number: Number.isInteger(Number((raw as any).number)) && Number((raw as any).number) > 0 ? Number((raw as any).number) : questions.length + 1,
       text,

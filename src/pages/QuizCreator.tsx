@@ -546,7 +546,9 @@ export default function QuizCreator({
   const [uploadedFilePreview, setUploadedFilePreview] = React.useState<string | null>(null);
   const [extractedSourcePreview, setExtractedSourcePreview] = React.useState<{ url: string; name: string } | null>(null);
   const [fileType, setFileType] = React.useState<'image' | 'pdf' | 'document' | null>(null);
-  const [pdfCount, setPdfCount] = React.useState(5);
+  // File extraction is intentionally lossless: extract every eligible question
+  // from the document instead of asking the model to stop at a fixed count.
+  const [pdfCount, setPdfCount] = React.useState(0);
   
   const [isProcessingOcr, setIsProcessingOcr] = React.useState(false);
   const [ocrError, setOcrError] = React.useState<string | null>(null);
@@ -1484,6 +1486,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         : 'Step 1: Preparing document text for fast Nemotron extraction...'
     });
 
+    const fallbackInstruction = `${fileCustomPrompt || ''}\n\n${buildQuestionTypeInstruction(preferredQuestionTypes, false)}`;
+
     try {
       // Android Chrome can report an empty File.type for Office documents.
       // Infer it from the extension so extraction and answer review receive the
@@ -1516,7 +1520,10 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const fileUploadName = uploadedFile.name;
       const totalPages = 1;
 
-      const typePromptSuffix = `\n\n${buildQuestionTypeInstruction(preferredQuestionTypes, isAr)}`;
+      // Keep the type contract language-neutral. The Worker separately detects
+      // the source language; using the UI language here could make an English
+      // document look like an Arabic generation request.
+      const typePromptSuffix = `\n\n${buildQuestionTypeInstruction(preferredQuestionTypes, false)}`;
       const effectiveInstruction = `${fileCustomPrompt || ''}${typePromptSuffix}`;
 
       // Step 2: Extract ready-made questions first. If the document is explanatory
@@ -1557,7 +1564,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           mimeType: inferredMimeType,
           totalPages,
           extractionMode: 'generate',
-          customInstruction: effectiveInstruction || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
+          customInstruction: effectiveInstruction || 'Generate questions only from the source document, preserve its language, and do not invent information.',
           totalQuestions: pdfCount,
           userId,
           creatorName,
@@ -1585,7 +1592,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           mimeType: inferredMimeType,
           totalPages,
           extractionMode: 'generate',
-          customInstruction: effectiveInstruction || 'حوّل الشرح إلى أسئلة اختيار من متعدد دقيقة، ولا تخترع معلومات غير موجودة في الملف.',
+          customInstruction: effectiveInstruction || 'Generate questions only from the source document, preserve its language, and do not invent information.',
           totalQuestions: pdfCount,
           userId,
           creatorName,
@@ -1653,6 +1660,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           fallbackResult = await runFallbackGeneration({
             type: 'pasted_text',
             text: extractedText,
+            customInstruction: fallbackInstruction || 'Generate questions only from the source document, preserve its language, and do not invent information.',
             totalQuestions: pdfCount,
             userId,
             creatorName,
@@ -1664,6 +1672,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           fallbackResult = await runFallbackGeneration({
             type: 'topic',
             topic: `اختبار شاملاً من شرح مستند (${cleanDocTitle})`,
+            customInstruction: fallbackInstruction || 'Generate questions only from the source document, preserve its language, and do not invent information.',
             totalQuestions: pdfCount,
             userId,
             creatorName,
@@ -2885,53 +2894,12 @@ A computer is a digital electronic machine...
 
             {uploadedFile && (fileType === 'pdf' || fileType === 'document') && (
               <div className="space-y-3 p-4 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-2xl text-right animate-fade-in">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block pb-1">عدد الأسئلة المطلوب استخراجها من الملف الدراسي:</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[280px] overflow-y-auto pr-1" dir="rtl">
-                  {COUNT_OPTIONS_WITH_AUTO.map((opt) => {
-                    const isSelected = pdfCount === opt.value;
-                    return (
-                      <button
-                        
-                        type="button"
-                        onClick={() => setPdfCount(opt.value)}
-                        className={`group relative flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 overflow-hidden text-right select-none active:scale-[0.98] cursor-pointer ${
-                          isSelected
-                            ? 'border-violet-500 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/5 shadow-[0_4px_20px_rgba(139,92,246,0.12)] ring-1 ring-violet-500/20'
-                            : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-900/50'
-                        }`} key={opt.value}
-                      >
-                        {isSelected && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-fuchsia-500/5 opacity-100" />
-                        )}
-                        <div className="flex items-center gap-3 w-full flex-row-reverse text-right z-10">
-                          <div className={`p-2.5 rounded-xl transition-all duration-300 ${
-                            isSelected ? 'bg-violet-500 text-white shadow-md shadow-violet-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-700'
-                          }`}>
-                            <span className="text-lg leading-none">{opt.icon}</span>
-                          </div>
-                          
-                          <div className="flex-1 min-w-0 pr-1">
-                            <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-violet-600 dark:text-violet-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                              {opt.label}
-                            </div>
-                            <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
-                              {opt.sub}
-                            </div>
-                          </div>
-                          
-                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 mr-auto ${
-                            isSelected ? 'border-violet-500 bg-violet-500 text-white scale-100' : 'border-slate-300 dark:border-slate-700 bg-transparent scale-90'
-                          }`}>
-                            {isSelected ? (
-                              <Check className="w-3 h-3 stroke-[3]" />
-                            ) : (
-                              <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 group-hover:bg-slate-400" />
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+                <div className="flex items-start gap-3 rounded-2xl border border-violet-200/70 bg-violet-500/5 p-4 dark:border-violet-900/50 dark:bg-violet-500/10" dir="rtl">
+                  <span className="text-xl" aria-hidden="true">✨</span>
+                  <div>
+                    <p className="text-xs font-black text-violet-700 dark:text-violet-300">استخراج شامل بدون حد لعدد الأسئلة</p>
+                    <p className="mt-1 text-[10px] leading-5 text-slate-600 dark:text-slate-400">سيقرأ النظام الملف بالكامل ويستخرج كل أسئلة MCQ وTrue/False المسموح بها حسب اختيارك، مع إزالة التكرار فقط.</p>
+                  </div>
                 </div>
               </div>
             )}

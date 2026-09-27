@@ -59,6 +59,11 @@ describe('dynamic vision chunk planning', () => {
     expect(validateCreateExtractionJobInput({ ...base, mimeType: 'image/avif' }, '00000000-0000-4000-8000-000000000001')).toBeNull();
   });
 
+  it('keeps file extraction unbounded when no requested count is supplied', () => {
+    expect(extractionSource).toContain("job.requested_question_count ? normalizedQuestions.slice(0, job.requested_question_count) : normalizedQuestions");
+    expect(extractionSource).toContain("const requestedCount = job.requested_question_count || null;");
+  });
+
   it('keeps answer accuracy strict instead of silently defaulting to option zero', () => {
     expect(extractionSource).toContain('If the source has no answer key, use null and do not guess.');
     expect(extractionSource).toContain('لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية');
