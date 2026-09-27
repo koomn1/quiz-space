@@ -257,6 +257,17 @@ function extractJson(text: string, depth = 0): unknown {
 
 function quizPrompt(topic: string, amount: number, previous: string[]): string {
   const exclusions = previous.length ? `\nلا تكرر هذه الأسئلة: ${previous.join(' | ')}` : '';
+  const marker = topic.match(/\[QUESTION_TYPES_ALLOWED:\s*([^\]]+)\]/i);
+  const allowed = (marker?.[1] || 'mcq,tf,essay').split(/[,+\s]+/).filter((type) => ['mcq', 'tf', 'essay'].includes(type));
+  const allowedTypes = [...new Set(allowed.length ? allowed : ['mcq'])];
+  const typeInstruction = allowedTypes.length === 1
+    ? `Allowed question type: ${allowedTypes[0]} only. Never return tf or essay questions.`
+    : `Allowed question types only: ${allowedTypes.join(', ')}. Do not use any other type.`;
+  const typeExamples = allowedTypes.map((type) => type === 'mcq'
+    ? '{"text":"Question","type":"mcq","options":["Option A","Option B","Option C","Option D"],"correctIndex":0,"correctAnswer":"Option A","explanation":"Explanation"}'
+    : type === 'tf'
+      ? '{"text":"Statement","type":"tf","options":["True","False"],"correctIndex":0,"correctAnswer":"True","explanation":"Explanation"}'
+      : '{"text":"Question","type":"essay","options":[],"correctIndex":0,"correctAnswer":"Model answer","explanation":"Explanation"}').join(',\n  ');
   const requiresArabic = /[\u0621-\u064A]/u.test(topic);
   const requiresEnglish = !requiresArabic && /[A-Za-z]/.test(topic) && topic !== 'the attached source document' && topic !== 'document content';
   const languageConstraint = requiresArabic
@@ -268,12 +279,10 @@ function quizPrompt(topic: string, amount: number, previous: string[]): string {
   // backticks (code-fence markers), so build the prompt without fences.
   const fence = String.fromCharCode(96, 96, 96); // ```
   return (`أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.` + exclusions + languageConstraint + `
-نوّع أنواع الأسئلة: اختيار من متعدد (mcq) وصح/خطأ (tf) وأسئلة مقالية (essay) حسب الموضوع.
+${typeInstruction}
 أجب بـ JSON صالح فقط محاط بوسم ${fence}json ... ${fence} وفق الشكل التالي:
 {"title":"عنوان الاختبار","description":"وصف الاختبار","questions":[
-  {"text":"نص السؤال","type":"mcq","options":["خيار 1","خيار 2","خيار 3","خيار 4"],"correctIndex":0,"correctAnswer":"","explanation":"الشرح العلمي"},
-  {"text":"سؤال صح أو خطأ","type":"tf","options":["صح","خطأ"],"correctIndex":0,"correctAnswer":"صح","explanation":"شرح"},
-  {"text":"سؤال مقالي","type":"essay","options":[],"correctIndex":0,"correctAnswer":"الإجابة النموذجية","explanation":"شرح"}
+  ${typeExamples}
 ]
 — تذكير أخير: ${amount} سؤال بالضبط، لا أقل، ثم أغلق JSON.`);
 }

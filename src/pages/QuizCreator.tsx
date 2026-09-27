@@ -21,6 +21,7 @@ import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
 import { applySourceAnswerKey, applyVerifiedAnswerReviews, normalizeSingleQuestionReviewResponse } from '../lib/extractedAnswerReview';
 import { countVerifiedQuizQuestions, getInvalidQuizQuestions } from '../lib/quizSaveValidation';
+import { filterGeneratedQuestionsByType } from '../lib/quizGenerationValidation';
 import {
   clearExtractedQuizDraft,
   getQuizCreatorDraftKey,
@@ -1119,14 +1120,20 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
   const prepareAndSolveExtractedQuiz = async (result: { title: string; description: string; quiz: Quiz }) => {
     const sourceName = extractedAttachmentRef.current?.name || uploadedFile?.name || '';
-    const effectiveTitle = isGenericExtractionTitle(result.title)
+    const sourceQuestions = result.quiz.questions || [];
+    const sourceTextForLanguage = sourceQuestions.map((question) => [question.text, ...(question.options || []), question.explanation || ''].join(' ')).join(' ');
+    const sourceLooksEnglish = /[A-Za-z]{8,}/.test(sourceTextForLanguage) && !/[\u0600-\u06FF]/u.test(sourceTextForLanguage);
+    const effectiveTitle = isGenericExtractionTitle(result.title) || (sourceLooksEnglish && /[\u0600-\u06FF]/u.test(result.title))
       ? deriveLocalQuizTitle(sourceName)
       : result.title.trim();
-    const effectiveDescription = result.description?.trim()
-      || `أسئلة مستخرجة من محتوى ${deriveLocalQuizTitle(sourceName)}.`;
+    const effectiveDescription = result.description?.trim() && !(sourceLooksEnglish && /[\u0600-\u06FF]/u.test(result.description))
+      ? result.description.trim()
+      : sourceLooksEnglish
+        ? `Questions extracted from ${deriveLocalQuizTitle(sourceName)}.`
+        : `أسئلة مستخرجة من محتوى ${deriveLocalQuizTitle(sourceName)}.`;
     setTitle(effectiveTitle);
     setDescription(effectiveDescription);
-    const draftQuestions = result.quiz.questions
+    const draftQuestions = filterGeneratedQuestionsByType(sourceQuestions, preferredQuestionTypes)
       .filter((question: any) => question?.type === 'essay' || (Array.isArray(question?.options) && question.options.filter((option: unknown) => typeof option === 'string' && option.trim()).length >= 2))
       .map((question: any, index: number) => ({
         ...question,

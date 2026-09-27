@@ -732,7 +732,7 @@ async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: strin
 
 function documentVisionPrompt(job: ExtractionJobRow): string {
   if (job.extraction_mode === 'generate') {
-    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. أعد JSON صالحاً فقط.`;
+    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. IMPORTANT: detect the dominant language from the attached page itself and write the title, description, questions, options, answers, and explanations in that same language. If the page is English, every output field must be English even though these instructions contain Arabic. Do not translate. أعد JSON صالحاً فقط.`;
   }
   return `${extractionPrompt(job.custom_instruction)}\n\nIMPORTANT: The attached page image is the source of truth for language. Detect its dominant language from the page itself and return every title, question, option, answer, and explanation in that same language. Do not copy the Arabic language of these instructions into an English source. Do not translate.`;
 }

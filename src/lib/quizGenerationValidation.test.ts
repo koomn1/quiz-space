@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterValidGeneratedQuestions } from './quizGenerationValidation';
+import { filterGeneratedQuestionsByType, filterValidGeneratedQuestions } from './quizGenerationValidation';
 import { validateAndCleanQuiz } from '../hooks/useQuizzes';
 
 describe('filterValidGeneratedQuestions', () => {
@@ -20,6 +20,16 @@ describe('filterValidGeneratedQuestions', () => {
 
   it('handles an absent generator payload safely', () => {
     expect(filterValidGeneratedQuestions(undefined)).toEqual([]);
+  });
+
+  it('enforces the selected question types after provider output', () => {
+    const questions = [
+      { text: 'A', type: 'mcq' },
+      { text: 'B', type: 'tf' },
+      { text: 'C', type: 'essay' },
+    ];
+    expect(filterGeneratedQuestionsByType(questions, ['mcq'])).toEqual([{ text: 'A', type: 'mcq' }]);
+    expect(filterGeneratedQuestionsByType(questions, ['mcq', 'tf'])).toHaveLength(2);
   });
 
   it('repairs an invalid extracted correct index from the answer text', () => {
