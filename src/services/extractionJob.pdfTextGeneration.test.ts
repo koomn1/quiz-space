@@ -91,7 +91,7 @@ describe('text PDF generation in extraction jobs', () => {
     );
 
     expect(callCount).toBe(2);
-    expect(result.provider).toBe('nvidia/nemotron-3-super-120b-a12b:free');
+    expect(result.provider).toBe('qwen/qwen3.8-27b:free');
     expect(result.questions).toHaveLength(1);
   });
 });

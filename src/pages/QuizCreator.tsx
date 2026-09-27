@@ -281,12 +281,13 @@ type PreferredQuestionType = 'mcq' | 'tf' | 'essay';
 function buildQuestionTypeInstruction(types: PreferredQuestionType[], isAr = true): string {
   const selected = types.length > 0 ? types : ['mcq' as PreferredQuestionType];
   const labels = selected.map(type => type === 'mcq' ? 'MCQ' : type === 'tf' ? 'True/False' : 'Essay');
+  const machineTypes = selected.join(',');
   const distribution = selected.length > 1
     ? (isAr ? 'وزّع الأسئلة المختارة بين الأنواع المحددة توزيعاً متوازناً حسب ملاءمة المحتوى.' : 'Distribute the questions across the selected types in a balanced way according to the source content.')
     : '';
   return isAr
-    ? `نوع الأسئلة المسموح فقط: ${labels.join(' + ')}. لا تستخدم أي نوع آخر. ${distribution}`
-    : `Allowed question types only: ${labels.join(' + ')}. Do not use any other type. ${distribution}`;
+    ? `نوع الأسئلة المسموح فقط: ${labels.join(' + ')}. لا تستخدم أي نوع آخر. ${distribution}\n[QUESTION_TYPES_ALLOWED:${machineTypes}]`
+    : `Allowed question types only: ${labels.join(' + ')}. Do not use any other type. ${distribution}\n[QUESTION_TYPES_ALLOWED:${machineTypes}]`;
 }
 
 export default function QuizCreator({

@@ -65,11 +65,33 @@ function extractJson(text: string): unknown {
   throw new Error('No valid JSON object or array found in model response.');
 }
 
+type AllowedQuestionType = 'mcq' | 'tf' | 'essay';
+
+function parseAllowedQuestionTypes(customInstruction?: string): AllowedQuestionType[] {
+  const marker = String(customInstruction || '').match(/\[QUESTION_TYPES_ALLOWED:\s*([^\]]+)\]/i);
+  if (!marker) return ['mcq', 'tf', 'essay'];
+  const allowed = marker[1].split(/[,+\s]+/).filter((type): type is AllowedQuestionType => type === 'mcq' || type === 'tf' || type === 'essay');
+  return allowed.length ? [...new Set(allowed)] : ['mcq', 'tf', 'essay'];
+}
+
+function sourceLanguageInstruction(text: string): string {
+  const sample = text.slice(0, 120_000);
+  const arabic = (sample.match(/[\u0600-\u06ff]/g) || []).length;
+  const latin = (sample.match(/[A-Za-z]/g) || []).length;
+  if (arabic >= 8 && arabic >= latin * 0.2) return 'اكتب كل النصوص بنفس لغة المصدر العربية، ولا تترجم إلى الإنجليزية.';
+  if (latin >= 8 && latin >= arabic * 0.2) return 'Write all quiz text in the source language, English. Do not translate it into Arabic.';
+  return 'Detect the dominant source language and keep the entire output in that language. Do not translate it.';
+}
+
 function buildPrompt(text: string, customInstruction?: string): string {
+  const allowed = parseAllowedQuestionTypes(customInstruction);
+  const allowedInstruction = `Allowed output types only: ${allowed.join(', ')}. Never return any other type.`;
   const extra = customInstruction?.trim()
     ? `\n\nتعليمات إضافية من المستخدم:\n${customInstruction.slice(0, 2_000)}`
     : '';
   return `أنت أداة استخراج أسئلة دقيقة. اقرأ النص التالي واستخرج كل الأسئلة الموجودة فيه كما هي، من غير تعديل أو إعادة صياغة أو تلخيص.
+${sourceLanguageInstruction(text)}
+${allowedInstruction}
 
 قواعد صارمة:
 - انسخ نص السؤال والاختيارات بالضبط مع الحفاظ على اللغة والترتيب.
@@ -98,7 +120,7 @@ function normalize(value: string): string {
   return value.replace(/\s+/g, ' ').trim().toLocaleLowerCase();
 }
 
-function normalizeQuestions(raw: any): any[] {
+function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mcq', 'tf', 'essay']): any[] {
   const source = Array.isArray(raw) ? raw : Array.isArray(raw?.questions) ? raw.questions : [];
   const seen = new Set<string>();
   const questions: any[] = [];
@@ -117,6 +139,7 @@ function normalizeQuestions(raw: any): any[] {
       : rawType === 'open' || rawType === 'essay' || rawType === 'short_answer'
         ? 'essay'
         : 'mcq';
+    if (!allowedTypes.includes(type)) continue;
     const options: string[] = Array.isArray(item.options)
       ? item.options.map((option: unknown) => String(option ?? '').trim()).filter(Boolean)
       : [];
@@ -274,7 +297,8 @@ export async function extractQuestionsFromText(
   onProgress?: (progress: DocumentExtractionProgress) => Promise<void> | void,
 ): Promise<DocumentExtractionResult> {
   const normalizedText = text.trim();
-  const localFastPath = normalizeQuestions(parseLiteralQuestions(normalizedText));
+  const allowedTypes = parseAllowedQuestionTypes(customInstruction);
+  const localFastPath = normalizeQuestions(parseLiteralQuestions(normalizedText), allowedTypes);
   if (localFastPath.length > 0) {
     if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: localFastPath.length });
     return {
@@ -319,7 +343,7 @@ export async function extractQuestionsFromText(
       }
       processed += 1;
       if (onProgress) {
-        const currentQuestionCount = parsedResults.reduce((count, parsed) => count + normalizeQuestions(parsed).length, 0);
+        const currentQuestionCount = parsedResults.reduce((count, parsed) => count + normalizeQuestions(parsed, allowedTypes).length, 0);
         await onProgress({ processed, total: chunks.length, questionsExtracted: currentQuestionCount });
       }
     }
@@ -328,7 +352,7 @@ export async function extractQuestionsFromText(
   const seen = new Set<string>();
   const questions: any[] = [];
   for (const result of parsedResults) {
-    for (const question of normalizeQuestions(result)) {
+    for (const question of normalizeQuestions(result, allowedTypes)) {
       const key = normalize(question.text);
       if (!seen.has(key)) {
         seen.add(key);
@@ -337,7 +361,7 @@ export async function extractQuestionsFromText(
     }
   }
   if (!questions.length) {
-    const literalQuestions = normalizeQuestions(parseLiteralQuestions(text));
+    const literalQuestions = normalizeQuestions(parseLiteralQuestions(text), allowedTypes);
     if (literalQuestions.length > 0) {
       return {
         title: 'Extracted Quiz',

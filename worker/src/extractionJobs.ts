@@ -214,9 +214,25 @@ export function sourceLanguageInstruction(text = ''): string {
   return 'Detect the dominant language of the source and write the entire quiz in that same language. Do not translate it into another language.';
 }
 
-function extractionPrompt(customInstruction?: string | null): string {
+type AllowedQuestionType = 'mcq' | 'tf' | 'essay';
+
+export function parseAllowedQuestionTypes(customInstruction?: string | null): AllowedQuestionType[] {
+  const marker = String(customInstruction || '').match(/\[QUESTION_TYPES_ALLOWED:\s*([^\]]+)\]/i);
+  if (!marker) return ['mcq', 'tf', 'essay'];
+  const allowed = marker[1].split(/[,+\s]+/).filter((type): type is AllowedQuestionType => type === 'mcq' || type === 'tf' || type === 'essay');
+  return allowed.length ? [...new Set(allowed)] : ['mcq', 'tf', 'essay'];
+}
+
+function allowedQuestionTypesInstruction(customInstruction?: string | null): string {
+  const allowed = parseAllowedQuestionTypes(customInstruction);
+  const labels = allowed.map(type => type === 'mcq' ? 'multiple choice (mcq)' : type === 'tf' ? 'true/false (tf)' : 'written/essay (essay)');
+  return `Allowed output types are ONLY: ${labels.join(', ')}. Never return a question whose type is not in this list. If generating questions, convert every requested question to one of these types.`;
+}
+
+function extractionPrompt(customInstruction?: string | null, sourceText = ''): string {
   return `You are a lossless document extraction engine.
-${sourceLanguageInstruction()}
+${sourceLanguageInstruction(sourceText)}
+${allowedQuestionTypesInstruction(customInstruction)}
 Extract EVERY question exactly as written.
 
 Rules:
@@ -250,7 +266,7 @@ function generatePrompt(amount: number | null | undefined, customInstruction?: s
   const scopeInstruction = Number.isInteger(amount) && Number(amount) > 0
     ? `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف.`
     : 'اقرأ محتوى المحاضرة بالكامل وأنشئ سؤالاً لكل نقطة أو معلومة أو مفهوم مهم يمكن أن يأتي منه سؤال. لا تضع حداً ثابتاً لعدد الأسئلة ولا تتوقف عند رقم افتراضي؛ غطِّ كل الأجزاء القابلة للسؤال، مع إزالة التكرار فقط.';
-  return `${scopeInstruction} ${sourceLanguageInstruction(sourceText)} حافظ على معلومات المستند ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، حوّل السؤال إلى essay بدل اختراع إجابة. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
+  return `${scopeInstruction} ${sourceLanguageInstruction(sourceText)} ${allowedQuestionTypesInstruction(customInstruction)} حافظ على معلومات المستند ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، لا تغيّر النوع إلى نوع غير مسموح، بل أنشئ السؤال بأحد الأنواع المسموحة فقط. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
 function extractBalancedJson(text: string, start: number): string | null {
@@ -329,7 +345,7 @@ function resolveCorrectIndex(raw: any, options: string[], type: 'mcq' | 'tf'): n
   return -1;
 }
 
-function normalizeQuestions(value: unknown): any[] {
+function normalizeQuestions(value: unknown, allowedTypes: AllowedQuestionType[] = ['mcq', 'tf', 'essay']): any[] {
   const container: any = value && typeof value === 'object' ? value as any : null;
   const source = Array.isArray(value)
     ? value
@@ -357,6 +373,7 @@ function normalizeQuestions(value: unknown): any[] {
       : declaredType === 'essay' || declaredType === 'short_answer' || declaredType === 'open'
         ? 'essay'
         : 'mcq';
+    if (!allowedTypes.includes(type)) continue;
     const rawOptions = (raw as any).options ?? (raw as any).choices ?? (raw as any).answers ?? (raw as any).choiceList;
     const options = Array.isArray(rawOptions)
       ? rawOptions.map((option: unknown) => String(typeof option === 'object' && option !== null ? ((option as any).text ?? (option as any).label ?? '') : option ?? '').trim()).filter(Boolean)
@@ -578,7 +595,8 @@ async function reconcileVisionParentJob(
   }
 
   if (completed.length < total) {
-    const extractedCount = completed.reduce((count, chunk) => count + normalizeQuestions(chunk.questions_json).length, 0);
+    const allowedTypes = parseAllowedQuestionTypes(parent.custom_instruction);
+    const extractedCount = completed.reduce((count, chunk) => count + normalizeQuestions(chunk.questions_json, allowedTypes).length, 0);
     const percentage = Math.max(8, Math.min(95, Math.round(5 + (completed.length / total) * 90)));
     await updateClaimedJob(env, authHeader, parent.id, parentToken, {
       processed_chunks: completed.length,
@@ -589,7 +607,8 @@ async function reconcileVisionParentJob(
     return;
   }
 
-  const questions = normalizeQuestions(completed.flatMap(chunk => normalizeQuestions(chunk.questions_json)));
+  const allowedTypes = parseAllowedQuestionTypes(parent.custom_instruction);
+  const questions = normalizeQuestions(completed.flatMap(chunk => normalizeQuestions(chunk.questions_json, allowedTypes)), allowedTypes);
   if (!questions.length) {
     await updateClaimedJob(env, authHeader, parent.id, parentToken, {
       status: 'error',
@@ -705,13 +724,13 @@ async function extractPdfVision(
     }));
     for (const result of results) {
       providers.add(result.model);
-      questions.push(...normalizeQuestions(result.quiz));
+          questions.push(...normalizeQuestions(result.quiz, parseAllowedQuestionTypes(job.custom_instruction)));
       processed += 1;
       await onProgress(processed, chunks.length, questions.length);
     }
   }
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
-  const normalizedQuestions = normalizeQuestions(questions);
+  const normalizedQuestions = normalizeQuestions(questions, parseAllowedQuestionTypes(job.custom_instruction));
   const finalQuestions = job.extraction_mode === 'generate'
     ? job.requested_question_count ? normalizedQuestions.slice(0, job.requested_question_count) : normalizedQuestions
     : normalizedQuestions;
@@ -778,7 +797,7 @@ async function generateQuestionsFromText(
     try {
       const response = await callOpenRouterWithFallback(env, messages, [model], { maxTokens: 4_000, temperature: 0.2 });
       const quiz = parseJson(response.text);
-      const questions = normalizeQuestions(quiz);
+      const questions = normalizeQuestions(quiz, parseAllowedQuestionTypes(job.custom_instruction));
       if (!questions.length) throw new Error('The document did not contain any valid questions.');
       const limitedQuestions = requestedCount ? questions.slice(0, requestedCount) : questions;
       await onProgress(1, 1, limitedQuestions.length);
@@ -862,7 +881,7 @@ export async function extractJobQuiz(
   }
 
   const prompt = isLiteral
-    ? extractionPrompt(job.custom_instruction)
+    ? extractionPrompt(job.custom_instruction, text)
     : generatePrompt(job.requested_question_count, job.custom_instruction);
   const base64 = base64FromBytes(source);
   const content = mimeType === 'application/pdf' || mimeType.includes('powerpoint')
@@ -870,7 +889,7 @@ export async function extractJobQuiz(
     : [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } }];
   const response = await callOpenRouterWithFallback(env, [{ role: 'user', content }], VISION_MODEL_FALLBACKS);
   const quiz = parseJson(response.text);
-  const questions = normalizeQuestions(quiz);
+  const questions = normalizeQuestions(quiz, parseAllowedQuestionTypes(job.custom_instruction));
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
   const finalQuestions = job.extraction_mode === 'generate'
     ? job.requested_question_count ? questions.slice(0, job.requested_question_count) : questions
@@ -1095,7 +1114,7 @@ export async function processExtractionJobChunk(
         },
       ],
     }], VISION_MODEL_FALLBACKS);
-    const questions = normalizeQuestions(parseJson(request.text));
+    const questions = normalizeQuestions(parseJson(request.text), parseAllowedQuestionTypes(parent.custom_instruction));
     if (!questions.length) throw new Error('The document did not contain any valid questions.');
     await updateClaimedChunk(env, authHeader, jobId, chunk.id, token, {
       status: 'complete',
