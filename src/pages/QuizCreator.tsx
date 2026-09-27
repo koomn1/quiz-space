@@ -855,6 +855,11 @@ export default function QuizCreator({
     if (!attachment) {
       throw new Error('لا يمكن تشغيل مرحلة حل الاختبار بعد الاستخراج بدون الملف الأصلي. أعد رفع الملف للمراجعة الآمنة.');
     }
+    if (!attachment.data && uploadedFile) {
+      const dataUrl = await convertToBase64(uploadedFile);
+      const comma = dataUrl.indexOf(',');
+      if (comma >= 0) attachment.data = dataUrl.slice(comma + 1);
+    }
     // The worker can now read PDF, DOC/DOCX, text, and image attachments.
     // Do not reject Office documents here: they need the same source-grounded
     // answer review as PDFs, not a forced manual-solving fallback.
@@ -1479,9 +1484,6 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     });
 
     try {
-      // Convert to base64
-      const base64Data = await convertToBase64(uploadedFile);
-      const base64Clean = base64Data.split(',')[1]; // Strip data URL prefix
       // Android Chrome can report an empty File.type for Office documents.
       // Infer it from the extension so extraction and answer review receive the
       // original DOCX/PDF/PPTX contract instead of being mislabeled as a PDF.
@@ -1497,15 +1499,21 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         'application/octet-stream'
       );
       extractedAttachmentRef.current = {
-        data: base64Clean,
+        // Keep the attachment lazy. The extraction job uploads the File
+        // directly; converting it to Base64 here duplicated the full read
+        // before the Worker had even started. The answer-review phase fills
+        // this field only when a model actually needs the raw attachment.
+        data: '',
         mimeType: inferredMimeType,
         name: uploadedFile.name,
         kind: inferredMimeType.startsWith('image/') ? 'image' : 'file',
       };
 
-      // We handle document initialization locally now in serverless
-      const initData = { fileUri: base64Clean, fileUploadName: uploadedFile.name, totalPages: 1 };
-      const { fileUri, fileUploadName, totalPages } = initData;
+      // The File object is uploaded directly by the extraction job. Keep the
+      // legacy fields empty so no duplicate Base64 read is performed here.
+      const fileUri = '';
+      const fileUploadName = uploadedFile.name;
+      const totalPages = 1;
 
       const typePromptSuffix = `\n\n${buildQuestionTypeInstruction(preferredQuestionTypes, isAr)}`;
       const effectiveInstruction = `${fileCustomPrompt || ''}${typePromptSuffix}`;
