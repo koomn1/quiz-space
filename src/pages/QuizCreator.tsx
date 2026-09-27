@@ -1497,6 +1497,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         lowerFileName.endsWith('.pdf') ? 'application/pdf' :
         lowerFileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
         lowerFileName.endsWith('.doc') ? 'application/msword' :
+        lowerFileName.endsWith('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :
+        lowerFileName.endsWith('.xls') ? 'application/vnd.ms-excel' :
         lowerFileName.endsWith('.pptx') ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' :
         lowerFileName.endsWith('.ppt') ? 'application/vnd.ms-powerpoint' :
         lowerFileName.endsWith('.txt') ? 'text/plain' :
@@ -1615,8 +1617,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           total: pdfCount,
           percentage: 45,
           message: isAr
-            ? `جاري الانتقال التلقائي: قراءة نص الملف محلياً وتوليد ${pdfCount} أسئلة بالكامل عبر المحرك الذكي...`
-            : `Fallback: Reading file text locally and generating exact ${pdfCount} questions via AI...`
+            ? 'جاري الانتقال التلقائي: قراءة نص الملف محلياً واستخراج كل الأسئلة الممكنة عبر المحرك الذكي...'
+            : 'Fallback: Reading the file locally and extracting all possible questions via AI...'
         });
 
         if (uploadedFile && (uploadedFile.type === 'application/pdf' || uploadedFile.name.toLowerCase().endsWith('.pdf'))) {
@@ -1981,7 +1983,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         id: q.id || `q-${index}-${Date.now()}`,
         type: q.type || 'mcq',
         text: q.text.trim(),
-        options: q.type === 'tf' ? ['صح', 'خطأ'] : q.options,
+        options: q.type === 'tf'
+          ? (/^[^\u0600-\u06ff]*[A-Za-z][^\u0600-\u06ff]*$/u.test(q.text) ? ['True', 'False'] : ['صح', 'خطأ'])
+          : q.options,
         correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1,
         correctAnswer: q.correctAnswer || '',
         explanation: q.explanation || '',

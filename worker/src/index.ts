@@ -4,6 +4,7 @@ import { extractPdfTextContent, extractQuestionsFromText } from './documentExtra
 import JSZip from 'jszip';
 import {
   createOrGetExtractionJob,
+  extractExcelText,
   getExtractionJob,
   listActiveExtractionJobs,
   processExtractionJob,
@@ -920,7 +921,7 @@ ${extraInstruction}`;
             const result = await mammoth.extractRawText({ arrayBuffer: fileData.buffer });
             textContent = result.value;
           } else if (body.mimeType.includes('spreadsheetml') || body.mimeType.includes('excel')) {
-            return json({ error: 'Spreadsheet uploads are temporarily unavailable while the secure parser is being deployed.' }, 415, headers);
+            textContent = await extractExcelText(fileData);
           } else if (body.mimeType.includes('presentationml') || body.mimeType.includes('powerpoint')) {
             // PPTX Extraction (OpenRouter fallback as PPTX parsing is complex)
             const text = await callOpenRouterWithFallback(env, [{

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { extractQuestionsFromText } from '../../worker/src/documentExtraction';
+import { extractQuestionsFromText, splitTextForExtraction } from '../../worker/src/documentExtraction';
 
 describe('structured document extraction fast path', () => {
   it('extracts a conventional question sheet without calling an external model', async () => {
@@ -39,5 +39,13 @@ Answer: True`,
     expect(progress).toEqual([{ processed: 1, total: 1, questionsExtracted: 2 }]);
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
+  });
+
+  it('overlaps long text chunks so boundary-spanning questions are not cut off', () => {
+    const source = `${'x'.repeat(119_500)}\nQuestion 41. Which option continues across the provider boundary?\nA. First\nB. Second\n${'y'.repeat(6_000)}`;
+    const chunks = splitTextForExtraction(source);
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(chunks.some(chunk => chunk.includes('Question 41.'))).toBe(true);
+    expect(chunks.some(chunk => chunk.includes('Which option continues across the provider boundary?'))).toBe(true);
   });
 });

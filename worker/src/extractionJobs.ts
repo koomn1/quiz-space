@@ -68,7 +68,7 @@ const LEASE_MS = 5 * 60 * 1000;
 const VISION_MODEL_TIMEOUT_MS = 45_000;
 const LARGE_PDF_PAGE_THRESHOLD = 20;
 const PDF_TEXT_SAMPLE_PAGES = 3;
-export const VISION_CHUNK_PAGE_COUNT = 5;
+export const VISION_CHUNK_PAGE_COUNT = 4;
 export const MIN_VISION_CHUNK_PAGE_COUNT = 3;
 export const MAX_VISION_CHUNK_DELIVERY_ATTEMPTS = 3;
 
@@ -102,6 +102,41 @@ async function extractPowerPointText(source: Uint8Array): Promise<string> {
     if (text) slides.push(text);
   }
   return slides.map((text, index) => `الشريحة ${index + 1}:\n${text}`).join('\n\n');
+}
+
+export async function extractExcelText(source: Uint8Array): Promise<string> {
+  const archive = await JSZip.loadAsync(source);
+  const decode = (value: string) => value
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+  const sharedStrings: string[] = [];
+  const shared = archive.file('xl/sharedStrings.xml');
+  if (shared) {
+    const xml = await shared.async('text');
+    for (const item of xml.matchAll(/<si[\s\S]*?<\/si>/gi)) {
+      sharedStrings.push(decode([...item[0].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/gi)].map(match => match[1]).join('')));
+    }
+  }
+  const sheetNames = Object.keys(archive.files).filter(name => /^xl\/worksheets\/sheet\d+\.xml$/i.test(name)).sort();
+  const sheets: string[] = [];
+  for (const name of sheetNames) {
+    const file = archive.file(name);
+    if (!file) continue;
+    const xml = await file.async('text');
+    const rows: string[] = [];
+    for (const row of xml.matchAll(/<row[\s\S]*?<\/row>/gi)) {
+      const cells: string[] = [];
+      for (const cell of row[0].matchAll(/<c\b([^>]*)>([\s\S]*?)<\/c>/gi)) {
+        const type = cell[1].match(/\bt="([^"]+)"/i)?.[1] || '';
+        const value = cell[2].match(/<v[^>]*>([\s\S]*?)<\/v>/i)?.[1] || cell[2].match(/<t[^>]*>([\s\S]*?)<\/t>/i)?.[1] || '';
+        if (!value) continue;
+        cells.push(decode(type === 's' ? (sharedStrings[Number(value)] || '') : value));
+      }
+      if (cells.length) rows.push(cells.join(' | '));
+    }
+    if (rows.length) sheets.push(rows.join('\n'));
+  }
+  return sheets.join('\n\n');
 }
 
 const TEXT_MODEL_FALLBACKS = [
@@ -150,6 +185,8 @@ const supportedMimeTypes = new Set([
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
   'application/vnd.ms-powerpoint',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'text/plain',
@@ -697,7 +734,7 @@ function documentVisionPrompt(job: ExtractionJobRow): string {
   if (job.extraction_mode === 'generate') {
     return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. أعد JSON صالحاً فقط.`;
   }
-  return extractionPrompt(job.custom_instruction);
+  return `${extractionPrompt(job.custom_instruction)}\n\nIMPORTANT: The attached page image is the source of truth for language. Detect its dominant language from the page itself and return every title, question, option, answer, and explanation in that same language. Do not copy the Arabic language of these instructions into an English source. Do not translate.`;
 }
 async function extractPdfVision(
   source: Uint8Array,
@@ -870,7 +907,7 @@ export async function extractJobQuiz(
     const result = await mammoth.extractRawText({ arrayBuffer: wordDocument.buffer });
     text = result.value;
   } else if (mimeType.includes('spreadsheetml') || mimeType.includes('ms-excel')) {
-    throw new Error('Spreadsheet uploads are temporarily unavailable while the secure parser is being deployed.');
+    text = await extractExcelText(source);
     } else if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
     text = new TextDecoder().decode(source);
   } else if (mimeType.includes('presentationml') || mimeType.includes('powerpoint')) {

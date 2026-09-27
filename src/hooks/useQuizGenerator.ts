@@ -241,7 +241,9 @@ export function useQuizGenerator() {
                   number: q.number || index + 1,
                   type: q.type === 'tf' ? 'tf' : q.type === 'essay' ? 'essay' : 'mcq',
                   text: String(q.text || '').trim(),
-                  options: q.type === 'tf' ? ['صح', 'خطأ'] : q.type === 'essay' ? [] : Array.isArray(q.options) ? q.options.map((option: unknown) => String(option || '').trim()) : [],
+                  options: q.type === 'tf'
+                    ? (/^[^\u0600-\u06ff]*[A-Za-z][^\u0600-\u06ff]*$/u.test(String(q.text || '').trim()) ? ['True', 'False'] : ['صح', 'خطأ'])
+                    : q.type === 'essay' ? [] : Array.isArray(q.options) ? q.options.map((option: unknown) => String(option || '').trim()) : [],
                   correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1,
                   correctAnswer: typeof q.correctAnswer === 'string' ? q.correctAnswer : '',
                   explanation: typeof q.explanation === 'string' ? q.explanation : '',
@@ -355,7 +357,7 @@ export function useQuizGenerator() {
           type: q.type === 'tf' ? 'tf' : q.type === 'essay' ? 'essay' : 'mcq',
           text: q.text || '',
           options: q.type === 'tf'
-            ? (q.options && q.options.length === 2 && q.options[0].trim() ? q.options : (isEnglish ? ['True', 'False'] : ['صح', 'خطأ']))
+            ? (isEnglish ? ['True', 'False'] : ['صح', 'خطأ'])
             : q.type === 'essay' ? [] : (q.options || ['', '', '', '']),
           correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1,
           correctAnswer: q.correctAnswer || '',

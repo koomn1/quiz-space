@@ -6,14 +6,15 @@ const extractionSource = readFileSync(new URL('./extractionJobs.ts', import.meta
 const indexSource = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
 
 describe('dynamic vision chunk planning', () => {
-  it('keeps the default five-page split for a normal scanned document', () => {
+  it('keeps the default four-page split for a normal scanned document', () => {
     const plan = selectVisionChunkPlan(9, 9 * 220 * 1024);
-    expect(plan.pageCountPerChunk).toBe(5);
+    expect(plan.pageCountPerChunk).toBe(4);
     expect(plan.concurrency).toBe(3);
-    expect(plan.estimatedChunkCount).toBe(2);
+    expect(plan.estimatedChunkCount).toBe(3);
     expect(buildVisionChunkRanges(9, plan.pageCountPerChunk)).toEqual([
-      { chunkIndex: 0, pageStart: 1, pageEnd: 5 },
-      { chunkIndex: 1, pageStart: 6, pageEnd: 9 },
+      { chunkIndex: 0, pageStart: 1, pageEnd: 4 },
+      { chunkIndex: 1, pageStart: 5, pageEnd: 8 },
+      { chunkIndex: 2, pageStart: 9, pageEnd: 9 },
     ]);
   });
 

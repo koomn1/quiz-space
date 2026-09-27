@@ -18,22 +18,25 @@ describe('large scanned PDF routing', () => {
     expect(shouldUseVisionForScannedPdf(9, '')).toBe(true);
     expect(shouldUseVisionForScannedPdf(9, 'Question 1. Which statement is correct? Choose the best answer from the available options below.')).toBe(false);
     expect(buildVisionChunkRanges(9)).toEqual([
-      { chunkIndex: 0, pageStart: 1, pageEnd: 5 },
-      { chunkIndex: 1, pageStart: 6, pageEnd: 9 },
+      { chunkIndex: 0, pageStart: 1, pageEnd: 4 },
+      { chunkIndex: 1, pageStart: 5, pageEnd: 8 },
+      { chunkIndex: 2, pageStart: 9, pageEnd: 9 },
     ]);
   });
 
-  it('creates independently retryable five-page ranges for a 37-page scanned PDF', () => {
-    expect(VISION_CHUNK_PAGE_COUNT).toBe(5);
+  it('creates independently retryable four-page ranges for a 37-page scanned PDF', () => {
+    expect(VISION_CHUNK_PAGE_COUNT).toBe(4);
     expect(buildVisionChunkRanges(37)).toEqual([
-      { chunkIndex: 0, pageStart: 1, pageEnd: 5 },
-      { chunkIndex: 1, pageStart: 6, pageEnd: 10 },
-      { chunkIndex: 2, pageStart: 11, pageEnd: 15 },
-      { chunkIndex: 3, pageStart: 16, pageEnd: 20 },
-      { chunkIndex: 4, pageStart: 21, pageEnd: 25 },
-      { chunkIndex: 5, pageStart: 26, pageEnd: 30 },
-      { chunkIndex: 6, pageStart: 31, pageEnd: 35 },
-      { chunkIndex: 7, pageStart: 36, pageEnd: 37 },
+      { chunkIndex: 0, pageStart: 1, pageEnd: 4 },
+      { chunkIndex: 1, pageStart: 5, pageEnd: 8 },
+      { chunkIndex: 2, pageStart: 9, pageEnd: 12 },
+      { chunkIndex: 3, pageStart: 13, pageEnd: 16 },
+      { chunkIndex: 4, pageStart: 17, pageEnd: 20 },
+      { chunkIndex: 5, pageStart: 21, pageEnd: 24 },
+      { chunkIndex: 6, pageStart: 25, pageEnd: 28 },
+      { chunkIndex: 7, pageStart: 29, pageEnd: 32 },
+      { chunkIndex: 8, pageStart: 33, pageEnd: 36 },
+      { chunkIndex: 9, pageStart: 37, pageEnd: 37 },
     ]);
   });
 });

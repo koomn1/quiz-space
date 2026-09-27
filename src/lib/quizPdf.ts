@@ -53,7 +53,10 @@ function normaliseText(value: unknown) {
 
 function getOptions(question: Question) {
   if (question.type === 'essay') return [];
-  if (question.type === 'tf') return question.options?.length ? question.options : ['صح', 'خطأ'];
+  if (question.type === 'tf') {
+    if (question.options?.length) return question.options;
+    return /[A-Za-z]/.test(question.text) && !/[\u0600-\u06ff]/u.test(question.text) ? ['True', 'False'] : ['صح', 'خطأ'];
+  }
   return question.options || [];
 }
 

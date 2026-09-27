@@ -30,6 +30,7 @@ const DOCUMENT_EXTRACTION_MODELS = [
 // Keep each provider request bounded: one huge 100–200 question prompt is slow,
 // exceeds output limits easily, and makes the whole extraction fail atomically.
 const DOCUMENT_SINGLE_REQUEST_LIMIT = 120_000;
+const DOCUMENT_CHUNK_OVERLAP = 4_000;
 const EXTRACTION_OPTIONS = { max_tokens: 12_000, temperature: 0.1 };
 
 function extractJson(text: string): unknown {
@@ -246,7 +247,7 @@ function parseLiteralQuestions(text: string): any[] {
   return questions;
 }
 
-function splitText(text: string): string[] {
+export function splitTextForExtraction(text: string): string[] {
   if (text.length <= DOCUMENT_SINGLE_REQUEST_LIMIT) return [text];
   const chunks: string[] = [];
   let start = 0;
@@ -255,7 +256,9 @@ function splitText(text: string): string[] {
     const boundary = targetEnd < text.length ? text.lastIndexOf('\n', targetEnd) : targetEnd;
     const end = boundary > start + 50_000 ? boundary : targetEnd;
     chunks.push(text.slice(start, end));
-    start = end;
+    // Repeat the tail of the previous chunk so a question/options block that
+    // crosses a provider boundary remains visible in at least one request.
+    start = end >= text.length ? end : Math.max(start + 1, end - DOCUMENT_CHUNK_OVERLAP);
   }
   return chunks;
 }
@@ -322,7 +325,7 @@ export async function extractQuestionsFromText(
     };
   }
 
-  const chunks = splitText(normalizedText);
+  const chunks = splitTextForExtraction(normalizedText);
   if (!chunks.length || !chunks[0]) throw new Error('No extractable text found in the document.');
 
   const rawResponses: string[] = [];
