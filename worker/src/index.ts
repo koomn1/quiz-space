@@ -268,8 +268,13 @@ function quizPrompt(topic: string, amount: number, previous: string[]): string {
     : type === 'tf'
       ? '{"text":"Statement","type":"tf","options":["True","False"],"correctIndex":0,"correctAnswer":"True","explanation":"Explanation"}'
       : '{"text":"Question","type":"essay","options":[],"correctIndex":0,"correctAnswer":"Model answer","explanation":"Explanation"}').join(',\n  ');
-  const requiresArabic = /[\u0621-\u064A]/u.test(topic);
-  const requiresEnglish = !requiresArabic && /[A-Za-z]/.test(topic) && topic !== 'the attached source document' && topic !== 'document content';
+  // The prompt can contain Arabic UI instructions while the attached/source
+  // text is English. A single Arabic character must not flip the whole quiz
+  // language; compare the dominant alphabet instead.
+  const arabicCount = (topic.match(/[\u0600-\u06FF]/g) || []).length;
+  const latinCount = (topic.match(/[A-Za-z]/g) || []).length;
+  const requiresArabic = arabicCount >= 8 && arabicCount >= latinCount * 0.2;
+  const requiresEnglish = !requiresArabic && latinCount >= 8 && latinCount >= arabicCount * 0.2;
   const languageConstraint = requiresArabic
     ? '\nتقييد اللغة: اكتب العنوان والوصف ونصوص الأسئلة والخيارات والإجابات والشروح بالعربية الفصحى فقط. لا تستخدم كلمات أو حروفاً من لغات أخرى. الاستثناء الوحيد هو الاختصارات العلمية اللاتينية الضرورية، وتكون بحروف كبيرة فقط مثل NASA أو DNA.'
     : requiresEnglish

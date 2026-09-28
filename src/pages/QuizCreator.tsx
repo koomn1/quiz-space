@@ -1585,13 +1585,24 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const hasUsableQuestions = Array.isArray(result?.quiz?.questions) && result.quiz.questions.some((question: any) =>
         question?.type === 'essay' || (Array.isArray(question?.options) && question.options.filter((option: unknown) => typeof option === 'string' && option.trim()).length >= 2)
       );
-      if (!hasUsableQuestions && activeExtractionMode === 'literal') {
+      const extractedQuestionCount = Array.isArray(result?.quiz?.questions) ? result.quiz.questions.length : 0;
+      // A long lecture can contain a few incidental MCQs even though most of
+      // the material is explanatory. Do not present those few items as the
+      // complete quiz; switch to content generation and keep automatic count
+      // (0) so the model covers the whole document.
+      const lowCoverageLiteralResult = activeExtractionMode === 'literal'
+        && uploadedFile.size >= 30_000
+        && extractedQuestionCount > 0
+        && extractedQuestionCount < 10;
+      if ((!hasUsableQuestions || lowCoverageLiteralResult) && activeExtractionMode === 'literal') {
         setExtractionMode('generate');
         setOcrProgress(prev => prev ? {
           ...prev,
           stage: 'analyzing',
           percentage: 30,
-          message: 'لم نجد أسئلة جاهزة؛ جاري صياغة أسئلة جديدة من شرح الملف تلقائيًا...'
+          message: lowCoverageLiteralResult
+            ? `تم استخراج ${extractedQuestionCount} أسئلة فقط من ملف كبير؛ جاري تغطية محتوى الملف بالكامل...`
+            : 'لم نجد أسئلة جاهزة؛ جاري صياغة أسئلة جديدة من شرح الملف تلقائيًا...'
         } : prev);
         result = await generateAndSaveQuiz({
           type: 'file_direct',
@@ -1602,7 +1613,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           totalPages,
           extractionMode: 'generate',
           customInstruction: effectiveInstruction || 'Generate questions only from the source document, preserve its language, and do not invent information.',
-          totalQuestions: pdfCount,
+          totalQuestions: 0,
           userId,
           creatorName,
           category: 'عام',

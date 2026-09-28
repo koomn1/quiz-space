@@ -153,7 +153,9 @@ export function useQuizGenerator() {
         lastGenerationError = generated.lastError;
       } else if (type === 'pasted_text') {
         const sourceText = text || '';
-        const sourceIsEnglish = /[A-Za-z]{8,}/.test(sourceText) && !/[\u0600-\u06FF]/u.test(sourceText);
+        const arabicChars = (sourceText.match(/[\u0600-\u06FF]/g) || []).length;
+        const latinChars = (sourceText.match(/[A-Za-z]/g) || []).length;
+        const sourceIsEnglish = latinChars >= 8 && latinChars >= arabicChars * 5;
         const generated = await generateQuestionBatches({
           // Do not prefix an English source with Arabic: the Worker uses the
           // prompt language as a fallback signal when deciding output language.
