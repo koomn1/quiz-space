@@ -1832,7 +1832,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     try {
       const result = await generateAndSaveQuiz({
         type: 'pasted_text',
-        text: `${pastedText.trim()}\n\n${buildQuestionTypeInstruction(preferredQuestionTypes, isAr)}`,
+        // The pasted text may be the English fallback of an uploaded file;
+        // keep UI language out of the generation prompt so source language wins.
+        text: `${pastedText.trim()}\n\n${buildQuestionTypeInstruction(preferredQuestionTypes, false)}`,
         totalQuestions: pasteCount,
         userId,
         creatorName,

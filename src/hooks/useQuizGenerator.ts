@@ -152,8 +152,14 @@ export function useQuizGenerator() {
         finalDescription = generated.description;
         lastGenerationError = generated.lastError;
       } else if (type === 'pasted_text') {
+        const sourceText = text || '';
+        const sourceIsEnglish = /[A-Za-z]{8,}/.test(sourceText) && !/[\u0600-\u06FF]/u.test(sourceText);
         const generated = await generateQuestionBatches({
-          prompt: `النص المصدر للأسئلة:\n\n${text}`,
+          // Do not prefix an English source with Arabic: the Worker uses the
+          // prompt language as a fallback signal when deciding output language.
+          prompt: sourceIsEnglish
+            ? `Source text for the quiz. Write the title, description, questions, options, answers, and explanations in English only. Do not translate into Arabic.\n\n${sourceText}`
+            : `النص المصدر للأسئلة:\n\n${sourceText}`,
           totalQuestions: generationQuestionCount,
           batchSize: BATCH_SIZE,
           excludedQuestions: [],
