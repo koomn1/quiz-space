@@ -834,7 +834,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
           ? await generateQuizFromFileStreaming(
               pendingQuizAttachment.data,
               pendingQuizAttachment.mimeType,
-              `أنشئ كويزًا داخل المنصة من الملف المرفق. استخرج الأسئلة كما هي بدقة، واحتفظ بالاختيارات والإجابات. المطلوب ${pendingQuiz.amount} سؤالًا كحد أقصى. مستوى الأسئلة: ${pendingQuiz.difficulty}. لا تكتب شرحًا أو أسئلة في رد محادثة؛ أعد بيانات الكويز فقط.`,
+              `Create an in-app quiz from the attached file. Read the file or image itself, extract or generate questions only from its content, and preserve answer choices and answers. Return the title, description, questions, options, answers, and explanations in English only. Maximum ${pendingQuiz.amount} questions. Difficulty: ${pendingQuiz.difficulty}. Return quiz data only.`,
               progress => {
                 setActivityState(progress.type === 'complete' ? 'composing' : 'working');
               },
@@ -844,7 +844,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
               pendingQuizAttachment.data,
               pendingQuizAttachment.mimeType,
               pendingQuiz.amount,
-              `أنشئ كويزًا داخل المنصة من الملف المرفق. المطلوب ${pendingQuiz.amount} سؤالًا كحد أقصى، بمستوى ${pendingQuiz.difficulty}. أعد بيانات الكويز فقط.`,
+              `Create an in-app quiz from the attached file or image. Read the attachment itself and use only its content. Return the title, description, questions, options, answers, and explanations in English only. Maximum ${pendingQuiz.amount} questions. Difficulty: ${pendingQuiz.difficulty}. Return quiz data only.`,
               'generate',
             )
         : await generateCosmoQuizInBatches(pendingQuiz.topic, pendingQuiz.amount);
@@ -949,7 +949,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const handleAttachmentFile = (file?: File) => {
     if (!file) return;
     const isImage = file.type.startsWith('image/');
-    const isDocument = file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'application/msword' || file.type === 'text/markdown' || file.type === 'text/plain' || /\.(pdf|docx|doc|md|txt)$/i.test(file.name);
+    const isDocument = file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.type === 'application/vnd.ms-excel' || file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || file.type === 'application/vnd.ms-powerpoint' || file.type === 'text/markdown' || file.type === 'text/plain' || /\.(pdf|docx|doc|xlsx|xls|pptx|ppt|md|txt)$/i.test(file.name);
     if ((!isImage && !isDocument) || file.size > 10 * 1024 * 1024) {
       setLastError(isAr ? 'الملف غير مدعوم أو أكبر من 10 ميجابايت.' : 'Unsupported file or file is larger than 10 MB.');
       return;
@@ -960,7 +960,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       const comma = dataUrl.indexOf(',');
       if (comma < 0) return;
       const lowerName = file.name.toLowerCase();
-      const mimeType = file.type || (lowerName.endsWith('.pdf') ? 'application/pdf' : lowerName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : lowerName.endsWith('.doc') ? 'application/msword' : lowerName.endsWith('.md') ? 'text/markdown' : 'text/plain');
+      const mimeType = file.type || (lowerName.endsWith('.pdf') ? 'application/pdf' : lowerName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : lowerName.endsWith('.doc') ? 'application/msword' : lowerName.endsWith('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : lowerName.endsWith('.xls') ? 'application/vnd.ms-excel' : lowerName.endsWith('.pptx') ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' : lowerName.endsWith('.ppt') ? 'application/vnd.ms-powerpoint' : lowerName.endsWith('.md') ? 'text/markdown' : 'text/plain');
       setSelectedAttachment({ data: dataUrl.slice(comma + 1), mimeType, name: file.name, kind: isImage ? 'image' : 'file' });
       setLastError(null);
     };

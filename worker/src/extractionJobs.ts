@@ -83,7 +83,7 @@ export interface VisionChunkPlan {
   estimatedChunkCount: number;
   reason: 'standard' | 'large-document' | 'raster-heavy';
 }
-async function extractPowerPointText(source: Uint8Array): Promise<string> {
+export async function extractPowerPointText(source: Uint8Array): Promise<string> {
   const archive = await JSZip.loadAsync(source);
   const slideFiles = Object.keys(archive.files)
     .filter(name => /^ppt\/slides\/slide\d+\.xml$/i.test(name))

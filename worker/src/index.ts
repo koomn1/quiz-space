@@ -659,7 +659,7 @@ async function renderQuizSharePage(request: Request, env: Env): Promise<Response
   return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'index, follow' } });
 }
 
-function buildCosmoUserContent(body: any): any {
+async function buildCosmoUserContent(body: any): Promise<any> {
   const prompt = typeof body.prompt === 'string' ? body.prompt : '';
   const attachment = body.attachment;
   const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
@@ -674,9 +674,30 @@ function buildCosmoUserContent(body: any): any {
   if (data && mimeType === 'application/pdf') {
     return [{ type: 'text', text: prompt }, { type: 'file', file: { filename: name, file_data: `data:${mimeType};base64,${data}` } }];
   }
+  if (data && (mimeType.includes('wordprocessingml') || mimeType === 'application/msword')) {
+    try {
+      const bytes = Uint8Array.from(atob(data), char => char.charCodeAt(0));
+      const extracted = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
+      if (extracted.value.trim()) return `${prompt}\n\nContent extracted from ${name}:\n${extracted.value.slice(0, 500_000)}`;
+    } catch (error) { console.warn('Cosmo Word attachment extraction failed:', error); }
+  }
+  if (data && (mimeType.includes('spreadsheetml') || mimeType.includes('excel'))) {
+    try {
+      const bytes = Uint8Array.from(atob(data), char => char.charCodeAt(0));
+      const extracted = await extractExcelText(bytes);
+      if (extracted.trim()) return `${prompt}\n\nContent extracted from ${name}:\n${extracted.slice(0, 500_000)}`;
+    } catch (error) { console.warn('Cosmo spreadsheet attachment extraction failed:', error); }
+  }
+  if (data && (mimeType.includes('presentationml') || mimeType.includes('powerpoint'))) {
+    try {
+      const bytes = Uint8Array.from(atob(data), char => char.charCodeAt(0));
+      const extracted = await extractPowerPointText(bytes);
+      if (extracted.trim()) return `${prompt}\n\nContent extracted from ${name}:\n${extracted.slice(0, 500_000)}`;
+    } catch (error) { console.warn('Cosmo PowerPoint attachment extraction failed:', error); }
+  }
   if (data && (mimeType === 'text/plain' || mimeType === 'text/markdown' || /\.(md|txt)$/i.test(name))) {
-    const decoded = decodeBase64Utf8(data).slice(0, 120_000);
-    return `${prompt}\n\nمحتوى الملف (${name}):\n${decoded}`;
+    const decoded = decodeBase64Utf8(data).slice(0, 500_000);
+    return `${prompt}\n\nContent extracted from ${name}:\n${decoded}`;
   }
   return prompt;
 }
@@ -685,7 +706,9 @@ function hasCosmoAttachment(body: any): boolean {
   const attachment = body.attachment;
   const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
   const mimeType = attachment && typeof attachment.mimeType === 'string' ? attachment.mimeType : '';
-  return Boolean((body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') || (data && mimeType && data.length <= 15_000_000));
+  // Base64 expands a 12 MB upload to roughly 16 MB. The old 15 MB guard
+  // silently routed larger attachments to a text-only model.
+  return Boolean((body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') || (data && mimeType && data.length <= 40_000_000));
 }
 
 async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext): Promise<Response> {
@@ -1070,7 +1093,7 @@ ${extraInstruction}`;
       messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
       const hasAttachment = hasCosmoAttachment(body);
-      messages.push({ role: 'user', content: buildCosmoUserContent(body) });
+      messages.push({ role: 'user', content: await buildCosmoUserContent(body) });
       // Route to the vision model whenever an image is actually attached —
       // checking the model NAME for the substring 'vision' silently broke
       // this once the models were swapped to ones whose names don't contain
@@ -1138,7 +1161,7 @@ ${extraInstruction}`;
       messages.push({ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) });
       messages.push(...history);
       const hasAttachment = hasCosmoAttachment(body);
-      messages.push({ role: 'user', content: buildCosmoUserContent(body) });
+      messages.push({ role: 'user', content: await buildCosmoUserContent(body) });
 
       const candidates = hasAttachment ? OPENROUTER_VISION_FALLBACKS : OPENROUTER_STREAM_TEXT_MODELS;
       // Fallback only applies to picking which model actually starts
