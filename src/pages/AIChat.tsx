@@ -563,15 +563,17 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [selectedAttachment, setSelectedAttachment] = useState<ChatAttachment | null>(null);
+  const selectedAttachmentRef = useRef<ChatAttachment | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const [pendingQuiz, setPendingQuiz] = useState<{ topic: string; amount: number; difficulty: string } | null>(null);
   const [pendingQuizAttachment, setPendingQuizAttachment] = useState<ChatAttachment | null>(null);
+  const pendingQuizAttachmentRef = useRef<ChatAttachment | null>(null);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [isQuizGenerationError, setIsQuizGenerationError] = useState(false);
-  const confirmQuizGenerationRef = useRef<(() => Promise<void>) | null>(null);
+  const confirmQuizGenerationRef = useRef<((quiz?: { topic: string; amount: number; difficulty: string }, attachment?: ChatAttachment | null) => Promise<void>) | null>(null);
   const [quickSuggestions, setQuickSuggestions] = useState<QuickSuggestion[]>([]);
   const [activityState, setActivityState] = useState<OrbState>('working');
 
@@ -693,13 +695,15 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     }
     // Any quiz request made while a file is attached must use the in-app quiz
     // creator and save a real quiz; never answer with quiz text in the chat.
-    const requestedFileQuiz = Boolean(selectedAttachment && requestedQuiz);
+    const attachmentForQuiz = selectedAttachment || selectedAttachmentRef.current;
+    const requestedFileQuiz = Boolean(attachmentForQuiz && requestedQuiz);
     if (requestedQuiz && !pendingQuiz) {
       setPendingQuiz(requestedQuiz);
-      if (requestedFileQuiz) setPendingQuizAttachment(selectedAttachment);
+      pendingQuizAttachmentRef.current = requestedFileQuiz ? attachmentForQuiz : null;
+      if (requestedFileQuiz) setPendingQuizAttachment(attachmentForQuiz);
       else setPendingQuizAttachment(null);
       setMessages(prev => [...prev,
-        { id: Date.now().toString(), role: 'user', text: trimmed, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) },
+        { id: Date.now().toString(), role: 'user', text: trimmed, image: attachmentForQuiz?.kind === 'image' ? attachmentForQuiz.data : undefined, attachmentName: attachmentForQuiz?.kind === 'file' ? attachmentForQuiz.name : undefined, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) },
         { id: `${Date.now()}-confirm`, role: 'assistant', text: isAr
           ? requestedFileQuiz
             ? `هحوّل الملف المرفق إلى كويز حقيقي داخل المنصة، وليس أسئلة داخل الشات: **${requestedQuiz.amount} سؤال** بمستوى **${requestedQuiz.difficulty}**. اضغط تأكيد للبدء.`
@@ -731,6 +735,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
+    selectedAttachmentRef.current = null;
     setSelectedAttachment(null);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setIsAnalyzing(true);
@@ -839,12 +844,13 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     setLastError(null);
     setIsQuizGenerationError(false);
     try {
-      setActivityState(pendingQuizAttachment ? 'working' : 'solving');
-      const generated = pendingQuizAttachment
-        ? pendingQuizAttachment.mimeType === 'application/pdf'
+      const attachmentForGeneration = pendingQuizAttachment || pendingQuizAttachmentRef.current;
+      setActivityState(attachmentForGeneration ? 'working' : 'solving');
+      const generated = attachmentForGeneration
+        ? attachmentForGeneration.mimeType === 'application/pdf'
           ? await generateQuizFromFileStreaming(
-              pendingQuizAttachment.data,
-              pendingQuizAttachment.mimeType,
+              attachmentForGeneration.data,
+              attachmentForGeneration.mimeType,
               `Create an in-app quiz from the attached file. Read the file or image itself, extract or generate questions only from its content, and preserve answer choices and answers. Return the title, description, questions, options, answers, and explanations in English only. Maximum ${pendingQuiz.amount} questions. Difficulty: ${pendingQuiz.difficulty}. Return quiz data only.`,
               progress => {
                 setActivityState(progress.type === 'complete' ? 'composing' : 'working');
@@ -852,14 +858,14 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
               'literal',
             )
           : await generateQuizFromFileWithFallback(
-              pendingQuizAttachment.data,
-              pendingQuizAttachment.mimeType,
+              attachmentForGeneration.data,
+              attachmentForGeneration.mimeType,
               pendingQuiz.amount,
               `Create an in-app quiz from the attached file or image. Read the attachment itself and use only its content. Return the title, description, questions, options, answers, and explanations in English only. Maximum ${pendingQuiz.amount} questions. Difficulty: ${pendingQuiz.difficulty}. Return quiz data only.`,
               'generate',
             )
         : await generateCosmoQuizInBatches(pendingQuiz.topic, pendingQuiz.amount);
-      const limitedGenerated = pendingQuizAttachment
+      const limitedGenerated = attachmentForGeneration
         ? { ...generated, questions: generated.questions.slice(0, pendingQuiz.amount) }
         : generated;
       const verified = validateAndCleanQuiz(limitedGenerated);
@@ -885,6 +891,9 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       setMessages(prev => [...prev, { id: `${Date.now()}-created`, role: 'assistant', text: isAr ? `تم إنشاء الاختبار **${saved.title}** بنجاح. هتقدر تبدأه دلوقتي.` : `The quiz **${saved.title}** was created successfully. You can start it now.`, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }]);
       setPendingQuiz(null);
       setPendingQuizAttachment(null);
+      pendingQuizAttachmentRef.current = null;
+      selectedAttachmentRef.current = null;
+      setSelectedAttachment(null);
       onOpenGeneratedQuiz?.(saved.id);
     } catch (error) {
       console.error('Cosmo quiz generation failed', error);
@@ -973,7 +982,9 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       if (comma < 0) return;
       const lowerName = file.name.toLowerCase();
       const mimeType = file.type || (lowerName.endsWith('.pdf') ? 'application/pdf' : lowerName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : lowerName.endsWith('.doc') ? 'application/msword' : lowerName.endsWith('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : lowerName.endsWith('.xls') ? 'application/vnd.ms-excel' : lowerName.endsWith('.pptx') ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' : lowerName.endsWith('.ppt') ? 'application/vnd.ms-powerpoint' : lowerName.endsWith('.md') ? 'text/markdown' : 'text/plain');
-      setSelectedAttachment({ data: dataUrl.slice(comma + 1), mimeType, name: file.name, kind: isImage ? 'image' : 'file' });
+      const attachment = { data: dataUrl.slice(comma + 1), mimeType, name: file.name, kind: isImage ? 'image' as const : 'file' as const };
+      selectedAttachmentRef.current = attachment;
+      setSelectedAttachment(attachment);
       setLastError(null);
     };
     reader.readAsDataURL(file);
@@ -1290,7 +1301,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                 style={{ background: theme.INPUT_BG, border: `1px solid ${theme.BORDER_SOFT}` }}>
                 {selectedAttachment.kind === 'image' ? <img src={selectedAttachment.data} alt="Preview" className="h-20 w-auto rounded-lg object-cover" /> : <FileText className="w-5 h-5" style={{ color: ACCENT }} />}
                 <span className="max-w-[180px] truncate text-xs" style={{ color: theme.FG }}>{selectedAttachment.name}</span>
-                <button onClick={() => setSelectedAttachment(null)} className="p-1 rounded-full shadow-lg" style={{ background: '#ef4444', color: 'white' }}><X size={12} /></button>
+                <button onClick={() => { selectedAttachmentRef.current = null; setSelectedAttachment(null); }} className="p-1 rounded-full shadow-lg" style={{ background: '#ef4444', color: 'white' }}><X size={12} /></button>
               </div>
             )}
             <BorderBeam size="md" colorVariant="colorful" strength={0.72} active={!isAnalyzing} theme={darkMode ? 'dark' : 'light'}>
