@@ -22,6 +22,14 @@ describe('filterValidGeneratedQuestions', () => {
     expect(filterValidGeneratedQuestions(undefined)).toEqual([]);
   });
 
+  it('rejects blank MCQ cards and MCQs with fewer than two options', () => {
+    expect(filterValidGeneratedQuestions([
+      { text: '', type: 'mcq', options: ['', '', '', ''] },
+      { text: 'Incomplete', type: 'mcq', options: ['Only one', ''] },
+      { text: 'Complete', type: 'mcq', options: ['A', 'B', '', ''] },
+    ])).toEqual([{ text: 'Complete', type: 'mcq', options: ['A', 'B', '', ''] }]);
+  });
+
   it('enforces the selected question types after provider output', () => {
     const questions = [
       { text: 'A', type: 'mcq' },

@@ -1594,7 +1594,10 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         && uploadedFile.size >= 30_000
         && extractedQuestionCount > 0
         && extractedQuestionCount < 10;
-      if ((!hasUsableQuestions || lowCoverageLiteralResult) && activeExtractionMode === 'literal') {
+      const lowCoverageGeneratedResult = activeExtractionMode === 'generate'
+        && uploadedFile.size >= 30_000
+        && extractedQuestionCount < 10;
+      if ((!hasUsableQuestions || lowCoverageLiteralResult || lowCoverageGeneratedResult) && activeExtractionMode === 'literal') {
         setExtractionMode('generate');
         setOcrProgress(prev => prev ? {
           ...prev,
@@ -1619,6 +1622,10 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           category: 'عام',
           persist: false,
         });
+      }
+
+      if (lowCoverageGeneratedResult) {
+        throw new Error('The document generation returned too few usable questions; retrying with the full extracted text.');
       }
 
       // Step 3: Extraction is complete; now solve and verify answers as a separate phase.

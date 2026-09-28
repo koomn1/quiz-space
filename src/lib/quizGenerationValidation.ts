@@ -1,5 +1,11 @@
-export function filterValidGeneratedQuestions<T extends { text?: unknown }>(questions: T[] | null | undefined): T[] {
-  return (questions || []).filter((question) => String(question?.text || '').trim().length > 0);
+export function filterValidGeneratedQuestions<T extends { text?: unknown; type?: unknown; options?: unknown }>(questions: T[] | null | undefined): T[] {
+  return (questions || []).filter((question) => {
+    if (String(question?.text || '').trim().length === 0) return false;
+    if (question?.type !== 'mcq') return true;
+    // Never put an unusable MCQ card with blank options into the editor.
+    return Array.isArray(question?.options)
+      && question.options.filter((option) => String(option || '').trim().length > 0).length >= 2;
+  });
 }
 
 export type AllowedGeneratedQuestionType = 'mcq' | 'tf' | 'essay';
