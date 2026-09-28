@@ -16,4 +16,9 @@ describe('Cosmo file quiz flow contract', () => {
     expect(source).toContain('onOpenGeneratedQuiz?.(saved.id)');
     expect(source).toContain('setPendingQuizAttachment(null)');
   });
+
+  it('recognizes Arabic and English quiz intent before sending a chat request', () => {
+    expect(source).toContain('اختبرني|اختبار|كويز|امتحان|create|make|generate|quiz|test');
+    expect(source).toContain('export function parseQuizRequest');
+  });
 });

@@ -88,16 +88,19 @@ function parseAiSuggestions(raw: string, isAr: boolean): QuickSuggestion[] {
   }
 }
 
-function parseQuizRequest(text: string): { topic: string; amount: number; difficulty: string } | null {
+export function parseQuizRequest(text: string): { topic: string; amount: number; difficulty: string } | null {
   const normalized = text.trim();
-  if (!/(أنشئ|اعمل|اعملّي|ولد|اختبار|quiz|test)/i.test(normalized)) return null;
-  if (!/(اختبار|quiz|test)/i.test(normalized)) return null;
+  // Treat all common quiz intents as a real in-app quiz request. Previously
+  // "اختبرني", "كويز", "امتحان", and English "make/generate a quiz" missed
+  // this gate and were answered as ordinary chat messages.
+  if (!/(أنشئ|انشئ|اعمل|اعملّي|اعمللي|ولد|أنشئلي|اختبرني|اختبار|كويز|امتحان|create|make|generate|quiz|test)/i.test(normalized)) return null;
+  if (!/(اختبار|اختبرني|كويز|امتحان|quiz|test)/i.test(normalized)) return null;
   const normalizedDigits = normalized.replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
   const amountMatch = normalizedDigits.match(/(\d{1,3})\s*(?:سؤال|اسئلة|أسئلة|questions?)/i);
   const amount = Math.min(COSMO_QUIZ_MAX_COUNT, Math.max(COSMO_QUIZ_MIN_COUNT, amountMatch ? Number(amountMatch[1]) : 10));
   const difficulty = /صعب|متقدم|hard|advanced/i.test(normalized) ? 'صعب' : /سهل|مبتدئ|easy|beginner/i.test(normalized) ? 'سهل' : 'متوسط';
   const topic = normalized
-    .replace(/(?:أنشئ|اعمل(?:ي|ِّي)?|ولد|لي|اختبار|quiz|test|[0-9٠-٩]{1,3}\s*(?:سؤال|اسئلة|أسئلة|questions?))/gi, ' ')
+    .replace(/(?:أنشئ|انشئ|اعمل(?:ي|ِّي|لي)?|ولد|أنشئلي|اختبرني|لي|اختبار|كويز|امتحان|create|make|generate|quiz|test|[0-9٠-٩]{1,3}\s*(?:سؤال|اسئلة|أسئلة|questions?))/gi, ' ')
     .replace(/(?:صعب|متقدم|سهل|مبتدئ|hard|advanced|easy|beginner|متوسط|medium)/gi, ' ')
     .replace(/[،,:؛]/g, ' ')
     .replace(/\s+/g, ' ').trim() || 'معلومات عامة';
@@ -568,6 +571,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const [pendingQuizAttachment, setPendingQuizAttachment] = useState<ChatAttachment | null>(null);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [isQuizGenerationError, setIsQuizGenerationError] = useState(false);
+  const confirmQuizGenerationRef = useRef<(() => Promise<void>) | null>(null);
   const [quickSuggestions, setQuickSuggestions] = useState<QuickSuggestion[]>([]);
   const [activityState, setActivityState] = useState<OrbState>('working');
 
@@ -680,6 +684,13 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     if (isAnalyzing) return;
 
     const requestedQuiz = parseQuizRequest(trimmed);
+    const confirmsPendingQuiz = Boolean(pendingQuiz && /^(نعم|ايوه|أيوه|اه|أبدأ|ابدأ|أكد|تأكيد|موافق|yes|yeah|yep|confirm|confirmed|start|go ahead|okay|ok)\b/i.test(trimmed));
+    if (confirmsPendingQuiz) {
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text: trimmed, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }]);
+      setInputText('');
+      void confirmQuizGenerationRef.current?.();
+      return;
+    }
     // Any quiz request made while a file is attached must use the in-app quiz
     // creator and save a real quiz; never answer with quiz text in the chat.
     const requestedFileQuiz = Boolean(selectedAttachment && requestedQuiz);
@@ -820,7 +831,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       setIsAnalyzing(false);
       setStreamingText('');
     }
-  }, [inputText, selectedAttachment, isAnalyzing, userId, activeConversationId, isAr, cosmoSystemInstruction]);
+  }, [inputText, selectedAttachment, pendingQuiz, isAnalyzing, userId, activeConversationId, isAr, cosmoSystemInstruction]);
 
   const confirmQuizGeneration = async () => {
     if (!pendingQuiz || isGeneratingQuiz) return;
@@ -888,6 +899,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       setIsGeneratingQuiz(false);
     }
   };
+  confirmQuizGenerationRef.current = confirmQuizGeneration;
 
   const startNewChat = () => {
     setActiveConversationId(null);
@@ -1306,7 +1318,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
                     <ImageIcon className="w-4 h-4" /><span>{isAr ? 'صورة' : 'Image'}</span>
                   </button>
-                  <button onClick={() => fileInputRef.current?.click()} title={isAr ? 'إرفاق PDF أو DOCX أو MD أو TXT' : 'Attach PDF, DOCX, MD or TXT'}
+                  <button onClick={() => fileInputRef.current?.click()} title={isAr ? 'إرفاق PDF أو Word أو Excel أو PowerPoint' : 'Attach PDF, Word, Excel or PowerPoint'}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
                     style={{ color: theme.MUTED }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
@@ -1314,7 +1326,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                     <FileText className="w-4 h-4" /><span>{isAr ? 'ملف' : 'File'}</span>
                   </button>
                   <input type="file" ref={imageInputRef} accept="image/*" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
-                  <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/markdown,text/plain" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
+                  <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,text/markdown,text/plain" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
                 </div>
 
                 <Liquid blur={6} contrast={18} fill={darkMode ? '#182b3a' : '#ffffff'} className="flex items-center">
