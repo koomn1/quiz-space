@@ -31,7 +31,9 @@ async function workerRequest<T>(path: string, body: unknown, timeoutMs = AI_REQU
       return response.json() as Promise<T>;
     }
     const payload = await response.json().catch(() => ({})) as WorkerError;
-    throw new Error(payload.error || `AI service failed (${response.status}).`);
+    const error = new Error(payload.error || `AI service failed (${response.status}).`);
+    (error as Error & { status?: number }).status = response.status;
+    throw error;
   } catch (err: any) {
     console.error("AI Worker request failed:", err);
 
@@ -54,7 +56,9 @@ async function workerGet<T>(path: string): Promise<T> {
     const response = await fetchWithAuth(getApiUrl(path), { method: 'GET' });
     if (response.ok) return response.json() as Promise<T>;
     const payload = await response.json().catch(() => ({})) as WorkerError;
-    throw new Error(payload.error || `AI service failed (${response.status}).`);
+    const error = new Error(payload.error || `AI service failed (${response.status}).`);
+    (error as Error & { status?: number }).status = response.status;
+    throw error;
   } catch (err: any) {
     if (err?.message && !err.message.includes('Unable to reach')) throw err;
     throw new Error('Unable to reach the AI Worker. Please check your connection and try again.');
@@ -273,6 +277,15 @@ export interface FileQuizGenerationResult {
   provider: string;
 }
 
+function isTransientAiError(error: unknown): boolean {
+  const typed = error as { status?: number; message?: string } | null;
+  const message = String(typed?.message || error || '').toLowerCase();
+  return typed?.status === 408 || typed?.status === 429 || typed?.status === 502 || typed?.status === 503 || typed?.status === 504
+    || /overloaded|rate limit|temporarily|busy|unavailable|timeout|timed out|provider/.test(message);
+}
+
+const sleep = (ms: number) => new Promise<void>(resolve => window.setTimeout(resolve, ms));
+
 // OpenRouter owns model fallback inside the Worker. The client never loops
 // through direct providers, so telemetry and user-facing errors stay consistent.
 export async function generateQuizFromFileWithFallback(
@@ -282,14 +295,25 @@ export async function generateQuizFromFileWithFallback(
   customInstruction?: string,
   extractionMode?: 'literal' | 'generate',
 ): Promise<GeneratedQuiz> {
-  return workerRequest<GeneratedQuiz>('/api/ai/generate-file', {
+  const request = {
     provider: 'openrouter',
     fileBase64,
     mimeType,
     amount,
     customInstruction,
     extractionMode,
-  });
+  };
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await workerRequest<GeneratedQuiz>('/api/ai/generate-file', request);
+    } catch (error) {
+      lastError = error;
+      if (!isTransientAiError(error) || attempt === 2) throw error;
+      await sleep([2_000, 5_000, 10_000][attempt]);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('AI provider request failed.');
 }
 
 export interface AiChatAttachment {

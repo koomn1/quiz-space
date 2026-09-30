@@ -207,6 +207,7 @@ export function useQuizGenerator() {
         }
         let data: GeneratedQuiz | null = null;
         const pollDeadline = Date.now() + 45 * 60 * 1000;
+        let pollDelayMs = 2_500;
         while (Date.now() < pollDeadline) {
           if (job.status === 'complete' && job.quiz) {
             data = job.quiz;
@@ -228,8 +229,23 @@ export function useQuizGenerator() {
               eta,
             ].filter(Boolean).join(' '),
           });
-          await new Promise(resolve => window.setTimeout(resolve, 700));
-          job = await getExtractionJob(job.id);
+          await new Promise(resolve => window.setTimeout(resolve, pollDelayMs));
+          try {
+            job = await getExtractionJob(job.id);
+            pollDelayMs = 2_500;
+          } catch (error) {
+            const typed = error as { status?: number; message?: string };
+            const message = String(typed?.message || error || '').toLowerCase();
+            if (typed?.status === 429 || /rate limit|too many requests|429/.test(message)) {
+              pollDelayMs = Math.min(15_000, Math.max(5_000, pollDelayMs * 2));
+              setProgress(prev => ({
+                ...prev,
+                message: 'الخادم مشغول مؤقتاً، سيتم استكمال متابعة الملف تلقائياً...'
+              }));
+              continue;
+            }
+            throw error;
+          }
         }
         if (!data) throw new Error('انتهت مهلة متابعة الاستخراج. افتح صفحة إنشاء الاختبار مجدداً لاستئناف المهمة.');
 
