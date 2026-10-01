@@ -1018,9 +1018,9 @@ ${extraInstruction}`;
             if (!documentText.trim()) throw new Error('Document contains no readable text');
             const text = await providerText(
               'openrouter',
-              `${generatedPrompt}\n\nReadable content from the attached document:\n${documentText.slice(0, 500_000)}`,
+              `${generatedPrompt}\n\nReadable content from the attached document (use this representative excerpt; do not invent content outside it):\n${documentText.slice(0, 120_000)}`,
               env,
-              { timeoutMs: 60_000 },
+              { timeoutMs: 45_000 },
             );
             return json(extractJson(text), 200, headers);
           }
