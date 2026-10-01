@@ -1009,6 +1009,21 @@ ${extraInstruction}`;
             const text = await providerText('openrouter', `${generatedPrompt}\n\nمحتوى الشرائح:\n${slideText.slice(0, 120000)}`, env, { timeoutMs: 45_000 });
             return json(extractJson(text), 200, headers);
           }
+          const isWord = body.mimeType.includes('wordprocessingml') || body.mimeType.includes('msword');
+          const isSpreadsheet = body.mimeType.includes('spreadsheetml') || body.mimeType.includes('excel');
+          if (isWord || isSpreadsheet) {
+            const documentText = isWord
+              ? (await mammoth.extractRawText({ arrayBuffer: fileData.buffer })).value
+              : await extractExcelText(fileData);
+            if (!documentText.trim()) throw new Error('Document contains no readable text');
+            const text = await providerText(
+              'openrouter',
+              `${generatedPrompt}\n\nReadable content from the attached document:\n${documentText.slice(0, 500_000)}`,
+              env,
+              { timeoutMs: 60_000 },
+            );
+            return json(extractJson(text), 200, headers);
+          }
           // Images and scanned PDFs require a multimodal OpenRouter model.
           throw new Error('Text extraction unavailable; use the OpenRouter multimodal fallback.');
         } catch (generationError) {
