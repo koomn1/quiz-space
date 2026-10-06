@@ -131,7 +131,10 @@ export function useQuizGenerator() {
       let finalTitle = '';
       let finalDescription = '';
 
-      const BATCH_SIZE = 40;
+      // Forty questions in one JSON response can keep the UI at 0/40 while a
+      // provider generates a very large answer or retries a slow model. Two
+      // parallel batches of twenty return sooner and expose progress earlier.
+      const BATCH_SIZE = 20;
 
       if (type === 'topic') {
         const generated = await generateQuestionBatches({
