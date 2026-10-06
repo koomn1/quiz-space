@@ -61,7 +61,7 @@ describe('dynamic vision chunk planning', () => {
   });
 
   it('keeps file extraction unbounded when no requested count is supplied', () => {
-    expect(extractionSource).toContain("job.requested_question_count ? normalizedQuestions.slice(0, job.requested_question_count) : normalizedQuestions");
+    expect(extractionSource).toContain("job.requested_question_count\n    ? normalizedQuestions.slice(0, job.requested_question_count)\n    : normalizedQuestions");
     expect(extractionSource).toContain("const requestedCount = job.requested_question_count || null;");
   });
 

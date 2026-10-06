@@ -3216,6 +3216,31 @@ A computer is a digital electronic machine...
                 <label className="block text-xs font-black text-slate-600 dark:text-slate-350 border-b border-slate-200/50 dark:border-slate-800 pb-2">
                   ⚡ اختار الوضع المناسب لك — وضعان مستقلان تماماً:
                 </label>
+                <div className="rounded-2xl border border-cyan-200/70 bg-cyan-50/60 p-4 text-right dark:border-cyan-900/60 dark:bg-cyan-950/20">
+                  <label htmlFor="file-question-count" className="block text-xs font-black text-cyan-800 dark:text-cyan-200">
+                    {isAr ? 'عدد الأسئلة: تلقائي أو يدوي' : 'Question count: automatic or manual'}
+                  </label>
+                  <p className="mt-1 text-[10px] font-bold leading-5 text-cyan-700/80 dark:text-cyan-300/80">
+                    {isAr
+                      ? 'تلقائي = تغطية كل الأسئلة أو النقاط القابلة للسؤال في الملف أو الصورة. اليدوي يحدد العدد الأقصى المطلوب.'
+                      : 'Automatic covers all extractable questions or testable points. Manual sets the maximum number.'}
+                  </p>
+                  <select
+                    id="file-question-count"
+                    value={pdfCount}
+                    onChange={(event) => setPdfCount(Number(event.target.value))}
+                    disabled={isProcessingOcr || isGenerating}
+                    className="mt-3 w-full rounded-xl border border-cyan-200 bg-white px-3 py-2.5 text-xs font-black text-slate-800 outline-none focus:ring-2 focus:ring-cyan-400/40 dark:border-cyan-900 dark:bg-slate-900 dark:text-slate-100"
+                  >
+                    {COUNT_OPTIONS_WITH_AUTO.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.value === 0
+                          ? (isAr ? 'تلقائي — كل الأسئلة الممكنة من الملف' : 'Automatic — all possible questions')
+                          : (isAr ? `يدوي — ${option.value} سؤال` : `Manual — ${option.value} questions`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {/* Mode 1: literal extraction — existing questions only */}
                   <div className={`flex flex-col p-4 rounded-2xl border text-right transition-all ${

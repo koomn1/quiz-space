@@ -779,8 +779,8 @@ async function extractPdfVision(
   }
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
   const normalizedQuestions = normalizeQuestions(questions, parseAllowedQuestionTypes(job.custom_instruction));
-  const finalQuestions = job.extraction_mode === 'generate'
-    ? job.requested_question_count ? normalizedQuestions.slice(0, job.requested_question_count) : normalizedQuestions
+  const finalQuestions = job.requested_question_count
+    ? normalizedQuestions.slice(0, job.requested_question_count)
     : normalizedQuestions;
   return { title: deriveQuizTitle(job.source_file_name), description: `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`, questions: finalQuestions, provider: [...providers].join(', '), chunks: chunks.length };
 }
@@ -830,39 +830,86 @@ async function generateQuestionsFromText(
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
   const requestedCount = job.requested_question_count || null;
-    const prompt = `${generatePrompt(requestedCount, job.custom_instruction, text)}\n\nمحتوى الملف المصدر:\n${text.slice(0, 500_000)}`;
-  const messages = [
-    {
-      role: 'system',
-      content: 'أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ المادة كاملة، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواها فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.',
-    },
-    { role: 'user', content: prompt },
-  ];
+  // Automatic generation must cover the whole source. A single very large
+  // prompt commonly returns only the first ~40 questions because the model
+  // reaches its output limit. Split the source into overlapping sections and
+  // generate from every section, while keeping a positive requested count as
+  // the explicit/manual one-request path.
+  const sourceChunks: string[] = [];
+  const automaticChunkSize = 90_000;
+  const automaticOverlap = 3_000;
+  if (requestedCount) {
+    sourceChunks.push(text.slice(0, 500_000));
+  } else {
+    for (let start = 0; start < text.length; ) {
+      const targetEnd = Math.min(start + automaticChunkSize, text.length);
+      const boundary = targetEnd < text.length ? text.lastIndexOf('\n', targetEnd) : targetEnd;
+      const end = boundary > start + 30_000 ? boundary : targetEnd;
+      sourceChunks.push(text.slice(start, end));
+      if (end >= text.length) break;
+      start = Math.max(start + 1, end - automaticOverlap);
+    }
+  }
+  const totalChunks = Math.max(1, sourceChunks.length);
+  const messages = [{
+    role: 'system',
+    content: 'أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ الجزء المرسل، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواه فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.',
+  }];
   let lastError: unknown;
-  // Use the same OpenRouter chat-style invocation as Cosmo. The only difference
-  // is the system instruction and structured quiz response contract above.
-  for (const model of TEXT_MODEL_FALLBACKS) {
-    try {
-      const response = await callOpenRouterWithFallback(env, messages, [model], { maxTokens: 4_000, temperature: 0.2 });
-      const quiz = parseJson(response.text);
-      const questions = normalizeQuestions(quiz, parseAllowedQuestionTypes(job.custom_instruction));
-      if (!questions.length) throw new Error('The document did not contain any valid questions.');
-      const limitedQuestions = requestedCount ? questions.slice(0, requestedCount) : questions;
-      await onProgress(1, 1, limitedQuestions.length);
-      return {
-        title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
-        description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-        questions: limitedQuestions,
-        provider: response.model,
-        chunks: 1,
-      };
-    } catch (error) {
-      lastError = error;
-      console.warn(`Text extraction model ${model} did not return a usable quiz; trying fallback.`, error);
+  const allowedTypes = parseAllowedQuestionTypes(job.custom_instruction);
+  const allQuestions: any[] = [];
+  const seen = new Set<string>();
+  const providers = new Set<string>();
+  let title = deriveQuizTitle(job.source_file_name, text);
+  let description = `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`;
+
+  // Keep provider traffic bounded while processing every source section.
+  const concurrency = requestedCount ? 1 : 3;
+  for (let start = 0; start < sourceChunks.length; start += concurrency) {
+    const batch = sourceChunks.slice(start, start + concurrency);
+    const results = await Promise.all(batch.map(async (sourceChunk) => {
+      const chunkMessages = [
+        messages[0],
+        { role: 'user', content: `${generatePrompt(requestedCount, job.custom_instruction, sourceChunk)}\n\nمحتوى الملف المصدر — الجزء الحالي (استخرج كل النقاط القابلة للسؤال من هذا الجزء):\n${sourceChunk}` },
+      ];
+      let chunkError: unknown;
+      for (const model of TEXT_MODEL_FALLBACKS) {
+        try {
+          const response = await callOpenRouterWithFallback(env, chunkMessages, [model], { maxTokens: requestedCount ? 8_000 : 12_000, temperature: 0.2 });
+          const quiz = parseJson(response.text);
+          const questions = normalizeQuestions(quiz, allowedTypes);
+          if (!questions.length) throw new Error('The document section did not contain valid questions.');
+          return { response, quiz, questions };
+        } catch (error) {
+          chunkError = error;
+          console.warn(`Text generation section failed on model ${model}; trying fallback.`, error);
+        }
+      }
+      throw chunkError instanceof Error ? chunkError : new Error('All text generation models failed for this section.');
+    }).map(promise => promise.catch(error => ({ error }))));
+
+    for (const result of results) {
+      if ('error' in result) {
+        lastError = result.error;
+      } else {
+        providers.add(result.response.model);
+        if (!isGenericQuizTitle(result.quiz?.title)) title = String(result.quiz.title).trim();
+        if (typeof result.quiz?.description === 'string' && result.quiz.description.trim()) description = result.quiz.description.trim();
+        for (const question of result.questions) {
+          const key = String(question.text || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+          if (key && !seen.has(key)) {
+            seen.add(key);
+            allQuestions.push(question);
+          }
+        }
+      }
+      await onProgress(Math.min(start + results.length, totalChunks), totalChunks, allQuestions.length);
     }
   }
 
-  throw lastError instanceof Error ? lastError : new Error('All text extraction models failed.');
+  if (!allQuestions.length) throw lastError instanceof Error ? lastError : new Error('The document did not contain any valid questions.');
+  const finalQuestions = requestedCount ? allQuestions.slice(0, requestedCount) : allQuestions;
+  return { title, description, questions: finalQuestions, provider: [...providers].join(', ') || 'openrouter', chunks: totalChunks };
 }
 
 export async function extractJobQuiz(
@@ -892,6 +939,7 @@ export async function extractJobQuiz(
         });
         return {
           ...result,
+          questions: job.requested_question_count ? result.questions.slice(0, job.requested_question_count) : result.questions,
           title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
           description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
         };
@@ -920,6 +968,7 @@ export async function extractJobQuiz(
       });
       return {
         ...result,
+        questions: job.requested_question_count ? result.questions.slice(0, job.requested_question_count) : result.questions,
         title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
         description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
       };
@@ -935,13 +984,16 @@ export async function extractJobQuiz(
   const content = mimeType === 'application/pdf' || mimeType.includes('powerpoint')
     ? [{ type: 'text', text: prompt }, { type: 'file', file: { filename: 'uploaded-document', file_data: `data:${mimeType};base64,${base64}` } }]
     : [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } }];
-  const response = await callOpenRouterWithFallback(env, [{ role: 'user', content }], VISION_MODEL_FALLBACKS);
+  const response = await callOpenRouterWithFallback(
+    env,
+    [{ role: 'user', content }],
+    VISION_MODEL_FALLBACKS,
+    { maxTokens: job.requested_question_count ? 8_000 : 12_000, temperature: 0.2 },
+  );
   const quiz = parseJson(response.text);
   const questions = normalizeQuestions(quiz, parseAllowedQuestionTypes(job.custom_instruction));
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
-  const finalQuestions = job.extraction_mode === 'generate'
-    ? job.requested_question_count ? questions.slice(0, job.requested_question_count) : questions
-    : questions;
+  const finalQuestions = job.requested_question_count ? questions.slice(0, job.requested_question_count) : questions;
   await onProgress(1, 1, finalQuestions.length);
   return {
     title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
