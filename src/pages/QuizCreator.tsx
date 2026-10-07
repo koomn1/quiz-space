@@ -634,9 +634,13 @@ export default function QuizCreator({
   } = useQuizGenerator();
   const hasCheckedPendingExtractionJob = React.useRef(false);
 
-  // Synchronize ocrProgress with generationProgress
+  // Synchronize extraction progress without overwriting the separate
+  // post-extraction answer-verification phase. The extraction job can report
+  // a final `current` value with `total: 0`; forwarding that stale snapshot
+  // would render misleading progress such as 360 / 0 while verification is
+  // actually running with its own correct total.
   React.useEffect(() => {
-    if (generationProgress && activeMode === 'ocr') {
+    if (generationProgress && activeMode === 'ocr' && !postExtractionSolvePending) {
       setOcrProgress({
         stage: generationProgress.stage === 'scanning' ? 'analyzing' : generationProgress.stage === 'saving' ? 'compiling' : generationProgress.stage === 'solving' ? 'solving' : 'extracting',
         current: generationProgress.current,
