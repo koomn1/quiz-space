@@ -900,15 +900,14 @@ export default function QuizCreator({
       : normalizedSourceText.length > 4_000
         ? `${normalizedSourceText.slice(0, 2_000)}\n... [تم اختصار منتصف المصدر] ...\n${normalizedSourceText.slice(-2_000)}`
         : normalizedSourceText;
-    // Keep each request under the worker's 20k prompt limit while running a
-    // small number of requests concurrently for large quizzes.
-    // Six questions keeps the prompt focused while five concurrent batches
-    // reduce wall-clock time for long quizzes without flooding the provider.
-    const batchSize = 6;
-    const maxConcurrentBatches = 5;
-    // Two bounded attempts are enough before recovery; the Worker already has
-    // its own model fallback, so a third client retry multiplies peak latency.
-    const maxSolveAttempts = 2;
+    // Keep each request small and deliberately limit concurrency. Large files
+    // can produce hundreds of questions; five simultaneous answer-review calls
+    // overload providers and make the whole solve stage fail at 0/N.
+    const batchSize = 3;
+    const maxConcurrentBatches = 2;
+    // A third bounded attempt is useful for transient provider overloads while
+    // still preventing an individual batch from hanging indefinitely.
+    const maxSolveAttempts = 3;
     const waitBeforeRetry = (attempt: number) => new Promise<void>(resolve => {
       globalThis.setTimeout(resolve, 1_000 * attempt);
     });

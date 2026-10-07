@@ -137,6 +137,16 @@ describe('extracted answer review', () => {
     expect(result.questions.map(question => question.correctIndex)).toEqual([1, 2, 3, 0]);
   });
 
+  it('reads explicit inline answers without requiring an answer-key heading', () => {
+    const sourceQuestions = [
+      { ...questions[0], number: 1, options: ['A1', 'B1', 'C1', 'D1'] },
+      { ...questions[0], id: 'q2-inline', number: 2, options: ['A2', 'B2', 'C2', 'D2'] },
+    ];
+    const result = applySourceAnswerKey(sourceQuestions, 'Question 1... Answer: Option B for question 1. Question 2... Answer: Option D for question 2.');
+    expect(result.matched).toBe(2);
+    expect(result.questions.map(question => question.correctIndex)).toEqual([1, 3]);
+  });
+
   it('accepts Worker-wrapped, double-encoded, and prefixed model answers', () => {
     const workerResponse = JSON.stringify({ text: JSON.stringify({
       answers: [{ questionIndex: 1, correctIndex: 1, correctAnswer: 'B) القاهرة', explanation: 'سبب', evidence: 'دليل' }],

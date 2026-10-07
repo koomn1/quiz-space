@@ -113,9 +113,11 @@ export function normalizeReviewAnswer(value: unknown): string {
 
 export function applySourceAnswerKey(questions: Question[], sourceText: string, questionOffset = 0): { questions: Question[]; matched: number } {
   const marker = sourceText.search(/(?:answer\s*key|مفتاح\s*(?:الإجابة|الإجابات)|نموذج\s+الإجابة)/i);
-  if (marker < 0) return { questions: questions.map(question => ({ ...question })), matched: 0 };
-
-  const answerKey = sourceText.slice(marker).replace(/[()[\]{}]/g, ' ');
+  // Some exam PDFs place the answer immediately after each question instead
+  // of adding a separate answer-key section, for example: "Answer: Option B
+  // for question 17." Read that explicit form too; it avoids unnecessary AI
+  // verification calls and is still strictly source-grounded.
+  const answerKey = (marker >= 0 ? sourceText.slice(marker) : sourceText).replace(/[()[\]{}]/g, ' ');
   const letterToIndex: Record<string, number> = { a: 0, b: 1, c: 2, d: 3, أ: 0, ب: 1, ج: 2, د: 3 };
   const answerMap = new Map<number, number>();
   const answerPatterns = [
@@ -128,6 +130,14 @@ export function applySourceAnswerKey(questions: Question[], sourceText: string, 
       const optionIndex = /^[1-4]$/.test(rawOption) ? Number(rawOption) - 1 : letterToIndex[rawOption];
       if (Number.isInteger(questionNumber) && Number.isInteger(optionIndex)) answerMap.set(questionNumber - 1, optionIndex);
     }
+  }
+
+  const inlineAnswerPattern = /answer\s*:\s*(?:option\s*)?([a-dأ-د1-4])\s*(?:for\s+(?:question\s*)?)?(\d{1,4})/gi;
+  for (const match of answerKey.matchAll(inlineAnswerPattern)) {
+    const questionNumber = Number(match[2]);
+    const rawOption = match[1].toLocaleLowerCase();
+    const optionIndex = /^[1-4]$/.test(rawOption) ? Number(rawOption) - 1 : letterToIndex[rawOption];
+    if (Number.isInteger(questionNumber) && Number.isInteger(optionIndex)) answerMap.set(questionNumber - 1, optionIndex);
   }
 
   let matched = 0;
