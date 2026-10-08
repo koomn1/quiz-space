@@ -8,13 +8,13 @@
   --font-display: "Space Grotesk", "Cairo", "IBM Plex Sans Arabic", "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   
-  /* Dynamic Theme Colors mapping to CSS Variables */
-  --color-primary: var(--theme-primary, #0f6b4f);
-  --color-primary-hover: var(--theme-primary-hover, #064b37);
-  --color-primary-light: var(--theme-primary-light, #CDFC8A);
-  --color-primary-dark: var(--theme-primary-dark, #022E21);
-  --color-gradient-from: var(--theme-gradient-from, #CDFC8A);
-  --color-gradient-to: var(--theme-gradient-to, #0f6b4f);
+  /* QuizSpace AI-Native palette: violet intelligence + cyan action. */
+  --color-primary: var(--theme-primary, #7C3AED);
+  --color-primary-hover: var(--theme-primary-hover, #6D28D9);
+  --color-primary-light: var(--theme-primary-light, #FAF5FF);
+  --color-primary-dark: var(--theme-primary-dark, #1E1B4B);
+  --color-gradient-from: var(--theme-gradient-from, #7C3AED);
+  --color-gradient-to: var(--theme-gradient-to, #0891B2);
 
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-bounce-subtle: bounce-subtle 1.5s ease-in-out infinite;
@@ -66,14 +66,14 @@
 
 html, body {
   font-family: var(--font-sans);
-  background-color: #f7fbe9;
+  background-color: #FAF5FF;
   direction: rtl;
-  color: #022E21;
+  color: #1E1B4B;
 }
 
 html.dark, body.dark {
-  background-color: #022E21;
-  color: #f3fbe5;
+  background-color: #020617;
+  color: #F8FAFC;
 }
 
 /* Cinematic Theme Toggle Transition - Ensures gorgeous, lag-free smooth fade on all components */
@@ -88,11 +88,11 @@ html.dark, body.dark {
 }
 
 button {
-  @apply transition-all duration-300 active:scale-[0.96];
+  @apply transition-[color,background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98];
 }
 
 a {
-  @apply transition-transform duration-300;
+  @apply transition-[color,background-color,border-color,opacity] duration-200;
 }
 
 /* Premium Typography Utilities */
@@ -126,7 +126,7 @@ a {
   color: transparent;
 }
 .text-gradient-cosmic {
-  background: linear-gradient(135deg, #022E21, #0f6b4f, #CDFC8A, #022E21);
+  background: linear-gradient(135deg, #1E1B4B, #7C3AED, #0891B2, #1E1B4B);
   background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -201,7 +201,7 @@ a {
   border-radius: inherit;
   background: radial-gradient(
     300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(15, 107, 79, 0.08),
+    rgba(124, 58, 237, 0.08),
     transparent 40%
   );
   opacity: 0;
@@ -542,6 +542,21 @@ button,
 a,
 [role='button'] {
   -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role='button']:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 72%, white);
+  outline-offset: 3px;
+}
+
+img,
+svg {
+  max-width: 100%;
 }
 
 @media (max-width: 640px) {
@@ -1016,8 +1031,8 @@ html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-400"] {
    explicit on-surface tokens so glass never reduces readability.
    ======================================================================== */
 :root {
-  --lg-bg: #f3f7fb;
-  --lg-bg-deep: #e8f0f8;
+  --lg-bg: #faf5ff;
+  --lg-bg-deep: #f3e8ff;
   --lg-surface: rgba(255, 255, 255, 0.78);
   --lg-surface-strong: rgba(255, 255, 255, 0.92);
   --lg-surface-muted: rgba(235, 242, 249, 0.76);
@@ -1025,19 +1040,19 @@ html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-400"] {
   --lg-border-strong: rgba(88, 111, 140, 0.28);
   --lg-text: #10233f;
   --lg-text-muted: #52657e;
-  --lg-accent: #315bd6;
-  --lg-accent-soft: #e6edff;
-  --lg-secondary: #168f86;
+  --lg-accent: #7c3aed;
+  --lg-accent-soft: #ede9fe;
+  --lg-secondary: #0891b2;
   --lg-danger: #c84b5b;
   --lg-shadow: 0 18px 55px rgba(47, 76, 112, 0.10);
   --lg-shadow-soft: 0 8px 26px rgba(47, 76, 112, 0.08);
-  --app-page-bg: color-mix(in srgb, #f7fbff 94%, var(--theme-primary, #315bd6) 6%);
-  --app-surface: color-mix(in srgb, #ffffff 95%, var(--theme-primary, #315bd6) 5%);
-  --app-surface-strong: color-mix(in srgb, #ffffff 98%, var(--theme-primary, #315bd6) 2%);
+  --app-page-bg: color-mix(in srgb, #faf5ff 94%, var(--theme-primary, #7c3aed) 6%);
+  --app-surface: color-mix(in srgb, #ffffff 95%, var(--theme-primary, #7c3aed) 5%);
+  --app-surface-strong: color-mix(in srgb, #ffffff 98%, var(--theme-primary, #7c3aed) 2%);
   --app-surface-raised: #ffffff;
-  --app-surface-tint: color-mix(in srgb, #eef4ff 86%, var(--theme-primary, #315bd6) 14%);
-  --app-border: color-mix(in srgb, #8ca4c0 24%, var(--theme-primary, #315bd6) 16%);
-  --app-border-strong: color-mix(in srgb, #6e89aa 32%, var(--theme-primary, #315bd6) 24%);
+  --app-surface-tint: color-mix(in srgb, #f5f3ff 86%, var(--theme-primary, #7c3aed) 14%);
+  --app-border: color-mix(in srgb, #8ca4c0 24%, var(--theme-primary, #7c3aed) 16%);
+  --app-border-strong: color-mix(in srgb, #6e89aa 32%, var(--theme-primary, #7c3aed) 24%);
   --app-text: #17233b;
   --app-text-muted: #5e6f87;
 }
@@ -1052,19 +1067,19 @@ html.dark {
   --lg-border-strong: rgba(173, 201, 232, 0.28);
   --lg-text: #e8f1fb;
   --lg-text-muted: #aabbd0;
-  --lg-accent: #8faeff;
-  --lg-accent-soft: rgba(91, 124, 229, 0.2);
-  --lg-secondary: #63c9bd;
+  --lg-accent: #a78bfa;
+  --lg-accent-soft: rgba(124, 58, 237, 0.2);
+  --lg-secondary: #67e8f9;
   --lg-danger: #ff9aa5;
   --lg-shadow: 0 20px 60px rgba(0, 0, 0, 0.26);
   --lg-shadow-soft: 0 10px 32px rgba(0, 0, 0, 0.18);
-  --app-page-bg: color-mix(in srgb, #081321 91%, var(--theme-primary, #8faeff) 9%);
-  --app-surface: color-mix(in srgb, #122238 86%, var(--theme-primary, #8faeff) 14%);
-  --app-surface-strong: color-mix(in srgb, #142940 91%, var(--theme-primary, #8faeff) 9%);
+  --app-page-bg: color-mix(in srgb, #081321 91%, var(--theme-primary, #a78bfa) 9%);
+  --app-surface: color-mix(in srgb, #122238 86%, var(--theme-primary, #a78bfa) 14%);
+  --app-surface-strong: color-mix(in srgb, #142940 91%, var(--theme-primary, #a78bfa) 9%);
   --app-surface-raised: #172d46;
-  --app-surface-tint: color-mix(in srgb, #1b3552 78%, var(--theme-primary, #8faeff) 22%);
-  --app-border: color-mix(in srgb, #a9c4e5 20%, var(--theme-primary, #8faeff) 18%);
-  --app-border-strong: color-mix(in srgb, #b7d0ef 30%, var(--theme-primary, #8faeff) 24%);
+  --app-surface-tint: color-mix(in srgb, #1b3552 78%, var(--theme-primary, #a78bfa) 22%);
+  --app-border: color-mix(in srgb, #a9c4e5 20%, var(--theme-primary, #a78bfa) 18%);
+  --app-border-strong: color-mix(in srgb, #b7d0ef 30%, var(--theme-primary, #a78bfa) 24%);
   --app-text: #edf5ff;
   --app-text-muted: #afc0d5;
 }
@@ -1091,9 +1106,9 @@ body {
 }
 
 .quiz-action-bar {
-  background: color-mix(in srgb, var(--app-surface-strong) 88%, var(--theme-primary, #315bd6) 12%);
+  background: color-mix(in srgb, var(--app-surface-strong) 88%, var(--theme-primary, #7c3aed) 12%);
   border: 1px solid var(--app-border);
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--theme-primary, #315bd6) 12%, transparent);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--theme-primary, #7c3aed) 12%, transparent);
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
 }
@@ -1101,7 +1116,7 @@ body {
 .light-readable-ui {
   background:
     radial-gradient(circle at 8% 0%, rgba(116, 164, 255, 0.14), transparent 32rem),
-    radial-gradient(circle at 92% 14%, rgba(76, 190, 174, 0.11), transparent 28rem),
+    radial-gradient(circle at 92% 14%, rgba(8, 145, 178, 0.12), transparent 28rem),
     var(--app-page-bg) !important;
 }
 
@@ -1268,6 +1283,7 @@ html:not(.dark) .liquid-sidebar div[class~="text-white"] {
   .liquid-bottom-nav__item {
     min-width: 0;
     min-height: 3.25rem;
+    min-width: 2.75rem;
     display: flex;
     flex-direction: column;
     align-items: center;

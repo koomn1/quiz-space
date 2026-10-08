@@ -129,7 +129,7 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="liquid-sidebar w-full h-full bg-[#0a0518]/95 backdrop-blur-3xl border-none text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
+    <aside id="quizspace-primary-sidebar" aria-label={isAr ? 'التنقل الرئيسي' : 'Primary navigation'} className="liquid-sidebar w-full h-full bg-[#0a0518]/95 backdrop-blur-3xl border-none text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
       {/* Premium Custom SVG Logo */}
       <div className="flex items-center gap-2 justify-start select-none py-1 mb-1 shrink-0" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
         <div 
@@ -171,13 +171,15 @@ export default function Sidebar({
         {isGuest ? (
           <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/40 border border-[#3d1d6d]/30 backdrop-blur-md">
             <div className="flex items-center gap-2 text-[11px] font-black text-slate-300">
-              <span className="text-xs">☄️</span>
+              <Sparkles aria-hidden="true" className="h-4 w-4 shrink-0 text-cyan-300" />
               <span>{isAr ? 'مرحباً بك كطالب زائر!' : 'Welcome Guest!'}</span>
             </div>
           </div>
         ) : (
           <button 
             onClick={() => setTab('profile')} 
+            type="button"
+            aria-label={isAr ? 'فتح الملف الشخصي' : 'Open profile'}
             className="w-full p-2 sm:p-2.5 rounded-2xl bg-slate-900/50 hover:bg-[#130b2b]/60 border-2 border-[#b175ff]/20 hover:border-[#b175ff]/60 hover:shadow-[0_0_20px_rgba(177,117,255,0.25)] transition-all duration-300 cursor-pointer text-right relative overflow-hidden group" 
             style={{ textAlign: isAr ? 'right' : 'left' }}
           >

@@ -129,22 +129,24 @@ export default function Header({
   return (
     <header className="liquid-header fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 bg-white/95 px-0 pb-2 pt-0 backdrop-blur-xl dark:bg-[#020617]/95 sm:pb-3">
       <div className="w-full">
-        <div 
+        <div
           className="liquid-header__bar flex min-w-0 items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white/90 dark:bg-slate-950/90 border-b border-slate-100 dark:border-slate-800/80 rounded-b-2xl px-3 sm:px-6 lg:px-10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
-          
-          
-          
+
+
+
         >
-          
+
           {/* Logo & Headline */}
           <div className="flex items-center gap-2">
             {!isQuizLocked && (
-              <button aria-label={lang === 'ar' ? 'فتح القائمة' : 'Open navigation'} className="flex h-11 w-11 items-center justify-center p-0 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200" onClick={toggleSidebar}>
+              <button aria-label={lang === 'ar' ? 'فتح القائمة' : 'Open navigation'} aria-expanded={isSidebarOpen} aria-controls="quizspace-primary-sidebar" className="flex h-11 w-11 items-center justify-center p-0 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200" onClick={toggleSidebar}>
                 <AnimatedMenuIcon className="w-5 h-5 sm:w-6 sm:h-6" isOpen={isSidebarOpen} />
               </button>
             )}
-            <div 
-              className={`flex items-center gap-1.5 sm:gap-3 select-none transition-all duration-300 ${isQuizLocked ? 'cursor-default pointer-events-none' : 'cursor-pointer group'}`} 
+            <button
+              type="button"
+              aria-label={lang === 'ar' ? 'العودة إلى الرئيسية' : 'Go to home'}
+              className={`border-0 bg-transparent p-0 flex items-center gap-1.5 sm:gap-3 select-none transition-all duration-300 ${isQuizLocked ? 'cursor-default pointer-events-none' : 'cursor-pointer group'}`}
               onClick={() => {
                 if (!isQuizLocked) {
                   setTab('landing');
@@ -152,7 +154,7 @@ export default function Header({
               }}
             >
               <MainLogo size="sm" />
-            </div>
+            </button>
           </div>
 
 	          {/* User Profile Info, Theme Select & Dark Mode */}
@@ -220,8 +222,11 @@ export default function Header({
 
 
 	               {/* Dark Mode Toggle Button - Redesigned to be fancier */}
-	              <button
-	                onClick={() => setDarkMode(!darkMode)}
+              <button
+                type="button"
+                onClick={() => setDarkMode(!darkMode)}
+                aria-label={t.toggleTheme}
+                aria-pressed={darkMode}
 		                className="group relative flex items-center justify-center w-11 h-11 rounded-[18px] bg-gradient-to-tr from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 hover:from-white hover:to-slate-50 dark:hover:from-slate-800 dark:hover:to-slate-700 border-2 border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_15px_rgba(0,0,0,0.3)] transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
 	                title={t.toggleTheme}
 	              >
