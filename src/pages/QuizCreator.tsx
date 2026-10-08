@@ -2322,7 +2322,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
               </div>
 
               {/* High-end Progress Bar and Counter */}
-              <div className="bg-white/40 dark:bg-slate-900/40 p-5 rounded-[24px] border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md shadow-lg space-y-3">
+              <div className="bg-white/40 dark:bg-slate-900/40 p-5 rounded-[24px] border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md shadow-lg space-y-3" aria-live="polite">
                 <div className="flex justify-between items-center text-xs font-extrabold text-slate-700 dark:text-slate-300" dir={isAr ? 'rtl' : 'ltr'}>
                   <span>{isAr ? 'نسبة التقدم الكلية:' : 'Overall Progress:'}</span>
                   <span className="font-mono text-indigo-600 dark:text-indigo-400">
@@ -2338,7 +2338,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                   />
                 </div>
                 <div className="text-[10px] font-mono tracking-widest text-slate-400 dark:text-slate-500 uppercase">
-                  {isAr ? 'يرجى عدم إغلاق هذه الصفحة أثناء معالجة المحاضرة' : 'PLEASE DO NOT CLOSE THIS VIEW DURING ANALYSIS'}
+                  {isAr ? 'التقدم محفوظ تلقائياً؛ يمكنك مغادرة الصفحة والعودة لاحقاً من مركز المعالجة' : 'Progress is saved automatically; you can leave and return later from the Processing Center'}
                 </div>
               </div>
             </div>

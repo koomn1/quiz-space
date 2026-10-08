@@ -47,6 +47,7 @@ import DailyQuizCard from './components/DailyQuizCard';
 const AIChat = lazyWithRetry(() => import('./pages/AIChat'), 'ai-chat');
 import SplashScreen from './components/SplashScreen';
 import { ToastHost } from './components/Toast';
+import ProcessingCenterBanner from './components/ProcessingCenterBanner';
 const Classrooms = lazyWithRetry(() => import('./components/Classrooms'), 'classrooms');
 const MotivationHubPage = lazyWithRetry(() => import('./pages/MotivationHubPage'), 'motivation-hub');
 import type { MotivationSection } from './pages/MotivationHubPage';
@@ -1427,6 +1428,11 @@ export default function App() {
             isSidebarOpen={isSidebarOpen}
             isQuizLocked={isQuizLocked}
           />}
+          <ProcessingCenterBanner
+            lang={lang}
+            enabled={Boolean(authContext.isAuthenticated && userId && !userId.startsWith('user-guest'))}
+            onOpenCreator={() => handleSetTab('create')}
+          />
 
           <div
           className={`light-readable-ui theme-page min-h-dvh w-full max-w-none overflow-x-hidden transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : ''}`}
