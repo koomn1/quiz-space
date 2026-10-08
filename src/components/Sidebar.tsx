@@ -9,6 +9,7 @@ import { UserBadge } from './UserBadge';
 import { PremiumNameTag, BadgeTier, NameColorKey, BadgeColorKey } from './PremiumNameTag';
 import CosmoOrb from './CosmoOrb';
 import ProfileAvatar from './ProfileAvatar';
+import { showToast } from './Toast';
 
 interface SidebarProps {
   currentTab: string;
@@ -255,7 +256,7 @@ export default function Sidebar({
               key={item.id}
               onClick={() => {
                 if (isLocked) {
-                  alert(item.id === 'aichat'
+                  showToast('info', item.id === 'aichat'
                     ? (isAr ? 'شات كوزمو متاح بعد تفعيل أي عضوية.' : 'Cosmo Chat is available after activating a membership.')
                     : (isAr ? 'هذه الميزة متاحة فقط للباقات الفضية فأعلى. يرجى الترقية.' : 'This feature is only available for Silver plans and above. Please upgrade.'));
                   setTab('billing');

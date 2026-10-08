@@ -1368,6 +1368,9 @@ export default function App() {
 
   return (
         <>
+          <a className="skip-link" href="#main-content">
+            {lang === 'ar' ? 'تخطَّ إلى المحتوى الرئيسي' : 'Skip to main content'}
+          </a>
           <ToastHost />
           {splashActive ? (
         <SplashScreen
@@ -1453,7 +1456,7 @@ export default function App() {
             
             {/* Glowing Orbs */}
             <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-violet-600/10 blur-[120px] mix-blend-screen" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#0ae448]/5 blur-[120px] mix-blend-screen" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-cyan-400/5 blur-[120px] mix-blend-screen" />
             <div className="absolute top-[30%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-cyan-500/10 blur-[120px] mix-blend-screen" />
           </div>
         </div>
@@ -1592,7 +1595,7 @@ export default function App() {
         
 
         {/* Main page frame wrapping */}
-        <main ref={mainContainerRef} className={`theme-page ${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (isNotFoundTab ? 'flex-1 w-full min-h-0 p-0 relative z-10' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10'))}`}>
+        <main id="main-content" ref={mainContainerRef} tabIndex={-1} className={`theme-page ${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (isNotFoundTab ? 'flex-1 w-full min-h-0 p-0 relative z-10' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-4 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10'))}`}>
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (

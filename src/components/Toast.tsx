@@ -69,6 +69,8 @@ export function ToastHost() {
       {toasts.map((t) => (
         <div
           key={t.id}
+          role={t.type === 'error' ? 'alert' : 'status'}
+          aria-live={t.type === 'error' ? 'assertive' : 'polite'}
           className={`pointer-events-auto w-full max-w-sm flex items-center gap-2.5 px-4 py-3 rounded-xl border ${BORDER[t.type]} bg-slate-950/95 backdrop-blur shadow-xl text-white text-sm font-bold animate-[toast-in_0.2s_ease-out]`}
         >
           {ICONS[t.type]}
@@ -76,8 +78,8 @@ export function ToastHost() {
           <button
             type="button"
             onClick={() => dismiss(t.id)}
-            className="shrink-0 text-slate-400 hover:text-white transition-colors"
-            aria-label="Dismiss"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+            aria-label="Dismiss notification"
           >
             <X className="w-4 h-4" />
           </button>
