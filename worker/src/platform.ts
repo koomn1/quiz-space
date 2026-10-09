@@ -33,6 +33,8 @@ export function supabaseBaseUrl(env: Env): string {
 }
 
 export function publicExtractionJob(job: ExtractionJobRow) {
+  const questions = Array.isArray(job.questions_json) ? job.questions_json : [];
+  const reviewRequiredQuestions = questions.filter((question: any) => question && typeof question === 'object' && Number(question.correctIndex) < 0).length;
   return {
     id: job.id,
     status: job.status,
@@ -40,6 +42,11 @@ export function publicExtractionJob(job: ExtractionJobRow) {
     processedChunks: job.processed_chunks,
     totalChunks: job.total_chunks,
     progressMessage: job.progress_message,
+    sourceFileName: job.source_file_name,
+    extractedQuestions: questions.length,
+    completedQuestions: job.status === 'complete' ? questions.length : 0,
+    reviewRequiredQuestions,
+    estimatedSecondsRemaining: null,
     quiz: job.status === 'complete' && Array.isArray(job.questions_json)
       ? {
           title: job.quiz_title || 'اختبار مستخرج',

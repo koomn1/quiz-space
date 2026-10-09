@@ -19,7 +19,7 @@ export interface ExtractionJobRow {
   extraction_mode: 'literal' | 'generate';
   custom_instruction: string | null;
   requested_question_count: number | null;
-  status: 'pending' | 'processing' | 'complete' | 'error';
+  status: 'pending' | 'processing' | 'paused' | 'complete' | 'error' | 'cancelled';
   progress_percentage: number;
   processed_chunks: number;
   total_chunks: number | null;
@@ -61,6 +61,8 @@ export interface CreateExtractionJobInput {
   customInstruction?: string;
   requestedQuestionCount?: number;
 }
+
+export type ExtractionJobControl = 'pause' | 'resume' | 'cancel' | 'retry-failed';
 
 const BUCKET = 'quiz-extraction-uploads';
 const MAX_SOURCE_BYTES = 12 * 1024 * 1024;
@@ -439,6 +441,15 @@ function normalizeQuestions(value: unknown, allowedTypes: AllowedQuestionType[] 
   return questions;
 }
 
+function questionFingerprint(question: any): string {
+  const raw = [question?.text, ...(Array.isArray(question?.options) ? question.options : [])]
+    .map(value => String(value || '').normalize('NFKC').replace(/\s+/g, ' ').trim().toLocaleLowerCase())
+    .join('|');
+  let hash = 2166136261;
+  for (let index = 0; index < raw.length; index += 1) hash = Math.imul(hash ^ raw.charCodeAt(index), 16777619);
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
 async function callOpenRouterWithFallback(
   env: ExtractionJobEnv,
   messages: any[],
@@ -644,13 +655,15 @@ async function reconcileVisionParentJob(
 
   if (completed.length < total) {
     const allowedTypes = parseAllowedQuestionTypes(parent.custom_instruction);
-    const extractedCount = completed.reduce((count, chunk) => count + normalizeQuestions(chunk.questions_json, allowedTypes).length, 0);
+    const partialQuestions = normalizeQuestions(completed.flatMap(chunk => normalizeQuestions(chunk.questions_json, allowedTypes)), allowedTypes);
+    const extractedCount = partialQuestions.length;
     const percentage = Math.max(8, Math.min(95, Math.round(5 + (completed.length / total) * 90)));
     await updateClaimedJob(env, authHeader, parent.id, parentToken, {
       processed_chunks: completed.length,
       total_chunks: total,
       progress_percentage: percentage,
       progress_message: `معالجة الجزء ${completed.length}/${total} واستخراج ${extractedCount} سؤالاً.`,
+      questions_json: partialQuestions,
     });
     return;
   }
@@ -1095,6 +1108,52 @@ export async function restartExpiredJob(env: ExtractionJobEnv, authHeader: strin
   return rows[0] || job;
 }
 
+export async function controlExtractionJob(
+  env: ExtractionJobEnv,
+  authHeader: string,
+  jobId: string,
+  control: ExtractionJobControl,
+): Promise<ExtractionJobRow | null> {
+  const job = await fetchJob(env, authHeader, jobId);
+  if (!job) return null;
+  if (control === 'pause' && !['pending', 'processing'].includes(job.status)) return job;
+  if (control === 'resume' && !['paused', 'error'].includes(job.status)) return job;
+  if (control === 'cancel' && ['complete', 'cancelled'].includes(job.status)) return job;
+  if (control === 'retry-failed' && job.status !== 'error') return job;
+
+  if (control === 'retry-failed') {
+    const resetChunks = await fetch(apiUrl(env, `/rest/v1/extraction_job_chunks?parent_job_id=eq.${encodeURIComponent(jobId)}&status=eq.error`), {
+      method: 'PATCH',
+      headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ status: 'pending', processing_token: null, processing_lease_expires_at: null, error_message: null }),
+    });
+    if (!resetChunks.ok) throw new Error(`Failed chunks reset failed: ${resetChunks.status}`);
+  }
+
+  const nextStatus = control === 'pause' ? 'paused' : control === 'cancel' ? 'cancelled' : 'pending';
+  const message = control === 'pause'
+    ? 'تم إيقاف المهمة مؤقتاً بناءً على طلبك.'
+    : control === 'cancel'
+      ? 'تم إلغاء مهمة الاستخراج بناءً على طلبك.'
+      : control === 'retry-failed'
+        ? 'تمت إعادة الأجزاء الفاشلة إلى قائمة الانتظار.'
+        : 'تم استئناف مهمة الاستخراج.';
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?id=eq.${encodeURIComponent(jobId)}`), {
+    method: 'PATCH',
+    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+    body: JSON.stringify({
+      status: nextStatus,
+      processing_token: null,
+      processing_lease_expires_at: null,
+      error_message: control === 'retry-failed' || control === 'resume' ? null : job.error_message,
+      progress_message: message,
+    }),
+  });
+  if (!response.ok) throw new Error(`Job control failed: ${response.status}`);
+  const rows = await response.json() as ExtractionJobRow[];
+  return rows[0] || job;
+}
+
 export async function processExtractionJob(
   env: ExtractionJobEnv,
   authHeader: string,
@@ -1214,7 +1273,13 @@ export async function processExtractionJobChunk(
         },
       ],
     }], VISION_MODEL_FALLBACKS);
-    const questions = normalizeQuestions(parseJson(request.text), parseAllowedQuestionTypes(parent.custom_instruction));
+    const questions = normalizeQuestions(parseJson(request.text), parseAllowedQuestionTypes(parent.custom_instruction)).map((question) => ({
+      ...question,
+      fingerprint: questionFingerprint(question),
+      sourceDocumentId: parent.id,
+      sourceChunkId: chunk.id,
+      sourcePages: Array.from({ length: chunk.page_end - chunk.page_start + 1 }, (_, offset) => chunk.page_start + offset),
+    }));
     if (!questions.length) throw new Error('The document did not contain any valid questions.');
     await updateClaimedChunk(env, authHeader, jobId, chunk.id, token, {
       status: 'complete',
@@ -1254,7 +1319,7 @@ export async function getExtractionJob(env: ExtractionJobEnv, authHeader: string
 }
 
 export async function listActiveExtractionJobs(env: ExtractionJobEnv, authHeader: string): Promise<ExtractionJobRow[]> {
-  const response = await fetch(apiUrl(env, '/rest/v1/extraction_jobs?status=in.(pending,processing)&order=created_at.desc&limit=5&select=*'), {
+  const response = await fetch(apiUrl(env, '/rest/v1/extraction_jobs?status=in.(pending,processing,paused,error)&order=created_at.desc&limit=10&select=*'), {
     headers: databaseHeaders(env, authHeader),
   });
   if (!response.ok) throw new Error(`Active job read failed: ${response.status}`);

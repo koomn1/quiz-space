@@ -65,7 +65,8 @@ async function workerGet<T>(path: string): Promise<T> {
   }
 }
 
-export type ExtractionJobStatus = 'pending' | 'processing' | 'complete' | 'error';
+export type ExtractionJobStatus = 'pending' | 'processing' | 'paused' | 'complete' | 'error' | 'cancelled';
+export type ExtractionJobControl = 'pause' | 'resume' | 'cancel' | 'retry-failed';
 
 export interface ExtractionJob {
   id: string;
@@ -76,6 +77,11 @@ export interface ExtractionJob {
   progressMessage: string | null;
   quiz: GeneratedQuiz | null;
   errorMessage: string | null;
+  sourceFileName?: string | null;
+  extractedQuestions?: number;
+  completedQuestions?: number;
+  reviewRequiredQuestions?: number;
+  estimatedSecondsRemaining?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -105,7 +111,7 @@ function createIdempotencyKey(): string {
 
 function rememberPendingExtractionJob(job: ExtractionJob): void {
   if (typeof window === 'undefined') return;
-  if (job.status === 'complete' || job.status === 'error') {
+  if (job.status === 'complete' || job.status === 'cancelled') {
     window.localStorage.removeItem(EXTRACTION_JOB_STORAGE_KEY);
     return;
   }
@@ -203,6 +209,12 @@ export async function listActiveExtractionJobs(): Promise<ExtractionJob[]> {
   const response = await workerGet<{ jobs: ExtractionJob[] }>('/api/ai/extraction-jobs');
   response.jobs.forEach(rememberPendingExtractionJob);
   return response.jobs;
+}
+
+export async function controlExtractionJob(jobId: string, control: ExtractionJobControl): Promise<ExtractionJob> {
+  const job = await workerRequest<ExtractionJob>(`/api/ai/extraction-jobs/${encodeURIComponent(jobId)}/${control}`, {});
+  rememberPendingExtractionJob(job);
+  return job;
 }
 
 export async function generateQuizWithProvider(

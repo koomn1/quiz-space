@@ -1,9 +1,11 @@
 import {
+  controlExtractionJob,
   createOrGetExtractionJob,
   getExtractionJob,
   listActiveExtractionJobs,
   restartExpiredJob,
   validateCreateExtractionJobInput,
+  type ExtractionJobControl,
   type ExtractionJobRow,
 } from './extractionJobs';
 import { claimTask, taskIdempotencyKey } from './taskLedger';
@@ -11,13 +13,17 @@ import { scheduleExtractionJob } from './queue';
 import { publicExtractionJob, type Env } from './platform';
 import { json, isAuthenticated, type RouteContext, type RouteResult, routePath } from './routes';
 
+const JOB_ID = '[0-9a-f-]{36}';
 function isExtractionPath(path: string): boolean {
-  return path === '/api/ai/extraction-jobs' || /^\/api\/ai\/extraction-jobs\/[0-9a-f-]{36}$/i.test(path);
+  return path === '/api/ai/extraction-jobs'
+    || new RegExp(`^/api/ai/extraction-jobs/${JOB_ID}$`, 'i').test(path)
+    || new RegExp(`^/api/ai/extraction-jobs/${JOB_ID}/(pause|resume|cancel|retry-failed)$`, 'i').test(path);
 }
-
 export function isExtractionJobRequest(request: Request): boolean {
   return isExtractionPath(routePath(request));
 }
+
+const controls = new Set<ExtractionJobControl>(['pause', 'resume', 'cancel', 'retry-failed']);
 
 export async function handleExtractionRoutes(context: RouteContext): Promise<RouteResult> {
   const path = routePath(context.request);
@@ -35,10 +41,21 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
       }
       return json({ jobs: resumable.map(publicExtractionJob) }, 200, context.headers);
     }
-    const jobId = path.split('/').pop() || '';
+    const jobId = path.split('/')[4] || '';
     let job = await getExtractionJob(context.env, context.authHeader, jobId);
     if (!job) return json({ error: 'Extraction job not found' }, 404, context.headers);
     job = await restartExpiredJob(context.env, context.authHeader, job);
+    if (job.status === 'pending') await scheduleExtractionJob(context.env, context.authHeader, job.id);
+    return json(publicExtractionJob(job), 200, context.headers);
+  }
+
+  const segments = path.split('/');
+  if (segments.length === 6 && context.request.method === 'POST') {
+    const jobId = segments[4] || '';
+    const control = segments[5] as ExtractionJobControl;
+    if (!controls.has(control)) return json({ error: 'Unsupported job control' }, 400, context.headers);
+    const job = await controlExtractionJob(context.env, context.authHeader, jobId, control);
+    if (!job) return json({ error: 'Extraction job not found' }, 404, context.headers);
     if (job.status === 'pending') await scheduleExtractionJob(context.env, context.authHeader, job.id);
     return json(publicExtractionJob(job), 200, context.headers);
   }
@@ -61,8 +78,6 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
 
   let job = await createOrGetExtractionJob(context.env, context.authHeader, context.userId, input);
   let taskId: string | undefined;
-  // The extraction_jobs unique idempotency constraint remains the source of truth.
-  // The unified ledger adds cross-workload observability and prevents duplicate queue ownership.
   try {
     const task = await claimTask(context.env, context.authHeader, {
       taskType: 'extraction',
