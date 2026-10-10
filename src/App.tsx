@@ -48,6 +48,7 @@ const AIChat = lazyWithRetry(() => import('./pages/AIChat'), 'ai-chat');
 import SplashScreen from './components/SplashScreen';
 import { ToastHost } from './components/Toast';
 import ProcessingCenterBanner from './components/ProcessingCenterBanner';
+import CommandPalette from './components/CommandPalette';
 const Classrooms = lazyWithRetry(() => import('./components/Classrooms'), 'classrooms');
 const MotivationHubPage = lazyWithRetry(() => import('./pages/MotivationHubPage'), 'motivation-hub');
 import type { MotivationSection } from './pages/MotivationHubPage';
@@ -158,6 +159,7 @@ export default function App() {
   const [quizToEdit, setQuizToEdit] = React.useState<any | null>(null);
   const [isStatsLoaded, setIsStatsLoaded] = React.useState(false);
   const [userStats, setUserStats] = React.useState<UserStats | null>(null);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false);
   // The server-backed is_admin column is the only client-side signal used for
   // administrative UI. Database policies independently enforce every privileged write.
   const isAdminUser = userStats?.isAdmin === true;
@@ -1242,6 +1244,19 @@ export default function App() {
     }
     };
 
+  React.useEffect(() => {
+    const handleCommandShortcut = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && !isTyping) {
+        event.preventDefault();
+        setIsCommandPaletteOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleCommandShortcut);
+    return () => window.removeEventListener('keydown', handleCommandShortcut);
+  }, []);
+
   // Direct hash links must follow the same membership rule as sidebar clicks.
   React.useEffect(() => {
     if (activeTab !== 'aichat' || hasActiveMembership || authContext.loading || !isStatsLoaded) return;
@@ -1432,6 +1447,13 @@ export default function App() {
             lang={lang}
             enabled={Boolean(authContext.isAuthenticated && userId && !userId.startsWith('user-guest'))}
             onOpenCreator={() => handleSetTab('create')}
+          />
+          <CommandPalette
+            isOpen={isCommandPaletteOpen}
+            lang={lang}
+            onOpen={() => setIsCommandPaletteOpen(true)}
+            onClose={() => setIsCommandPaletteOpen(false)}
+            onNavigate={(tab) => handleSetTab(tab)}
           />
 
           <div
