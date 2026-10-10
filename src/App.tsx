@@ -1643,12 +1643,8 @@ export default function App() {
         ) : (
           
             <div
-              
-              
-              
-              
-              
-              className={`${isCosmoTab || isNotFoundTab ? 'h-full min-h-0' : (usesSharedFrame ? '' : 'min-h-[100dvh]')} will-change-transform transform-gpu gsap-tab-wrapper`}
+              key={`${activeTab}-${activeQuizId || 'screen'}-${navKey}`}
+              className={`${isCosmoTab || isNotFoundTab ? 'h-full min-h-0' : (usesSharedFrame ? '' : 'min-h-[100dvh]')} page-transition-enter will-change-transform transform-gpu gsap-tab-wrapper`}
               style={{ backfaceVisibility: 'hidden' }}
             >
               <LazyRouteErrorBoundary lang={lang}>
