@@ -1059,18 +1059,23 @@ export default function App() {
     const root = document.documentElement;
     const shouldAnimate = hasAppliedThemeRef.current;
     hasAppliedThemeRef.current = true;
-    if (shouldAnimate) root.classList.add('theme-transition');
-    const timeout = shouldAnimate ? setTimeout(() => root.classList.remove('theme-transition'), 180) : undefined;
+    let frame = 0;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const applyTheme = () => {
+      root.classList.toggle('dark', darkMode);
+      localStorage.setItem('quiz_theme', darkMode ? 'dark' : 'light');
+      if (shouldAnimate) timeout = setTimeout(() => root.classList.remove('theme-transition'), 280);
+    };
 
-    if (darkMode) {
-      root.classList.add('dark');
-      localStorage.setItem('quiz_theme', 'dark');
+    if (shouldAnimate) {
+      root.classList.add('theme-transition');
+      frame = window.requestAnimationFrame(applyTheme);
     } else {
-      root.classList.remove('dark');
-      localStorage.setItem('quiz_theme', 'light');
+      applyTheme();
     }
 
     return () => {
+      if (frame) window.cancelAnimationFrame(frame);
       if (timeout) clearTimeout(timeout);
       root.classList.remove('theme-transition');
     };
@@ -1465,7 +1470,7 @@ export default function App() {
                 <div className={`relative flex min-h-0 min-w-0 flex-1 flex-col transition-colors duration-300 ${isCosmoTab ? 'h-full overflow-hidden' : 'min-h-dvh overflow-x-hidden'}`}>
 
                 
-        <div className={`fixed inset-0 pointer-events-none z-0 overflow-hidden select-none ${isCosmoTab ? 'hidden' : ''}`}>
+        <div className={`theme-animated-bg fixed inset-0 pointer-events-none z-0 overflow-hidden select-none ${isCosmoTab ? 'hidden' : ''}`}>
           {/* Light mode background elements */}
           <div className="absolute inset-0 dark:hidden opacity-30">
             <div 

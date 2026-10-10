@@ -76,15 +76,23 @@ html.dark, body.dark {
   color: #F8FAFC;
 }
 
-/* Cinematic Theme Toggle Transition - Ensures gorgeous, lag-free smooth fade on all components */
+/* Theme motion is intentionally scoped: never transition every descendant. */
 .theme-transition,
-.theme-transition * {
-  transition: background-color 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              color 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              fill 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              stroke 450ms cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 450ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+.theme-transition body,
+.theme-transition #root,
+.theme-transition .theme-page,
+.theme-transition .theme-surface,
+.theme-transition .theme-container {
+  transition: background-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+              color 180ms ease-out,
+              box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Text/icons that do not carry layout or blur stay cheap to animate. */
+.theme-transition .theme-muted,
+.theme-transition svg {
+  transition: color 180ms ease-out, fill 180ms ease-out, stroke 180ms ease-out;
 }
 
 button {
@@ -1468,4 +1476,9 @@ html:not(.dark) .liquid-sidebar div[class~="text-white"] {
     transform: none !important;
     opacity: 0.25;
   }
+}
+
+.theme-transition .theme-animated-bg,
+.theme-transition .theme-animated-bg * {
+  animation-play-state: paused !important;
 }
