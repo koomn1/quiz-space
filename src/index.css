@@ -1482,3 +1482,46 @@ html:not(.dark) .liquid-sidebar div[class~="text-white"] {
 .theme-transition .theme-animated-bg * {
   animation-play-state: paused !important;
 }
+
+/* Mobile header: keep navigation visible without a large floating pill. */
+@media (max-width: 768px) {
+  .liquid-header {
+    padding: max(env(safe-area-inset-top), 0.25rem) 0 0 !important;
+  }
+
+  .liquid-header__bar {
+    min-height: 3.75rem;
+    border-inline: 0 !important;
+    border-top: 0 !important;
+    border-radius: 0 !important;
+    clip-path: none !important;
+    overflow: visible !important;
+    padding-inline: 0.75rem !important;
+    box-shadow: 0 4px 18px rgba(2, 6, 23, 0.12) !important;
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+  }
+
+  .liquid-header__brand,
+  .liquid-header__actions {
+    gap: 0.35rem !important;
+  }
+
+  .liquid-header__brand > button:first-child,
+  .liquid-header__actions > button,
+  .liquid-header__actions .liquid-header__theme-toggle {
+    width: 2.7rem !important;
+    height: 2.7rem !important;
+    min-width: 2.7rem;
+    border-radius: 0.9rem !important;
+  }
+
+  .liquid-header__theme-toggle {
+    border-width: 1px !important;
+    box-shadow: none !important;
+  }
+
+  .liquid-header__brand img {
+    max-width: 7rem;
+  }
+}

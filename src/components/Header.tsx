@@ -137,7 +137,7 @@ export default function Header({
         >
 
           {/* Logo & Headline */}
-          <div className="flex items-center gap-2">
+          <div className="liquid-header__brand flex items-center gap-2">
             {!isQuizLocked && (
               <button aria-label={lang === 'ar' ? 'فتح القائمة' : 'Open navigation'} aria-expanded={isSidebarOpen} aria-controls="quizspace-primary-sidebar" className="flex h-11 w-11 items-center justify-center p-0 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200" onClick={toggleSidebar}>
                 <AnimatedMenuIcon className="w-5 h-5 sm:w-6 sm:h-6" isOpen={isSidebarOpen} />
@@ -159,7 +159,7 @@ export default function Header({
 
 	          {/* User Profile Info, Theme Select & Dark Mode */}
 	          {!isQuizLocked ? (
-	            <div className="flex items-center gap-1 sm:gap-2.5 min-w-0 flex-shrink-0">
+            <div className="liquid-header__actions flex items-center gap-1 sm:gap-2.5 min-w-0 flex-shrink-0">
 	              {!isGuest && (
 	                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 rounded-2xl border border-amber-200/60 bg-amber-50/40 px-2 py-1.5 dark:border-amber-900/30 dark:bg-amber-950/10 sm:px-3 sm:py-2 flex-shrink min-w-0" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
 		                  <div className="flex items-center gap-1 text-[10px] font-black text-amber-600 dark:text-amber-400 sm:text-xs whitespace-nowrap">
@@ -227,7 +227,7 @@ export default function Header({
                 onClick={() => setDarkMode(!darkMode)}
                 aria-label={t.toggleTheme}
                 aria-pressed={darkMode}
-		                className="group relative flex items-center justify-center w-11 h-11 rounded-[18px] bg-gradient-to-tr from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 hover:from-white hover:to-slate-50 dark:hover:from-slate-800 dark:hover:to-slate-700 border-2 border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_15px_rgba(0,0,0,0.3)] transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
+                className="liquid-header__theme-toggle group relative flex items-center justify-center w-11 h-11 rounded-[18px] bg-gradient-to-tr from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 hover:from-white hover:to-slate-50 dark:hover:from-slate-800 dark:hover:to-slate-700 border-2 border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_15px_rgba(0,0,0,0.3)] transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
 	                title={t.toggleTheme}
 	              >
 	                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
