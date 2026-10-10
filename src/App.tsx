@@ -49,6 +49,7 @@ import SplashScreen from './components/SplashScreen';
 import { ToastHost } from './components/Toast';
 import ProcessingCenterBanner from './components/ProcessingCenterBanner';
 import CommandPalette from './components/CommandPalette';
+import PageSkeleton from './components/PageSkeleton';
 const Classrooms = lazyWithRetry(() => import('./components/Classrooms'), 'classrooms');
 const MotivationHubPage = lazyWithRetry(() => import('./pages/MotivationHubPage'), 'motivation-hub');
 import type { MotivationSection } from './pages/MotivationHubPage';
@@ -1648,7 +1649,7 @@ export default function App() {
               style={{ backfaceVisibility: 'hidden' }}
             >
               <LazyRouteErrorBoundary lang={lang}>
-                <React.Suspense fallback={<div className="flex items-center justify-center min-h-[60vh] w-full"><CosmicLoader /></div>}>
+                <React.Suspense fallback={<PageSkeleton lang={lang} />}>
               {activeTab === 'not-found' && (
                 <NotFound lang={lang} onGoHome={() => handleSetTab('landing')} />
               )}

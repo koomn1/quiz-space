@@ -16,6 +16,7 @@ import { getApiUrl } from '../lib/origin';
 import { UserBadge } from '../components/UserBadge';
 import { getPublicProfiles, getSiteStats } from '../lib/db';
 import DailyQuizCard from '../components/DailyQuizCard';
+import { QuizCatalogSkeleton } from '../components/PageSkeleton';
 
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
@@ -167,7 +168,6 @@ const SPARK_TOPICS_AR = [
   "سيكولوجية الأحلام"
 ];
 
-import { PremiumLoader } from '../components/PremiumLoader';
 import ContactFooter from '../components/ContactFooter';
 
 export default function LandingPage({
@@ -529,7 +529,7 @@ export default function LandingPage({
 
         {/* Quizzes List rendering */}
         {isLoading ? (
-          <PremiumLoader text={t.loadingQuizzes} />
+          <QuizCatalogSkeleton lang={lang} />
         ) : filteredQuizzes.length === 0 ? (
           <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-[32px] p-8 sm:p-12 text-center max-w-xl mx-auto space-y-6 flex flex-col items-center justify-center glow-card">
             <div className="animate-pulse">
