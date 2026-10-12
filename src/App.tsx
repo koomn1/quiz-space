@@ -419,6 +419,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const sidebarMenuButtonRef = React.useRef<HTMLButtonElement>(null);
   const sidebarPanelRef = React.useRef<HTMLDivElement>(null);
+  const sidebarWasOpenRef = React.useRef(false);
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [popupBlocked, setPopupBlocked] = React.useState(false);
   const [networkFailedError, setNetworkFailedError] = React.useState(false);
@@ -608,9 +609,13 @@ export default function App() {
 
   React.useEffect(() => {
     if (!isSidebarOpen) {
-      sidebarMenuButtonRef.current?.focus({ preventScroll: true });
+      if (sidebarWasOpenRef.current) {
+        sidebarMenuButtonRef.current?.focus({ preventScroll: true });
+        sidebarWasOpenRef.current = false;
+      }
       return;
     }
+    sidebarWasOpenRef.current = true;
     sidebarPanelRef.current?.focus({ preventScroll: true });
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setIsSidebarOpen(false);
