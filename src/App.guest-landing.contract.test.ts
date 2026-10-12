@@ -2,14 +2,16 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const appSource = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
+const routesSource = readFileSync(new URL('./app/AppRoutes.tsx', import.meta.url), 'utf8');
+const appAndRoutesSource = `${appSource}\n${routesSource}`;
 const guestLandingSource = readFileSync(new URL('./pages/GuestLandingPage.tsx', import.meta.url), 'utf8');
 const headerSource = readFileSync(new URL('./components/Header.tsx', import.meta.url), 'utf8');
 
 describe('guest landing and authenticated home contract', () => {
   it('renders the standalone guest landing only for unauthenticated visitors', () => {
-    expect(appSource).toContain("import GuestLandingPage from './pages/GuestLandingPage'");
-    expect(appSource).toContain("authContext.isAuthenticated && userId && !userId.startsWith('user-guest') ? (");
-    expect(appSource).toContain('<GuestLandingPage');
+    expect(appAndRoutesSource).toContain("import GuestLandingPage from '../pages/GuestLandingPage'");
+    expect(appAndRoutesSource).toContain("authIsAuthenticated && userId && !userId.startsWith('user-guest') ? (");
+    expect(appAndRoutesSource).toContain('<GuestLandingPage');
   });
 
   it('uses the official brand plus real in-product home and quiz-creation screenshots', () => {

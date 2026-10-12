@@ -13,15 +13,16 @@ describe('dashboard delivery contract', () => {
   });
 
   it('uses real learning engagement metrics and an application loading signal in analytics', async () => {
-    const [analyticsSource, appSource] = await Promise.all([
+    const [analyticsSource, appSource, routesSource] = await Promise.all([
       readFile(new URL('./AnalyticsDashboard.tsx', import.meta.url), 'utf8'),
       readFile(new URL('../App.tsx', import.meta.url), 'utf8'),
+      readFile(new URL('../app/AppRoutes.tsx', import.meta.url), 'utf8'),
     ]);
 
     expect(analyticsSource).toContain('isLoading?: boolean');
     expect(analyticsSource).toContain('averagePlaysPerCreatedQuiz');
     expect(analyticsSource).toContain('A quick read on your progress');
     expect(analyticsSource).not.toContain('totalRevenue');
-    expect(appSource).toContain('isLoading={isLoadingQuizzes}');
+    expect(`${appSource}\n${routesSource}`).toContain('isLoading={isLoadingQuizzes}');
   });
 });

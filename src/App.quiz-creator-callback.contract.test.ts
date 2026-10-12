@@ -3,13 +3,15 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const appSource = readFileSync(resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+const routesSource = readFileSync(resolve(process.cwd(), 'src/app/AppRoutes.tsx'), 'utf8');
+const appAndRoutesSource = `${appSource}\n${routesSource}`;
 const workerClientSource = readFileSync(resolve(process.cwd(), 'src/services/aiWorkerClient.ts'), 'utf8');
 
 describe('post-save and Cosmo responsiveness contracts', () => {
   it('preserves the creator when the save flow explicitly keeps it open', () => {
-    expect(appSource).toContain("if (!options?.keepCreatorOpen) {");
-    expect(appSource).toContain("setQuizToEdit(null);");
-    expect(appSource).toContain("void fetchQuizzesList();");
+    expect(appAndRoutesSource).toContain("if (!options?.keepCreatorOpen) {");
+    expect(appAndRoutesSource).toContain("setQuizToEdit(null);");
+    expect(appAndRoutesSource).toContain("void fetchQuizzesList();");
   });
 
   it('bounds Cosmo streaming and fallback requests separately', () => {
