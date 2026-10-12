@@ -42,6 +42,7 @@ import { useLocale } from './context/LocaleContext';
 import { useAppBootstrap, useQuizCatalog } from './hooks/useAppBootstrap';
 import { useAuthBootstrap } from './hooks/useAuthBootstrap';
 import { useNotificationsRealtime } from './hooks/useNotificationsRealtime';
+import { useAppUiEffects } from './hooks/useAppUiEffects';
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -425,70 +426,22 @@ export default function App() {
   // Guests and free accounts are redirected to the plans page before the chat opens.
   const isCosmoTab = activeTab === 'aichat' && !activeQuizId && hasActiveMembership;
 
-  // Body scroll lock when mobile sidebar, auth modals, or the Cosmo chat
-  // screen are open — the chat page itself never scrolls
-  React.useEffect(() => {
-    if (isSidebarOpen || isAuthModalOpen || authRedirectQuizId || isCosmoTab) {
-      document.body.classList.add('scroll-lock');
-      return () => {
-        document.body.classList.remove('scroll-lock');
-      };
-    }
-  }, [isSidebarOpen, isAuthModalOpen, authRedirectQuizId, isCosmoTab]);
-
-  React.useEffect(() => {
-    if (!isSidebarOpen) {
-      if (sidebarWasOpenRef.current) {
-        sidebarMenuButtonRef.current?.focus({ preventScroll: true });
-        sidebarWasOpenRef.current = false;
-      }
-      return;
-    }
-    sidebarWasOpenRef.current = true;
-    sidebarPanelRef.current?.focus({ preventScroll: true });
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsSidebarOpen(false);
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [isSidebarOpen]);
-
-  // Scroll to top when active tab or active quiz changes
-  React.useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [activeTab, activeQuizId]);
-
-  // Magnetic Cursor Glow Tracker
-  React.useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const cards = document.querySelectorAll('.glass-panel, .glass-card, .card-3d');
-      for (const card of cards) {
-        const rect = (card as HTMLElement).getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        (card as HTMLElement).style.setProperty('--mouse-x', `${x}px`);
-        (card as HTMLElement).style.setProperty('--mouse-y', `${y}px`);
-      }
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  React.useEffect(() => {
-    if (userId && !userId.startsWith('user-') && isStatsLoaded) {
-      try {
-        const cachedKey = `user_profile_fallback_${userId}`;
-        const existingDataStr = localStorage.getItem(cachedKey);
-        const existingData = existingDataStr ? JSON.parse(existingDataStr) : {};
-        localStorage.setItem(cachedKey, JSON.stringify({
-          ...existingData,
-          uid: userId,
-          photoURL: userPhoto,
-          customId: userCustomId
-        }));
-      } catch (_) {}
-    }
-  }, [userId, userPhoto, userCustomId, isStatsLoaded]);
+  useAppUiEffects({
+    isSidebarOpen,
+    isAuthModalOpen,
+    authRedirectQuizId,
+    isCosmoTab,
+    setIsSidebarOpen,
+    sidebarWasOpenRef,
+    sidebarMenuButtonRef,
+    sidebarPanelRef,
+    activeTab,
+    activeQuizId,
+    userId,
+    userPhoto,
+    userCustomId,
+    isStatsLoaded,
+  });
 
   // Trigger the tour only after the account-backed onboarding state has loaded.
   // This prevents an already onboarded user from seeing it again on a new browser.
