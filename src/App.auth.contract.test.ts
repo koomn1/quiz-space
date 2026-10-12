@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8');
+const authBootstrapSource = readFileSync(new URL('./hooks/useAuthBootstrap.ts', import.meta.url), 'utf8');
+const appAuthSource = `${source}\n${authBootstrapSource}`;
 
 describe('Quiz Space App authentication success contract', () => {
   it('does not keep the stale nullable AuthModal success callback', () => {
@@ -12,20 +14,20 @@ describe('Quiz Space App authentication success contract', () => {
   });
 
   it('keeps Supabase as the authenticated session source of truth', () => {
-    expect(source).toContain('supabase.auth.onAuthStateChange');
-    expect(source).toContain('setUserId(user.id)');
+    expect(appAuthSource).toContain('supabase.auth.onAuthStateChange');
+    expect(appAuthSource).toContain('setUserId(user.id)');
   });
 
   it('defers database work outside the Supabase auth callback lock', () => {
-    expect(source).toContain('Never await Supabase/database work directly inside onAuthStateChange.');
-    expect(source).toContain('window.setTimeout(() => {');
-    expect(source).toContain('void (async () => {');
+    expect(appAuthSource).toContain('Never await Supabase/database work directly inside onAuthStateChange.');
+    expect(appAuthSource).toContain('window.setTimeout(() => {');
+    expect(appAuthSource).toContain('void (async () => {');
   });
 
   it('ignores stale auth events that arrive after a newer session event', () => {
-    expect(source).toContain('let authSyncGeneration = 0;');
-    expect(source).toContain('const generation = ++authSyncGeneration;');
-    expect(source).toContain('if (generation !== authSyncGeneration) return;');
+    expect(appAuthSource).toContain('let authSyncGeneration = 0;');
+    expect(appAuthSource).toContain('const generation = ++authSyncGeneration;');
+    expect(appAuthSource).toContain('if (generation !== authSyncGeneration) return;');
   });
 
   it('delegates Google login to the shared AuthContext flow', () => {
