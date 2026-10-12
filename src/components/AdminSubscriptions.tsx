@@ -914,15 +914,6 @@ export default function AdminSubscriptions({
                 >
                   {isAr ? "عرض الملف" : "View Profile"}
                 </button>
-                <button className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors">
-                  {isAr ? "عرض الاختبارات" : "View Quizzes"}
-                </button>
-                <button className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 rounded-lg text-xs font-bold transition-colors">
-                  {isAr ? "توثيق الحساب" : "Verify Account"}
-                </button>
-                <button className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors">
-                  {isAr ? "إعادة تعيين كلمة المرور" : "Reset Password"}
-                </button>
               </div>
             </div>
 
