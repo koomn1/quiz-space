@@ -80,6 +80,15 @@ button {
   @apply transition-[color,background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98];
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 70%, white);
+  outline-offset: 3px;
+}
+
 a {
   @apply transition-[color,background-color,border-color,opacity] duration-200;
 }
