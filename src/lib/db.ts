@@ -2243,13 +2243,65 @@ export async function updateUserSubscription(userId: string, isPremium: boolean,
   return { data, error };
 }
 
+export async function updateAdminUserSuspension(userId: string, isSuspended: boolean): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot update account status.');
+  const { error } = await supabase
+    .from('users')
+    .update({ is_suspended: isSuspended, updated_at: new Date().toISOString() })
+    .eq('uid', userId);
+  if (error) throw error;
+}
+
+export async function saveAdminSubscriptionPlan(plan: SubscriptionPlan): Promise<SubscriptionPlan> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot save subscription plans.');
+  const { data, error } = await supabase
+    .from('subscription_plans')
+    .upsert({
+      id: plan.id,
+      name: plan.name,
+      name_ar: plan.nameAr || null,
+      price: plan.price,
+      currency: plan.currency || 'EGP',
+      duration_months: plan.durationMonths,
+      features: plan.features,
+      badge_style: plan.badgeStyle,
+      badge_color: plan.badgeColor,
+      priority_level: plan.priorityLevel,
+      is_lifetime: Boolean(plan.isLifetime),
+      is_active: plan.isActive !== false,
+    }, { onConflict: 'id' })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as SubscriptionPlan;
+}
+
+export async function deleteAdminSubscriptionPlan(planId: string): Promise<void> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot delete subscription plans.');
+  const { error } = await supabase.from('subscription_plans').delete().eq('id', planId);
+  if (error) throw error;
+}
+
 // ---------------- SUBSCRIPTION PLANS (SUPABASE DIRECT) ----------------
 
 export async function getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase.from('subscription_plans').select('*').order('priority_level', { ascending: true });
-      if (!error && data) return data as SubscriptionPlan[];
+      if (!error && data) return data.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        nameAr: row.name_ar,
+        price: Number(row.price || 0),
+        currency: row.currency || 'EGP',
+        durationMonths: Number(row.duration_months || 1),
+        features: Array.isArray(row.features) ? row.features : [],
+        badgeStyle: row.badge_style || 'pro',
+        badgeColor: row.badge_color || '#3b82f6',
+        priorityLevel: Number(row.priority_level || 0),
+        isLifetime: Boolean(row.is_lifetime),
+        isActive: row.is_active !== false,
+      })) as SubscriptionPlan[];
     } catch (e) { console.error('Unhandled Supabase error:', e); }
   }
   return [];

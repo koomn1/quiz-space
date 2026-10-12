@@ -28,6 +28,10 @@ import {
   saveCoupon,
   deleteCoupon,
   updateUserSubscription,
+  updateAdminUserSuspension,
+  getSubscriptionPlans,
+  saveAdminSubscriptionPlan,
+  deleteAdminSubscriptionPlan,
   createNotification,
   createCommunityPost,
   COSMO_ADMIN_UID,
@@ -87,6 +91,12 @@ export default function AdminSubscriptions({
     },
   ]);
   const [mockPayments, setMockPayments] = useState<PaymentProof[]>([]);
+  const [planDraft, setPlanDraft] = useState<SubscriptionPlan>({
+    id: '', name: '', nameAr: '', price: 0, currency: 'EGP', durationMonths: 1,
+    features: [], badgeStyle: 'pro', badgeColor: '#3b82f6', priorityLevel: 1, isActive: true,
+  });
+  const [isSavingPlan, setIsSavingPlan] = useState(false);
+  const [planBusyId, setPlanBusyId] = useState<string | null>(null);
 
   const [selectedUser, setSelectedUser] = useState<UserStats | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
@@ -141,7 +151,8 @@ export default function AdminSubscriptions({
 
   const loadRealData = async () => {
     try {
-      const profiles = await getAllProfiles();
+      const [profiles, plans] = await Promise.all([getAllProfiles(), getSubscriptionPlans()]);
+      if (plans.length > 0) setMockPlans(plans);
       const mappedUsers = profiles.map((p) => ({
         userId: p.uid || p.id || p.userId,
         name: p.name || "Unknown",
@@ -491,15 +502,18 @@ export default function AdminSubscriptions({
 
   const handleSuspend = () => {
     if (!selectedUser) return;
-    const updatedUsers = mockUsers.map((u) =>
-      u.userId === selectedUser.userId
-        ? { ...u, isSuspended: !u.isSuspended }
-        : u,
-    );
-    setMockUsers(updatedUsers);
-    setSelectedUser(
-      updatedUsers.find((u) => u.userId === selectedUser.userId) || null,
-    );
+    void (async () => {
+      const nextSuspended = !selectedUser.isSuspended;
+      try {
+        await updateAdminUserSuspension(selectedUser.userId, nextSuspended);
+        const updatedUsers = mockUsers.map((u) => u.userId === selectedUser.userId ? { ...u, isSuspended: nextSuspended } : u);
+        setMockUsers(updatedUsers);
+        setSelectedUser(updatedUsers.find((u) => u.userId === selectedUser.userId) || null);
+        showToast('success', isAr ? (nextSuspended ? 'تم إيقاف الحساب وحفظ الحالة.' : 'تمت استعادة الحساب وحفظ الحالة.') : (nextSuspended ? 'Account suspended and saved.' : 'Account restored and saved.'));
+      } catch (error: any) {
+        showToast('error', error?.message || (isAr ? 'تعذر حفظ حالة الحساب.' : 'Unable to save account status.'));
+      }
+    })();
   };
 
   const approvePayment = async (payId: string) => {
@@ -558,6 +572,56 @@ export default function AdminSubscriptions({
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const requestPaymentInfo = async (payId: string) => {
+    try {
+      const { error } = await supabase.from('premium_requests').update({ status: 'needs_info', updated_at: new Date().toISOString() }).eq('id', payId);
+      if (error) throw error;
+      setMockPayments((prev) => prev.filter((p) => p.id !== payId));
+      showToast('success', isAr ? 'تم تحويل الطلب إلى يحتاج معلومات.' : 'Payment marked as needing more information.');
+    } catch (error: any) {
+      showToast('error', error?.message || (isAr ? 'تعذر تحديث حالة الدفع.' : 'Unable to update payment status.'));
+    }
+  };
+
+  const openNewPlan = () => {
+    setPlanDraft({ id: `custom-${Date.now().toString(36)}`, name: '', nameAr: '', price: 0, currency: 'EGP', durationMonths: 1, features: [], badgeStyle: 'pro', badgeColor: '#3b82f6', priorityLevel: 1, isActive: true });
+    setSelectedPlanId('new');
+  };
+
+  const openEditPlan = (plan: SubscriptionPlan) => {
+    setPlanDraft({ ...plan, features: [...(plan.features || [])] });
+    setSelectedPlanId(`edit:${plan.id}`);
+  };
+
+  const savePlan = async () => {
+    if (!planDraft.name.trim() || planDraft.price < 0 || planDraft.durationMonths < 1) {
+      showToast('error', isAr ? 'أكمل اسم الخطة والسعر والمدة بشكل صحيح.' : 'Enter a valid plan name, price, and duration.');
+      return;
+    }
+    setIsSavingPlan(true);
+    try {
+      const saved = await saveAdminSubscriptionPlan({ ...planDraft, name: planDraft.name.trim(), features: planDraft.features.filter(Boolean) });
+      setMockPlans((prev) => [...prev.filter((p) => p.id !== saved.id), saved].sort((a, b) => a.priorityLevel - b.priorityLevel));
+      setSelectedPlanId('');
+      showToast('success', isAr ? 'تم حفظ الخطة على الخادم.' : 'Plan saved to the server.');
+    } catch (error: any) {
+      showToast('error', error?.message || (isAr ? 'تعذر حفظ الخطة.' : 'Unable to save the plan.'));
+    } finally { setIsSavingPlan(false); }
+  };
+
+  const removePlan = async (plan: SubscriptionPlan) => {
+    if (planBusyId) return;
+    if (!window.confirm(isAr ? `حذف خطة «${plan.name}»؟` : `Delete “${plan.name}”?`)) return;
+    setPlanBusyId(plan.id);
+    try {
+      await deleteAdminSubscriptionPlan(plan.id);
+      setMockPlans((prev) => prev.filter((p) => p.id !== plan.id));
+      showToast('success', isAr ? 'تم حذف الخطة.' : 'Plan deleted.');
+    } catch (error: any) {
+      showToast('error', error?.message || (isAr ? 'تعذر حذف الخطة.' : 'Unable to delete the plan.'));
+    } finally { setPlanBusyId(null); }
   };
 
   return (
@@ -670,7 +734,7 @@ export default function AdminSubscriptions({
               <h3 className="font-bold text-slate-800 dark:text-white mb-2">
                 {isAr ? "تفعيل يدوي برقم UID" : "Manual Activation by UID"}
               </h3>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   id="manual_uid_input"
                   type="text"
@@ -736,7 +800,7 @@ export default function AdminSubscriptions({
                       console.error(e);
                     }
                   }}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-xs"
+                  className="min-h-11 w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-xs"
                 >
                   {isAr ? "تفعيل" : "Activate"}
                 </button>
@@ -744,7 +808,21 @@ export default function AdminSubscriptions({
             </div>
           </div>
 
-          <div className="glass-panel p-4 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+          <div className="grid gap-3 md:hidden">
+            {mockUsers.map((user, idx) => (
+              <article key={user.userId || idx} className="glass-panel rounded-2xl border border-slate-200/50 p-4 dark:border-slate-700/50">
+                <div className="flex items-start justify-between gap-3">
+                  <button type="button" onClick={() => onViewProfile?.(user.userId)} className="min-w-0 text-start">
+                    <p className="truncate text-sm font-black text-slate-900 dark:text-white">{user.name}</p>
+                    <p className="mt-1 truncate text-xs text-slate-500">{user.email || user.userId}</p>
+                  </button>
+                  <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${user.isSuspended || user.isMembershipExpired ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>{user.isSuspended ? (isAr ? 'موقوف' : 'Suspended') : user.isMembershipExpired ? (isAr ? 'منتهية' : 'Expired') : (isAr ? 'نشط' : 'Active')}</span>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500"><span>{user.planName || 'Free'}</span><button type="button" onClick={() => { setSelectedUser(user); setSelectedPlanId(user.planId || ''); setSubscriptionRenewalDate(user.renewalDate ? user.renewalDate.slice(0, 10) : ''); }} className="min-h-11 rounded-xl bg-blue-500/10 px-4 font-bold text-blue-600">{isAr ? 'إدارة' : 'Manage'}</button></div>
+              </article>
+            ))}
+          </div>
+          <div className="glass-panel hidden overflow-x-auto p-4 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 md:block">
             <table className="w-full text-left" dir={isAr ? "rtl" : "ltr"}>
               <thead className="text-xs text-slate-500 uppercase bg-slate-50/50 dark:bg-slate-800/50">
                 <tr>
@@ -768,16 +846,9 @@ export default function AdminSubscriptions({
                     <td
                       onClick={() => onViewProfile?.(user.userId)}
                       title={isAr ? "عرض الملف الشخصي" : "View profile"}
-                      className="px-4 py-3 font-bold text-slate-800 dark:text-white flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
+                      className="px-4 py-3 font-bold text-slate-800 dark:text-white cursor-pointer hover:text-primary transition-colors"
                     >
-                      {user.name}
-                      {(user.isLifetime || user.isFounder) && (
-                        <UserBadge
-                          tier={user.isFounder ? "founder" : "lifetime"}
-                          size="sm"
-                          showTooltip={false}
-                        />
-                      )}
+                      <div className="flex items-center gap-2">{user.name}{(user.isLifetime || user.isFounder) && <UserBadge tier={user.isFounder ? "founder" : "lifetime"} size="sm" showTooltip={false} />}</div>
                     </td>
                     <td className="px-4 py-3 text-slate-500">
                       {user.planName || "Free"}
@@ -930,15 +1001,10 @@ export default function AdminSubscriptions({
                 {isAr ? "إزالة" : "Remove"}
               </button>
               <button
-                onClick={() => {
-                  setMockUsers((prev) =>
-                    prev.filter((u) => u.userId !== selectedUser.userId),
-                  );
-                  setSelectedUser(null);
-                }}
+                onClick={handleSuspend}
                 className="px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700"
               >
-                {isAr ? "حذف المستخدم نهائياً" : "Delete User completely"}
+                {isAr ? "تعطيل الحساب على الخادم" : "Deactivate account"}
               </button>
             </div>
           </div>
@@ -957,32 +1023,34 @@ export default function AdminSubscriptions({
               {mockPayments.map((pay, idx) => (
                 <div
                   key={pay.id || idx}
-                  className="glass-panel p-5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 relative overflow-hidden"
+                  className="glass-panel p-5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden"
                 >
-                  <div className="absolute top-0 right-0 p-3 flex gap-1">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <h4 className="font-bold text-lg min-w-0 truncate">{pay.userName}</h4>
+                    <div className="flex shrink-0 gap-1">
                     <button
                       onClick={() => approvePayment(pay.id)}
                       title={isAr ? "قبول وتفعيل" : "Approve & Activate"}
-                      className="text-emerald-500 hover:bg-emerald-500/10 p-1.5 rounded-lg transition-colors"
+                      className="text-emerald-500 hover:bg-emerald-500/10 min-h-11 min-w-11 rounded-lg transition-colors"
                     >
                       <CheckCircle className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => rejectPayment(pay.id)}
+                      onClick={() => requestPaymentInfo(pay.id)}
                       title={isAr ? "طلب المزيد من المعلومات" : "Request Info"}
-                      className="text-amber-500 hover:bg-amber-500/10 p-1.5 rounded-lg transition-colors"
+                      className="text-amber-500 hover:bg-amber-500/10 min-h-11 min-w-11 rounded-lg transition-colors"
                     >
                       <Edit2 className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => rejectPayment(pay.id)}
                       title={isAr ? "رفض" : "Reject"}
-                      className="text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors"
+                      className="text-red-500 hover:bg-red-500/10 min-h-11 min-w-11 rounded-lg transition-colors"
                     >
                       <XCircle className="w-5 h-5" />
                     </button>
+                    </div>
                   </div>
-                  <h4 className="font-bold text-lg">{pay.userName}</h4>
                   <p className="text-xs text-slate-500 mb-2">
                     Plan:{" "}
                     <span className="font-bold text-slate-700 border border-slate-200 px-1 rounded">
@@ -1035,14 +1103,14 @@ export default function AdminSubscriptions({
         <div className="space-y-6">
           <div className="flex justify-end">
             <button
-              onClick={() => setSelectedPlanId("new")}
+              onClick={openNewPlan}
               className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl font-bold text-sm hover:opacity-90"
             >
               <Plus className="w-4 h-4" /> {isAr ? "إضافة خطة" : "Add Plan"}
             </button>
           </div>
 
-          {selectedPlanId === "new" && (
+          {(selectedPlanId === "new" || selectedPlanId.startsWith('edit:')) && (
             <div className="glass-panel p-6 rounded-3xl border border-primary/20 dark:border-primary/20 ring-4 ring-primary/5 mb-6">
               <h3 className="font-bold text-lg mb-4">
                 {isAr
@@ -1056,6 +1124,8 @@ export default function AdminSubscriptions({
                   </label>
                   <input
                     type="text"
+                    value={planDraft.name}
+                    onChange={(e) => setPlanDraft((draft) => ({ ...draft, name: e.target.value }))}
                     placeholder="e.g. Creator Plan"
                     className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1066,6 +1136,9 @@ export default function AdminSubscriptions({
                   </label>
                   <input
                     type="number"
+                    min="0"
+                    value={planDraft.price}
+                    onChange={(e) => setPlanDraft((draft) => ({ ...draft, price: Number(e.target.value) }))}
                     placeholder="19.99"
                     className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1076,6 +1149,9 @@ export default function AdminSubscriptions({
                   </label>
                   <input
                     type="number"
+                    min="1"
+                    value={planDraft.durationMonths}
+                    onChange={(e) => setPlanDraft((draft) => ({ ...draft, durationMonths: Number(e.target.value) }))}
                     placeholder="1"
                     className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1086,6 +1162,8 @@ export default function AdminSubscriptions({
                   </label>
                   <input
                     type="text"
+                    value={planDraft.features.join(', ')}
+                    onChange={(e) => setPlanDraft((draft) => ({ ...draft, features: e.target.value.split(',').map((feature) => feature.trim()).filter(Boolean) }))}
                     placeholder="e.g. VIP unlocked, Custom domain"
                     className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1094,7 +1172,7 @@ export default function AdminSubscriptions({
                   <label className="text-xs font-bold text-slate-500">
                     Badge Style
                   </label>
-                  <select className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary">
+                  <select value={planDraft.badgeStyle} onChange={(e) => setPlanDraft((draft) => ({ ...draft, badgeStyle: e.target.value as SubscriptionPlan['badgeStyle'] }))} className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary">
                     <option value="pro">Pro (Blue)</option>
                     <option value="premium">Premium (Purple)</option>
                     <option value="team">Team (Cyan Diamond)</option>
@@ -1113,6 +1191,9 @@ export default function AdminSubscriptions({
                   </label>
                   <input
                     type="number"
+                    min="0"
+                    value={planDraft.priorityLevel}
+                    onChange={(e) => setPlanDraft((draft) => ({ ...draft, priorityLevel: Number(e.target.value) }))}
                     placeholder="Priority (higher overrides lower)"
                     className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1123,6 +1204,8 @@ export default function AdminSubscriptions({
                   </label>
                   <input
                     type="text"
+                    value={planDraft.badgeColor}
+                    onChange={(e) => setPlanDraft((draft) => ({ ...draft, badgeColor: e.target.value }))}
                     placeholder="#ff00ff"
                     className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary"
                   />
@@ -1130,10 +1213,11 @@ export default function AdminSubscriptions({
               </div>
               <div className="mt-6 flex gap-2">
                 <button
-                  onClick={() => setSelectedPlanId("")}
+                  onClick={() => void savePlan()}
+                  disabled={isSavingPlan}
                   className="px-4 py-2 bg-gradient-to-r from-primary to-indigo-600 text-white rounded-xl font-bold"
                 >
-                  Save Plan
+                  {isSavingPlan ? (isAr ? 'جارٍ الحفظ...' : 'Saving...') : (isAr ? 'حفظ الخطة' : 'Save Plan')}
                 </button>
                 <button
                   onClick={() => setSelectedPlanId("")}
@@ -1166,10 +1250,10 @@ export default function AdminSubscriptions({
                     </p>
                   </div>
                   <div className="flex gap-1">
-                    <button className="text-slate-400 hover:text-blue-500 p-1">
+                    <button type="button" onClick={() => openEditPlan(plan)} className="text-slate-400 hover:text-blue-500 min-h-11 min-w-11 rounded-xl">
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button className="text-slate-400 hover:text-red-500 p-1">
+                    <button type="button" disabled={planBusyId === plan.id} onClick={() => void removePlan(plan)} className="text-slate-400 hover:text-red-500 min-h-11 min-w-11 rounded-xl disabled:opacity-50">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>

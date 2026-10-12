@@ -40,15 +40,18 @@ interface AdminDashboardProps {
   quizzes: Quiz[];
   lang: 'ar' | 'en';
   onViewProfile?: (userId: string) => void;
+  onEditQuiz?: (quiz: Quiz) => void;
+  onDeleteQuiz?: (quizId: string) => Promise<void>;
   currentUserId?: string;
   currentUserEmail?: string;
 }
 
-export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUserId, currentUserEmail }: AdminDashboardProps) {
+export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQuiz, onDeleteQuiz, currentUserId, currentUserEmail }: AdminDashboardProps) {
   const isAr = lang === 'ar';
   const containerRef = React.useRef<HTMLDivElement>(null);
   
   const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards' | 'motivation_usage'>('overview');
+  const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
   useGSAP(() => {
     // Initial load animation for header and stats
     gsap.fromTo(
@@ -330,9 +333,15 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
         </div>
       </div>
 
+      <div className="mb-4 lg:hidden">
+        <label htmlFor="admin-tab-select" className="sr-only">{isAr ? 'قسم لوحة الإدارة' : 'Admin section'}</label>
+        <select id="admin-tab-select" value={activeAdminTab} onChange={(event) => setActiveAdminTab(event.target.value as typeof activeAdminTab)} className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+          {adminTabs.map((tab) => <option key={tab.id} value={tab.id}>{tab.name}</option>)}
+        </select>
+      </div>
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Sidebar Nav */}
-        <div className="w-full lg:w-64 flex-shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 lg:pb-0">
+        <div className="hidden lg:flex w-full lg:w-64 flex-shrink-0 flex-row lg:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 lg:pb-0">
           {adminTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeAdminTab === tab.id;
@@ -504,8 +513,13 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, currentUs
                            <div className="flex items-center justify-between mt-4">
                               <span className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded-md font-bold">General</span>
                               <div className="flex items-center gap-1">
-                                 <button className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg"><Edit2 className="w-4 h-4" /></button>
-                                 <button className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                                 <button type="button" onClick={() => onEditQuiz?.(quiz)} disabled={!onEditQuiz} title={isAr ? 'تعديل الاختبار' : 'Edit quiz'} className="min-h-11 min-w-11 text-blue-500 hover:bg-blue-500/10 rounded-lg disabled:opacity-40"><Edit2 className="mx-auto w-4 h-4" /></button>
+                                 <button type="button" onClick={async () => {
+                                   if (!onDeleteQuiz || deletingQuizId) return;
+                                   if (!window.confirm(isAr ? `حذف اختبار «${quiz.title}»؟` : `Delete “${quiz.title}”?`)) return;
+                                   setDeletingQuizId(quiz.id);
+                                   try { await onDeleteQuiz(quiz.id); } finally { setDeletingQuizId(null); }
+                                 }} disabled={!onDeleteQuiz || deletingQuizId === quiz.id} title={isAr ? 'حذف الاختبار' : 'Delete quiz'} className="min-h-11 min-w-11 text-red-500 hover:bg-red-500/10 rounded-lg disabled:opacity-40"><Trash2 className="mx-auto w-4 h-4" /></button>
                               </div>
                            </div>
                         </div>

@@ -1999,6 +1999,11 @@ export default function App() {
                       quizzes={quizzes} 
                       lang={lang} 
                       onViewProfile={(creatorId) => { handleSetTab('profile', false, creatorId); }}
+                      onEditQuiz={(quiz) => { setQuizToEdit(quiz); handleSetTab('create'); }}
+                      onDeleteQuiz={async (quizId) => {
+                        await deleteQuiz(quizId);
+                        await fetchQuizzesList();
+                      }}
                       currentUserId={userId}
                       currentUserEmail={userEmail}
                     />
