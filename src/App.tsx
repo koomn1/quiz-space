@@ -66,6 +66,7 @@ import { startWebVitalsReporting } from './lib/performanceTelemetry';
 import { getOnboardingTourStorageKey, shouldShowOnboardingTour } from './lib/onboardingState';
 import { getThemePreset } from './lib/themePresets';
 import { useAuth } from './context/AuthContext';
+import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -496,27 +497,12 @@ export default function App() {
     return localStorage.getItem('firebase_quota_exceeded') === 'true';
   });
 
-  React.useEffect(() => {
-    const checkQuota = () => {
-      if (localStorage.getItem('firebase_quota_exceeded') === 'true') {
-        setShowQuotaWarning(true);
-      }
-    };
-    let timer: number | undefined;
-    const schedule = () => {
-      if (!document.hidden) checkQuota();
-      timer = window.setTimeout(schedule, 3000);
-    };
-    const handleVisibility = () => {
-      if (!document.hidden) checkQuota();
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    schedule();
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-      if (timer) window.clearTimeout(timer);
-    };
+  const checkQuota = React.useCallback(() => {
+    if (localStorage.getItem('firebase_quota_exceeded') === 'true') {
+      setShowQuotaWarning(true);
+    }
   }, []);
+  useVisibilityPolling(checkQuota, 3000);
 
   React.useEffect(() => {
     localStorage.setItem('quiz_language', lang);
@@ -524,32 +510,11 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  React.useEffect(() => {
-    let active = true;
-    const refreshPlatformSettings = async () => {
-      const settings = await getPlatformSettings();
-      if (active) setPlatformMaintenanceActive(settings.maintenanceMode);
-    };
-
-    void refreshPlatformSettings();
-    let timer: number | undefined;
-    const schedule = () => {
-      timer = window.setTimeout(async () => {
-        if (!document.hidden) await refreshPlatformSettings();
-        schedule();
-      }, 30000);
-    };
-    const handleVisibility = () => {
-      if (!document.hidden) void refreshPlatformSettings();
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    schedule();
-    return () => {
-      active = false;
-      document.removeEventListener('visibilitychange', handleVisibility);
-      if (timer) window.clearTimeout(timer);
-    };
+  const refreshPlatformSettings = React.useCallback(async () => {
+    const settings = await getPlatformSettings();
+    setPlatformMaintenanceActive(settings.maintenanceMode);
   }, []);
+  useVisibilityPolling(refreshPlatformSettings, 30000);
 
   // Show push banner only after login if permission is not granted and banner not dismissed for this session
   React.useEffect(() => {
