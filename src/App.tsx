@@ -9,7 +9,6 @@ import { useSearchParams } from './hooks/useSearchParams';
 import { Quiz, UserStats, getUserRoleAndPlan } from './types';
 import { AVATAR_PRESETS, getDefaultAvatar, resolveProfileImageUrl } from './constants/profileAssets';
 import { supabase } from './lib/supabaseClient';
-import { registerPushNotifications } from './lib/pushManager';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import { playChimeSound } from './lib/chime';
@@ -29,9 +28,8 @@ import ProcessingCenterBanner from './components/ProcessingCenterBanner';
 import CommandPalette from './components/CommandPalette';
 import { Sparkles, Edit, Compass, Info, XCircle, Award, Volume2, Globe, Bell, AlertTriangle, ExternalLink, User, Bot, Zap, MessageCircle } from 'lucide-react';
 
-import { saveUserProfile, deleteQuiz, getUserProfileStats, getRecentCompletions, getPlatformSettings, getUserNotificationPreferences } from './lib/db';
+import { saveUserProfile, deleteQuiz, getUserProfileStats, getRecentCompletions, getPlatformSettings } from './lib/db';
 import { playNotificationSound } from './lib/sound';
-import { pushNotificationsManager, PushNotificationPayload } from './lib/pushNotifications';
 import { translations } from './lib/i18n';
 import { getApiUrl } from './lib/origin';
 import { generateCoolStudentName } from './lib/nameGenerator';
@@ -43,6 +41,7 @@ import { useTheme } from './context/ThemeContext';
 import { useLocale } from './context/LocaleContext';
 import { useAppBootstrap, useQuizCatalog } from './hooks/useAppBootstrap';
 import { useAuthBootstrap } from './hooks/useAuthBootstrap';
+import { useNotificationsRealtime } from './hooks/useNotificationsRealtime';
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -396,75 +395,27 @@ export default function App() {
     return () => clearTimeout(timeout);
   }, { scope: mainContainerRef, dependencies: [activeTab] });
 
-  const [unreadMessagesCount, setUnreadMessagesCount] = React.useState<number>(0);
-
   const { quizzes, isLoadingQuizzes, fetchQuizzesList } = useQuizCatalog();
   const handleQuizDetected = React.useCallback((quizId: string) => {
     authRedirectQuizIdRef.current = quizId;
   }, []);
   useAppBootstrap({ onQuizDetected: handleQuizDetected, fetchQuizzesList });
 
-  
-  // i18n & Push API properties setup
-  const [activePush, setActivePush] = React.useState<PushNotificationPayload | null>(null);
-  const [pushNotificationsEnabled, setPushNotificationsEnabled] = React.useState(false);
-  const [showPushBanner, setShowPushBanner] = React.useState(() => {
-    const perm = pushNotificationsManager.getPermissionStatus();
-    return perm !== 'granted' && localStorage.getItem('quiz_push_banner_dismissed') !== 'true';
-  });
-  const [showQuotaWarning, setShowQuotaWarning] = React.useState(() => {
-    return localStorage.getItem('firebase_quota_exceeded') === 'true';
-  });
-
-  const checkQuota = React.useCallback(() => {
-    if (localStorage.getItem('firebase_quota_exceeded') === 'true') {
-      setShowQuotaWarning(true);
-    }
-  }, []);
-  useVisibilityPolling(checkQuota, 3000);
+  const {
+    unreadMessagesCount,
+    activePush,
+    setActivePush,
+    showPushBanner,
+    setShowPushBanner,
+    showQuotaWarning,
+    setShowQuotaWarning,
+  } = useNotificationsRealtime({ userId, userName, lang });
 
   const refreshPlatformSettings = React.useCallback(async () => {
     const settings = await getPlatformSettings();
     setPlatformMaintenanceActive(settings.maintenanceMode);
   }, []);
   useVisibilityPolling(refreshPlatformSettings, 30000);
-
-  // Show push banner only after login if permission is not granted and banner not dismissed for this session
-  React.useEffect(() => {
-    if (!userId || userId.startsWith('user-guest')) return;
-    const perm = typeof window !== 'undefined' && window.Notification ? window.Notification.permission : 'default';
-    const dismissed = localStorage.getItem('quiz_push_banner_dismissed') === 'true';
-    setShowPushBanner(perm !== 'granted' && !dismissed);
-  }, [userId]);
-
-  // Reset push banner on logout
-  React.useEffect(() => {
-    if (!userId || userId.startsWith('user-guest')) {
-      setShowPushBanner(false);
-    }
-  }, [userId]);
-
-  React.useEffect(() => {
-    let active = true;
-    if (!userId || userId.startsWith('user-')) {
-      setPushNotificationsEnabled(false);
-      return () => { active = false; };
-    }
-
-    void getUserNotificationPreferences(userId).then((preferences) => {
-      if (active) setPushNotificationsEnabled(preferences.pushEnabled);
-    });
-
-    const handlePreferenceChange = (event: Event) => {
-      const detail = (event as CustomEvent<{ pushEnabled?: boolean }>).detail;
-      if (typeof detail?.pushEnabled === 'boolean') setPushNotificationsEnabled(detail.pushEnabled);
-    };
-    window.addEventListener('quizspace:notification-preferences-updated', handlePreferenceChange);
-    return () => {
-      active = false;
-      window.removeEventListener('quizspace:notification-preferences-updated', handlePreferenceChange);
-    };
-  }, [userId]);
 
   // A membership is active when the profile is marked premium or carries a paid plan.
   // Keep this check centralized so navigation, direct links, and rendering agree.
@@ -538,113 +489,6 @@ export default function App() {
       } catch (_) {}
     }
   }, [userId, userPhoto, userCustomId, isStatsLoaded]);
-
-  React.useEffect(() => {
-    const handleNotification = (payload: PushNotificationPayload) => {
-      setActivePush(payload);
-      setTimeout(() => {
-        setActivePush((curr) => curr?.id === payload.id ? null : curr);
-      }, 7000);
-    };
-    pushNotificationsManager.subscribe('app-root', handleNotification);
-    
-    // Subscribe to the notifications table in real-time via Supabase Realtime
-    // (Postgres logical replication under the hood - Supabase's equivalent of onSnapshot).
-    if (localStorage.getItem('firebase_quota_exceeded') === 'true') {
-      return;
-    }
-    const sessionBootTime = new Date().toISOString();
-
-    const notifChannel = supabase
-      .channel('notifications-feed')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications' },
-        (payload) => {
-          const data = payload.new as any;
-          if (data.created_at && data.created_at < sessionBootTime) return;
-          if (data.sender_name && data.sender_name === userName) return;
-          if (!pushNotificationsEnabled) return;
-
-          pushNotificationsManager.trigger({
-            title: data.title || (lang === 'ar' ? 'تنبيه جديد 🪐' : 'New Buzz 🪐'),
-            body: data.body || '',
-            icon: 'bell'
-          });
-          try {
-            playNotificationSound('chime');
-          } catch (_) {}
-        }
-      )
-      .subscribe();
-
-    return () => {
-      pushNotificationsManager.unsubscribe('app-root');
-      void supabase.removeChannel(notifChannel);
-    };
-  }, [userName, lang, pushNotificationsEnabled]);
-
-  // Request native browser desktop notifications permission on startup
-
-  // Monitor unread direct messages in real-time, compute total unreadMessagesCount, and trigger desktop push notifications
-  React.useEffect(() => {
-    if (!userId) {
-      setUnreadMessagesCount(0);
-      return;
-    }
-    if (localStorage.getItem('firebase_quota_exceeded') === 'true') {
-      setUnreadMessagesCount(0);
-      return;
-    }
-
-    const sessionBootTime = new Date().toISOString();
-
-    // Initial unread count fetch (Supabase Realtime only streams *changes*, not existing rows).
-    supabase.from('direct_messages').select('id', { count: 'exact', head: true })
-      .eq('receiver_id', userId).eq('is_read', false)
-      .then(({ count }) => setUnreadMessagesCount(count || 0));
-
-    const dmChannel = supabase
-      .channel(`direct-messages-${userId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'direct_messages', filter: `receiver_id=eq.${userId}` },
-        (payload) => {
-          const msg = payload.new as any;
-          if (!msg.is_read) setUnreadMessagesCount((prev) => prev + 1);
-
-          const isNew = msg.created_at && new Date(msg.created_at).getTime() > new Date(sessionBootTime).getTime();
-          if (isNew && pushNotificationsEnabled) {
-            const senderName = msg.sender_name || (lang === 'ar' ? 'مستخدم' : 'Scholar');
-            const text = msg.text || '';
-
-            if (typeof window !== 'undefined' && window.Notification?.permission === 'granted') {
-              try {
-                new window.Notification(lang === 'ar' ? `رسالة جديدة من ${senderName} 💬` : `New message from ${senderName} 💬`, {
-                  body: text.length > 70 ? text.substring(0, 70) + '...' : text,
-                  icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.webp`
-                });
-              } catch (err) {
-                console.warn('Native notification instantiation error:', err);
-              }
-            }
-
-            pushNotificationsManager.trigger({
-              title: lang === 'ar' ? `رسالة جديدة من ${senderName} 💬` : `New message from ${senderName} 💬`,
-              body: text,
-              icon: 'message'
-            });
-
-            try {
-              playNotificationSound('chime');
-            } catch (_) {}
-          }
-        }
-      )
-      .subscribe();
-
-    return () => { void supabase.removeChannel(dmChannel); };
-  }, [userId, lang, pushNotificationsEnabled]);
 
   // Trigger the tour only after the account-backed onboarding state has loaded.
   // This prevents an already onboarded user from seeing it again on a new browser.
