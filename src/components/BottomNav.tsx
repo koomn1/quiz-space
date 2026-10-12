@@ -23,7 +23,7 @@ export default function BottomNav({ currentTab, setTab, lang, isGuest = false, h
 
   return (
     <nav className="liquid-bottom-nav" aria-label={lang === 'ar' ? 'التنقل الرئيسي' : 'Main navigation'} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="liquid-bottom-nav__inner">
+      <div className="liquid-bottom-nav__inner" style={{ gridTemplateColumns: `repeat(${visibleItems.length}, minmax(0, 1fr))` }}>
         {visibleItems.map(({ id, ar, en, icon: Icon }) => {
           const active = id === 'landing' ? currentTab === 'landing' : currentTab === id;
           return (

@@ -130,7 +130,7 @@ export default function Sidebar({
   };
 
   return (
-    <aside id="quizspace-primary-sidebar" aria-label={isAr ? 'التنقل الرئيسي' : 'Primary navigation'} className="liquid-sidebar w-full h-full bg-[#0a0518]/95 backdrop-blur-3xl border-none text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
+    <aside aria-label={isAr ? 'التنقل الرئيسي' : 'Primary navigation'} className="liquid-sidebar w-full h-full bg-[#0a0518]/95 backdrop-blur-3xl border-none text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
       {/* Premium Custom SVG Logo */}
       <div className="flex items-center gap-2 justify-start select-none py-1 mb-1 shrink-0" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
         <div 
@@ -222,7 +222,7 @@ export default function Sidebar({
       </div>
  
       {/* Navigation items with micro-animations & layoutId glassmorphism active pill */}
-      <nav className="flex-1 space-y-0.5 py-1 pr-0.5 overflow-y-auto scrollbar-none">
+      <nav aria-label={isAr ? 'أقسام المنصة' : 'Platform sections'} className="flex-1 space-y-0.5 py-1 pr-0.5 overflow-y-auto scrollbar-none">
         {menuItems.map((item) => {
           const isActive = item.id === 'motivation' ? currentTab.startsWith('motivation') : currentTab === item.id;
           const isLocked = (item.isPremiumOnly && activePlanId === 'free') || (item.id === 'aichat' && !hasActiveMembership);
@@ -234,7 +234,7 @@ export default function Sidebar({
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-full flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${
+                className={`w-full min-h-11 flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${
                   isActive 
                     ? 'text-[var(--app-text)] font-extrabold'
                     : 'hover:text-primary text-[var(--app-text-muted)] font-bold'
@@ -264,7 +264,7 @@ export default function Sidebar({
                   setTab(item.id);
                 }
               }}
-              className={`w-full flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${
+              className={`w-full min-h-11 flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${
                 isActive
                   ? 'text-[var(--app-text)] font-extrabold'
                   : 'hover:text-primary text-[var(--app-text-muted)] font-bold'
