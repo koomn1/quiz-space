@@ -40,6 +40,7 @@ import { startWebVitalsReporting } from './lib/performanceTelemetry';
 import { getOnboardingTourStorageKey, shouldShowOnboardingTour } from './lib/onboardingState';
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
+import { useLocale } from './context/LocaleContext';
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -59,6 +60,7 @@ export default function App() {
 
   const authContext = useAuth();
   const { darkMode, setDarkMode, colorTheme, setColorTheme } = useTheme();
+  const { lang, setLang } = useLocale();
   // The intro belongs to a fresh load of the primary root URL only.
   // Inner hash routes and auth refreshes use the normal application loader.
   const [splashActive, setSplashActive] = React.useState(() => {
@@ -399,9 +401,6 @@ export default function App() {
 
   
   // i18n & Push API properties setup
-  const [lang, setLang] = React.useState<'ar' | 'en'>(() => {
-    return (localStorage.getItem('quiz_language') as 'ar' | 'en') || 'ar';
-  });
   const [activePush, setActivePush] = React.useState<PushNotificationPayload | null>(null);
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = React.useState(false);
   const [showPushBanner, setShowPushBanner] = React.useState(() => {
@@ -418,12 +417,6 @@ export default function App() {
     }
   }, []);
   useVisibilityPolling(checkQuota, 3000);
-
-  React.useEffect(() => {
-    localStorage.setItem('quiz_language', lang);
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = lang;
-  }, [lang]);
 
   const refreshPlatformSettings = React.useCallback(async () => {
     const settings = await getPlatformSettings();
