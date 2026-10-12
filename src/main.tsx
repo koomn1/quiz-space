@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext.tsx';
+import { ThemeProvider } from './context/ThemeContext';
 import App from './App.tsx';
 import { recordPushNotificationOpen } from './lib/db';
 import { supabase } from './lib/supabaseClient';
@@ -73,11 +74,13 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppRuntimeBoundary>
-          <App />
-          <ServiceWorkerUpdatePrompt />
-          <NativeAppUpdatePrompt />
-        </AppRuntimeBoundary>
+        <ThemeProvider>
+          <AppRuntimeBoundary>
+            <App />
+            <ServiceWorkerUpdatePrompt />
+            <NativeAppUpdatePrompt />
+          </AppRuntimeBoundary>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,

@@ -38,8 +38,8 @@ import { generateCoolStudentName } from './lib/nameGenerator';
 import { getOrCreateGuestIdentity } from './lib/guestIdentity';
 import { startWebVitalsReporting } from './lib/performanceTelemetry';
 import { getOnboardingTourStorageKey, shouldShowOnboardingTour } from './lib/onboardingState';
-import { getThemePreset } from './lib/themePresets';
 import { useAuth } from './context/AuthContext';
+import { useTheme } from './context/ThemeContext';
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -58,6 +58,7 @@ export default function App() {
   const mainContainerRef = React.useRef<HTMLElement>(null);
 
   const authContext = useAuth();
+  const { darkMode, setDarkMode, colorTheme, setColorTheme } = useTheme();
   // The intro belongs to a fresh load of the primary root URL only.
   // Inner hash routes and auth refreshes use the normal application loader.
   const [splashActive, setSplashActive] = React.useState(() => {
@@ -397,16 +398,6 @@ export default function App() {
   const [isLoadingQuizzes, setIsLoadingQuizzes] = React.useState(true);
 
   
-  const [darkMode, setDarkMode] = React.useState(() => {
-    const savedTheme = localStorage.getItem('quiz_theme');
-    if (!savedTheme) {
-      localStorage.setItem('quiz_theme', 'dark');
-      return true;
-    }
-    return savedTheme !== 'light';
-  });
-  const [colorTheme, setColorTheme] = React.useState<string>(() => getThemePreset(localStorage.getItem('quiz_color_theme')).id);
-
   // i18n & Push API properties setup
   const [lang, setLang] = React.useState<'ar' | 'en'>(() => {
     return (localStorage.getItem('quiz_language') as 'ar' | 'en') || 'ar';
@@ -656,23 +647,6 @@ export default function App() {
 
     return () => { void supabase.removeChannel(dmChannel); };
   }, [userId, lang, pushNotificationsEnabled]);
-
-  // Bright cheerful theme presets helper configurations & syncing
-  React.useEffect(() => {
-    const selected = getThemePreset(colorTheme);
-    if (selected.id !== colorTheme) setColorTheme(selected.id);
-    if (selected.id === 'deep-night' && !darkMode) setDarkMode(true);
-    localStorage.setItem('quiz_color_theme', selected.id);
-
-    const root = document.documentElement;
-    root.dataset.colorTheme = selected.id;
-    root.style.setProperty('--theme-gradient-from', selected.gradientFrom);
-    root.style.setProperty('--theme-gradient-to', selected.gradientTo);
-    root.style.setProperty('--theme-primary', selected.primary);
-    root.style.setProperty('--theme-primary-hover', selected.primaryHover);
-    root.style.setProperty('--theme-primary-light', selected.primaryLight);
-    root.style.setProperty('--theme-primary-dark', selected.primaryDark);
-  }, [colorTheme, darkMode, setDarkMode]);
 
   // Trigger the tour only after the account-backed onboarding state has loaded.
   // This prevents an already onboarded user from seeing it again on a new browser.
@@ -954,10 +928,6 @@ export default function App() {
     // 0. Fetch real external public URL origin for sharing purposes
     initAppOrigin();
 
-    // 1. Theme configuration fallback lock
-    const isDark = localStorage.getItem('quiz_theme') === 'dark';
-    setDarkMode(isDark);
-
     let path = window.location.pathname;
     if (path.startsWith('/quiz-space')) {
       path = path.slice(11);
@@ -986,18 +956,6 @@ export default function App() {
     // 3. Fetch Quizzes straight from database
     fetchQuizzesList();
   }, []);
-
-  // Apply the theme synchronously. A global transition causes every glass/blurred
-  // surface to repaint at once on mobile, which can freeze the page.
-  React.useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle('dark', darkMode);
-    localStorage.setItem('quiz_theme', darkMode ? 'dark' : 'light');
-
-    return () => {
-      root.classList.remove('theme-transition');
-    };
-  }, [darkMode]);
 
   // Fetch quizzes list from Firestore
   const fetchQuizzesList = async () => {
