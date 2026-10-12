@@ -29,11 +29,11 @@ import ProcessingCenterBanner from './components/ProcessingCenterBanner';
 import CommandPalette from './components/CommandPalette';
 import { Sparkles, Edit, Compass, Info, XCircle, Award, Volume2, Globe, Bell, AlertTriangle, ExternalLink, User, Bot, Zap, MessageCircle } from 'lucide-react';
 
-import { getQuizzes, saveUserProfile, deleteQuiz, getUserProfileStats, getRecentCompletions, getPlatformSettings, getUserNotificationPreferences } from './lib/db';
+import { saveUserProfile, deleteQuiz, getUserProfileStats, getRecentCompletions, getPlatformSettings, getUserNotificationPreferences } from './lib/db';
 import { playNotificationSound } from './lib/sound';
 import { pushNotificationsManager, PushNotificationPayload } from './lib/pushNotifications';
 import { translations } from './lib/i18n';
-import { initAppOrigin, getApiUrl } from './lib/origin';
+import { getApiUrl } from './lib/origin';
 import { generateCoolStudentName } from './lib/nameGenerator';
 import { getOrCreateGuestIdentity } from './lib/guestIdentity';
 import { startWebVitalsReporting } from './lib/performanceTelemetry';
@@ -41,6 +41,7 @@ import { getOnboardingTourStorageKey, shouldShowOnboardingTour } from './lib/onb
 import { useAuth } from './context/AuthContext';
 import { useTheme } from './context/ThemeContext';
 import { useLocale } from './context/LocaleContext';
+import { useAppBootstrap, useQuizCatalog } from './hooks/useAppBootstrap';
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -396,8 +397,11 @@ export default function App() {
 
   const [unreadMessagesCount, setUnreadMessagesCount] = React.useState<number>(0);
 
-  const [quizzes, setQuizzes] = React.useState<Quiz[]>([]);
-  const [isLoadingQuizzes, setIsLoadingQuizzes] = React.useState(true);
+  const { quizzes, isLoadingQuizzes, fetchQuizzesList } = useQuizCatalog();
+  const handleQuizDetected = React.useCallback((quizId: string) => {
+    authRedirectQuizIdRef.current = quizId;
+  }, []);
+  useAppBootstrap({ onQuizDetected: handleQuizDetected, fetchQuizzesList });
 
   
   // i18n & Push API properties setup
@@ -917,52 +921,6 @@ export default function App() {
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [userId]);
-  React.useEffect(() => {
-    // 0. Fetch real external public URL origin for sharing purposes
-    initAppOrigin();
-
-    let path = window.location.pathname;
-    if (path.startsWith('/quiz-space')) {
-      path = path.slice(11);
-    }
-    const hash = window.location.hash;
-
-    let quizId = null;
-    if (hash) {
-      const hashClean = hash.replace(/^#\/?/, "").split('?')[0];
-      const qMatch = hashClean.match(/^quiz\/([^\/?#]+)/);
-      if (qMatch && qMatch[1]) {
-        quizId = qMatch[1];
-      }
-    }
-    if (!quizId) {
-      const quizMatch = path.match(/^\/quiz\/([^\/]+)/) || path.match(/^\/apps\/([^\/]+)/);
-      if (quizMatch && quizMatch[1]) {
-        quizId = quizMatch[1];
-      }
-    }
-
-    if (quizId) {
-      authRedirectQuizIdRef.current = quizId;
-    }
-
-    // 3. Fetch Quizzes straight from database
-    fetchQuizzesList();
-  }, []);
-
-  // Fetch quizzes list from Firestore
-  const fetchQuizzesList = async () => {
-    setIsLoadingQuizzes(true);
-    try {
-      const data = await getQuizzes();
-      setQuizzes(data);
-    } catch (e) {
-      console.error('Error fetching quizzes:', e);
-    } finally {
-      setIsLoadingQuizzes(false);
-    }
-  };
-
   // Activate Local Sandbox Simulation Mode to handle network blocks / iframe sandboxing.
   // This is a guest/trial mode only: it must never carry real privileges (premium,
   // class creation, community posting, etc.) since it isn't backed by a Supabase
