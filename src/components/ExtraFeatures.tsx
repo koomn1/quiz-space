@@ -1408,7 +1408,9 @@ export function SettingsSection({
     id: theme.id,
     name: theme.id === 'indigo' ? (isAr ? 'داكن (بنفسجي فضائي)' : 'Space Purple')
       : theme.id === 'light' ? (isAr ? 'فاتح (أبيض رصين)' : 'Minimalist Light')
-        : theme.id === 'sky' ? (isAr ? 'داكن (أزرق محيطي)' : 'Ocean Blue')
+      : theme.id === 'sky' ? (isAr ? 'أزرق محيطي' : 'Ocean Blue')
+          : theme.id === 'blue' ? (isAr ? 'أزرق هادئ' : 'Calm Blue')
+            : theme.id === 'deep-night' ? (isAr ? 'ليلي عميق جدًا' : 'Deep Night')
           : theme.id === 'emerald' ? (isAr ? 'داكن (أخضر زمردي)' : 'Emerald Green')
             : theme.id === 'sunset' ? (isAr ? 'داكن (برتقالي الشمس)' : 'Sunset Orange')
               : theme.id === 'pastelp' ? (isAr ? 'فاتح (وردي باستيل)' : 'Pastel Pink')

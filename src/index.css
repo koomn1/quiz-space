@@ -1521,3 +1521,52 @@ html:not(.dark) .liquid-sidebar div[class~="text-white"] {
 @media (prefers-reduced-motion: reduce) {
   .processing-toast { animation: none; }
 }
+
+/* Extra color modes: these presets change surfaces as well as the accent color. */
+html.dark[data-color-theme="deep-night"] {
+  --lg-bg: #03030a;
+  --lg-bg-deep: #050511;
+  --lg-surface: rgba(8, 8, 22, 0.86);
+  --lg-surface-strong: rgba(12, 12, 31, 0.96);
+  --lg-surface-muted: rgba(10, 10, 25, 0.8);
+  --lg-border: rgba(148, 163, 184, 0.13);
+  --lg-border-strong: rgba(139, 92, 246, 0.28);
+  --lg-text: #f4f3ff;
+  --lg-text-muted: #a9a6c6;
+  --lg-accent: #a78bfa;
+  --lg-accent-soft: rgba(139, 92, 246, 0.18);
+  --app-page-bg: #03030a;
+  --app-surface: #080816;
+  --app-surface-strong: #0c0c1f;
+  --app-surface-raised: #11112b;
+  --app-surface-tint: #171735;
+  --app-border: rgba(139, 92, 246, 0.2);
+  --app-border-strong: rgba(167, 139, 250, 0.34);
+  --app-text: #f4f3ff;
+  --app-text-muted: #aaa7c7;
+}
+
+html:not(.dark)[data-color-theme="blue"] {
+  --app-page-bg: #f3f8ff;
+  --app-surface: #ffffff;
+  --app-surface-strong: #ffffff;
+  --app-surface-tint: #e8f2ff;
+  --app-border: rgba(37, 99, 235, 0.2);
+  --app-border-strong: rgba(37, 99, 235, 0.34);
+  --app-text: #102a56;
+  --app-text-muted: #526b91;
+}
+
+html.dark[data-color-theme="blue"] {
+  --lg-accent: #60a5fa;
+  --lg-accent-soft: rgba(37, 99, 235, 0.2);
+  --app-page-bg: #071426;
+  --app-surface: #0d1f39;
+  --app-surface-strong: #102746;
+  --app-surface-raised: #16345a;
+  --app-surface-tint: #17406d;
+  --app-border: rgba(96, 165, 250, 0.2);
+  --app-border-strong: rgba(96, 165, 250, 0.36);
+  --app-text: #eff6ff;
+  --app-text-muted: #a9c4e5;
+}

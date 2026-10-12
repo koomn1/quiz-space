@@ -728,6 +728,7 @@ export default function App() {
   React.useEffect(() => {
     const selected = getThemePreset(colorTheme);
     if (selected.id !== colorTheme) setColorTheme(selected.id);
+    if (selected.id === 'deep-night' && !darkMode) setDarkMode(true);
     localStorage.setItem('quiz_color_theme', selected.id);
 
     const root = document.documentElement;
@@ -738,7 +739,7 @@ export default function App() {
     root.style.setProperty('--theme-primary-hover', selected.primaryHover);
     root.style.setProperty('--theme-primary-light', selected.primaryLight);
     root.style.setProperty('--theme-primary-dark', selected.primaryDark);
-  }, [colorTheme]);
+  }, [colorTheme, darkMode, setDarkMode]);
 
   // Trigger the tour only after the account-backed onboarding state has loaded.
   // This prevents an already onboarded user from seeing it again on a new browser.
