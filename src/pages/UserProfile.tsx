@@ -49,6 +49,33 @@ import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, resolveProfileImageUrl, uniqueProfileFrames } from "../constants/profileAssets";
 
+function compressProfileImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read image file.'));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error('Could not decode image file.'));
+      image.onload = () => {
+        const maxSize = 640;
+        const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const context = canvas.getContext('2d');
+        if (!context) {
+          reject(new Error('Could not prepare image preview.'));
+          return;
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/webp', 0.82));
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
   'frame-dragon-spirit': { animation: 'frame-rotate 10s linear infinite' },
   'frame-legendary-dragon': { animation: 'frame-rotate 10s linear infinite' },
@@ -1369,7 +1396,7 @@ export default function UserProfile({
                     <>
                       <button
                         onClick={handleSaveProfile}
-                        disabled={isSaving}
+                        disabled={isSaving || isAvatarUploading}
                         className="px-5 py-2.5 rounded-full font-bold text-xs bg-primary text-white shadow hover:bg-primary/95 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <Save className="w-4 h-4" />
@@ -1585,18 +1612,19 @@ export default function UserProfile({
                               }
                               setIsAvatarUploading(true);
                               try {
+                                // Always prepare a compact local fallback first. The
+                                // Storage bucket may reject a client upload because of
+                                // its policy, while the profile row can still safely
+                                // persist a small data URL.
+                                const compressedDataUrl = await compressProfileImage(file);
+                                setEditPhotoURL(compressedDataUrl);
                                 const uploadedUrl = await uploadAvatar(profileId, file);
                                 if (uploadedUrl) {
                                   setEditPhotoURL(uploadedUrl);
-                                } else {
-                                const reader = new FileReader();
-                                reader.onload = (evt) => {
-                                  if (evt.target?.result) {
-                                    setEditPhotoURL(evt.target.result as string);
-                                  }
-                                };
-                                  reader.readAsDataURL(file);
                                 }
+                              } catch (error) {
+                                console.error('Profile image preparation failed:', error);
+                                showToast('error', isAr ? 'تعذر تجهيز الصورة. جرّب صورة أخرى.' : 'Could not prepare this image. Try another one.');
                               } finally {
                                 setIsAvatarUploading(false);
                               }
@@ -2057,7 +2085,7 @@ export default function UserProfile({
           <div className="sticky bottom-3 z-10 flex flex-col gap-2 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 sm:static sm:flex-row sm:justify-end sm:bg-transparent sm:pt-4 sm:backdrop-blur-none">
             <button
               onClick={handleSaveProfile}
-              disabled={isSaving}
+              disabled={isSaving || isAvatarUploading}
               className="min-h-11 w-full px-6 py-2.5 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary-hover transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-primary/10 sm:w-auto"
             >
               {isSaving

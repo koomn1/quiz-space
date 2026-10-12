@@ -464,6 +464,16 @@ html, body, header, main, footer, div, section, article, nav, button, input, tex
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Switching a theme is a single atomic visual update, not an animation for
+   every node in the document. This prevents the mobile white flash/freeze. */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

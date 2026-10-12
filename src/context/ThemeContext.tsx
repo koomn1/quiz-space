@@ -42,6 +42,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setDarkMode(true);
     }
 
+    // Theme changes update many utility classes at once. Temporarily disable
+    // per-element transitions so the browser does not animate/repaint the
+    // entire page for several seconds or flash a white intermediate frame.
+    root.classList.add('theme-switching');
     root.classList.toggle('dark', darkMode);
     root.dataset.colorTheme = selected.id;
     root.style.setProperty('--theme-gradient-from', selected.gradientFrom);
@@ -54,6 +58,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     window.localStorage.setItem('quiz_theme', darkMode ? 'dark' : 'light');
     window.localStorage.setItem('quiz_color_theme', selected.id);
+    const releaseTimer = window.setTimeout(() => root.classList.remove('theme-switching'), 80);
+    return () => window.clearTimeout(releaseTimer);
   }, [colorTheme, darkMode]);
 
   const value = React.useMemo(() => ({ darkMode, setDarkMode, colorTheme, setColorTheme }), [darkMode, colorTheme]);
