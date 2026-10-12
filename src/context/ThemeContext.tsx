@@ -4,20 +4,22 @@ import { getThemePreset } from '../lib/themePresets';
 interface ThemeContextValue {
   darkMode: boolean;
   setDarkMode: React.Dispatch<React.SetStateAction<boolean>>;
+  themePreference: 'light' | 'dark' | 'system';
+  setThemePreference: (preference: 'light' | 'dark' | 'system') => void;
   colorTheme: string;
   setColorTheme: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const ThemeContext = React.createContext<ThemeContextValue | undefined>(undefined);
 
-function readDarkMode() {
-  if (typeof window === 'undefined') return true;
-  const savedTheme = window.localStorage.getItem('quiz_theme');
-  if (!savedTheme) {
-    window.localStorage.setItem('quiz_theme', 'dark');
-    return true;
-  }
-  return savedTheme !== 'light';
+function readThemePreference(): 'light' | 'dark' | 'system' {
+  if (typeof window === 'undefined') return 'dark';
+  const saved = window.localStorage.getItem('quiz_theme_preference');
+  if (saved === 'light' || saved === 'dark' || saved === 'system') return saved;
+  return window.localStorage.getItem('quiz_theme') === 'light' ? 'light' : 'dark';
+}
+function prefersDark() {
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
 }
 
 function readColorTheme() {
@@ -26,7 +28,11 @@ function readColorTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [darkMode, setDarkMode] = React.useState(readDarkMode);
+  const [themePreference, setThemePreferenceState] = React.useState(readThemePreference);
+  const [darkMode, setDarkMode] = React.useState(() => {
+    const preference = readThemePreference();
+    return preference === 'system' ? prefersDark() : preference === 'dark';
+  });
   const [colorTheme, setColorTheme] = React.useState(readColorTheme);
 
   React.useLayoutEffect(() => {
@@ -57,12 +63,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.style.colorScheme = darkMode ? 'dark' : 'light';
 
     window.localStorage.setItem('quiz_theme', darkMode ? 'dark' : 'light');
+    window.localStorage.setItem('quiz_theme_preference', themePreference);
     window.localStorage.setItem('quiz_color_theme', selected.id);
     const releaseTimer = window.setTimeout(() => root.classList.remove('theme-switching'), 80);
     return () => window.clearTimeout(releaseTimer);
-  }, [colorTheme, darkMode]);
+  }, [colorTheme, darkMode, themePreference]);
 
-  const value = React.useMemo(() => ({ darkMode, setDarkMode, colorTheme, setColorTheme }), [darkMode, colorTheme]);
+  const setThemePreference = React.useCallback((preference: 'light' | 'dark' | 'system') => {
+    setThemePreferenceState(preference);
+    setDarkMode(preference === 'system' ? prefersDark() : preference === 'dark');
+  }, []);
+
+  React.useEffect(() => {
+    if (themePreference !== 'system' || typeof window === 'undefined') return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => setDarkMode(media.matches);
+    media.addEventListener?.('change', handleChange);
+    return () => media.removeEventListener?.('change', handleChange);
+  }, [themePreference]);
+
+  const value = React.useMemo(() => ({ darkMode, setDarkMode, themePreference, setThemePreference, colorTheme, setColorTheme }), [darkMode, themePreference, setThemePreference, colorTheme]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 

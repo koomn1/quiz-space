@@ -37,7 +37,7 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { activateRewardFrame, deactivateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems, getPdfExportHistory, getPdfExportSignedUrl, isTrialSubscription } from "../lib/db";
+import { activateRewardFrame, clearAvatar, deactivateRewardFrame, getUserProfileStats, saveUserProfile, getCouponByCode, uploadAvatar, uploadCoverImage, updateBadgeAndNameColor, redeemCouponForUser, getRewardsSummary, getRewardInventory, getRewardStoreItems, getPdfExportHistory, getPdfExportSignedUrl, isTrialSubscription } from "../lib/db";
 import { PremiumNameTag, availableBadgeTiers, availableBadgeColors, availableNameColors, NAME_COLOR_PRESETS, BADGE_LABELS, BADGE_COLOR_PRESETS, BadgeTier, NameColorKey, BadgeColorKey } from "../components/PremiumNameTag";
 import { getApiUrl } from "../lib/origin";
 import { supabase } from "../lib/supabaseClient";
@@ -49,31 +49,37 @@ import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, resolveProfileImageUrl, uniqueProfileFrames } from "../constants/profileAssets";
 
-function compressProfileImage(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Could not read image file.'));
-    reader.onload = () => {
-      const image = new Image();
-      image.onerror = () => reject(new Error('Could not decode image file.'));
-      image.onload = () => {
-        const maxSize = 640;
-        const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-        const context = canvas.getContext('2d');
-        if (!context) {
-          reject(new Error('Could not prepare image preview.'));
-          return;
-        }
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/webp', 0.82));
-      };
-      image.src = String(reader.result);
+async function prepareProfileImage(file: File): Promise<{ preview: string; uploadFile: File; compressionPercent: number }> {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Unsupported image type.');
+  const header = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  const isJpeg = header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff;
+  const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
+  const isPng = header.length >= 8 && pngSignature.every((value, index) => header[index] === value);
+  const isWebp = String.fromCharCode(...header.slice(0, 4)) === 'RIFF' && String.fromCharCode(...header.slice(8, 12)) === 'WEBP';
+  if (!isJpeg && !isPng && !isWebp) throw new Error('The image signature is invalid.');
+  if (typeof createImageBitmap !== 'function') throw new Error('Image decoding is unavailable.');
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' } as ImageBitmapOptions);
+  try {
+    const size = Math.min(bitmap.width, bitmap.height);
+    const sx = Math.round((bitmap.width - size) / 2);
+    const sy = Math.round((bitmap.height - size) / 2);
+    const canvas = document.createElement('canvas');
+    canvas.width = 640;
+    canvas.height = 640;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Could not prepare image preview.');
+    context.drawImage(bitmap, sx, sy, size, size, 0, 0, 640, 640);
+    const preview = canvas.toDataURL('image/webp', 0.82);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82));
+    if (!blob) throw new Error('Could not encode image.');
+    return {
+      preview,
+      uploadFile: new File([blob], 'profile.webp', { type: 'image/webp' }),
+      compressionPercent: file.size ? Math.max(0, Math.round((1 - blob.size / file.size) * 100)) : 0,
     };
-    reader.readAsDataURL(file);
-  });
+  } finally {
+    bitmap.close();
+  }
 }
 
 const ACTIVE_FRAME_STYLES: Record<string, React.CSSProperties> = {
@@ -184,6 +190,7 @@ export default function UserProfile({
   const [editFrameId, setEditFrameId] = React.useState('');
   const [isFramesLoading, setIsFramesLoading] = React.useState(false);
   const [isAvatarUploading, setIsAvatarUploading] = React.useState(false);
+  const [avatarCompressionPercent, setAvatarCompressionPercent] = React.useState<number | null>(null);
   const [avatarFilter, setAvatarFilter] = React.useState<'all' | 'boy' | 'girl'>('all');
   const [avatarSearch, setAvatarSearch] = React.useState('');
   const [frameSearch, setFrameSearch] = React.useState('');
@@ -772,6 +779,7 @@ export default function UserProfile({
         // policy rejects direct frame writes even for owned frames — activation
         // must go through activate_reward_frame() below.
       );
+      if (!editPhotoURL && profileData?.photoURL) await clearAvatar(profileId);
 
       // The active frame is a reward entitlement, so its ownership is verified
       // by a dedicated server-side RPC rather than generic profile updates.
@@ -1612,19 +1620,17 @@ export default function UserProfile({
                               }
                               setIsAvatarUploading(true);
                               try {
-                                // Always prepare a compact local fallback first. The
-                                // Storage bucket may reject a client upload because of
-                                // its policy, while the profile row can still safely
-                                // persist a small data URL.
-                                const compressedDataUrl = await compressProfileImage(file);
-                                setEditPhotoURL(compressedDataUrl);
-                                const uploadedUrl = await uploadAvatar(profileId, file);
+                                const prepared = await prepareProfileImage(file);
+                                setAvatarCompressionPercent(prepared.compressionPercent);
+                                setEditPhotoURL(prepared.preview);
+                                const uploadedUrl = await uploadAvatar(profileId, prepared.uploadFile);
                                 if (uploadedUrl) {
                                   setEditPhotoURL(uploadedUrl);
                                 }
                               } catch (error) {
                                 console.error('Profile image preparation failed:', error);
-                                showToast('error', isAr ? 'تعذر تجهيز الصورة. جرّب صورة أخرى.' : 'Could not prepare this image. Try another one.');
+                                setAvatarCompressionPercent(null);
+                                showToast('error', isAr ? 'الصورة غير مدعومة أو تالفة. اختر JPG أو PNG أو WebP سليمة.' : 'This image is unsupported or damaged. Choose a valid JPG, PNG, or WebP file.');
                               } finally {
                                 setIsAvatarUploading(false);
                               }
@@ -1641,10 +1647,19 @@ export default function UserProfile({
                         {editPhotoURL && (
                           <button
                             type="button"
-                            onClick={() => setEditPhotoURL("")}
+                            onClick={() => { setEditPhotoURL(""); setAvatarCompressionPercent(null); }}
                             className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[11px] font-black transition-colors"
                           >
                             {isAr ? "إزالة" : "Remove"}
+                          </button>
+                        )}
+                        {!editPhotoURL && profileData?.photoURL && (
+                          <button
+                            type="button"
+                            onClick={() => { setEditPhotoURL(""); setAvatarCompressionPercent(null); }}
+                            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-[11px] font-black transition-colors"
+                          >
+                            {isAr ? "إعادة الصورة الافتراضية" : "Reset default avatar"}
                           </button>
                         )}
                       </div>
@@ -1653,6 +1668,11 @@ export default function UserProfile({
                           ? "صيغ مدعومة: JPG, PNG, WebP (الحد الأقصى: 2 ميغابايت)."
                           : "Supported: JPG, PNG, WebP (Max 2MB)."}
                       </p>
+                      {avatarCompressionPercent !== null && (
+                        <p className="text-[10px] font-bold text-emerald-500 mt-1">
+                          {isAr ? `تم ضغط الصورة بنسبة ${avatarCompressionPercent}%` : `Image compressed by ${avatarCompressionPercent}%`}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

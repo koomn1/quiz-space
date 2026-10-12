@@ -110,22 +110,35 @@ export async function uploadCoverImage(userId: string, file: File): Promise<stri
 export async function uploadAvatar(userId: string, file: File): Promise<string | null> {
   if (!isSupabaseConfigured) return null;
   try {
-    const ext = file.name.split('.').pop() || 'jpg';
-    const path = `avatars/${userId}_${Date.now()}.${ext}`;
-    const { data, error } = await supabase.storage.from('avatars').upload(path, file, {
-      cacheControl: '3600',
+    const path = `avatars/${userId}/profile.webp`;
+    const { error } = await supabase.storage.from('avatars').upload(path, file, {
+      cacheControl: '31536000',
+      contentType: 'image/webp',
       upsert: true,
     });
     if (error) {
       console.error('Avatar upload error:', error.message);
       return null;
     }
+    const { data: legacyFiles } = await supabase.storage.from('avatars').list(`avatars/${userId}`);
+    const stalePaths = (legacyFiles || [])
+      .map((entry) => entry.name)
+      .filter((name) => name && name !== 'profile.webp')
+      .map((name) => `avatars/${userId}/${name}`);
+    if (stalePaths.length) await supabase.storage.from('avatars').remove(stalePaths);
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
-    return publicUrl;
+    return `${publicUrl}?v=${Date.now()}`;
   } catch (e) {
     console.error('Avatar upload exception:', e);
     return null;
   }
+}
+
+export async function clearAvatar(userId: string): Promise<void> {
+  if (!isSupabaseConfigured || !userId) return;
+  await supabase.storage.from('avatars').remove([`avatars/${userId}/profile.webp`]);
+  const { error } = await supabase.from('users').update({ photo_url: '' }).eq('uid', userId);
+  if (error) throw error;
 }
 
 const PDF_EXPORT_BUCKET = 'quiz-pdf-exports';

@@ -40,6 +40,7 @@ import ThreeDIcon from './ThreeDIcon';
 import ParallaxTiltCard from './ParallaxTiltCard';
 import { UserBadge } from './UserBadge';
 import { playChimeSound } from '../lib/chime';
+import { useTheme } from '../context/ThemeContext';
 
 export { playChimeSound } from '../lib/chime';
 
@@ -1354,6 +1355,7 @@ export function SettingsSection({
   userPlanName?: 'Free' | 'Silver' | 'Gold' | 'Diamond';
 }) {
   const isAr = lang === 'ar';
+  const { themePreference, setThemePreference } = useTheme();
   
   // Tab control state (1: البيانات الأساسية, 2: إدارة الأمان, 3: تخصيص الواجهة, 4: الإشعارات)
   const [activeTab, setActiveTab] = useState<1 | 2 | 3 | 4>(1);
@@ -1789,6 +1791,17 @@ export function SettingsSection({
                   </div>
                   <div className="shrink-0">
                     <NeumorphismToggle checked={darkMode} onChange={setDarkMode} size="sm" />
+                  </div>
+                </div>
+                <div className="md:col-span-2 rounded-2xl bg-slate-950/40 border border-slate-800 p-4">
+                  <h4 className="text-xs font-bold text-white">{isAr ? 'تفضيل الثيم' : 'Theme preference'}</h4>
+                  <p className="text-[10px] text-slate-400 mt-0.5 mb-3">{isAr ? 'اختَر الوضع الفاتح أو الداكن أو اتبع إعداد الجهاز تلقائيًا.' : 'Choose light, dark, or follow the device automatically.'}</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['light', 'dark', 'system'] as const).map((preference) => (
+                      <button key={preference} type="button" onClick={() => setThemePreference(preference)} className={`min-h-10 rounded-xl border text-[11px] font-black transition ${themePreference === preference ? 'border-primary bg-primary/15 text-primary' : 'border-slate-700 text-slate-300 hover:border-slate-500'}`}>
+                        {preference === 'light' ? (isAr ? 'فاتح' : 'Light') : preference === 'dark' ? (isAr ? 'داكن' : 'Dark') : (isAr ? 'حسب الجهاز' : 'System')}
+                      </button>
+                    ))}
                   </div>
                 </div>
 

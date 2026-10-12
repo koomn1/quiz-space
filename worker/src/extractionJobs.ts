@@ -441,6 +441,17 @@ function normalizeQuestions(value: unknown, allowedTypes: AllowedQuestionType[] 
   return questions;
 }
 
+function validateGeneratedQuestions(questions: any[]): any[] {
+  return questions.filter((question) => {
+    if (!question?.text || question.type === 'essay') return Boolean(question?.text);
+    if (!Array.isArray(question.options) || question.options.length < 2) return false;
+    if (!Number.isInteger(question.correctIndex) || question.correctIndex < 0 || question.correctIndex >= question.options.length) return false;
+    const answer = normalizeAnswerText(question.correctAnswer);
+    const expected = normalizeAnswerText(question.options[question.correctIndex]);
+    return Boolean(answer && expected && answer === expected);
+  });
+}
+
 function questionFingerprint(question: any): string {
   const raw = [question?.text, ...(Array.isArray(question?.options) ? question.options : [])]
     .map(value => String(value || '').normalize('NFKC').replace(/\s+/g, ' ').trim().toLocaleLowerCase())
@@ -843,15 +854,14 @@ async function generateQuestionsFromText(
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
   const requestedCount = job.requested_question_count || null;
-  // Automatic generation must cover the whole source. A single very large
-  // prompt commonly returns only the first ~40 questions because the model
-  // reaches its output limit. Split the source into overlapping sections and
-  // generate from every section, while keeping a positive requested count as
-  // the explicit/manual one-request path.
+  // Large explicit requests must also cover the whole source. Sending 100/200
+  // questions in one prompt commonly reaches the model output limit and makes
+  // the whole job fail, so split the source and assign a proportional target
+  // to every section.
   const sourceChunks: string[] = [];
   const automaticChunkSize = 90_000;
   const automaticOverlap = 3_000;
-  if (requestedCount) {
+  if (requestedCount && requestedCount <= 25) {
     sourceChunks.push(text.slice(0, 500_000));
   } else {
     for (let start = 0; start < text.length; ) {
@@ -864,6 +874,18 @@ async function generateQuestionsFromText(
     }
   }
   const totalChunks = Math.max(1, sourceChunks.length);
+  const chunkTargets: Array<number | null> = requestedCount
+    ? sourceChunks.map((chunk, index) => {
+        if (index === sourceChunks.length - 1) {
+          const assignedBeforeLast = sourceChunks.slice(0, -1).reduce(
+            (sum, current) => sum + Math.max(1, Math.round(requestedCount * current.length / Math.max(1, text.length))),
+            0,
+          );
+          return Math.max(1, requestedCount - assignedBeforeLast);
+        }
+        return Math.max(1, Math.round(requestedCount * chunk.length / Math.max(1, text.length)));
+      })
+    : sourceChunks.map(() => null);
   const messages = [{
     role: 'system',
     content: 'أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ الجزء المرسل، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواه فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.',
@@ -877,22 +899,25 @@ async function generateQuestionsFromText(
   let description = `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`;
 
   // Keep provider traffic bounded while processing every source section.
-  const concurrency = requestedCount ? 1 : 3;
+  const concurrency = 3;
   for (let start = 0; start < sourceChunks.length; start += concurrency) {
     const batch = sourceChunks.slice(start, start + concurrency);
     const results = await Promise.all(batch.map(async (sourceChunk) => {
+      const chunkIndex = sourceChunks.indexOf(sourceChunk, start);
+      const chunkTarget = chunkTargets[chunkIndex] || null;
       const chunkMessages = [
         messages[0],
-        { role: 'user', content: `${generatePrompt(requestedCount, job.custom_instruction, sourceChunk)}\n\nمحتوى الملف المصدر — الجزء الحالي (استخرج كل النقاط القابلة للسؤال من هذا الجزء):\n${sourceChunk}` },
+        { role: 'user', content: `${generatePrompt(chunkTarget, job.custom_instruction, sourceChunk)}\n\nمحتوى الملف المصدر — الجزء الحالي (استخرج كل النقاط القابلة للسؤال من هذا الجزء):\n${sourceChunk}` },
       ];
       let chunkError: unknown;
       for (const model of TEXT_MODEL_FALLBACKS) {
         try {
-          const response = await callOpenRouterWithFallback(env, chunkMessages, [model], { maxTokens: requestedCount ? 8_000 : 12_000, temperature: 0.2 });
+          const response = await callOpenRouterWithFallback(env, chunkMessages, [model], { maxTokens: chunkTarget ? Math.min(12_000, Math.max(3_000, chunkTarget * 220)) : 12_000, temperature: 0.2 });
           const quiz = parseJson(response.text);
           const questions = normalizeQuestions(quiz, allowedTypes);
-          if (!questions.length) throw new Error('The document section did not contain valid questions.');
-          return { response, quiz, questions };
+          const verifiedQuestions = validateGeneratedQuestions(questions);
+          if (!verifiedQuestions.length) throw new Error('The document section did not contain valid generated questions.');
+          return { response, quiz, questions: verifiedQuestions };
         } catch (error) {
           chunkError = error;
           console.warn(`Text generation section failed on model ${model}; trying fallback.`, error);
