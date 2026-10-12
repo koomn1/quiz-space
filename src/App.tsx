@@ -477,7 +477,6 @@ export default function App() {
     }
     return savedTheme !== 'light';
   });
-  const hasAppliedThemeRef = React.useRef(false);
   const [colorTheme, setColorTheme] = React.useState<string>(() => getThemePreset(localStorage.getItem('quiz_color_theme')).id);
 
   // i18n & Push API properties setup
@@ -1054,29 +1053,14 @@ export default function App() {
     fetchQuizzesList();
   }, []);
 
-  // Apply the initial theme immediately; animate only user-triggered toggles.
+  // Apply the theme synchronously. A global transition causes every glass/blurred
+  // surface to repaint at once on mobile, which can freeze the page.
   React.useEffect(() => {
     const root = document.documentElement;
-    const shouldAnimate = hasAppliedThemeRef.current;
-    hasAppliedThemeRef.current = true;
-    let frame = 0;
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    const applyTheme = () => {
-      root.classList.toggle('dark', darkMode);
-      localStorage.setItem('quiz_theme', darkMode ? 'dark' : 'light');
-      if (shouldAnimate) timeout = setTimeout(() => root.classList.remove('theme-transition'), 280);
-    };
-
-    if (shouldAnimate) {
-      root.classList.add('theme-transition');
-      frame = window.requestAnimationFrame(applyTheme);
-    } else {
-      applyTheme();
-    }
+    root.classList.toggle('dark', darkMode);
+    localStorage.setItem('quiz_theme', darkMode ? 'dark' : 'light');
 
     return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-      if (timeout) clearTimeout(timeout);
       root.classList.remove('theme-transition');
     };
   }, [darkMode]);
@@ -1463,11 +1447,11 @@ export default function App() {
           />
 
           <div
-          className={`light-readable-ui theme-page min-h-dvh w-full max-w-none overflow-x-hidden transition-colors duration-500 ${isCosmoTab ? 'h-dvh overflow-hidden' : ''}`}
+          className={`light-readable-ui theme-page min-h-dvh w-full max-w-none overflow-x-hidden ${isCosmoTab ? 'h-dvh overflow-hidden' : ''}`}
         >
           <PremiumCursor />
       
-                <div className={`relative flex min-h-0 min-w-0 flex-1 flex-col transition-colors duration-300 ${isCosmoTab ? 'h-full overflow-hidden' : 'min-h-dvh overflow-x-hidden'}`}>
+                <div className={`relative flex min-h-0 min-w-0 flex-1 flex-col ${isCosmoTab ? 'h-full overflow-hidden' : 'min-h-dvh overflow-x-hidden'}`}>
 
                 
         <div className={`theme-animated-bg fixed inset-0 pointer-events-none z-0 overflow-hidden select-none ${isCosmoTab ? 'hidden' : ''}`}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, CheckCircle2, CircleDot, FileText, LoaderCircle, Pause, Play, RefreshCw, RotateCcw, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, CircleDot, FileText, LoaderCircle, Pause, Play, RefreshCw, RotateCcw, X, ChevronDown } from 'lucide-react';
 import { controlExtractionJob, ExtractionJob, ExtractionJobControl, listActiveExtractionJobs } from '../services/aiWorkerClient';
 
 type ProcessingCenterBannerProps = { lang: 'ar' | 'en'; enabled: boolean; onOpenCreator: () => void };
@@ -12,6 +12,7 @@ const statusText = (status: ExtractionJob['status'], ar: boolean) => ({
 export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }: ProcessingCenterBannerProps) {
   const [jobs, setJobs] = React.useState<ExtractionJob[]>([]);
   const [dismissed, setDismissed] = React.useState(false);
+  const [expanded, setExpanded] = React.useState(false);
   const [busy, setBusy] = React.useState<string | null>(null);
   const [loadError, setLoadError] = React.useState(false);
   const ar = lang === 'ar';
@@ -27,6 +28,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
 
   React.useEffect(() => {
     setDismissed(false);
+    setExpanded(false);
     void refresh();
     if (!enabled) return undefined;
     const id = window.setInterval(() => void refresh(), 15_000);
@@ -53,44 +55,35 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
   const questions = job.extractedQuestions || 0;
 
   return (
-    <section className="relative z-20 border-b border-violet-200/70 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-xl dark:border-violet-900/60 dark:bg-slate-950/95 sm:px-6" dir={ar ? 'rtl' : 'ltr'} aria-label={ar ? 'مركز معالجة الملفات' : 'Document processing center'}>
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300" aria-hidden="true">
-              {job.status === 'processing' ? <LoaderCircle className="h-5 w-5 animate-spin" /> : job.status === 'error' ? <AlertTriangle className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-sm font-black text-slate-900 dark:text-white">{ar ? 'مركز معالجة الملفات' : 'Processing center'}</h2>
-                <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-black text-violet-800 dark:bg-violet-500/15 dark:text-violet-200"><CircleDot className="h-3 w-3" aria-hidden="true" />{statusText(job.status, ar)}</span>
-                {jobs.length > 1 && <span className="text-[10px] font-bold text-slate-500">{ar ? `${jobs.length} مهام` : `${jobs.length} jobs`}</span>}
-              </div>
-              <p className="mt-1 truncate text-xs font-bold text-slate-700 dark:text-slate-200">{job.sourceFileName || (ar ? 'ملف مرفوع' : 'Uploaded document')}</p>
-              <p className="mt-1 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{job.progressMessage || (ar ? 'تتم المعالجة في الخلفية.' : 'Processing in the background.')}</p>
-              <div className="mt-2 flex items-center gap-2" aria-live="polite">
-                <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage} aria-label={ar ? `تقدم المعالجة ${percentage}%` : `Processing progress ${percentage}%`}><div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 transition-[width] duration-500" style={{ width: `${percentage}%` }} /></div>
-                <span className="w-10 text-left text-[11px] font-black tabular-nums text-slate-700 dark:text-slate-200">{percentage}%</span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                <span>{ar ? `الأجزاء: ${job.processedChunks}/${job.totalChunks || '?'}` : `Chunks: ${job.processedChunks}/${job.totalChunks || '?'}`}</span>
-                <span>{ar ? `أسئلة مستخرجة: ${questions}` : `Extracted: ${questions}`}</span>
-                <span>{ar ? `تحتاج مراجعة: ${job.reviewRequiredQuestions || 0}` : `Review: ${job.reviewRequiredQuestions || 0}`}</span>
-              </div>
-            </div>
+    <aside className="processing-toast fixed inset-x-3 top-[calc(env(safe-area-inset-top)+4.5rem)] z-[80] sm:inset-x-auto sm:end-6 sm:top-24 sm:w-[min(29rem,calc(100vw-3rem))]" dir={ar ? 'rtl' : 'ltr'} aria-label={ar ? 'إشعار معالجة الملفات' : 'Document processing notification'}>
+      <div className="pointer-events-auto overflow-hidden rounded-2xl border border-violet-300/60 bg-white/95 shadow-[0_16px_45px_rgba(30,27,75,0.2)] backdrop-blur-xl dark:border-violet-700/50 dark:bg-slate-950/95">
+        <div className="flex items-center gap-2.5 p-3">
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${job.status === 'error' ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300' : 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300'}`} aria-hidden="true">
+            {job.status === 'processing' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : job.status === 'error' ? <AlertTriangle className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
           </div>
-          <div className="flex flex-wrap items-center gap-2 lg:max-w-[430px] lg:justify-end">
-            {canPause && <button type="button" onClick={() => void act(job, 'pause')} disabled={Boolean(busy)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-amber-200 px-3 text-xs font-black text-amber-800 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-60 dark:border-amber-900/60 dark:text-amber-300 dark:hover:bg-amber-950/30"><Pause className="h-3.5 w-3.5" aria-hidden="true" />{isBusy('pause') ? (ar ? 'جارٍ...' : 'Working...') : (ar ? 'إيقاف' : 'Pause')}</button>}
-            {canResume && <button type="button" onClick={() => void act(job, 'resume')} disabled={Boolean(busy)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-emerald-600 px-3 text-xs font-black text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-60"><Play className="h-3.5 w-3.5" aria-hidden="true" />{isBusy('resume') ? (ar ? 'جارٍ...' : 'Working...') : (ar ? 'استئناف' : 'Resume')}</button>}
-            {job.status === 'error' && <button type="button" onClick={() => void act(job, 'retry-failed')} disabled={Boolean(busy)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-rose-200 px-3 text-xs font-black text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500 disabled:opacity-60 dark:border-rose-900/60 dark:text-rose-300 dark:hover:bg-rose-950/30"><RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />{ar ? 'إعادة الفاشل' : 'Retry failed'}</button>}
-            {job.status !== 'error' && <button type="button" onClick={() => void act(job, 'cancel')} disabled={Boolean(busy)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"><X className="h-3.5 w-3.5" aria-hidden="true" />{ar ? 'إلغاء' : 'Cancel'}</button>}
-            <button type="button" onClick={() => void refresh()} className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" aria-label={ar ? 'تحديث' : 'Refresh'}><RefreshCw className="h-4 w-4" aria-hidden="true" /></button>
-            <button type="button" onClick={onOpenCreator} className="inline-flex min-h-10 items-center gap-1 rounded-xl bg-violet-600 px-3 text-xs font-black text-white transition hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-400">{ar ? 'فتح المهمة' : 'Open job'}</button>
-            <button type="button" onClick={() => setDismissed(true)} className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:hover:bg-slate-800" aria-label={ar ? 'إخفاء المركز مؤقتًا' : 'Dismiss temporarily'}><X className="h-4 w-4" aria-hidden="true" /></button>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5"><strong className="truncate text-xs font-black text-slate-900 dark:text-white">{ar ? 'مهمتك محفوظة وتعمل بالخلفية' : 'Your task is saved and running'}</strong><span className="shrink-0 rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-black text-violet-800 dark:bg-violet-500/15 dark:text-violet-200">{statusText(job.status, ar)}</span></div>
+            <p className="mt-1 truncate text-[10px] font-bold text-slate-500 dark:text-slate-400">{job.sourceFileName || (ar ? 'ملف مرفوع' : 'Uploaded document')} · {percentage}%</p>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage} aria-label={ar ? `تقدم المعالجة ${percentage}%` : `Processing progress ${percentage}%`}><div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 transition-[width] duration-500" style={{ width: `${percentage}%` }} /></div>
           </div>
+          <button type="button" onClick={() => setExpanded((value) => !value)} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:hover:bg-slate-800" aria-expanded={expanded} aria-label={ar ? 'عرض تفاصيل المعالجة' : 'Show processing details'}><ChevronDown className={`h-4 w-4 transition-transform ${expanded ? 'rotate-180' : ''}`} /></button>
+          <button type="button" onClick={() => setDismissed(true)} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:hover:bg-slate-800" aria-label={ar ? 'إخفاء الإشعار' : 'Dismiss notification'}><X className="h-4 w-4" /></button>
         </div>
-        <p className="mt-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400"><CheckCircle2 className="mr-1 inline h-3 w-3 text-emerald-500" aria-hidden="true" />{loadError ? (ar ? 'تعذر تحديث الحالة؛ حاول مرة أخرى.' : 'Could not refresh status; try again.') : (ar ? 'التقدم محفوظ على الخادم؛ يمكنك مغادرة الصفحة والعودة لاحقًا.' : 'Progress is saved on the server; you can leave and return later.')}</p>
+
+        {expanded && <div className="border-t border-violet-100/80 px-3 pb-3 pt-2 dark:border-violet-900/50">
+          <p className="truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">{job.progressMessage || (ar ? 'تتم المعالجة في الخلفية.' : 'Processing in the background.')}</p>
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400"><span>{ar ? `الأجزاء: ${job.processedChunks}/${job.totalChunks || '?'}` : `Chunks: ${job.processedChunks}/${job.totalChunks || '?'}`}</span><span>{ar ? `أسئلة: ${questions}` : `Questions: ${questions}`}</span><span>{ar ? `مراجعة: ${job.reviewRequiredQuestions || 0}` : `Review: ${job.reviewRequiredQuestions || 0}`}</span></div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {canPause && <button type="button" onClick={() => void act(job, 'pause')} disabled={Boolean(busy)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-amber-200 px-2.5 text-[10px] font-black text-amber-800 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-60 dark:border-amber-900/60 dark:text-amber-300 dark:hover:bg-amber-950/30"><Pause className="h-3 w-3" />{isBusy('pause') ? (ar ? 'جارٍ...' : 'Working...') : (ar ? 'إيقاف' : 'Pause')}</button>}
+            {canResume && <button type="button" onClick={() => void act(job, 'resume')} disabled={Boolean(busy)} className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-emerald-600 px-2.5 text-[10px] font-black text-white transition hover:bg-emerald-500 disabled:opacity-60"><Play className="h-3 w-3" />{isBusy('resume') ? (ar ? 'جارٍ...' : 'Working...') : (ar ? 'استئناف' : 'Resume')}</button>}
+            {job.status === 'error' && <button type="button" onClick={() => void act(job, 'retry-failed')} disabled={Boolean(busy)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-rose-200 px-2.5 text-[10px] font-black text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-900/60 dark:text-rose-300 dark:hover:bg-rose-950/30"><RotateCcw className="h-3 w-3" />{ar ? 'إعادة الفاشل' : 'Retry failed'}</button>}
+            {job.status !== 'error' && <button type="button" onClick={() => void act(job, 'cancel')} disabled={Boolean(busy)} className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 px-2.5 text-[10px] font-black text-slate-600 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"><X className="h-3 w-3" />{ar ? 'إلغاء' : 'Cancel'}</button>}
+            <button type="button" onClick={() => void refresh()} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" aria-label={ar ? 'تحديث' : 'Refresh'}><RefreshCw className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={onOpenCreator} className="ms-auto inline-flex min-h-9 items-center gap-1 rounded-lg bg-violet-600 px-3 text-[10px] font-black text-white transition hover:bg-violet-500">{ar ? 'فتح المهمة' : 'Open job'}</button>
+          </div>
+          <p className="mt-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400"><CheckCircle2 className="mr-1 inline h-3 w-3 text-emerald-500" />{loadError ? (ar ? 'تعذر تحديث الحالة؛ حاول مرة أخرى.' : 'Could not refresh status; try again.') : (ar ? 'التقدم محفوظ؛ يمكنك متابعة التصفح والعودة لاحقًا.' : 'Progress is saved; keep browsing and return later.')}</p>
+        </div>}
       </div>
-    </section>
+    </aside>
   );
 }

@@ -76,25 +76,6 @@ html.dark, body.dark {
   color: #F8FAFC;
 }
 
-/* Theme motion is intentionally scoped: never transition every descendant. */
-.theme-transition,
-.theme-transition body,
-.theme-transition #root,
-.theme-transition .theme-page,
-.theme-transition .theme-surface,
-.theme-transition .theme-container {
-  transition: background-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
-              color 180ms ease-out,
-              box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Text/icons that do not carry layout or blur stay cheap to animate. */
-.theme-transition .theme-muted,
-.theme-transition svg {
-  transition: color 180ms ease-out, fill 180ms ease-out, stroke 180ms ease-out;
-}
-
 button {
   @apply transition-[color,background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98];
 }
@@ -1478,11 +1459,6 @@ html:not(.dark) .liquid-sidebar div[class~="text-white"] {
   }
 }
 
-.theme-transition .theme-animated-bg,
-.theme-transition .theme-animated-bg * {
-  animation-play-state: paused !important;
-}
-
 /* Mobile header: keep navigation visible without a large floating pill. */
 @media (max-width: 768px) {
   .liquid-header {
@@ -1524,4 +1500,24 @@ html:not(.dark) .liquid-sidebar div[class~="text-white"] {
   .liquid-header__brand img {
     max-width: 7rem;
   }
+}
+
+.processing-toast {
+  animation: processing-toast-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  pointer-events: none;
+}
+
+@keyframes processing-toast-in {
+  from { opacity: 0; transform: translateY(-0.5rem) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .processing-toast {
+    top: calc(env(safe-area-inset-top) + 4.35rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .processing-toast { animation: none; }
 }
