@@ -9,7 +9,7 @@ import Security from '../pages/settings/Security';
 import Notifications from '../pages/settings/Notifications';
 import { 
   Compass, Layers, Users, Bookmark, Trophy, Award, Sparkles, Search, MessageSquare, 
-  Send, ThumbsUp, Trash2, PlusCircle, CheckCircle, Flame, Clock, Heart, Shield, Settings,
+  Send, ThumbsUp, Trash2, PlusCircle, CheckCircle, Flame, Clock, Heart, Shield, Settings, Pencil,
   Volume2, VolumeX, Eye, BookOpen, Star, HelpCircle, User, Zap, Info, X
 } from 'lucide-react';
 import { Quiz, QuizCompletion } from '../types';
@@ -30,7 +30,9 @@ import {
   getBookmarkedQuizIds,
   addBookmark,
   removeBookmark,
-  updateBadgeAndNameColor
+  updateBadgeAndNameColor,
+  COSMO_ADMIN_UID,
+  updateCommunityPost
 } from '../lib/db';
 import { PremiumNameTag, NAME_COLOR_PRESETS, availableBadgeTiers, availableNameColors, BADGE_LABELS, BadgeTier, NameColorKey } from './PremiumNameTag';
 import { TelegramBadge } from './ProfileStatsView';
@@ -60,6 +62,7 @@ interface CommunityPost {
   authorName: string;
   authorId: string;
   createdAt: string;
+  updatedAt?: string | null;
   likes: number;
   likedBy: string[];
   reactions?: Partial<Record<ReactionType, number>>;
@@ -305,6 +308,9 @@ function CommunityPostCard({
   isAr,
   handleReact,
   onDelete,
+  onEdit,
+  canEdit,
+  canDelete,
   onOpenInsights,
   onViewRecorded
 }: {
@@ -316,10 +322,16 @@ function CommunityPostCard({
   isAr: boolean;
   handleReact: (postId: string, reaction: ReactionType, e: React.MouseEvent) => void;
   onDelete: (postId: string) => void;
+  onEdit: (postId: string, text: string) => Promise<void>;
+  canEdit: boolean;
+  canDelete: boolean;
   onOpenInsights?: (post: CommunityPost) => void;
   onViewRecorded?: (postId: string, viewsCount: number) => void;
 }) {
   const hasTriggeredView = React.useRef(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftText, setDraftText] = useState(post.text);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!post.id || hasTriggeredView.current) return;
@@ -386,20 +398,51 @@ function CommunityPostCard({
             </p>
           </div>
         </div>
-        {isAdmin && (
-          <button 
-            onClick={() => onDelete(post.id)}
-            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-colors cursor-pointer"
-            title={isAr ? 'حذف' : 'Delete'}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+        {(canEdit || canDelete) && (
+          <div className="flex items-center gap-1">
+            {canEdit && !isEditing && (
+              <button type="button" onClick={() => { setDraftText(post.text); setIsEditing(true); }}
+                className="p-2 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors cursor-pointer"
+                title={isAr ? 'تعديل خلال دقيقتين' : 'Edit within two minutes'} aria-label={isAr ? 'تعديل المنشور' : 'Edit post'}>
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
+            {canDelete && (
+              <button type="button" onClick={() => onDelete(post.id)}
+                className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-colors cursor-pointer"
+                title={isAr ? 'حذف' : 'Delete'} aria-label={isAr ? 'حذف المنشور' : 'Delete post'}>
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         )}
       </div>
 
-      <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed text-right font-semibold" style={{ textAlign: isAr ? 'right' : 'left' }}>
-        {post.text}
-      </p>
+      {isEditing ? (
+        <div className="space-y-2">
+          <textarea value={draftText} onChange={(e) => setDraftText(e.target.value)} rows={3} maxLength={5000} autoFocus
+            className="w-full rounded-2xl border border-primary/40 bg-slate-50 dark:bg-slate-800 p-3 text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+            dir={isAr ? 'rtl' : 'ltr'} aria-label={isAr ? 'نص المنشور' : 'Post text'} />
+          <div className="flex items-center justify-end gap-2" dir={isAr ? 'rtl' : 'ltr'}>
+            <button type="button" onClick={() => setIsEditing(false)} className="min-h-10 rounded-xl px-3 text-[11px] font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+              {isAr ? 'إلغاء' : 'Cancel'}
+            </button>
+            <button type="button" disabled={!draftText.trim() || isSaving} onClick={async () => {
+              if (!draftText.trim() || isSaving) return;
+              setIsSaving(true);
+              try { await onEdit(post.id, draftText.trim()); setIsEditing(false); } finally { setIsSaving(false); }
+            }} className="min-h-10 inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 text-[11px] font-bold text-white hover:bg-primary-hover disabled:opacity-50 cursor-pointer">
+              <CheckCircle className="w-3.5 h-3.5" />
+              {isSaving ? (isAr ? 'جارٍ الحفظ...' : 'Saving...') : (isAr ? 'حفظ التعديل' : 'Save edit')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed text-right font-semibold" style={{ textAlign: isAr ? 'right' : 'left' }}>
+          {post.text}
+          {post.updatedAt && <span className="block mt-1 text-[10px] font-medium text-slate-400">{isAr ? 'تم التعديل' : 'Edited'}</span>}
+        </p>
+      )}
 
       <div className="border-t border-slate-100 dark:border-slate-800/50 pt-2 flex w-full min-w-0 flex-wrap items-center justify-start gap-2" dir={isAr ? 'rtl' : 'ltr'}>
         <ReactionButton post={post} isAr={isAr} onReact={(reaction, e) => handleReact(post.id, reaction, e)} />
@@ -777,6 +820,10 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
         ) : (
           posts.filter(post => String(post.text || '').trim()).map(post => {
             const isAdmin = isAdminProp === true;
+            const isSuperAdmin = userId === COSMO_ADMIN_UID;
+            const isOwner = post.authorId === userId;
+            const withinEditWindow = Date.now() - new Date(post.createdAt).getTime() <= 2 * 60 * 1000;
+            const canModerate = isAdmin || isSuperAdmin;
             return (
               <CommunityPostCard
                 key={post.id}
@@ -784,16 +831,37 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                 userId={userId}
                 userName={userName}
                 userEmail={userEmail}
-                isAdmin={isAdmin}
+                isAdmin={canModerate}
                 isAr={isAr}
                 handleReact={handleReact}
+                canEdit={canModerate || (isOwner && withinEditWindow)}
+                canDelete={canModerate || (isOwner && withinEditWindow)}
+                onEdit={async (postId, text) => {
+                  try {
+                    const updated = await updateCommunityPost(postId, text);
+                    setPosts(prev => {
+                      const next = prev.map(item => item.id === postId ? { ...item, ...updated } : item);
+                      postsRef.current = next;
+                      return next;
+                    });
+                  } catch (err) {
+                    console.error('Failed to edit community post:', err);
+                    alert(isAr ? 'تعذر تعديل المنشور. ربما انتهت نافذة الدقيقتين.' : 'The post could not be edited. The two-minute window may have expired.');
+                    throw err;
+                  }
+                }}
                 onDelete={async (postId) => {
                   if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا المنشور؟' : 'Are you sure you want to delete this post?')) {
-                    setPosts(prev => prev.filter(p => p.id !== postId));
                     try {
                       await deleteCommunityPost(postId);
+                      setPosts(prev => {
+                        const next = prev.filter(p => p.id !== postId);
+                        postsRef.current = next;
+                        return next;
+                      });
                     } catch (err) {
                       console.error('Failed to delete post on server:', err);
+                      alert(isAr ? 'تعذر حذف المنشور. تحقق من الصلاحية أو نافذة الدقيقتين.' : 'The post could not be deleted. Check your permission or the two-minute window.');
                     }
                   }
                 }}

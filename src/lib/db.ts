@@ -1798,6 +1798,7 @@ function mapCommunityPostRow(row: any): any {
     authorId: row.author_id,
     authorName: row.author_name,
     createdAt: row.created_at,
+    updatedAt: row.updated_at || null,
     likes: row.likes || 0,
     likedBy: row.liked_by || [],
     authorBadgeSymbol: row.author_badge_symbol || '',
@@ -1935,12 +1936,27 @@ export async function deleteCommunityPost(postId: string): Promise<boolean> {
   if (!isSupabaseConfigured) {
     throw new Error('Supabase is not configured; cannot delete a community post.');
   }
-  const { error } = await supabase.from('community_posts').delete().eq('id', postId);
+  const { data, error } = await supabase.rpc('delete_community_post', { p_post_id: postId });
   if (error) {
     console.error('Failed to delete community post:', error);
     throw error;
   }
-  return true;
+  return data === true;
+}
+
+export async function updateCommunityPost(postId: string, text: string): Promise<any> {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured; cannot update a community post.');
+  }
+  const { data, error } = await supabase.rpc('update_community_post', {
+    p_post_id: postId,
+    p_text: text,
+  });
+  if (error) {
+    console.error('Failed to update community post:', error);
+    throw error;
+  }
+  return mapCommunityPostRow(data);
 }
 
 // ---------------- COMMUNICATION: CHATS & DIRECT MESSAGES (SUPABASE DIRECT) ----------------
