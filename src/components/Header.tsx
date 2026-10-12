@@ -34,6 +34,7 @@ interface HeaderProps {
   isPremium?: boolean;
   isSidebarOpen?: boolean;
   isQuizLocked?: boolean;
+  menuButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 export default function Header({
@@ -54,7 +55,8 @@ export default function Header({
   setLang,
   isPremium,
   isSidebarOpen = false,
-  isQuizLocked = false
+  isQuizLocked = false,
+  menuButtonRef,
 }: HeaderProps) {
   const [isEditingName, setIsEditingName] = React.useState(false);
   const [tempName, setTempName] = React.useState(userName);
@@ -139,7 +141,7 @@ export default function Header({
           {/* Logo & Headline */}
           <div className="liquid-header__brand flex items-center gap-2">
             {!isQuizLocked && (
-              <button aria-label={lang === 'ar' ? 'فتح القائمة' : 'Open navigation'} aria-expanded={isSidebarOpen} aria-controls="quizspace-primary-sidebar" className="flex h-11 w-11 items-center justify-center p-0 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200" onClick={toggleSidebar}>
+              <button ref={menuButtonRef} type="button" aria-label={isSidebarOpen ? (lang === 'ar' ? 'إغلاق القائمة' : 'Close navigation') : (lang === 'ar' ? 'فتح القائمة' : 'Open navigation')} aria-expanded={isSidebarOpen} aria-controls="quizspace-primary-sidebar" className="flex h-11 w-11 items-center justify-center p-0 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200" onClick={toggleSidebar}>
                 <AnimatedMenuIcon className="w-5 h-5 sm:w-6 sm:h-6" isOpen={isSidebarOpen} />
               </button>
             )}

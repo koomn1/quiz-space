@@ -417,6 +417,8 @@ export default function App() {
   const [sharingQuiz, setSharingQuiz] = React.useState<{ id: string; title: string; description?: string } | null>(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const sidebarMenuButtonRef = React.useRef<HTMLButtonElement>(null);
+  const sidebarPanelRef = React.useRef<HTMLDivElement>(null);
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [popupBlocked, setPopupBlocked] = React.useState(false);
   const [networkFailedError, setNetworkFailedError] = React.useState(false);
@@ -499,8 +501,20 @@ export default function App() {
         setShowQuotaWarning(true);
       }
     };
-    const interval = setInterval(checkQuota, 3000);
-    return () => clearInterval(interval);
+    let timer: number | undefined;
+    const schedule = () => {
+      if (!document.hidden) checkQuota();
+      timer = window.setTimeout(schedule, 3000);
+    };
+    const handleVisibility = () => {
+      if (!document.hidden) checkQuota();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    schedule();
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (timer) window.clearTimeout(timer);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -517,10 +531,22 @@ export default function App() {
     };
 
     void refreshPlatformSettings();
-    const interval = window.setInterval(() => { void refreshPlatformSettings(); }, 30000);
+    let timer: number | undefined;
+    const schedule = () => {
+      timer = window.setTimeout(async () => {
+        if (!document.hidden) await refreshPlatformSettings();
+        schedule();
+      }, 30000);
+    };
+    const handleVisibility = () => {
+      if (!document.hidden) void refreshPlatformSettings();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    schedule();
     return () => {
       active = false;
-      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (timer) window.clearTimeout(timer);
     };
   }, []);
 
@@ -579,6 +605,19 @@ export default function App() {
       };
     }
   }, [isSidebarOpen, isAuthModalOpen, authRedirectQuizId, isCosmoTab]);
+
+  React.useEffect(() => {
+    if (!isSidebarOpen) {
+      sidebarMenuButtonRef.current?.focus({ preventScroll: true });
+      return;
+    }
+    sidebarPanelRef.current?.focus({ preventScroll: true });
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsSidebarOpen(false);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isSidebarOpen]);
 
   // Scroll to top when active tab or active quiz changes
   React.useEffect(() => {
@@ -1433,6 +1472,7 @@ export default function App() {
             isPremium={isUserPremium}
             isSidebarOpen={isSidebarOpen}
             isQuizLocked={isQuizLocked}
+            menuButtonRef={sidebarMenuButtonRef}
           />}
           <ProcessingCenterBanner
             lang={lang}
@@ -2141,11 +2181,13 @@ export default function App() {
             />
 
             {/* Sidebar Slide-in Panel */}
-            <div 
-              
-              
-              
-              
+            <div
+              id="quizspace-primary-sidebar"
+              ref={sidebarPanelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={lang === 'ar' ? 'القائمة الرئيسية' : 'Primary navigation'}
+              tabIndex={-1}
               className={`fixed inset-y-0 ${lang === 'ar' ? 'right-0' : 'left-0'} z-[9999] w-64 h-[100dvh] flex flex-col overflow-hidden transform-gpu bg-[#0a0518] border-x border-[#3d1d6d]/60 shadow-2xl`}
               style={{ backfaceVisibility: 'hidden', isolation: 'isolate' }}
             >
