@@ -57,5 +57,5 @@ export function getOrCreateGuestIdentity(lang: 'ar' | 'en' = 'ar'): GuestIdentit
 }
 
 export function isGuestIdentity(id: string | null | undefined): boolean {
-  return !id || id === 'anonymous' || id === 'guest' || id.startsWith('user-guest-') || id.startsWith('local-user-');
+  return !id || id === 'anonymous' || id === 'guest' || id.startsWith('user-guest') || id.startsWith('local-user-');
 }

@@ -15,6 +15,7 @@ import {
   isDurableQuestionImageUrl,
   parseInlineImageDataUrl,
 } from './questionMedia';
+import { isGuestIdentity } from './guestIdentity';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
 // `users` is required to have a valid UUID `uid` — a trigger
@@ -704,8 +705,27 @@ export async function submitQuizAttempt(
   // caller id there while real Supabase clients always use auth.uid().
   let authenticatedTakerId = data.takerId;
   if (typeof supabase.auth?.getUser === 'function') {
-    const { data: authData, error: authError } = await supabase.auth.getUser();
+    let { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user?.id) {
+      try {
+        const refreshRes = await supabase.auth.refreshSession();
+        if (refreshRes?.data?.user?.id) {
+          authData = refreshRes.data;
+          authError = null;
+        }
+      } catch (_) {}
+    }
+    if (authError || !authData.user?.id) {
+      if (isGuestIdentity(data.takerId)) {
+        return submitGuestQuizAttempt(quizId, {
+          guestId: data.takerId,
+          guestName: data.takerName,
+          score: data.score,
+          clientAttemptKey: `fallback-${Date.now()}`,
+          rating: data.rating,
+          feedback: data.feedback,
+        });
+      }
       throw authError || new Error('Your authenticated session is not ready.');
     }
     authenticatedTakerId = authData.user.id;

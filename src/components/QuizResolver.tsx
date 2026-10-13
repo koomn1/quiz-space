@@ -735,29 +735,43 @@ export default function QuizResolver({
       // second completion.
       let completionId = savedCompletionId;
       if (!completionId && autoSavePromiseRef.current) {
-        completionId = await autoSavePromiseRef.current;
-        if (completionId) setSavedCompletionId(completionId);
+        try {
+          completionId = await autoSavePromiseRef.current;
+          if (completionId) setSavedCompletionId(completionId);
+        } catch (_) {}
       }
 
       if (completionId && isReviewDirty && !isDailyQuiz) {
-        if (isGuest) {
-          await updateGuestQuizAttemptScore(completionId, userId, attemptKeyRef.current, score);
-        } else {
-          await updateQuizAttemptScore(completionId, score);
+        try {
+          if (isGuest) {
+            await updateGuestQuizAttemptScore(completionId, userId, attemptKeyRef.current, score);
+          } else {
+            await updateQuizAttemptScore(completionId, score);
+          }
+          setIsReviewDirty(false);
+        } catch (scoreErr) {
+          console.warn('Score update failed on final submit:', scoreErr);
         }
-        setIsReviewDirty(false);
       }
       
       // Save rating attempt to Supabase
       if (completionId && !isDailyQuiz) {
         if (selectedRating > 0) {
-          if (isGuest) {
-            await updateGuestQuizAttemptReview(completionId, userId, selectedRating, feedbackText.trim());
-          } else {
-            await updateCompletionReview(completionId, selectedRating, feedbackText);
+          try {
+            if (isGuest) {
+              await updateGuestQuizAttemptReview(completionId, userId, selectedRating, feedbackText.trim());
+            } else {
+              await updateCompletionReview(completionId, selectedRating, feedbackText);
+            }
+            setHasRatedQuiz(true);
+          } catch (reviewErr) {
+            console.warn('Optional star review update failed, proceeding with exit:', reviewErr);
           }
-          setHasRatedQuiz(true);
         }
+        try { playNotificationSound('success'); } catch (_) {}
+        if (onQuizLockChange) onQuizLockChange(false);
+        onGoHome();
+        return;
       } else if (isGuest && !isDailyQuiz) {
         const result = await submitGuestQuizAttempt(quizId, {
           guestId: userId,
@@ -768,12 +782,13 @@ export default function QuizResolver({
           feedback: feedbackText.trim(),
         });
         const completionRow = Array.isArray(result) ? result[0] : result;
-        if (!completionRow?.id) throw new Error('Quiz completion was not recorded.');
-        setSavedCompletionId(completionRow.id);
-        setHasRatedQuiz(true);
+        if (completionRow?.id) {
+          setSavedCompletionId(completionRow.id);
+          setHasRatedQuiz(true);
+        }
       } else {
         const result = await submitQuizAttempt(quizId, {
-          takerId: userId,
+          takerId: userId || 'anonymous',
           takerName: finalName,
           score,
           rating: selectedRating > 0 ? selectedRating : undefined,
@@ -781,9 +796,10 @@ export default function QuizResolver({
           totalQuestions: quiz.questions.length
         });
         const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
-        if (!completionRow?.id) throw new Error('Quiz completion was not recorded.');
-        setSavedCompletionId(completionRow.id);
-        setHasRatedQuiz(true);
+        if (completionRow?.id) {
+          setSavedCompletionId(completionRow.id);
+          setHasRatedQuiz(true);
+        }
       }
 
       try {
@@ -799,6 +815,18 @@ export default function QuizResolver({
       onGoHome();
     } catch (err: any) {
       console.error('Quiz exit error:', err);
+      try {
+        const offlineKey = 'quizspace_offline_completions';
+        const existing = JSON.parse(localStorage.getItem(offlineKey) || '[]');
+        existing.push({
+          quizId,
+          userId,
+          score,
+          totalQuestions: quiz.questions.length,
+          savedAt: new Date().toISOString(),
+        });
+        localStorage.setItem(offlineKey, JSON.stringify(existing.slice(-20)));
+      } catch (_) {}
       const rawMessage = String(err?.message || '').trim();
       const isSessionError = /session|jwt|token|auth|not authorized/i.test(rawMessage);
       const isQuizMissing = /quiz not found|invalid quiz/i.test(rawMessage);
@@ -1759,9 +1787,19 @@ export default function QuizResolver({
                 style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
               />
               {saveError && (
-                <p role="alert" className="rounded-xl border border-rose-400/45 bg-rose-500/10 px-3 py-2 text-xs font-semibold leading-6 text-rose-100">
-                  {saveError}
-                </p>
+                <div role="alert" className="space-y-2 rounded-2xl border border-rose-400/45 bg-rose-500/10 p-3 text-xs font-semibold leading-6 text-rose-100">
+                  <p>{saveError}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onQuizLockChange) onQuizLockChange(false);
+                      onGoHome();
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-500 text-white font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    <span>{isAr ? 'الخروج للرئيسية وتخطي التقييم ←' : 'Exit to home anyway →'}</span>
+                  </button>
+                </div>
               )}
             </div>
 
@@ -1800,6 +1838,19 @@ export default function QuizResolver({
                     <span>{isAr ? 'تسليم وإنهاء ✨' : 'Submit & Finish ✨'}</span>
                   </>
                 )}
+              </button>
+            </div>
+
+            <div className="max-w-xs mx-auto pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (onQuizLockChange) onQuizLockChange(false);
+                  onGoHome();
+                }}
+                className="text-xs font-bold text-slate-400 hover:text-white transition-colors cursor-pointer underline"
+              >
+                {isAr ? 'تخطي التقييم والعودة للرئيسية ←' : 'Skip feedback and return home →'}
               </button>
             </div>
           </div>
