@@ -128,6 +128,18 @@ export function getRememberedExtractionJobId(): string | null {
   }
 }
 
+export function clearRememberedExtractionJobId(jobId?: string): void {
+  if (typeof window === 'undefined') return;
+  if (!jobId) {
+    window.localStorage.removeItem(EXTRACTION_JOB_STORAGE_KEY);
+    return;
+  }
+  const current = getRememberedExtractionJobId();
+  if (current === jobId) {
+    window.localStorage.removeItem(EXTRACTION_JOB_STORAGE_KEY);
+  }
+}
+
 function getCachedExtractionJobId(idempotencyKey?: string): string | null {
   if (!idempotencyKey || typeof window === 'undefined') return null;
   return window.localStorage.getItem(`${EXTRACTION_IDEMPOTENCY_STORAGE_PREFIX}${idempotencyKey}`);

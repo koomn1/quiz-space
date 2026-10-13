@@ -13,7 +13,7 @@ import { getApiUrl, getAppOrigin } from '../lib/origin';
 import { supabase } from '../lib/supabaseClient';
 import { fetchWithAuth } from '../lib/authFetch';
 import { useQuizGenerator } from '../hooks/useQuizGenerator';
-import { askAI, askAIStream, getRememberedExtractionJobId, type AiChatAttachment } from '../services/aiWorkerClient';
+import { askAI, askAIStream, getRememberedExtractionJobId, clearRememberedExtractionJobId, type AiChatAttachment } from '../services/aiWorkerClient';
 import DrivePicker from '../components/DrivePicker';
 import QuestionMedia from '../components/QuestionMedia';
 import OverlayPortal from '../components/OverlayPortal';
@@ -691,6 +691,7 @@ export default function QuizCreator({
         setIsProcessingOcr(false);
         setOcrProgress(null);
       } catch (error: any) {
+        clearRememberedExtractionJobId(jobId);
         if (cancelled) return;
         setOcrError(error?.message || (isAr ? 'تعذر استئناف مهمة استخراج الملف.' : 'Unable to resume the document extraction job.'));
         setIsProcessingOcr(false);
