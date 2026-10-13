@@ -153,6 +153,10 @@ export default function QuizResolver({
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const attemptKeyRef = React.useRef<string>('');
   const autoSaveStartedRef = React.useRef<string | null>(null);
+  // The result save starts as soon as the final answer is submitted. Keep the
+  // in-flight promise so a fast tap on "Submit & Finish" waits for that same
+  // write instead of racing a second request against it.
+  const autoSavePromiseRef = React.useRef<Promise<string | null> | null>(null);
   const createAttemptKey = React.useCallback(() => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
     return `attempt-${Date.now()}-${Math.random().toString(36).slice(2, 14)}`;
@@ -160,6 +164,7 @@ export default function QuizResolver({
   React.useEffect(() => {
     attemptKeyRef.current = createAttemptKey();
     autoSaveStartedRef.current = null;
+    autoSavePromiseRef.current = null;
   }, [quizId, createAttemptKey]);
   const isDailyQuiz = quizId.startsWith('daily-');
 
@@ -318,7 +323,7 @@ export default function QuizResolver({
       autoSaveStartedRef.current = attemptKeyRef.current;
       playNotificationSound('success');
 
-      const autoSave = async () => {
+      const autoSave = async (): Promise<string | null> => {
         try {
           await persistIncorrectAnswers();
           // Daily challenges are not available to guests through the normal entry flow.
@@ -337,8 +342,12 @@ export default function QuizResolver({
                 clientAttemptKey: attemptKeyRef.current,
                 feedback: '',
               })
-            : await submitQuizAttempt(quizId, {
-                takerId: userId || 'anonymous',
+              : await submitQuizAttempt(quizId, {
+                // submitQuizAttempt resolves the authoritative Supabase Auth
+                // uid again at the write boundary; never send `anonymous`.
+                // The old contract `takerId: userId || 'anonymous'` is kept
+                // out of the executable path intentionally.
+                takerId: userId,
                 takerName: finalName,
                 score,
                 rating: undefined,
@@ -360,11 +369,13 @@ export default function QuizResolver({
             window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
           }
           window.dispatchEvent(new CustomEvent('quizspace:xp-updated', { detail: { userId, xpAwarded: savedRow?.xp_awarded ?? 0 } }));
+          return savedRow?.id ? String(savedRow.id) : null;
         } catch (e) {
           console.error('Quiz auto-save failed:', e);
+          return null;
         }
       };
-      autoSave();
+      autoSavePromiseRef.current = autoSave();
     } else {
       if (onQuizLockChange) {
         onQuizLockChange(false);
@@ -718,23 +729,32 @@ export default function QuizResolver({
 
     try {
       const finalName = takerName.trim() || userName.trim() || 'طالب متميز';
+      // The automatic save is triggered by the last answer and may still be
+      // running when the user reaches this button. Await it and use its ID so
+      // the review updates the saved attempt rather than creating/racing a
+      // second completion.
+      let completionId = savedCompletionId;
+      if (!completionId && autoSavePromiseRef.current) {
+        completionId = await autoSavePromiseRef.current;
+        if (completionId) setSavedCompletionId(completionId);
+      }
 
-      if (savedCompletionId && isReviewDirty && !isDailyQuiz) {
+      if (completionId && isReviewDirty && !isDailyQuiz) {
         if (isGuest) {
-          await updateGuestQuizAttemptScore(savedCompletionId, userId, attemptKeyRef.current, score);
+          await updateGuestQuizAttemptScore(completionId, userId, attemptKeyRef.current, score);
         } else {
-          await updateQuizAttemptScore(savedCompletionId, score);
+          await updateQuizAttemptScore(completionId, score);
         }
         setIsReviewDirty(false);
       }
       
       // Save rating attempt to Supabase
-      if (savedCompletionId && !isDailyQuiz) {
+      if (completionId && !isDailyQuiz) {
         if (selectedRating > 0) {
           if (isGuest) {
-            await updateGuestQuizAttemptReview(savedCompletionId, userId, selectedRating, feedbackText.trim());
+            await updateGuestQuizAttemptReview(completionId, userId, selectedRating, feedbackText.trim());
           } else {
-            await updateCompletionReview(savedCompletionId, selectedRating, feedbackText);
+            await updateCompletionReview(completionId, selectedRating, feedbackText);
           }
           setHasRatedQuiz(true);
         }
@@ -753,7 +773,7 @@ export default function QuizResolver({
         setHasRatedQuiz(true);
       } else {
         const result = await submitQuizAttempt(quizId, {
-          takerId: userId || 'anonymous',
+          takerId: userId,
           takerName: finalName,
           score,
           rating: selectedRating > 0 ? selectedRating : undefined,
@@ -777,11 +797,22 @@ export default function QuizResolver({
 
       // Return home
       onGoHome();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Quiz exit error:', err);
+      const rawMessage = String(err?.message || '').trim();
+      const isSessionError = /session|jwt|token|auth|not authorized/i.test(rawMessage);
+      const isQuizMissing = /quiz not found|invalid quiz/i.test(rawMessage);
       setSaveError(isAr
-        ? 'تعذر حفظ نتيجتك الآن. لم نغلق الجلسة حتى لا تفقد تقدمك؛ حاول مرة أخرى.'
-        : 'Your result could not be saved. The session remains open so you can try again.');
+        ? isSessionError
+          ? 'انتهت جلسة الدخول أو لم تكتمل بعد. حدّث الصفحة وسجّل الدخول ثم أعد المحاولة.'
+          : isQuizMissing
+            ? 'لم يعد الاختبار متاحاً للحفظ. أعد فتح الاختبار من صفحة الاختبارات.'
+            : 'تعذر حفظ نتيجتك الآن. لم نغلق الجلسة حتى لا تفقد تقدمك؛ حاول مرة أخرى.'
+        : isSessionError
+          ? 'Your sign-in session is missing or expired. Refresh the page, sign in again, and retry.'
+          : isQuizMissing
+            ? 'This quiz is no longer available for saving. Reopen it from the quizzes page.'
+            : 'Your result could not be saved. The session remains open so you can try again.');
     } finally {
       setIsSubmittingReview(false);
     }
@@ -807,6 +838,7 @@ export default function QuizResolver({
     setFeedback('');
     attemptKeyRef.current = createAttemptKey();
     autoSaveStartedRef.current = null;
+    autoSavePromiseRef.current = null;
     setRating(5);
     setIsTimeOut(false);
     setEssayAnswers(new Array(quiz ? quiz.questions.length : 0).fill(''));

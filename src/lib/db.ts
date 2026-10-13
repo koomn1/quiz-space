@@ -697,12 +697,25 @@ export async function submitQuizAttempt(
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
+  // Profile state can lag one render behind the Auth session after login or a
+  // token refresh. The RPC rejects `anonymous` and any uid other than
+  // auth.uid(), so resolve the authoritative id at the write boundary.
+  // A few offline/unit-test clients provide only `rpc`; retain the validated
+  // caller id there while real Supabase clients always use auth.uid().
+  let authenticatedTakerId = data.takerId;
+  if (typeof supabase.auth?.getUser === 'function') {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user?.id) {
+      throw authError || new Error('Your authenticated session is not ready.');
+    }
+    authenticatedTakerId = authData.user.id;
+  }
   // Daily challenges are private payloads and intentionally do not exist in quizzes.
   // Use their dedicated RPC so solving them still records XP and completion.
   if (quizId.startsWith('daily-')) {
     const { data: dailyResult, error: dailyError } = await supabase.rpc('submit_user_daily_quiz_attempt', {
       p_quiz_id: quizId,
-      p_taker_id: data.takerId,
+      p_taker_id: authenticatedTakerId,
       p_taker_name: data.takerName,
       p_score: data.score,
       p_total_questions: data.totalQuestions || 1,
@@ -720,7 +733,7 @@ export async function submitQuizAttempt(
 
   const { data: result, error } = await supabase.rpc('submit_quiz_attempt', {
     p_quiz_id: quizId,
-    p_taker_id: data.takerId,
+    p_taker_id: authenticatedTakerId,
     p_taker_name: data.takerName,
     p_score: data.score,
     p_rating: data.rating ?? null,
@@ -738,8 +751,17 @@ export async function submitQuizAttempt(
 
   // Never fall back to direct completion/XP writes. The server-side RPC is the
   // single atomic source of truth for score validation, best-score state, and XP.
-  console.error('submit_quiz_attempt RPC failed:', error);
-  throw new Error('تعذر تسجيل نتيجة الاختبار حالياً. حاول مرة أخرى.');
+  console.error('submit_quiz_attempt RPC failed:', {
+    message: error.message,
+    code: error.code,
+    details: error.details,
+    hint: error.hint,
+    quizId,
+    takerId: authenticatedTakerId,
+  });
+  // Preserve the PostgREST message so the UI can distinguish an expired
+  // session, invalid quiz payload, or unavailable RPC.
+  throw error;
 }
 
 export async function getRewardsSummary(userId: string): Promise<RewardsSummary> {
