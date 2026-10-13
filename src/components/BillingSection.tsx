@@ -21,7 +21,7 @@ import {
   PartyPopper,
   Gift
 } from 'lucide-react';
-import { createPremiumRequest, getPremiumRequests, getCouponByCode, redeemCouponForUser, getTrialOffers } from '../lib/db';
+import { createPremiumRequest, getPremiumRequests, getCouponByCode, redeemCouponForUser, getTrialOffers, getMyMembershipStatus, MyMembershipStatus } from '../lib/db';
 import { getApiUrl } from '../lib/origin';
 import { supabase } from '../lib/supabaseClient';
 
@@ -172,6 +172,35 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
   const [activeTrialOffers, setActiveTrialOffers] = useState<number[]>([]);
   const [isLoadingTrialOffers, setIsLoadingTrialOffers] = useState(true);
   const [trialOffersLoadError, setTrialOffersLoadError] = useState(false);
+  const [membership, setMembership] = useState<MyMembershipStatus | null>(null);
+  const [isLoadingMembership, setIsLoadingMembership] = useState(true);
+  const [membershipLoadError, setMembershipLoadError] = useState(false);
+
+  // Do not infer the current plan from the request history or the parent
+  // snapshot. The server calculates the effective membership and expiry.
+  useEffect(() => {
+    let active = true;
+    setIsLoadingMembership(true);
+    setMembershipLoadError(false);
+    void getMyMembershipStatus()
+      .then((status) => { if (active) setMembership(status); })
+      .catch((error) => {
+        console.error('Failed to load current membership:', error);
+        if (active) setMembershipLoadError(true);
+      })
+      .finally(() => { if (active) setIsLoadingMembership(false); });
+    return () => { active = false; };
+  }, [userId]);
+
+  const currentIsPremium = membership?.isPremium ?? isPremium;
+  const currentPlanName = membership?.isPremium ? membership.planName : 'Free';
+  const currentPlanId = membership?.isPremium ? membership.planId : 'free';
+  const currentPlanLabel = currentPlanName === 'Free'
+    ? (isAr ? 'الباقة المجانية' : 'Free Plan')
+    : currentPlanName;
+  const formattedRenewalDate = membership?.renewalDate
+    ? new Date(membership.renewalDate).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { dateStyle: 'long' })
+    : null;
 
   // Helper to compress image to max width 800px and jpeg quality 0.7
   const compressAndResizeImage = (file: File): Promise<string> => {
@@ -544,14 +573,14 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         
         {/* Dynamic badge on current subscription status */}
         <div className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 border font-bold text-xs shadow-sm bg-white dark:bg-slate-900 ${
-          isPremium 
+          currentIsPremium
             ? 'border-amber-500/30 text-amber-600 dark:text-amber-400' 
             : 'border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
         }`}>
-          {isPremium ? (
+          {currentIsPremium ? (
             <>
               <Crown className="w-5 h-5 text-amber-500 animate-bounce" />
-              <span>{isAr ? 'باقة النخبة (مفعّلة) 👑' : 'Premium Elite (Active)'}</span>
+              <span>{isAr ? `${currentPlanLabel} (مفعّلة) 👑` : `${currentPlanLabel} (Active)`}</span>
             </>
           ) : (
             <>
@@ -562,13 +591,66 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         </div>
       </div>
 
+      {/* The current membership is separate from payment-request history. */}
+      <section className="rounded-3xl border border-cyan-400/25 bg-gradient-to-br from-slate-950 via-indigo-950/80 to-slate-900 p-5 text-white shadow-xl shadow-indigo-950/20 sm:p-6" aria-labelledby="subscription-management-title">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-200/80">
+              <ShieldCheck className="h-4 w-4" />
+              {isAr ? 'حالة العضوية الموثقة' : 'Verified membership status'}
+            </div>
+            <h3 id="subscription-management-title" className="text-xl font-black sm:text-2xl">
+              {isAr ? 'إدارة الاشتراكات' : 'Subscription Management'}
+            </h3>
+            <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-300">
+              {isAr ? 'هذه البيانات تُقرأ من عضويتك الفعلية في الحساب، وليست من سجل طلبات الدفع.' : 'These details come from your effective account membership, not from payment-request history.'}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-center sm:min-w-40">
+            <p className="text-[10px] font-bold text-slate-300">{isAr ? 'الباقة الحالية' : 'Current plan'}</p>
+            <p className="mt-1 text-lg font-black text-cyan-200">{isLoadingMembership ? '...' : currentPlanLabel}</p>
+          </div>
+        </div>
+
+        {membershipLoadError ? (
+          <p role="alert" className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-xs font-bold text-amber-100">
+            {isAr ? 'تعذر قراءة تفاصيل العضوية الآن. حدّث الصفحة للتأكد من الحالة.' : 'Membership details could not be loaded. Refresh to verify your status.'}
+          </p>
+        ) : (
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <p className="text-[10px] font-bold text-slate-400">{isAr ? 'الحالة' : 'Status'}</p>
+              <p className={`mt-1 font-black ${currentIsPremium ? 'text-emerald-300' : 'text-slate-200'}`}>
+                {isLoadingMembership ? '...' : currentIsPremium ? (isAr ? 'مفعّلة' : 'Active') : (isAr ? 'غير مشترك' : 'Not subscribed')}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <p className="text-[10px] font-bold text-slate-400">{isAr ? 'تاريخ الانتهاء' : 'Expiry date'}</p>
+              <p className="mt-1 font-black text-white">
+                {isLoadingMembership ? '...' : membership?.isLifetime || membership?.isFounder ? (isAr ? 'بدون انتهاء' : 'No expiry') : formattedRenewalDate || (isAr ? 'غير محدد' : 'Not specified')}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <p className="text-[10px] font-bold text-slate-400">{isAr ? 'ملاحظات مهمة' : 'Important note'}</p>
+              <p className="mt-1 text-xs font-bold leading-5 text-slate-200">
+                {currentIsPremium
+                  ? (isAr ? 'صلاحيات الباقة الحالية فقط هي المفعّلة على حسابك.' : 'Only the current plan entitlements are active on your account.')
+                  : (isAr ? 'يمكنك اختيار باقة وإرسال طلب تفعيل من النماذج بالأسفل.' : 'Choose a plan and submit an activation request below.')}
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Dynamic Active Trial Offers Section (Only rendered when super admin activates one or more trial offers) */}
       {trialOffersLoadError && (
         <p role="alert" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs font-bold text-amber-700 dark:text-amber-300">
           {isAr ? 'تعذر تحميل عروض التجربة حالياً. أعد فتح الصفحة لاحقاً.' : 'Trial offers could not be loaded right now. Please reopen this page later.'}
         </p>
       )}
-      {!isPremium && !isLoadingTrialOffers && activeTrialOffers.length > 0 && (() => {
+      {/* Equivalent to the old !isPremium && !isLoadingTrialOffers gate, but
+          currentIsPremium is now server-authoritative and plan-aware. */}
+      {!currentIsPremium && !isLoadingTrialOffers && activeTrialOffers.length > 0 && (() => {
 
         const allOffersMeta: Record<number, { titleAr: string; titleEn: string; descAr: string; descEn: string }> = {
           7: { titleAr: 'باقة تجريبية ٧ أيام', titleEn: '7-Day Free Trial', descAr: 'وصول كامل لكل مزايا النخبة لمدة أسبوع بموافقة السوبر أدمن', descEn: 'Full elite access for 1 week upon super admin approval' },
@@ -693,6 +775,9 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {plans.map((p) => {
           const isSelected = selectedPlan === p.id;
+          const isCurrentPlan = currentIsPremium
+            ? currentPlanId === p.id || currentPlanName.toLowerCase().includes(p.id)
+            : p.id === 'free';
           return (
             <div 
               key={p.id}
@@ -709,11 +794,16 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                   {p.badge}
                 </span>
 
-                <h4 className="text-lg font-black text-slate-850 dark:text-white mb-1.5 flex items-center gap-1.5">
+                <h4 className="text-lg font-black text-slate-850 dark:text-white mb-1.5 flex flex-wrap items-center gap-1.5">
                   {p.id === 'diamond' && <Gem className="w-5 h-5 text-cyan-400" />}
                   {p.id === 'gold' && <Crown className="w-5 h-5 text-amber-400" />}
                   {p.id === 'silver' && <Zap className="w-5 h-5 text-slate-400" />}
                   {p.name}
+                  {isCurrentPlan && (
+                    <span className="rounded-full bg-emerald-500/15 px-2 py-1 text-[9px] font-black text-emerald-600 dark:text-emerald-300">
+                      {isAr ? 'باقتك الحالية' : 'Current plan'}
+                    </span>
+                  )}
                 </h4>
 
                 <div className="flex items-baseline gap-1 mt-3 mb-6 flex-wrap">

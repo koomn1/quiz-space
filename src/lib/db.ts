@@ -1349,6 +1349,39 @@ export async function checkUserPremiumStatus(userId: string): Promise<boolean> {
   }
 }
 
+export interface MyMembershipStatus {
+  isPremium: boolean;
+  planId?: string;
+  planName: string;
+  isLifetime: boolean;
+  isFounder: boolean;
+  renewalDate?: string;
+  membershipStatus: 'active' | 'expired' | 'free';
+  isExpired: boolean;
+}
+
+/** Read the server-calculated membership, including the effective expiry date. */
+export async function getMyMembershipStatus(): Promise<MyMembershipStatus | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase.rpc('get_my_membership_status');
+  if (error) {
+    console.error('Error loading current membership details:', error.message);
+    throw error;
+  }
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return {
+    isPremium: Boolean(row.is_premium),
+    planId: row.plan_id || undefined,
+    planName: row.plan_name || 'Free',
+    isLifetime: Boolean(row.is_lifetime),
+    isFounder: Boolean(row.is_founder),
+    renewalDate: row.renewal_date || undefined,
+    membershipStatus: row.membership_status || (row.is_premium ? 'active' : 'free'),
+    isExpired: Boolean(row.is_expired),
+  };
+}
+
 // ---------------- PREMIUM TRIAL ACTIVATION REQUEST HANDLERS (SUPABASE DIRECT) ----------------
 
 export async function createPremiumRequest(requestId: string, reqData: any): Promise<void> {
