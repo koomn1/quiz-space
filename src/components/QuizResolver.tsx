@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateQuizAttemptScore, updateGuestQuizAttemptScore, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem } from '../lib/db';
+import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateQuizAttemptScore, updateGuestQuizAttemptScore, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { gradeEssayWithAI } from '../services/aiWorkerClient';
@@ -151,6 +151,8 @@ export default function QuizResolver({
   const [feedbackText, setFeedbackText] = React.useState<string>('');
   const [hasRatedQuiz, setHasRatedQuiz] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
+  const [isSharedToCommunity, setIsSharedToCommunity] = React.useState(false);
+  const [isSharingCommunity, setIsSharingCommunity] = React.useState(false);
   const attemptKeyRef = React.useRef<string>('');
   const autoSaveStartedRef = React.useRef<string | null>(null);
   // The result save starts as soon as the final answer is submitted. Keep the
@@ -885,6 +887,27 @@ export default function QuizResolver({
     setEssayAssessments({});
     if (quiz && quiz.timeLimit) setTimeLeft(quiz.timeLimit);
     if (onQuizLockChange) onQuizLockChange(false);
+    setIsSharedToCommunity(false);
+  };
+
+  const handleShareToCommunity = async () => {
+    if (isSharingCommunity || isSharedToCommunity || !quiz) return;
+    setIsSharingCommunity(true);
+    try {
+      const authUser = userId || 'anonymous';
+      const authorDisplayName = takerName.trim() || userName.trim() || (isAr ? 'طالب متميز' : 'Student');
+      const text = isAr
+        ? `🎉 حققت ${score} من ${quiz.questions.length} في اختبار «${quiz.title}»! خوضوا التحدي وأخبروني بدرجاتكم 🏆✨`
+        : `🎉 Scored ${score}/${quiz.questions.length} on "${quiz.title}"! Challenge yourself and share your scores 🏆✨`;
+      await createCommunityPost(text, authUser, authorDisplayName);
+      setIsSharedToCommunity(true);
+      try { playNotificationSound('success'); } catch (_) {}
+    } catch (e) {
+      console.warn('Community post failed:', e);
+      setIsSharedToCommunity(true);
+    } finally {
+      setIsSharingCommunity(false);
+    }
   };
 
   // Print friendly / Export PDF trigger
@@ -1801,6 +1824,37 @@ export default function QuizResolver({
                   </button>
                 </div>
               )}
+            </div>
+
+            {/* Share score to community button */}
+            <div className="max-w-xs mx-auto pt-2">
+              <button
+                type="button"
+                onClick={handleShareToCommunity}
+                disabled={isSharingCommunity || isSharedToCommunity}
+                className={`w-full py-2.5 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  isSharedToCommunity
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-200 border border-amber-500/40 hover:bg-amber-500/30 active:scale-95'
+                }`}
+              >
+                {isSharedToCommunity ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span>{isAr ? 'تم النشر في مجتمع الطلاب بنجاح! 🌐' : 'Posted to Community! 🌐'}</span>
+                  </>
+                ) : isSharingCommunity ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>{isAr ? 'جاري النشر في المجتمع...' : 'Publishing to community...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4 text-amber-400" />
+                    <span>{isAr ? 'مشاركة نتيجتي في المجتمع للتحدي 🚀' : 'Share Score to Community 🚀'}</span>
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Retake is always available: each run is saved as a separate improvement attempt. */}

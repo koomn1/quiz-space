@@ -604,6 +604,26 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
     setIsInsightsOpen(true);
   };
 
+  const [activeSubTab, setActiveSubTab] = useState<'discussions' | 'solvers'>('discussions');
+  const [recentSolvers, setRecentSolvers] = useState<QuizCompletion[]>([]);
+  const [loadingSolvers, setLoadingSolvers] = useState(false);
+
+  useEffect(() => {
+    if (activeSubTab !== 'solvers') return;
+    async function loadSolvers() {
+      setLoadingSolvers(true);
+      try {
+        const data = await getRecentCompletions(40);
+        setRecentSolvers(data || []);
+      } catch (err) {
+        console.warn('Failed to load recent solvers in community:', err);
+      } finally {
+        setLoadingSolvers(false);
+      }
+    }
+    loadSolvers();
+  }, [activeSubTab]);
+
   // Load current user profile for badges attachment
   useEffect(() => {
     if (!userId) return;
@@ -768,114 +788,263 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
 
   return (
     <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
-      <div>
-        <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">{isAr ? '💬 مجتمع الفضاء الأكاديمي' : 'Academic Community Hub'}</h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{isAr ? 'تواصل وتفاعل مع المعلمين والطلاب ونظم غرف نقاش تنافسية مذهلة.' : 'Connect & interact with students and educators, exchange notes & high score challenges.'}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">{isAr ? '💬 مجتمع الفضاء الأكاديمي' : 'Academic Community Hub'}</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{isAr ? 'تواصل وتفاعل مع المعلمين والطلاب وتعرف على المتفوقين وحلول الاختبارات لحظياً.' : 'Connect & interact with students and educators, view recent quiz solvers and high scores live.'}</p>
+        </div>
+
+        {/* Sub-Tabs switcher */}
+        <div className="inline-flex p-1 rounded-2xl bg-slate-150 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 shrink-0 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('discussions')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              activeSubTab === 'discussions'
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>{isAr ? 'النقاشات والمنشورات' : 'Discussions'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('solvers')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+              activeSubTab === 'solvers'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Trophy className="w-3.5 h-3.5" />
+            <span>{isAr ? 'سجل المتفوقين والحلول 🏆' : 'Live Solvers 🏆'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Publish Feed Form */}
-      {userId && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-4 card-3d">
-          <textarea 
-            rows={3}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder={isAr ? 'شارك رأيك في الموقع، أسئلتك، أو تجربتك هنا...' : 'Share your opinion about the site, questions or experience...'}
-            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-4 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-primary transition-all text-right resize-none"
-            style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
-          />
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-              💡 {isAr ? 'منشورك سيظهر لجميع أعضاء مجتمع الفضاء الأكاديمي.' : 'Your post will be visible to all academic community members.'}
-            </p>
-            <button 
-              onClick={handlePublish}
-              disabled={!inputText.trim() || isPublishing}
-              className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-black shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+      {activeSubTab === 'solvers' ? (
+        <div className="space-y-4">
+          <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-primary/10 border border-amber-500/20 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-800 dark:text-white">
+                  {isAr ? 'لوحة المتفوقين وأحدث المحاولات المكتملة' : 'Live Solvers & Hall of Fame'}
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {isAr ? 'يتم تحديث هذه القائمة فوراً عند انتهاء أي طالب أو زائر من حل اختبار على المنصة.' : 'Real-time record of all participants who completed quizzes on Quiz Space.'}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                setLoadingSolvers(true);
+                try {
+                  const data = await getRecentCompletions(40);
+                  setRecentSolvers(data || []);
+                } finally {
+                  setLoadingSolvers(false);
+                }
+              }}
+              className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer shrink-0"
             >
-              <span>{isAr ? 'نشر الآن 🚀' : 'Post Now 🚀'}</span>
-              <Send className="w-3.5 h-3.5" />
+              {isAr ? 'تحديث 🔄' : 'Refresh 🔄'}
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Discussion List */}
-      <div className="space-y-4">
-        {posts.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-3xl p-8 text-center space-y-4 shadow-sm">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">
-              <MessageSquare className="w-8 h-8" />
+          {loadingSolvers ? (
+            <div className="py-16 text-center text-slate-500 space-y-2">
+              <div className="inline-block animate-spin text-amber-500"><Trophy className="w-6 h-6" /></div>
+              <p className="text-xs font-bold">{isAr ? 'جاري تحميل سجل المتفوقين...' : 'Loading solvers...'}</p>
             </div>
-            <div className="space-y-1.5">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-white">
-                {isAr ? 'لا توجد منشورات حتى الآن' : 'No posts yet'}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-                {isAr 
-                  ? 'المجتمع فارغ حالياً من المنشورات الاصطناعية! شارك أفكارك، تجاربك، أو استفساراتك لتكون أول من يكتب هنا 💬✨' 
-                  : 'The community has no artificial posts! Be the first to share your thoughts, questions, or quiz scores live 💬✨'}
+          ) : recentSolvers.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center space-y-3">
+              <Trophy className="w-10 h-10 text-slate-400 mx-auto" />
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                {isAr ? 'لا توجد محاولات مكتملة مسجلة بعد' : 'No recorded completions yet'}
+              </p>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {isAr ? 'كن الأول في حل أي اختبار وستظهر نتيجتك فوراً في هذه اللوحة أمام كل رواد المجتمع!' : 'Be the first to solve a quiz and your score will appear here for all community members!'}
               </p>
             </div>
-          </div>
-        ) : (
-          posts.filter(post => String(post.text || '').trim()).map(post => {
-            const isAdmin = isAdminProp === true;
-            const isSuperAdmin = userId === COSMO_ADMIN_UID;
-            const isOwner = post.authorId === userId;
-            const withinEditWindow = Date.now() - new Date(post.createdAt).getTime() <= 2 * 60 * 1000;
-            const canModerate = isAdmin || isSuperAdmin;
-            return (
-              <CommunityPostCard
-                key={post.id}
-                post={post}
-                userId={userId}
-                userName={userName}
-                userEmail={userEmail}
-                isAdmin={canModerate}
-                isAr={isAr}
-                handleReact={handleReact}
-                canEdit={canModerate || (isOwner && withinEditWindow)}
-                canDelete={canModerate || (isOwner && withinEditWindow)}
-                onEdit={async (postId, text) => {
-                  try {
-                    const updated = await updateCommunityPost(postId, text);
-                    setPosts(prev => {
-                      const next = prev.map(item => item.id === postId ? { ...item, ...updated } : item);
-                      postsRef.current = next;
-                      return next;
-                    });
-                  } catch (err) {
-                    console.error('Failed to edit community post:', err);
-                    alert(isAr ? 'تعذر تعديل المنشور. ربما انتهت نافذة الدقيقتين.' : 'The post could not be edited. The two-minute window may have expired.');
-                    throw err;
-                  }
-                }}
-                onDelete={async (postId) => {
-                  if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا المنشور؟' : 'Are you sure you want to delete this post?')) {
-                    try {
-                      await deleteCommunityPost(postId);
-                      setPosts(prev => {
-                        const next = prev.filter(p => p.id !== postId);
-                        postsRef.current = next;
-                        return next;
-                      });
-                    } catch (err) {
-                      console.error('Failed to delete post on server:', err);
-                      alert(isAr ? 'تعذر حذف المنشور. تحقق من الصلاحية أو نافذة الدقيقتين.' : 'The post could not be deleted. Check your permission or the two-minute window.');
-                    }
-                  }
-                }}
-                onOpenInsights={handleOpenInsights}
-                onViewRecorded={(postId, viewsCount) => {
-                  setPosts(prev => prev.map(item => item.id === postId ? { ...item, viewsCount } : item));
-                  setSelectedPostForInsights(prev => prev?.id === postId ? { ...prev, viewsCount } : prev);
-                }}
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {recentSolvers.map((solver, index) => {
+                const isPerfect = solver.totalQuestions > 0 && solver.score === solver.totalQuestions;
+                const percentage = solver.totalQuestions > 0 ? Math.round((solver.score / solver.totalQuestions) * 100) : 0;
+                return (
+                  <div
+                    key={solver.id || `${solver.takerId}-${index}`}
+                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-amber-400/50 transition-all flex items-center justify-between gap-3 shadow-xs"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+                        index === 0
+                          ? 'bg-amber-400 text-white shadow-md'
+                          : index === 1
+                          ? 'bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
+                          : index === 2
+                          ? 'bg-amber-700 text-white'
+                          : 'bg-slate-150 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                      }`}>
+                        {index < 3 ? '👑' : `#${index + 1}`}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-black text-xs text-slate-800 dark:text-slate-100 truncate">
+                            {solver.takerName || (isAr ? 'طالب متميز' : 'Student')}
+                          </p>
+                          {isPerfect && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-300 font-black">
+                              {isAr ? 'علامة كاملة 🌟' : 'Perfect 🌟'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5" title={solver.quizTitle}>
+                          {isAr ? 'حل: ' : 'Solved: '}<span className="font-bold text-slate-700 dark:text-slate-300">{solver.quizTitle || (isAr ? 'اختبار' : 'Quiz')}</span>
+                        </p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                          {solver.createdAt ? new Date(solver.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <span className={`px-2.5 py-1 rounded-xl text-xs font-black ${
+                        isPerfect
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                          : percentage >= 70
+                          ? 'bg-primary/15 text-primary'
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {solver.score} / {solver.totalQuestions} ({percentage}%)
+                      </span>
+                      {solver.quizId && (
+                        <a
+                          href={`#/quiz/${solver.quizId}`}
+                          className="text-[11px] font-bold text-primary hover:underline"
+                        >
+                          {isAr ? 'خوض الاختبار ⚡' : 'Try Quiz ⚡'}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Publish Feed Form */}
+          {userId && (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-4 card-3d">
+              <textarea 
+                rows={3}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder={isAr ? 'شارك رأيك في الموقع، أسئلتك، أو تجربتك هنا...' : 'Share your opinion about the site, questions or experience...'}
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-4 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-primary transition-all text-right resize-none"
+                style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
               />
-            );
-          })
-        )}
-      </div>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                  💡 {isAr ? 'منشورك سيظهر لجميع أعضاء مجتمع الفضاء الأكاديمي.' : 'Your post will be visible to all academic community members.'}
+                </p>
+                <button 
+                  onClick={handlePublish}
+                  disabled={!inputText.trim() || isPublishing}
+                  className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-black shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <span>{isAr ? 'نشر الآن 🚀' : 'Post Now 🚀'}</span>
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Discussion List */}
+          <div className="space-y-4">
+            {posts.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-3xl p-8 text-center space-y-4 shadow-sm">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">
+                  <MessageSquare className="w-8 h-8" />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+                    {isAr ? 'لا توجد منشورات حتى الآن' : 'No posts yet'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                    {isAr 
+                      ? 'المجتمع فارغ حالياً من المنشورات الاصطناعية! شارك أفكارك، تجاربك، أو استفساراتك لتكون أول من يكتب هنا 💬✨' 
+                      : 'The community has no artificial posts! Be the first to share your thoughts, questions, or quiz scores live 💬✨'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              posts.filter(post => String(post.text || '').trim()).map(post => {
+                const isAdmin = isAdminProp === true;
+                const isSuperAdmin = userId === COSMO_ADMIN_UID;
+                const isOwner = post.authorId === userId;
+                const withinEditWindow = Date.now() - new Date(post.createdAt).getTime() <= 2 * 60 * 1000;
+                const canModerate = isAdmin || isSuperAdmin;
+                return (
+                  <CommunityPostCard
+                    key={post.id}
+                    post={post}
+                    userId={userId}
+                    userName={userName}
+                    userEmail={userEmail}
+                    isAdmin={canModerate}
+                    isAr={isAr}
+                    handleReact={handleReact}
+                    canEdit={canModerate || (isOwner && withinEditWindow)}
+                    canDelete={canModerate || (isOwner && withinEditWindow)}
+                    onEdit={async (postId, text) => {
+                      try {
+                        const updated = await updateCommunityPost(postId, text);
+                        setPosts(prev => {
+                          const next = prev.map(item => item.id === postId ? { ...item, ...updated } : item);
+                          postsRef.current = next;
+                          return next;
+                        });
+                      } catch (err) {
+                        console.error('Failed to edit community post:', err);
+                        alert(isAr ? 'تعذر تعديل المنشور. ربما انتهت نافذة الدقيقتين.' : 'The post could not be edited. The two-minute window may have expired.');
+                        throw err;
+                      }
+                    }}
+                    onDelete={async (postId) => {
+                      if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا المنشور؟' : 'Are you sure you want to delete this post?')) {
+                        try {
+                          await deleteCommunityPost(postId);
+                          setPosts(prev => {
+                            const next = prev.filter(p => p.id !== postId);
+                            postsRef.current = next;
+                            return next;
+                          });
+                        } catch (err) {
+                          console.error('Failed to delete post on server:', err);
+                          alert(isAr ? 'تعذر حذف المنشور. تحقق من الصلاحية أو نافذة الدقيقتين.' : 'The post could not be deleted. Check your permission or the two-minute window.');
+                        }
+                      }
+                    }}
+                    onOpenInsights={handleOpenInsights}
+                    onViewRecorded={(postId, viewsCount) => {
+                      setPosts(prev => prev.map(item => item.id === postId ? { ...item, viewsCount } : item));
+                      setSelectedPostForInsights(prev => prev?.id === postId ? { ...prev, viewsCount } : prev);
+                    }}
+                  />
+                );
+              })
+            )}
+          </div>
+        </>
+      )}
 
       {/* Viewer Insights Modal */}
       

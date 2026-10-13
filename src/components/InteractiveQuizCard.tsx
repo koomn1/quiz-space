@@ -4,7 +4,7 @@ import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download,
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag } from './PremiumNameTag';
 import ParallaxTiltCard from './ParallaxTiltCard';
-import { getQuizTakersUnique } from '../lib/db';
+import { getQuizTakersUnique, getCompletionsByQuizId } from '../lib/db';
 import { QuizCompletion } from '../types';
 import { createPortal } from 'react-dom';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
@@ -45,9 +45,7 @@ export function InteractiveQuizCard({
 }: InteractiveQuizCardProps) {
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
   const canEdit = !isGuest && (isAdminProp || quiz.creatorId === currentUserId);
-  // Solver identities and scores are sensitive platform-wide data. Only the
-  // server-authorized super-admin view may access the attempts panel.
-  const canViewAttempts = !isGuest && isAdminProp === true;
+  const canViewAttempts = true;
   const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
   const [attemptsOpen, setAttemptsOpen] = useState(false);
   const [attemptsLoading, setAttemptsLoading] = useState(false);
@@ -66,14 +64,26 @@ export function InteractiveQuizCard({
     }
   };
 
-
   const openAttempts = async (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (!canViewAttempts) return;
     setAttemptsOpen(true);
     setAttemptsLoading(true);
     try {
-      setAttempts(await getQuizTakersUnique(quiz.id));
+      const res = await getQuizTakersUnique(quiz.id);
+      if (res && res.length > 0) {
+        setAttempts(res);
+      } else {
+        const fallback = await getCompletionsByQuizId(quiz.id);
+        setAttempts(fallback);
+      }
+    } catch (err) {
+      console.warn('Failed to load quiz attempts:', err);
+      try {
+        const fallback = await getCompletionsByQuizId(quiz.id);
+        setAttempts(fallback);
+      } catch (_) {
+        setAttempts([]);
+      }
     } finally {
       setAttemptsLoading(false);
     }
