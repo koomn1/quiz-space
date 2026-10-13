@@ -111,7 +111,7 @@ function createIdempotencyKey(): string {
 
 function rememberPendingExtractionJob(job: ExtractionJob): void {
   if (typeof window === 'undefined') return;
-  if (job.status === 'complete' || job.status === 'cancelled') {
+  if (job.status === 'complete' || job.status === 'cancelled' || job.status === 'error') {
     window.localStorage.removeItem(EXTRACTION_JOB_STORAGE_KEY);
     return;
   }
