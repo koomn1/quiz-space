@@ -47,6 +47,7 @@ Thumbs.db
 # Supabase (if you want to keep local supabase config private)
 supabase/.env
 supabase/functions/.env
+supabase/.temp/
 
 # wrangler files
 .wrangler
