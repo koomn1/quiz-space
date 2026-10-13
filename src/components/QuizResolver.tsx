@@ -802,17 +802,27 @@ export default function QuizResolver({
       const rawMessage = String(err?.message || '').trim();
       const isSessionError = /session|jwt|token|auth|not authorized/i.test(rawMessage);
       const isQuizMissing = /quiz not found|invalid quiz/i.test(rawMessage);
+      const isInvalidScore = /invalid score/i.test(rawMessage);
+      const isCompletionMissing = /completion not found/i.test(rawMessage);
       setSaveError(isAr
         ? isSessionError
           ? 'انتهت جلسة الدخول أو لم تكتمل بعد. حدّث الصفحة وسجّل الدخول ثم أعد المحاولة.'
           : isQuizMissing
             ? 'لم يعد الاختبار متاحاً للحفظ. أعد فتح الاختبار من صفحة الاختبارات.'
-            : 'تعذر حفظ نتيجتك الآن. لم نغلق الجلسة حتى لا تفقد تقدمك؛ حاول مرة أخرى.'
+            : isInvalidScore
+              ? 'تعذر اعتماد الدرجة لأن عدد الأسئلة تغيّر. أعد فتح الاختبار من صفحة الاختبارات ثم سلّمه مرة أخرى.'
+              : isCompletionMissing
+                ? 'انتهت محاولة الاختبار المحفوظة. أعد فتح الاختبار ثم أرسل النتيجة مرة أخرى.'
+                : 'تعذر حفظ نتيجتك الآن. لم نغلق الجلسة حتى لا تفقد تقدمك؛ حاول مرة أخرى.'
         : isSessionError
           ? 'Your sign-in session is missing or expired. Refresh the page, sign in again, and retry.'
           : isQuizMissing
             ? 'This quiz is no longer available for saving. Reopen it from the quizzes page.'
-            : 'Your result could not be saved. The session remains open so you can try again.');
+            : isInvalidScore
+              ? 'The score does not match the saved quiz. Reopen the quiz from your quizzes page and submit again.'
+              : isCompletionMissing
+                ? 'The saved attempt is no longer available. Reopen the quiz and submit again.'
+                : 'Your result could not be saved. The session remains open so you can try again.');
     } finally {
       setIsSubmittingReview(false);
     }

@@ -22,7 +22,18 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
     if (!enabled) return;
     try {
       const result = await listActiveExtractionJobs();
-      setJobs(result.filter((job) => !['complete', 'cancelled'].includes(job.status)));
+      // A worker lease is only a few minutes long. If an old processing job
+      // has not changed for a long time, it is an orphaned record rather than
+      // a live task. Keeping it in the banner makes finished quizzes look as
+      // if they are still running and makes Cancel show a misleading error.
+      const staleBefore = Date.now() - 30 * 60 * 1000;
+      const activeJobs = result.filter((job) => {
+        if (['complete', 'cancelled'].includes(job.status)) return false;
+        if (!['pending', 'processing'].includes(job.status)) return true;
+        const updatedAt = Date.parse(String(job.updatedAt || ''));
+        return !Number.isFinite(updatedAt) || updatedAt >= staleBefore;
+      });
+      setJobs(activeJobs);
       setLoadError(false);
     } catch { setLoadError(true); }
   }, [enabled]);
@@ -58,7 +69,14 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
       }
     } catch (error) {
       console.error('Extraction job control failed:', error);
-      setLoadError(true);
+      // Cancellation is best-effort. The job can already have expired or be
+      // stale, so do not keep a misleading completed-task banner visible.
+      if (control === 'cancel') {
+        setJobs((current) => current.filter((item) => item.id !== job.id));
+        setLoadError(false);
+      } else {
+        setLoadError(true);
+      }
     } finally { setBusy(null); }
   };
 
