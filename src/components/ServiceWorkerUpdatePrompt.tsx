@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -16,10 +16,17 @@ export function ServiceWorkerUpdatePrompt() {
   const [isOnline, setIsOnline] = useState(() => typeof navigator === 'undefined' ? true : navigator.onLine);
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const reloadAfterControllerChange = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
-    const onControllerChange = () => window.location.reload();
+    // The first worker claims the page during normal startup. Reloading on
+    // that controllerchange races page.evaluate/navigation in browsers and
+    // can interrupt the app before profile assets finish precaching. Only
+    // reload after the user explicitly accepted an update.
+    const onControllerChange = () => {
+      if (reloadAfterControllerChange.current) window.location.reload();
+    };
     navigator.serviceWorker?.addEventListener('controllerchange', onControllerChange);
 
     void registerQuizSpaceServiceWorker({
@@ -76,6 +83,7 @@ export function ServiceWorkerUpdatePrompt() {
 
   const applyUpdate = () => {
     if (!updateRegistration || !activateQuizSpaceServiceWorkerUpdate(updateRegistration)) return;
+    reloadAfterControllerChange.current = true;
     setIsRefreshing(true);
     window.setTimeout(() => window.location.reload(), 5_000);
   };
