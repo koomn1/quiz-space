@@ -50,7 +50,7 @@ export function MyQuizzes({
         
         <button 
           onClick={fetchQuizzesList}
-          className="flex items-center justify-center gap-1.5 text-xs text-primary bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 font-bold transition-all cursor-pointer h-9 w-fit self-end sm:self-auto"
+          className="uipro-btn-tactile flex items-center justify-center gap-2 text-xs text-primary bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-black transition-all cursor-pointer shadow-xs self-end sm:self-auto"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>{isAr ? 'تحديث القائمة' : 'Refresh List'}</span>
@@ -58,15 +58,15 @@ export function MyQuizzes({
       </div>
 
       {myQuizzes.length === 0 ? (
-        <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-3xl border border-slate-200 dark:border-slate-850 shadow-sm max-w-xl mx-auto flex flex-col items-center justify-center space-y-4">
-          <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500">
+        <div className="uipro-clay-card text-center py-20 rounded-[32px] border-dashed border-2 border-slate-200 dark:border-slate-800 max-w-xl mx-auto flex flex-col items-center justify-center space-y-4 p-8">
+          <div className="p-4 rounded-2xl bg-primary/10 dark:bg-primary/20 text-primary shadow-inner">
             <BookOpen className="w-10 h-10" />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-black text-slate-700 dark:text-slate-200">
+          <div className="space-y-1.5">
+            <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 font-display">
               {isAr ? 'لم تقم بإنشاء أي اختبار بعد' : 'You haven\'t created any quizzes yet'}
             </h3>
-            <p className="text-xs text-slate-400 font-medium max-w-xs leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold max-w-xs leading-relaxed">
               {isAr ? 'ابدأ الآن بتأليف اختبار تفاعلي باستخدام كوزمو لتبدأ رحلتك العلمية!' : 'Author a smart quiz or prompt the AI companion right now to start your cosmic journey!'}
             </p>
           </div>

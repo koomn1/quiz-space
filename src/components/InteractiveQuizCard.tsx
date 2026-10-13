@@ -12,13 +12,14 @@ import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '..
 
 interface InteractiveQuizCardProps {
   quiz: Quiz;
-  idx: number;
-  isAr: boolean;
-  t: any;
-  currentUserEmail: string | null | undefined;
-  currentUserId: string | null | undefined;
+  idx?: number;
+  isAr?: boolean;
+  lang?: 'ar' | 'en';
+  t?: any;
+  currentUserEmail?: string | null | undefined;
+  currentUserId?: string | null | undefined;
   onStartQuiz: (quizId: string) => void;
-  onShareQuiz: (quizId: string, quizTitle: string, quizDescription?: string) => void;
+  onShareQuiz?: (quizId: string, quizTitle: string, quizDescription?: string) => void;
   onEditQuiz?: (quiz: Quiz) => void;
   onViewProfile?: (creatorId: string) => void;
   creatorTier?: 'free' | 'premium' | 'enterprise';
@@ -29,8 +30,9 @@ interface InteractiveQuizCardProps {
 
 export function InteractiveQuizCard({
   quiz,
-  idx,
-  isAr,
+  idx = 0,
+  isAr: isArProp,
+  lang,
   t,
   currentUserEmail,
   currentUserId,
@@ -43,6 +45,7 @@ export function InteractiveQuizCard({
   view = 'grid',
   isAdmin: isAdminProp = false
 }: InteractiveQuizCardProps) {
+  const isAr = isArProp !== undefined ? isArProp : lang === 'ar';
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
   const canEdit = !isGuest && (isAdminProp || quiz.creatorId === currentUserId);
   const canViewAttempts = true;
@@ -175,18 +178,59 @@ export function InteractiveQuizCard({
   }, [attemptsOpen]);
 
   const attemptsPanel = attemptsOpen && typeof document !== 'undefined' ? createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onClick={() => setAttemptsOpen(false)} role="dialog" aria-modal="true" aria-labelledby={`attempts-title-${quiz.id}`}>
-      <div className="w-full max-w-lg max-h-[min(640px,90vh)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900" onClick={(e) => e.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
-          <div><h3 id={`attempts-title-${quiz.id}`} className="font-black text-slate-800 dark:text-white">{isAr ? 'الأعضاء الذين حلوا الاختبار' : 'Members who solved this quiz'}</h3><p className="mt-1 text-xs text-slate-500">{quiz.title}</p></div>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md animate-fade-in" onClick={() => setAttemptsOpen(false)} role="dialog" aria-modal="true" aria-labelledby={`attempts-title-${quiz.id}`}>
+      <div className="w-full max-w-lg max-h-[min(660px,90vh)] overflow-hidden rounded-[28px] border border-violet-200/80 bg-white/95 shadow-2xl dark:border-violet-500/20 dark:bg-[#0d1322]/95 backdrop-blur-xl" onClick={(e) => e.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 px-6 py-4.5 dark:border-slate-800/80 bg-gradient-to-r from-violet-500/5 via-primary/5 to-cyan-500/5">
+          <div>
+            <h3 id={`attempts-title-${quiz.id}`} className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
+              <span>🏆</span>
+              <span>{isAr ? 'الأعضاء الذين حلوا الاختبار' : 'Members who solved this quiz'}</span>
+            </h3>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 font-bold truncate max-w-xs">{quiz.title}</p>
+          </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={exportAttemptsCsv} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-2 text-[11px] font-black text-emerald-600 transition-colors hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400" title="CSV"><Download className="h-3.5 w-3.5" />CSV</button>
-            <button type="button" onClick={exportAttemptsExcel} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 px-3 py-2 text-[11px] font-black text-blue-600 transition-colors hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-blue-400" title="Excel"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
-            <button type="button" onClick={() => setAttemptsOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={exportAttemptsCsv} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-2 text-[11px] font-black text-emerald-600 transition-all hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400" title="CSV"><Download className="h-3.5 w-3.5" />CSV</button>
+            <button type="button" onClick={exportAttemptsExcel} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 px-3 py-2 text-[11px] font-black text-blue-600 transition-all hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-blue-400" title="Excel"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
+            <button type="button" onClick={() => setAttemptsOpen(false)} className="rounded-xl p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><X className="h-4 w-4" /></button>
           </div>
         </div>
-        <div className="max-h-[min(520px,70vh)] overflow-y-auto p-4">
-          {attemptsLoading ? <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" />{isAr ? 'جاري تحميل الأعضاء...' : 'Loading members...'}</div> : attempts.length === 0 ? <p className="py-12 text-center text-sm text-slate-500">{isAr ? 'لا توجد محاولات مسجلة بعد.' : 'No recorded attempts yet.'}</p> : <div className="space-y-2">{attempts.map((attempt) => <div key={attempt.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50"><div><p className="font-bold text-slate-800 dark:text-slate-100">{attempt.takerName || (isAr ? 'عضو' : 'Member')}</p><p className="text-[11px] text-slate-500">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p></div><span className="rounded-lg bg-primary/10 px-2 py-1 text-xs font-black text-primary">{attempt.score}/{attempt.totalQuestions}</span></div>)}</div>}
+        <div className="max-h-[min(520px,70vh)] overflow-y-auto p-4 sm:p-5 space-y-2.5">
+          {attemptsLoading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-16 text-xs font-bold text-slate-400">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span>{isAr ? 'جاري تحميل قائمة الأبطال والحلول...' : 'Loading quiz solvers list...'}</span>
+            </div>
+          ) : attempts.length === 0 ? (
+            <div className="py-16 text-center text-xs font-bold text-slate-400">
+              <span className="text-3xl block mb-2">🎯</span>
+              <span>{isAr ? 'لا توجد محاولات مسجلة بعد — كُن أول من يحل هذا الاختبار!' : 'No recorded attempts yet — be the first to solve it!'}</span>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {attempts.map((attempt, aIdx) => {
+                const medal = aIdx === 0 ? '🥇' : aIdx === 1 ? '🥈' : aIdx === 2 ? '🥉' : `#${aIdx + 1}`;
+                const pct = attempt.totalQuestions > 0 ? Math.round((attempt.score / attempt.totalQuestions) * 100) : 100;
+                return (
+                  <div key={attempt.id || aIdx} className="flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3.5 dark:border-slate-800 dark:bg-slate-900/60 hover:border-primary/30 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="w-7 text-center font-black text-xs text-slate-400 select-none">{medal}</span>
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 text-primary dark:text-primary-light flex items-center justify-center font-black text-xs border border-primary/20">
+                        {attempt.takerName ? attempt.takerName.slice(0, 1) : '👤'}
+                      </div>
+                      <div>
+                        <p className="font-bold text-xs text-slate-900 dark:text-slate-100">{attempt.takerName || (isAr ? 'زائر متميز' : 'Member')}</p>
+                        <p className="text-[10px] font-bold text-slate-400 mt-0.5">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 px-2.5 py-1 text-xs font-black font-mono text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">{pct}%</span>
+                      <span className="rounded-xl bg-primary/10 px-2.5 py-1 text-xs font-black text-primary font-mono">{attempt.score}/{attempt.totalQuestions}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>,
@@ -352,59 +396,53 @@ export function InteractiveQuizCard({
     <ParallaxTiltCard
       idx={idx}
       onClick={() => onStartQuiz(quiz.id)}
-      className="liquid-quiz-card glass-card hover:border-primary/35 p-[1px] rounded-[24px] duration-300 ease-out flex flex-col justify-between overflow-hidden group relative"
+      className="uipro-clay-card rounded-[28px] duration-300 ease-out flex flex-col justify-between overflow-hidden group relative cursor-pointer"
     >
-      {/* Animated Gradient Border */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/55 via-violet-500/45 to-cyan-400/35 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out rounded-[24px] pointer-events-none -z-20"></div>
+      {/* Soft Specular Light Highlight on Hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-cyan-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none -z-10 rounded-[28px]"></div>
       
       {/* Inner Card Content Wrapper */}
-      <div className="liquid-container bg-white/95 dark:bg-[#090d16]/95 backdrop-blur-xl h-full w-full rounded-[23px] p-6 flex flex-col justify-between z-10 relative overflow-hidden transition-colors duration-300">
+      <div className="h-full w-full p-6 sm:p-7 flex flex-col justify-between z-10 relative">
+        <div className="space-y-4" style={{ transform: 'translateZ(20px)', transformStyle: 'preserve-3d' }}>
         
-        {/* Ambient glowing background on hover inside */}
-        <div 
-          className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 pointer-events-none" 
-        />
-        
-        <div className="space-y-4" style={{ transform: 'translateZ(25px)', transformStyle: 'preserve-3d' }}>
-        
-        {/* Header: Title or Badge */}
-        <div className="flex items-start justify-between gap-3 flex-row-reverse" dir="ltr" style={{ transform: 'translateZ(30px)' }}>
+        {/* Header: Badges & Rating */}
+        <div className="flex items-center justify-between gap-3 flex-row-reverse" dir="ltr">
           <div className="flex items-center gap-1.5 flex-row-reverse flex-wrap">
-            <span className="inline-flex items-center gap-1 text-[10.5px] font-black text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+            <span className="uipro-pill-badge bg-primary/10 text-primary dark:text-primary-light border border-primary/15 font-black">
               <Sparkles className="w-3.5 h-3.5" />
-              {quiz.questions.length} {t?.questionsCount || (isAr ? 'أسئلة' : 'Questions')}
+              <span>{quiz.questions.length} {t?.questionsCount || (isAr ? 'أسئلة' : 'Questions')}</span>
             </span>
             {quiz.category && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-violet-500 dark:text-violet-400 bg-violet-500/10 dark:bg-violet-950/40 px-2.5 py-1 rounded-lg border border-violet-500/10 dark:border-violet-900/40">
+              <span className="uipro-pill-badge text-violet-600 dark:text-violet-300 bg-violet-500/10 dark:bg-violet-950/40 border border-violet-500/20">
                 <Tag className="w-3 h-3" />
-                {quiz.category}
+                <span>{quiz.category}</span>
               </span>
             )}
           </div>
           
           {/* Rating Block */}
           {quiz.ratingsCount > 0 ? (
-            <div className="flex items-center gap-1.5 text-xs text-amber-500 bg-amber-500/5 dark:bg-amber-950/20 px-2.5 py-1 rounded-lg font-bold border border-amber-500/10 dark:border-amber-500/5">
-              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-              <span>{quiz.avgRating} ({quiz.ratingsCount} {t?.ratingLabel || (isAr ? 'تقييم' : 'Ratings')})</span>
+            <div className="uipro-pill-badge text-amber-500 bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/20">
+              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+              <span>{quiz.avgRating} ({quiz.ratingsCount})</span>
             </div>
           ) : (
-            <span className="text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-800/40 px-2 py-0.5 rounded-md font-bold">{t?.unrated || (isAr ? 'غير مقيّم' : 'Unrated')}</span>
+            <span className="uipro-pill-badge text-slate-400 bg-slate-100 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50">{t?.unrated || (isAr ? 'جديد' : 'New')}</span>
           )}
         </div>
 
         {/* Info */}
-        <div className="space-y-2 block" style={{ textAlign: isAr ? 'right' : 'left', transform: 'translateZ(35px)' }}>
-          <h4 className="font-display font-black text-lg text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors duration-200 leading-tight">
+        <div className="space-y-2 block" style={{ textAlign: isAr ? 'right' : 'left' }}>
+          <h4 className="font-display font-black text-lg text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors duration-200 leading-snug">
             {quiz.title}
           </h4>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
-            {quiz.description || (isAr ? 'لم يتم كتابة وصف توضيحي تفصيلي لهذا الاختبار العام.' : 'No detailed description written for this public quiz.')}
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 font-medium">
+            {quiz.description || (isAr ? 'اختبار تفاعلي مميز لقياس مهاراتك ومعارفك في هذا المجال.' : 'An interactive knowledge challenge to test your skills.')}
           </p>
 
           {/* Elegant metadata line placed cleanly under description */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 text-[10.5px] text-slate-450 dark:text-slate-500 font-bold" dir={isAr ? 'rtl' : 'ltr'}>
-            <span>{t?.byCreator || (isAr ? 'بواسطة' : 'by')}</span>
+          <div className="flex flex-wrap items-center gap-2 pt-2 text-[11px] text-slate-400 dark:text-slate-500 font-bold" dir={isAr ? 'rtl' : 'ltr'}>
+            <span className="text-slate-400 font-medium">{t?.byCreator || (isAr ? 'بواسطة' : 'by')}</span>
             <span
               onClick={(e) => { e.stopPropagation(); onViewProfile && quiz.creatorId && onViewProfile(quiz.creatorId); }}
               className="cursor-pointer hover:underline hover:text-primary transition-all"
@@ -416,28 +454,28 @@ export function InteractiveQuizCard({
                 nameColor={quiz.creatorNameColor as any}
                 badgeColor={quiz.creatorBadgeColor as any}
                 badgeSize="sm"
-                className="font-black text-slate-600 dark:text-slate-350"
+                className="font-black text-slate-700 dark:text-slate-300"
               />
             </span>
-            <span className="text-slate-300 dark:text-slate-700 font-normal select-none">•</span>
-            <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className={canViewAttempts ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canViewAttempts ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
+            <span className="text-slate-300 dark:text-slate-700 select-none">•</span>
+            <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer font-bold transition-colors" title={isAr ? 'عرض قائمة المتفوقين والحلول' : 'View solvers list'}><Users className="h-3.5 w-3.5" /><span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span></button>
           </div>
         </div>
 
       </div>
 
-      {/* Clean, spacious action footer that NEVER overflows horizontally */}
+      {/* Clean, spacious action footer */}
       <div 
-        className="relative border-t border-slate-100 dark:border-slate-800/60 pt-4 mt-5 flex flex-wrap items-center justify-between gap-x-2 gap-y-3 w-full"
-        style={{ transform: 'translateZ(20px)', transformStyle: 'preserve-3d' }}
+        className="relative border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-5 flex flex-wrap items-center justify-between gap-x-2 gap-y-3 w-full"
+        style={{ transform: 'translateZ(15px)' }}
       >
-        <div className="flex items-center gap-1.5 shrink-0 flex-nowrap" style={{ transform: 'translateZ(10px)' }}>
+        <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onShareQuiz(quiz.id, quiz.title, quiz.description);
             }}
-            className="p-2 w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/90 text-slate-700 hover:text-primary dark:text-slate-300 dark:hover:text-primary hover:scale-105 hover:bg-slate-200 transition-all cursor-pointer border border-slate-200/50 dark:border-slate-700"
+            className="p-2 w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-primary hover:scale-105 hover:bg-slate-200/80 transition-all cursor-pointer border border-slate-200/60 dark:border-slate-700/60"
             title={t?.shareTooltip || (isAr ? 'مشاركة' : 'Share')}
           >
             <Share2 className="w-4 h-4" />
@@ -452,7 +490,7 @@ export function InteractiveQuizCard({
                     e.stopPropagation();
                     onEditQuiz(quiz);
                   }}
-                  className="p-2 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 hover:bg-amber-100/50 dark:hover:bg-amber-900/20 transition-all hover:scale-105 cursor-pointer border border-amber-200/40 dark:border-amber-800/30"
+                  className="p-2 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 hover:bg-amber-100/50 transition-all hover:scale-105 cursor-pointer border border-amber-200/40 dark:border-amber-800/30"
                   title={t?.editTooltip || (isAr ? 'تعديل' : 'Edit')}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
@@ -466,7 +504,7 @@ export function InteractiveQuizCard({
                     e.stopPropagation();
                     onDeleteClick(quiz.id);
                   }}
-                  className="p-2 w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/30 text-red-655 hover:text-red-750 dark:text-red-400 dark:hover:text-red-350 hover:bg-red-100/50 dark:hover:bg-red-900/20 transition-all hover:scale-105 cursor-pointer border border-red-200/40 dark:border-red-800/30"
+                  className="p-2 w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-350 hover:bg-red-100/50 transition-all hover:scale-105 cursor-pointer border border-red-200/40 dark:border-red-800/30"
                   title={t?.deleteTooltip || (isAr ? 'حذف' : 'Delete')}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -476,21 +514,21 @@ export function InteractiveQuizCard({
           )}
         </div>
 
-                  <button
+        <div className="relative flex items-center gap-1.5">
+          <button
             onClick={(e) => {
               e.stopPropagation();
               setExportMenuOpen((open) => !open);
-              }
-            }
-            className="flex shrink-0 whitespace-nowrap items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-violet-100 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 font-black text-xs transition-all hover:scale-105 cursor-pointer border border-violet-200/60 dark:border-violet-800/50"
+            }}
+            className="flex shrink-0 whitespace-nowrap items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-violet-100/80 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 font-black text-xs transition-all hover:scale-105 cursor-pointer border border-violet-200/70 dark:border-violet-800/50"
             title={isAr ? 'تحويل إلى PDF أو طباعة' : 'Export PDF or print'}
           >
             <Printer className="w-4 h-4" />
-            <span className="hidden sm:inline">{isAr ? 'PDF / طباعة' : 'PDF / Print'}</span>
+            <span className="hidden sm:inline">{isAr ? 'PDF / طباعة' : 'PDF'}</span>
             <ChevronDown className="h-3.5 w-3.5" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200/80 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95" dir={isAr ? 'rtl' : 'ltr'}>
               <button type="button" onClick={() => { setExportMenuOpen(false); setPreviewOpen(true); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Eye className="h-4 w-4 text-violet-500" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
               <button type="button" onClick={downloadPdf} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تصدير PDF احترافي' : 'Export professional PDF'}</button>
               <button type="button" onClick={() => { setExportMenuOpen(false); printQuiz(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
@@ -501,12 +539,12 @@ export function InteractiveQuizCard({
               e.stopPropagation();
               onStartQuiz(quiz.id);
             }}
-            className="group/play flex grow shrink-0 whitespace-nowrap items-center justify-center gap-1.5 px-5 h-10 rounded-xl bg-gradient-to-r from-primary to-violet-500 hover:from-primary-hover hover:to-violet-400 text-white font-black text-xs transition-all hover:scale-105 duration-300 shadow-md shadow-primary/20 hover:shadow-primary/40 cursor-pointer active:scale-95 overflow-hidden relative"
-        >
-          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/play:translate-y-0 transition-transform duration-300" />
-          <span className="relative z-10">{t?.startPlayBtn || (isAr ? 'ابدأ اللعب' : 'Start Play')}</span>
-          <Play className={`relative z-10 w-3.5 h-3.5 fill-white ${isAr ? '' : 'rotate-180'} group-hover/play:scale-110 transition-transform`} />
-        </button>
+            className="uipro-btn-tactile group/play flex grow shrink-0 whitespace-nowrap items-center justify-center gap-2 px-5 h-10 rounded-xl bg-gradient-to-r from-primary to-violet-600 hover:from-primary-hover hover:to-violet-500 text-white font-black text-xs shadow-md shadow-primary/25 hover:shadow-primary/45 cursor-pointer relative overflow-hidden"
+          >
+            <span>{t?.startPlayBtn || (isAr ? 'ابدأ التحدي' : 'Start Play')}</span>
+            <Play className={`w-3.5 h-3.5 fill-white ${isAr ? '' : 'rotate-180'} group-hover/play:scale-115 transition-transform`} />
+          </button>
+        </div>
       </div>
       </div>
     </ParallaxTiltCard>

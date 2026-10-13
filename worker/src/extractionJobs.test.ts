@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { buildVisionChunkRanges, deriveQuizTitle, isGenericQuizTitle, selectVisionChunkPlan, sourceFileBaseName, validateCreateExtractionJobInput, visionChunkRetryDelaySeconds } from './extractionJobs';
 
-const extractionSource = readFileSync(new URL('./extractionJobs.ts', import.meta.url), 'utf8');
-const indexSource = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
+const extractionSource = readFileSync(new URL('./extractionJobs.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const indexSource = readFileSync(new URL('./index.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 
 describe('dynamic vision chunk planning', () => {
   it('keeps the default four-page split for a normal scanned document', () => {

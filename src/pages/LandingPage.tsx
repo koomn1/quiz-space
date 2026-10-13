@@ -6,7 +6,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Quiz } from '../types';
-import { BookOpen, Star, Play, Share2, Search, ArrowLeft, RefreshCw, FileText, CheckCircle, Sparkles, Trash2, Cpu, Trophy, Layers, Flame, Lightbulb, Check, HelpCircle, MessageCircle, BrainCircuit, Rocket, Tag, LayoutGrid, List, Users } from 'lucide-react';
+import { BookOpen, Star, Play, Share2, Search, ArrowLeft, RefreshCw, FileText, CheckCircle, Sparkles, Trash2, Cpu, Trophy, Layers, Flame, Lightbulb, Check, HelpCircle, MessageCircle, BrainCircuit, Rocket, Tag, LayoutGrid, List, Users, X } from 'lucide-react';
 import { translations } from '../lib/i18n';
 import { MainLogo } from '../components/MainLogo';
 import ThreeDIcon from '../components/ThreeDIcon';
@@ -366,46 +366,77 @@ export default function LandingPage({
       {/* Featured quiz of the week */}
       {siteStats?.featuredQuiz && quizzes.length > 0 && (
         <div className="gsap-fade-section mt-8">
-          <div className="relative rounded-3xl border-2 border-amber-400/40 bg-gradient-to-r from-amber-400/10 via-yellow-400/5 to-orange-400/10 p-5 backdrop-blur-sm">
-            <div className="absolute -top-3 right-4 flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1 text-[10px] font-black text-amber-950 shadow-lg">
-              <Trophy className="w-3 h-3" />
+          <div className="uipro-clay-card relative rounded-3xl border-2 border-amber-400/50 bg-gradient-to-r from-amber-400/15 via-yellow-400/10 to-orange-400/15 p-6 backdrop-blur-md shadow-xl overflow-hidden">
+            <div className="absolute -top-1 right-6 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-3.5 py-1 text-[11px] font-black text-amber-950 shadow-lg shadow-amber-400/30">
+              <Trophy className="w-3.5 h-3.5" />
               {isAr ? 'كويز الأسبوع ⭐' : 'Quiz of the Week ⭐'}
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex-1">
-                <h4 className="text-lg font-black text-slate-900 dark:text-white">{siteStats.featuredQuiz.title}</h4>
-                <p className="text-xs text-slate-500 mt-1">{siteStats.featuredQuiz.description || ''}</p>
-                <div className="flex items-center gap-3 mt-2 text-[10px] font-bold text-slate-400">
-                  <span className="flex items-center gap-1"><Users className="w-3 h-3" />{siteStats.featuredQuiz.takersCount} {isAr ? 'حلّوه' : 'solvers'}</span>
-                  <span className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-400" />{siteStats.featuredQuiz.avgRating?.toFixed(1) || '—'}</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mt-2">
+              <div className="flex-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
+                <h4 className="text-xl font-black text-slate-900 dark:text-white font-display tracking-tight leading-snug">{siteStats.featuredQuiz.title}</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium leading-relaxed">{siteStats.featuredQuiz.description || ''}</p>
+                <div className="flex items-center gap-3 mt-3 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                  <span className="uipro-pill-badge bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 flex items-center gap-1 px-2.5 py-0.5">
+                    <Users className="w-3.5 h-3.5 text-primary" />
+                    {siteStats.featuredQuiz.takersCount} {isAr ? 'حلّوه' : 'solvers'}
+                  </span>
+                  <span className="uipro-pill-badge bg-amber-400/20 text-amber-700 dark:text-amber-300 border-amber-400/30 flex items-center gap-1 px-2.5 py-0.5">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    {siteStats.featuredQuiz.avgRating?.toFixed(1) || '—'}
+                  </span>
                 </div>
               </div>
               <button
                 onClick={() => onStartQuiz(siteStats.featuredQuiz.id)}
-                className="min-h-11 shrink-0 rounded-xl bg-amber-500 hover:bg-amber-600 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-amber-500/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+                className="uipro-btn-tactile min-h-12 shrink-0 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 px-6 py-3 text-xs font-black text-slate-950 shadow-xl shadow-amber-500/25 transition-all cursor-pointer self-start sm:self-auto"
               >
-                {isAr ? 'ابدأ الآن' : 'Start Now'}
+                {isAr ? 'ابدأ الآن 🚀' : 'Start Now 🚀'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Student action cockpit: one clear next step plus fast routes, without duplicating the daily quiz card. */}
-      <div className="gsap-fade-section mt-10 rounded-[2rem] border border-violet-200/70 bg-gradient-to-br from-violet-50 via-white to-cyan-50 p-5 shadow-sm dark:border-violet-900/40 dark:from-violet-950/30 dark:via-slate-900 dark:to-cyan-950/20 sm:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 text-white shadow-lg shadow-violet-500/20"><Rocket className="h-6 w-6" /></div>
+      {/* Student action cockpit: one clear next step plus fast routes */}
+      <div className="gsap-fade-section mt-10 rounded-[2.5rem] uipro-clay-card border border-violet-200/80 dark:border-violet-900/50 p-6 sm:p-7 relative overflow-hidden">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 text-white shadow-xl shadow-violet-500/25">
+              <Rocket className="h-7 w-7" />
+            </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-violet-600 dark:text-violet-300">{isAr ? 'خطوتك التالية' : 'Your next step'}</p>
-              <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-white">{isGuest ? (isAr ? 'ابدأ رحلتك التعليمية' : 'Start your learning journey') : (isAr ? 'اختر تحديًا وابدأ الآن' : 'Pick a challenge and start now')}</h3>
-              <p className="mt-1 text-xs font-bold leading-6 text-slate-500 dark:text-slate-400">{isAr ? 'لا تترك لوحة التحكم تعرض أرقامًا فقط؛ اختر إجراءً واحدًا وأنجزه الآن.' : 'Turn the dashboard into an action: choose one focused task and complete it now.'}</p>
+              <p className="text-[11px] font-black uppercase tracking-widest text-violet-600 dark:text-violet-400">{isAr ? 'خطوتك التالية' : 'Your next step'}</p>
+              <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white font-display">{isGuest ? (isAr ? 'ابدأ رحلتك التعليمية' : 'Start your learning journey') : (isAr ? 'اختر تحديًا وابدأ الآن' : 'Pick a challenge and start now')}</h3>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500 dark:text-slate-400">{isAr ? 'لا تترك لوحة التحكم تعرض أرقامًا فقط؛ اختر إجراءً واحدًا وأنجزه الآن.' : 'Turn the dashboard into an action: choose one focused task and complete it now.'}</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:min-w-[31rem]">
-            {dailyQuiz && !isGuest && <button type="button" onClick={() => document.getElementById('daily-quiz-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-violet-600 px-3 py-2.5 text-xs font-black text-white shadow-md shadow-violet-500/20 transition hover:-translate-y-0.5 hover:bg-violet-500"><BrainCircuit className="h-4 w-4" />{isAr ? 'سؤال اليوم' : 'Daily question'}</button>}
-            <button type="button" onClick={() => document.getElementById('quizzes-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-cyan-200 bg-white px-3 py-2.5 text-xs font-black text-cyan-700 transition hover:-translate-y-0.5 hover:border-cyan-400 dark:border-cyan-900/50 dark:bg-slate-900 dark:text-cyan-300"><Search className="h-4 w-4" />{isAr ? 'استكشف اختبارًا' : 'Explore quizzes'}</button>
-            <button type="button" onClick={isGuest ? onLoginClick : onCreateQuizTab} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-3 py-2.5 text-xs font-black text-violet-700 transition hover:-translate-y-0.5 hover:border-violet-400 dark:border-violet-900/50 dark:bg-slate-900 dark:text-violet-300"><Sparkles className="h-4 w-4" />{isGuest ? (isAr ? 'سجّل للمتابعة' : 'Sign in to continue') : (isAr ? 'أنشئ اختبارًا' : 'Create a quiz')}</button>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 lg:min-w-[32rem]">
+            {dailyQuiz && !isGuest && (
+              <button 
+                type="button" 
+                onClick={() => document.getElementById('daily-quiz-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} 
+                className="uipro-btn-tactile flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-xs font-black text-white shadow-lg shadow-violet-500/25"
+              >
+                <BrainCircuit className="h-4 w-4" />
+                {isAr ? 'سؤال اليوم' : 'Daily question'}
+              </button>
+            )}
+            <button 
+              type="button" 
+              onClick={() => document.getElementById('quizzes-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} 
+              className="uipro-btn-tactile flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-cyan-300/80 dark:border-cyan-800 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-black text-cyan-700 dark:text-cyan-300 shadow-sm hover:border-cyan-400"
+            >
+              <Search className="h-4 w-4" />
+              {isAr ? 'استكشف اختبارًا' : 'Explore quizzes'}
+            </button>
+            <button 
+              type="button" 
+              onClick={isGuest ? onLoginClick : onCreateQuizTab} 
+              className="uipro-btn-tactile flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-violet-300/80 dark:border-violet-800 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-black text-violet-700 dark:text-violet-300 shadow-sm hover:border-violet-400"
+            >
+              <Sparkles className="h-4 w-4" />
+              {isGuest ? (isAr ? 'سجّل للمتابعة' : 'Sign in to continue') : (isAr ? 'أنشئ اختبارًا' : 'Create a quiz')}
+            </button>
           </div>
         </div>
       </div>
@@ -440,7 +471,7 @@ export default function LandingPage({
             {onToggleViewMode && (
               <button 
                 onClick={onToggleViewMode}
-                className="flex h-11 w-11 items-center justify-center text-xs text-slate-500 hover:text-primary dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                className="uipro-btn-tactile flex h-11 w-11 items-center justify-center text-xs text-slate-500 hover:text-primary dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-xs"
                 title={viewMode === 'grid' ? (isAr ? 'عرض القائمة' : 'Switch to List View') : (isAr ? 'عرض الشبكة' : 'Switch to Grid View')}
               >
                 {viewMode === 'grid' ? <List className="w-4.5 h-4.5" /> : <LayoutGrid className="w-4.5 h-4.5" />}
@@ -449,7 +480,7 @@ export default function LandingPage({
 
             <button 
               onClick={onRefresh}
-              className="flex min-h-11 items-center justify-center gap-1.5 text-xs text-primary bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-bold transition-all cursor-pointer"
+              className="uipro-btn-tactile flex min-h-11 items-center justify-center gap-2 text-xs text-primary bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-black transition-all cursor-pointer shadow-xs"
               disabled={isLoading}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -469,16 +500,25 @@ export default function LandingPage({
               placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-slate-800 pr-11 pl-4 py-3 sm:py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700/80 outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-primary focus:ring-1 focus:ring-primary dark:focus:border-primary transition-all duration-200"
+              className="w-full bg-white dark:bg-slate-900 pr-12 pl-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-xs"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             {/* Ownership Filter */}
-            <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+            <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
               <button
                 onClick={() => setOwnershipFilter('all')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   ownershipFilter === 'all' 
                     ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' 
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -488,7 +528,7 @@ export default function LandingPage({
               </button>
               <button
                 onClick={() => setOwnershipFilter('my-quizzes')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   ownershipFilter === 'my-quizzes' 
                     ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' 
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -502,10 +542,10 @@ export default function LandingPage({
             <div className="flex flex-wrap gap-2">
               <button 
                 onClick={() => setSelectedCategory(null)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
+                className={`uipro-pill-badge text-xs font-black transition-all cursor-pointer border ${
                   !selectedCategory 
-                    ? 'bg-primary border-primary text-white shadow-md' 
-                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-primary border-primary text-white shadow-md shadow-primary/25 scale-[1.02]' 
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 {isAr ? '🌐 الكل' : 'All'}
@@ -514,10 +554,10 @@ export default function LandingPage({
                 <button 
                   key={tag}
                   onClick={() => setSelectedCategory(tag)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
+                  className={`uipro-pill-badge text-xs font-black transition-all cursor-pointer border ${
                     selectedCategory === tag 
-                      ? 'bg-primary border-primary text-white shadow-md' 
-                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-primary border-primary text-white shadow-md shadow-primary/25 scale-[1.02]' 
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
                   #{tag}

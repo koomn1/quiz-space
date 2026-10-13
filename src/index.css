@@ -1599,3 +1599,110 @@ html.dark[data-color-theme="blue"] {
   --app-text: #eff6ff;
   --app-text-muted: #a9c4e5;
 }
+
+/* ==========================================================================
+   UI/UX PRO MAX - Human-Crafted Design Tokens & Utility Classes
+   ========================================================================== */
+
+/* Modern Claymorphism tactile card */
+.uipro-clay-card {
+  background: var(--app-surface, #ffffff);
+  border-radius: 1.75rem;
+  border: 1.5px solid rgba(124, 58, 237, 0.12);
+  box-shadow: 
+    0 10px 30px -10px rgba(124, 58, 237, 0.15),
+    0 2px 8px -2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark .uipro-clay-card {
+  background: var(--app-surface, #0d1322);
+  border: 1.5px solid rgba(139, 92, 246, 0.18);
+  box-shadow: 
+    0 12px 36px -12px rgba(0, 0, 0, 0.6),
+    0 4px 12px -2px rgba(139, 92, 246, 0.08),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.uipro-clay-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 20px 40px -12px rgba(124, 58, 237, 0.22),
+    0 6px 16px -4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+  border-color: rgba(124, 58, 237, 0.35);
+}
+
+.dark .uipro-clay-card:hover {
+  box-shadow: 
+    0 24px 48px -12px rgba(0, 0, 0, 0.7),
+    0 8px 20px -4px rgba(139, 92, 246, 0.2),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+  border-color: rgba(167, 139, 250, 0.4);
+}
+
+/* Glassmorphic interactive surfaces */
+.uipro-glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 32px 0 rgba(99, 102, 241, 0.07);
+}
+
+.dark .uipro-glass-panel {
+  background: rgba(13, 19, 34, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Tactile pill badges with clear hierarchy */
+.uipro-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-weight: 800;
+  font-size: 0.6875rem;
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
+}
+
+/* Shimmer metallic effect for winners and achievements */
+@keyframes uipro-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.uipro-gold-shimmer {
+  background: linear-gradient(135deg, #fef08a 0%, #facc15 25%, #eab308 50%, #fde047 75%, #ca8a04 100%);
+  background-size: 200% auto;
+  animation: uipro-shimmer 4s linear infinite;
+}
+
+.uipro-silver-shimmer {
+  background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 30%, #94a3b8 50%, #e2e8f0 75%, #64748b 100%);
+  background-size: 200% auto;
+  animation: uipro-shimmer 4s linear infinite;
+}
+
+.uipro-bronze-shimmer {
+  background: linear-gradient(135deg, #fed7aa 0%, #fb923c 30%, #ea580c 50%, #fdba74 75%, #c2410c 100%);
+  background-size: 200% auto;
+  animation: uipro-shimmer 4s linear infinite;
+}
+
+/* Spring button press */
+.uipro-btn-tactile {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+}
+
+.uipro-btn-tactile:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.uipro-btn-tactile:active {
+  transform: translateY(1px) scale(0.97);
+}

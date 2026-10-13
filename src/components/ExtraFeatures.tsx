@@ -41,6 +41,7 @@ import ParallaxTiltCard from './ParallaxTiltCard';
 import { UserBadge } from './UserBadge';
 import { playChimeSound } from '../lib/chime';
 import { useTheme } from '../context/ThemeContext';
+import { InteractiveQuizCard } from './InteractiveQuizCard';
 
 export { playChimeSound } from '../lib/chime';
 
@@ -100,33 +101,43 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
   });
 
   return (
-    <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
+    <div className="space-y-8 animate-fade-in" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">{isAr ? '🔗 استكشف الكواكيب العلمية' : 'Explore Scientific Galaxies'}</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{isAr ? 'تصفح وقارن واكتشف اختبارات عامة من جميع أنحاء الكوكب لحصد أعلى درجات الخبرة.' : 'Browse, contrast & play public quizzes uploaded by scholars world-wide.'}</p>
+          <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2.5">
+            <span className="p-2 rounded-2xl bg-primary/10 text-primary dark:text-primary-light">🧭</span>
+            <span>{isAr ? 'استكشف الاختبارات الكوكبية' : 'Explore Scientific Galaxies'}</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
+            {isAr ? 'تصفح وقارن واكتشف اختبارات عامة منتقاة بعناية لزيادة خبرتك المعرفية وتحدي أصدقائك.' : 'Browse, play & share public challenges curated by educators worldwide.'}
+          </p>
         </div>
         
-        <div className="relative w-full md:w-80">
+        <div className="relative w-full md:w-88">
           <input 
             type="text" 
-            placeholder={isAr ? 'ابحث باسم الاختبار الكوكبي...' : 'Search planetary quizzes...'}
+            placeholder={isAr ? 'ابحث باسم الاختبار أو مجاله...' : 'Search quizzes by title or topic...'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-xl py-2 px-4 pr-10 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-primary shadow-xs"
+            className="w-full bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl py-3 px-4 pr-11 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 shadow-sm transition-all"
           />
-          <Search className="w-4 h-4 text-slate-400 absolute top-2.5 right-3" />
+          <Search className="w-4.5 h-4.5 text-slate-400 absolute top-3.5 right-3.5 pointer-events-none" />
+          {search && (
+            <button type="button" onClick={() => setSearch('')} className="absolute top-3 left-3 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Suggested Tags */}
-      <div className="flex flex-wrap gap-2">
+      {/* Suggested Tags Pills */}
+      <div className="flex flex-wrap items-center gap-2">
         <button 
           onClick={() => setSelectedTag(null)}
-          className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
+          className={`uipro-pill-badge py-2 px-4 text-xs font-black transition-all cursor-pointer ${
             !selectedTag 
-              ? 'bg-primary border-primary text-white shadow-md' 
-              : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+              ? 'bg-primary text-white shadow-md shadow-primary/25 scale-103' 
+              : 'bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-primary/40 hover:text-primary'
           }`}
         >
           {isAr ? '🌐 الكل' : 'All'}
@@ -134,11 +145,11 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
         {tags.map(tag => (
           <button 
             key={tag}
-            onClick={() => setSelectedTag(tag)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
+            onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+            className={`uipro-pill-badge py-2 px-4 text-xs font-black transition-all cursor-pointer ${
               selectedTag === tag 
-                ? 'bg-primary border-primary text-white shadow-md' 
-                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-primary text-white shadow-md shadow-primary/25 scale-103' 
+                : 'bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-primary/40 hover:text-primary'
             }`}
           >
             #{tag}
@@ -146,39 +157,40 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
         ))}
       </div>
 
-      {/* Quizzes List */}
+      {/* Quizzes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((quiz, idx) => (
-          <ParallaxTiltCard 
+          <InteractiveQuizCard
             key={quiz.id}
+            quiz={quiz}
             idx={idx}
-            className="bg-white dark:bg-slate-900 rounded-3xl p-5 flex flex-col justify-between cursor-pointer card-3d border border-slate-100 dark:border-slate-800"
-            onClick={() => { playChimeSound('click'); onStartQuiz(quiz.id); }}
-          >
-            <div className="space-y-3">
-              <span className="inline-block bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-light text-[10px] font-extrabold px-2.5 py-1 rounded-lg">
-                🚀 {quiz.questions.length} {isAr ? 'أسئلة' : 'Questions'}
-              </span>
-              <h3 className="font-display font-black text-sm text-slate-850 dark:text-white text-right leading-tight" style={{ textAlign: isAr ? 'right' : 'left' }}>{quiz.title}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                {quiz.description || (isAr ? 'لا يوجد وصف توضيحي متاح.' : 'No description available.')}
-              </p>
-            </div>
-
-            <div className="border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-4 flex items-center justify-between w-full">
-              <span 
-                className="text-[10px] text-slate-400 dark:text-slate-500 font-bold hover:text-primary transition-colors hover:underline cursor-pointer"
-                onClick={(e) => { e.stopPropagation(); onViewProfile && quiz.creatorId && onViewProfile(quiz.creatorId); }}
-              >
-                👤 {quiz.creatorName}
-              </span>
-              <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded text-amber-500 dark:text-amber-400 text-[10.5px] font-black">
-                <Star className="w-3.5 h-3.5 fill-amber-500 dark:fill-amber-400" />
-                <span>{quiz.avgRating || '4.8'}</span>
-              </div>
-            </div>
-          </ParallaxTiltCard>
+            isAr={isAr}
+            t={translations[lang]}
+            currentUserEmail={undefined}
+            currentUserId={undefined}
+            onStartQuiz={onStartQuiz}
+            onShareQuiz={(id, title, desc) => {
+              if (navigator.share) {
+                navigator.share({ title, text: desc, url: window.location.href });
+              }
+            }}
+            onViewProfile={onViewProfile}
+          />
         ))}
+        {filtered.length === 0 && (
+          <div className="col-span-full py-16 bg-white/60 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-center space-y-3 max-w-md mx-auto w-full p-8">
+            <span className="text-4xl block">🔍</span>
+            <h4 className="font-display font-black text-sm text-slate-800 dark:text-slate-200">
+              {isAr ? 'لم نجد أي اختبار يطابق هذا البحث' : 'No matching quizzes found'}
+            </h4>
+            <p className="text-xs text-slate-400">
+              {isAr ? 'جرّب البحث بكلمات أخرى أو اختر وسمًا مختلفًا من الأعلى.' : 'Try different search keywords or select a different tag.'}
+            </p>
+            <button type="button" onClick={() => { setSearch(''); setSelectedTag(null); }} className="uipro-btn-tactile text-xs font-black text-primary hover:underline">
+              {isAr ? 'إعادة ضبط الفلاتر' : 'Reset filters'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -215,11 +227,19 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
     });
   };
 
+  const activeCategoryQuizzes = selectedCat ? getFilteredQuizzes(selectedCat) : publicQuizzes;
+  const activeCategoryObj = categories.find(c => c.id === selectedCat);
+
   return (
-    <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
+    <div className="space-y-8 animate-fade-in" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div>
-        <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">{isAr ? '🗂️ الفئات والمسارات الأكاديمية' : 'Academic Classifications'}</h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{isAr ? 'تصفح مسارات علمية حية ومنتقاة بعناية لزيادة تحصيلك المعرفي.' : 'Browse selective knowledge paths targeted to maximize scientific achievements.'}</p>
+        <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2.5">
+          <span className="p-2 rounded-2xl bg-primary/10 text-primary dark:text-primary-light">🗂️</span>
+          <span>{isAr ? 'الفئات والمسارات الأكاديمية' : 'Academic Classifications'}</span>
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
+          {isAr ? 'تصفح مسارات علمية حية ومنتقاة بعناية لزيادة تحصيلك المعرفي والتفوق الأكاديمي.' : 'Browse selective knowledge paths targeted to maximize scientific achievements.'}
+        </p>
       </div>
 
       {/* Categories Bento Grid */}
@@ -230,26 +250,25 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
 
           return (
             <ParallaxTiltCard key={cat.id} 
-              
               idx={idx}
               onClick={() => { playChimeSound('click'); setSelectedCat(isSelected ? null : cat.id); }}
-              className={`relative overflow-hidden p-5 rounded-3xl cursor-pointer border transition-all card-3d ${
+              className={`uipro-clay-card relative overflow-hidden p-5 rounded-[26px] cursor-pointer border transition-all ${
                 isSelected 
-                  ? 'bg-gradient-to-br from-primary/10 to-indigo-600/10 border-primary shadow-xl ring-2 ring-primary/20 dark:ring-primary/40' 
-                  : 'bg-white dark:bg-slate-900 border-slate-205 dark:border-slate-800/85 hover:border-slate-350 dark:hover:border-slate-700'
+                  ? 'bg-gradient-to-br from-primary/15 via-violet-500/10 to-indigo-600/10 border-primary shadow-xl ring-2 ring-primary/40' 
+                  : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-primary/40'
               }`}
             >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
-              
-              <div className="space-y-4">
-                <div className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${cat.color} flex items-center justify-center text-white font-bold shadow-md`}>
+              <div className="space-y-3.5">
+                <div className={`w-11 h-11 rounded-2xl bg-gradient-to-tr ${cat.color} flex items-center justify-center text-white font-bold shadow-md shadow-primary/20`}>
                   <ThreeDIcon name={cat.iconName} className="w-6 h-6 text-white" />
                 </div>
                 <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                  <h3 className={`font-display font-black text-xs leading-tight ${isSelected ? 'text-primary dark:text-white font-black' : 'text-slate-850 dark:text-white'}`}>{isAr ? cat.titleAr : cat.titleEn}</h3>
-                  <p className="text-[10px] text-slate-550 dark:text-slate-400 font-bold">
-                    {matchedCount} {isAr ? 'مسابقة متوفرة' : 'Quizzes available'}
-                  </p>
+                  <h3 className={`font-display font-black text-sm leading-tight ${isSelected ? 'text-primary dark:text-white' : 'text-slate-900 dark:text-slate-100'}`}>
+                    {isAr ? cat.titleAr : cat.titleEn}
+                  </h3>
+                  <span className="uipro-pill-badge bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px]">
+                    {matchedCount} {isAr ? 'اختبار' : 'quizzes'}
+                  </span>
                 </div>
               </div>
             </ParallaxTiltCard>
@@ -257,38 +276,45 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
         })}
       </div>
 
-      {/* Conditional Quizzes Details based on Category selection */}
-      <div className="space-y-4">
-        <h3 className="font-display font-bold text-sm text-slate-800 dark:text-white mt-8 flex items-center gap-2">
-          {isAr ? '💎 الاختبارات المتوفرة بالفئة المحددة:' : 'Quiz items for matching classification:'}
-          {selectedCat && (
-            <span className="text-xs bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-light px-2.5 py-0.5 rounded-full font-bold">
-              {isAr ? categories.find(c => c.id === selectedCat)?.titleAr : categories.find(c => c.id === selectedCat)?.titleEn}
-            </span>
-          )}
-        </h3>
+      {/* Category Quizzes Details */}
+      <div className="space-y-6 pt-2">
+        <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-4">
+          <h3 className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
+            <span>💎</span>
+            <span>{isAr ? 'الاختبارات المتوفرة:' : 'Quizzes in this track:'}</span>
+            {activeCategoryObj && (
+              <span className="uipro-pill-badge bg-primary/15 text-primary dark:text-primary-light border border-primary/25">
+                {isAr ? activeCategoryObj.titleAr : activeCategoryObj.titleEn}
+              </span>
+            )}
+          </h3>
+          <span className="text-xs font-bold text-slate-400">
+            {activeCategoryQuizzes.length} {isAr ? 'اختبار متاح' : 'quizzes available'}
+          </span>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {(selectedCat ? getFilteredQuizzes(selectedCat) : quizzes).map(quiz => (
-            <div 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {activeCategoryQuizzes.map((quiz, idx) => (
+            <InteractiveQuizCard
               key={quiz.id}
-              onClick={() => { playChimeSound('click'); onStartQuiz(quiz.id); }}
-              className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 p-4.5 rounded-2xl cursor-pointer hover:border-primary/45 hover:shadow-md transition-all flex items-center justify-between gap-3 text-right"
-              dir={isAr ? 'rtl' : 'ltr'}
-              style={{ textAlign: isAr ? 'right' : 'left' }}
-            >
-              <div className="space-y-1">
-                <h4 className="font-display font-extrabold text-sm text-slate-800 dark:text-white leading-snug">{quiz.title}</h4>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">{quiz.questions.length} {isAr ? 'أسئلة تفاعلية' : 'questions'}</p>
-              </div>
-              <button className="p-2 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-xl transition-all cursor-pointer">
-                <Clock className="w-4 h-4" />
-              </button>
-            </div>
+              quiz={quiz}
+              idx={idx}
+              isAr={isAr}
+              t={translations[lang]}
+              currentUserEmail={undefined}
+              currentUserId={undefined}
+              onStartQuiz={onStartQuiz}
+              onShareQuiz={(id, title, desc) => {
+                if (navigator.share) {
+                  navigator.share({ title, text: desc, url: window.location.href });
+                }
+              }}
+              onViewProfile={onViewProfile}
+            />
           ))}
-          {(selectedCat ? getFilteredQuizzes(selectedCat) : quizzes).length === 0 && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 col-span-full py-8 select-none bg-slate-50 dark:bg-slate-900/40 border border-dashed border-slate-205 dark:border-slate-800 rounded-3xl text-center font-bold">
-              {isAr ? 'لا توجد اختبارات مضافة في هذه الفئة بعد. كن الأول وأضف واحداً!' : 'No quizzes in this category found yet. Create one now!'}
+          {activeCategoryQuizzes.length === 0 && (
+            <p className="text-xs text-slate-400 col-span-full py-12 select-none bg-slate-50/60 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-center font-bold">
+              {isAr ? 'لا توجد اختبارات مضافة في هذه الفئة حالياً. كن أول من ينشئ اختباراً فيها!' : 'No quizzes in this category found yet. Create one now!'}
             </p>
           )}
         </div>
@@ -374,9 +400,7 @@ function CommunityPostCard({
 
   return (
     <div 
-      
-      
-      className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800/80 space-y-3 card-3d"
+      className="uipro-clay-card p-6 rounded-[28px] space-y-4 text-right relative overflow-hidden"
     >
       <div className="flex items-center justify-between text-right" dir={isAr ? 'rtl' : 'ltr'}>
         <div className="flex items-center gap-2">
@@ -795,29 +819,29 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
         </div>
 
         {/* Sub-Tabs switcher */}
-        <div className="inline-flex p-1 rounded-2xl bg-slate-150 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 shrink-0 self-start sm:self-auto">
+        <div className="inline-flex p-1.5 rounded-2xl uipro-glass-panel bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shrink-0 self-start sm:self-auto gap-1">
           <button
             type="button"
             onClick={() => setActiveSubTab('discussions')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeSubTab === 'discussions'
-                ? 'bg-primary text-white shadow-sm'
+                ? 'bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5" />
+            <MessageSquare className="w-4 h-4" />
             <span>{isAr ? 'النقاشات والمنشورات' : 'Discussions'}</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveSubTab('solvers')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeSubTab === 'solvers'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
+                ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white shadow-md shadow-amber-500/25 scale-[1.02]'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Trophy className="w-3.5 h-3.5" />
+            <Trophy className="w-4 h-4 text-amber-300" />
             <span>{isAr ? 'سجل المتفوقين والحلول 🏆' : 'Live Solvers 🏆'}</span>
           </button>
         </div>
@@ -825,7 +849,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
 
       {activeSubTab === 'solvers' ? (
         <div className="space-y-4">
-          <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-primary/10 border border-amber-500/20 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-4">
+          <div className="uipro-clay-card bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-primary/10 border border-amber-500/20 rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
                 <Trophy className="w-5 h-5" />
@@ -850,7 +874,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                   setLoadingSolvers(false);
                 }
               }}
-              className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer shrink-0"
+              className="uipro-pill-badge text-xs font-bold text-amber-600 dark:text-amber-400 border border-amber-500/30 bg-amber-500/10 cursor-pointer shrink-0"
             >
               {isAr ? 'تحديث 🔄' : 'Refresh 🔄'}
             </button>
@@ -862,7 +886,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
               <p className="text-xs font-bold">{isAr ? 'جاري تحميل سجل المتفوقين...' : 'Loading solvers...'}</p>
             </div>
           ) : recentSolvers.length === 0 ? (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-10 text-center space-y-3">
+            <div className="uipro-clay-card rounded-3xl p-10 text-center space-y-3">
               <Trophy className="w-10 h-10 text-slate-400 mx-auto" />
               <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
                 {isAr ? 'لا توجد محاولات مكتملة مسجلة بعد' : 'No recorded completions yet'}
@@ -879,7 +903,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                 return (
                   <div
                     key={solver.id || `${solver.takerId}-${index}`}
-                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-amber-400/50 transition-all flex items-center justify-between gap-3 shadow-xs"
+                    className="uipro-clay-card p-4 rounded-2xl flex items-center justify-between gap-3 text-right"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
@@ -942,23 +966,24 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
         <>
           {/* Publish Feed Form */}
           {userId && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 space-y-4 card-3d">
+            <div className="uipro-clay-card p-5 space-y-4 rounded-3xl relative overflow-hidden">
               <textarea 
                 rows={3}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder={isAr ? 'شارك رأيك في الموقع، أسئلتك، أو تجربتك هنا...' : 'Share your opinion about the site, questions or experience...'}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-4 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-primary transition-all text-right resize-none"
+                className="w-full bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-4 text-xs text-slate-800 dark:text-slate-100 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all text-right resize-none font-medium"
                 style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
               />
               <div className="flex items-center justify-between">
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                  💡 {isAr ? 'منشورك سيظهر لجميع أعضاء مجتمع الفضاء الأكاديمي.' : 'Your post will be visible to all academic community members.'}
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
+                  <span>💡</span>
+                  <span>{isAr ? 'منشورك سيظهر لجميع أعضاء مجتمع الفضاء الأكاديمي.' : 'Your post will be visible to all academic community members.'}</span>
                 </p>
                 <button 
                   onClick={handlePublish}
                   disabled={!inputText.trim() || isPublishing}
-                  className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-black shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="uipro-btn-tactile px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-black shadow-lg shadow-primary/20 flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <span>{isAr ? 'نشر الآن 🚀' : 'Post Now 🚀'}</span>
                   <Send className="w-3.5 h-3.5" />
@@ -1162,58 +1187,47 @@ export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile, us
 
   return (
     <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
-      <div>
-        <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">{isAr ? '🔖 مسابشاتك المفضلة والمحفوظة' : 'My Pinned Bookmarks'}</h2>
-        <p className="text-xs text-slate-505 dark:text-slate-400 mt-1">{isAr ? 'سرعة الوصول للاختبارات التي تود تكرار حلها ومراجعة أسئلتها الصعبة.' : 'Fast-track your access to planetary examinations you wish to repeat or memorize.'}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white flex items-center gap-2">
+            <span>🔖</span>
+            <span>{isAr ? 'مسابقاتك المفضلة والمحفوظة' : 'My Pinned Bookmarks'}</span>
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {isAr ? 'سرعة الوصول للاختبارات التي تود تكرار حلها ومراجعة أسئلتها الصعبة.' : 'Fast-track your access to planetary examinations you wish to repeat or memorize.'}
+          </p>
+        </div>
+        {savedQuizzes.length > 0 && (
+          <div className="uipro-pill-badge bg-primary/10 text-primary border-primary/20 text-xs px-3.5 py-1.5 self-start sm:self-auto font-black">
+            <span>⭐ {savedQuizzes.length} {isAr ? 'اختبار محفوظ' : 'Saved Quizzes'}</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {savedQuizzes.map(quiz => (
-          <div 
+          <InteractiveQuizCard
             key={quiz.id}
-            onClick={() => { playChimeSound('click'); onStartQuiz(quiz.id); }}
-            className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-3xl p-5 flex flex-col justify-between cursor-pointer card-3d text-right relative"
-            dir={isAr ? 'rtl' : 'ltr'}
-          >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-light text-[10px] font-extrabold px-2.5 py-1 rounded-lg">
-                  💡 {quiz.questions.length} {isAr ? 'سؤال' : 'questions'}
-                </span>
-                <button 
-                  onClick={(e) => toggleBookmark(quiz.id, e)}
-                  className="p-1 text-rose-500 hover:text-slate-400 cursor-pointer transition-colors"
-                >
-                  <Bookmark className="w-5 h-5 fill-rose-500 text-rose-500" />
-                </button>
-              </div>
-
-              <h3 className="font-display font-black text-sm text-slate-850 dark:text-white text-right leading-tight" style={{ textAlign: isAr ? 'right' : 'left' }}>{quiz.title}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                {quiz.description || (isAr ? 'لا يوجد وصف توضيحي مكتوب لهذا الاختبار.' : 'No description available for this quiz.')}
-              </p>
-            </div>
-
-            <div className="border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-4 flex items-center justify-between text-slate-450 dark:text-slate-500 text-[10px] font-bold">
-              <span 
-                className="hover:text-primary transition-colors hover:underline cursor-pointer"
-                onClick={(e) => { e.stopPropagation(); onViewProfile && quiz.creatorId && onViewProfile(quiz.creatorId); }}
-              >
-                👤 {quiz.creatorName}
-              </span>
-              <span>{isAr ? 'جاهز للحل بنقرة' : 'Ready to solve'}</span>
-            </div>
-          </div>
+            quiz={quiz}
+            lang={lang}
+            onStartQuiz={onStartQuiz}
+            onViewProfile={onViewProfile}
+            currentUserId={userId}
+          />
         ))}
 
         {savedQuizzes.length === 0 && (
-          <div className="col-span-full py-16 bg-slate-55 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-center space-y-4 max-w-lg mx-auto w-full">
-            <Bookmark className="w-10 h-10 text-slate-400 mx-auto" />
-            <h4 className="font-display font-black text-sm text-slate-700 dark:text-slate-300">{isAr ? 'قائمتك المفضلة خالية تماماً' : 'No Bookmarked Quizzes'}</h4>
-            <p className="text-xs text-slate-500 leading-normal max-w-xs mx-auto">
+          <div className="col-span-full py-16 uipro-clay-card border-dashed border-2 border-slate-200 dark:border-slate-800 rounded-[32px] text-center space-y-4 max-w-lg mx-auto w-full p-8">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary shadow-inner">
+              <Bookmark className="w-8 h-8" />
+            </div>
+            <h4 className="font-display font-black text-base text-slate-800 dark:text-white">
+              {isAr ? 'قائمتك المفضلة خالية تماماً' : 'No Bookmarked Quizzes'}
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
               {isAr 
-                ? 'اضغط على رمز الإشارة المرجعية ببطاقة أي اختبار في صفحة الرئيسية لحفظ تقدمه وإيجاده هنا فوراً للحل لاحقاً.'
-                : 'Tap the pin symbol on any quiz layout card from the gallery grid to isolate it here for streamlined solving.'}
+                ? 'اضغط على زر الإشارة المرجعية أو النجمة ببطاقة أي اختبار في صفحة الاستكشاف أو الرئيسية لحفظه هنا والرجوع إليه لاحقاً.'
+                : 'Click the star or bookmark icon on any quiz card across explore or catalogue to pin it here for quick access anytime.'}
             </p>
           </div>
         )}
@@ -1321,24 +1335,27 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
     <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black font-display text-slate-900 dark:text-white">{isAr ? '🏆 شارات التوثيق المستحقة' : 'My Accomplishments & Trophies'}</h2>
-          <p className="text-xs text-slate-400 mt-1">{isAr ? 'احصد نقاط المعرفة (XP) وافتح بطاقات الإنجاز لتتوج بلقب بروفيسور الفضاء.' : 'Compile academic XP points, unlock custom status cards & raise your rank to space professor.'}</p>
+          <h2 className="text-2xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2">
+            <span>🏆</span>
+            <span>{isAr ? 'شارات التوثيق المستحقة' : 'My Accomplishments & Trophies'}</span>
+          </h2>
+          <p className="text-xs text-slate-400 mt-1">
+            {isAr ? 'احصد نقاط المعرفة (XP) وافتح بطاقات الإنجاز لتتوج بلقب بروفيسور الفضاء.' : 'Compile academic XP points, unlock custom status cards & raise your rank to space professor.'}
+          </p>
         </div>
 
         {/* Interactive Simulation Trigger */}
         <button
-          
-          
           onClick={() => triggerCelebration(achievementsList[Math.floor(Math.random() * achievementsList.length)])}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black text-xs cursor-pointer shadow-lg shadow-amber-500/10"
+          className="uipro-btn-tactile inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-slate-950 font-black text-xs cursor-pointer shadow-lg shadow-amber-500/20"
         >
-          <span>🎉</span>
+          <Sparkles className="w-4 h-4" />
           <span>{isAr ? 'محاكاة الفوز بشارة جديدة' : 'Simulate Badge Unlock!'}</span>
         </button>
       </div>
 
       {/* Interactive Suggestion Ticker */}
-      <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent border border-indigo-500/15 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+      <div className="uipro-glass-panel bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent border border-indigo-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5">
           <span className="text-lg animate-bounce">⚡</span>
           <span className="text-slate-700 dark:text-slate-300 font-extrabold leading-relaxed">
@@ -1350,39 +1367,38 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
       {/* Visual Stats Row with Scale-in Animations */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: isAr ? 'إجمالي النقاط المكتسبة' : 'Total Knowledge XP', val: `${achievementsList.filter(a => a.unlocked).reduce((sum, a) => sum + parseInt(a.rewardText), 0) + (totalSolved * 10)} XP`, color: 'text-amber-500 dark:text-amber-400' },
-          { label: isAr ? 'أعلى علامة مسجلة' : 'Max Score Level', val: `${maxScore}%`, color: 'text-indigo-500 dark:text-indigo-400' },
-          { label: isAr ? 'سرعة الحل المعتمدة' : 'Performance Speed', val: `${maxStreak}%`, color: 'text-emerald-500 dark:text-emerald-400' },
-          { label: isAr ? 'الشارات المفتوحة' : 'Platinum Trophies', val: `${achievementsList.filter(a => a.unlocked).length} / ${achievementsList.length}`, color: 'text-purple-500 dark:text-purple-400' }
-        ].map((stat, sIdx) => (
-          <div
-            key={sIdx}
-            
-            
-            
-            className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 p-4.5 rounded-2xl text-right card-3d"
-          >
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-bold">{stat.label}</span>
-            <span className={`text-xl font-black ${stat.color} block font-display mt-1`}>{stat.val}</span>
-          </div>
-        ))}
+          { label: isAr ? 'إجمالي النقاط المكتسبة' : 'Total Knowledge XP', val: `${achievementsList.filter(a => a.unlocked).reduce((sum, a) => sum + parseInt(a.rewardText), 0) + (totalSolved * 10)} XP`, color: 'text-amber-500 dark:text-amber-400', icon: Sparkles },
+          { label: isAr ? 'أعلى علامة مسجلة' : 'Max Score Level', val: `${maxScore}%`, color: 'text-indigo-500 dark:text-indigo-400', icon: Trophy },
+          { label: isAr ? 'سرعة الحل المعتمدة' : 'Performance Speed', val: `${maxStreak}%`, color: 'text-emerald-500 dark:text-emerald-400', icon: Zap },
+          { label: isAr ? 'الشارات المفتوحة' : 'Platinum Trophies', val: `${achievementsList.filter(a => a.unlocked).length} / ${achievementsList.length}`, color: 'text-purple-500 dark:text-purple-400', icon: Award }
+        ].map((stat, sIdx) => {
+          const StatIcon = stat.icon;
+          return (
+            <div
+              key={sIdx}
+              className="uipro-clay-card p-4.5 rounded-2xl text-right relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-bold">{stat.label}</span>
+                <div className={`w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center ${stat.color}`}>
+                  <StatIcon className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <span className={`text-xl font-black ${stat.color} block font-display tracking-tight`}>{stat.val}</span>
+            </div>
+          );
+        })}
       </div>
 
       {/* Achievements Cards list with Stagger Revealing */}
-      <div 
-        
-        
-        
-        className="space-y-4"
-      >
+      <div className="space-y-4">
         {achievementsList.map(item => (
           <div 
             key={item.id}
-            
             onClick={() => triggerCelebration(item)}
-            className={`p-5 rounded-3xl border text-right transition-all flex flex-col md:flex-row items-center justify-between gap-4 cursor-pointer relative overflow-hidden group card-3d ${
+            className={`uipro-clay-card p-5 rounded-3xl border text-right transition-all flex flex-col md:flex-row items-center justify-between gap-4 cursor-pointer relative overflow-hidden group ${
               item.unlocked 
-                ? 'bg-gradient-to-br from-indigo-55/40 via-indigo-55/15 to-transparent dark:from-indigo-950/25 dark:via-indigo-950/10 dark:to-transparent border-indigo-200 dark:border-indigo-500/30 shadow-xs' 
+                ? 'bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 dark:from-indigo-950/30 dark:via-slate-900 dark:to-purple-950/20 border-indigo-200 dark:border-indigo-500/30 shadow-md' 
                 : 'bg-slate-100/60 dark:bg-[#11131c]/40 border-slate-200 dark:border-slate-900/80 grayscale opacity-60'
             }`}
             dir={isAr ? 'rtl' : 'ltr'}
@@ -1391,20 +1407,20 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
             <div className="flex items-center gap-4 text-right z-10">
-              <div 
-                
-                
-                className="text-3xl p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-205 dark:border-slate-800 shrink-0 shadow-sm"
-              >
+              <div className="text-3xl p-3.5 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm flex items-center justify-center w-14 h-14">
                 {item.icon}
               </div>
               <div className="space-y-1 block" style={{ textAlign: isAr ? 'right' : 'left' }}>
                 <h4 className="font-display font-black text-sm text-slate-800 dark:text-white flex items-center gap-2">
                   <span>{isAr ? item.titleAr : item.titleEn}</span>
                   {item.unlocked ? (
-                    <span className="text-[10px] bg-indigo-500 text-white font-bold px-2 py-0.5 rounded-full select-none animate-pulse">🎉 {isAr ? 'تم الفتح' : 'Unlocked'}</span>
+                    <span className="text-[10px] uipro-gold-shimmer bg-indigo-500 text-white font-bold px-2.5 py-0.5 rounded-full select-none shadow-xs">
+                      🎉 {isAr ? 'تم الفتح' : 'Unlocked'}
+                    </span>
                   ) : (
-                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-650 dark:text-slate-500 font-bold px-2 py-0.5 rounded-full select-none">🔒 {isAr ? 'مقفل' : 'Locked'}</span>
+                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold px-2.5 py-0.5 rounded-full select-none">
+                      🔒 {isAr ? 'مقفل' : 'Locked'}
+                    </span>
                   )}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm font-semibold leading-relaxed">
@@ -1414,7 +1430,11 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
             </div>
 
             <div className="flex items-center gap-3 shrink-0 z-10">
-              <span className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold px-3 py-1 rounded-xl border border-amber-500/20">
+              <span className={`text-xs font-black px-3.5 py-1.5 rounded-xl border ${
+                item.unlocked
+                  ? 'uipro-gold-shimmer bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/30'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+              }`}>
                 ★ {item.rewardText}
               </span>
             </div>
@@ -1423,74 +1443,58 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
       </div>
 
       {/* Holographic Fullscreen Medal Unlocked Celebration Modal */}
-      
-        {celebrationMedal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl">
-            {/* Radiant light beam simulation in background */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-amber-500/10 rounded-full blur-[140px] animate-pulse" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
-            </div>
+      {celebrationMedal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-amber-500/10 rounded-full blur-[140px] animate-pulse" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px]" />
+          </div>
 
-            <div
-              
-              
-              
-              
-              className="w-full max-w-md bg-white dark:bg-slate-900 border border-amber-500/40 rounded-[36px] p-8 text-center relative overflow-hidden shadow-2xl card-3d"
-              dir={isAr ? 'rtl' : 'ltr'}
-            >
-              {/* Gold light burst aura behind the medal */}
-              <div className="absolute top-12 left-1/2 -translate-x-1/2 w-48 h-48 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-full opacity-20 blur-3xl" />
+          <div
+            className="w-full max-w-md uipro-clay-card bg-white dark:bg-slate-900 border-2 border-amber-500/50 rounded-[36px] p-8 text-center relative overflow-hidden shadow-2xl"
+            dir={isAr ? 'rtl' : 'ltr'}
+          >
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 w-48 h-48 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-full opacity-20 blur-3xl" />
 
-              <div className="space-y-6 relative z-10">
-                {/* Massive Animated 3D Spinning Medal Box */}
-                <div 
-                  className="w-32 h-32 mx-auto bg-gradient-to-tr from-amber-400 via-yellow-500 to-amber-300 rounded-full flex items-center justify-center text-6xl shadow-xl shadow-amber-500/20 border-4 border-yellow-250 ring-8 ring-amber-500/20"
+            <div className="space-y-6 relative z-10">
+              <div 
+                className="w-32 h-32 mx-auto bg-gradient-to-tr from-amber-400 via-yellow-500 to-amber-300 rounded-full flex items-center justify-center text-6xl shadow-2xl shadow-amber-500/30 border-4 border-yellow-200 ring-8 ring-amber-500/20 animate-bounce"
+              >
+                <span className="drop-shadow-md select-none">{celebrationMedal.icon}</span>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="inline-block px-3 py-1 bg-amber-500/20 border border-amber-400/40 rounded-full text-[10px] text-amber-600 dark:text-amber-300 font-extrabold uppercase tracking-widest">
+                  🏆 {isAr ? 'تم فتح شارة توثيق جديدة!' : 'New Badge Unlocked!'}
+                </span>
+                <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white tracking-tight leading-snug">
+                  {isAr ? celebrationMedal.titleAr : celebrationMedal.titleEn}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-300 font-semibold px-4 leading-relaxed">
+                  {isAr ? celebrationMedal.descAr : celebrationMedal.descEn}
+                </p>
+              </div>
+
+              <div className="uipro-glass-panel bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl py-3.5 px-6 max-w-xs mx-auto flex items-center justify-between text-right">
+                <span className="text-slate-500 dark:text-slate-400 font-bold text-xs">{isAr ? 'الجائزة المضافة:' : 'Reward Added:'}</span>
+                <span className="text-base font-black text-amber-500 dark:text-amber-400 font-mono tracking-tight">+{celebrationMedal.rewardText}</span>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => {
+                    setCelebrationMedal(null);
+                    playChimeSound('click');
+                  }}
+                  className="uipro-btn-tactile w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 text-slate-950 font-black text-xs cursor-pointer shadow-xl shadow-amber-500/25 leading-none focus:outline-none"
                 >
-                  <span className="drop-shadow-md select-none">{celebrationMedal.icon}</span>
-                </div>
-
-                {/* Sparking title labels */}
-                <div className="space-y-1.5">
-                  <span 
-                    
-                    
-                    className="inline-block px-3 py-1 bg-amber-500/20 border border-amber-400/40 rounded-full text-[10px] text-amber-600 dark:text-amber-300 font-extrabold uppercase tracking-widest"
-                  >
-                    🏆 {isAr ? 'تم فتح شارة توثيق جديدة!' : 'New Badge Unlocked!'}
-                  </span>
-                  <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white tracking-tight leading-snug">
-                    {isAr ? celebrationMedal.titleAr : celebrationMedal.titleEn}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-300 font-semibold px-4 leading-relaxed">
-                    {isAr ? celebrationMedal.descAr : celebrationMedal.descEn}
-                  </p>
-                </div>
-
-                {/* Knowledge XP banner */}
-                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-3.5 px-6 max-w-xs mx-auto flex items-center justify-between text-right">
-                  <span className="text-slate-500 dark:text-slate-400 font-bold text-xs">{isAr ? 'الجائزة المضافة:' : 'Reward Added:'}</span>
-                  <span className="text-base font-black text-amber-500 dark:text-amber-400 font-mono tracking-tight">+{celebrationMedal.rewardText}</span>
-                </div>
-
-                {/* Claim confirmation switch */}
-                <div className="pt-2">
-                  <button
-                    onClick={() => {
-                      setCelebrationMedal(null);
-                      playChimeSound('click');
-                    }}
-                    className="w-full py-3.5 rounded-2.5xl bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 text-slate-950 font-black text-xs cursor-pointer shadow-lg shadow-amber-500/15 hover:scale-103 active:scale-97 transition-all leading-none focus:outline-none"
-                  >
-                    {isAr ? 'أغلق وتابع تجميع المعرفة 🚀' : 'Collect & Continue Journey 🚀'}
-                  </button>
-                </div>
+                  {isAr ? 'أغلق وتابع تجميع المعرفة 🚀' : 'Collect & Continue Journey 🚀'}
+                </button>
               </div>
             </div>
           </div>
-        )}
-      
+        </div>
+      )}
     </div>
   );
 }
@@ -2073,7 +2077,7 @@ export function SettingsSection({
               <div className="p-4 bg-slate-950/60 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow">
-                    <svg className="w-6 h-6" viewBox="0 0 1000 866" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 1000 1000" className="w-6 h-6">
                       <path d="M333.333 0L500 288.675L166.667 866.025L0 577.35Z" fill="#0F9D58" />
                       <path d="M166.667 866.025L833.333 866.025L666.667 577.35L333.333 577.35Z" fill="#4285F4" />
                       <path d="M666.667 0L1000 577.35L833.333 866.025L500 288.675Z" fill="#FFBA00" />
@@ -2176,83 +2180,90 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
 
   const getRankStyle = (rank: number) => {
     if (rank === 1) return {
-      bgColor: 'bg-[#facc15]/10 dark:bg-[#facc15]/15',
-      borderColor: 'border-[#facc15]',
-      textColor: 'text-[#eab308]',
+      bgColor: 'bg-gradient-to-b from-amber-400/20 via-yellow-400/10 to-amber-500/5',
+      borderColor: 'border-amber-400 dark:border-amber-400/80',
+      textColor: 'text-amber-500 dark:text-amber-400',
       badge: '👑',
-      height: 'h-40 sm:h-48'
+      badgeBg: 'bg-amber-400 text-amber-950',
+      height: 'h-48 sm:h-56',
+      shimmer: 'uipro-gold-shimmer'
     };
     if (rank === 2) return {
-      bgColor: 'bg-slate-100/60 dark:bg-slate-400/10',
-      borderColor: 'border-slate-350 dark:border-slate-500',
-      textColor: 'text-slate-400',
+      bgColor: 'bg-gradient-to-b from-slate-200/40 via-slate-100/20 to-slate-200/5 dark:from-slate-700/20 dark:to-transparent',
+      borderColor: 'border-slate-300 dark:border-slate-600',
+      textColor: 'text-slate-500 dark:text-slate-300',
       badge: '🥈',
-      height: 'h-32 sm:h-38'
+      badgeBg: 'bg-slate-300 text-slate-800 dark:bg-slate-600 dark:text-white',
+      height: 'h-40 sm:h-46',
+      shimmer: 'uipro-silver-shimmer'
     };
     return {
-      bgColor: 'bg-orange-550/10 dark:bg-[#ca8a04]/10',
-      borderColor: 'border-orange-500/40 dark:border-[#ca8a04]/60',
+      bgColor: 'bg-gradient-to-b from-orange-400/20 via-orange-300/10 to-orange-500/5',
+      borderColor: 'border-orange-400/60 dark:border-orange-500/50',
       textColor: 'text-orange-500 dark:text-orange-400',
       badge: '🥉',
-      height: 'h-28 sm:h-32'
+      badgeBg: 'bg-orange-400 text-orange-950',
+      height: 'h-36 sm:h-40',
+      shimmer: 'uipro-bronze-shimmer'
     };
   };
 
   return (
     <div className="space-y-8 animate-fade-in" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div>
-        <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">{isAr ? '🏆 لوحة الشرف ومنصة التتويج' : 'Laureate Podium & Leaderboard'}</h2>
-        <p className="text-xs text-slate-505 dark:text-slate-400 mt-1">{isAr ? 'منصة فخرية مخصصة لأسرع عقول الشروق وأدقهم نتائج في التحديات.' : 'Honoring state-of-the-art scholars with precision completion scores.'}</p>
+        <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2.5">
+          <span className="p-2 rounded-2xl bg-amber-500/10 text-amber-500">🏆</span>
+          <span>{isAr ? 'لوحة الشرف ومنصة التتويج' : 'Laureate Podium & Leaderboard'}</span>
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
+          {isAr ? 'منصة فخرية لتتويج أسرع عقول المنصة وأدقهم نتائج في حل التحديات العلمية.' : 'Honoring elite scholars with high-precision quiz scores.'}
+        </p>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center p-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="flex items-center justify-center p-20">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
         </div>
       ) : (
         <>
           {/* Top 3 Visual Podium Display */}
           {podiumWinners.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-end justify-center gap-4 pt-6 pb-2 select-none">
+            <div className="flex flex-col sm:flex-row items-end justify-center gap-4 sm:gap-6 pt-8 pb-4 select-none">
               {renderPodiumOrder().map((winner, index) => {
                 const style = getRankStyle(winner.rank);
                 return (
                   <div
                     key={winner.userId || index}
-                    
-                    
-                    
-                    
-                    className={`w-full sm:w-56 rounded-3xl border ${style.borderColor} ${style.bgColor} p-5 flex flex-col justify-end items-center relative space-y-4 overflow-hidden glow-card shadow-lg shrink-0`}
-                    style={{ minHeight: '220px' }}
+                    className={`w-full sm:w-60 rounded-[32px] border-2 ${style.borderColor} ${style.bgColor} p-6 flex flex-col justify-end items-center relative space-y-4 shadow-xl shrink-0 uipro-clay-card`}
+                    style={{ minHeight: winner.rank === 1 ? '260px' : winner.rank === 2 ? '230px' : '210px' }}
                   >
                     {/* Background badge identifier */}
-                    <div className="absolute top-4 right-4 text-3xl opacity-90 animate-pulse select-none">
+                    <div className="absolute top-4 right-4 text-3xl select-none">
                       {style.badge}
                     </div>
 
-                    <div className="flex flex-col items-center text-center space-y-2">
+                    <div className="flex flex-col items-center text-center space-y-2.5 w-full">
                       <div className="relative">
-                        <div className={`w-14 h-14 rounded-full bg-slate-900 border-2 ${winner.rank === 1 ? 'border-yellow-400' : winner.rank === 2 ? 'border-slate-350' : 'border-orange-500'} flex items-center justify-center text-white font-extrabold text-sm shadow-md`}>
+                        <div className={`w-16 h-16 rounded-full bg-slate-900 border-2 ${winner.rank === 1 ? 'border-yellow-400 ring-4 ring-yellow-400/20' : winner.rank === 2 ? 'border-slate-300' : 'border-orange-400'} flex items-center justify-center text-white font-extrabold text-base shadow-lg`}>
                           {winner.userName ? winner.userName.substring(0, 1) : '👤'}
                         </div>
-                        <span className="absolute -bottom-1 -right-1 bg-slate-950 px-2 py-0.5 rounded-full text-[9px] font-black border border-slate-855 text-white">
+                        <span className={`absolute -bottom-1 -right-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-md ${style.badgeBg}`}>
                           #{winner.rank}
                         </span>
                       </div>
 
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-black text-slate-800 dark:text-white flex items-center justify-center gap-1">
-                          {winner.userName || (isAr ? 'عضو غامض' : 'Mystical Scholar')}
+                      <div className="space-y-1 w-full">
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5 truncate">
+                          {winner.userName || (isAr ? 'طالب متميز' : 'Scholar')}
                           <UserBadge tier={winner.userTier || 'free'} showLabel={false} />
                         </h4>
-                        <p className="text-[10px] text-slate-505 dark:text-slate-400 font-bold max-w-[140px] truncate">{winner.quizTitle}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold truncate max-w-[160px] mx-auto">{winner.quizTitle}</p>
                       </div>
                     </div>
 
-                    <div className="w-full bg-slate-50 dark:bg-slate-950/65 py-2.5 px-3 rounded-2xl text-center border border-slate-205 dark:border-slate-800/60 block">
-                      <span className="text-sm font-black font-mono text-slate-705 dark:text-white block leading-none">{winner.score}%</span>
-                      <span className="text-[9.5px] text-slate-500 dark:text-slate-400 font-black tracking-wide block mt-1">{winner.elapsedSeconds || 45} {isAr ? 'ثانية حل ⏱' : 'sec solve ⏱'}</span>
+                    <div className="w-full bg-white/80 dark:bg-slate-950/70 py-3 px-4 rounded-2xl text-center border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                      <span className={`text-base font-black font-mono block leading-none ${style.textColor}`}>{winner.score}%</span>
+                      <span className="text-[10px] text-slate-400 font-bold block mt-1">{winner.elapsedSeconds || 45} {isAr ? 'ثانية حل ⏱' : 'sec solve ⏱'}</span>
                     </div>
                   </div>
                 );
@@ -2261,12 +2272,12 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
           )}
 
           {/* Leaderboard Table/List representing rankings 4+ */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl card-3d">
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-right" dir={isAr ? 'rtl' : 'ltr'}>
-              <h3 className="font-display font-black text-sm text-slate-700 dark:text-slate-250">{isAr ? 'قائمة الصدارة المتكاملة:' : 'Complete Global Scoreboard:'}</h3>
-              <span className="text-[9.5px] bg-[#22c55e]/15 text-[#22c55e]/90 font-black py-1 px-3 rounded-full flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-[#22c55e] animate-ping" />
-                <span>{isAr ? 'تحديث حي ومباشر' : 'Live Sync Feed'}</span>
+          <div className="uipro-clay-card rounded-[32px] overflow-hidden shadow-xl">
+            <div className="p-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-right" dir={isAr ? 'rtl' : 'ltr'}>
+              <h3 className="font-display font-black text-sm text-slate-800 dark:text-slate-200">{isAr ? 'قائمة الصدارة العامة:' : 'Complete Global Scoreboard:'}</h3>
+              <span className="uipro-pill-badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <span>{isAr ? 'تحديث حي ومباشر' : 'Live Sync'}</span>
               </span>
             </div>
 
@@ -2276,33 +2287,29 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                 return (
                   <div 
                     key={idx}
-                    
-                    
-                    
-                     
-                    className="p-4.5 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                    className="p-5 flex items-center justify-between gap-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                     dir={isAr ? 'rtl' : 'ltr'}
                   >
                     <div className="flex items-center gap-3.5">
-                      <span className="text-xs font-black w-6 text-center select-none text-slate-400 block">
+                      <span className="text-xs font-black w-7 text-center select-none text-slate-400 block font-mono">
                         #{displayRank}
                       </span>
-                      <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-xs text-slate-650 dark:text-white font-extrabold shadow">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/15 to-violet-500/15 border border-primary/20 flex items-center justify-center text-xs text-primary dark:text-primary-light font-extrabold shadow-xs">
                         {item.userName ? item.userName.substring(0,1) : '👤'}
                       </div>
                       <div className="space-y-0.5 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                        <h4 className="text-xs font-black text-slate-805 dark:text-white flex items-center gap-1">
+                        <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                           {item.userName || (isAr ? 'طالب متميز' : 'Elite Student')}
                           <UserBadge tier={item.userTier || 'free'} showLabel={false} />
                         </h4>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate max-w-xs">{isAr ? 'حلّ باقتدار:' : 'Solved:'} {item.quizTitle}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold truncate max-w-xs">{isAr ? 'حلّ باقتدار:' : 'Solved:'} {item.quizTitle}</p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 shrink-0 text-left" style={{ textAlign: isAr ? 'left' : 'right' }}>
+                    <div className="flex items-center gap-3 shrink-0 text-left" style={{ textAlign: isAr ? 'left' : 'right' }}>
                       <div className="text-right">
-                        <span className="text-xs font-black text-indigo-505 dark:text-indigo-400 block font-mono">{item.score}%</span>
-                        <span className="text-[9px] text-slate-500 font-bold block">{item.elapsedSeconds || 50} {isAr ? 'ثانية ⏱' : 'sec ⏱'}</span>
+                        <span className="text-xs font-black text-primary font-mono block">{item.score}%</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">{item.elapsedSeconds || 50} {isAr ? 'ثانية ⏱' : 'sec ⏱'}</span>
                       </div>
                     </div>
                   </div>
@@ -2310,9 +2317,10 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
               })}
 
               {boardItems.length === 0 && (
-                <p className="p-12 text-center text-xs text-slate-400 select-none">
-                  {isAr ? 'لا توجد نتائج مسجلة في لوحة الشرف اليوم بعد.' : 'No entries on the podium today yet.'}
-                </p>
+                <div className="p-16 text-center text-xs text-slate-400 select-none space-y-2">
+                  <span className="text-3xl block">🏆</span>
+                  <span>{isAr ? 'لا توجد نتائج مسجلة في لوحة الشرف اليوم بعد.' : 'No entries on the podium today yet.'}</span>
+                </div>
               )}
             </div>
           </div>

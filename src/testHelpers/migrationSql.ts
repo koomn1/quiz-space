@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 const BASELINE = readFileSync(
   new URL('../../supabase/migrations/20260728_consolidated_baseline.sql', import.meta.url),
   'utf8',
-);
+).replace(/\r\n/g, '\n');
 
 const ORIGIN_MARKER_RE = /^-- >>> ORIGIN: (supabase\/migrations\/[^\n]+)$/gm;
 
