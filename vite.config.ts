@@ -8,8 +8,8 @@ import viteCompression from 'vite-plugin-compression';
 
 const isCloudflarePagesBuild = process.env.DEPLOY_TARGET === 'cloudflare-pages';
 
-export default defineConfig({
-    base: isCloudflarePagesBuild ? '/' : '/quiz-space/',
+export default defineConfig(({ command }) => ({
+    base: command === 'serve' || isCloudflarePagesBuild ? '/' : '/quiz-space/',
     plugins: [
       react(),
       tailwindcss(),
@@ -55,4 +55,4 @@ export default defineConfig({
         },
       },
     },
-});
+}));
