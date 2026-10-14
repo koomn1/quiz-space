@@ -741,23 +741,35 @@ export default function QuizResolver({
       }
 
       if (completionId && isReviewDirty && !isDailyQuiz) {
-        if (isGuest) {
-          await updateGuestQuizAttemptScore(completionId, userId, attemptKeyRef.current, score);
-        } else {
-          await updateQuizAttemptScore(completionId, score);
+        try {
+          if (isGuest) {
+            await updateGuestQuizAttemptScore(completionId, userId, attemptKeyRef.current, score);
+          } else {
+            await updateQuizAttemptScore(completionId, score);
+          }
+          setIsReviewDirty(false);
+        } catch (scoreErr) {
+          // The automatic completion already contains a valid result. A stale
+          // review score must not trap the user on the finished-quiz screen.
+          console.warn('Review score update skipped; saved completion remains valid:', scoreErr);
         }
-        setIsReviewDirty(false);
       }
       
       // Save rating attempt to Supabase
       if (completionId && !isDailyQuiz) {
         if (selectedRating > 0) {
-          if (isGuest) {
-            await updateGuestQuizAttemptReview(completionId, userId, selectedRating, feedbackText.trim());
-          } else {
-            await updateCompletionReview(completionId, selectedRating, feedbackText);
+          try {
+            if (isGuest) {
+              await updateGuestQuizAttemptReview(completionId, userId, selectedRating, feedbackText.trim());
+            } else {
+              await updateCompletionReview(completionId, selectedRating, feedbackText);
+            }
+            setHasRatedQuiz(true);
+          } catch (reviewErr) {
+            // Rating is optional metadata and must never block a successfully
+            // saved quiz attempt from being submitted and closed.
+            console.warn('Optional review metadata skipped; saved completion remains valid:', reviewErr);
           }
-          setHasRatedQuiz(true);
         }
         try { playNotificationSound('success'); } catch (_) {}
         if (onQuizLockChange) onQuizLockChange(false);
