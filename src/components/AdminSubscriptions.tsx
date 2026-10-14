@@ -647,28 +647,32 @@ export default function AdminSubscriptions({
   return (
     <div className="space-y-6" dir={isAr ? "rtl" : "ltr"}>
       {/* Sub Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+      <div className="grid grid-cols-2 gap-2 border-b border-slate-200 pb-2 dark:border-slate-800 sm:flex sm:overflow-x-auto">
         <button
+          type="button"
           onClick={() => setSubTab("users")}
-          className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap ${subTab === "users" ? "bg-primary text-white" : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"}`}
+          className={`min-h-11 rounded-xl px-3 py-2 text-center text-xs font-black transition-colors sm:px-4 sm:text-sm ${subTab === "users" ? "bg-primary text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"}`}
         >
           {isAr ? "إدارة اشتراكات المستخدمين" : "User Subscriptions"}
         </button>
         <button
+          type="button"
           onClick={() => setSubTab("payments")}
-          className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap ${subTab === "payments" ? "bg-primary text-white" : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"}`}
+          className={`min-h-11 rounded-xl px-3 py-2 text-center text-xs font-black transition-colors sm:px-4 sm:text-sm ${subTab === "payments" ? "bg-primary text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"}`}
         >
           {isAr ? "مراجعة المدفوعات" : "Payment Reviews"}
         </button>
         <button
+          type="button"
           onClick={() => setSubTab("plans")}
-          className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap ${subTab === "plans" ? "bg-primary text-white" : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"}`}
+          className={`min-h-11 rounded-xl px-3 py-2 text-center text-xs font-black transition-colors sm:px-4 sm:text-sm ${subTab === "plans" ? "bg-primary text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"}`}
         >
           {isAr ? "الخطط المخصصة" : "Custom Plans"}
         </button>
         <button
+          type="button"
           onClick={() => setSubTab("coupons")}
-          className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap ${subTab === "coupons" ? "bg-primary text-white" : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"}`}
+          className={`min-h-11 rounded-xl px-3 py-2 text-center text-xs font-black transition-colors sm:px-4 sm:text-sm ${subTab === "coupons" ? "bg-primary text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"}`}
         >
           {isAr ? "إدارة أكواد الخصم 🎫" : "Discount Coupons 🎫"}
         </button>
@@ -1045,59 +1049,77 @@ export default function AdminSubscriptions({
               {mockPayments.map((pay, idx) => (
                 <div
                   key={pay.id || idx}
-                  className="glass-panel p-5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 overflow-hidden"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <h4 className="font-bold text-lg min-w-0 truncate">{pay.userName}</h4>
-                    <div className="flex shrink-0 gap-1">
+                    className="glass-panel overflow-hidden rounded-2xl border border-slate-200/50 p-4 dark:border-slate-700/50 sm:p-5"
+                  >
+                  <div className="mb-4 flex flex-col gap-3 border-b border-slate-200/70 pb-4 dark:border-slate-700/60 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <h4 className="truncate text-base font-black text-slate-900 dark:text-white sm:text-lg">{pay.userName}</h4>
+                      <p className="mt-1 truncate text-[11px] text-slate-500">{pay.userId || (isAr ? 'مستخدم' : 'User')}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1 sm:shrink-0">
                     <button
+                      type="button"
                       onClick={() => approvePayment(pay.id)}
+                      aria-label={isAr ? "قبول وتفعيل" : "Approve and activate"}
                       title={isAr ? "قبول وتفعيل" : "Approve & Activate"}
-                      className="text-emerald-500 hover:bg-emerald-500/10 min-h-11 min-w-11 rounded-lg transition-colors"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-emerald-500 transition-colors hover:bg-emerald-500/10"
                     >
                       <CheckCircle className="w-5 h-5" />
+                      <span className="hidden text-[11px] font-black sm:inline">{isAr ? 'اعتماد' : 'Approve'}</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => requestPaymentInfo(pay.id)}
+                      aria-label={isAr ? "طلب المزيد من المعلومات" : "Request more information"}
                       title={isAr ? "طلب المزيد من المعلومات" : "Request Info"}
-                      className="text-amber-500 hover:bg-amber-500/10 min-h-11 min-w-11 rounded-lg transition-colors"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-amber-500 transition-colors hover:bg-amber-500/10"
                     >
                       <Edit2 className="w-5 h-5" />
+                      <span className="hidden text-[11px] font-black sm:inline">{isAr ? 'معلومات' : 'Info'}</span>
                     </button>
                     <button
+                      type="button"
                       onClick={() => rejectPayment(pay.id)}
+                      aria-label={isAr ? "رفض الدفع" : "Reject payment"}
                       title={isAr ? "رفض" : "Reject"}
-                      className="text-red-500 hover:bg-red-500/10 min-h-11 min-w-11 rounded-lg transition-colors"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-red-500 transition-colors hover:bg-red-500/10"
                     >
                       <XCircle className="w-5 h-5" />
+                      <span className="hidden text-[11px] font-black sm:inline">{isAr ? 'رفض' : 'Reject'}</span>
                     </button>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-500 mb-2">
-                    Plan:{" "}
-                    <span className="font-bold text-slate-700 border border-slate-200 px-1 rounded">
+                  <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+                    <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
+                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'الخطة' : 'Plan'}</span>
+                      <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">
                       {pay.planName}
-                    </span>{" "}
-                    via {pay.method}
-                  </p>
-                  <p className="text-xl font-black text-emerald-600">
-                    ${pay.amount}
-                  </p>
-                  <div className="mt-3">
+                      </span>
+                    </div>
+                    <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
+                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'طريقة الدفع' : 'Payment method'}</span>
+                      <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">{pay.method}</span>
+                    </div>
+                    <div className="col-span-2 rounded-xl bg-emerald-500/10 p-3 sm:col-span-1">
+                      <span className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{isAr ? 'المبلغ' : 'Amount'}</span>
+                      <span className="mt-1 block text-xl font-black text-emerald-600">${pay.amount}</span>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200/70 bg-slate-100/40 p-3 dark:border-slate-700/70 dark:bg-slate-900/40">
+                    <p className="mb-2 text-[11px] font-black text-slate-500">{isAr ? 'إيصال الدفع' : 'Payment receipt'}</p>
                     {pay.receiptUrl ? (
                       pay.receiptUrl.startsWith('data:image') ? (
                         <img
                           src={pay.receiptUrl}
-                          alt="Payment receipt"
-                          className="max-w-full h-auto rounded-lg border border-slate-200 dark:border-slate-700"
-                          style={{ maxHeight: '300px' }}
+                          alt={isAr ? 'إيصال الدفع' : 'Payment receipt'}
+                          className="h-auto max-h-72 w-full rounded-xl border border-slate-200 bg-white object-contain p-1 dark:border-slate-700 dark:bg-slate-950"
                         />
                       ) : (
                         <a
                           href={pay.receiptUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-bold text-blue-500 underline"
+                          className="inline-flex min-h-11 items-center rounded-xl bg-blue-500/10 px-3 text-xs font-bold text-blue-500 underline"
                         >
                           {isAr
                             ? "عرض الإيصال / التفاصيل"
@@ -1110,7 +1132,7 @@ export default function AdminSubscriptions({
                       </span>
                     )}
                     {pay.notes && (
-                      <p className="text-xs mt-1">Notes: {pay.notes}</p>
+                      <p className="mt-3 rounded-xl bg-amber-500/10 p-3 text-xs leading-5 text-slate-700 dark:text-slate-200"><strong>{isAr ? 'ملاحظات: ' : 'Notes: '}</strong>{pay.notes}</p>
                     )}
                   </div>
                 </div>
