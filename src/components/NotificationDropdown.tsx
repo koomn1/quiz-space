@@ -186,7 +186,12 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
       <button
         type="button"
         onClick={() => {
-          setIsOpen(!isOpen);
+          const nextOpen = !isOpen;
+          setIsOpen(nextOpen);
+          if (nextOpen) {
+            setFilter('all');
+            void loadNotifications();
+          }
         }}
         aria-label={isAr ? 'فتح مركز الإشعارات' : 'Open notification centre'}
         aria-expanded={isOpen}

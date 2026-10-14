@@ -46,7 +46,7 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
     try {
       const { data, error: queryError } = await supabase
         .from('notifications')
-        .select('id,title,body,message,type,is_read,created_at')
+        .select('id,title,body,type,is_read,created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -70,7 +70,18 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
     pushNotificationsManager.subscribe(listenerId, (payload) => {
       setItems((previous) => [fromPush(payload), ...previous.filter((item) => item.id !== payload.id)]);
     });
-    return () => pushNotificationsManager.unsubscribe(listenerId);
+    const channel = userId && !userId.startsWith('user-')
+      ? supabase
+        .channel(`notification-center-${userId}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, (payload) => {
+          setItems((previous) => [payload.new as AppNotification, ...previous.filter((item) => item.id !== payload.new.id)]);
+        })
+        .subscribe()
+      : null;
+    return () => {
+      pushNotificationsManager.unsubscribe(listenerId);
+      if (channel) void supabase.removeChannel(channel);
+    };
   }, [load, userId]);
 
   const markAllRead = async () => {
