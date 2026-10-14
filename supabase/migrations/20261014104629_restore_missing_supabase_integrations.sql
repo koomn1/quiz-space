@@ -18,6 +18,11 @@ ALTER TABLE public.post_reactions ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.post_reactions FROM anon, authenticated;
 GRANT SELECT ON public.post_reactions TO anon, authenticated;
 
+-- Remove older permissive policies if the live project has them under legacy
+-- names. PostgreSQL combines permissive policies with OR, so owner-scoped
+-- policies below must not be weakened by an earlier policy.
+DROP POLICY IF EXISTS post_reactions_own ON public.post_reactions;
+DROP POLICY IF EXISTS post_reactions_read ON public.post_reactions;
 DROP POLICY IF EXISTS post_reactions_public_read ON public.post_reactions;
 CREATE POLICY post_reactions_public_read
   ON public.post_reactions FOR SELECT TO anon, authenticated
@@ -101,6 +106,7 @@ ALTER TABLE public.cosmo_conversations ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.cosmo_conversations FROM anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.cosmo_conversations TO authenticated;
 
+DROP POLICY IF EXISTS cosmo_conversations_own ON public.cosmo_conversations;
 DROP POLICY IF EXISTS cosmo_conversations_select_own ON public.cosmo_conversations;
 CREATE POLICY cosmo_conversations_select_own
   ON public.cosmo_conversations FOR SELECT TO authenticated
@@ -155,6 +161,7 @@ ALTER TABLE public.cosmo_messages ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.cosmo_messages FROM anon, authenticated;
 GRANT SELECT, INSERT, DELETE ON public.cosmo_messages TO authenticated;
 
+DROP POLICY IF EXISTS cosmo_messages_own ON public.cosmo_messages;
 DROP POLICY IF EXISTS cosmo_messages_select_own ON public.cosmo_messages;
 CREATE POLICY cosmo_messages_select_own
   ON public.cosmo_messages FOR SELECT TO authenticated
