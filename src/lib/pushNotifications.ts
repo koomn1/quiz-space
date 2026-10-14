@@ -22,6 +22,7 @@ type NotificationCallback = (payload: PushNotificationPayload) => void;
 class PushNotificationManager {
   private listeners: Map<string, NotificationCallback> = new Map();
   private notificationPermission: 'default' | 'granted' | 'denied' = 'default';
+  private readonly historyKey = 'quizspace_push_notification_history';
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -66,6 +67,30 @@ class PushNotificationManager {
     this.listeners.delete(id);
   }
 
+  public getRecent(limit = 30): PushNotificationPayload[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = JSON.parse(localStorage.getItem(this.historyKey) || '[]') as PushNotificationPayload[];
+      return Array.isArray(stored) ? stored.slice(0, limit) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  public markRead(ids?: string[]) {
+    if (typeof window === 'undefined') return;
+    const idSet = ids ? new Set(ids) : null;
+    const remaining = this.getRecent().filter((item) => idSet ? !idSet.has(item.id) : false);
+    localStorage.setItem(this.historyKey, JSON.stringify(remaining));
+  }
+
+  private remember(payload: PushNotificationPayload) {
+    if (typeof window === 'undefined') return;
+    const history = this.getRecent().filter((item) => item.id !== payload.id);
+    history.unshift(payload);
+    localStorage.setItem(this.historyKey, JSON.stringify(history.slice(0, 30)));
+  }
+
   // Primary entrypoint to dispatch a notification when someone breaks a record
   public dispatchRecordBroken(
     quizId: string,
@@ -84,6 +109,7 @@ class PushNotificationManager {
       playerName,
       timestamp: new Date()
     };
+    this.remember(payload);
 
     // 1. Play premium high-score audio chime
     try {
@@ -129,6 +155,8 @@ class PushNotificationManager {
       playerName: payload.playerName || '',
       timestamp: payload.timestamp || new Date()
     };
+
+    this.remember(fullPayload);
 
     if (typeof window !== 'undefined' && window.Notification && this.notificationPermission === 'granted') {
       try {

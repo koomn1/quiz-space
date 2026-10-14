@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { getNotificationGroup, matchesNotificationFilter, NotificationGroup } from '../lib/notificationPresentation';
 import { claimDailyEngagementReward, getDailyBrainChallenge, getLearningStreakStatus, getMotivationStatus } from '../lib/db';
 import { hasUsedLuckySpinToday } from '../lib/motivationData';
+import { pushNotificationsManager, PushNotificationPayload } from '../lib/pushNotifications';
 
 type Notification = {
   id: string;
@@ -25,6 +26,17 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
 
   const isAr = lang === 'ar';
 
+  const toAppNotification = (payload: PushNotificationPayload): Notification => ({
+    id: payload.id,
+    title: payload.title,
+    body: payload.body,
+    type: 'system',
+    is_read: false,
+    created_at: payload.timestamp instanceof Date
+      ? payload.timestamp.toISOString()
+      : String(payload.timestamp || new Date().toISOString()),
+  });
+
   const loadNotifications = useCallback(async () => {
     if (!userId || userId.startsWith('user-')) return;
     try {
@@ -36,7 +48,15 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
         getDailyBrainChallenge().catch(() => null),
         getLearningStreakStatus().catch(() => null),
       ]);
-      if (!notificationResult.error && notificationResult.data) setNotifications(notificationResult.data);
+      if (!notificationResult.error && notificationResult.data) {
+        const databaseNotifications = notificationResult.data as Notification[];
+        const pushNotifications = pushNotificationsManager.getRecent().map(toAppNotification);
+        const databaseIds = new Set(databaseNotifications.map((notification) => notification.id));
+        setNotifications([
+          ...pushNotifications.filter((notification) => !databaseIds.has(notification.id)),
+          ...databaseNotifications,
+        ]);
+      }
 
       const dismissedKey = `quizspace_daily_notifications:${userId}:${today}`;
       const dismissed = new Set(JSON.parse(localStorage.getItem(dismissedKey) || '[]') as string[]);
@@ -79,6 +99,17 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
   }, [userId, loadNotifications]);
 
   useEffect(() => {
+    const listenerId = `notification-dropdown-${userId}`;
+    pushNotificationsManager.subscribe(listenerId, (payload) => {
+      setNotifications((previous) => [
+        toAppNotification(payload),
+        ...previous.filter((notification) => notification.id !== payload.id),
+      ]);
+    });
+    return () => pushNotificationsManager.unsubscribe(listenerId);
+  }, [userId]);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
@@ -99,6 +130,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
 
   const markAllAsRead = async () => {
     dismissDailyNotifications(dailyNotifications.map((notification) => notification.id));
+    pushNotificationsManager.markRead(notifications.filter((notification) => notification.id.startsWith('push-')).map((notification) => notification.id));
     try {
       await supabase
         .from('notifications')
@@ -124,6 +156,11 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
     if (daily) {
       dismissDailyNotifications([notificationId]);
       void claimDailyEngagementReward('daily_notification_action').catch(() => undefined);
+      return;
+    }
+    if (notificationId.startsWith('push-')) {
+      pushNotificationsManager.markRead([notificationId]);
+      setNotifications((previous) => previous.filter((notification) => notification.id !== notificationId));
       return;
     }
     const current = notifications.find((notification) => notification.id === notificationId);
