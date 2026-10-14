@@ -1464,6 +1464,8 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
         email: reqData.email,
         planName: reqData.planName,
         planPrice: reqData.planPrice,
+        amount: reqData.amount,
+        paymentMethod: reqData.paymentMethod,
         status: reqData.status || 'pending',
       }
     }));

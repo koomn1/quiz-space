@@ -135,6 +135,8 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
           email: e.detail.email || '',
           planName: e.detail.planName || 'الباقة المميزة',
           planPrice: e.detail.planPrice,
+          amount: e.detail.amount,
+          paymentMethod: e.detail.paymentMethod,
         });
         refreshPendingCount();
       }
