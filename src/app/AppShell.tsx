@@ -92,13 +92,15 @@ export default function AppShell(props: AppShellProps) {
             enabled={Boolean(authIsAuthenticated && userId && !userId.startsWith('user-guest'))}
             onOpenCreator={() => handleSetTab('create')}
           />
-          <CommandPalette
-            isOpen={isCommandPaletteOpen}
-            lang={lang}
-            onOpen={() => setIsCommandPaletteOpen(true)}
-            onClose={() => setIsCommandPaletteOpen(false)}
-            onNavigate={(tab) => handleSetTab(tab)}
-          />
+          {showAppHeader && !isQuizLocked && (
+            <CommandPalette
+              isOpen={isCommandPaletteOpen}
+              lang={lang}
+              onOpen={() => setIsCommandPaletteOpen(true)}
+              onClose={() => setIsCommandPaletteOpen(false)}
+              onNavigate={(tab) => handleSetTab(tab)}
+            />
+          )}
 
           <div
           className={`light-readable-ui theme-page min-h-dvh w-full max-w-none overflow-x-hidden ${isCosmoTab ? 'h-dvh overflow-hidden' : ''}`}

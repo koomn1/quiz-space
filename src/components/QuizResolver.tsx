@@ -6,7 +6,7 @@
 import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
-import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock, LayoutGrid, X } from 'lucide-react';
 import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateQuizAttemptScore, updateGuestQuizAttemptScore, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
@@ -115,7 +115,11 @@ export default function QuizResolver({
   // Always start from the top of the screen when a quiz is opened
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [quizId]);
+    onQuizLockChange?.(true);
+    return () => {
+      onQuizLockChange?.(false);
+    };
+  }, [quizId, onQuizLockChange]);
 
   // Solving states
   const [currentIdx, setCurrentIdx] = React.useState(0);
@@ -179,6 +183,7 @@ export default function QuizResolver({
   const [isFlipped, setIsFlipped] = React.useState(false);
   const [aiFlashcardExplanations, setAiFlashcardExplanations] = React.useState<Record<string, string>>({});
   const [aiFlashcardLoading, setAiFlashcardLoading] = React.useState<Record<string, boolean>>({});
+  const [isQuestionsOverviewOpen, setIsQuestionsOverviewOpen] = React.useState(false);
 
   const handleFetchAiFlashcardExplanation = async (qId: string, q: Question) => {
     if (!hasCosmoAccess) {
@@ -553,6 +558,38 @@ export default function QuizResolver({
     }, 0);
   }, [essayAssessments, quiz]);
 
+  // Next question navigation
+  const handleNextQuestion = React.useCallback(() => {
+    setSelectedIdx(null);
+    setIsAnswersFrozen(false);
+    setEssayAnswerText('');
+    setEssayAssessed(null);
+
+    setCurrentIdx(prevIdx => {
+      if (quiz && prevIdx + 1 < quiz.questions.length) {
+        return prevIdx + 1;
+      }
+      setIsQuizCompleted(true);
+      return prevIdx;
+    });
+  }, [quiz]);
+
+  // Keyboard navigation support: Enter advances to next question when answered
+  React.useEffect(() => {
+    if (isQuizCompleted || isFlashcardMode || !quiz) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (isAnswersFrozen) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          handleNextQuestion();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAnswersFrozen, isQuizCompleted, isFlashcardMode, quiz, handleNextQuestion]);
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 max-w-xl mx-auto">
@@ -635,20 +672,6 @@ export default function QuizResolver({
     setEssayAssessments((previous) => ({ ...previous, [questionIndex]: false }));
     setScore(calculateScore(userAnswers));
     setIsReviewDirty(true);
-  };
-
-  // Next question navigation
-  const handleNextQuestion = () => {
-    setSelectedIdx(null);
-    setIsAnswersFrozen(false);
-    setEssayAnswerText('');
-    setEssayAssessed(null);
-
-    if (currentIdx + 1 < quiz.questions.length) {
-      setCurrentIdx(currentIdx + 1);
-    } else {
-      setIsQuizCompleted(true);
-    }
   };
 
   // Submit final scores & reviews to Firestore
@@ -970,78 +993,93 @@ export default function QuizResolver({
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 pb-8 print:bg-white print:p-0 sm:space-y-8 sm:pb-16">
+    <div className="mx-auto max-w-3xl space-y-4 pb-8 pb-28 sm:space-y-6 sm:pb-32 print:bg-white print:p-0">
       
-      {/* Top progress bar tracking percentage of completed questions with Framer Motion anim */}
+      {/* Sleek top progress bar tracking percentage of completed questions */}
       {!isQuizCompleted && (
         <div className="w-full bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden shadow-inner print:hidden relative">
           <div
-            
             style={{ width: `${progressPercent}%` }}
-            
-            className="h-full bg-primary rounded-full relative"
+            className="h-full bg-gradient-to-r from-primary to-primary-hover rounded-full transition-all duration-300 relative"
           />
         </div>
       )}
 
-      {/* Return Page Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 print:hidden sm:pb-4">
-        {!isQuizCompleted ? (
-          <button
-            onClick={onGoHome}
-            className="flex items-center gap-1 text-xs text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary/90 font-bold"
-          >
-            <ArrowRight className="w-4 h-4" />
-            <span>الخروج للرئيسية</span>
-          </button>
-        ) : (
-          <div className="flex items-center gap-1.5 text-xs text-primary font-extrabold">
-            <CheckCircle2 className="h-4 w-4" />
-            <span>{isAr ? 'تم حفظ المحاولة — يمكنك مراجعة إجاباتك قبل التسليم' : 'Attempt saved — review your answers before submitting'}</span>
+      {/* Unified Compact Navigation Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5 print:hidden sm:pb-3.5">
+        <div className="flex items-center gap-2">
+          {!isQuizCompleted ? (
+            <button
+              onClick={onGoHome}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+              title={isAr ? 'الخروج للرئيسية' : 'Exit to home'}
+            >
+              <ArrowRight className="w-4 h-4" />
+              <span>{isAr ? 'خروج' : 'Exit'}</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs text-primary font-extrabold">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>{isAr ? 'تم حفظ المحاولة — يمكنك مراجعة إجاباتك قبل التسليم' : 'Attempt saved — review your answers before submitting'}</span>
+            </div>
+          )}
+
+          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg">
+            {quiz.creatorName ? `${isAr ? 'الناشر:' : 'By:'} ${quiz.creatorName}` : (isAr ? 'اختبار مخصص' : 'Custom Quiz')}
+          </span>
+        </div>
+
+        {/* Controls: Mode Switcher & Question Overview Pill */}
+        {!isQuizCompleted && (
+          <div className="flex items-center gap-2">
+            <div className="flex bg-slate-100/90 dark:bg-slate-900/60 p-0.5 rounded-xl border border-slate-200/60 dark:border-slate-800/80 gap-0.5 shadow-2xs">
+              <button
+                onClick={() => {
+                  playChimeSound('click');
+                  setIsFlashcardMode(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  !isFlashcardMode
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-slate-700/60'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <span>{isAr ? 'حل ⚡' : 'Quiz ⚡'}</span>
+              </button>
+              <button
+                onClick={() => {
+                  playChimeSound('click');
+                  setIsFlashcardMode(true);
+                  setIsFlipped(false);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  isFlashcardMode
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-slate-700/60'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+                }`}
+              >
+                <BadgeCheck className="w-3.5 h-3.5 text-amber-500" />
+                <span>{isAr ? 'كروت 🎴' : 'Cards 🎴'}</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsQuestionsOverviewOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800 shadow-2xs transition-colors cursor-pointer"
+              title={isAr ? 'عرض قائمة وتفاصيل الأسئلة' : 'Questions List'}
+            >
+              <LayoutGrid className="w-3.5 h-3.5 text-primary" />
+              <span>{currentIdx + 1}/{quiz.questions.length}</span>
+            </button>
           </div>
         )}
-
-        <span className="text-[11px] font-medium text-slate-400 bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-md">
-          الناشر: {quiz.creatorName}
-        </span>
       </div>
 
       {/* Solving Phase layout */}
       {!isQuizCompleted ? (
-        <div className="space-y-4 sm:space-y-6">
-          
-          {/* Dual Toggle tab representing solving vs study flashcards */}
-          <div className="flex bg-slate-100/80 dark:bg-slate-900/40 p-0.5 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 w-fit mx-auto print:hidden gap-1 shadow-xs">
-            <button
-              onClick={() => {
-                playChimeSound('click');
-                setIsFlashcardMode(false);
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:gap-2 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer ${
-                !isFlashcardMode
-                  ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700/60'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
-              }`}
-            >
-              <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              <span>{isAr ? 'الوضع التنافسي: حل واختبار ⚡' : 'Competitive Mode: Solve & Test'}</span>
-            </button>
-            <button
-              onClick={() => {
-                playChimeSound('click');
-                setIsFlashcardMode(true);
-                setIsFlipped(false);
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:gap-2 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer ${
-                isFlashcardMode
-                  ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700/60'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
-              }`}
-            >
-              <BadgeCheck className="w-4 h-4 text-amber-500" />
-              <span>{isAr ? 'الوضع الأكاديمي: كروت الاستذكار 🎴' : 'Academic Mode: Study Flashcards'}</span>
-            </button>
-          </div>
+        <div className="space-y-4 sm:space-y-5">
 
           {/* CSS Animation injection for active answer & 3D rotating flashcards effects */}
           <style>{`
@@ -1336,21 +1374,12 @@ export default function QuizResolver({
           ) : (
             <>
               {/* Progress Details row */}
-              <div className="space-y-2 print:hidden">
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span className="font-bold text-primary">السؤال {currentIdx + 1} من {quiz.questions.length}</span>
-                  <span className="font-mono">{progressPercent}% مكتمل</span>
-                </div>
-                
-                {/* Smooth linear progress bar */}
-                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-full overflow-hidden">
-                  <div
-                    
-                    style={{ width: `${progressPercent}%` }}
-                    className="h-full bg-primary rounded-full"
-                    
-                  />
-                </div>
+              <div className="flex items-center justify-between text-xs text-slate-500 print:hidden px-1">
+                <span className="font-bold text-primary flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  <span>{isAr ? `السؤال ${currentIdx + 1} من ${quiz.questions.length}` : `Question ${currentIdx + 1} of ${quiz.questions.length}`}</span>
+                </span>
+                <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">{progressPercent}% {isAr ? 'مكتمل' : 'completed'}</span>
               </div>
           <style>{`
             @keyframes shake-panel {
@@ -1366,14 +1395,8 @@ export default function QuizResolver({
           `}</style>
 
           {/* Active Question Panel with elegant minimalist design */}
-          
             <div
-              
-              
-              
-              
-              
-              className={`theme-surface relative p-4 sm:p-10 md:p-12 rounded-[2rem] backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] space-y-5 sm:space-y-10 transition-all duration-500 overflow-hidden ${
+              className={`theme-surface relative p-4 sm:p-7 md:p-8 rounded-[2rem] backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] space-y-5 sm:space-y-10 transition-all duration-500 overflow-hidden ${
                 hasShaken ? 'shake-question' : ''
               } ${
                 isAnswersFrozen 
@@ -1487,19 +1510,19 @@ export default function QuizResolver({
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-2.5 sm:gap-4">
+              <div className="grid grid-cols-1 gap-2 sm:gap-2.5">
                 {currentQuestion.options.map((option, oIdx) => {
                   const isSelected = selectedIdx === oIdx;
                   const isCorrect = oIdx === currentQuestion.correctIndex;
                   const showFeedback = isAnswersFrozen;
 
-                  let optClass = 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 border hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-200';
+                  let optClass = 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 border hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50/50 dark:hover:bg-slate-800/40';
                   
                   if (showFeedback) {
                     if (isCorrect) {
-                      optClass = 'border-emerald-500 bg-emerald-50/50 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-500/50 dark:text-emerald-300 border-2';
+                      optClass = 'border-emerald-500 bg-emerald-50/60 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-500/60 dark:text-emerald-300 border-2';
                     } else if (isSelected) {
-                      optClass = 'border-rose-500 bg-rose-50/50 text-rose-800 dark:bg-rose-900/20 dark:border-rose-500/50 dark:text-rose-300 border-2';
+                      optClass = 'border-rose-500 bg-rose-50/60 text-rose-800 dark:bg-rose-950/30 dark:border-rose-500/60 dark:text-rose-300 border-2';
                     } else {
                       optClass = 'opacity-40 border-slate-100 bg-transparent text-slate-400 dark:border-slate-800 border';
                     }
@@ -1507,13 +1530,10 @@ export default function QuizResolver({
 
                   return (
                     <button
-                      
+                      key={oIdx}
                       disabled={isAnswersFrozen}
                       onClick={() => handleSelectOption(oIdx)}
-                      className={`relative flex min-h-12 items-center p-3.5 sm:p-5 rounded-[1.25rem] text-sm font-medium text-right transition-all duration-300 cursor-pointer ${optClass} overflow-hidden`}
-                      
-                      
-                      
+                      className={`group relative flex min-h-12 items-center p-3 sm:p-4 rounded-2xl text-sm font-semibold text-right transition-all duration-200 cursor-pointer ${optClass} overflow-hidden shadow-2xs hover:shadow-xs active:scale-[0.99]`}
                     >
                       <div className="flex-1 pr-1 pl-10 leading-relaxed font-semibold">
                         {option}
@@ -1599,17 +1619,40 @@ export default function QuizResolver({
           </div>
         
 
-          {/* Action button bar */}
-          <div className="quiz-action-bar sticky bottom-2 z-10 -mx-1 flex justify-end rounded-2xl p-1 print:hidden sm:static sm:mx-0 sm:justify-end sm:bg-transparent sm:p-0">
-            {isAnswersFrozen && (
-              <button
-                onClick={handleNextQuestion}
-                className="flex min-h-12 items-center gap-2 rounded-2xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-primary/20 transition-all duration-205 cursor-pointer hover:bg-primary-hover sm:px-8"
-              >
-                <span>{currentIdx + 1 === quiz.questions.length ? 'إنهاء وحساب الدرجة' : 'السؤال التالي'}</span>
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            )}
+          {/* Action button bar — Fixed to bottom for instant accessibility on mobile and desktop */}
+          <div
+            style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
+            className="quiz-action-bar fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.4)] transition-all print:hidden sticky bottom-2"
+          >
+            <div className="mx-auto max-w-3xl px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsQuestionsOverviewOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800 transition-colors cursor-pointer"
+                  title={isAr ? 'عرض قائمة الأسئلة' : 'View questions list'}
+                >
+                  <LayoutGrid className="w-4 h-4 text-primary" />
+                  <span>{isAr ? `السؤال ${currentIdx + 1} من ${quiz.questions.length}` : `Question ${currentIdx + 1} of ${quiz.questions.length}`}</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isAnswersFrozen ? (
+                  <button
+                    onClick={handleNextQuestion}
+                    className="flex min-h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-hover px-6 sm:px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer animate-pulse-subtle"
+                  >
+                    <span>{currentIdx + 1 === quiz.questions.length ? (isAr ? 'إنهاء وحساب الدرجة' : 'Finish & Calculate Score') : (isAr ? 'السؤال التالي' : 'Next Question')}</span>
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <div className="flex min-h-12 items-center px-4 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
+                    <span>{isAr ? 'اختر إجابة للمتابعة' : 'Select an answer to proceed'}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           </>
@@ -2190,6 +2233,96 @@ export default function QuizResolver({
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* Questions Overview Modal / Sheet */}
+      {isQuestionsOverviewOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsQuestionsOverviewOpen(false)}
+        >
+          <div 
+            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+            dir={isAr ? 'rtl' : 'ltr'}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="w-5 h-5 text-primary" />
+                <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100">
+                  {isAr ? 'قائمة وتفاصيل الأسئلة' : 'Questions Overview'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsQuestionsOverviewOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Questions Grid */}
+            <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-64 overflow-y-auto p-1">
+              {quiz.questions.map((_, i) => {
+                const isAnswered = i in userAnswers || (essayAnswers[i] && essayAnswers[i].trim().length > 0);
+                const isCurrent = i === currentIdx;
+                const isCorrect = userAnswers[i] === quiz.questions[i].correctIndex;
+
+                let badgeClass = 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-500 hover:border-slate-400';
+                if (isCurrent) {
+                  badgeClass = 'border-primary bg-primary text-white font-black shadow-sm ring-2 ring-primary/30';
+                } else if (isAnswered) {
+                  badgeClass = isCorrect 
+                    ? 'border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-bold'
+                    : 'border-rose-500/40 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 font-bold';
+                }
+
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      if (isFlashcardMode) {
+                        setCurrentFlashcardIdx(i);
+                        setIsFlipped(false);
+                      } else if (i <= currentIdx || isAnswered) {
+                        setCurrentIdx(i);
+                        setSelectedIdx(userAnswers[i] ?? null);
+                        setIsAnswersFrozen(i in userAnswers);
+                      }
+                      setIsQuestionsOverviewOpen(false);
+                    }}
+                    className={`flex flex-col items-center justify-center h-12 rounded-xl border text-xs transition-all cursor-pointer ${badgeClass}`}
+                  >
+                    <span>{i + 1}</span>
+                    {isAnswered && !isCurrent && (
+                      <span className="text-[10px] leading-none mt-0.5">
+                        {isCorrect ? '✓' : '✗'}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Legend & Summary */}
+            <div className="flex items-center justify-around pt-3 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-primary" />
+                <span>{isAr ? 'السؤال الحالي' : 'Current'}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span>{isAr ? 'صحيح' : 'Correct'}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                <span>{isAr ? 'خاطئ' : 'Wrong'}</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
