@@ -8,6 +8,7 @@ import { Quiz, QuizCompletion, UserStats, Question, QuestionRating, Promotion, C
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, normalizeBadgeColor, normalizeBadgeTier, normalizeNameColor, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
 import { resolveProfileImageUrl } from '../constants/profileAssets';
+import { isGuestIdentity } from './guestIdentity';
 import {
   QUIZ_QUESTION_MEDIA_BUCKET,
   QUIZ_QUESTION_MEDIA_MAX_BYTES,

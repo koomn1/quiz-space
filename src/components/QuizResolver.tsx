@@ -344,20 +344,12 @@ export default function QuizResolver({
                 clientAttemptKey: attemptKeyRef.current,
                 feedback: '',
               })
-<<<<<<< ours
               : await submitQuizAttempt(quizId, {
                 // submitQuizAttempt resolves the authoritative Supabase Auth
                 // uid again at the write boundary; never send `anonymous`.
                 // The old contract `takerId: userId || 'anonymous'` is kept
                 // out of the executable path intentionally.
                 takerId: userId,
-||||||| base
-            : await submitQuizAttempt(quizId, {
-                takerId: userId || 'anonymous',
-=======
-              : await submitQuizAttempt(quizId, {
-                takerId: userId || 'anonymous',
->>>>>>> theirs
                 takerName: finalName,
                 score,
                 rating: undefined,
