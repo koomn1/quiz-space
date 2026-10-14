@@ -91,6 +91,7 @@ export default function AdminSubscriptions({
     },
   ]);
   const [mockPayments, setMockPayments] = useState<PaymentProof[]>([]);
+  const [paymentLoadError, setPaymentLoadError] = useState<string | null>(null);
   const [planDraft, setPlanDraft] = useState<SubscriptionPlan>({
     id: '', name: '', nameAr: '', price: 0, currency: 'EGP', durationMonths: 1,
     features: [], badgeStyle: 'pro', badgeColor: '#3b82f6', priorityLevel: 1, isActive: true,
@@ -168,9 +169,17 @@ export default function AdminSubscriptions({
         completions: [],
       }));
       setMockUsers(mappedUsers);
+    } catch (err) {
+      console.error('Failed to load admin users/plans:', err);
+    }
 
+    // Keep payment requests independent from the other admin queries. A failure
+    // in profiles or plans must not make a real payment queue look empty.
+    try {
       const requests = await getPremiumRequests();
-      const pendingRequests = requests.filter((r) => (r.status || "pending") === "pending");
+      // Only an explicit pending status belongs in the payment-review queue.
+      // Missing/legacy statuses must not turn an unrelated row into a payment request.
+      const pendingRequests = requests.filter((r) => r.status === "pending");
       const payments = pendingRequests.map((r) => ({
         id: r.id,
         userId: r.userId,
@@ -185,8 +194,11 @@ export default function AdminSubscriptions({
         notes: r.notes,
       }));
       setMockPayments(payments as PaymentProof[]);
+      setPaymentLoadError(null);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load premium payment requests:', err);
+      setMockPayments([]);
+      setPaymentLoadError(isAr ? 'تعذر تحميل طلبات الدفع. اضغط إعادة المحاولة.' : 'Unable to load payment requests. Try again.');
     }
   };
 
@@ -1013,7 +1025,18 @@ export default function AdminSubscriptions({
       {/* Payments Tab */}
       {subTab === "payments" && (
         <div className="space-y-6">
-          {mockPayments.length === 0 ? (
+          {paymentLoadError ? (
+            <div className="rounded-2xl border border-rose-300/50 bg-rose-500/10 p-5 text-sm text-rose-700 dark:text-rose-300">
+              <p className="font-bold">{paymentLoadError}</p>
+              <button
+                type="button"
+                onClick={() => void loadRealData()}
+                className="mt-3 min-h-11 rounded-xl bg-rose-600 px-4 py-2 font-bold text-white transition hover:bg-rose-700"
+              >
+                {isAr ? "إعادة المحاولة" : "Retry"}
+              </button>
+            </div>
+          ) : mockPayments.length === 0 ? (
             <p className="text-slate-500 text-sm">
               {isAr ? "لا توجد مدفوعات معلقة" : "No pending payments"}
             </p>

@@ -112,7 +112,10 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
     }
   };
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length + dailyNotifications.length;
+  // Daily activities are shown inside the dropdown, but they are not inbox
+  // notifications. Keeping them out of this count prevents the bell badge
+  // from showing a misleading number when there are no real notifications.
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
   const allNotifications = [...dailyNotifications, ...notifications];
   const filteredNotifications = allNotifications.filter((notification) => matchesNotificationFilter(notification.type, filter));
 
