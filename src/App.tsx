@@ -178,7 +178,7 @@ export default function App() {
       if (parts[0] === 'join' && parts[1]) {
         return 'classrooms';
       }
-      if (parts[0] === 'quiz' || parts[0] === 'dashboard') {
+      if (parts[0] === 'quiz' || parts[0] === 'dashboard' || parts[0] === 'main-content') {
         return 'landing';
       }
       if (parts[0]) {
@@ -806,9 +806,6 @@ export default function App() {
 
   return (
         <>
-          <a className="skip-link" href="#main-content">
-            {lang === 'ar' ? 'تخطَّ إلى المحتوى الرئيسي' : 'Skip to main content'}
-          </a>
           <ToastHost />
           {splashActive ? (
         <SplashScreen

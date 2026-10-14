@@ -3,9 +3,56 @@
  * Designed dynamically to play delightful audio feedback without requiring external assets.
  * Refactored to be peaceful, minimalist, and extremely calm (no arcade/gaming sound style).
  */
+
+let userHasInteracted = false;
+let sharedAudioCtx: AudioContext | null = null;
+
+if (typeof window !== 'undefined') {
+  const markInteracted = () => {
+    userHasInteracted = true;
+    if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+  };
+  window.addEventListener('pointerdown', markInteracted, { capture: true, passive: true });
+  window.addEventListener('keydown', markInteracted, { capture: true, passive: true });
+  window.addEventListener('touchstart', markInteracted, { capture: true, passive: true });
+}
+
+export function canPlayAudio(): boolean {
+  if (typeof window === 'undefined') return false;
+  if ((navigator as any)?.userActivation?.hasBeenActive) return true;
+  return userHasInteracted;
+}
+
+export function getAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  if (!canPlayAudio()) return null;
+
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return null;
+
+    if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+      sharedAudioCtx = new AudioContextClass();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
 export function playNotificationSound(type: 'success' | 'chime' | 'delete' | 'tap') {
   try {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (typeof window !== 'undefined' && localStorage.getItem('quiz_sound_effects_muted') === 'true') {
+      return;
+    }
+
+    const audioCtx = getAudioContext();
+    if (!audioCtx) return;
     
     if (type === 'chime') {
       // Soft, minimalist dual-tone ambient chime (No fast game arpeggio)
@@ -102,6 +149,6 @@ export function playNotificationSound(type: 'success' | 'chime' | 'delete' | 'ta
       osc.stop(now + 0.04);
     }
   } catch (e) {
-    console.warn('Web Audio synthesis not played yet: needs client user interaction event first.', e);
+    // Graceful silent fallback
   }
 }

@@ -1,13 +1,20 @@
+import { getAudioContext } from './sound';
+
 export type ChimeType = 'click' | 'correct' | 'wrong' | 'completion';
 
 export function playChimeSound(type: ChimeType) {
   try {
-    const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (typeof window !== 'undefined' && localStorage.getItem('quiz_sound_effects_muted') === 'true') {
+      return;
+    }
+
+    const context = getAudioContext();
+    if (!context) return;
+
     const oscillator = context.createOscillator();
     const gain = context.createGain();
     oscillator.connect(gain);
     gain.connect(context.destination);
-    if (localStorage.getItem('quiz_sound_effects_muted') === 'true') return;
 
     if (type === 'click') {
       oscillator.frequency.setValueAtTime(600, context.currentTime);
@@ -45,6 +52,6 @@ export function playChimeSound(type: ChimeType) {
       oscillator.stop(context.currentTime + 0.7);
     }
   } catch (error) {
-    console.warn('Audio Context is locked or unsupported', error);
+    // Graceful silent fallback
   }
 }

@@ -173,8 +173,10 @@ export function useAuthBootstrap(options: AuthBootstrapOptions) {
         // and initial stats have finished loading. Rendering it during the
         // auth callback can mask a valid login with a runtime/bootstrap error.
 
-        // Success logged in chime sound
-        playNotificationSound('chime');
+        // Success logged in chime sound (explicit sign-in only, not cold page refresh)
+        if (_event === 'SIGNED_IN') {
+          playNotificationSound('chime');
+        }
 
         const basePath = getAppBasePath();
         // Check if there was a quiz click waiting for login
