@@ -362,10 +362,9 @@ export default function QuizResolver({
           // completion is recognized and the review step does not submit a
           // second time (which previously made XP appear not to update).
           const savedRow = Array.isArray(res) ? res[0] : (res?.completion || res);
-          if (savedRow?.id) {
-            setSavedCompletionId(savedRow.id);
-            console.log('Quiz auto-saved successfully, completion ID:', savedRow.id, 'XP:', savedRow.xp_awarded ?? 0);
-          }
+          if (!savedRow?.id) throw new Error('Quiz completion was not recorded.');
+          setSavedCompletionId(savedRow.id);
+          console.log('Quiz auto-saved successfully, completion ID:', savedRow.id, 'XP:', savedRow.xp_awarded ?? 0);
           if (isDailyQuiz) {
             try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}
             window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
@@ -374,7 +373,7 @@ export default function QuizResolver({
           return savedRow?.id ? String(savedRow.id) : null;
         } catch (e) {
           console.error('Quiz auto-save failed:', e);
-          return null;
+          throw e;
         }
       };
       autoSavePromiseRef.current = autoSave();
@@ -737,38 +736,28 @@ export default function QuizResolver({
       // second completion.
       let completionId = savedCompletionId;
       if (!completionId && autoSavePromiseRef.current) {
-        try {
-          completionId = await autoSavePromiseRef.current;
-          if (completionId) setSavedCompletionId(completionId);
-        } catch (_) {}
+        completionId = await autoSavePromiseRef.current;
+        if (completionId) setSavedCompletionId(completionId);
       }
 
       if (completionId && isReviewDirty && !isDailyQuiz) {
-        try {
-          if (isGuest) {
-            await updateGuestQuizAttemptScore(completionId, userId, attemptKeyRef.current, score);
-          } else {
-            await updateQuizAttemptScore(completionId, score);
-          }
-          setIsReviewDirty(false);
-        } catch (scoreErr) {
-          console.warn('Score update failed on final submit:', scoreErr);
+        if (isGuest) {
+          await updateGuestQuizAttemptScore(completionId, userId, attemptKeyRef.current, score);
+        } else {
+          await updateQuizAttemptScore(completionId, score);
         }
+        setIsReviewDirty(false);
       }
       
       // Save rating attempt to Supabase
       if (completionId && !isDailyQuiz) {
         if (selectedRating > 0) {
-          try {
-            if (isGuest) {
-              await updateGuestQuizAttemptReview(completionId, userId, selectedRating, feedbackText.trim());
-            } else {
-              await updateCompletionReview(completionId, selectedRating, feedbackText);
-            }
-            setHasRatedQuiz(true);
-          } catch (reviewErr) {
-            console.warn('Optional star review update failed, proceeding with exit:', reviewErr);
+          if (isGuest) {
+            await updateGuestQuizAttemptReview(completionId, userId, selectedRating, feedbackText.trim());
+          } else {
+            await updateCompletionReview(completionId, selectedRating, feedbackText);
           }
+          setHasRatedQuiz(true);
         }
         try { playNotificationSound('success'); } catch (_) {}
         if (onQuizLockChange) onQuizLockChange(false);

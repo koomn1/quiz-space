@@ -21,7 +21,7 @@ describe('QuizResolver guest attempt contract', () => {
 
   it('keeps authenticated saves on the existing authenticated RPC path', () => {
     expect(resolver).toContain('submitQuizAttempt(quizId, {');
-    expect(resolver).toContain('takerId: userId || \'anonymous\'');
+    expect(resolver).toContain('takerId: userId,');
     expect(resolver).toContain('if (savedCompletionId && !isDailyQuiz)');
   });
 });
