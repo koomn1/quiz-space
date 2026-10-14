@@ -1120,6 +1120,11 @@ export interface AIMessageRow {
   text: string;
   hadImage: boolean;
   createdAt: string;
+  clientMessageId?: string | null;
+  status?: 'pending' | 'sent' | 'failed' | 'deleted';
+  mode?: string;
+  conversationId?: string | null;
+  serverSequence?: number | null;
 }
 
 export interface AIChatConversation {
@@ -1127,14 +1132,20 @@ export interface AIChatConversation {
   title: string;
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string | null;
+  deletedAt?: string | null;
+  lastMessageAt?: string | null;
+  revision?: number;
+  titleSource?: 'default' | 'ai' | 'user';
 }
 
 export async function getAIChatConversations(userId: string): Promise<AIChatConversation[]> {
   if (!userId || !isSupabaseConfigured) return [];
   const { data, error } = await supabase
     .from('cosmo_conversations')
-    .select('id, title, created_at, updated_at')
+    .select('id, title, created_at, updated_at, archived_at, deleted_at, last_message_at, revision, title_source')
     .eq('user_id', userId)
+    .is('deleted_at', null)
     .order('updated_at', { ascending: false });
   if (error) {
     console.error('Error loading AI conversations:', error.message);
@@ -1145,6 +1156,11 @@ export async function getAIChatConversations(userId: string): Promise<AIChatConv
     title: row.title,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    archivedAt: row.archived_at,
+    deletedAt: row.deleted_at,
+    lastMessageAt: row.last_message_at,
+    revision: Number(row.revision || 1),
+    titleSource: row.title_source || 'default',
   }));
 }
 
@@ -1153,33 +1169,57 @@ export async function createAIChatConversation(userId: string, title?: string): 
   const id = 'conv-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const { data, error } = await supabase
     .from('cosmo_conversations')
-    .insert({ id, user_id: userId, title: title || 'محادثة جديدة' })
-    .select('id, title, created_at, updated_at')
+    .insert({ id, user_id: userId, title: title || 'محادثة جديدة', title_source: title ? 'user' : 'default' })
+    .select('id, title, created_at, updated_at, archived_at, deleted_at, last_message_at, revision, title_source')
     .single();
   if (error) {
     console.error('Error creating AI conversation:', error.message);
     return null;
   }
-  return { id: data.id, title: data.title, createdAt: data.created_at, updatedAt: data.updated_at };
+  return {
+    id: data.id,
+    title: data.title,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    archivedAt: data.archived_at,
+    deletedAt: data.deleted_at,
+    lastMessageAt: data.last_message_at,
+    revision: Number(data.revision || 1),
+    titleSource: data.title_source || 'default',
+  };
 }
 
 export async function renameAIChatConversation(conversationId: string, title: string): Promise<void> {
   if (!isSupabaseConfigured) return;
-  const { error } = await supabase.from('cosmo_conversations').update({ title }).eq('id', conversationId);
-  if (error) console.error('Error renaming AI conversation:', error.message);
+  const { error } = await supabase.from('cosmo_conversations').update({ title, title_source: 'user' }).eq('id', conversationId);
+  if (error) throw new Error('تعذر إعادة تسمية المحادثة حالياً.');
 }
 
 export async function deleteAIChatConversation(conversationId: string): Promise<void> {
   if (!isSupabaseConfigured) return;
-  const { error } = await supabase.from('cosmo_conversations').delete().eq('id', conversationId);
-  if (error) console.error('Error deleting AI conversation:', error.message);
+  const { error } = await supabase
+    .from('cosmo_conversations')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', conversationId)
+    .is('deleted_at', null);
+  if (error) throw new Error('تعذر حذف المحادثة حالياً.');
+}
+
+export async function archiveAIChatConversation(conversationId: string, archived: boolean): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  const { error } = await supabase
+    .from('cosmo_conversations')
+    .update({ archived_at: archived ? new Date().toISOString() : null })
+    .eq('id', conversationId)
+    .is('deleted_at', null);
+  if (error) throw new Error('تعذر تحديث أرشيف المحادثة حالياً.');
 }
 
 export async function getAIChatHistory(userId: string, conversationId?: string, limit = 200): Promise<AIMessageRow[]> {
   if (!userId || !isSupabaseConfigured) return [];
   let query = supabase
     .from('cosmo_messages')
-    .select('id, role, text, had_image, created_at')
+    .select('id, role, text, had_image, created_at, client_message_id, status, mode, conversation_id, server_sequence')
     .eq('user_id', userId);
   query = conversationId ? query.eq('conversation_id', conversationId) : query.is('conversation_id', null);
   const { data, error } = await query.order('created_at', { ascending: true }).limit(limit);
@@ -1193,21 +1233,56 @@ export async function getAIChatHistory(userId: string, conversationId?: string, 
     text: row.text,
     hadImage: !!row.had_image,
     createdAt: row.created_at,
+    clientMessageId: row.client_message_id,
+    status: row.status || 'sent',
+    mode: row.mode || 'instant',
+    conversationId: row.conversation_id,
+    serverSequence: row.server_sequence == null ? null : Number(row.server_sequence),
   }));
 }
 
-export async function saveAIChatMessage(userId: string, role: 'user' | 'cosmo', text: string, hadImage = false, conversationId?: string): Promise<void> {
-  if (!userId || !isSupabaseConfigured) return;
-  const { error } = await supabase.from('cosmo_messages').insert({
+export async function saveAIChatMessage(
+  userId: string,
+  role: 'user' | 'cosmo',
+  text: string,
+  hadImage = false,
+  conversationId?: string,
+  options?: { clientMessageId?: string; status?: 'pending' | 'sent' | 'failed' | 'deleted'; mode?: string; metadata?: Record<string, unknown> },
+): Promise<AIMessageRow | null> {
+  if (!userId || !isSupabaseConfigured) return null;
+  const payload = {
     user_id: userId,
     role,
     text,
     had_image: hadImage,
     conversation_id: conversationId || null,
-  });
+    client_message_id: options?.clientMessageId || null,
+    status: options?.status || 'sent',
+    mode: options?.mode || 'instant',
+    metadata: options?.metadata || {},
+  };
+  const query = options?.clientMessageId
+    ? supabase.from('cosmo_messages').upsert(payload, { onConflict: 'user_id,conversation_id,client_message_id' })
+    : supabase.from('cosmo_messages').insert(payload);
+  const { data, error } = await query
+    .select('id, role, text, had_image, created_at, client_message_id, status, mode, conversation_id, server_sequence')
+    .maybeSingle();
   if (error) {
-    console.error('Error saving AI message:', error.message);
+    throw new Error('تعذر حفظ رسالة المحادثة حالياً.');
   }
+  if (!data) return null;
+  return {
+    id: data.id,
+    role: data.role,
+    text: data.text,
+    hadImage: !!data.had_image,
+    createdAt: data.created_at,
+    clientMessageId: data.client_message_id,
+    status: data.status,
+    mode: data.mode,
+    conversationId: data.conversation_id,
+    serverSequence: data.server_sequence == null ? null : Number(data.server_sequence),
+  };
 }
 
 export async function clearAIChatHistory(userId: string): Promise<void> {
@@ -1216,6 +1291,91 @@ export async function clearAIChatHistory(userId: string): Promise<void> {
   if (error) {
     console.error('Error clearing AI history:', error.message);
   }
+}
+
+export interface CosmoSearchResult {
+  resultType: 'message';
+  resultId: string;
+  conversationId: string | null;
+  title: string;
+  snippet: string;
+  createdAt: string;
+}
+
+export async function searchAIChatContent(query: string, limit = 30): Promise<CosmoSearchResult[]> {
+  if (!query.trim() || !isSupabaseConfigured) return [];
+  const { data, error } = await supabase.rpc('search_cosmo_content', {
+    p_query: query.trim().slice(0, 200),
+    p_limit: Math.min(Math.max(limit, 1), 100),
+  });
+  if (error) {
+    console.error('Error searching AI content:', error.message);
+    return [];
+  }
+  return (data || []).map((row: any) => ({
+    resultType: row.result_type,
+    resultId: row.result_id,
+    conversationId: row.conversation_id,
+    title: row.title || 'محادثة',
+    snippet: row.snippet || '',
+    createdAt: row.created_at,
+  }));
+}
+
+export interface CosmoMemorySettings {
+  userId: string;
+  enabled: boolean;
+  autoCaptureEnabled: boolean;
+  sensitiveCaptureDisabled: boolean;
+  retentionDays: number | null;
+  updatedAt: string;
+}
+
+export async function getCosmoMemorySettings(userId: string): Promise<CosmoMemorySettings> {
+  const defaults: CosmoMemorySettings = { userId, enabled: false, autoCaptureEnabled: false, sensitiveCaptureDisabled: true, retentionDays: null, updatedAt: new Date(0).toISOString() };
+  if (!userId || !isSupabaseConfigured) return defaults;
+  const { data, error } = await supabase.from('cosmo_memory_settings').select('*').eq('user_id', userId).maybeSingle();
+  if (error || !data) return defaults;
+  return { userId: data.user_id, enabled: !!data.enabled, autoCaptureEnabled: !!data.auto_capture_enabled, sensitiveCaptureDisabled: data.sensitive_capture_disabled !== false, retentionDays: data.retention_days == null ? null : Number(data.retention_days), updatedAt: data.updated_at };
+}
+
+export async function updateCosmoMemorySettings(userId: string, settings: Partial<Pick<CosmoMemorySettings, 'enabled' | 'autoCaptureEnabled' | 'sensitiveCaptureDisabled' | 'retentionDays'>>): Promise<CosmoMemorySettings> {
+  if (!userId || !isSupabaseConfigured) return getCosmoMemorySettings(userId);
+  const { data, error } = await supabase.from('cosmo_memory_settings').upsert({
+    user_id: userId,
+    enabled: settings.enabled ?? false,
+    auto_capture_enabled: settings.autoCaptureEnabled ?? false,
+    sensitive_capture_disabled: settings.sensitiveCaptureDisabled ?? true,
+    retention_days: settings.retentionDays ?? null,
+    updated_at: new Date().toISOString(),
+  }).select('*').single();
+  if (error) throw new Error('تعذر حفظ إعدادات الذاكرة حالياً.');
+  return { userId: data.user_id, enabled: !!data.enabled, autoCaptureEnabled: !!data.auto_capture_enabled, sensitiveCaptureDisabled: data.sensitive_capture_disabled !== false, retentionDays: data.retention_days == null ? null : Number(data.retention_days), updatedAt: data.updated_at };
+}
+
+export interface CosmoMemoryItem {
+  id: string;
+  userId: string;
+  category: 'preference' | 'goal' | 'learning' | 'profile' | 'custom';
+  content: string;
+  sourceMessageId: string | null;
+  status: 'active' | 'deleted';
+  confidence: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function listCosmoMemoryItems(userId: string): Promise<CosmoMemoryItem[]> {
+  if (!userId || !isSupabaseConfigured) return [];
+  const { data, error } = await supabase.from('cosmo_memory_items').select('*').eq('user_id', userId).eq('status', 'active').order('updated_at', { ascending: false }).limit(100);
+  if (error) return [];
+  return (data || []).map((row: any) => ({ id: row.id, userId: row.user_id, category: row.category, content: row.content, sourceMessageId: row.source_message_id, status: row.status, confidence: row.confidence == null ? null : Number(row.confidence), createdAt: row.created_at, updatedAt: row.updated_at }));
+}
+
+export async function deleteCosmoMemoryItem(userId: string, memoryId: string): Promise<void> {
+  if (!userId || !isSupabaseConfigured) return;
+  const { error } = await supabase.from('cosmo_memory_items').update({ status: 'deleted', deleted_at: new Date().toISOString() }).eq('id', memoryId).eq('user_id', userId);
+  if (error) throw new Error('تعذر حذف الذاكرة حالياً.');
 }
 
 // ---------------------------------------------------------------------------

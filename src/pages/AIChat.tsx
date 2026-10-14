@@ -5,8 +5,8 @@ import { askAI, askAIStream, searchCosmoWeb, createExtractionJob, getExtractionJ
 import { generateQuizWithFallback, validateAndCleanQuiz } from '../hooks/useQuizzes';
 import { GeneratedQuiz } from '../types';
 import { createQuiz } from '../lib/db';
-import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, AIChatConversation } from '../lib/db';
-import { Image as ImageIcon, FileText, Send, Trash2, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
+import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, archiveAIChatConversation, searchAIChatContent, AIChatConversation, CosmoSearchResult } from '../lib/db';
+import { Image as ImageIcon, FileText, Send, Trash2, Archive, Sparkles, X, Copy, Check, Search, MessageSquare, Plus, SquarePen, PanelLeftClose, PanelLeftOpen, BookOpen, BrainCircuit, Zap, GraduationCap, ThumbsUp, ThumbsDown, RotateCcw, ChevronDown, MoreVertical, Pencil, FileQuestion, Volume2 } from 'lucide-react';
 import { profileAssetUrl } from '../constants/profileAssets';
 import ProfileAvatar from '../components/ProfileAvatar';
 import { ThinkingOrb as LibraryThinkingOrb, type OrbState } from 'thinking-orbs';
@@ -590,6 +590,9 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   const draftKey = activeConversationId ? `${localChatKey(userId)}-draft-${activeConversationId}` : `${localChatKey(userId)}-draft-new`;
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' ? true : window.innerWidth >= 768);
   const [convSearchQuery, setConvSearchQuery] = useState('');
+  const [searchInputOpen, setSearchInputOpen] = useState(false);
+  const [chatSearchResults, setChatSearchResults] = useState<CosmoSearchResult[]>([]);
+  const [showArchivedConversations, setShowArchivedConversations] = useState(false);
   const [renamingConvId, setRenamingConvId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const skipNextHistoryLoadRef = useRef<string | null>(null);
@@ -609,6 +612,24 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     })();
   }, [userId]);
 
+  useEffect(() => {
+    const query = convSearchQuery.trim();
+    if (!query || !userId) {
+      setChatSearchResults([]);
+      return;
+    }
+    let active = true;
+    const timer = window.setTimeout(() => {
+      void searchAIChatContent(query).then(results => {
+        if (active) setChatSearchResults(results);
+      });
+    }, 250);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [convSearchQuery, userId]);
+
   /* Load the selected conversation from both remote and local storage. */
   useEffect(() => {
     if (!activeConversationId) { setMessages([]); return; }
@@ -621,7 +642,18 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       const local = readLocalChatData(userId);
       const localHistory = local.messages[activeConversationId] || [];
       const remoteHistory = userId ? await getAIChatHistory(userId, activeConversationId) : [];
-      const history = remoteHistory.length > 0 ? remoteHistory : localHistory;
+      // localStorage is an offline cache, not the source of truth. Merge by id
+      // so a message created offline is not lost when the remote history exists.
+      const mergedById = new Map<string, LocalChatMessage>();
+      localHistory.forEach(message => mergedById.set(message.id, message));
+      remoteHistory.forEach(message => mergedById.set(message.id, {
+        id: message.id,
+        role: message.role,
+        text: message.text,
+        hadImage: message.hadImage,
+        createdAt: message.createdAt,
+      }));
+      const history = [...mergedById.values()].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       setMessages(history.map(m => ({
         id: m.id,
         role: m.role === 'cosmo' ? 'assistant' : 'user',
@@ -780,7 +812,17 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
       if (conv) conv.updatedAt = new Date().toISOString();
       writeLocalChatData(userId, localData);
     }
-    if (userId && currentConvId) await saveAIChatMessage(userId, 'user', userMsg.text, !!selectedAttachment, currentConvId);
+    if (userId && currentConvId) {
+      try {
+        await saveAIChatMessage(userId, 'user', userMsg.text, !!selectedAttachment, currentConvId, {
+          clientMessageId: userMsg.id,
+          mode: 'instant',
+        });
+      } catch (saveError) {
+        console.error('Cosmo user message save failed:', saveError);
+        setLastError(isAr ? 'تم إرسال الرسالة، لكن تعذر حفظها سحابياً. سنحاول المزامنة مرة أخرى.' : 'Message sent, but cloud saving failed. We will retry synchronization.');
+      }
+    }
 
     try {
       const aiMsgId = (Date.now() + 1).toString();
@@ -837,7 +879,17 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
         if (conv) conv.updatedAt = new Date().toISOString();
         writeLocalChatData(userId, updated);
       }
-      if (userId && currentConvId) await saveAIChatMessage(userId, 'cosmo', fullText, false, currentConvId);
+      if (userId && currentConvId) {
+        try {
+          await saveAIChatMessage(userId, 'cosmo', fullText, false, currentConvId, {
+            clientMessageId: aiMsgId,
+            mode: wantsWebSearch ? 'search' : 'instant',
+          });
+        } catch (saveError) {
+          console.error('Cosmo assistant message save failed:', saveError);
+          setLastError(isAr ? 'ظهر الرد، لكن تعذر حفظه سحابياً. حاول فتح المحادثة مرة أخرى للمزامنة.' : 'The reply appeared, but cloud saving failed. Reopen the chat to retry synchronization.');
+        }
+      }
       setLastError(null);
       setIsQuizGenerationError(false);
       try { localStorage.removeItem(draftKey); } catch { /* storage can be unavailable */ }
@@ -1001,6 +1053,16 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
     }
   };
 
+  const handleConvArchive = async (conversation: AIChatConversation) => {
+    const archived = !conversation.archivedAt;
+    await archiveAIChatConversation(conversation.id, archived);
+    const updated = readLocalChatData(userId);
+    updated.conversations = updated.conversations.map(item => item.id === conversation.id ? { ...item, archivedAt: archived ? new Date().toISOString() : null, updatedAt: new Date().toISOString() } : item);
+    writeLocalChatData(userId, updated);
+    setConversations(prev => prev.map(item => item.id === conversation.id ? { ...item, archivedAt: archived ? new Date().toISOString() : null } : item));
+    if (archived && activeConversationId === conversation.id) setActiveConversationId(null);
+  };
+
   const handleAttachmentFile = (file?: File) => {
     if (!file) return;
     const isImage = file.type.startsWith('image/');
@@ -1034,7 +1096,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
   };
 
   const filteredConvs = conversations.filter(c =>
-    c.title.toLowerCase().includes(convSearchQuery.toLowerCase().trim())
+    Boolean(c.archivedAt) === showArchivedConversations && c.title.toLowerCase().includes(convSearchQuery.toLowerCase().trim())
   );
   const convGroups = [...new Set(filteredConvs.map(groupLabel))];
   const userInitial = userName ? userName.trim().charAt(0).toUpperCase() : 'U';
@@ -1066,12 +1128,15 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
               <PanelLeftClose className="w-5 h-5" style={{ color: theme.MUTED }} />
             </button>
             <div className="flex items-center gap-1">
-              <button onClick={() => setConvSearchQuery(q => q ? '' : q)}
+              <button onClick={() => { setSearchInputOpen(value => !value); setConvSearchQuery(''); }}
                 className="p-2 rounded-lg transition-colors"
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                 title={isAr ? 'بحث' : 'Search'}>
                 <Search className="w-5 h-5" style={{ color: theme.MUTED }} />
+              </button>
+              <button onClick={() => setShowArchivedConversations(value => !value)} className="p-2 rounded-lg transition-colors" title={isAr ? 'المحادثات المؤرشفة' : 'Archived chats'}>
+                <Archive className="w-5 h-5" style={{ color: showArchivedConversations ? ACCENT : theme.MUTED }} />
               </button>
               <button onClick={startNewChat}
                 className="p-2 rounded-lg transition-colors"
@@ -1083,7 +1148,7 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
             </div>
           </div>
 
-          {convSearchQuery && (
+          {searchInputOpen && (
             <div className="px-3 pb-2">
               <input
                 value={convSearchQuery}
@@ -1097,7 +1162,20 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
           )}
 
           <div className="flex-1 overflow-y-auto px-2 py-1">
-            {filteredConvs.length === 0 ? (
+            {convSearchQuery.trim() ? (
+              chatSearchResults.length === 0 ? (
+                <p className="text-xs text-center py-6" style={{ color: theme.MUTED }}>{isAr ? 'لا توجد نتائج داخل الرسائل' : 'No message matches'}</p>
+              ) : (
+                <div className="space-y-1">
+                  {chatSearchResults.map(result => (
+                    <button key={`${result.resultType}-${result.resultId}`} onClick={() => { if (result.conversationId) setActiveConversationId(result.conversationId); }} className="w-full text-right rounded-lg px-3 py-2" style={{ background: theme.HOVER_SOFT, color: theme.FG }}>
+                      <span className="block text-xs font-medium truncate">{result.title}</span>
+                      <span className="mt-1 block text-[11px] leading-4" style={{ color: theme.MUTED }}>{result.snippet.replace(/<[^>]*>/g, '')}</span>
+                    </button>
+                  ))}
+                </div>
+              )
+            ) : filteredConvs.length === 0 ? (
               <p className="text-xs text-center py-6" style={{ color: theme.MUTED }}>
                 {isAr ? 'لا توجد محادثات بعد' : 'No conversations yet'}
               </p>
@@ -1140,6 +1218,14 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
                           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                           title={isAr ? 'إعادة تسمية' : 'Rename'}>
                           <Pencil className="w-3 h-3" style={{ color: theme.MUTED }} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); void handleConvArchive(h); }}
+                          className="p-1 rounded transition-colors"
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                          title={h.archivedAt ? (isAr ? 'استعادة' : 'Restore') : (isAr ? 'أرشفة' : 'Archive')}>
+                          <Archive className="w-3 h-3" style={{ color: theme.MUTED }} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); handleConvDelete(h.id); }}
