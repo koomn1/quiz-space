@@ -10,7 +10,6 @@ import { MainLogo } from './MainLogo';
 import { AnimatedGlobeIcon } from './AnimatedGlobeIcon';
 import { AnimatedMenuIcon } from './AnimatedMenuIcon';
 import { AnimatedThemeIcon } from './AnimatedThemeIcon';
-import HeaderMessages from './HeaderMessages';
 import { UserBadge } from './UserBadge';
 import { NotificationDropdown } from './NotificationDropdown';
 import { getRewardsSummary } from '../lib/db';

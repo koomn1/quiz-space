@@ -1430,9 +1430,18 @@ export async function getMyMembershipStatus(): Promise<MyMembershipStatus | null
 
 export async function createPremiumRequest(requestId: string, reqData: any): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; cannot submit premium request.');
+  // Resolve the authenticated user's ID to satisfy RLS policy (auth.uid() = user_id)
+  let effectiveUserId = reqData.userId;
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData?.user?.id) {
+      effectiveUserId = authData.user.id;
+    }
+  } catch (_) {}
+
   const { error } = await supabase.from('premium_requests').insert({
     id: requestId,
-    user_id: reqData.userId,
+    user_id: effectiveUserId,
     name: reqData.name,
     email: reqData.email,
     plan_name: reqData.planName,
@@ -1447,14 +1456,37 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
 
 export async function getPremiumRequests(userId?: string): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
+  
+  let targetUid = userId;
+  if (!targetUid || targetUid.startsWith('user-guest')) {
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      targetUid = authData?.user?.id;
+    } catch (_) {}
+  }
+
   let query = supabase.from('premium_requests').select('*');
-  if (userId) {
-    query = query.eq('user_id', userId);
+  if (targetUid && !targetUid.startsWith('user-guest')) {
+    query = query.eq('user_id', targetUid);
   }
   query = query.order('created_at', { ascending: false });
   const { data, error } = await query;
   if (error) {
     console.error('Error getting premium requests:', error);
+    try {
+      const fallback = await supabase.from('premium_requests').select('*').order('created_at', { ascending: false });
+      if (!fallback.error && fallback.data) {
+        return (fallback.data || []).map((row: any) => ({
+          ...row,
+          userId: row.user_id || row.userId,
+          planName: row.plan_name || row.planName,
+          paymentScreenshot: row.payment_screenshot || row.paymentScreenshot,
+          rejectReason: row.reject_reason || row.rejectReason,
+          createdAt: row.created_at || row.createdAt,
+          updatedAt: row.updated_at || row.updatedAt,
+        }));
+      }
+    } catch (_) {}
     throw error;
   }
   return (data || []).map((row: any) => ({

@@ -452,10 +452,6 @@ export default function AppRoutes(props: AppRoutesProps) {
                 <LazyCommunitySection lang={lang} userId={userId} userName={userName} userEmail={userEmail} userRole={getUserRoleAndPlan(userStats).role} isGuest={isGuestSandbox} isAdmin={isAdminUser} />
               )}
 
-              {activeTab === 'messages' && (
-                <MessageInbox lang={lang} userId={userId} userName={userName} userPhoto={userPhoto || undefined} defaultAvatar={AVATAR_PRESETS[0].url} />
-              )}
-
               {activeTab === 'classrooms' && (
                 <LazyClassrooms 
                   lang={lang} 
