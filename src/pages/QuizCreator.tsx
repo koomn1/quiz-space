@@ -6,7 +6,7 @@
 import React from 'react';
 
 import { Question, Quiz } from '../types';
-import { Plus, Trash2, Camera, Sparkles, Wand2, Save, FileText, ChevronLeft, Image as ImageIcon, HelpCircle, Clock, Check, MessageSquare, User, BookOpen, Tag, FolderOpen, XCircle, Search } from 'lucide-react';
+import { Plus, Trash2, Camera, Sparkles, Wand2, Save, FileText, ChevronLeft, Image as ImageIcon, HelpCircle, Clock, Check, MessageSquare, User, BookOpen, Tag, FolderOpen, XCircle, Search, Crown } from 'lucide-react';
 import { createQuiz, updateQuiz, getQuizzes, persistQuestionImages } from '../lib/db';
 import { translations } from '../lib/i18n';
 import { getApiUrl, getAppOrigin } from '../lib/origin';

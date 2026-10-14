@@ -6,7 +6,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Quiz } from '../types';
-import { BookOpen, Star, Play, Share2, Search, ArrowLeft, RefreshCw, FileText, CheckCircle, Sparkles, Trash2, Cpu, Trophy, Layers, Flame, Lightbulb, Check, HelpCircle, MessageCircle, BrainCircuit, Rocket, Tag, LayoutGrid, List, Users, X } from 'lucide-react';
+import { BookOpen, Star, Play, Share2, Search, ArrowLeft, ArrowUpRight, RefreshCw, FileText, CheckCircle, Sparkles, Trash2, Cpu, Trophy, Layers, Flame, Lightbulb, Check, HelpCircle, MessageCircle, BrainCircuit, Rocket, Tag, LayoutGrid, List, Users, X } from 'lucide-react';
 import { translations } from '../lib/i18n';
 import { MainLogo } from '../components/MainLogo';
 import ThreeDIcon from '../components/ThreeDIcon';

@@ -9,6 +9,7 @@ import GuestLandingPage from '../pages/GuestLandingPage';
 import NotFound from '../pages/NotFound';
 import QuizResolver from '../components/QuizResolver';
 import MessageInbox from '../components/MessageInbox';
+import NotificationCenter from '../components/NotificationCenter';
 import AdminGuard from '../components/AdminGuard';
 import CosmicLoader from '../components/CosmicLoader';
 import PageSkeleton from '../components/PageSkeleton';
@@ -303,7 +304,7 @@ export default function AppRoutes(props: AppRoutesProps) {
               )}
 
               {activeTab === 'notifications' && (
-                <MessageInbox lang={lang} userId={userId} userName={userName} />
+                <NotificationCenter lang={lang} userId={userId} />
               )}
 
               {activeTab === 'create' && (
