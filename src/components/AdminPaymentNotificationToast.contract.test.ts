@@ -18,6 +18,8 @@ describe('Admin Payment Notifications Contract', () => {
     expect(hookSource).toContain("playNotificationSound('chime')");
     expect(hookSource).toContain("new Notification(");
     expect(hookSource).toContain('quizspace-payment-request-submitted');
+    expect(hookSource).toContain('.range(0, 99)');
+    expect(hookSource).toContain('setAlerts(nextAlerts)');
   });
 
   it('renders floating in-app notification toast and binds to payments review queue', () => {

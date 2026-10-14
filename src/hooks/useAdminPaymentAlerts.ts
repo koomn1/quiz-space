@@ -27,7 +27,7 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
     try {
       const [{ count }, { data, error }] = await Promise.all([
         supabase.from('premium_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('premium_requests').select('id, name, email, plan_name, plan_price, amount, payment_method').eq('status', 'pending').order('created_at', { ascending: false }).limit(20),
+        supabase.from('premium_requests').select('id, name, email, plan_name, plan_price, amount, payment_method, created_at').eq('status', 'pending').order('created_at', { ascending: false }).range(0, 99),
       ]);
       if (error) throw error;
       const nextAlerts = (data || []).map((record: any) => ({

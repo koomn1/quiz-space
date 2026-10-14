@@ -1439,13 +1439,17 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
     }
   } catch (_) {}
 
+  const numericPlanPrice = typeof reqData.planPrice === 'number' && Number.isFinite(reqData.planPrice)
+    ? reqData.planPrice
+    : null;
   const { error } = await supabase.from('premium_requests').insert({
     id: requestId,
     user_id: effectiveUserId,
     name: reqData.name,
     email: reqData.email,
+    plan_id: reqData.planId || null,
     plan_name: reqData.planName,
-    plan_price: reqData.planPrice || null,
+    plan_price: numericPlanPrice,
     amount: reqData.amount ?? null,
     payment_method: reqData.paymentMethod || null,
     payment_screenshot: reqData.paymentScreenshot,
@@ -1472,7 +1476,7 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
   }
 }
 
-export async function getPremiumRequests(userId?: string): Promise<any[]> {
+export async function getPremiumRequests(userId?: string, options: { adminQueue?: boolean } = {}): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
   
   let targetUid = userId;
@@ -1484,22 +1488,28 @@ export async function getPremiumRequests(userId?: string): Promise<any[]> {
   }
 
   let query = supabase.from('premium_requests').select('*');
-  if (targetUid && !targetUid.startsWith('user-guest')) {
+  // Admin review must not inherit the default current-user filter. RLS still
+  // limits this unscoped query to administrators at the database layer.
+  if (!options.adminQueue && targetUid && !targetUid.startsWith('user-guest')) {
     query = query.eq('user_id', targetUid);
   }
   query = query.order('created_at', { ascending: false });
+  if (options.adminQueue) query = query.eq('status', 'pending').range(0, 99);
   const { data, error } = await query;
   if (error) {
     console.error('Error getting premium requests:', error);
     try {
-      const fallback = await supabase.from('premium_requests').select('*').order('created_at', { ascending: false });
-      if (!fallback.error && fallback.data) {
-        return (fallback.data || []).map((row: any) => ({
+      let fallback = supabase.from('premium_requests').select('*').order('created_at', { ascending: false });
+      if (options.adminQueue) fallback = fallback.eq('status', 'pending').range(0, 99);
+      const fallbackResult = await fallback;
+      if (!fallbackResult.error && fallbackResult.data) {
+        return (fallbackResult.data || []).map((row: any) => ({
           ...row,
           userId: row.user_id || row.userId,
+          planId: row.plan_id || row.planId,
           planName: row.plan_name || row.planName,
-          planPrice: row.plan_price || row.planPrice,
-          amount: row.amount,
+          planPrice: row.plan_price ?? row.planPrice,
+          amount: row.amount ?? null,
           paymentMethod: row.payment_method || row.paymentMethod,
           paymentScreenshot: row.payment_screenshot || row.paymentScreenshot,
           rejectReason: row.reject_reason || row.rejectReason,
@@ -1513,9 +1523,10 @@ export async function getPremiumRequests(userId?: string): Promise<any[]> {
   return (data || []).map((row: any) => ({
     ...row,
     userId: row.user_id || row.userId,
+    planId: row.plan_id || row.planId,
     planName: row.plan_name || row.planName,
-    planPrice: row.plan_price || row.planPrice,
-    amount: row.amount,
+    planPrice: row.plan_price ?? row.planPrice,
+    amount: row.amount ?? null,
     paymentMethod: row.payment_method || row.paymentMethod,
     paymentScreenshot: row.payment_screenshot || row.paymentScreenshot,
     rejectReason: row.reject_reason || row.rejectReason,

@@ -575,8 +575,6 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       const targetPlanObj = plans.find(p => p.id === selectedPlan);
       const basePrice = targetPlanObj ? targetPlanObj.priceNum : 300;
       const discountedPrice = basePrice * (1 - promoDiscount / 100);
-      const formattedPrice = discountedPrice === 0 ? 'FREE' : `${discountedPrice} EGP / ${discountedPrice} ج.م`;
-
       const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
       if (promoDiscount === 100) {
@@ -601,8 +599,9 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
           name: subscriberName,
           email: subscriberEmail,
           userEmail: subscriberEmail,
+          planId: selectedPlan,
           planName: targetPlanObj?.name || selectedPlan,
-          planPrice: formattedPrice,
+          planPrice: basePrice,
           amount: discountedPrice,
           paymentMethod: selectedMethod,
           paymentScreenshot: screenshotBase64 || 'PROMO_100_FREE',
@@ -934,8 +933,9 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                             name: subscriberName,
                             email: subscriberEmail,
                             userEmail: subscriberEmail,
+                            planId: null,
                             planName: isAr ? `باقة تجريبية ${days} يوماً` : `${days}-Day Free Trial`,
-                            planPrice: 'FREE TRIAL (Pending Admin Approval)',
+                            planPrice: null,
                             paymentScreenshot: `TRIAL_OFFER_${days}_DAYS`,
                             promoCodeUsed: `TRIAL_${days}D`,
                             status: 'pending',
@@ -1552,6 +1552,21 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                       <span className={`px-3 py-1 rounded-full text-[10px] font-black border shadow-xs ${statusColor}`}>
                         {statusLabel}
                       </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs">
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'المبلغ المطلوب' : 'Amount due'}</span>
+                      <strong className="mt-1 block text-base font-black text-emerald-600">
+                        {typeof req.amount === 'number' ? req.amount.toLocaleString(isAr ? 'ar-EG' : 'en-US') : req.amount || (isAr ? 'غير مسجل في الطلب القديم' : 'Not recorded on legacy request')} {isAr ? 'ج.م' : 'EGP'}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'طريقة الدفع' : 'Payment method'}</span>
+                      <strong className="mt-1 block text-sm font-black text-slate-800 dark:text-slate-100">
+                        {req.paymentMethod === 'instapay' ? 'InstaPay' : req.paymentMethod === 'vodafone' || req.paymentMethod === 'vodafone_cash' ? 'Vodafone Cash' : req.paymentMethod === 'bank_transfer' ? (isAr ? 'تحويل بنكي' : 'Bank Transfer') : (isAr ? 'غير محددة في الطلب القديم' : 'Not recorded on legacy request')}
+                      </strong>
                     </div>
                   </div>
 

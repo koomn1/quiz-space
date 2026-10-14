@@ -42,6 +42,7 @@ import {
   updatePremiumRequest,
 } from "../lib/db";
 import { activateDiamondInstitution } from "../lib/institutions";
+import { mapPendingPaymentRequests } from "../lib/paymentQueue";
 
 interface AdminSubscriptionsProps {
   lang: "ar" | "en";
@@ -176,24 +177,9 @@ export default function AdminSubscriptions({
     // Keep payment requests independent from the other admin queries. A failure
     // in profiles or plans must not make a real payment queue look empty.
     try {
-      const requests = await getPremiumRequests();
-      // Only an explicit pending status belongs in the payment-review queue.
-      // Missing/legacy statuses must not turn an unrelated row into a payment request.
-      const pendingRequests = requests.filter((r) => r.status === "pending");
-      const payments = pendingRequests.map((r) => ({
-        id: r.id,
-        userId: r.userId,
-        userName: r.userName || r.userEmail,
-        planId: r.planName,
-        planName: r.planName,
-        amount: r.amount ?? r.planPrice ?? '',
-        method: r.paymentMethod || "request",
-        status: r.status || "pending",
-        submittedAt: r.timestamp || r.createdAt,
-        receiptUrl: r.receiptUrl || r.paymentScreenshot || r.receiptBase64 || '',
-        notes: r.notes,
-      }));
-      setMockPayments(payments as PaymentProof[]);
+      // This is an admin-scoped query; do not apply the current admin's user_id.
+      const requests = await getPremiumRequests(undefined, { adminQueue: true });
+      setMockPayments(mapPendingPaymentRequests(requests));
       setPaymentLoadError(null);
     } catch (err) {
       console.error('Failed to load premium payment requests:', err);
@@ -1045,7 +1031,11 @@ export default function AdminSubscriptions({
               {isAr ? "لا توجد مدفوعات معلقة" : "No pending payments"}
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="max-h-[calc(100vh-13rem)] overflow-y-auto overscroll-contain pr-1 sm:pr-2">
+              <div className="mb-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                {isAr ? `يتم عرض ${mockPayments.length} طلب دفع معلق — مرّر لرؤية القائمة كاملة.` : `${mockPayments.length} pending payment requests — scroll to review the full queue.`}
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {mockPayments.map((pay, idx) => (
                 <div
                   key={pay.id || idx}
@@ -1139,6 +1129,7 @@ export default function AdminSubscriptions({
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           )}
         </div>
