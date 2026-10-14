@@ -185,9 +185,10 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       icon: <Smartphone className="w-5 h-5 text-rose-400" />,
       details: {
         mobile: '01037560348',
+        link: 'http://vf.eg/vfcash?id=mt&qrId=wamRjE',
         instructions: isAr 
-          ? 'يرجى تحويل المبلغ المطلوب إلى رقم فودافون كاش (01037560348) وإرفاق لقطة شاشة التحويل.' 
-          : 'Transfer to Vodafone Cash wallet (01037560348) and upload the success confirmation receipt.'
+          ? 'اضغط زر الدفع المباشر أو حوّل المبلغ المطلوب إلى رقم فودافون كاش (01037560348)، ثم أرفق لقطة شاشة التحويل الناجح.'
+          : 'Open the direct payment link or transfer to Vodafone Cash wallet (01037560348), then upload the successful payment screenshot.'
       }
     }
   ];
@@ -1214,6 +1215,16 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                           <p className="text-[10px] text-slate-500 leading-relaxed">
                             {m.details.instructions}
                           </p>
+                          {m.details.link && (
+                            <a
+                              href={m.details.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-1 w-full py-2 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md shadow-rose-600/20"
+                            >
+                              <span>{isAr ? 'فتح رابط الدفع المباشر في فودافون كاش ↗' : 'Open Direct Vodafone Cash Link ↗'}</span>
+                            </a>
+                          )}
                         </>
                       )}
                     </div>
