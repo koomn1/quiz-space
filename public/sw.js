@@ -1,4 +1,6 @@
-const CACHE_VERSION = 'v4';
+// Bump this whenever the deployed app shell changes so installed PWAs discard
+// stale cached assets instead of continuing to render an older release.
+const CACHE_VERSION = 'v5';
 const APP_CACHE = `quiz-space-app-${CACHE_VERSION}`;
 const VIDEO_CACHE = `quiz-space-videos-${CACHE_VERSION}`;
 const PROFILE_ASSET_CACHE = `quiz-space-profile-assets-${CACHE_VERSION}`;
