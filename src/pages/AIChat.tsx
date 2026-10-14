@@ -721,6 +721,11 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
             : `I can prepare a **${requestedQuiz.topic}** quiz with **${requestedQuiz.amount} questions** at **${requestedQuiz.difficulty}** level. Review the settings below and confirm to generate it.`, timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }
       ]);
       setInputText('');
+      // The attachment is now part of the pending quiz request. Remove it
+      // from the composer so it cannot look unsent or be attached twice.
+      selectedAttachmentRef.current = null;
+      setSelectedAttachment(null);
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
       return;
     }
 
