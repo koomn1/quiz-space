@@ -736,8 +736,15 @@ export default function QuizResolver({
       // second completion.
       let completionId = savedCompletionId;
       if (!completionId && autoSavePromiseRef.current) {
-        completionId = await autoSavePromiseRef.current;
-        if (completionId) setSavedCompletionId(completionId);
+        try {
+          completionId = await autoSavePromiseRef.current;
+          if (completionId) setSavedCompletionId(completionId);
+        } catch (autoSaveErr) {
+          // The last-answer save is only an early convenience. The explicit
+          // finish action below is the authoritative retry and must still run.
+          console.warn('Automatic completion save failed; retrying on final submit:', autoSaveErr);
+          completionId = null;
+        }
       }
 
       if (completionId && isReviewDirty && !isDailyQuiz) {
