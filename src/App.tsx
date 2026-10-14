@@ -101,7 +101,9 @@ export default function App() {
   const {
     pendingCount: pendingPaymentCount,
     latestAlert: paymentAlert,
+    alerts: paymentAlerts,
     dismissAlert: dismissPaymentAlert,
+    dismissAlertById: dismissPaymentAlertById,
   } = useAdminPaymentAlerts({
     isAdmin: isAdminUser,
     onNavigateToPayments: () => {
@@ -1104,7 +1106,9 @@ export default function App() {
         {/* Real-time Admin Payment Alert Toast */}
         <AdminPaymentNotificationToast
           alert={paymentAlert}
+          alerts={paymentAlerts}
           onDismiss={dismissPaymentAlert}
+          onDismissAlert={dismissPaymentAlertById}
           onNavigateToPayments={() => {
             handleSetTab('admin');
             window.location.hash = '#/admin/subscriptions';

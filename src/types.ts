@@ -152,8 +152,8 @@ export interface PaymentProof {
   userName: string;
   planId: string;
   planName: string;
-  amount: number;
-  method: 'vodafone_cash' | 'instapay' | 'bank_transfer' | 'request';
+  amount: number | string;
+  method: 'vodafone' | 'vodafone_cash' | 'instapay' | 'bank_transfer' | 'request';
   status: 'pending' | 'approved' | 'rejected' | 'needs_info';
   receiptUrl?: string;
   submittedAt: string;

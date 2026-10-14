@@ -4,18 +4,22 @@ import { PaymentAlertInfo } from '../hooks/useAdminPaymentAlerts';
 
 interface AdminPaymentNotificationToastProps {
   alert: PaymentAlertInfo | null;
+  alerts?: PaymentAlertInfo[];
   onDismiss: () => void;
+  onDismissAlert?: (id: string) => void;
   onNavigateToPayments: () => void;
   lang?: 'ar' | 'en';
 }
 
 export function AdminPaymentNotificationToast({
   alert,
+  alerts = alert ? [alert] : [],
   onDismiss,
+  onDismissAlert,
   onNavigateToPayments,
   lang = 'ar',
 }: AdminPaymentNotificationToastProps) {
-  if (!alert) return null;
+  if (alerts.length === 0) return null;
   const isAr = lang === 'ar';
 
   return (
@@ -46,13 +50,24 @@ export function AdminPaymentNotificationToast({
               </div>
 
               <h4 className="text-xs sm:text-sm font-black text-white">
-                {isAr ? `قام ${alert.name} بإرسال إيصال دفع` : `${alert.name} sent a payment receipt`}
+                {isAr ? `${alerts.length} طلبات دفع معلقة` : `${alerts.length} pending payment requests`}
               </h4>
 
-              <p className="text-[11px] text-slate-300 font-medium">
-                {isAr ? 'الباقة المستهدفة:' : 'Plan:'} <strong className="text-amber-200 font-black">{alert.planName}</strong>
-                {alert.planPrice && <span className="text-slate-400 font-mono text-[10px] mx-1.5">({alert.planPrice})</span>}
-              </p>
+              <div className="mt-2 max-h-36 space-y-1.5 overflow-y-auto pr-1">
+                {alerts.map((item) => (
+                  <div key={item.id} className="rounded-xl bg-white/5 px-2.5 py-2 text-[11px] text-slate-200">
+                    <div className="flex items-center justify-between gap-2">
+                      <strong className="truncate text-amber-200">{item.name}</strong>
+                      {onDismissAlert && <button type="button" onClick={() => onDismissAlert(item.id)} className="shrink-0 text-slate-400 hover:text-white" aria-label={isAr ? 'إخفاء الطلب' : 'Hide request'}>×</button>}
+                    </div>
+                    <div className="mt-0.5 text-slate-300">
+                      {item.planName}
+                      {item.amount !== undefined && <span className="mx-1.5 font-black text-emerald-300">{item.amount} {isAr ? 'ج.م' : 'EGP'}</span>}
+                      {item.paymentMethod && <span className="text-slate-400">· {item.paymentMethod === 'instapay' ? 'InstaPay' : item.paymentMethod === 'vodafone' || item.paymentMethod === 'vodafone_cash' ? 'Vodafone Cash' : item.paymentMethod}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

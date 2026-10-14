@@ -603,6 +603,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
           userEmail: subscriberEmail,
           planName: targetPlanObj?.name || selectedPlan,
           planPrice: formattedPrice,
+          amount: discountedPrice,
+          paymentMethod: selectedMethod,
           paymentScreenshot: screenshotBase64 || 'PROMO_100_FREE',
           promoCodeUsed: promoCode ? `${promoCode} (${promoDiscount}%)` : '',
           status: promoDiscount === 100 ? 'approved' : 'pending',
@@ -649,6 +651,10 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
   const scrollToHistory = () => {
     document.getElementById('activation-history-section')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const selectedPlanDetails = plans.find((plan) => plan.id === selectedPlan);
+  const payableAmount = (selectedPlanDetails?.priceNum || 0) * (1 - promoDiscount / 100);
+  const selectedPaymentMethodDetails = paymentMethods.find((method) => method.id === selectedMethod);
 
   return (
     <div 
@@ -1324,6 +1330,22 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                     / {isAr ? 'شهرياً' : 'mo'}
                   </span>
                 </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/20">
+                <span className="block text-[10px] font-black text-emerald-700 dark:text-emerald-300">{isAr ? 'المبلغ المطلوب تحويله:' : 'Amount to transfer:'}</span>
+                <strong className="mt-1 block text-xl font-black text-emerald-700 dark:text-emerald-200">
+                  {payableAmount.toLocaleString(isAr ? 'ar-EG' : 'en-US')} {isAr ? 'ج.م' : 'EGP'}
+                  <span className="ml-1 text-[10px] font-bold text-emerald-600/70 dark:text-emerald-300/70">/ {isAr ? 'شهرياً' : 'month'}</span>
+                </strong>
+              </div>
+              <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 dark:bg-primary/10">
+                <span className="block text-[10px] font-black text-primary">{isAr ? 'طريقة الدفع المحددة:' : 'Selected payment method:'}</span>
+                <strong className="mt-1 block text-sm font-black text-slate-900 dark:text-white">
+                  {selectedPaymentMethodDetails?.title || selectedMethod}
+                </strong>
               </div>
             </div>
 

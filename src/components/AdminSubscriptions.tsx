@@ -186,7 +186,7 @@ export default function AdminSubscriptions({
         userName: r.userName || r.userEmail,
         planId: r.planName,
         planName: r.planName,
-        amount: r.planPrice,
+        amount: r.amount ?? r.planPrice ?? '',
         method: r.paymentMethod || "request",
         status: r.status || "pending",
         submittedAt: r.timestamp || r.createdAt,
@@ -1098,11 +1098,13 @@ export default function AdminSubscriptions({
                     </div>
                     <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
                       <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'طريقة الدفع' : 'Payment method'}</span>
-                      <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">{pay.method}</span>
+                      <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">
+                        {pay.method === 'instapay' ? 'InstaPay' : pay.method === 'vodafone' || pay.method === 'vodafone_cash' ? 'Vodafone Cash' : pay.method === 'bank_transfer' ? (isAr ? 'تحويل بنكي' : 'Bank transfer') : (isAr ? 'غير محددة' : 'Not specified')}
+                      </span>
                     </div>
                     <div className="col-span-2 rounded-xl bg-emerald-500/10 p-3 sm:col-span-1">
                       <span className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{isAr ? 'المبلغ' : 'Amount'}</span>
-                      <span className="mt-1 block text-xl font-black text-emerald-600">${pay.amount}</span>
+                      <span className="mt-1 block text-xl font-black text-emerald-600">{typeof pay.amount === 'number' ? pay.amount.toLocaleString(isAr ? 'ar-EG' : 'en-US') : pay.amount || '—'} <span className="text-xs">{isAr ? 'ج.م' : 'EGP'}</span></span>
                     </div>
                   </div>
                   <div className="rounded-2xl border border-slate-200/70 bg-slate-100/40 p-3 dark:border-slate-700/70 dark:bg-slate-900/40">

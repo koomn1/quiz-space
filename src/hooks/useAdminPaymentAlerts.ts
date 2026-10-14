@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { getPendingPaymentRequestsCount } from '../lib/db';
 import { playNotificationSound } from '../lib/sound';
 
 export interface PaymentAlertInfo {
@@ -9,6 +8,8 @@ export interface PaymentAlertInfo {
   email: string;
   planName: string;
   planPrice?: string;
+  amount?: number | string;
+  paymentMethod?: string;
 }
 
 interface UseAdminPaymentAlertsOptions {
@@ -19,12 +20,28 @@ interface UseAdminPaymentAlertsOptions {
 export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdminPaymentAlertsOptions) {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [latestAlert, setLatestAlert] = useState<PaymentAlertInfo | null>(null);
+  const [alerts, setAlerts] = useState<PaymentAlertInfo[]>([]);
 
   const refreshPendingCount = useCallback(async () => {
     if (!isAdmin) return;
     try {
-      const count = await getPendingPaymentRequestsCount();
-      setPendingCount(count);
+      const [{ count }, { data, error }] = await Promise.all([
+        supabase.from('premium_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('premium_requests').select('id, name, email, plan_name, plan_price, amount, payment_method').eq('status', 'pending').order('created_at', { ascending: false }).limit(20),
+      ]);
+      if (error) throw error;
+      const nextAlerts = (data || []).map((record: any) => ({
+        id: record.id,
+        name: record.name || record.email || 'مشترك كوزميك',
+        email: record.email || '',
+        planName: record.plan_name || 'الباقة المميزة',
+        planPrice: record.plan_price || undefined,
+        amount: record.amount ?? undefined,
+        paymentMethod: record.payment_method || undefined,
+      }));
+      setPendingCount(count ?? nextAlerts.length);
+      setAlerts(nextAlerts);
+      setLatestAlert(nextAlerts[0] || null);
     } catch (err) {
       console.warn('Error refreshing pending payment count:', err);
     }
@@ -38,6 +55,7 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
 
     // 2. Set floating in-app banner alert
     setLatestAlert(alert);
+    setAlerts((previous) => [alert, ...previous.filter((item) => item.id !== alert.id)]);
 
     // 3. Send OS desktop notification if permission granted
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
@@ -63,10 +81,16 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
     setLatestAlert(null);
   }, []);
 
+  const dismissAlertById = useCallback((id: string) => {
+    setAlerts((previous) => previous.filter((alert) => alert.id !== id));
+    setLatestAlert((current) => current?.id === id ? null : current);
+  }, []);
+
   useEffect(() => {
     if (!isAdmin) {
       setPendingCount(0);
       setLatestAlert(null);
+      setAlerts([]);
       return;
     }
 
@@ -93,6 +117,8 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
               email: newRecord.email || '',
               planName: newRecord.plan_name || newRecord.planName || 'الباقة المميزة',
               planPrice: newRecord.plan_price || newRecord.planPrice,
+              amount: newRecord.amount,
+              paymentMethod: newRecord.payment_method || newRecord.paymentMethod,
             });
           }
           refreshPendingCount();
@@ -128,7 +154,9 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
   return {
     pendingCount,
     latestAlert,
+    alerts,
     dismissAlert,
+    dismissAlertById,
     refreshPendingCount,
   };
 }
