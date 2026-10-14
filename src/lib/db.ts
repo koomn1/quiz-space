@@ -359,7 +359,7 @@ export const SAMPLE_QUIZZES: Quiz[] = [
     creatorId: 'admin-quizspace',
     creatorName: 'فريق QuizSpace',
     totalPlays: 0,
-    avgRating: 5.0,
+    avgRating: 0,
     ratingsCount: 0,
     timeLimit: 60,
     createdAt: new Date().toISOString(),
@@ -398,7 +398,7 @@ export const SAMPLE_QUIZZES: Quiz[] = [
     creatorId: 'admin-quizspace',
     creatorName: 'أكاديمية المطورين',
     totalPlays: 0,
-    avgRating: 5.0,
+    avgRating: 0,
     ratingsCount: 0,
     timeLimit: 90,
     createdAt: new Date().toISOString(),
@@ -2144,7 +2144,7 @@ export async function getMyClassroomsSnapshot() {
   };
 }
 
-export async function sendPushEvent(payload: { title: string; body: string; url?: string; category: 'classroom' | 'community' | 'quiz' | 'system'; classId?: string }): Promise<number> {
+export async function sendPushEvent(payload: { title: string; body: string; url?: string; category: 'classroom' | 'community' | 'quiz' | 'system'; classId?: string; postId?: string }): Promise<number> {
   if (!isSupabaseConfigured) return 0;
   try {
     const { data, error } = await supabase.functions.invoke('send-promotion-push', { body: { ...payload, url: payload.url || '/' } });

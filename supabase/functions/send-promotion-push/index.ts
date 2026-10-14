@@ -8,6 +8,25 @@ const corsHeaders = {
 
 type Category = 'classroom' | 'community' | 'quiz' | 'promotion' | 'system';
 
+const APP_ORIGIN = 'https://quiz-space-app.pages.dev';
+const MAX_TITLE_LENGTH = 120;
+const MAX_BODY_LENGTH = 500;
+
+function safeTargetUrl(value: unknown): string {
+  if (typeof value !== 'string' || value.length > 2_048) return '/';
+  if (value.startsWith('/') && !value.startsWith('//')) return value;
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === 'https:' && parsed.origin === APP_ORIGIN) {
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+  } catch {
+    // Invalid and external URLs fall back to the app root.
+  }
+  return '/';
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -28,45 +47,77 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const title = String(body.title || '').trim();
-    const message = String(body.body || '').trim();
-    const url = String(body.url || '/');
+    let title = String(body.title || '').trim().slice(0, MAX_TITLE_LENGTH);
+    let message = String(body.body || '').trim().slice(0, MAX_BODY_LENGTH);
+    let url = safeTargetUrl(body.url || '/');
     const category = (body.category || 'system') as Category;
     const classId = body.classId ? String(body.classId) : null;
-    if (!title || !message) return new Response('title and body are required', { status: 400, headers: corsHeaders });
     if (!['classroom', 'community', 'quiz', 'promotion', 'system'].includes(category)) {
       return new Response('invalid category', { status: 400, headers: corsHeaders });
     }
+    if (classId && category !== 'classroom') {
+      return new Response('classId is only valid for classroom notifications', { status: 400, headers: corsHeaders });
+    }
 
-    const { data: adminRow } = user
+    const { data: adminRow, error: adminLookupError } = user
       ? await adminClient.from('users').select('is_admin').eq('uid', user.id).maybeSingle()
-      : { data: { is_admin: true } };
-    if (category === 'promotion' && !adminRow?.is_admin && !isCron) {
+      : { data: { is_admin: true }, error: null };
+    if (adminLookupError) throw adminLookupError;
+    const isAdmin = adminRow?.is_admin === true;
+    const isGlobalCategory = category === 'community' || category === 'promotion' || category === 'system';
+    if ((isGlobalCategory || category === 'quiz') && !isAdmin && !isCron && category !== 'community') {
       return new Response('Forbidden', { status: 403, headers: corsHeaders });
     }
 
     let recipientIds: string[] = Array.isArray(body.recipientIds)
-      ? body.recipientIds.map((id: unknown) => String(id)).filter(Boolean)
+      ? [...new Set(body.recipientIds.map((id: unknown) => String(id).trim()).filter(Boolean))].slice(0, 5000)
       : [];
 
-    if (classId) {
+    if (category === 'classroom') {
+      if (!classId) return new Response('classId is required for classroom notifications', { status: 400, headers: corsHeaders });
       const { data: classroom } = await adminClient.from('classrooms').select('id, created_by').eq('id', classId).maybeSingle();
       if (!classroom) return new Response('classroom not found', { status: 404, headers: corsHeaders });
-      if (classroom.created_by !== user?.id) {
+      if (!isCron && !isAdmin && classroom.created_by !== user?.id) {
         const { data: membership } = await adminClient.from('classroom_students').select('student_id').eq('class_id', classId).eq('student_id', user?.id || '').maybeSingle();
         if (!membership) return new Response('Forbidden', { status: 403, headers: corsHeaders });
       }
       const { data: members } = await adminClient.from('classroom_students').select('student_id').eq('class_id', classId);
       recipientIds = [...new Set([classroom.created_by, ...(members || []).map((row: any) => row.student_id)])].filter((id) => id !== user?.id);
+    } else if (category === 'community' && !isAdmin && !isCron) {
+      const postId = typeof body.postId === 'string' ? body.postId.trim().slice(0, 256) : '';
+      if (!user || !postId) return new Response('A newly created post is required', { status: 403, headers: corsHeaders });
+      const { data: post, error: postError } = await adminClient
+        .from('community_posts')
+        .select('id, author_id, author_name, text, created_at')
+        .eq('id', postId)
+        .maybeSingle();
+      if (postError) throw postError;
+      const postCreatedAt = post?.created_at ? Date.parse(post.created_at) : 0;
+      if (!post || post.author_id !== user.id || !Number.isFinite(postCreatedAt) || Date.now() - postCreatedAt < 0 || Date.now() - postCreatedAt > 5 * 60_000) {
+        return new Response('Post notification is not authorized', { status: 403, headers: corsHeaders });
+      }
+      title = '🌐 منشور جديد في المجتمع';
+      message = `${String(post.author_name || 'QuizSpace').slice(0, 120)}: ${String(post.text || '').slice(0, 360)}`;
+      url = '/#/community';
+      const { data: users, error: usersError } = await adminClient.from('users').select('uid').neq('uid', user.id);
+      if (usersError) throw usersError;
+      recipientIds = (users || []).map((row: any) => row.uid);
     } else if (category === 'community' || category === 'system') {
       const { data: users } = user
         ? await adminClient.from('users').select('uid').neq('uid', user.id)
         : await adminClient.from('users').select('uid');
       recipientIds = (users || []).map((row: any) => row.uid);
+    } else if (category === 'promotion' && recipientIds.length === 0) {
+      const { data: users, error: usersError } = await adminClient.from('users').select('uid');
+      if (usersError) throw usersError;
+      recipientIds = (users || []).map((row: any) => row.uid);
     }
 
+    if (!title || !message) return new Response('title and body are required', { status: 400, headers: corsHeaders });
+    if (recipientIds.length === 0) return new Response(JSON.stringify({ sent: 0, removed: 0 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
     let query = adminClient.from('push_subscriptions').select('id, user_id, endpoint, p256dh, auth');
-    if (recipientIds.length) query = query.in('user_id', recipientIds);
+    query = query.in('user_id', recipientIds);
     const { data: subscriptions, error: readError } = await query;
     if (readError) throw readError;
 

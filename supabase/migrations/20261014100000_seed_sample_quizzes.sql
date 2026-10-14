@@ -13,8 +13,8 @@ INSERT INTO public.quizzes (
     {"id":"q3","text":"أي عام تم فيه إطلاق نموذج ChatGPT لأول مرة للعامة؟","type":"mcq","options":["أواخر عام 2022","عام 2020","عام 2018","عام 2024"],"correctIndex":0,"explanation":"تم إطلاق ChatGPT بواسطة OpenAI في نوفمبر 2022 وحقق انتشاراً هائلاً على مستوى العالم."}
   ]'::jsonb,
   0,
-  5.0,
-  1,
+  0,
+  0,
   60,
   'ذكاء اصطناعي'
 ), (
@@ -28,8 +28,8 @@ INSERT INTO public.quizzes (
     {"id":"qw2","text":"في مكتبة React، ما المفهوم المستخدم لإدارة التأثيرات الجانبية (Side Effects)؟","type":"mcq","options":["Hook (useEffect)","useState","useContext","useRef"],"correctIndex":0,"explanation":"يُستخدم Hook الإيعاز useEffect للتعامل مع العمليات الجانبية مثل جلب البيانات والتنصت على الأحداث."}
   ]'::jsonb,
   0,
-  5.0,
-  1,
+  0,
+  0,
   90,
   'برمجة وتقنية'
 ) ON CONFLICT (id) DO NOTHING;

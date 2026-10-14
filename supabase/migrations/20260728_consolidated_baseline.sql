@@ -3442,8 +3442,6 @@ CREATE INDEX IF NOT EXISTS idx_daily_quiz_user_slots_quiz_id
   ON public.daily_quiz_user_slots (quiz_id);
 CREATE INDEX IF NOT EXISTS idx_featured_quizzes_quiz_id
   ON public.featured_quizzes (quiz_id);
-CREATE INDEX IF NOT EXISTS idx_post_reactions_user_id
-  ON public.post_reactions (user_id);
 CREATE INDEX IF NOT EXISTS idx_reward_inventory_item_id
   ON public.reward_inventory (item_id);
 CREATE INDEX IF NOT EXISTS idx_reward_store_orders_item_id
@@ -3452,8 +3450,6 @@ CREATE INDEX IF NOT EXISTS idx_reward_store_orders_approved_by
   ON public.reward_store_orders (approved_by);
 CREATE INDEX IF NOT EXISTS idx_user_reward_badges_badge_id
   ON public.user_reward_badges (badge_id);
-CREATE INDEX IF NOT EXISTS idx_quiz_analysis_jobs_draft_user_id
-  ON public.quiz_analysis_jobs (draft_user_id);
 
 CREATE OR REPLACE FUNCTION public.claim_daily_gift()
 RETURNS JSONB
