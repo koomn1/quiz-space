@@ -24,6 +24,7 @@ interface SidebarProps {
   photoUrl?: string | null;
   avatar_url?: string | null;
   isAdmin?: boolean;
+  pendingPaymentCount?: number;
   badgeTier?: BadgeTier;
   nameColor?: NameColorKey;
   badgeColor?: BadgeColorKey;
@@ -42,6 +43,7 @@ export default function Sidebar({
   photoUrl = null,
   avatar_url = null,
   isAdmin = false,
+  pendingPaymentCount = 0,
   badgeTier = 'none',
   nameColor = 'default',
   badgeColor = 'blue',
@@ -84,7 +86,11 @@ export default function Sidebar({
   ];
 
   if (isAdmin) {
-    menuItems.push({ id: 'admin', label: isAr ? 'لوحة الإدارة' : 'Admin Panel' });
+    menuItems.push({ 
+      id: 'admin', 
+      label: isAr ? 'لوحة الإدارة' : 'Admin Panel',
+      showBadge: pendingPaymentCount > 0 ? pendingPaymentCount : undefined
+    });
   }
   const hasActiveMembership = isPremium || ['gold', 'diamond', 'premium'].includes(planClean);
 

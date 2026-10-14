@@ -193,6 +193,14 @@ export default function AdminSubscriptions({
   useEffect(() => {
     loadRealData();
     void loadTrialOffers();
+
+    const handleNewRequest = () => {
+      loadRealData();
+    };
+    window.addEventListener('quizspace-payment-request-submitted', handleNewRequest);
+    return () => {
+      window.removeEventListener('quizspace-payment-request-submitted', handleNewRequest);
+    };
   }, []);
 
   const loadCoupons = async () => {

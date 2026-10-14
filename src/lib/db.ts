@@ -1452,6 +1452,19 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
     console.error('Error creating premium request:', error.message);
     throw error;
   }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('quizspace-payment-request-submitted', {
+      detail: {
+        id: requestId,
+        name: reqData.name,
+        email: reqData.email,
+        planName: reqData.planName,
+        planPrice: reqData.planPrice,
+        status: reqData.status || 'pending',
+      }
+    }));
+  }
 }
 
 export async function getPremiumRequests(userId?: string): Promise<any[]> {
@@ -1499,6 +1512,25 @@ export async function getPremiumRequests(userId?: string): Promise<any[]> {
     updatedAt: row.updated_at || row.updatedAt,
   }));
 }
+
+export async function getPendingPaymentRequestsCount(): Promise<number> {
+  if (!isSupabaseConfigured) return 0;
+  try {
+    const { count, error } = await supabase
+      .from('premium_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    if (error) {
+      console.warn('Error fetching pending payment requests count:', error.message);
+      return 0;
+    }
+    return count ?? 0;
+  } catch (err) {
+    console.warn('Failed to query pending payment count:', err);
+    return 0;
+  }
+}
+
 
 // ---------------- USER SESSIONS HANDLERS (SUPABASE DIRECT) ----------------
 

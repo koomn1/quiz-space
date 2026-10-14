@@ -35,14 +35,36 @@ export function MyQuizzes({
   const myQuizzes = quizzes.filter(q => q.creatorId === userId);
   const t = translations[lang];
   const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (myQuizzes.length > 0 && containerRef.current) {
+      gsap.from(containerRef.current.querySelectorAll('.my-quiz-card-wrapper'), {
+        opacity: 0,
+        y: 16,
+        duration: 0.45,
+        stagger: 0.06,
+        ease: 'power2.out',
+        clearProps: 'all'
+      });
+    }
+  }, { scope: containerRef, dependencies: [myQuizzes.length] });
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fade-in text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
+    <div ref={containerRef} className="max-w-6xl mx-auto space-y-8 animate-fade-in text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white mb-2">
-            {isAr ? 'اختباراتي الخاصة 📚' : 'My Personal Quizzes 📚'}
-          </h2>
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center shrink-0">
+              <BookOpen className="w-4 h-4" />
+            </div>
+            <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">
+              {isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes'}
+            </h2>
+            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+              {myQuizzes.length}
+            </span>
+          </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
             {isAr ? 'إدارة وتحرير وحذف كافة الاختبارات العلمية التي قمت بتأليفها.' : 'Manage, edit, and inspect all quizzes authored by your account.'}
           </p>
@@ -75,23 +97,24 @@ export function MyQuizzes({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 [perspective:1400px]">
           
             {myQuizzes.map((quiz, idx) => (
-              <InteractiveQuizCard
-                
-                quiz={quiz}
-                idx={idx}
-                isAr={isAr}
-                t={t}
-                currentUserEmail={userEmail}
-                currentUserId={userId}
-                isAdmin={isAdmin}
-                onStartQuiz={onStartQuiz}
-                onShareQuiz={onShareQuiz}
-                onEditQuiz={onEditQuiz}
-                onDeleteClick={(id) => {
-                  setQuizToDelete(id);
-                }}
-                view="grid"
-              />
+              <div key={quiz.id} className="my-quiz-card-wrapper">
+                <InteractiveQuizCard
+                  quiz={quiz}
+                  idx={idx}
+                  isAr={isAr}
+                  t={t}
+                  currentUserEmail={userEmail}
+                  currentUserId={userId}
+                  isAdmin={isAdmin}
+                  onStartQuiz={onStartQuiz}
+                  onShareQuiz={onShareQuiz}
+                  onEditQuiz={onEditQuiz}
+                  onDeleteClick={(id) => {
+                    setQuizToDelete(id);
+                  }}
+                  view="grid"
+                />
+              </div>
             ))}
           
         </div>

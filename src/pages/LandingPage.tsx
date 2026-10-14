@@ -101,9 +101,10 @@ function DeleteQuizConfirmDialog({ isAr, onCancel, onConfirm }: DeleteQuizConfir
             ref={confirmButtonRef}
             type="button"
             onClick={onConfirm}
-            className="min-h-11 rounded-xl bg-red-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-red-600/15 transition-all hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-650"
+            className="min-h-11 rounded-xl bg-red-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-red-600/15 transition-all hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-650 flex items-center gap-1.5"
           >
-            {isAr ? 'تأكيد الحذف 🗑' : 'Delete Quiz 🗑'}
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{isAr ? 'تأكيد الحذف' : 'Delete Quiz'}</span>
           </button>
         </div>
       </div>
@@ -357,7 +358,10 @@ export default function LandingPage({
           {siteStats.todayQuizzes > 0 && (
             <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-4 text-center backdrop-blur-sm">
               <p className="text-2xl font-black text-amber-500">{siteStats.todayQuizzes.toLocaleString()}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-1">{isAr ? 'كويز اليوم 🆕' : 'New Today'}</p>
+              <p className="text-[10px] font-bold text-slate-500 mt-1 flex items-center justify-center gap-1">
+                <Sparkles className="w-3 h-3 text-amber-500" />
+                <span>{isAr ? 'كويز جديد اليوم' : 'New Today'}</span>
+              </p>
             </div>
           )}
         </div>
@@ -369,7 +373,7 @@ export default function LandingPage({
           <div className="uipro-clay-card relative rounded-3xl border-2 border-amber-400/50 bg-gradient-to-r from-amber-400/15 via-yellow-400/10 to-orange-400/15 p-6 backdrop-blur-md shadow-xl overflow-hidden">
             <div className="absolute -top-1 right-6 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-3.5 py-1 text-[11px] font-black text-amber-950 shadow-lg shadow-amber-400/30">
               <Trophy className="w-3.5 h-3.5" />
-              {isAr ? 'كويز الأسبوع ⭐' : 'Quiz of the Week ⭐'}
+              <span>{isAr ? 'كويز الأسبوع المميّز' : 'Featured Quiz of the Week'}</span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mt-2">
               <div className="flex-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
@@ -388,9 +392,10 @@ export default function LandingPage({
               </div>
               <button
                 onClick={() => onStartQuiz(siteStats.featuredQuiz.id)}
-                className="uipro-btn-tactile min-h-12 shrink-0 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 px-6 py-3 text-xs font-black text-slate-950 shadow-xl shadow-amber-500/25 transition-all cursor-pointer self-start sm:self-auto"
+                className="uipro-btn-tactile min-h-12 shrink-0 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 px-6 py-3 text-xs font-black text-slate-950 shadow-xl shadow-amber-500/25 transition-all cursor-pointer self-start sm:self-auto flex items-center gap-1.5"
               >
-                {isAr ? 'ابدأ الآن 🚀' : 'Start Now 🚀'}
+                <span>{isAr ? 'ابدأ الاختبار الآن' : 'Start Quiz'}</span>
+                <ArrowUpRight className="w-4 h-4" />
               </button>
             </div>
           </div>

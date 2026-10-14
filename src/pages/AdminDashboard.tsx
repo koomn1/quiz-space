@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, BarChart3, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2, ArrowUpRight, RefreshCw, UserRoundCheck } from 'lucide-react';
 import { Quiz } from '../types';
-import { getAdminOverviewSnapshot, getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings } from '../lib/db';
+import { getAdminOverviewSnapshot, getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings, getPendingPaymentRequestsCount } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
 import AdminRewardCatalogPanel from '../components/AdminRewardCatalogPanel';
 import { getApiUrl } from '../lib/origin';
@@ -85,6 +85,29 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
   const [isLoadingOverview, setIsLoadingOverview] = useState(true);
   const [overviewLoadError, setOverviewLoadError] = useState<string | null>(null);
   const [overviewRefreshKey, setOverviewRefreshKey] = useState(0);
+  const [pendingPaymentCount, setPendingPaymentCount] = useState<number>(0);
+
+  useEffect(() => {
+    let mounted = true;
+    const refreshPending = async () => {
+      try {
+        const count = await getPendingPaymentRequestsCount();
+        if (mounted) setPendingPaymentCount(count);
+      } catch (e) {
+        // Safe fallback
+      }
+    };
+    void refreshPending();
+
+    const handleNewRequest = () => {
+      void refreshPending();
+    };
+    window.addEventListener('quizspace-payment-request-submitted', handleNewRequest);
+    return () => {
+      mounted = false;
+      window.removeEventListener('quizspace-payment-request-submitted', handleNewRequest);
+    };
+  }, []);
 
   const [promoType, setPromoType] = useState('Promo Code');
   const [promoCode, setPromoCode] = useState('');
@@ -200,13 +223,18 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
       setIsLoadingOverview(true);
       setOverviewLoadError(null);
 
-      const [profilesResult, couponsResult, overviewResult] = await Promise.allSettled([
+      const [profilesResult, couponsResult, overviewResult, pendingCountResult] = await Promise.allSettled([
         getAllProfiles(),
         getCoupons(),
         getAdminOverviewSnapshot(),
+        getPendingPaymentRequestsCount(),
       ]);
 
       if (!isMounted) return;
+
+      if (pendingCountResult.status === 'fulfilled') {
+        setPendingPaymentCount(pendingCountResult.value);
+      }
 
       let hasLoadFailure = false;
       if (profilesResult.status === 'fulfilled') {
@@ -292,9 +320,9 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
   const adminTabs = [
     { id: 'overview', name: isAr ? 'نظرة عامة' : 'Overview', icon: LayoutDashboard },
     { id: 'users', name: isAr ? 'المستخدمين' : 'Users', icon: Users },
-    { id: 'classrooms', name: isAr ? 'الفصول (الشبح 👻)' : 'Classrooms (Ghost 👻)', icon: EyeOff },
+    { id: 'classrooms', name: isAr ? 'الفصول (وضع التخفي)' : 'Classrooms (Stealth Mode)', icon: EyeOff },
     { id: 'quizzes', name: isAr ? 'الاختبارات' : 'Quizzes', icon: Database },
-    { id: 'subscriptions', name: isAr ? 'الاشتراكات' : 'Subscriptions', icon: Crown },
+    { id: 'subscriptions', name: isAr ? 'الاشتراكات' : 'Subscriptions', icon: Crown, badge: pendingPaymentCount > 0 ? pendingPaymentCount : null },
     { id: 'coupons', name: isAr ? 'الكوبونات' : 'Coupons', icon: Ticket },
     { id: 'ai_monitoring', name: isAr ? 'مراقبة الذكاء الاصطناعي' : 'AI Monitoring', icon: Activity },
     { id: 'rewards', name: isAr ? 'النقاط والمتجر' : 'Rewards & Store', icon: Gift },
@@ -336,7 +364,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
       <div className="mb-4 lg:hidden">
         <label htmlFor="admin-tab-select" className="sr-only">{isAr ? 'قسم لوحة الإدارة' : 'Admin section'}</label>
         <select id="admin-tab-select" value={activeAdminTab} onChange={(event) => setActiveAdminTab(event.target.value as typeof activeAdminTab)} className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-800 outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white">
-          {adminTabs.map((tab) => <option key={tab.id} value={tab.id}>{tab.name}</option>)}
+          {adminTabs.map((tab) => <option key={tab.id} value={tab.id}>{tab.name}{tab.badge ? ` (${tab.badge})` : ''}</option>)}
         </select>
       </div>
       <div className="flex flex-col lg:flex-row gap-6">
@@ -350,14 +378,21 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                 key={tab.id}
                 onClick={() => setActiveAdminTab(tab.id as any)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`admin-nav-item flex min-h-11 items-center gap-3 px-4 py-3.5 rounded-2xl transition-all whitespace-nowrap lg:whitespace-normal font-bold text-sm ${
+                className={`admin-nav-item flex min-h-11 items-center justify-between px-4 py-3.5 rounded-2xl transition-all whitespace-nowrap lg:whitespace-normal font-bold text-sm ${
                   isActive
                     ? 'bg-primary text-white shadow-lg shadow-primary/20'
                     : 'glass-panel text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'opacity-100' : 'opacity-70'}`} />
-                <span>{tab.name}</span>
+                <div className="flex items-center gap-3">
+                  <Icon className={`w-5 h-5 ${isActive ? 'opacity-100' : 'opacity-70'}`} />
+                  <span>{tab.name}</span>
+                </div>
+                {tab.badge ? (
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-[11px] font-black rounded-full bg-amber-500 text-slate-950 animate-pulse shadow-sm">
+                    {tab.badge}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -369,6 +404,37 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
             <div className="admin-content-panel">
               {activeAdminTab === 'overview' && (
                 <div className="space-y-6">
+                  {pendingPaymentCount > 0 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent text-amber-900 dark:text-amber-100 shadow-sm animate-fade-in">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
+                          <WalletCards className="w-5 h-5" />
+                        </div>
+                        <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                              {isAr ? `يوجد ${pendingPaymentCount} طلب(ات) اشتراك ودفع معلقة بحاجة لاعتمادك` : `${pendingPaymentCount} pending subscription payment request(s) awaiting review`}
+                            </h4>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-slate-950 animate-pulse">
+                              {isAr ? 'عاجل' : 'Urgent'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                            {isAr ? 'قام مشتركون بإرسال إيصالات دفع وفودافون كاش / إنستاباي، اضغط لمراجعة وتفعيل اشتراكاتهم فوراً.' : 'Subscribers submitted payment receipts. Inspect and activate their memberships instantly.'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveAdminTab('subscriptions')}
+                        className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0"
+                      >
+                        <span>{isAr ? 'الانتقال لطلبات الدفع' : 'Review Requests'}</span>
+                        <ArrowUpRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                     <div>
                       <p className="text-xs font-black uppercase tracking-[0.16em] text-purple-600 dark:text-purple-300">{isAr ? 'نبض المنصة' : 'Platform pulse'}</p>
@@ -612,7 +678,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                                 }
 
                                 await broadcastPlatformNotification(
-                                  promoType === 'Promo Code' ? (isAr ? '🎉 كود خصم جديد!' : '🎉 New Promo Code!') : (isAr ? '🎁 عرض خاص!' : '🎁 Special Offer!'),
+                                  promoType === 'Promo Code' ? (isAr ? 'كود خصم جديد' : 'New Promo Code') : (isAr ? 'عرض خاص' : 'Special Offer'),
                                   `${promoCode}: ${promoMessage}` + (isAr ? ' (متوفر الآن في صفحة الدفع)' : ' (Now available on checkout)')
                                 );
 
@@ -621,7 +687,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                                     try {
                                       await sendDirectMessage(
                                         COSMO_SYSTEM_UID,
-                                        isAr ? 'كوزمو 🤖' : 'AI 🤖',
+                                        isAr ? 'كوزمو' : 'Cosmo AI',
                                         user.userId,
                                         user.name || 'Student',
                                         `${promoMessage} ${promoType === 'Promo Code' ? `Code: ${promoCode}` : ''}`
@@ -698,7 +764,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                     <div>
                       <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
                         <EyeOff className="w-5 h-5 text-purple-500" />
-                        <span>{isAr ? 'الرقابة العامة والتحكم الفائق (وضع الشبح 👻)' : 'Global Override & Stealth Ghost Mode'}</span>
+                        <span>{isAr ? 'الرقابة العامة والتحكم الفائق (وضع التخفي)' : 'Global Override & Stealth Mode'}</span>
                       </h3>
                       <p className="text-xs text-slate-500 mt-1">
                         {isAr 
@@ -730,14 +796,18 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                           </div>
 
                           <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-slate-500 font-bold">
-                            <span>{isAr ? `👥 الطلاب: ${studentsCount}` : `👥 Enrolled: ${studentsCount}`}</span>
+                            <span className="flex items-center gap-1.5">
+                              <Users className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{isAr ? `الطلاب: ${studentsCount}` : `Enrolled: ${studentsCount}`}</span>
+                            </span>
                             <button
                               onClick={() => {
                                 setActiveAdminClassroom(c);
                               }}
                               className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm shadow-purple-500/15 cursor-pointer"
                             >
-                              <span>{isAr ? 'دخول الشبح 👻' : 'Ghost Entry 👻'}</span>
+                              <EyeOff className="w-3.5 h-3.5" />
+                              <span>{isAr ? 'دخول في وضع التخفي' : 'Stealth Access'}</span>
                             </button>
                           </div>
                         </div>

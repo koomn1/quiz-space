@@ -43,6 +43,9 @@ import { useAppBootstrap, useQuizCatalog } from './hooks/useAppBootstrap';
 import { useAuthBootstrap } from './hooks/useAuthBootstrap';
 import { useNotificationsRealtime } from './hooks/useNotificationsRealtime';
 import { useAppUiEffects } from './hooks/useAppUiEffects';
+import { useAdminPaymentAlerts } from './hooks/useAdminPaymentAlerts';
+import { AdminPaymentNotificationToast } from './components/AdminPaymentNotificationToast';
+
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -94,6 +97,18 @@ export default function App() {
   // The server-backed is_admin column is the only client-side signal used for
   // administrative UI. Database policies independently enforce every privileged write.
   const isAdminUser = userStats?.isAdmin === true;
+
+  const {
+    pendingCount: pendingPaymentCount,
+    latestAlert: paymentAlert,
+    dismissAlert: dismissPaymentAlert,
+  } = useAdminPaymentAlerts({
+    isAdmin: isAdminUser,
+    onNavigateToPayments: () => {
+      handleSetTab('admin');
+      window.location.hash = '#/admin/subscriptions';
+    },
+  });
 
   React.useEffect(() => {
     if (!authContext.user) return;
@@ -1055,6 +1070,7 @@ export default function App() {
                 userEmail={userEmail}
                 photoUrl={userPhoto}
                 isAdmin={isAdminUser}
+                pendingPaymentCount={pendingPaymentCount}
                 badgeTier={(userStats as any)?.badgeTier}
                 nameColor={(userStats as any)?.nameColor}
                 badgeColor={(userStats as any)?.badgeColor}
@@ -1083,6 +1099,17 @@ export default function App() {
               handleSetTab('billing');
             }
           }}
+        />
+
+        {/* Real-time Admin Payment Alert Toast */}
+        <AdminPaymentNotificationToast
+          alert={paymentAlert}
+          onDismiss={dismissPaymentAlert}
+          onNavigateToPayments={() => {
+            handleSetTab('admin');
+            window.location.hash = '#/admin/subscriptions';
+          }}
+          lang={lang}
         />
         </>
       )}

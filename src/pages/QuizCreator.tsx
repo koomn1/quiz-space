@@ -346,7 +346,7 @@ export default function QuizCreator({
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-black text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)] animate-pulse">
           <Sparkles className="w-3 h-3 text-emerald-400 animate-spin" style={{ animationDuration: '3s' }} />
-          <span>{isAr ? 'توليد غير محدود ✨' : 'Unlimited Generation ✨'}</span>
+          <span>{isAr ? 'توليد غير محدود' : 'Unlimited Generation'}</span>
         </span>
       );
     }
@@ -396,7 +396,8 @@ export default function QuizCreator({
           }}
           className="px-6 py-3 bg-gradient-to-r from-amber-500 via-violet-600 to-pink-500 text-white font-black text-xs rounded-xl hover:brightness-110 shadow-lg shadow-violet-500/20 transition-all flex items-center gap-2 cursor-pointer border border-white/10"
         >
-          <span>{isAr ? 'ترقية الاشتراك إلى الباقة الذهبية الآن 👑' : 'Upgrade to Gold Plan Now 👑'}</span>
+          <Crown className="w-4 h-4 text-amber-200" />
+          <span>{isAr ? 'ترقية الاشتراك إلى الباقة الذهبية الآن' : 'Upgrade to Gold Plan Now'}</span>
         </button>
         </div>
       </div>

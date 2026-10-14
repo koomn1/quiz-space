@@ -105,7 +105,9 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2.5">
-            <span className="p-2 rounded-2xl bg-primary/10 text-primary dark:text-primary-light">🧭</span>
+            <span className="p-2 rounded-2xl bg-primary/10 text-primary dark:text-primary-light flex items-center justify-center">
+              <Compass className="w-5 h-5 text-primary" />
+            </span>
             <span>{isAr ? 'استكشف الاختبارات الكوكبية' : 'Explore Scientific Galaxies'}</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
@@ -140,7 +142,7 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
               : 'bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-primary/40 hover:text-primary'
           }`}
         >
-          {isAr ? '🌐 الكل' : 'All'}
+          {isAr ? 'جميع الاختبارات' : 'All Quizzes'}
         </button>
         {tags.map(tag => (
           <button 
@@ -179,7 +181,7 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
         ))}
         {filtered.length === 0 && (
           <div className="col-span-full py-16 bg-white/60 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-center space-y-3 max-w-md mx-auto w-full p-8">
-            <span className="text-4xl block">🔍</span>
+            <Search className="w-10 h-10 mx-auto text-slate-400" />
             <h4 className="font-display font-black text-sm text-slate-800 dark:text-slate-200">
               {isAr ? 'لم نجد أي اختبار يطابق هذا البحث' : 'No matching quizzes found'}
             </h4>
@@ -234,7 +236,9 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
     <div className="space-y-8 animate-fade-in" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div>
         <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2.5">
-          <span className="p-2 rounded-2xl bg-primary/10 text-primary dark:text-primary-light">🗂️</span>
+          <span className="p-2 rounded-2xl bg-primary/10 text-primary dark:text-primary-light flex items-center justify-center">
+            <Layers className="w-5 h-5 text-primary" />
+          </span>
           <span>{isAr ? 'الفئات والمسارات الأكاديمية' : 'Academic Classifications'}</span>
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
