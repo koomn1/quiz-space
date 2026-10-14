@@ -4,6 +4,7 @@ import { playNotificationSound } from '../lib/sound';
 import { pushNotificationsManager, type PushNotificationPayload } from '../lib/pushNotifications';
 import { supabase } from '../lib/supabaseClient';
 import { useVisibilityPolling } from './useVisibilityPolling';
+import { isGuestIdentity } from '../lib/guestIdentity';
 
 export function useNotificationsRealtime({
   userId,
@@ -95,7 +96,9 @@ export function useNotificationsRealtime({
   }, [userName, lang, pushNotificationsEnabled]);
 
   useEffect(() => {
-    if (!userId || localStorage.getItem('firebase_quota_exceeded') === 'true') {
+    // Guest identities are local-only labels, not Supabase auth.uid values.
+    // Querying direct_messages with one causes a predictable 401.
+    if (isGuestIdentity(userId) || localStorage.getItem('firebase_quota_exceeded') === 'true') {
       setUnreadMessagesCount(0);
       return;
     }

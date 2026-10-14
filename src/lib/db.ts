@@ -15,7 +15,7 @@ import {
   isDurableQuestionImageUrl,
   parseInlineImageDataUrl,
 } from './questionMedia';
-import { isGuestIdentity } from './guestIdentity';
+
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
 // `users` is required to have a valid UUID `uid` — a trigger
@@ -694,15 +694,28 @@ export async function submitQuizAttempt(
     score: number;
     rating?: number;
     feedback?: string;
+    clientAttemptKey?: string;
     totalQuestions?: number;
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
+  // Guest labels are local-only identities, never Supabase auth.uid values.
+  // Route them before resolving the authenticated session so a stale render
+  // cannot send a guest attempt to the authenticated RPC.
+  if (isGuestIdentity(data.takerId)) {
+    if (!data.clientAttemptKey) throw new Error('Guest attempt key is missing.');
+    return submitGuestQuizAttempt(quizId, {
+      guestId: data.takerId,
+      guestName: data.takerName,
+      score: data.score,
+      clientAttemptKey: data.clientAttemptKey,
+      rating: data.rating,
+      feedback: data.feedback,
+    });
+  }
   // Profile state can lag one render behind the Auth session after login or a
-  // token refresh. The RPC rejects `anonymous` and any uid other than
-  // auth.uid(), so resolve the authoritative id at the write boundary.
-  // A few offline/unit-test clients provide only `rpc`; retain the validated
-  // caller id there while real Supabase clients always use auth.uid().
+  // token refresh. The RPC rejects anonymous and any uid other than auth.uid(),
+  // so resolve the authoritative id at the write boundary.
   let authenticatedTakerId = data.takerId;
   if (typeof supabase.auth?.getUser === 'function') {
     let { data: authData, error: authError } = await supabase.auth.getUser();
@@ -715,19 +728,7 @@ export async function submitQuizAttempt(
         }
       } catch (_) {}
     }
-    if (authError || !authData.user?.id) {
-      if (isGuestIdentity(data.takerId)) {
-        return submitGuestQuizAttempt(quizId, {
-          guestId: data.takerId,
-          guestName: data.takerName,
-          score: data.score,
-          clientAttemptKey: `fallback-${Date.now()}`,
-          rating: data.rating,
-          feedback: data.feedback,
-        });
-      }
-      throw authError || new Error('Your authenticated session is not ready.');
-    }
+    if (authError || !authData.user?.id) throw authError || new Error('Your authenticated session is not ready.');
     authenticatedTakerId = authData.user.id;
   }
   // Daily challenges are private payloads and intentionally do not exist in quizzes.
@@ -2050,7 +2051,7 @@ export async function updateCommunityPost(postId: string, text: string): Promise
 // ---------------- COMMUNICATION: CHATS & DIRECT MESSAGES (SUPABASE DIRECT) ----------------
 
 export async function getDirectMessages(userId: string): Promise<any[]> {
-  if (!userId) return [];
+  if (!userId || isGuestIdentity(userId)) return [];
   if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase.from('direct_messages')
@@ -2114,7 +2115,7 @@ export async function deleteDirectMessage(messageId: string): Promise<void> {
 }
 
 export async function markMessagesAsRead(userId: string, contactId: string): Promise<void> {
-  if (!userId || !contactId) return;
+  if (!userId || isGuestIdentity(userId) || !contactId) return;
   if (isSupabaseConfigured) {
     try {
       await supabase.from('direct_messages')
@@ -3466,7 +3467,7 @@ export async function upsertQuizErrorBankItem(params: {
   userAnswer: string;
   correctAnswer: string;
 }): Promise<QuizErrorBankItem | null> {
-  if (!params.userId || params.userId === 'anonymous' || params.userId.startsWith('guest-')) return null;
+  if (!params.userId || isGuestIdentity(params.userId)) return null;
   const { data, error } = await supabase.rpc('upsert_quiz_error_bank_item', {
     p_user_id: params.userId,
     p_quiz_id: params.quizId,
@@ -3481,7 +3482,7 @@ export async function upsertQuizErrorBankItem(params: {
 }
 
 export async function getQuizErrorBank(userId: string, includeResolved = false): Promise<QuizErrorBankItem[]> {
-  if (!userId || userId === 'anonymous' || userId.startsWith('guest-')) return [];
+  if (!userId || isGuestIdentity(userId)) return [];
   let query = supabase.from('quiz_error_bank').select('*').eq('user_id', userId).order('last_attempted_at', { ascending: false });
   if (!includeResolved) query = query.is('resolved_at', null);
   const { data, error } = await query;

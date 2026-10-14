@@ -344,16 +344,25 @@ export default function QuizResolver({
                 clientAttemptKey: attemptKeyRef.current,
                 feedback: '',
               })
+<<<<<<< ours
               : await submitQuizAttempt(quizId, {
                 // submitQuizAttempt resolves the authoritative Supabase Auth
                 // uid again at the write boundary; never send `anonymous`.
                 // The old contract `takerId: userId || 'anonymous'` is kept
                 // out of the executable path intentionally.
                 takerId: userId,
+||||||| base
+            : await submitQuizAttempt(quizId, {
+                takerId: userId || 'anonymous',
+=======
+              : await submitQuizAttempt(quizId, {
+                takerId: userId || 'anonymous',
+>>>>>>> theirs
                 takerName: finalName,
                 score,
                 rating: undefined,
                 feedback: '',
+                clientAttemptKey: attemptKeyRef.current,
                 totalQuestions: quiz.questions.length
               });
 
@@ -803,6 +812,7 @@ export default function QuizResolver({
           score,
           rating: selectedRating > 0 ? selectedRating : undefined,
           feedback: feedbackText.trim(),
+          clientAttemptKey: attemptKeyRef.current,
           totalQuestions: quiz.questions.length
         });
         const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
