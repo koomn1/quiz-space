@@ -50,7 +50,18 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
   const isAr = lang === 'ar';
   const containerRef = React.useRef<HTMLDivElement>(null);
   
-  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards' | 'motivation_usage'>('overview');
+  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards' | 'motivation_usage'>(() => {
+    if (typeof window !== 'undefined' && (window.location.hash.includes('subscriptions') || window.location.hash.includes('payments'))) {
+      return 'subscriptions';
+    }
+    return 'overview';
+  });
+  const [initialSubTab, setInitialSubTab] = useState<"users" | "payments" | "plans" | "coupons">(() => {
+    if (typeof window !== 'undefined' && (window.location.hash.includes('subscriptions') || window.location.hash.includes('payments'))) {
+      return 'payments';
+    }
+    return 'users';
+  });
   const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
   useGSAP(() => {
     // Initial load animation for header and stats
@@ -106,6 +117,29 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
     return () => {
       mounted = false;
       window.removeEventListener('quizspace-payment-request-submitted', handleNewRequest);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleHash = () => {
+      if (typeof window !== 'undefined' && (window.location.hash.includes('subscriptions') || window.location.hash.includes('payments'))) {
+        setActiveAdminTab('subscriptions');
+        setInitialSubTab('payments');
+      }
+    };
+    const handleAdminNavigation = (e: any) => {
+      if (e?.detail?.tab) {
+        setActiveAdminTab(e.detail.tab);
+      }
+      if (e?.detail?.subTab) {
+        setInitialSubTab(e.detail.subTab);
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    window.addEventListener('quizspace-navigate-admin-tab', handleAdminNavigation);
+    return () => {
+      window.removeEventListener('hashchange', handleHash);
+      window.removeEventListener('quizspace-navigate-admin-tab', handleAdminNavigation);
     };
   }, []);
 
@@ -426,7 +460,16 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                       </div>
                       <button
                         type="button"
-                        onClick={() => setActiveAdminTab('subscriptions')}
+                        onClick={() => {
+                          setActiveAdminTab('subscriptions');
+                          setInitialSubTab('payments');
+                          if (typeof window !== 'undefined') {
+                            window.location.hash = '#/admin/subscriptions';
+                            window.dispatchEvent(new CustomEvent('quizspace-navigate-admin-tab', {
+                              detail: { tab: 'subscriptions', subTab: 'payments' }
+                            }));
+                          }
+                        }}
                         className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0"
                       >
                         <span>{isAr ? 'الانتقال لطلبات الدفع' : 'Review Requests'}</span>
@@ -595,7 +638,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
               )}
 
               {activeAdminTab === 'subscriptions' && (
-                <AdminSubscriptions lang={lang} onViewProfile={onViewProfile} />
+                <AdminSubscriptions lang={lang} onViewProfile={onViewProfile} initialSubTab={initialSubTab} />
               )}
 
               {activeAdminTab === 'coupons' && (

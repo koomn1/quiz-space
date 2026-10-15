@@ -1657,20 +1657,25 @@ export async function getPremiumRequests(userId?: string, options: { adminQueue?
     query = query.eq('user_id', targetUid);
   }
   query = query.order('created_at', { ascending: false });
-  if (options.adminQueue) query = query.eq('status', 'pending').range(0, 99);
+  if (options.adminQueue) query = query.in('status', ['pending', 'Pending', 'PENDING']).range(0, 99);
   else if (options.adminLedger || options.allAdmin) query = query.range(0, 499);
   const { data, error } = await query;
   if (error) {
     console.error('Error getting premium requests:', error);
     try {
-      let fallback = supabase.from('premium_requests').select('*').order('created_at', { ascending: false });
-      if (options.adminQueue) fallback = fallback.eq('status', 'pending').range(0, 99);
+      let fallback = supabase
+        .from('premium_requests')
+        .select('id, user_id, name, email, plan_id, plan_name, plan_price, amount, payment_method, payment_screenshot, status, reject_reason, created_at, updated_at')
+        .order('created_at', { ascending: false });
+      if (options.adminQueue) fallback = fallback.in('status', ['pending', 'Pending', 'PENDING']).range(0, 99);
       else if (options.adminLedger || options.allAdmin) fallback = fallback.range(0, 499);
       const fallbackResult = await fallback;
       if (!fallbackResult.error && fallbackResult.data) {
         return (fallbackResult.data || []).map((row: any) => ({
           ...row,
           userId: row.user_id || row.userId,
+          userName: row.name || row.userName || row.email,
+          userEmail: row.email || row.userEmail,
           planId: row.plan_id || row.planId,
           planName: row.plan_name || row.planName,
           planPrice: row.plan_price ?? row.planPrice,
@@ -1688,6 +1693,8 @@ export async function getPremiumRequests(userId?: string, options: { adminQueue?
   return (data || []).map((row: any) => ({
     ...row,
     userId: row.user_id || row.userId,
+    userName: row.name || row.userName || row.email,
+    userEmail: row.email || row.userEmail,
     planId: row.plan_id || row.planId,
     planName: row.plan_name || row.planName,
     planPrice: row.plan_price ?? row.planPrice,
@@ -1813,13 +1820,36 @@ export async function updatePremiumRequest(
   }
 
   if (status === 'approved') {
+    let targetUserId = userId;
+    if (!targetUserId) {
+      try {
+        const { data: reqRow } = await supabase.from('premium_requests').select('user_id').eq('id', requestId).maybeSingle();
+        if (reqRow?.user_id) targetUserId = reqRow.user_id;
+      } catch (_) {}
+    }
+
     const { error } = await supabase.rpc('approve_premium_request', {
       p_request_id: requestId,
-      p_user_id: userId,
+      p_user_id: targetUserId,
     });
     if (error) {
-      console.error('Error approving premium request:', error.message);
-      throw new Error('Unable to approve the subscription request.');
+      console.warn('approve_premium_request RPC failed, attempting direct table update fallback:', error.message);
+      const { error: directErr } = await supabase.from('premium_requests').update({
+        status: 'approved',
+        updated_at: new Date().toISOString(),
+      }).eq('id', requestId);
+      if (directErr) {
+        console.error('Error in direct approval fallback:', directErr.message);
+        throw new Error('Unable to approve the subscription request.');
+      }
+      if (targetUserId) {
+        await updateUserSubscription(targetUserId, {
+          isPremium: true,
+          planName: planName || 'Premium',
+          planId: planId || undefined,
+          membershipStatus: 'active',
+        }).catch(() => {});
+      }
     }
     return;
   }

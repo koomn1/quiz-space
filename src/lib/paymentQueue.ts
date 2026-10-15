@@ -29,6 +29,8 @@ export interface PaymentRequestRecord {
 export function normalizePaymentRequest(record: PaymentRequestRecord): PaymentProof & { planPrice?: number | string; paymentMethod?: string } {
   const amount = record.amount ?? record.plan_price ?? record.planPrice ?? '';
   const paymentMethod = record.payment_method || record.paymentMethod || 'request';
+  const rawStatus = (record.status || 'pending').toString().toLowerCase().trim();
+  const normalizedStatus = (['pending', 'approved', 'rejected', 'needs_info'].includes(rawStatus) ? rawStatus : 'pending') as PaymentProof['status'];
   return {
     id: String(record.id || ''),
     userId: String(record.user_id || record.userId || ''),
@@ -39,7 +41,7 @@ export function normalizePaymentRequest(record: PaymentRequestRecord): PaymentPr
     amount,
     method: paymentMethod as PaymentProof['method'],
     paymentMethod,
-    status: (record.status || 'pending') as PaymentProof['status'],
+    status: normalizedStatus,
     submittedAt: String(record.created_at || record.createdAt || ''),
     receiptUrl: record.payment_screenshot || record.paymentScreenshot || record.receiptUrl || '',
     notes: record.notes || undefined,
@@ -47,7 +49,12 @@ export function normalizePaymentRequest(record: PaymentRequestRecord): PaymentPr
 }
 
 export function mapPendingPaymentRequests(records: PaymentRequestRecord[]): PaymentProof[] {
-  return records.filter((record) => record.status === 'pending').map(normalizePaymentRequest);
+  return records
+    .filter((record) => {
+      const s = (record.status || 'pending').toString().toLowerCase().trim();
+      return s === 'pending';
+    })
+    .map(normalizePaymentRequest);
 }
 
 export function mapAllPaymentRequests(records: PaymentRequestRecord[]): (PaymentProof & { rejectReason?: string; updatedAt?: string; email?: string })[] {

@@ -1113,6 +1113,11 @@ export default function App() {
           onNavigateToPayments={() => {
             handleSetTab('admin');
             window.location.hash = '#/admin/subscriptions';
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('quizspace-navigate-admin-tab', {
+                detail: { tab: 'subscriptions', subTab: 'payments' }
+              }));
+            }
           }}
           lang={lang}
         />

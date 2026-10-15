@@ -962,16 +962,31 @@ export default function UserProfile({
         const { error: reqErr } = await supabase.from('premium_requests').insert({
           id: requestId,
           user_id: currentUserId,
-          user_name: profileData?.name || currentUserName || "User",
-          user_email: currentUserEmail || "",
-          plan: "diamond",
+          name: profileData?.name || currentUserName || "User",
+          email: currentUserEmail || "",
+          plan_id: "diamond",
+          plan_name: "Diamond",
+          plan_price: 1500,
           amount: 0,
-          payment_method: "VIP_PROMO_CODE",
-          promo_code: code,
-          receipt_url: "vip-auto-approved",
+          payment_method: "request",
+          payment_screenshot: `VIP_PROMO_CODE_${code}`,
           status: "approved",
           created_at: new Date().toISOString()
         });
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('quizspace-payment-request-submitted', {
+            detail: {
+              id: requestId,
+              name: profileData?.name || currentUserName || "User",
+              email: currentUserEmail || "",
+              planName: "Diamond",
+              amount: 0,
+              paymentMethod: "request",
+              status: "approved",
+            }
+          }));
+        }
 
         // The atomic redemption RPC is the source of truth for activation.
         // Audit-request insertion is best-effort and must not turn a successful

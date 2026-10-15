@@ -59,16 +59,49 @@ import { mapPendingPaymentRequests, mapAllPaymentRequests } from "../lib/payment
 interface AdminSubscriptionsProps {
   lang: "ar" | "en";
   onViewProfile?: (userId: string) => void;
+  initialSubTab?: "users" | "payments" | "plans" | "coupons";
 }
 
 export default function AdminSubscriptions({
   lang,
   onViewProfile,
+  initialSubTab,
 }: AdminSubscriptionsProps) {
   const isAr = lang === "ar";
   const [subTab, setSubTab] = useState<
     "users" | "payments" | "plans" | "coupons"
-  >("users");
+  >(() => {
+    if (initialSubTab) return initialSubTab;
+    if (typeof window !== "undefined" && (window.location.hash.includes("subscriptions") || window.location.hash.includes("payments"))) {
+      return "payments";
+    }
+    return "users";
+  });
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
+
+  useEffect(() => {
+    const handleHash = () => {
+      if (typeof window !== "undefined" && (window.location.hash.includes("subscriptions") || window.location.hash.includes("payments"))) {
+        setSubTab("payments");
+      }
+    };
+    const handleNav = (e: any) => {
+      if (e?.detail?.subTab) {
+        setSubTab(e.detail.subTab);
+      }
+    };
+    window.addEventListener("hashchange", handleHash);
+    window.addEventListener("quizspace-navigate-admin-tab", handleNav);
+    return () => {
+      window.removeEventListener("hashchange", handleHash);
+      window.removeEventListener("quizspace-navigate-admin-tab", handleNav);
+    };
+  }, []);
 
   const [mockUsers, setMockUsers] = useState<UserStats[]>([]);
   const [mockPlans, setMockPlans] = useState<SubscriptionPlan[]>([
@@ -243,8 +276,22 @@ export default function AdminSubscriptions({
       loadRealData();
     };
     window.addEventListener('quizspace-payment-request-submitted', handleNewRequest);
+
+    // Realtime Supabase channel: instantly updates the queue and ledger when any request is submitted
+    const syncChannel = supabase
+      .channel('admin-subscriptions-live-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'premium_requests' },
+        () => {
+          loadRealData();
+        }
+      )
+      .subscribe();
+
     return () => {
       window.removeEventListener('quizspace-payment-request-submitted', handleNewRequest);
+      supabase.removeChannel(syncChannel);
     };
   }, []);
 
@@ -691,7 +738,8 @@ export default function AdminSubscriptions({
   };
 
   const filteredLedger = paymentLedger.filter((item) => {
-    if (ledgerStatusFilter !== 'all' && item.status !== ledgerStatusFilter) return false;
+    const itemStatus = (item.status || '').toLowerCase();
+    if (ledgerStatusFilter !== 'all' && itemStatus !== ledgerStatusFilter.toLowerCase()) return false;
     if (ledgerMethodFilter !== 'all') {
       const m = (item.method || item.paymentMethod || '').toLowerCase();
       if (!m.includes(ledgerMethodFilter.toLowerCase())) return false;
@@ -711,12 +759,12 @@ export default function AdminSubscriptions({
 
   const ledgerStats = {
     total: paymentLedger.length,
-    approved: paymentLedger.filter((p) => p.status === 'approved').length,
-    pending: paymentLedger.filter((p) => p.status === 'pending').length,
-    rejected: paymentLedger.filter((p) => p.status === 'rejected').length,
-    needsInfo: paymentLedger.filter((p) => p.status === 'needs_info').length,
+    approved: paymentLedger.filter((p) => (p.status || '').toLowerCase() === 'approved').length,
+    pending: paymentLedger.filter((p) => (p.status || '').toLowerCase() === 'pending').length,
+    rejected: paymentLedger.filter((p) => (p.status || '').toLowerCase() === 'rejected').length,
+    needsInfo: paymentLedger.filter((p) => (p.status || '').toLowerCase() === 'needs_info').length,
     totalVolumeEGP: paymentLedger
-      .filter((p) => p.status === 'approved')
+      .filter((p) => (p.status || '').toLowerCase() === 'approved')
       .reduce((sum, p) => sum + (typeof p.amount === 'number' ? p.amount : Number(p.amount) || 0), 0),
   };
 
@@ -1163,40 +1211,53 @@ export default function AdminSubscriptions({
               </p>
             </div>
 
-            {/* Segmented Switch: Queue vs Ledger */}
-            <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 self-start sm:self-auto">
-              <button
-                type="button"
-                onClick={() => setPaymentViewMode("queue")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
-                  paymentViewMode === "queue"
-                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                }`}
-              >
-                <Clock className="w-4 h-4 text-amber-500" />
-                <span>{isAr ? "طابور الطلبات المعلقة" : "Pending Queue"}</span>
-                {mockPayments.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
-                    {mockPayments.length}
+            {/* Segmented Switch: Queue vs Ledger & Manual Refresh */}
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setPaymentViewMode("queue")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
+                    paymentViewMode === "queue"
+                      ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  }`}
+                >
+                  <Clock className="w-4 h-4 text-amber-500" />
+                  <span>{isAr ? "طابور الطلبات المعلقة" : "Pending Queue"}</span>
+                  {mockPayments.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
+                      {mockPayments.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentViewMode("ledger")}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
+                    paymentViewMode === "ledger"
+                      ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  }`}
+                >
+                  <FileText className="w-4 h-4 text-purple-500" />
+                  <span>{isAr ? "سجل طلبات الدفع والعمليات" : "Payment Ledger"}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-black">
+                    {paymentLedger.length}
                   </span>
-                )}
-              </button>
+                </button>
+              </div>
 
               <button
                 type="button"
-                onClick={() => setPaymentViewMode("ledger")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
-                  paymentViewMode === "ledger"
-                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                }`}
+                onClick={() => void loadLedgerOnly()}
+                disabled={isLedgerLoading}
+                title={isAr ? "تحديث قائمة وطلبات الدفع الآن" : "Refresh payment records now"}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer disabled:opacity-60"
               >
-                <FileText className="w-4 h-4 text-purple-500" />
-                <span>{isAr ? "سجل طلبات الدفع والعمليات" : "Payment Ledger"}</span>
-                <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-black">
-                  {paymentLedger.length}
-                </span>
+                <RefreshCw className={`w-3.5 h-3.5 text-primary ${isLedgerLoading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{isAr ? "تحديث" : "Refresh"}</span>
               </button>
             </div>
           </div>
