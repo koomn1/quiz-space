@@ -1819,8 +1819,21 @@ export default function AIChat({
   /* File upload handling */
   const handleAttachmentFile = async (file?: File) => {
     if (!file) return;
-    const isImage = file.type.startsWith('image/');
-    const isDocument = file.type === 'application/pdf' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.type === 'application/vnd.ms-excel' || file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' || file.type === 'application/vnd.ms-powerpoint' || file.type === 'text/markdown' || file.type === 'text/plain' || /\.(pdf|docx|doc|xlsx|xls|pptx|ppt|md|txt)$/i.test(file.name);
+    const lowerName = file.name.toLowerCase();
+    const inferredMime = file.type || (
+      lowerName.endsWith('.pdf') ? 'application/pdf' :
+      lowerName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+      lowerName.endsWith('.doc') ? 'application/msword' :
+      lowerName.endsWith('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' :
+      lowerName.endsWith('.xls') ? 'application/vnd.ms-excel' :
+      lowerName.endsWith('.pptx') ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' :
+      lowerName.endsWith('.ppt') ? 'application/vnd.ms-powerpoint' :
+      lowerName.endsWith('.md') ? 'text/markdown' :
+      lowerName.endsWith('.txt') ? 'text/plain' :
+      lowerName.match(/\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i) ? `image/${lowerName.endsWith('.png') ? 'png' : lowerName.endsWith('.webp') ? 'webp' : 'jpeg'}` : ''
+    );
+    const isImage = inferredMime.startsWith('image/');
+    const isDocument = inferredMime === 'application/pdf' || inferredMime.includes('wordprocessingml') || inferredMime === 'application/msword' || inferredMime.includes('spreadsheetml') || inferredMime === 'application/vnd.ms-excel' || inferredMime.includes('presentationml') || inferredMime === 'application/vnd.ms-powerpoint' || inferredMime === 'text/markdown' || inferredMime === 'text/plain' || /\.(pdf|docx|doc|xlsx|xls|pptx|ppt|md|txt)$/i.test(file.name);
 
     if ((!isImage && !isDocument) || file.size > 25 * 1024 * 1024) {
       setLastError(isAr ? 'الملف غير مدعوم أو أكبر من 25 ميجابايت.' : 'Unsupported file or file exceeds 25 MB.');
@@ -1832,8 +1845,7 @@ export default function AIChat({
       const dataUrl = String(event.target?.result || '');
       const comma = dataUrl.indexOf(',');
       if (comma < 0) return;
-      const lowerName = file.name.toLowerCase();
-      const mimeType = file.type || (lowerName.endsWith('.pdf') ? 'application/pdf' : lowerName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : lowerName.endsWith('.doc') ? 'application/msword' : lowerName.endsWith('.xlsx') ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : lowerName.endsWith('.xls') ? 'application/vnd.ms-excel' : lowerName.endsWith('.pptx') ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' : lowerName.endsWith('.ppt') ? 'application/vnd.ms-powerpoint' : lowerName.endsWith('.md') ? 'text/markdown' : 'text/plain');
+      const mimeType = inferredMime || 'application/octet-stream';
 
       const rawBase64 = dataUrl.slice(comma + 1);
 

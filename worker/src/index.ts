@@ -696,64 +696,64 @@ async function renderQuizSharePage(request: Request, env: Env): Promise<Response
   return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'X-Robots-Tag': 'index, follow' } });
 }
 
+function normalizeAttachmentData(value: string): string {
+  const trimmed = value.trim();
+  const comma = trimmed.indexOf(',');
+  return trimmed.startsWith('data:') && comma >= 0 ? trimmed.slice(comma + 1) : trimmed;
+}
+
+function inferAttachmentMime(mimeType: string, fileName: string): string {
+  if (mimeType.trim()) return mimeType.toLowerCase();
+  const name = fileName.toLowerCase();
+  if (name.endsWith('.pdf')) return 'application/pdf';
+  if (name.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  if (name.endsWith('.doc')) return 'application/msword';
+  if (name.endsWith('.xlsx')) return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  if (name.endsWith('.xls')) return 'application/vnd.ms-excel';
+  if (name.endsWith('.pptx')) return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+  if (name.endsWith('.ppt')) return 'application/vnd.ms-powerpoint';
+  if (name.endsWith('.md')) return 'text/markdown';
+  if (name.endsWith('.txt') || name.endsWith('.csv')) return 'text/plain';
+  if (/\.(png|jpe?g|gif|webp|bmp|heic|heif)$/i.test(name)) return name.endsWith('.png') ? 'image/png' : name.endsWith('.webp') ? 'image/webp' : 'image/jpeg';
+  return 'application/octet-stream';
+}
+
 async function buildCosmoUserContent(body: any): Promise<any> {
   const prompt = typeof body.prompt === 'string' ? body.prompt : '';
   const attachment = body.attachment;
-  const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
-  const mimeType = attachment && typeof attachment.mimeType === 'string' ? attachment.mimeType : '';
   const name = attachment && typeof attachment.name === 'string' ? attachment.name : 'attachment';
+  const rawData = attachment && typeof attachment.data === 'string' ? attachment.data : '';
+  const data = normalizeAttachmentData(rawData);
+  const mimeType = inferAttachmentMime(attachment && typeof attachment.mimeType === 'string' ? attachment.mimeType : '', name);
   if (body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') {
-    return [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${body.image.mimeType};base64,${body.image.data}` } }];
+    return [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${body.image.mimeType};base64,${normalizeAttachmentData(body.image.data)}` } }];
   }
   if (data && mimeType.startsWith('image/')) {
     return [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${mimeType};base64,${data}` } }];
   }
-  if (data && mimeType === 'application/pdf') {
+  if (data) {
     try {
       const source = await extractAttachmentText(data, mimeType, name);
       if (source.text.trim()) return `${prompt}\n\n${formatSourceForModel(source)}`;
     } catch (error) {
-      console.warn('Cosmo PDF text extraction failed; preserving provider PDF fallback:', error);
+      console.warn('Cosmo attachment text extraction failed; preserving provider fallback:', error);
     }
-    return [{ type: 'text', text: `${prompt}\n\nاقرأ الملف المرفق نفسه. إذا كان PDF مصوراً استخدم الرؤية/OCR، ولا تقل إن الملف غير متاح إلا إذا رفض المزود المرفق فعلاً.` }, { type: 'file', file: { filename: name, file_data: `data:${mimeType};base64,${data}` } }];
+    if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
+      return [{ type: 'text', text: `${prompt}\n\nاقرأ المرفق فعلياً. هذا الملف قد يكون PDF مصوراً؛ استخدم OCR/الرؤية إن لزم. لا تقل إنك لا تستطيع فتحه إذا كان المرفق موجوداً.` }, { type: 'file', file: { filename: name, file_data: `data:${mimeType};base64,${data}` } }];
+    }
   }
-  if (data && (mimeType.includes('wordprocessingml') || mimeType === 'application/msword')) {
-    try {
-      const bytes = Uint8Array.from(atob(data), char => char.charCodeAt(0));
-      const extracted = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
-      if (extracted.value.trim()) return `${prompt}\n\n${formatSourceForModel({ fileName: name, mimeType, text: extracted.value, characterCount: extracted.value.length, extractionMethod: 'docx', warnings: extracted.messages.length ? [`DOCX parser warnings: ${extracted.messages.length}`] : [] })}`;
-    } catch (error) { console.warn('Cosmo Word attachment extraction failed:', error); }
-  }
-  if (data && (mimeType.includes('spreadsheetml') || mimeType.includes('excel'))) {
-    try {
-      const bytes = Uint8Array.from(atob(data), char => char.charCodeAt(0));
-      const extracted = await extractExcelText(bytes);
-      if (extracted.trim()) return `${prompt}\n\n${formatSourceForModel({ fileName: name, mimeType, text: extracted, characterCount: extracted.length, extractionMethod: 'xlsx', warnings: [] })}`;
-    } catch (error) { console.warn('Cosmo spreadsheet attachment extraction failed:', error); }
-  }
-  if (data && (mimeType.includes('presentationml') || mimeType.includes('powerpoint'))) {
-    try {
-      const bytes = Uint8Array.from(atob(data), char => char.charCodeAt(0));
-      const extracted = await extractPowerPointText(bytes);
-      if (extracted.trim()) return `${prompt}\n\n${formatSourceForModel({ fileName: name, mimeType, text: extracted, characterCount: extracted.length, extractionMethod: 'pptx', warnings: [] })}`;
-    } catch (error) { console.warn('Cosmo PowerPoint attachment extraction failed:', error); }
-  }
-  if (data && (mimeType === 'text/plain' || mimeType === 'text/markdown' || /\.(md|txt)$/i.test(name))) {
-    const decoded = decodeBase64Utf8(data).slice(0, 500_000);
-    return `${prompt}\n\n${formatSourceForModel({ fileName: name, mimeType, text: decoded, characterCount: decoded.length, extractionMethod: 'text', warnings: [] })}`;
-  }
-  return prompt;
+  return data ? `${prompt}\n\nالملف المرفق موجود باسم ${name}، لكن تعذر استخراج نص قابل للقراءة منه.` : prompt;
 }
 
 function hasCosmoAttachment(body: any): boolean {
   const attachment = body.attachment;
-  const data = attachment && typeof attachment.data === 'string' ? attachment.data : '';
-  const mimeType = attachment && typeof attachment.mimeType === 'string' ? attachment.mimeType : '';
+  const data = attachment && typeof attachment.data === 'string' ? normalizeAttachmentData(attachment.data) : '';
+  const mimeType = inferAttachmentMime(attachment && typeof attachment.mimeType === 'string' ? attachment.mimeType : '', attachment && typeof attachment.name === 'string' ? attachment.name : 'attachment');
   // Office, TXT, and Markdown files are extracted into text before the model
   // call, so they should use the fast text chain. Vision is reserved for
   // images and PDFs that may contain scanned pages.
   const needsVision = mimeType.startsWith('image/') || mimeType === 'application/pdf';
-  return Boolean((body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') || (data && mimeType && needsVision && data.length <= 40_000_000));
+  return Boolean((body.image && typeof body.image.data === 'string' && typeof body.image.mimeType === 'string') || (data && needsVision && data.length <= 40_000_000));
 }
 
 async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext): Promise<Response> {
