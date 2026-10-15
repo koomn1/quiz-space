@@ -19,10 +19,9 @@ describe('Cosmo generation recovery contract', () => {
   it('keeps live free-first OpenRouter models as the fallback route', () => {
     expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free'");
     expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
-    expect(workerSource).toContain("'qwen/qwen3.8-27b:free'");
+    expect(workerSource).toContain("'nvidia/nemotron-3-ultra-550b-a55b:free'");
     expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
-    expect(workerSource).toContain("'z-ai/glm-5.3-flash:free'");
-    expect(workerSource).toContain("'qwen/qwen3.8-flash'");
+    expect(workerSource).toContain("'openrouter/free'");
     expect(workerSource).toContain("'openai/gpt-5-mini'");
     expect(workerSource).not.toContain("'google/gemini-2.0-flash-001'");
     expect(workerSource).not.toContain("'openai/gpt-oss-120b:free'");
@@ -30,6 +29,8 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).not.toContain("'openai/gpt-4o-mini'");
     expect(workerSource).not.toContain("'qwen/qwen3.7-flash'");
     expect(workerSource).not.toContain("'google/gemini-2.5-flash'");
+    expect(workerSource).not.toContain("'qwen/qwen3.8-27b:free'");
+    expect(workerSource).not.toContain("'z-ai/glm-5.3-flash:free'");
   });
 
   it('uses the resilient OpenRouter model sequence for quiz generation', () => {

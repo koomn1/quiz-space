@@ -40,15 +40,12 @@ type Provider = 'openrouter';
 const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free';
 const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
 const OPENROUTER_TEXT_FALLBACKS = [
-  'qwen/qwen3.8-27b:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
-  'z-ai/glm-5.3-flash:free',
-  'qwen/qwen3.8-flash',
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'openrouter/free',
 ];
 const OPENROUTER_STREAM_TEXT_MODELS = [
   OPENROUTER_TEXT_MODEL,
-  'qwen/qwen3.8-27b:free',
-  'z-ai/glm-5.3-flash:free',
   'nvidia/nemotron-3-ultra-550b-a55b:free',
   ...OPENROUTER_TEXT_FALLBACKS,
 ];
@@ -63,8 +60,8 @@ const OPENROUTER_STREAM_TEXT_MODELS = [
 // quality-first sequence so one slow provider cannot block every batch.
   const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
     'nvidia/nemotron-3.5-lightning:free',
-    'qwen/qwen3.8-27b:free',
-    'qwen/qwen3.8-flash',
+    'nvidia/nemotron-3-super-120b-a12b:free',
+    'openrouter/free',
     'openai/gpt-5-mini',
   ];
   const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
@@ -1109,8 +1106,8 @@ ${extraInstruction}`;
         'nvidia/nemotron-3-ultra-550b-a55b',
         OPENROUTER_VISION_MODEL,
         'nvidia/nemotron-3-super-120b-a12b:free',
-        'z-ai/glm-5.3-flash:free',
-        'qwen/qwen3.8-flash',
+        'nvidia/nemotron-3-ultra-550b-a55b:free',
+        'openrouter/free',
         'openai/gpt-5-mini',
       ];
       const model = allowedModels.includes(body.model) ? body.model : OPENROUTER_TEXT_MODEL;
