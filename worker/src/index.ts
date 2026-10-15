@@ -858,20 +858,23 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
           return json({ error: 'Invalid generation request' }, 400, headers);
         }
         const baseQuestions = Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : [];
-        let text = await providerText(provider, quizPrompt(body.topic, body.amount, baseQuestions), env);
+        const initialBatchSize = Math.min(body.amount, 25);
+        let text = await providerText(provider, quizPrompt(body.topic, initialBatchSize, baseQuestions), env);
         let result = extractJson(text) as any;
         // Models occasionally stop early and return fewer questions than
-        // requested — retry up to 2 times, asking explicitly for the missing
-        // remainder so the returned quiz honors the requested count.
+        // requested — ask for bounded batches so large requests do not exceed
+        // provider output limits or the Worker request lifetime.
         let missing = Number.isInteger(body.amount) && Array.isArray(result?.questions)
           ? body.amount - result.questions.length : body.amount;
         let retries = 0;
-        while (missing > 0 && retries < 2) {
+        const maxCompletionBatches = Math.ceil(body.amount / 25) + 2;
+        while (missing > 0 && retries < maxCompletionBatches) {
           retries++;
           try {
+            const batchAmount = Math.min(missing, 25);
             const remainder = await providerText('openrouter', quizPrompt(
-              `${body.topic} — أكمل الاختبار السابق بالأسئلة الناقصة فقط دون تكرار، وأجب بعدد ${missing} سؤال بالضبط`,
-              missing,
+              `${body.topic} — أكمل الاختبار السابق بالأسئلة الناقصة فقط دون تكرار، وأجب بعدد ${batchAmount} سؤال بالضبط`,
+              batchAmount,
               [...baseQuestions, ...((result?.questions || []).map((q: any) => String(q.text || '')))].slice(-200)
             ), env);
             const extra = extractJson(remainder) as any;
