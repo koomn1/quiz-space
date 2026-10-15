@@ -1843,12 +1843,12 @@ export async function updatePremiumRequest(
         throw new Error('Unable to approve the subscription request.');
       }
       if (targetUserId) {
-        await updateUserSubscription(targetUserId, {
-          isPremium: true,
-          planName: planName || 'Premium',
-          planId: planId || undefined,
-          membershipStatus: 'active',
-        }).catch(() => {});
+        await updateUserSubscription(
+          targetUserId,
+          true,
+          planName || 'Premium',
+          planId || undefined,
+        ).catch(() => {});
       }
     }
     return;

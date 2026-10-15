@@ -1014,7 +1014,7 @@ function MessageRow({
               {/* Mode badge */}
               {msg.mode && msg.mode !== 'instant' && (() => {
                 const mc = getModeConfig(msg.mode);
-                const ModeIcon = mc.icon;
+                const ModeIcon = mc.icon as React.ComponentType<{ className?: string }>;
                 return (
                   <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border" style={{ background: mc.bgTint, borderColor: mc.borderTint, color: mc.color }}>
                     <ModeIcon className="w-3 h-3" />
@@ -1185,6 +1185,7 @@ export default function AIChat({
   const confirmQuizGenerationRef = useRef<((quiz?: { topic: string; amount: number; difficulty: string }, attachment?: ChatAttachment | null) => Promise<void>) | null>(null);
 
   const [quickSuggestions, setQuickSuggestions] = useState<QuickSuggestion[]>([]);
+  const retryAttachmentRef = useRef<ChatAttachment | null>(null);
   const [activityState, setActivityState] = useState<OrbState>('working');
 
   // Resolve the active mode (auto-detected or manually selected)
@@ -1353,9 +1354,10 @@ export default function AIChat({
   };
 
   /* Send message */
-  const sendMessage = useCallback(async (text?: string) => {
+  const sendMessage = useCallback(async (text?: string, attachmentOverride?: ChatAttachment | null) => {
     const trimmed = (text ?? inputText).trim();
-    if (!trimmed && !selectedAttachment) return;
+    const attachmentForRequest = attachmentOverride || selectedAttachment || selectedAttachmentRef.current;
+    if (!trimmed && !attachmentForRequest) return;
     if (isAnalyzing) return;
 
     const requestedQuiz = parseQuizRequest(trimmed);
@@ -1367,7 +1369,7 @@ export default function AIChat({
       return;
     }
 
-    const attachmentForQuiz = selectedAttachment || selectedAttachmentRef.current;
+    const attachmentForQuiz = attachmentForRequest;
     const requestedFileQuiz = Boolean(attachmentForQuiz && requestedQuiz);
 
     if (requestedQuiz && !pendingQuiz) {
@@ -1412,20 +1414,21 @@ export default function AIChat({
       return;
     }
 
-    const displayText = trimmed || (isAr ? 'مرفق: ' + (selectedAttachment?.name || 'ملف') : 'Attachment: ' + (selectedAttachment?.name || 'file'));
+    retryAttachmentRef.current = attachmentForRequest;
+    const displayText = trimmed || (isAr ? 'مرفق: ' + (attachmentForRequest?.name || 'ملف') : 'Attachment: ' + (attachmentForRequest?.name || 'file'));
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
       text: displayText,
-      image: selectedAttachment?.kind === 'image' ? selectedAttachment.data : undefined,
-      attachmentName: selectedAttachment?.kind === 'file' ? selectedAttachment.name : undefined,
+      image: attachmentForRequest?.kind === 'image' ? attachmentForRequest.data : undefined,
+      attachmentName: attachmentForRequest?.kind === 'file' ? attachmentForRequest.name : undefined,
       attachmentSize: selectedAttachment?.sizeBytes ? formatBytes(selectedAttachment.sizeBytes) : undefined,
       timestamp: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
-    const activeAttachment = selectedAttachment;
+    const activeAttachment = attachmentForRequest;
     selectedAttachmentRef.current = null;
     setSelectedAttachment(null);
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
@@ -1506,7 +1509,7 @@ export default function AIChat({
 
       const abortController = new AbortController();
       streamAbortRef.current = abortController;
-      const modePrompt = getModeSystemPrompt(effectiveMode, isAr);
+      const modePrompt = buildModeInstruction(effectiveMode, isAr);
       const systemInstruction = COSMO_PERSONALITY + modePrompt;
 
       const { text: fullText } = await askAIStream(
@@ -1786,7 +1789,7 @@ export default function AIChat({
     if (!lastUser) return;
     setMessages(prev => prev.filter(m => !(m.role === 'assistant' && !m.text)));
     setInputText('');
-    setTimeout(() => sendMessage(lastUser.text.replace('صورة مرفقة', '').trim()), 50);
+    setTimeout(() => sendMessage(lastUser.text.replace('صورة مرفقة', '').trim(), retryAttachmentRef.current), 50);
   };
 
   const handleConvRename = async (convId: string) => {
@@ -2516,11 +2519,11 @@ export default function AIChat({
 
               {/* Error state */}
               {lastError && !isAnalyzing && (
-                <div className="flex flex-col items-center gap-2 py-4">
+                <div className="flex flex-col items-center gap-2 py-4 px-3">
                   <p className="text-sm text-center max-w-md font-medium text-rose-400">{lastError}</p>
                   <button
                     onClick={isQuizGenerationError ? confirmQuizGeneration : retryLastMessage}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white shadow-md cursor-pointer"
+                    className="flex min-h-11 w-full max-w-xs items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white shadow-md cursor-pointer"
                     style={{ background: ACCENT }}
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -2548,26 +2551,34 @@ export default function AIChat({
 
         {/* Dynamic Quick Suggestions */}
         {quickSuggestions.length > 0 && !isAnalyzing && (
-          <div className="px-4 pt-2 flex-shrink-0" dir={isAr ? 'rtl' : 'ltr'}>
-            <div className="max-w-3xl mx-auto flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap">{isAr ? 'اقتراحات ذكية:' : 'Ideas:'}</span>
+          <div className="min-w-0 shrink-0 px-3 pt-2 sm:px-4" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="mx-auto flex min-w-0 max-w-3xl items-center gap-2 overflow-x-auto overscroll-x-contain pb-1 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <span className="shrink-0 text-[11px] font-bold text-slate-400 whitespace-nowrap">{isAr ? 'اقتراحات سريعة:' : 'Quick ideas:'}</span>
               {quickSuggestions.map(suggestion => (
                 <button
                   key={suggestion.label}
                   onClick={() => sendMessage(suggestion.prompt)}
-                  className="whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition-all hover:scale-105 active:scale-95 cursor-pointer border"
+                  className="min-h-9 shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer border"
                   style={{ color: ACCENT, background: theme.IS_DARK ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.06)', borderColor: 'rgba(99,102,241,0.25)' }}
                 >
                   {suggestion.label}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => openQuizStudio()}
+                className="min-h-9 shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-black transition-all active:scale-95 cursor-pointer border"
+                style={{ color: '#07111f', background: '#CDFC8A', borderColor: '#CDFC8A' }}
+              >
+                {isAr ? 'إنشاء اختبار' : 'Create quiz'}
+              </button>
             </div>
           </div>
         )}
 
         {/* ─── Floating Composer Pill ─── */}
-        <div className="px-4 pb-4 pt-1 flex-shrink-0">
-          <div className="max-w-3xl mx-auto">
+        <div className="shrink-0 px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-1 sm:px-4">
+          <div className="mx-auto max-w-3xl min-w-0">
             {/* Attachment preview chip */}
             {selectedAttachment && (
               <div
@@ -2632,7 +2643,7 @@ export default function AIChat({
                           color: activeMode.color,
                         }}
                       >
-                        <activeMode.icon className="w-3.5 h-3.5" />
+                        {React.createElement(activeMode.icon, { className: 'w-3.5 h-3.5' })}
                         <span className="max-w-[75px] sm:max-w-none truncate">{isAr ? activeMode.labelAr : activeMode.labelEn}</span>
                         <ChevronDown className="w-3 h-3 opacity-60" />
                       </button>
@@ -2667,7 +2678,7 @@ export default function AIChat({
                           <div className="grid grid-cols-2 gap-1.5 max-h-64 overflow-y-auto">
                             {COSMO_MODES.map((mode) => {
                               const isSelected = selectedMode === mode.id;
-                              const ModeIcon = mode.icon;
+                              const ModeIcon = mode.icon as React.ComponentType<{ className?: string }>;
                               return (
                                 <button
                                   key={mode.id}
