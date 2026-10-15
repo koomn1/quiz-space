@@ -858,7 +858,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
           return json({ error: 'Invalid generation request' }, 400, headers);
         }
         const baseQuestions = Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : [];
-        const initialBatchSize = Math.min(body.amount, 25);
+        const initialBatchSize = Math.min(body.amount, 10);
         let text = await providerText(provider, quizPrompt(body.topic, initialBatchSize, baseQuestions), env);
         let result = extractJson(text) as any;
         // Models occasionally stop early and return fewer questions than
@@ -867,11 +867,11 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
         let missing = Number.isInteger(body.amount) && Array.isArray(result?.questions)
           ? body.amount - result.questions.length : body.amount;
         let retries = 0;
-        const maxCompletionBatches = Math.ceil(body.amount / 25) + 2;
+        const maxCompletionBatches = Math.ceil(body.amount / 10) + 3;
         while (missing > 0 && retries < maxCompletionBatches) {
           retries++;
           try {
-            const batchAmount = Math.min(missing, 25);
+            const batchAmount = Math.min(missing, 10);
             const remainder = await providerText('openrouter', quizPrompt(
               `${body.topic} — أكمل الاختبار السابق بالأسئلة الناقصة فقط دون تكرار، وأجب بعدد ${batchAmount} سؤال بالضبط`,
               batchAmount,
