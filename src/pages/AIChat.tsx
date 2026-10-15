@@ -408,24 +408,24 @@ async function generateCosmoQuizInBatches(
 function usePalette(darkMode: boolean) {
   if (darkMode) {
     return {
-      BG: '#080C14',
-      SURFACE: '#0E1424',
-      CARD: '#111827',
-      SIDEBAR: '#070A12',
+      BG: '#070B14',
+      SURFACE: '#111A2B',
+      CARD: '#162238',
+      SIDEBAR: '#0A1020',
       FG: '#F8FAFC',
-      MUTED: '#94A3B8',
-      BORDER: 'rgba(255, 255, 255, 0.08)',
-      BORDER_SOFT: 'rgba(255, 255, 255, 0.04)',
-      HOVER: 'rgba(99, 102, 241, 0.12)',
-      HOVER_SOFT: 'rgba(99, 102, 241, 0.06)',
-      SUBTLE_TEXT: '#64748B',
-      OVERLAY_BG: '#111827',
-      OVERLAY_BACKDROP: 'rgba(7, 11, 20, 0.85)',
-      SEND_IDLE: '#1E293B',
+      MUTED: '#C5D0DF',
+      BORDER: 'rgba(148, 163, 184, 0.28)',
+      BORDER_SOFT: 'rgba(148, 163, 184, 0.16)',
+      HOVER: 'rgba(99, 102, 241, 0.20)',
+      HOVER_SOFT: 'rgba(148, 163, 184, 0.10)',
+      SUBTLE_TEXT: '#9AA8BB',
+      OVERLAY_BG: '#131D30',
+      OVERLAY_BACKDROP: 'rgba(7, 11, 20, 0.90)',
+      SEND_IDLE: '#334155',
       SEND_ACTIVE_FG: '#FFFFFF',
       SCROLL_THUMB: 'rgba(99, 102, 241, 0.22)',
       SCROLL_THUMB_HOVER: 'rgba(99, 102, 241, 0.42)',
-      INPUT_BG: '#10172A',
+      INPUT_BG: '#18253A',
       USER_BUBBLE_BG: 'linear-gradient(135deg, #1E293B 0%, #162032 100%)',
       USER_BUBBLE_BORDER: 'rgba(99, 102, 241, 0.25)',
       IS_DARK: true,
@@ -438,18 +438,18 @@ function usePalette(darkMode: boolean) {
     SIDEBAR: '#F1F5F9',
     FG: '#0F172A',
     MUTED: '#475569',
-    BORDER: 'rgba(15, 23, 42, 0.08)',
-    BORDER_SOFT: 'rgba(15, 23, 42, 0.04)',
-    HOVER: 'rgba(99, 102, 241, 0.08)',
-    HOVER_SOFT: 'rgba(99, 102, 241, 0.04)',
-    SUBTLE_TEXT: '#64748B',
+    BORDER: 'rgba(15, 23, 42, 0.14)',
+    BORDER_SOFT: 'rgba(15, 23, 42, 0.08)',
+    HOVER: 'rgba(99, 102, 241, 0.12)',
+    HOVER_SOFT: 'rgba(15, 23, 42, 0.06)',
+    SUBTLE_TEXT: '#52637A',
     OVERLAY_BG: '#FFFFFF',
     OVERLAY_BACKDROP: 'rgba(248, 250, 252, 0.85)',
     SEND_IDLE: '#E2E8F0',
     SEND_ACTIVE_FG: '#FFFFFF',
     SCROLL_THUMB: 'rgba(99, 102, 241, 0.18)',
     SCROLL_THUMB_HOVER: 'rgba(99, 102, 241, 0.35)',
-    INPUT_BG: '#F8FAFC',
+    INPUT_BG: '#F1F5F9',
     USER_BUBBLE_BG: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
     USER_BUBBLE_BORDER: 'rgba(99, 102, 241, 0.2)',
     IS_DARK: false,
@@ -2710,7 +2710,7 @@ export default function AIChat({
                                     <p className="text-xs font-bold truncate" style={{ color: isSelected ? mode.color : theme.FG }}>
                                       {isAr ? mode.labelAr : mode.labelEn}
                                     </p>
-                                    <p className="text-[10px] leading-tight truncate opacity-60" style={{ color: theme.MUTED }}>
+                                    <p className="text-[10px] leading-tight truncate" style={{ color: theme.MUTED, opacity: 0.88 }}>
                                       {isAr ? mode.descAr : mode.descEn}
                                     </p>
                                   </div>
@@ -2741,8 +2741,8 @@ export default function AIChat({
                       type="button"
                       onClick={() => imageInputRef.current?.click()}
                       title={isAr ? 'إرفاق صورة للتحليل البصري' : 'Attach image'}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer"
-                      style={{ color: theme.MUTED, background: theme.HOVER_SOFT }}
+                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer border"
+                      style={{ color: theme.FG, background: theme.HOVER_SOFT, borderColor: theme.BORDER_SOFT }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER_SOFT}
                     >
@@ -2754,8 +2754,8 @@ export default function AIChat({
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       title={isAr ? 'إرفاق ملف (PDF, Word, Excel, PowerPoint, Text)' : 'Attach file'}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer"
-                      style={{ color: theme.MUTED, background: theme.HOVER_SOFT }}
+                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer border"
+                      style={{ color: theme.FG, background: theme.HOVER_SOFT, borderColor: theme.BORDER_SOFT }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER_SOFT}
                     >
@@ -2771,7 +2771,7 @@ export default function AIChat({
                       style={{
                         background: webSearchEnabled ? 'rgba(6,182,212,0.15)' : theme.HOVER_SOFT,
                         borderColor: webSearchEnabled ? 'rgba(6,182,212,0.4)' : 'transparent',
-                        color: webSearchEnabled ? '#06b6d4' : theme.MUTED
+                        color: webSearchEnabled ? '#06b6d4' : theme.FG
                       }}
                     >
                       <Globe className="w-3.5 h-3.5 text-cyan-400" />
