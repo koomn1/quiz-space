@@ -1107,6 +1107,7 @@ export default function App() {
         <AdminPaymentNotificationToast
           alert={paymentAlert}
           alerts={paymentAlerts}
+          pendingPaymentCount={pendingPaymentCount}
           onDismiss={dismissPaymentAlert}
           onDismissAlert={dismissPaymentAlertById}
           onNavigateToPayments={() => {

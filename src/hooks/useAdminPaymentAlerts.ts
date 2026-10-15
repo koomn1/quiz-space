@@ -17,6 +17,27 @@ interface UseAdminPaymentAlertsOptions {
   onNavigateToPayments?: () => void;
 }
 
+const DISMISSED_ALERTS_KEY = 'quizspace_dismissed_payment_alerts';
+
+function getDismissedAlertIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = sessionStorage.getItem(DISMISSED_ALERTS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function markAlertIdsAsDismissed(ids: string[]) {
+  if (typeof window === 'undefined' || ids.length === 0) return;
+  try {
+    const existing = getDismissedAlertIds();
+    ids.forEach((id) => existing.add(id));
+    sessionStorage.setItem(DISMISSED_ALERTS_KEY, JSON.stringify(Array.from(existing)));
+  } catch {}
+}
+
 export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdminPaymentAlertsOptions) {
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [latestAlert, setLatestAlert] = useState<PaymentAlertInfo | null>(null);
@@ -30,7 +51,8 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
         supabase.from('premium_requests').select('id, name, email, plan_name, plan_price, amount, payment_method, created_at').eq('status', 'pending').order('created_at', { ascending: false }).range(0, 99),
       ]);
       if (error) throw error;
-      const nextAlerts = (data || []).map((record: any) => ({
+      const dismissedIds = getDismissedAlertIds();
+      const allPending = (data || []).map((record: any) => ({
         id: record.id,
         name: record.name || record.email || 'مشترك كوزميك',
         email: record.email || '',
@@ -39,7 +61,8 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
         amount: record.amount ?? undefined,
         paymentMethod: record.payment_method || undefined,
       }));
-      setPendingCount(count ?? nextAlerts.length);
+      setPendingCount(count ?? allPending.length);
+      const nextAlerts = allPending.filter((item) => !dismissedIds.has(item.id));
       setAlerts(nextAlerts);
       setLatestAlert(nextAlerts[0] || null);
     } catch (err) {
@@ -48,6 +71,11 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
   }, [isAdmin]);
 
   const triggerPaymentAlert = useCallback((alert: PaymentAlertInfo) => {
+    const dismissedIds = getDismissedAlertIds();
+    if (dismissedIds.has(alert.id)) {
+      return;
+    }
+
     // 1. Play soft audio chime (respects user interaction and mute settings)
     try {
       playNotificationSound('chime');
@@ -78,10 +106,15 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
   }, [onNavigateToPayments]);
 
   const dismissAlert = useCallback(() => {
+    setAlerts((current) => {
+      markAlertIdsAsDismissed(current.map((item) => item.id));
+      return [];
+    });
     setLatestAlert(null);
   }, []);
 
   const dismissAlertById = useCallback((id: string) => {
+    markAlertIdsAsDismissed([id]);
     setAlerts((previous) => previous.filter((alert) => alert.id !== id));
     setLatestAlert((current) => current?.id === id ? null : current);
   }, []);

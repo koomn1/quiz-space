@@ -15,6 +15,18 @@ import {
   Percent,
   Gift,
   Crown,
+  Search,
+  Filter,
+  Clock,
+  Download,
+  ExternalLink,
+  FileText,
+  RefreshCw,
+  Eye,
+  HelpCircle,
+  ArrowUpRight,
+  CheckCircle2,
+  ChevronRight,
 } from "lucide-react";
 import { UserBadge } from "./UserBadge";
 import { showToast } from "./Toast";
@@ -42,7 +54,7 @@ import {
   updatePremiumRequest,
 } from "../lib/db";
 import { activateDiamondInstitution } from "../lib/institutions";
-import { mapPendingPaymentRequests } from "../lib/paymentQueue";
+import { mapPendingPaymentRequests, mapAllPaymentRequests } from "../lib/paymentQueue";
 
 interface AdminSubscriptionsProps {
   lang: "ar" | "en";
@@ -93,6 +105,13 @@ export default function AdminSubscriptions({
   ]);
   const [mockPayments, setMockPayments] = useState<PaymentProof[]>([]);
   const [paymentLoadError, setPaymentLoadError] = useState<string | null>(null);
+  const [paymentViewMode, setPaymentViewMode] = useState<"queue" | "ledger">("queue");
+  const [paymentLedger, setPaymentLedger] = useState<(PaymentProof & { rejectReason?: string; updatedAt?: string; email?: string })[]>([]);
+  const [isLedgerLoading, setIsLedgerLoading] = useState(false);
+  const [ledgerSearch, setLedgerSearch] = useState("");
+  const [ledgerStatusFilter, setLedgerStatusFilter] = useState<string>("all");
+  const [ledgerMethodFilter, setLedgerMethodFilter] = useState<string>("all");
+  const [inspectingPayment, setInspectingPayment] = useState<(PaymentProof & { rejectReason?: string; updatedAt?: string; email?: string }) | null>(null);
   const [planDraft, setPlanDraft] = useState<SubscriptionPlan>({
     id: '', name: '', nameAr: '', price: 0, currency: 'EGP', durationMonths: 1,
     features: [], badgeStyle: 'pro', badgeColor: '#3b82f6', priorityLevel: 1, isActive: true,
@@ -185,6 +204,34 @@ export default function AdminSubscriptions({
       console.error('Failed to load premium payment requests:', err);
       setMockPayments([]);
       setPaymentLoadError(isAr ? 'تعذر تحميل طلبات الدفع. اضغط إعادة المحاولة.' : 'Unable to load payment requests. Try again.');
+    }
+
+    try {
+      setIsLedgerLoading(true);
+      const allRequests = await getPremiumRequests(undefined, { adminLedger: true });
+      setPaymentLedger(mapAllPaymentRequests(allRequests));
+    } catch (err) {
+      console.warn('Failed to load full payment ledger:', err);
+    } finally {
+      setIsLedgerLoading(false);
+    }
+  };
+
+  const loadLedgerOnly = async () => {
+    setIsLedgerLoading(true);
+    try {
+      const [allRequests, pendingReqs] = await Promise.all([
+        getPremiumRequests(undefined, { adminLedger: true }),
+        getPremiumRequests(undefined, { adminQueue: true }),
+      ]);
+      setPaymentLedger(mapAllPaymentRequests(allRequests));
+      setMockPayments(mapPendingPaymentRequests(pendingReqs));
+      showToast('success', isAr ? 'تم تحديث سجل المدفوعات والطلبات بنجاح' : 'Payment ledger and requests refreshed');
+    } catch (err) {
+      console.error('Error reloading payment ledger:', err);
+      showToast('error', isAr ? 'تعذر تحديث سجل المدفوعات' : 'Unable to refresh payment ledger');
+    } finally {
+      setIsLedgerLoading(false);
     }
   };
 
@@ -524,7 +571,7 @@ export default function AdminSubscriptions({
 
   const approvePayment = async (payId: string) => {
     try {
-      const payInfo = mockPayments.find((p) => p.id === payId);
+      const payInfo = mockPayments.find((p) => p.id === payId) || paymentLedger.find((p) => p.id === payId);
       if (!payInfo) return;
 
       await updatePremiumRequest(
@@ -536,16 +583,18 @@ export default function AdminSubscriptions({
       );
 
       setMockPayments((prev) => prev.filter((p) => p.id !== payId));
-      alert(
-        isAr
-          ? "تم قبول الدفعة وتفعيل الاشتراك"
-          : "Payment approved and subscription activated.",
+      setPaymentLedger((prev) =>
+        prev.map((p) => (p.id === payId ? { ...p, status: 'approved' as const, updatedAt: new Date().toISOString() } : p))
       );
+      if (inspectingPayment?.id === payId) {
+        setInspectingPayment((prev) => prev ? { ...prev, status: 'approved' as const, updatedAt: new Date().toISOString() } : null);
+      }
+      showToast('success', isAr ? "تم قبول الدفعة وتفعيل الاشتراك بنجاح 🚀" : "Payment approved and subscription activated 🚀");
 
       try {
         const { createNotification } = await import("../lib/db");
         await createNotification(
-          isAr ? "ترقية للباقت المتقدمة 🚀" : "Premium Upgrade 🚀",
+          isAr ? "ترقية للباقة المتقدمة 🚀" : "Premium Upgrade 🚀",
           isAr
             ? `انضم مستخدم جديد لباقة ${payInfo.planName}! نتمنى له رحلة ممتعة.`
             : `A user has just upgraded to ${payInfo.planName}! We wish them a great journey.`,
@@ -557,38 +606,118 @@ export default function AdminSubscriptions({
       }
     } catch (err: any) {
       console.error(err);
-      alert(isAr ? "فشل قبول العملية: " + err.message : "Failed to approve: " + err.message);
+      showToast('error', isAr ? "فشل قبول العملية: " + err.message : "Failed to approve: " + err.message);
     }
   };
 
-  const rejectPayment = async (payId: string) => {
+  const rejectPayment = async (payId: string, customReason?: string) => {
     try {
-      const payInfo = mockPayments.find((p) => p.id === payId);
+      const payInfo = mockPayments.find((p) => p.id === payId) || paymentLedger.find((p) => p.id === payId);
       if (!payInfo) return;
 
+      const reason = customReason || (isAr ? "بيانات التحويل غير مطابقة أو الإيصال غير صالح" : "Payment details or receipt invalid");
       const { error } = await supabase.from('premium_requests').update({
         status: 'rejected',
-        updated_at: new Date().toISOString()
+        reject_reason: reason,
+        updated_at: new Date().toISOString(),
       }).eq('id', payId);
 
       if (!error) {
         setMockPayments((prev) => prev.filter((p) => p.id !== payId));
-        alert(isAr ? "تم رفض الدفعة" : "Payment rejected.");
+        setPaymentLedger((prev) =>
+          prev.map((p) => (p.id === payId ? { ...p, status: 'rejected' as const, rejectReason: reason, updatedAt: new Date().toISOString() } : p))
+        );
+        if (inspectingPayment?.id === payId) {
+          setInspectingPayment((prev) => prev ? { ...prev, status: 'rejected' as const, rejectReason: reason, updatedAt: new Date().toISOString() } : null);
+        }
+        showToast('info', isAr ? "تم رفض الطلب وتحديث السجل." : "Payment marked as rejected.");
       }
     } catch (err) {
       console.error(err);
+      showToast('error', isAr ? "تعذر تحديث حالة الرفض" : "Failed to reject payment");
     }
   };
 
   const requestPaymentInfo = async (payId: string) => {
     try {
-      const { error } = await supabase.from('premium_requests').update({ status: 'needs_info', updated_at: new Date().toISOString() }).eq('id', payId);
+      const { error } = await supabase.from('premium_requests').update({
+        status: 'needs_info',
+        updated_at: new Date().toISOString(),
+      }).eq('id', payId);
       if (error) throw error;
       setMockPayments((prev) => prev.filter((p) => p.id !== payId));
+      setPaymentLedger((prev) =>
+        prev.map((p) => (p.id === payId ? { ...p, status: 'needs_info' as const, updatedAt: new Date().toISOString() } : p))
+      );
+      if (inspectingPayment?.id === payId) {
+        setInspectingPayment((prev) => prev ? { ...prev, status: 'needs_info' as const, updatedAt: new Date().toISOString() } : null);
+      }
       showToast('success', isAr ? 'تم تحويل الطلب إلى يحتاج معلومات.' : 'Payment marked as needing more information.');
     } catch (error: any) {
       showToast('error', error?.message || (isAr ? 'تعذر تحديث حالة الدفع.' : 'Unable to update payment status.'));
     }
+  };
+
+  const exportLedgerToCSV = () => {
+    if (paymentLedger.length === 0) {
+      showToast('info', isAr ? 'لا توجد بيانات لتصديرها' : 'No records to export');
+      return;
+    }
+    const headers = ['ID', 'User Name', 'User ID', 'Email', 'Plan', 'Amount', 'Payment Method', 'Status', 'Submitted At', 'Updated At', 'Reject Reason'];
+    const rows = filteredLedger.map((item) => [
+      item.id,
+      `"${(item.userName || '').replace(/"/g, '""')}"`,
+      item.userId,
+      item.email || '',
+      `"${(item.planName || '').replace(/"/g, '""')}"`,
+      item.amount || '',
+      item.method || item.paymentMethod || '',
+      item.status,
+      item.submittedAt || '',
+      item.updatedAt || '',
+      `"${(item.rejectReason || item.notes || '').replace(/"/g, '""')}"`,
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `quizspace-payment-ledger-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('success', isAr ? 'تم تصدير سجل المدفوعات بنجاح' : 'Payment ledger exported successfully');
+  };
+
+  const filteredLedger = paymentLedger.filter((item) => {
+    if (ledgerStatusFilter !== 'all' && item.status !== ledgerStatusFilter) return false;
+    if (ledgerMethodFilter !== 'all') {
+      const m = (item.method || item.paymentMethod || '').toLowerCase();
+      if (!m.includes(ledgerMethodFilter.toLowerCase())) return false;
+    }
+    if (ledgerSearch.trim()) {
+      const q = ledgerSearch.toLowerCase().trim();
+      const matchName = (item.userName || '').toLowerCase().includes(q);
+      const matchEmail = (item.email || '').toLowerCase().includes(q);
+      const matchUserId = (item.userId || '').toLowerCase().includes(q);
+      const matchPlan = (item.planName || '').toLowerCase().includes(q);
+      const matchMethod = (item.method || item.paymentMethod || '').toLowerCase().includes(q);
+      const matchNotes = (item.notes || item.rejectReason || '').toLowerCase().includes(q);
+      if (!matchName && !matchEmail && !matchUserId && !matchPlan && !matchMethod && !matchNotes) return false;
+    }
+    return true;
+  });
+
+  const ledgerStats = {
+    total: paymentLedger.length,
+    approved: paymentLedger.filter((p) => p.status === 'approved').length,
+    pending: paymentLedger.filter((p) => p.status === 'pending').length,
+    rejected: paymentLedger.filter((p) => p.status === 'rejected').length,
+    needsInfo: paymentLedger.filter((p) => p.status === 'needs_info').length,
+    totalVolumeEGP: paymentLedger
+      .filter((p) => p.status === 'approved')
+      .reduce((sum, p) => sum + (typeof p.amount === 'number' ? p.amount : Number(p.amount) || 0), 0),
   };
 
   const openNewPlan = () => {
@@ -644,9 +773,14 @@ export default function AdminSubscriptions({
         <button
           type="button"
           onClick={() => setSubTab("payments")}
-          className={`min-h-11 rounded-xl px-3 py-2 text-center text-xs font-black transition-colors sm:px-4 sm:text-sm ${subTab === "payments" ? "bg-primary text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"}`}
+          className={`min-h-11 rounded-xl px-3 py-2 text-center text-xs font-black transition-colors sm:px-4 sm:text-sm flex items-center justify-center gap-1.5 ${subTab === "payments" ? "bg-primary text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"}`}
         >
-          {isAr ? "مراجعة المدفوعات" : "Payment Reviews"}
+          <span>{isAr ? "طلبات وسجل المدفوعات" : "Payments & Ledger"}</span>
+          {mockPayments.length > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] animate-pulse">
+              {mockPayments.length}
+            </span>
+          )}
         </button>
         <button
           type="button"
@@ -1015,120 +1149,790 @@ export default function AdminSubscriptions({
       {/* Payments Tab */}
       {subTab === "payments" && (
         <div className="space-y-6">
-          {paymentLoadError ? (
-            <div className="rounded-2xl border border-rose-300/50 bg-rose-500/10 p-5 text-sm text-rose-700 dark:text-rose-300">
-              <p className="font-bold">{paymentLoadError}</p>
+          {/* Top Sub-Navigation Header */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200/70 pb-4 dark:border-slate-800">
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-amber-500" />
+                <span>{isAr ? "إدارة ومراجعة طلبات الدفع والاشتراكات" : "Payment Operations & Ledger"}</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {isAr
+                  ? "مراجعة وتفعيل إيصالات المشتركين أو تصفح السجل الكامل لكافة المعاملات المالية السابقة."
+                  : "Review pending subscriber receipts or browse the complete historical ledger of all payment requests."}
+              </p>
+            </div>
+
+            {/* Segmented Switch: Queue vs Ledger */}
+            <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 self-start sm:self-auto">
               <button
                 type="button"
-                onClick={() => void loadRealData()}
-                className="mt-3 min-h-11 rounded-xl bg-rose-600 px-4 py-2 font-bold text-white transition hover:bg-rose-700"
+                onClick={() => setPaymentViewMode("queue")}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
+                  paymentViewMode === "queue"
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
               >
-                {isAr ? "إعادة المحاولة" : "Retry"}
+                <Clock className="w-4 h-4 text-amber-500" />
+                <span>{isAr ? "طابور الطلبات المعلقة" : "Pending Queue"}</span>
+                {mockPayments.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
+                    {mockPayments.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPaymentViewMode("ledger")}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all ${
+                  paymentViewMode === "ledger"
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-white"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
+              >
+                <FileText className="w-4 h-4 text-purple-500" />
+                <span>{isAr ? "سجل طلبات الدفع والعمليات" : "Payment Ledger"}</span>
+                <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-black">
+                  {paymentLedger.length}
+                </span>
               </button>
             </div>
-          ) : mockPayments.length === 0 ? (
-            <p className="text-slate-500 text-sm">
-              {isAr ? "لا توجد مدفوعات معلقة" : "No pending payments"}
-            </p>
-          ) : (
-            <div className="max-h-[calc(100vh-13rem)] overflow-y-auto overscroll-contain pr-1 sm:pr-2">
-              <div className="mb-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300">
-                {isAr ? `يتم عرض ${mockPayments.length} طلب دفع معلق — مرّر لرؤية القائمة كاملة.` : `${mockPayments.length} pending payment requests — scroll to review the full queue.`}
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {mockPayments.map((pay, idx) => (
-                <div
-                  key={pay.id || idx}
-                    className="glass-panel overflow-hidden rounded-2xl border border-slate-200/50 p-4 dark:border-slate-700/50 sm:p-5"
+          </div>
+
+          {/* VIEW MODE 1: PENDING QUEUE */}
+          {paymentViewMode === "queue" && (
+            <div className="space-y-4">
+              {paymentLoadError ? (
+                <div className="rounded-2xl border border-rose-300/50 bg-rose-500/10 p-5 text-sm text-rose-700 dark:text-rose-300">
+                  <p className="font-bold">{paymentLoadError}</p>
+                  <button
+                    type="button"
+                    onClick={() => void loadRealData()}
+                    className="mt-3 min-h-11 rounded-xl bg-rose-600 px-4 py-2 font-bold text-white transition hover:bg-rose-700"
                   >
-                  <div className="mb-4 flex flex-col gap-3 border-b border-slate-200/70 pb-4 dark:border-slate-700/60 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      <h4 className="truncate text-base font-black text-slate-900 dark:text-white sm:text-lg">{pay.userName}</h4>
-                      <p className="mt-1 truncate text-[11px] text-slate-500">{pay.userId || (isAr ? 'مستخدم' : 'User')}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-1 sm:shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => approvePayment(pay.id)}
-                      aria-label={isAr ? "قبول وتفعيل" : "Approve and activate"}
-                      title={isAr ? "قبول وتفعيل" : "Approve & Activate"}
-                      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-emerald-500 transition-colors hover:bg-emerald-500/10"
-                    >
-                      <CheckCircle className="w-5 h-5" />
-                      <span className="hidden text-[11px] font-black sm:inline">{isAr ? 'اعتماد' : 'Approve'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => requestPaymentInfo(pay.id)}
-                      aria-label={isAr ? "طلب المزيد من المعلومات" : "Request more information"}
-                      title={isAr ? "طلب المزيد من المعلومات" : "Request Info"}
-                      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-amber-500 transition-colors hover:bg-amber-500/10"
-                    >
-                      <Edit2 className="w-5 h-5" />
-                      <span className="hidden text-[11px] font-black sm:inline">{isAr ? 'معلومات' : 'Info'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => rejectPayment(pay.id)}
-                      aria-label={isAr ? "رفض الدفع" : "Reject payment"}
-                      title={isAr ? "رفض" : "Reject"}
-                      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-red-500 transition-colors hover:bg-red-500/10"
-                    >
-                      <XCircle className="w-5 h-5" />
-                      <span className="hidden text-[11px] font-black sm:inline">{isAr ? 'رفض' : 'Reject'}</span>
-                    </button>
-                    </div>
+                    {isAr ? "إعادة المحاولة" : "Retry"}
+                  </button>
+                </div>
+              ) : mockPayments.length === 0 ? (
+                <div className="glass-panel rounded-3xl border border-slate-200/60 dark:border-slate-800 p-8 text-center space-y-4">
+                  <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 text-emerald-500 mx-auto flex items-center justify-center">
+                    <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
-                    <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
-                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'الخطة' : 'Plan'}</span>
-                      <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">
-                      {pay.planName}
-                      </span>
-                    </div>
-                    <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
-                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'طريقة الدفع' : 'Payment method'}</span>
-                      <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">
-                        {pay.method === 'instapay' ? 'InstaPay' : pay.method === 'vodafone' || pay.method === 'vodafone_cash' ? 'Vodafone Cash' : pay.method === 'bank_transfer' ? (isAr ? 'تحويل بنكي' : 'Bank transfer') : (isAr ? 'غير محددة' : 'Not specified')}
-                      </span>
-                    </div>
-                    <div className="col-span-2 rounded-xl bg-emerald-500/10 p-3 sm:col-span-1">
-                      <span className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{isAr ? 'المبلغ' : 'Amount'}</span>
-                      <span className="mt-1 block text-xl font-black text-emerald-600">{typeof pay.amount === 'number' ? pay.amount.toLocaleString(isAr ? 'ar-EG' : 'en-US') : pay.amount || '—'} <span className="text-xs">{isAr ? 'ج.م' : 'EGP'}</span></span>
-                    </div>
+                  <div className="max-w-md mx-auto space-y-1">
+                    <h4 className="text-base font-black text-slate-900 dark:text-white">
+                      {isAr ? "لا توجد طلبات دفع معلقة حالياً" : "No pending payment requests"}
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                      {isAr
+                        ? "رائع! تم اعتماد ومراجعة جميع طلبات الدفع المرسلة. يمكنك الانتقال إلى السجل للاطلاع على العمليات المعتمدة السابقة."
+                        : "All caught up! All submitted payment requests have been reviewed. You can browse the payment ledger to review past records."}
+                    </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200/70 bg-slate-100/40 p-3 dark:border-slate-700/70 dark:bg-slate-900/40">
-                    <p className="mb-2 text-[11px] font-black text-slate-500">{isAr ? 'إيصال الدفع' : 'Payment receipt'}</p>
-                    {pay.receiptUrl ? (
-                      pay.receiptUrl.startsWith('data:image') ? (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentViewMode("ledger")}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-black text-xs shadow-md hover:opacity-95 transition-all"
+                  >
+                    <span>{isAr ? "عرض سجل جميع العمليات" : "View Complete Ledger"}</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="max-h-[calc(100vh-13rem)] overflow-y-auto overscroll-contain pr-1 sm:pr-2">
+                  <div className="mb-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-between">
+                    <span>
+                      {isAr
+                        ? `يتم عرض ${mockPayments.length} طلب دفع معلق — مرّر لرؤية القائمة كاملة.`
+                        : `${mockPayments.length} pending payment requests — scroll to review the full queue.`}
+                    </span>
+                    <span className="text-[11px] text-primary underline cursor-pointer" onClick={() => setPaymentViewMode("ledger")}>
+                      {isAr ? "فتح السجل الكامل" : "Open Full Ledger"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {mockPayments.map((pay, idx) => (
+                      <div
+                        key={pay.id || idx}
+                        className="glass-panel overflow-hidden rounded-2xl border border-slate-200/50 p-4 dark:border-slate-700/50 sm:p-5"
+                      >
+                        <div className="mb-4 flex flex-col gap-3 border-b border-slate-200/70 pb-4 dark:border-slate-700/60 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <h4 className="truncate text-base font-black text-slate-900 dark:text-white sm:text-lg">
+                              {pay.userName}
+                            </h4>
+                            <p className="mt-1 truncate text-[11px] text-slate-500">
+                              {pay.userId || (isAr ? "مستخدم" : "User")}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-1 sm:shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => approvePayment(pay.id)}
+                              aria-label={isAr ? "قبول وتفعيل" : "Approve and activate"}
+                              title={isAr ? "قبول وتفعيل" : "Approve & Activate"}
+                              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-emerald-500 transition-colors hover:bg-emerald-500/10 cursor-pointer"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                              <span className="hidden text-[11px] font-black sm:inline">
+                                {isAr ? "اعتماد" : "Approve"}
+                              </span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => requestPaymentInfo(pay.id)}
+                              aria-label={isAr ? "طلب المزيد من المعلومات" : "Request more information"}
+                              title={isAr ? "طلب المزيد من المعلومات" : "Request Info"}
+                              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-amber-500 transition-colors hover:bg-amber-500/10 cursor-pointer"
+                            >
+                              <Edit2 className="w-5 h-5" />
+                              <span className="hidden text-[11px] font-black sm:inline">
+                                {isAr ? "معلومات" : "Info"}
+                              </span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => rejectPayment(pay.id)}
+                              aria-label={isAr ? "رفض الدفع" : "Reject payment"}
+                              title={isAr ? "رفض" : "Reject"}
+                              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-red-500 transition-colors hover:bg-red-500/10 cursor-pointer"
+                            >
+                              <XCircle className="w-5 h-5" />
+                              <span className="hidden text-[11px] font-black sm:inline">
+                                {isAr ? "رفض" : "Reject"}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+                          <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
+                            <span className="block text-[10px] font-bold text-slate-500">{isAr ? "الخطة" : "Plan"}</span>
+                            <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">
+                              {pay.planName}
+                            </span>
+                          </div>
+                          <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
+                            <span className="block text-[10px] font-bold text-slate-500">
+                              {isAr ? "طريقة الدفع" : "Payment method"}
+                            </span>
+                            <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">
+                              {pay.method === "instapay"
+                                ? "InstaPay"
+                                : pay.method === "vodafone" || pay.method === "vodafone_cash"
+                                ? "Vodafone Cash"
+                                : pay.method === "bank_transfer"
+                                ? isAr
+                                  ? "تحويل بنكي"
+                                  : "Bank transfer"
+                                : isAr
+                                ? "غير محددة"
+                                : "Not specified"}
+                            </span>
+                          </div>
+                          <div className="col-span-2 rounded-xl bg-emerald-500/10 p-3 sm:col-span-1">
+                            <span className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                              {isAr ? "المبلغ" : "Amount"}
+                            </span>
+                            <span className="mt-1 block text-xl font-black text-emerald-600">
+                              {typeof pay.amount === "number"
+                                ? pay.amount.toLocaleString(isAr ? "ar-EG" : "en-US")
+                                : pay.amount || "—"}{" "}
+                              <span className="text-xs">{isAr ? "ج.م" : "EGP"}</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-200/70 bg-slate-100/40 p-3 dark:border-slate-700/70 dark:bg-slate-900/40">
+                          <div className="mb-2 flex items-center justify-between">
+                            <p className="text-[11px] font-black text-slate-500">{isAr ? "إيصال الدفع" : "Payment receipt"}</p>
+                            {pay.receiptUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setInspectingPayment(pay as any)}
+                                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>{isAr ? "تكبير وفحص" : "Inspect"}</span>
+                              </button>
+                            )}
+                          </div>
+                          {pay.receiptUrl ? (
+                            pay.receiptUrl.startsWith("data:image") ? (
+                              <img
+                                src={pay.receiptUrl}
+                                alt={isAr ? "إيصال الدفع" : "Payment receipt"}
+                                onClick={() => setInspectingPayment(pay as any)}
+                                className="h-auto max-h-72 w-full rounded-xl border border-slate-200 bg-white object-contain p-1 dark:border-slate-700 dark:bg-slate-950 cursor-pointer hover:opacity-95 transition-opacity"
+                              />
+                            ) : (
+                              <a
+                                href={pay.receiptUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex min-h-11 items-center rounded-xl bg-blue-500/10 px-3 text-xs font-bold text-blue-500 underline"
+                              >
+                                {isAr ? "عرض الإيصال / التفاصيل" : "View Receipt / Details"}
+                              </a>
+                            )
+                          ) : (
+                            <span className="text-xs text-slate-500 italic">
+                              {isAr ? "لا يوجد ايصال مرفق" : "No receipt attached"}
+                            </span>
+                          )}
+                          {pay.notes && (
+                            <p className="mt-3 rounded-xl bg-amber-500/10 p-3 text-xs leading-5 text-slate-700 dark:text-slate-200">
+                              <strong>{isAr ? "ملاحظات: " : "Notes: "}</strong>
+                              {pay.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* VIEW MODE 2: COMPLETE PAYMENT REQUESTS LEDGER */}
+          {paymentViewMode === "ledger" && (
+            <div className="space-y-6">
+              {/* Summary Metrics Ribbon */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="glass-panel rounded-2xl border border-slate-200/70 p-4 dark:border-slate-800">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span className="text-xs font-bold">{isAr ? "إجمالي العمليات" : "Total Requests"}</span>
+                    <FileText className="w-4 h-4 text-purple-500" />
+                  </div>
+                  <p className="mt-2 text-2xl font-black text-slate-900 dark:text-white">
+                    {ledgerStats.total}
+                  </p>
+                </div>
+
+                <div className="glass-panel rounded-2xl border border-slate-200/70 p-4 dark:border-slate-800">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span className="text-xs font-bold">{isAr ? "المعتمدة والمفعلة" : "Approved"}</span>
+                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                    {ledgerStats.approved}
+                  </p>
+                </div>
+
+                <div className="glass-panel rounded-2xl border border-slate-200/70 p-4 dark:border-slate-800">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span className="text-xs font-bold">{isAr ? "قيد الانتظار" : "Pending"}</span>
+                    <Clock className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <p className="mt-2 text-2xl font-black text-amber-500">
+                    {ledgerStats.pending}
+                  </p>
+                </div>
+
+                <div className="glass-panel rounded-2xl border border-slate-200/70 p-4 dark:border-slate-800">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <span className="text-xs font-bold">{isAr ? "إجمالي الإيرادات" : "Total Volume"}</span>
+                    <Crown className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <p className="mt-2 text-xl font-black text-slate-900 dark:text-white truncate">
+                    {ledgerStats.totalVolumeEGP.toLocaleString(isAr ? "ar-EG" : "en-US")}{" "}
+                    <span className="text-xs text-slate-400 font-bold">{isAr ? "ج.م" : "EGP"}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Ledger Controls & Filters */}
+              <div className="glass-panel rounded-3xl border border-slate-200/70 p-4 sm:p-5 dark:border-slate-800 space-y-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  {/* Search Input */}
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={ledgerSearch}
+                      onChange={(e) => setLedgerSearch(e.target.value)}
+                      placeholder={isAr ? "بحث بالاسم، البريد، الباقة، طريقة الدفع..." : "Search by name, email, plan, method..."}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-10 pl-4 py-2.5 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    {ledgerSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setLedgerSearch("")}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Actions & Filters */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Method Filter */}
+                    <select
+                      value={ledgerMethodFilter}
+                      onChange={(e) => setLedgerMethodFilter(e.target.value)}
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="all">{isAr ? "جميع طرق الدفع" : "All Methods"}</option>
+                      <option value="instapay">InstaPay</option>
+                      <option value="vodafone">Vodafone Cash</option>
+                      <option value="bank">Bank Transfer</option>
+                    </select>
+
+                    {/* Reload Button */}
+                    <button
+                      type="button"
+                      onClick={() => void loadLedgerOnly()}
+                      disabled={isLedgerLoading}
+                      title={isAr ? "تحديث السجل" : "Refresh ledger"}
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isLedgerLoading ? "animate-spin text-primary" : ""}`} />
+                    </button>
+
+                    {/* CSV Export Button */}
+                    <button
+                      type="button"
+                      onClick={exportLedgerToCSV}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-black text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                    >
+                      <Download className="w-4 h-4 text-primary" />
+                      <span>{isAr ? "تصدير CSV" : "Export CSV"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Status Chips */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                  {[
+                    { id: "all", label: isAr ? "الكل" : "All", count: paymentLedger.length },
+                    { id: "pending", label: isAr ? "قيد الانتظار" : "Pending", count: ledgerStats.pending, color: "text-amber-500" },
+                    { id: "approved", label: isAr ? "معتمد ومفعل" : "Approved", count: ledgerStats.approved, color: "text-emerald-500" },
+                    { id: "rejected", label: isAr ? "مرفوض" : "Rejected", count: ledgerStats.rejected, color: "text-rose-500" },
+                    { id: "needs_info", label: isAr ? "يحتاج معلومات" : "Needs Info", count: ledgerStats.needsInfo, color: "text-purple-500" },
+                  ].map((chip) => (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      onClick={() => setLedgerStatusFilter(chip.id)}
+                      className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                        ledgerStatusFilter === chip.id
+                          ? "bg-primary text-white shadow-sm"
+                          : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      <span>{chip.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                        ledgerStatusFilter === chip.id ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                      }`}>
+                        {chip.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ledger Records Table & Responsive Cards */}
+              {isLedgerLoading ? (
+                <div className="glass-panel p-12 text-center rounded-3xl border border-slate-200/70 dark:border-slate-800 space-y-3">
+                  <RefreshCw className="w-8 h-8 text-primary animate-spin mx-auto" />
+                  <p className="text-xs text-slate-500 font-bold">{isAr ? "جاري تحميل سجل المدفوعات..." : "Loading payment ledger..."}</p>
+                </div>
+              ) : filteredLedger.length === 0 ? (
+                <div className="glass-panel p-10 text-center rounded-3xl border border-slate-200/70 dark:border-slate-800 space-y-2">
+                  <FileText className="w-8 h-8 text-slate-400 mx-auto" />
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                    {isAr ? "لا توجد نتائج مطابقة لبحثك" : "No matching payment records"}
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    {isAr ? "جرّب تغيير فلاتر الحالة أو مسح عبارة البحث." : "Try adjusting your search criteria or resetting filters."}
+                  </p>
+                </div>
+              ) : (
+                <div className="glass-panel overflow-hidden rounded-3xl border border-slate-200/70 dark:border-slate-800 shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-right text-xs" style={{ direction: isAr ? "rtl" : "ltr", textAlign: isAr ? "right" : "left" }}>
+                      <thead>
+                        <tr className="border-b border-slate-200/80 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/60 text-slate-500 font-black">
+                          <th className="py-3 px-4">{isAr ? "المشترك" : "Subscriber"}</th>
+                          <th className="py-3 px-4">{isAr ? "الباقة" : "Plan"}</th>
+                          <th className="py-3 px-4">{isAr ? "المبلغ" : "Amount"}</th>
+                          <th className="py-3 px-4">{isAr ? "طريقة الدفع" : "Method"}</th>
+                          <th className="py-3 px-4">{isAr ? "الحالة" : "Status"}</th>
+                          <th className="py-3 px-4">{isAr ? "التاريخ" : "Date"}</th>
+                          <th className="py-3 px-4">{isAr ? "الإيصال" : "Receipt"}</th>
+                          <th className="py-3 px-4 text-center">{isAr ? "إجراءات" : "Actions"}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {filteredLedger.map((item) => (
+                          <tr key={item.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition-colors">
+                            {/* Subscriber Info */}
+                            <td className="py-3 px-4 min-w-[180px]">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                                  {(item.userName || "U").charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                  <strong className="block truncate text-slate-900 dark:text-white font-black">
+                                    {item.userName}
+                                  </strong>
+                                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                    <span className="truncate max-w-[130px]">{item.email || item.userId}</span>
+                                    {onViewProfile && item.userId && (
+                                      <button
+                                        type="button"
+                                        onClick={() => onViewProfile(item.userId)}
+                                        className="text-primary hover:underline"
+                                        title={isAr ? "عرض الملف" : "View profile"}
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Plan Name */}
+                            <td className="py-3 px-4 whitespace-nowrap font-bold text-slate-800 dark:text-slate-200">
+                              <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-black border border-slate-200/50 dark:border-slate-700/50">
+                                {item.planName}
+                              </span>
+                            </td>
+
+                            {/* Amount */}
+                            <td className="py-3 px-4 whitespace-nowrap font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                              {typeof item.amount === "number"
+                                ? item.amount.toLocaleString(isAr ? "ar-EG" : "en-US")
+                                : item.amount || "—"}{" "}
+                              <span className="text-[10px] font-bold text-slate-400">{isAr ? "ج.م" : "EGP"}</span>
+                            </td>
+
+                            {/* Payment Method */}
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              {item.method === "instapay" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
+                                  InstaPay
+                                </span>
+                              ) : item.method === "vodafone" || item.method === "vodafone_cash" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-500/20">
+                                  Vodafone Cash
+                                </span>
+                              ) : item.method === "bank_transfer" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20">
+                                  {isAr ? "تحويل بنكي" : "Bank Transfer"}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-500/10 text-slate-600 dark:text-slate-400">
+                                  {item.paymentMethod || item.method || "—"}
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Status Pill */}
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              {item.status === "approved" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                  <CheckCircle className="w-3 h-3" />
+                                  <span>{isAr ? "معتمد ومفعل" : "Approved"}</span>
+                                </span>
+                              ) : item.status === "pending" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                  <Clock className="w-3 h-3 animate-spin" style={{ animationDuration: "6s" }} />
+                                  <span>{isAr ? "قيد الانتظار" : "Pending"}</span>
+                                </span>
+                              ) : item.status === "rejected" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                                  <XCircle className="w-3 h-3" />
+                                  <span>{isAr ? "مرفوض" : "Rejected"}</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                                  <HelpCircle className="w-3 h-3" />
+                                  <span>{isAr ? "يحتاج معلومات" : "Needs Info"}</span>
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Date */}
+                            <td className="py-3 px-4 whitespace-nowrap text-[11px] text-slate-500">
+                              {item.submittedAt ? (
+                                <div>
+                                  <span className="block font-bold text-slate-700 dark:text-slate-300">
+                                    {new Date(item.submittedAt).toLocaleDateString(isAr ? "ar-EG" : "en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    })}
+                                  </span>
+                                  <span className="block text-[10px] text-slate-400">
+                                    {new Date(item.submittedAt).toLocaleTimeString(isAr ? "ar-EG" : "en-US", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
+                                </div>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+
+                            {/* Receipt Thumbnail */}
+                            <td className="py-3 px-4 whitespace-nowrap">
+                              {item.receiptUrl ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectingPayment(item)}
+                                  className="group relative w-10 h-10 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                                  title={isAr ? "عرض الإيصال" : "View receipt"}
+                                >
+                                  {item.receiptUrl.startsWith("data:image") ? (
+                                    <img
+                                      src={item.receiptUrl}
+                                      alt="Receipt"
+                                      className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                                    />
+                                  ) : (
+                                    <FileText className="w-4 h-4 text-primary" />
+                                  )}
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 italic">
+                                  {isAr ? "بدون إيصال" : "No receipt"}
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-3 px-4 whitespace-nowrap text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectingPayment(item)}
+                                  title={isAr ? "عرض التفاصيل الكاملة" : "View details"}
+                                  className="p-1.5 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                {item.status !== "approved" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => approvePayment(item.id)}
+                                    title={isAr ? "اعتماد وتفعيل الاشتراك" : "Approve & Activate"}
+                                    className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                                  >
+                                    <CheckCircle className="w-4 h-4" />
+                                  </button>
+                                )}
+                                {item.status === "pending" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => rejectPayment(item.id)}
+                                    title={isAr ? "رفض الطلب" : "Reject"}
+                                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* LIGHTBOX / RECEIPT INSPECTION MODAL */}
+          {inspectingPayment && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              onClick={() => setInspectingPayment(null)}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="relative max-w-2xl w-full rounded-3xl border border-slate-700/80 bg-slate-900 text-white p-6 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col space-y-4"
+                style={{ direction: isAr ? "rtl" : "ltr", textAlign: isAr ? "right" : "left" }}
+              >
+                {/* Modal Header */}
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div>
+                    <h3 className="text-base font-black text-white flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-amber-400" />
+                      <span>{isAr ? "تفاصيل إيصال الدفع والطلب" : "Payment Proof & Request Details"}</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {isAr ? `معرف العملية: ${inspectingPayment.id}` : `Request ID: ${inspectingPayment.id}`}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setInspectingPayment(null)}
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="overflow-y-auto space-y-4 pr-1">
+                  {/* Receipt Image */}
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-center">
+                    {inspectingPayment.receiptUrl ? (
+                      inspectingPayment.receiptUrl.startsWith("data:image") ? (
                         <img
-                          src={pay.receiptUrl}
-                          alt={isAr ? 'إيصال الدفع' : 'Payment receipt'}
-                          className="h-auto max-h-72 w-full rounded-xl border border-slate-200 bg-white object-contain p-1 dark:border-slate-700 dark:bg-slate-950"
+                          src={inspectingPayment.receiptUrl}
+                          alt="Full Receipt"
+                          className="max-h-80 w-auto mx-auto rounded-xl object-contain shadow-lg"
                         />
                       ) : (
-                        <a
-                          href={pay.receiptUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex min-h-11 items-center rounded-xl bg-blue-500/10 px-3 text-xs font-bold text-blue-500 underline"
-                        >
-                          {isAr
-                            ? "عرض الإيصال / التفاصيل"
-                            : "View Receipt / Details"}
-                        </a>
+                        <div className="py-8">
+                          <a
+                            href={inspectingPayment.receiptUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-black text-xs hover:opacity-95"
+                          >
+                            <span>{isAr ? "فتح الإيصال في نافذة جديدة" : "Open Receipt in New Tab"}</span>
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </div>
                       )
                     ) : (
-                      <span className="text-xs text-slate-500 italic">
-                        {isAr ? "لا يوجد ايصال مرفق" : "No receipt attached"}
-                      </span>
+                      <div className="py-8 text-slate-500 text-xs italic">
+                        {isAr ? "لم يتم إرفاق إيصال مع هذا الطلب" : "No receipt attached"}
+                      </div>
                     )}
-                    {pay.notes && (
-                      <p className="mt-3 rounded-xl bg-amber-500/10 p-3 text-xs leading-5 text-slate-700 dark:text-slate-200"><strong>{isAr ? 'ملاحظات: ' : 'Notes: '}</strong>{pay.notes}</p>
+                  </div>
+
+                  {/* Metadata Grid */}
+                  <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-3">
+                    <div className="rounded-xl bg-slate-800/60 p-3">
+                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "المشترك" : "Subscriber"}</span>
+                      <strong className="block truncate text-white mt-1">{inspectingPayment.userName}</strong>
+                      <span className="block truncate text-[10px] text-slate-400">{inspectingPayment.email || inspectingPayment.userId}</span>
+                    </div>
+
+                    <div className="rounded-xl bg-slate-800/60 p-3">
+                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "الباقة" : "Plan"}</span>
+                      <strong className="block truncate text-amber-300 mt-1">{inspectingPayment.planName}</strong>
+                    </div>
+
+                    <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 col-span-2 sm:col-span-1">
+                      <span className="block text-[10px] font-bold text-emerald-400">{isAr ? "المبلغ المطلوب" : "Amount"}</span>
+                      <strong className="block text-lg font-black text-emerald-400 mt-0.5">
+                        {inspectingPayment.amount} {isAr ? "ج.م" : "EGP"}
+                      </strong>
+                    </div>
+
+                    <div className="rounded-xl bg-slate-800/60 p-3">
+                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "طريقة التحويل" : "Payment Method"}</span>
+                      <strong className="block truncate text-white mt-1">
+                        {inspectingPayment.method === "instapay"
+                          ? "InstaPay"
+                          : inspectingPayment.method === "vodafone" || inspectingPayment.method === "vodafone_cash"
+                          ? "Vodafone Cash"
+                          : inspectingPayment.method === "bank_transfer"
+                          ? (isAr ? "تحويل بنكي" : "Bank Transfer")
+                          : inspectingPayment.method || "—"}
+                      </strong>
+                    </div>
+
+                    <div className="rounded-xl bg-slate-800/60 p-3">
+                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "الحالة الحالية" : "Current Status"}</span>
+                      <span className="mt-1 inline-block font-black text-xs">
+                        {inspectingPayment.status === "approved" ? (
+                          <span className="text-emerald-400">{isAr ? "معتمد ومفعل" : "Approved"}</span>
+                        ) : inspectingPayment.status === "pending" ? (
+                          <span className="text-amber-400">{isAr ? "قيد الانتظار" : "Pending"}</span>
+                        ) : inspectingPayment.status === "rejected" ? (
+                          <span className="text-rose-400">{isAr ? "مرفوض" : "Rejected"}</span>
+                        ) : (
+                          <span className="text-purple-400">{isAr ? "يحتاج معلومات" : "Needs Info"}</span>
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="rounded-xl bg-slate-800/60 p-3">
+                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "تاريخ الطلب" : "Submitted At"}</span>
+                      <span className="block text-[11px] text-slate-300 mt-1">
+                        {inspectingPayment.submittedAt ? new Date(inspectingPayment.submittedAt).toLocaleString(isAr ? "ar-EG" : "en-US") : "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Notes / Reject Reason */}
+                  {inspectingPayment.notes && (
+                    <div className="rounded-xl bg-slate-800/50 p-3 text-xs">
+                      <strong className="block text-amber-300 mb-1">{isAr ? "ملاحظات المشترك:" : "User Notes:"}</strong>
+                      <p className="text-slate-200 leading-relaxed">{inspectingPayment.notes}</p>
+                    </div>
+                  )}
+
+                  {inspectingPayment.rejectReason && (
+                    <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 p-3 text-xs">
+                      <strong className="block text-rose-300 mb-1">{isAr ? "سبب الرفض المسجل:" : "Recorded Reject Reason:"}</strong>
+                      <p className="text-rose-200 leading-relaxed">{inspectingPayment.rejectReason}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Modal Footer Actions */}
+                <div className="flex items-center justify-between gap-2 border-t border-slate-800 pt-3 flex-wrap">
+                  {onViewProfile && inspectingPayment.userId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInspectingPayment(null);
+                        onViewProfile(inspectingPayment.userId);
+                      }}
+                      className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors"
+                    >
+                      {isAr ? "الملف الشخصي للمشترك" : "View Profile"}
+                    </button>
+                  )}
+
+                  <div className="flex items-center gap-2 mr-auto">
+                    {inspectingPayment.status !== "approved" && (
+                      <button
+                        type="button"
+                        onClick={() => void approvePayment(inspectingPayment.id)}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all flex items-center gap-1.5 shadow-md"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>{isAr ? "قبول وتفعيل الاشتراك" : "Approve & Activate"}</span>
+                      </button>
+                    )}
+
+                    {inspectingPayment.status === "pending" && (
+                      <button
+                        type="button"
+                        onClick={() => void requestPaymentInfo(inspectingPayment.id)}
+                        className="px-3.5 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 text-xs font-bold transition-colors"
+                      >
+                        {isAr ? "طلب معلومات" : "Request Info"}
+                      </button>
+                    )}
+
+                    {inspectingPayment.status !== "rejected" && (
+                      <button
+                        type="button"
+                        onClick={() => void rejectPayment(inspectingPayment.id)}
+                        className="px-3.5 py-2 rounded-xl bg-rose-600/20 text-rose-300 border border-rose-600/40 hover:bg-rose-600/30 text-xs font-bold transition-colors"
+                      >
+                        {isAr ? "رفض الدفع" : "Reject"}
+                      </button>
                     )}
                   </div>
                 </div>
-              ))}
               </div>
             </div>
           )}

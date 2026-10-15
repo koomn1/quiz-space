@@ -50,6 +50,18 @@ export function mapPendingPaymentRequests(records: PaymentRequestRecord[]): Paym
   return records.filter((record) => record.status === 'pending').map(normalizePaymentRequest);
 }
 
+export function mapAllPaymentRequests(records: PaymentRequestRecord[]): (PaymentProof & { rejectReason?: string; updatedAt?: string; email?: string })[] {
+  return records.map((record) => {
+    const base = normalizePaymentRequest(record);
+    return {
+      ...base,
+      email: record.email || undefined,
+      rejectReason: record.reject_reason || undefined,
+      updatedAt: record.updated_at || undefined,
+    };
+  });
+}
+
 export function paymentAmountLabel(amount: unknown, isAr: boolean): string {
   if (typeof amount === 'number' && Number.isFinite(amount)) {
     return `${amount.toLocaleString(isAr ? 'ar-EG' : 'en-US')} ${isAr ? 'ج.م' : 'EGP'}`;

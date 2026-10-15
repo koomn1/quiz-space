@@ -1639,7 +1639,7 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
   }
 }
 
-export async function getPremiumRequests(userId?: string, options: { adminQueue?: boolean } = {}): Promise<any[]> {
+export async function getPremiumRequests(userId?: string, options: { adminQueue?: boolean; adminLedger?: boolean; allAdmin?: boolean } = {}): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
   
   let targetUid = userId;
@@ -1653,17 +1653,19 @@ export async function getPremiumRequests(userId?: string, options: { adminQueue?
   let query = supabase.from('premium_requests').select('*');
   // Admin review must not inherit the default current-user filter. RLS still
   // limits this unscoped query to administrators at the database layer.
-  if (!options.adminQueue && targetUid && !targetUid.startsWith('user-guest')) {
+  if (!options.adminQueue && !options.adminLedger && !options.allAdmin && targetUid && !targetUid.startsWith('user-guest')) {
     query = query.eq('user_id', targetUid);
   }
   query = query.order('created_at', { ascending: false });
   if (options.adminQueue) query = query.eq('status', 'pending').range(0, 99);
+  else if (options.adminLedger || options.allAdmin) query = query.range(0, 499);
   const { data, error } = await query;
   if (error) {
     console.error('Error getting premium requests:', error);
     try {
       let fallback = supabase.from('premium_requests').select('*').order('created_at', { ascending: false });
       if (options.adminQueue) fallback = fallback.eq('status', 'pending').range(0, 99);
+      else if (options.adminLedger || options.allAdmin) fallback = fallback.range(0, 499);
       const fallbackResult = await fallback;
       if (!fallbackResult.error && fallbackResult.data) {
         return (fallbackResult.data || []).map((row: any) => ({
