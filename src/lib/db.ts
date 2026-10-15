@@ -16,7 +16,7 @@ import {
   isDurableQuestionImageUrl,
   parseInlineImageDataUrl,
 } from './questionMedia';
-
+import { formatChatCode } from '../utils/chatCode';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
 // `users` is required to have a valid UUID `uid` — a trigger
@@ -1137,6 +1137,7 @@ export interface AIChatConversation {
   lastMessageAt?: string | null;
   revision?: number;
   titleSource?: 'default' | 'ai' | 'user';
+  code?: string;
 }
 
 export async function getAIChatConversations(userId: string): Promise<AIChatConversation[]> {
@@ -1161,6 +1162,7 @@ export async function getAIChatConversations(userId: string): Promise<AIChatConv
     lastMessageAt: row.last_message_at,
     revision: Number(row.revision || 1),
     titleSource: row.title_source || 'default',
+    code: formatChatCode(row.id),
   }));
 }
 
@@ -1186,6 +1188,7 @@ export async function createAIChatConversation(userId: string, title?: string): 
     lastMessageAt: data.last_message_at,
     revision: Number(data.revision || 1),
     titleSource: data.title_source || 'default',
+    code: formatChatCode(data.id),
   };
 }
 
