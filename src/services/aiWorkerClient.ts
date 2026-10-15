@@ -370,7 +370,40 @@ export interface WebSearchResult {
 }
 
 export async function searchCosmoWeb(query: string): Promise<{ query: string; results: WebSearchResult[]; searchedAt: string }> {
-  return workerRequest<{ query: string; results: WebSearchResult[]; searchedAt: string }>('/api/ai/search', { query }, 30_000);
+  try {
+    return await workerRequest<{ query: string; results: WebSearchResult[]; searchedAt: string }>('/api/ai/search', { query }, 30_000);
+  } catch (workerErr) {
+    const clientKey = (import.meta.env.VITE_TAVILY_API_KEY as string | undefined)?.trim();
+    if (clientKey) {
+      try {
+        const resp = await fetch('https://api.tavily.com/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: clientKey,
+            query,
+            search_depth: 'advanced',
+            topic: 'general',
+            max_results: 5,
+            include_answer: false,
+            include_raw_content: false,
+          }),
+        });
+        if (resp.ok) {
+          const payload = await resp.json() as { results?: Array<{ title?: string; url?: string; content?: string }> };
+          const results: WebSearchResult[] = (payload.results || []).slice(0, 5).map(result => ({
+            title: String(result.title || 'Untitled source').slice(0, 240),
+            url: String(result.url || '').slice(0, 2_000),
+            snippet: String(result.content || '').replace(/\s+/g, ' ').slice(0, 900),
+          })).filter(result => /^https?:\/\//i.test(result.url));
+          return { query, results, searchedAt: new Date().toISOString() };
+        }
+      } catch (directErr) {
+        console.error('Direct Tavily search error:', directErr);
+      }
+    }
+    throw workerErr;
+  }
 }
 
 // Streaming counterpart to askAI. Calls onChunk(deltaText) as tokens arrive
@@ -380,7 +413,7 @@ export async function searchCosmoWeb(query: string): Promise<{ query: string; re
 // server-side by then).
 export async function askAIStream(
   prompt: string,
-  options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string },
+  options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string; signal?: AbortSignal },
   onChunk: (deltaText: string, fullTextSoFar: string) => void,
 ): Promise<{ text: string }> {
   // Multimodal requests must use the regular Worker route. Streaming providers
@@ -394,6 +427,13 @@ export async function askAIStream(
   }
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), AI_STREAM_TIMEOUT_MS);
+  if (options.signal) {
+    if (options.signal.aborted) {
+      controller.abort();
+      return { text: '' };
+    }
+    options.signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
   let response: Response;
   let fullText = '';
 
@@ -448,12 +488,19 @@ export async function askAIStream(
     // the final JSON chunk in that case.
     if (buffer.trim()) consumeSseLine(buffer);
   } catch (error) {
+    if (options.signal?.aborted) {
+      return { text: fullText };
+    }
     if (!fullText) {
       return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
     }
     throw error;
   } finally {
     window.clearTimeout(timeoutId);
+  }
+
+  if (options.signal?.aborted) {
+    return { text: fullText };
   }
 
   if (!fullText) {

@@ -16,6 +16,16 @@
   --color-gradient-from: var(--theme-gradient-from, #7C3AED);
   --color-gradient-to: var(--theme-gradient-to, #0891B2);
 
+  /* Cosmo AI Design System Tokens */
+  --color-cosmo-canvas: #070913;
+  --color-cosmo-surface: #0F172A;
+  --color-cosmo-card: #111827;
+  --color-cosmo-indigo: #6366F1;
+  --color-cosmo-cyan: #06B6D4;
+  --color-cosmo-purple: #8B5CF6;
+  --color-cosmo-amber: #F59E0B;
+  --color-cosmo-emerald: #10B981;
+
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-bounce-subtle: bounce-subtle 1.5s ease-in-out infinite;
   --animate-sync-shimmer: sync-shimmer 2s infinite linear;
