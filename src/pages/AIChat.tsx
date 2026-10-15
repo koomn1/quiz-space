@@ -15,16 +15,18 @@ import { Liquid } from 'liquid-gooey';
 const COSMO_AVATAR = profileAssetUrl('avatars/cosmo-cartoon.webp');
 
 /* ═══════════════════════════════════════════════════════════
-   ✦ "Spark" — the new AI assistant (replaces Cosmo) ✦
-   Design adopted from the user-provided ChatGPT-style kit:
-   dark #212121 background, #2f2f2f cards, emerald #10a37f accent.
+   ✦ Cosmo AI — Cosmic Educational Assistant ✦
+   Design: AI-Native Cosmic Interface (Midnight Slate, Glowing
+   Indigo & Nebula Accents, Crisp Glassmorphism, Fluid Motion)
    ═══════════════════════════════════════════════════════════ */
 
-const ASSISTANT_NAME_AR = 'Cosmo AI';
+const ASSISTANT_NAME_AR = 'كوزمو AI';
 const ASSISTANT_NAME_EN = 'Cosmo AI';
-const ACCENT = '#0f6b4f';
-const LIME = '#CDFC8A';
-const TEAL = '#022E21';
+const ACCENT = '#6366F1'; // Cosmic Indigo
+const ACCENT_HOVER = '#4F46E5';
+const ACCENT_CYAN = '#06B6D4'; // Nebula Cyan
+const ACCENT_AMBER = '#F59E0B'; // Solar Amber
+const ACCENT_PURPLE = '#8B5CF6'; // Cosmic Violet
 const COSMO_QUIZ_MIN_COUNT = 3;
 const COSMO_QUIZ_MAX_COUNT = 100;
 const COSMO_QUIZ_BATCH_SIZE = 25;
@@ -153,44 +155,48 @@ async function generateCosmoQuizInBatches(topic: string, amount: number): Promis
 function usePalette(darkMode: boolean) {
   if (darkMode) {
     return {
-      BG: '#212121',
-      CARD: '#2f2f2f',
-      SIDEBAR: '#171717',
-      FG: '#ececec',
-      MUTED: '#8e8ea0',
-      BORDER: 'rgba(255,255,255,0.1)',
-      BORDER_SOFT: 'rgba(255,255,255,0.08)',
-      HOVER: 'rgba(255,255,255,0.1)',
-      HOVER_SOFT: 'rgba(255,255,255,0.06)',
-      SUBTLE_TEXT: '#6b6b76',
-      OVERLAY_BG: '#2f2f2f',
-      OVERLAY_BACKDROP: 'rgba(10,10,10,0.75)',
-      SEND_IDLE: '#0f6b4f',
-      SEND_ACTIVE_FG: '#CDFC8A',
-      SCROLL_THUMB: 'rgba(255,255,255,0.1)',
-      SCROLL_THUMB_HOVER: 'rgba(255,255,255,0.18)',
-      INPUT_BG: '#363636',
+      BG: '#0B0F19',
+      CARD: '#111827',
+      SIDEBAR: '#080C14',
+      FG: '#F8FAFC',
+      MUTED: '#94A3B8',
+      BORDER: 'rgba(255, 255, 255, 0.08)',
+      BORDER_SOFT: 'rgba(255, 255, 255, 0.04)',
+      HOVER: 'rgba(99, 102, 241, 0.12)',
+      HOVER_SOFT: 'rgba(99, 102, 241, 0.06)',
+      SUBTLE_TEXT: '#64748B',
+      OVERLAY_BG: '#111827',
+      OVERLAY_BACKDROP: 'rgba(7, 11, 20, 0.85)',
+      SEND_IDLE: '#1E293B',
+      SEND_ACTIVE_FG: '#FFFFFF',
+      SCROLL_THUMB: 'rgba(99, 102, 241, 0.22)',
+      SCROLL_THUMB_HOVER: 'rgba(99, 102, 241, 0.42)',
+      INPUT_BG: '#141D30',
+      USER_BUBBLE_BG: 'linear-gradient(135deg, #1E293B 0%, #162032 100%)',
+      USER_BUBBLE_BORDER: 'rgba(99, 102, 241, 0.25)',
       IS_DARK: true,
     };
   }
   return {
-    BG: '#f7f7f8',
-    CARD: '#ffffff',
-    SIDEBAR: '#f1f1f2',
-    FG: '#3f3f46',
-    MUTED: '#71717a',
-    BORDER: 'rgba(0,0,0,0.08)',
-    BORDER_SOFT: 'rgba(0,0,0,0.06)',
-    HOVER: 'rgba(0,0,0,0.06)',
-    HOVER_SOFT: 'rgba(0,0,0,0.04)',
-    SUBTLE_TEXT: '#a1a1aa',
-    OVERLAY_BG: '#ffffff',
-    OVERLAY_BACKDROP: 'rgba(247,247,248,0.8)',
-    SEND_IDLE: '#0f6b4f',
-    SEND_ACTIVE_FG: '#022E21',
-    SCROLL_THUMB: 'rgba(0,0,0,0.12)',
-    SCROLL_THUMB_HOVER: 'rgba(0,0,0,0.2)',
-    INPUT_BG: '#ffffff',
+    BG: '#F8FAFC',
+    CARD: '#FFFFFF',
+    SIDEBAR: '#F1F5F9',
+    FG: '#0F172A',
+    MUTED: '#475569',
+    BORDER: 'rgba(15, 23, 42, 0.08)',
+    BORDER_SOFT: 'rgba(15, 23, 42, 0.04)',
+    HOVER: 'rgba(99, 102, 241, 0.08)',
+    HOVER_SOFT: 'rgba(99, 102, 241, 0.04)',
+    SUBTLE_TEXT: '#64748B',
+    OVERLAY_BG: '#FFFFFF',
+    OVERLAY_BACKDROP: 'rgba(248, 250, 252, 0.85)',
+    SEND_IDLE: '#E2E8F0',
+    SEND_ACTIVE_FG: '#FFFFFF',
+    SCROLL_THUMB: 'rgba(99, 102, 241, 0.18)',
+    SCROLL_THUMB_HOVER: 'rgba(99, 102, 241, 0.35)',
+    INPUT_BG: '#FFFFFF',
+    USER_BUBBLE_BG: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
+    USER_BUBBLE_BORDER: 'rgba(99, 102, 241, 0.2)',
     IS_DARK: false,
   };
 }
@@ -229,29 +235,32 @@ interface AIChatProps {
   onOpenGeneratedQuiz?: (quizId: string) => void;
 }
 
-/* ─── Thinking orb (GSAP) from the reference kit ───────── */
+/* ─── Thinking orb (GSAP) with cosmic pulse ───────── */
 function ThinkingOrb() {
   return (
-    <div className="flex items-center justify-center w-11 h-11 rounded-2xl" style={{ background: 'rgba(16,163,127,0.08)', border: '1px solid rgba(16,163,127,0.2)' }} aria-label="Cosmo is thinking">
+    <div className="flex items-center justify-center w-11 h-11 rounded-2xl" style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', boxShadow: '0 0 20px rgba(99,102,241,0.2)' }} aria-label="Cosmo is thinking">
       <div className="flex items-end gap-1 h-4">
-        {[0, 1, 2].map(index => <span key={index} className="w-1.5 rounded-full" style={{ height: index === 1 ? 15 : 9, background: ACCENT, opacity: 0.72, animation: 'cosmoThinking 1.15s ease-in-out infinite', animationDelay: `${index * 0.16}s` }} />)}
+        {[0, 1, 2].map(index => <span key={index} className="w-1.5 rounded-full" style={{ height: index === 1 ? 16 : 10, background: 'linear-gradient(180deg, #818cf8, #6366f1)', opacity: 0.85, animation: 'cosmoThinking 1.15s ease-in-out infinite', animationDelay: `${index * 0.16}s` }} />)}
       </div>
-      <style>{`@keyframes cosmoThinking { 0%, 100% { transform: scaleY(.65); opacity: .4; } 50% { transform: scaleY(1); opacity: .9; } }`}</style>
+      <style>{`@keyframes cosmoThinking { 0%, 100% { transform: scaleY(.6); opacity: .45; } 50% { transform: scaleY(1); opacity: 1; } }`}</style>
     </div>
   );
 }
 
-/* ─── Assistant avatar (small) ─────────────────────────── */
+/* ─── Assistant avatar (cosmic glowing ring) ───────────── */
 function AssistantAvatar() {
   return (
-    <ProfileAvatar
-      src={COSMO_AVATAR}
-      alt="Cosmo AI"
-      fallback="C"
-      className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-violet-400/60 shadow-lg shadow-violet-500/20"
-      imageClassName="w-full h-full object-cover"
-      fallbackClassName="text-sm font-black text-violet-300"
-    />
+    <div className="relative flex-shrink-0">
+      <ProfileAvatar
+        src={COSMO_AVATAR}
+        alt="Cosmo AI"
+        fallback="C"
+        className="w-10 h-10 rounded-full flex-shrink-0 border-2 border-indigo-400/70 shadow-lg shadow-indigo-500/25 ring-2 ring-indigo-500/20"
+        imageClassName="w-full h-full object-cover"
+        fallbackClassName="text-sm font-black text-indigo-300"
+      />
+      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full shadow-sm" title="Online" />
+    </div>
   );
 }
 
@@ -409,13 +418,14 @@ function FormattedText({ text, fg, theme }: { text: string; fg: string; theme: P
   );
 }
 
-/* ─── Message row with gsap entrance ───────────────────── */
+/* ─── Message row with gsap entrance & cosmic styling ─── */
 function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial, theme }: { msg: Message; index: number; copiedMsgId: string | null; onCopy: (m: Message) => void; userPhoto?: string; userInitial: string; theme: Palette }) {
   const rowRef = useRef<HTMLDivElement>(null);
+  const [feedback, setFeedback] = useState<'liked' | 'disliked' | null>(null);
 
   useEffect(() => {
     if (!rowRef.current) return;
-    gsap.from(rowRef.current, { y: 22, opacity: 0, duration: 0.45, ease: 'power3.out' });
+    gsap.from(rowRef.current, { y: 16, opacity: 0, duration: 0.35, ease: 'power2.out' });
   }, [index]);
 
   return (
@@ -423,42 +433,98 @@ function MessageRow({ msg, index, copiedMsgId, onCopy, userPhoto, userInitial, t
       {msg.role === 'user' ? (
         <div className="flex items-end justify-end gap-3">
           <div
-            className="max-w-[85%] px-4 py-3 rounded-3xl text-[15px] leading-7"
-            style={{ background: theme.CARD, color: theme.FG }}
+            className="max-w-[85%] px-4 py-3 rounded-2xl rounded-br-sm text-[15px] leading-7 shadow-sm border"
+            style={{
+              background: theme.USER_BUBBLE_BG,
+              borderColor: theme.USER_BUBBLE_BORDER,
+              color: theme.FG,
+            }}
           >
-            {msg.image && <img src={msg.image} alt="Upload" className="max-w-xs rounded-lg mb-3 shadow-md" />}
-            {msg.attachmentName && <div className="flex items-center gap-2 mb-2 text-xs opacity-80"><FileText className="w-4 h-4" />{msg.attachmentName}</div>}
-            <div>{msg.text}</div>
-            <p className="text-[10px] mt-1 text-right" style={{ color: theme.MUTED }}>{msg.timestamp}</p>
+            {msg.image && (
+              <div className="rounded-xl overflow-hidden mb-3 border" style={{ borderColor: theme.BORDER_SOFT }}>
+                <img src={msg.image} alt="Upload" className="max-w-xs max-h-60 object-cover rounded-lg" />
+              </div>
+            )}
+            {msg.attachmentName && (
+              <div
+                className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-lg text-xs font-medium border"
+                style={{ background: theme.IS_DARK ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)', borderColor: 'rgba(99,102,241,0.3)', color: ACCENT }}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span className="truncate max-w-[220px]">{msg.attachmentName}</span>
+              </div>
+            )}
+            <div className="whitespace-pre-wrap select-text">{msg.text}</div>
+            <p className="text-[10px] mt-1.5 text-right font-medium opacity-70" style={{ color: theme.MUTED }}>{msg.timestamp}</p>
           </div>
           <ProfileAvatar
             src={userPhoto}
             alt={userInitial}
             fallback={userInitial}
-            className="h-8 w-8 rounded-full flex-shrink-0"
+            className="h-8 w-8 rounded-full flex-shrink-0 border border-indigo-400/30 shadow-sm"
             imageClassName="h-full w-full object-cover"
             fallbackClassName="text-sm font-semibold text-white"
           />
         </div>
       ) : (
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-3.5">
           <AssistantAvatar />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold mb-2" style={{ color: theme.FG }}>{ASSISTANT_NAME_EN}</p>
-            <FormattedText text={msg.text} fg={theme.FG} theme={theme} />
-            <div className="flex items-center gap-1 mt-3">
-              {([Copy, ThumbsUp, ThumbsDown, RotateCcw] as const).map((Icon, k) => (
-                <button
-                  key={k}
-                  onClick={() => k === 0 && onCopy(msg)}
-                  className="p-1.5 rounded-md transition-colors"
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
-                  style={{ color: copiedMsgId === msg.id && k === 0 ? ACCENT : theme.MUTED }}
-                >
-                  {copiedMsgId === msg.id && k === 0 ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                </button>
-              ))}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-bold tracking-wide" style={{ color: theme.FG }}>{ASSISTANT_NAME_AR}</span>
+              <span
+                className="text-[10px] px-2 py-0.5 rounded-full font-semibold border flex items-center gap-1 shadow-sm"
+                style={{
+                  background: theme.IS_DARK ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.1)',
+                  borderColor: theme.IS_DARK ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.2)',
+                  color: ACCENT,
+                }}
+              >
+                <Sparkles className="w-2.5 h-2.5" />
+                مساعد فضائي ذكي
+              </span>
+            </div>
+            <div
+              className="p-4 rounded-2xl border shadow-sm"
+              style={{
+                background: theme.CARD,
+                borderColor: theme.BORDER,
+              }}
+            >
+              <FormattedText text={msg.text} fg={theme.FG} theme={theme} />
+            </div>
+            <div className="flex items-center gap-1 mt-2.5 px-1">
+              <button
+                onClick={() => onCopy(msg)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors"
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                style={{ color: copiedMsgId === msg.id ? '#10B981' : theme.MUTED }}
+                title="نسخ الرد"
+              >
+                {copiedMsgId === msg.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedMsgId === msg.id ? 'تم النسخ' : 'نسخ'}</span>
+              </button>
+              <button
+                onClick={() => setFeedback(f => f === 'liked' ? null : 'liked')}
+                className="p-1.5 rounded-lg transition-colors"
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                style={{ color: feedback === 'liked' ? ACCENT : theme.MUTED }}
+                title="مفيد"
+              >
+                <ThumbsUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setFeedback(f => f === 'disliked' ? null : 'disliked')}
+                className="p-1.5 rounded-lg transition-colors"
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                style={{ color: feedback === 'disliked' ? '#EF4444' : theme.MUTED }}
+                title="غير مفيد"
+              >
+                <ThumbsDown className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>
@@ -523,10 +589,10 @@ function ThinkingRow({ isAr, theme, state = 'working' }: { isAr: boolean; theme:
 
 /* ─── Starter cards for the welcome screen ─────────────── */
 const starters = [
-  { icon: BookOpen,      title: 'اشرحلي درس',    sub: 'أي موضوع دراسي بطريقة بسيطة' },
-  { icon: BrainCircuit,  title: 'لخصلي المادة',  sub: 'ملخص سريع ومنظم' },
-  { icon: Zap,           title: 'اختبرني',       sub: 'أسئلة تفاعلية على المادة' },
-  { icon: GraduationCap, title: 'حضرني للامتحان',sub: 'خطة مذاكرة وأسئلة متوقعة' },
+  { icon: BookOpen,      title: 'اشرحلي درس',    sub: 'أي موضوع دراسي بطريقة مبسطة', color: '#6366F1', bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.25)' },
+  { icon: BrainCircuit,  title: 'لخصلي المحتوى',  sub: 'استخلاص أهم النقاط والمفاهيم', color: '#06B6D4', bg: 'rgba(6,182,212,0.08)', border: 'rgba(6,182,212,0.25)' },
+  { icon: Zap,           title: 'اختبرني فوراً', sub: 'أسئلة تفاعلية ذكية لقياس الفهم', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)' },
+  { icon: GraduationCap, title: 'حضرني للامتحان',sub: 'خطة مراجعة مركزة وتوقعات', color: '#8B5CF6', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.25)' },
 ];
 
 function groupLabel(conv: AIChatConversation): string {
@@ -1244,19 +1310,19 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
           </div>
 
           <div className="px-3 py-3 border-t" style={{ borderColor: theme.BORDER_SOFT }}>
-            <div className="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors"
+            <div className="flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-colors"
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                  onClick={onOpenAuthModal ? undefined : undefined}>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden"
-                style={{ background: '#10a37f', color: 'white' }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden shadow-sm"
+                style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', color: 'white' }}>
                 {userPhoto ? (
                   <img src={userPhoto} alt={userName || ''} className="w-full h-full object-cover" />
                 ) : (
                   userInitial
                 )}
               </div>
-              <span className="text-sm flex-1 truncate" style={{ color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)' }}>
+              <span className="text-sm font-medium flex-1 truncate" style={{ color: theme.FG }}>
                 {userName || (isAr ? 'طالب متميز' : 'Bright Scholar')}
               </span>
             </div>
@@ -1264,50 +1330,56 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
         </div>
       </aside>
 
-      {sidebarOpen && <button aria-label={isAr ? 'إغلاق القائمة' : 'Close sidebar'} onClick={() => setSidebarOpen(false)} className="absolute inset-0 z-20 bg-black/20 md:hidden" />}
+      {sidebarOpen && <button aria-label={isAr ? 'إغلاق القائمة' : 'Close sidebar'} onClick={() => setSidebarOpen(false)} className="absolute inset-0 z-20 bg-black/40 backdrop-blur-xs md:hidden" />}
 
       {/* ── Main ── */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10">
 
         {/* top bar */}
-        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b" style={{ borderColor: theme.BORDER_SOFT }}>
+        <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b backdrop-blur-md" style={{ borderColor: theme.BORDER_SOFT, background: theme.IS_DARK ? 'rgba(11,15,25,0.75)' : 'rgba(248,250,252,0.85)' }}>
           <div className="flex items-center gap-2">
             {!sidebarOpen && (
               <>
                 <button onClick={toggleSidebar}
-                  className="p-2 rounded-lg transition-colors"
+                  className="p-2 rounded-xl transition-colors cursor-pointer"
+                  style={{ color: theme.MUTED }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                  <PanelLeftOpen className="w-5 h-5" style={{ color: theme.MUTED }} />
+                  <PanelLeftOpen className="w-5 h-5" />
                 </button>
                 <button onClick={startNewChat}
-                  className="p-2 rounded-lg transition-colors"
+                  className="p-2 rounded-xl transition-colors cursor-pointer"
+                  style={{ color: theme.MUTED }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                  <SquarePen className="w-5 h-5" style={{ color: theme.MUTED }} />
+                  <SquarePen className="w-5 h-5" />
                 </button>
               </>
             )}
           </div>
 
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors font-semibold text-sm"
-            style={{ color: theme.FG }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full border shadow-xs"
+            style={{ borderColor: theme.BORDER, background: theme.CARD }}>
+            <div className="relative w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ring-1 ring-indigo-400/50">
               <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover" />
             </div>
-            {ASSISTANT_NAME_EN}
-            <ChevronDown className="w-4 h-4" style={{ color: theme.MUTED }} />
-          </button>
+            <span className="font-bold text-sm tracking-tight" style={{ color: theme.FG }}>
+              {isAr ? 'كوزمو AI' : 'Cosmo AI'}
+            </span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Active" />
+          </div>
 
           <div className="w-24 flex items-center justify-end gap-1">
             <button onClick={startNewChat}
-              className="p-2 rounded-lg transition-colors"
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all cursor-pointer text-xs font-bold border shadow-xs hover:scale-105 active:scale-95"
+              style={{
+                background: theme.IS_DARK ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)',
+                borderColor: 'rgba(99,102,241,0.3)',
+                color: ACCENT,
+              }}
               title={isAr ? 'محادثة جديدة' : 'New Chat'}>
-              <Plus className="w-5 h-5" style={{ color: theme.MUTED }} />
+              <Plus className="w-4 h-4" />
+              <span>{isAr ? 'جديد' : 'New'}</span>
             </button>
           </div>
         </div>
@@ -1316,37 +1388,67 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
         <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain scroll-smooth" dir="rtl" style={sidebarOpen ? {} : { maxWidth: '100%' }}>
           {emptyState ? (
 
-            /* ── Welcome ── */
-            <div ref={welcomeRef}
-              className="flex flex-col items-center justify-center min-h-full px-4 py-8">
+            /* ── Welcome (Cosmic Hero) ── */
+            <div ref={welcomeRef} className="flex flex-col items-center justify-center min-h-full px-4 py-12">
+              <div className="welcome-title flex flex-col items-center text-center mb-10 max-w-lg">
+                <div className="relative mb-5">
+                  <div className="absolute inset-0 rounded-full bg-indigo-500/20 blur-xl scale-150 animate-pulse" />
+                  <div className="relative w-20 h-20 rounded-3xl overflow-hidden p-1 border-2 border-indigo-400/40 shadow-2xl shadow-indigo-500/30" style={{ background: theme.CARD }}>
+                    <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover rounded-2xl" />
+                  </div>
+                  <span className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white shadow-md">
+                    مستعد
+                  </span>
+                </div>
 
-              <div className="welcome-title flex items-center gap-3 mb-8">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg shadow-violet-500/20">
-                  <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-3 border"
+                  style={{
+                    background: theme.IS_DARK ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)',
+                    borderColor: 'rgba(99,102,241,0.3)',
+                    color: ACCENT,
+                  }}>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{isAr ? 'مساعد الذكاء الاصطناعي التعليمي' : 'Cosmic AI Study Assistant'}</span>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-semibold" style={{ color: theme.FG }}>
-                    {isAr ? 'مرحباً بك في Quiz Space' : 'Welcome to Quiz Space'}
-                  </h1>
-                  <p className="text-sm" style={{ color: theme.MUTED }}>
-                    {isAr ? `أنا ${ASSISTANT_NAME_AR}، مساعدك الذكي للمذاكرة` : `I'm ${ASSISTANT_NAME_EN}, your smart study assistant`}
-                  </p>
-                </div>
+
+                <h1 className="text-3xl font-extrabold tracking-tight mb-2" style={{ color: theme.FG }}>
+                  {isAr ? 'جاهز نذاكر سوا مع كوزمو؟' : 'Ready to study with Cosmo?'}
+                </h1>
+                <p className="text-sm leading-relaxed max-w-md" style={{ color: theme.MUTED }}>
+                  {isAr
+                    ? 'اسألني عن أي درس، أو ارفع ملف ولخصه، أو اختبر نفسك في أي مادة بأسئلة ذكية فورية.'
+                    : 'Ask any question, summarize study documents, or generate practice quizzes instantly.'}
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 w-full max-w-xl">
-                {starters.map(({ icon: Icon, title, sub }) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full max-w-xl">
+                {starters.map(({ icon: Icon, title, sub, color, bg, border }) => (
                   <button
                     key={title}
                     onClick={() => sendMessage(title)}
-                    className="starter-card text-right p-4 rounded-2xl transition-colors"
-                    style={{ background: theme.INPUT_BG, border: `1px solid ${theme.BORDER_SOFT}` }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = darkMode ? '#363636' : 'rgba(0,0,0,0.04)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = theme.INPUT_BG}
+                    className="starter-card group text-right p-4 rounded-2xl transition-all duration-200 border cursor-pointer hover:-translate-y-0.5 shadow-sm hover:shadow-md"
+                    style={{
+                      background: theme.CARD,
+                      borderColor: theme.BORDER,
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.borderColor = color;
+                      (e.currentTarget as HTMLElement).style.background = bg;
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.borderColor = theme.BORDER;
+                      (e.currentTarget as HTMLElement).style.background = theme.CARD;
+                    }}
                   >
-                    <Icon className="w-5 h-5 mb-2" style={{ color: ACCENT }} />
-                    <p className="text-sm font-medium" style={{ color: theme.FG }}>{title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: theme.MUTED }}>{sub}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110" style={{ background: bg, border: `1px solid ${border}` }}>
+                        <Icon className="w-5 h-5" style={{ color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate" style={{ color: theme.FG }}>{title}</p>
+                        <p className="text-xs mt-0.5 truncate" style={{ color: theme.MUTED }}>{sub}</p>
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -1417,66 +1519,97 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
         <div className="px-4 pb-5 pt-2 flex-shrink-0">
           <div className="max-w-3xl mx-auto">
             {selectedAttachment && (
-              <div className="relative inline-flex items-center gap-2 mb-3 mr-3 p-2 rounded-xl"
-                style={{ background: theme.INPUT_BG, border: `1px solid ${theme.BORDER_SOFT}` }}>
-                {selectedAttachment.kind === 'image' ? <img src={selectedAttachment.data} alt="Preview" className="h-20 w-auto rounded-lg object-cover" /> : <FileText className="w-5 h-5" style={{ color: ACCENT }} />}
-                <span className="max-w-[180px] truncate text-xs" style={{ color: theme.FG }}>{selectedAttachment.name}</span>
-                <button onClick={() => { selectedAttachmentRef.current = null; setSelectedAttachment(null); }} className="p-1 rounded-full shadow-lg" style={{ background: '#ef4444', color: 'white' }}><X size={12} /></button>
+              <div
+                className="relative inline-flex items-center gap-2.5 mb-3 p-2.5 rounded-xl border shadow-sm"
+                style={{ background: theme.CARD, borderColor: theme.BORDER }}
+              >
+                {selectedAttachment.kind === 'image' ? (
+                  <img src={selectedAttachment.data} alt="Preview" className="h-16 w-16 rounded-lg object-cover border" style={{ borderColor: theme.BORDER_SOFT }} />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.12)', color: ACCENT }}>
+                    <FileText className="w-5 h-5" />
+                  </div>
+                )}
+                <div className="flex flex-col">
+                  <span className="max-w-[180px] truncate text-xs font-semibold" style={{ color: theme.FG }}>{selectedAttachment.name}</span>
+                  <span className="text-[10px]" style={{ color: theme.MUTED }}>{selectedAttachment.kind === 'image' ? (isAr ? 'صورة مرفقة' : 'Attached image') : (isAr ? 'مستند للدراسة' : 'Study document')}</span>
+                </div>
+                <button
+                  onClick={() => { selectedAttachmentRef.current = null; setSelectedAttachment(null); }}
+                  className="p-1 rounded-full text-white bg-rose-500 hover:bg-rose-600 transition-colors shadow-sm ml-1"
+                  title={isAr ? 'حذف المرفق' : 'Remove attachment'}
+                >
+                  <X size={12} />
+                </button>
               </div>
             )}
-            <BorderBeam size="md" colorVariant="colorful" strength={0.72} active={!isAnalyzing} theme={darkMode ? 'dark' : 'light'}>
-            <div className="rounded-3xl overflow-hidden"
-              style={{ background: theme.CARD, border: `1px solid ${theme.BORDER}` }}>
-
+            <BorderBeam size="md" colorVariant="colorful" strength={0.65} active={!isAnalyzing} theme={darkMode ? 'dark' : 'light'}>
+            <div
+              className="rounded-3xl overflow-hidden shadow-lg transition-all focus-within:ring-2 focus-within:ring-indigo-500/20"
+              style={{ background: theme.CARD, border: `1px solid ${theme.BORDER}` }}
+            >
               <textarea
                 ref={textareaRef}
                 value={inputText}
                 onChange={handleInput}
                 onKeyDown={handleKey}
-                placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي حاجة...` : `Ask ${ASSISTANT_NAME_EN} anything...`}
+                placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي سؤال دراسي، أو اطلب تلخيص أو كويز...` : `Ask ${ASSISTANT_NAME_EN} anything, or request a summary or quiz...`}
                 rows={1}
                 dir="rtl"
-                className="w-full px-5 pt-3.5 pb-2 bg-transparent resize-none outline-none text-[15px] leading-7 placeholder:opacity-40"
-                style={{ color: theme.FG, fontFamily: 'inherit', maxHeight: '120px', caretColor: ACCENT, textAlign: 'right' }}
+                className="w-full px-5 pt-4 pb-2 bg-transparent resize-none outline-none text-[15px] leading-7 placeholder:opacity-50"
+                style={{ color: theme.FG, fontFamily: 'inherit', maxHeight: '140px', caretColor: ACCENT, textAlign: 'right' }}
               />
 
-              <div className="flex items-center justify-between px-3 pb-3 pt-1" dir="rtl">
-                <div className="flex items-center gap-1">
-                  <button onClick={() => imageInputRef.current?.click()} title={isAr ? 'إرفاق صورة' : 'Attach image'}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
-                    style={{ color: theme.MUTED }}
+              <div className="flex items-center justify-between px-3.5 pb-3 pt-1" dir="rtl">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => imageInputRef.current?.click()}
+                    title={isAr ? 'إرفاق صورة أو رسم توضيحي' : 'Attach image'}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium transition-colors cursor-pointer"
+                    style={{ color: theme.MUTED, background: theme.HOVER_SOFT }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                    <ImageIcon className="w-4 h-4" /><span>{isAr ? 'صورة' : 'Image'}</span>
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER_SOFT}
+                  >
+                    <ImageIcon className="w-4 h-4 text-cyan-400" />
+                    <span>{isAr ? 'صورة' : 'Image'}</span>
                   </button>
-                  <button onClick={() => fileInputRef.current?.click()} title={isAr ? 'إرفاق PDF أو Word أو Excel أو PowerPoint' : 'Attach PDF, Word, Excel or PowerPoint'}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full transition-colors"
-                    style={{ color: theme.MUTED }}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    title={isAr ? 'إرفاق PDF أو Word أو Excel أو PowerPoint' : 'Attach PDF, Word, Excel or PowerPoint'}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl font-medium transition-colors cursor-pointer"
+                    style={{ color: theme.MUTED, background: theme.HOVER_SOFT }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
-                    <FileText className="w-4 h-4" /><span>{isAr ? 'ملف' : 'File'}</span>
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER_SOFT}
+                  >
+                    <FileText className="w-4 h-4 text-indigo-400" />
+                    <span>{isAr ? 'ملف' : 'File'}</span>
                   </button>
                   <input type="file" ref={imageInputRef} accept="image/*" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
                   <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,text/markdown,text/plain" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
                 </div>
 
-                <Liquid blur={6} contrast={18} fill={darkMode ? '#182b3a' : '#ffffff'} className="flex items-center">
+                <Liquid blur={6} contrast={18} fill={darkMode ? '#131D31' : '#ffffff'} className="flex items-center">
                   <Liquid.Item effect="morph" transition="bouncy">
                     <button
                       ref={sendBtnRef}
                       onClick={() => sendMessage()}
                       disabled={(!inputText.trim() && !selectedAttachment) || isAnalyzing}
                       aria-label={isAr ? 'إرسال' : 'Send'}
-                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-90"
+                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90 disabled:opacity-30 cursor-pointer shadow-md"
                       style={{
-                        background: isAnalyzing ? 'rgba(16,163,127,0.14)' : (inputText.trim() || selectedAttachment) ? ACCENT : theme.SEND_IDLE,
-                        border: isAnalyzing ? `1px solid ${ACCENT}66` : (inputText.trim() || selectedAttachment) ? `1px solid ${ACCENT}` : 'none',
-                        color: isAnalyzing ? ACCENT : (inputText.trim() || selectedAttachment) ? '#07111f' : '#ffffff',
+                        background: isAnalyzing
+                          ? 'rgba(99,102,241,0.18)'
+                          : (inputText.trim() || selectedAttachment)
+                            ? 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)'
+                            : theme.SEND_IDLE,
+                        border: isAnalyzing ? `1px solid ${ACCENT}88` : 'none',
+                        boxShadow: (inputText.trim() || selectedAttachment) && !isAnalyzing
+                          ? '0 4px 14px rgba(99,102,241,0.45)'
+                          : 'none',
                         cursor: isAnalyzing ? 'wait' : 'pointer',
-                        transform: isAnalyzing ? 'scale(.94)' : undefined,
                       }}
                     >
-                      <Send className="w-5 h-5" strokeWidth={2.8} style={{ color: (inputText.trim() || selectedAttachment) && !isAnalyzing ? '#07111f' : '#ffffff' }} />
+                      <Send className="w-4 h-4" strokeWidth={2.5} style={{ color: '#ffffff' }} />
                     </button>
                   </Liquid.Item>
                   <Liquid.Item x={isAnalyzing ? -8 : 0} y={isAnalyzing ? -2 : 0} effect="move" transition="bouncy">
@@ -1489,10 +1622,10 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
             </div>
             </BorderBeam>
 
-            <p className="text-center text-xs mt-3" style={{ color: theme.SUBTLE_TEXT }}>
+            <p className="text-center text-xs mt-3 opacity-70" style={{ color: theme.SUBTLE_TEXT }}>
               {isAr
-                ? `${ASSISTANT_NAME_AR} بيقدر يغلط. اتأكد من المعلومات المهمة.`
-                : `${ASSISTANT_NAME_EN} can make mistakes. Consider checking important info.`}
+                ? `${ASSISTANT_NAME_AR} ذكاء اصطناعي مساعد. يرجى مراجعة المعلومات الهامة دائماً.`
+                : `${ASSISTANT_NAME_EN} is an AI assistant. Please verify critical information.`}
             </p>
           </div>
         </div>
@@ -1500,24 +1633,24 @@ export default function AIChat({ lang, darkMode, isPremium, planName, userId, us
 
       {/* welcome screen for unauthenticated users */}
       {!userId && emptyState && (
-        <div className="absolute inset-0 flex items-center justify-center z-40" style={{ background: theme.OVERLAY_BACKDROP }}>
-          <div className="rounded-3xl p-8 max-w-sm text-center space-y-4"
+        <div className="absolute inset-0 flex items-center justify-center z-40 backdrop-blur-sm" style={{ background: theme.OVERLAY_BACKDROP }}>
+          <div className="rounded-3xl p-8 max-w-sm text-center space-y-4 shadow-2xl border"
             style={{ background: theme.OVERLAY_BG, border: `1px solid ${theme.BORDER}`, color: theme.FG }}>
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
-              style={{ background: 'linear-gradient(135deg,#10a37f,#1a7f64)' }}>
-              <Sparkles className="w-7 h-7 text-white" />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-indigo-500/25"
+              style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
+              <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-lg font-semibold" style={{ color: theme.FG }}>
-              {isAr ? 'سجل دخولك للتحدث مع كوزمو AI' : 'Sign in to chat with Cosmo AI'}
+            <h3 className="text-lg font-bold" style={{ color: theme.FG }}>
+              {isAr ? 'سجل دخولك لبدء التعلم مع كوزمو' : 'Sign in to chat with Cosmo AI'}
             </h3>
-            <p className="text-sm" style={{ color: theme.MUTED }}>
-              {isAr ? 'أنشئ حسابك أو سجل دخولك لتبدأ محادثاتك الذكية.' : 'Create an account or sign in to start smart conversations.'}
+            <p className="text-sm leading-relaxed" style={{ color: theme.MUTED }}>
+              {isAr ? 'احفظ محادثاتك وسجل مذاكرتك وتوليد الاختبارات الخاصة بك سحابياً.' : 'Save your conversations, study notes, and generated quizzes in the cloud.'}
             </p>
             <button
               onClick={() => onOpenAuthModal?.('register')}
-              className="w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95"
-              style={{ background: '#10a37f', color: 'white' }}>
-              {isAr ? 'تسجيل الدخول / إنشاء حساب' : 'Sign in / Create account'}
+              className="w-full py-3.5 rounded-xl font-bold text-sm text-white shadow-lg shadow-indigo-500/30 transition-all active:scale-95 cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
+              {isAr ? 'تسجيل الدخول / إنشاء حساب مجاني' : 'Sign in / Create Free Account'}
             </button>
           </div>
         </div>
