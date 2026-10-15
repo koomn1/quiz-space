@@ -8,11 +8,13 @@ const cosmoRoutesSource = readFileSync(resolve(process.cwd(), 'worker/src/cosmoR
 const routeSources = [workerSource, authSource, cosmoRoutesSource].join('\n');
 
 describe('Cosmo generation recovery contract', () => {
-  it('uses Groq Llama as the primary text route with OpenRouter fallback', () => {
+  it('uses Groq first, OpenAI second, and OpenRouter as the final text fallback', () => {
     expect(workerSource).toContain("const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b'");
     expect(workerSource).toContain('if (env.GROQ_API_KEY && !hasMultimodalContent)');
     expect(workerSource).toContain('falling back to OpenRouter');
     expect(workerSource).toContain('https://api.groq.com/openai/v1/chat/completions');
+    expect(workerSource).toContain('https://api.openai.com/v1/chat/completions');
+    expect(workerSource).toContain('OPENAI_API_KEY');
     expect(workerSource).toContain("selectedProvider = 'groq'");
   });
 
@@ -63,7 +65,7 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain("type Provider = 'openrouter'");
     expect(workerSource).not.toContain('api.deepseek.com');
     expect(workerSource).toContain('api.groq.com');
-    expect(workerSource).not.toContain('api.openai.com');
+    expect(workerSource).toContain('api.openai.com');
     expect(workerSource).not.toContain("provider: 'deepseek'");
     expect(workerSource).not.toContain("provider: 'direct'");
     expect(workerSource).not.toContain("provider: 'direct'");

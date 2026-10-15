@@ -73,6 +73,8 @@ const OPENROUTER_STREAM_TEXT_MODELS = [
 // GPT-OSS 20B is the fast, low-cost production replacement for routine text work.
 const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const OPENAI_TEXT_MODEL = 'gpt-5-mini';
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
   const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000;
 const OPENROUTER_SITE_URL = 'https://quizspace.app';
 const OPENROUTER_SITE_NAME = 'QuizSpace';
@@ -483,6 +485,40 @@ async function callOpenRouterWithFallback(
     } catch (error) {
       lastError = error;
       console.warn('Groq primary model failed; falling back to OpenRouter:', error);
+    }
+  }
+  if (env.OPENAI_API_KEY && !hasMultimodalContent) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), options?.timeoutMs ?? 30_000);
+      try {
+        const response = await fetch(OPENAI_API_URL, {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: OPENAI_TEXT_MODEL,
+            messages,
+            ...(options?.max_tokens ? { max_completion_tokens: options.max_tokens } : {}),
+            ...(options?.temperature != null ? { temperature: options.temperature } : {}),
+          }),
+        });
+        if (!response.ok) throw new AiProviderError(aiErrorCategoryFromStatus(response.status), 'openai', OPENAI_TEXT_MODEL, response.status);
+        const payload = await response.json() as any;
+        const text = providerContentToText(payload.choices?.[0]?.message?.content ?? payload.choices?.[0]?.text);
+        if (!text) throw new AiProviderError('empty_response', 'openai', OPENAI_TEXT_MODEL);
+        return options?.expectedAnswerCount
+          ? validateAnswerReviewResponse(text, options.expectedAnswerCount, OPENAI_TEXT_MODEL, { allowPartial: options.allowPartial })
+          : text;
+      } finally {
+        clearTimeout(timeout);
+      }
+    } catch (error) {
+      lastError = error;
+      console.warn('OpenAI fallback failed; continuing to OpenRouter:', error);
     }
   }
   for (const model of models) {
