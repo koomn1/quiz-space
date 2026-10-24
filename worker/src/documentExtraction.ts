@@ -11,6 +11,7 @@ export interface DocumentExtractionResult {
   rawResponses: string[];
   chunks: number;
   provider: string;
+  sourceText?: string;
 }
 
 export interface DocumentExtractionProgress {
@@ -132,17 +133,12 @@ function normalizeTrueFalseOptions(questionText: string, options: string[]): str
 
 function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mcq', 'tf', 'essay']): any[] {
   const source = Array.isArray(raw) ? raw : Array.isArray(raw?.questions) ? raw.questions : [];
-  const seen = new Set<string>();
   const questions: any[] = [];
 
   for (const item of source) {
     if (!item || typeof item !== 'object') continue;
     const text = String(item.text ?? item.question ?? '').trim();
     if (!text) continue;
-    const key = normalize(text);
-    if (seen.has(key)) continue;
-    seen.add(key);
-
     const rawType = String(item.type || '').toLowerCase();
     const type = rawType === 'true_false' || rawType === 'true/false' || rawType === 'tf'
       ? 'tf'
@@ -172,6 +168,9 @@ function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mc
       correctIndex,
       correctAnswer,
       explanation: item.explanation == null ? '' : String(item.explanation).trim(),
+      extractionMethod: item.extractionMethod || item.extraction_method || 'ai',
+      reviewRequired: Boolean(item.reviewRequired ?? item.review_required ?? (type !== 'essay' && correctIndex < 0)),
+      sourceText: item.sourceText || item.source_text || text,
     });
   }
   return questions;
@@ -184,19 +183,27 @@ const MODEL_TIMEOUT_MS = 35_000;
  * it only accepts numbered questions and clearly labelled options/answers, so
  * it cannot invent content when a document has no question structure.
  */
-function parseLiteralQuestions(text: string): any[] {
+export function parseLiteralQuestions(text: string): any[] {
   const questions: any[] = [];
   let current: any | null = null;
+  let sourceLines: string[] = [];
   const flush = () => {
-    if (current) questions.push(current);
+    if (current) {
+      current.sourceText = sourceLines.join('\n');
+      current.extractionMethod = 'direct';
+      current.reviewRequired = current.type !== 'essay' && current.correctIndex < 0;
+      questions.push(current);
+    }
     current = null;
+    sourceLines = [];
   };
   const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 
   for (const line of lines) {
-    const questionMatch = line.match(/^(?:question\s*)?(\d{1,4})[.)\-:]\s*(.+)$/i);
+    const questionMatch = line.match(/^(?:(?:question|q)\s*)?(\d{1,4})[.)\-:]\s*(.+)$/i);
     if (questionMatch) {
       flush();
+      sourceLines = [line];
       current = {
         number: Number(questionMatch[1]),
         text: questionMatch[2].trim(),
@@ -210,7 +217,8 @@ function parseLiteralQuestions(text: string): any[] {
     }
     if (!current) continue;
 
-    const optionMatch = line.match(/^([A-H])\s*[).:\-]\s*(.+)$/i);
+    sourceLines.push(line);
+    const optionMatch = line.match(/^\(?([A-H])(?:\)|[).:\-])\s*(.+)$/i);
     if (optionMatch) {
       current.type = 'mcq';
       current.options.push(optionMatch[2].trim());
@@ -244,6 +252,15 @@ function parseLiteralQuestions(text: string): any[] {
   }
   flush();
   return questions;
+}
+
+export function isReliableLiteralExtraction(text: string, questions: any[]): boolean {
+  if (!questions.length) return false;
+  const markers = text.match(/^(?:(?:question|q)\s*)?\d{1,4}[.)\-:]/gim) || [];
+  return markers.length === questions.length && questions.every(question => {
+    if (!question?.text || question.reviewRequired) return false;
+    return question.type === 'essay' || (Array.isArray(question.options) && question.options.length >= 2);
+  });
 }
 
 export function splitTextForExtraction(text: string): string[] {
@@ -311,16 +328,17 @@ export async function extractQuestionsFromText(
 ): Promise<DocumentExtractionResult> {
   const normalizedText = text.trim();
   const allowedTypes = parseAllowedQuestionTypes(customInstruction);
-  const localFastPath = normalizeQuestions(parseLiteralQuestions(normalizedText), allowedTypes);
-  if (localFastPath.length > 0) {
-    if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: localFastPath.length });
+  const directQuestions = normalizeQuestions(parseLiteralQuestions(normalizedText), allowedTypes);
+  if (isReliableLiteralExtraction(normalizedText, directQuestions)) {
+    if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: directQuestions.length });
     return {
       title: 'Extracted Quiz',
       description: 'Questions extracted from the uploaded document.',
-      questions: localFastPath.map((question, index) => ({ ...question, number: question.number || index + 1 })),
+      questions: directQuestions.map((question, index) => ({ ...question, number: question.number || index + 1, extractionMethod: 'direct' })),
       rawResponses: [],
       chunks: 1,
       provider: 'local-format-parser',
+      sourceText: normalizedText,
     };
   }
 
@@ -362,27 +380,30 @@ export async function extractQuestionsFromText(
     }
   }
 
-  const seen = new Set<string>();
-  const questions: any[] = [];
+  const aiQuestions: any[] = [];
   for (const result of parsedResults) {
     for (const question of normalizeQuestions(result, allowedTypes)) {
-      const key = normalize(question.text);
-      if (!seen.has(key)) {
-        seen.add(key);
-        questions.push(question);
-      }
+      aiQuestions.push({ ...question, extractionMethod: 'ai', sourceText: question.sourceText || question.text });
     }
   }
+  const questions = [...directQuestions];
+  for (const question of aiQuestions) {
+    const hasDirectMatch = directQuestions.some(direct => (
+      question.number && direct.number === question.number
+    ) || normalize(direct.text) === normalize(question.text));
+    if (!hasDirectMatch) questions.push({ ...question, reviewRequired: true });
+  }
+  questions.sort((left, right) => (Number(left.number) || 0) - (Number(right.number) || 0));
   if (!questions.length) {
-    const literalQuestions = normalizeQuestions(parseLiteralQuestions(text), allowedTypes);
-    if (literalQuestions.length > 0) {
+    if (directQuestions.length > 0) {
       return {
         title: 'Extracted Quiz',
         description: 'Questions extracted from the uploaded document.',
-        questions: literalQuestions.map((question, index) => ({ ...question, number: question.number || index + 1 })),
+        questions: directQuestions.map((question, index) => ({ ...question, number: question.number || index + 1, extractionMethod: 'direct', reviewRequired: true })),
         rawResponses,
         chunks: chunks.length,
         provider: `${[...modelsUsed].join(', ') || 'none'}, local-format-parser`,
+        sourceText: normalizedText,
       };
     }
     throw new Error('The document did not contain any valid questions.');
@@ -395,6 +416,7 @@ export async function extractQuestionsFromText(
     rawResponses,
     chunks: chunks.length,
     provider: [...modelsUsed].join(', '),
+    sourceText: normalizedText,
   };
 }
 

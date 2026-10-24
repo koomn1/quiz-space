@@ -406,15 +406,11 @@ function normalizeQuestions(value: unknown, allowedTypes: AllowedQuestionType[] 
           : Array.isArray(container?.quiz?.questions)
             ? container.quiz.questions
             : [];
-  const seen = new Set<string>();
   const questions: any[] = [];
   for (const raw of source) {
     if (!raw || typeof raw !== 'object') continue;
     const text = String((raw as any).text ?? (raw as any).question ?? (raw as any).questionText ?? (raw as any).prompt ?? '').trim();
     if (!text) continue;
-    const key = text.replace(/\s+/g, ' ').toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
     const declaredType = String((raw as any).type ?? (raw as any).questionType ?? (raw as any).kind ?? '').toLowerCase();
     const type = declaredType === 'tf' || declaredType === 'true_false' || declaredType === 'true/false'
       ? 'tf'
@@ -427,14 +423,18 @@ function normalizeQuestions(value: unknown, allowedTypes: AllowedQuestionType[] 
       ? rawOptions.map((option: unknown) => String(typeof option === 'object' && option !== null ? ((option as any).text ?? (option as any).label ?? '') : option ?? '').trim()).filter(Boolean)
       : [];
     const options = type === 'tf' ? normalizeTrueFalseOptions(text, parsedOptions) : parsedOptions;
+    const correctIndex = type === 'essay' ? -1 : resolveCorrectIndex(raw, options, type);
     questions.push({
       number: Number.isInteger(Number((raw as any).number)) && Number((raw as any).number) > 0 ? Number((raw as any).number) : questions.length + 1,
       text,
       type,
       options: type === 'essay' ? [] : options,
-      correctIndex: type === 'essay' ? -1 : resolveCorrectIndex(raw, options, type),
+      correctIndex,
       correctAnswer: (raw as any).correctAnswer ?? (raw as any).correct_answer ?? (raw as any).answer ?? (raw as any).correctOption ?? '',
       explanation: (raw as any).explanation == null ? '' : String((raw as any).explanation),
+      extractionMethod: (raw as any).extractionMethod ?? (raw as any).extraction_method ?? 'ai',
+      reviewRequired: Boolean((raw as any).reviewRequired ?? (raw as any).review_required ?? (type !== 'essay' && correctIndex < 0)),
+      sourceText: (raw as any).sourceText ?? (raw as any).source_text ?? text,
     });
   }
   return questions;

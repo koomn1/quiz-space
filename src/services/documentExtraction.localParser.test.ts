@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { extractQuestionsFromText, splitTextForExtraction } from '../../worker/src/documentExtraction';
+import { extractQuestionsFromText, isReliableLiteralExtraction, parseLiteralQuestions, splitTextForExtraction } from '../../worker/src/documentExtraction';
 
 describe('structured document extraction fast path', () => {
   it('extracts a conventional question sheet without calling an external model', async () => {
@@ -47,5 +47,46 @@ Answer: True`,
     expect(chunks.length).toBeGreaterThan(1);
     expect(chunks.some(chunk => chunk.includes('Question 41.'))).toBe(true);
     expect(chunks.some(chunk => chunk.includes('Which option continues across the provider boundary?'))).toBe(true);
+  });
+
+  it('extracts Q1 and Question 2 directly while preserving source order and duplicates', () => {
+    const source = `Q1. Choose the correct answer.
+(A) First
+(B) Second
+Answer: B
+Question 2: Choose the correct answer.
+A. First
+B. Second
+Answer: A
+3. Choose the correct answer.
+A. First
+B. Second
+Answer: B`;
+    const questions = parseLiteralQuestions(source);
+    expect(questions).toHaveLength(3);
+    expect(questions.map(question => question.number)).toEqual([1, 2, 3]);
+    expect(questions.map(question => question.extractionMethod)).toEqual(['direct', 'direct', 'direct']);
+    expect(questions[0].sourceText).toContain('Q1. Choose the correct answer.');
+    expect(isReliableLiteralExtraction(source, questions)).toBe(true);
+  });
+
+  it('does not call the model for a reliable direct extraction', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    const result = await extractQuestionsFromText(
+      `1. What is 2 + 2?
+A. 3
+B. 4
+Answer: B
+2. What is 3 + 3?
+A. 5
+B. 6
+Answer: B`,
+      { OPENROUTER_API_KEY: 'not-used-for-direct-extraction' },
+    );
+    expect(result.provider).toBe('local-format-parser');
+    expect(result.questions).toHaveLength(2);
+    expect(result.questions.every(question => question.extractionMethod === 'direct')).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
   });
 });
