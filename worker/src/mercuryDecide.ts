@@ -57,27 +57,27 @@ export async function extractQuestionBlocksWithMercury(
   env: MercuryDecideEnv,
 ): Promise<string[]> {
   if (!env.INCEPTION_API_KEY || !text.trim()) return [];
-  const questions: Record<string, unknown> = {};
+  const criteria: Record<string, string> = {};
   for (let index = 1; index <= 26; index += 1) {
-    questions[`question_${index}`] = {
-      type: 'extract',
-      criteria: {
-        question_block: `The exact contiguous text of question ${index}, including its original number and all immediately associated answer choices. Return the original text only. If it is not present, mark it not stated.`,
-      },
-    };
+    criteria[`question_${index}`] = `The exact contiguous text of question ${index}, including its original number and all immediately associated answer choices. Return the original text only. If it is not present, mark it not stated.`;
   }
 
   try {
-    const result = await requestDecision(env, { source: text.slice(0, 500_000) }, questions);
+    const result = await requestDecision(env, { source: text.slice(0, 500_000) }, {
+      question_blocks: {
+        type: 'extract',
+        source: 'source',
+        instructions: 'Extract complete numbered quiz question blocks exactly as written. Preserve wording, punctuation, line breaks, numbering, and choices. Never rewrite or summarize.',
+        criteria,
+      },
+    });
     const blocks: string[] = [];
+    const spans = result?.answers?.question_blocks?.spans;
     for (let index = 1; index <= 26; index += 1) {
-      const answer = result?.answers?.[`question_${index}`];
-      const spans = answer?.spans;
       const candidates = spans && typeof spans === 'object'
-        ? Object.values(spans as Record<string, unknown>)
+        ? (spans as Record<string, unknown>)[`question_${index}`]
         : [];
-      const value = candidates
-        .flatMap(candidate => Array.isArray(candidate) ? candidate : [candidate])
+      const value = (Array.isArray(candidates) ? candidates : [candidates])
         .map(spanText)
         .find(Boolean);
       if (value) blocks.push(value);
