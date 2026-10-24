@@ -2328,7 +2328,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 <div className="flex justify-between items-center text-xs font-extrabold text-slate-700 dark:text-slate-300" dir={isAr ? 'rtl' : 'ltr'}>
                   <span>{isAr ? 'نسبة التقدم الكلية:' : 'Overall Progress:'}</span>
                   <span className="font-mono text-indigo-600 dark:text-indigo-400">
-                    {overlayProgress ? overlayProgress.current : 0} / {overlayProgress ? overlayProgress.total : overlayFallbackTotal} {isAr ? 'سؤال' : 'questions'}
+                    {overlayProgress?.total === 1 && overlayProgress.percentage != null
+                      ? `${Math.round(overlayProgress.percentage)}%`
+                      : `${overlayProgress ? overlayProgress.current : 0} / ${overlayProgress ? overlayProgress.total : overlayFallbackTotal} ${isAr ? 'سؤال' : 'questions'}`}
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">

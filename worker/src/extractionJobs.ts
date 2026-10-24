@@ -828,6 +828,10 @@ async function samplePdfText(source: Uint8Array, pageCount: number): Promise<str
 async function getScannedPdfPageCount(source: Uint8Array, job: ExtractionJobRow): Promise<number | null> {
   if (job.file_mime_type !== 'application/pdf') return null;
   const pageCount = (await PDFDocument.load(source)).getPageCount();
+  // Sampling every PDF duplicates the text extraction work below and can
+  // leave a normal text-based document looking frozen before the first real
+  // progress event. Only large PDFs need the scanned-document probe.
+  if (pageCount < LARGE_PDF_PAGE_THRESHOLD) return null;
   const sampledText = await samplePdfText(source, pageCount);
   return shouldUseVisionForScannedPdf(pageCount, sampledText) ? pageCount : null;
 }
@@ -1196,6 +1200,25 @@ export async function processExtractionJob(
       progress_percentage: 5,
       progress_message: 'تم فتح الملف، جارٍ قراءة المحتوى.',
     });
+    // Publish a heartbeat before potentially expensive PDF inspection. This
+    // prevents the client from staying on its initial 0/1 placeholder while
+    // the worker is healthy but has not reached the extraction callback yet.
+    if (job.file_mime_type === 'application/pdf') {
+      const pageCount = (await PDFDocument.load(source)).getPageCount();
+      await updateClaimedJob(env, authHeader, job.id, token, {
+        progress_percentage: 7,
+        total_chunks: pageCount >= LARGE_PDF_PAGE_THRESHOLD ? Math.ceil(pageCount / VISION_CHUNK_PAGE_COUNT) : 1,
+        progress_message: pageCount >= LARGE_PDF_PAGE_THRESHOLD
+          ? `تم فتح ملف PDF (${pageCount} صفحة)، جارٍ تحديد طريقة الاستخراج المناسبة.`
+          : `تم فتح ملف PDF (${pageCount} صفحة)، جارٍ استخراج النص والأسئلة الحرفية.`,
+      });
+    } else {
+      await updateClaimedJob(env, authHeader, job.id, token, {
+        progress_percentage: 7,
+        total_chunks: 1,
+        progress_message: 'تم فتح الملف، جارٍ استخراج النص والأسئلة الحرفية.',
+      });
+    }
     const scannedPageCount = await getScannedPdfPageCount(source, job);
     if (scannedPageCount) {
       await restartExpiredVisionChunks(env, authHeader, job.id);
