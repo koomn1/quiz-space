@@ -350,13 +350,13 @@ export async function extractQuestionsFromText(
   if (env.INCEPTION_API_KEY) {
     const mercuryBlocks = await extractQuestionBlocksWithMercury(normalizedText, env);
     if (mercuryBlocks.length > 0) {
-      const mercuryQuestions = normalizeQuestions(parseLiteralQuestions(mercuryBlocks.join('\n')), allowedTypes)
+      const mercuryQuestions = normalizeQuestions(parseLiteralQuestions(mercuryBlocks.map(block => block.text).join('\n')), allowedTypes)
         .map((question, index) => ({
           ...question,
           number: question.number || index + 1,
           extractionMethod: 'mercury-decide',
           sourceText: question.sourceText || question.text,
-          reviewRequired: Boolean(question.reviewRequired),
+          reviewRequired: Boolean(question.reviewRequired) || (mercuryBlocks[index]?.confidence != null && mercuryBlocks[index].confidence < 0.75),
         }));
       if (mercuryQuestions.length > 0) {
         if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: mercuryQuestions.length });

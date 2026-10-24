@@ -12,6 +12,11 @@ interface MercuryDecisionResponse {
   answers?: Record<string, any>;
 }
 
+export interface MercuryExtractedBlock {
+  text: string;
+  confidence: number | null;
+}
+
 const MERCURY_DECIDE_URL = 'https://api.inceptionlabs.ai/v1/decisions';
 const MERCURY_TIMEOUT_MS = 25_000;
 
@@ -55,7 +60,7 @@ function spanText(value: unknown): string {
 export async function extractQuestionBlocksWithMercury(
   text: string,
   env: MercuryDecideEnv,
-): Promise<string[]> {
+): Promise<MercuryExtractedBlock[]> {
   if (!env.INCEPTION_API_KEY || !text.trim()) return [];
   const criteria: Record<string, string> = {};
   for (let index = 1; index <= 26; index += 1) {
@@ -71,16 +76,21 @@ export async function extractQuestionBlocksWithMercury(
         criteria,
       },
     });
-    const blocks: string[] = [];
+    const blocks: MercuryExtractedBlock[] = [];
     const spans = result?.answers?.question_blocks?.spans;
     for (let index = 1; index <= 26; index += 1) {
       const candidates = spans && typeof spans === 'object'
         ? (spans as Record<string, unknown>)[`question_${index}`]
         : [];
-      const value = (Array.isArray(candidates) ? candidates : [candidates])
-        .map(spanText)
-        .find(Boolean);
-      if (value) blocks.push(value);
+      const span = (Array.isArray(candidates) ? candidates : [candidates])
+        .find(candidate => Boolean(spanText(candidate)));
+      const value = spanText(span);
+      if (value) {
+        const confidence = span && typeof span === 'object' && typeof (span as MercurySpan & { confidence?: unknown }).confidence === 'number'
+          ? Number((span as MercurySpan & { confidence: number }).confidence)
+          : null;
+        blocks.push({ text: value, confidence });
+      }
     }
     return blocks;
   } catch (error) {
