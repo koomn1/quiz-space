@@ -89,4 +89,16 @@ Answer: B`,
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
+
+  it('parses option labels with a spaced dash and flags missing answers for review', () => {
+    const source = `Question 7: Water freezes at what temperature?
+A - 0°C
+B - 50°C
+C - 100°C`;
+    const [question] = parseLiteralQuestions(source);
+    expect(question.type).toBe('mcq');
+    expect(question.options).toEqual(['0°C', '50°C', '100°C']);
+    expect(question.correctIndex).toBe(-1);
+    expect(question.reviewRequired).toBe(true);
+  });
 });

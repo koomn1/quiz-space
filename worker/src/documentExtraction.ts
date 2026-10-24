@@ -218,7 +218,7 @@ export function parseLiteralQuestions(text: string): any[] {
     if (!current) continue;
 
     sourceLines.push(line);
-    const optionMatch = line.match(/^\(?([A-H])(?:\)|[).:\-])\s*(.+)$/i);
+    const optionMatch = line.match(/^\(?([A-H])(?:\)\s*|\s*[).:\-])\s*(.+)$/i);
     if (optionMatch) {
       current.type = 'mcq';
       current.options.push(optionMatch[2].trim());
