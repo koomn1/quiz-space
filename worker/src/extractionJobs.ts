@@ -1,10 +1,12 @@
 import mammoth from 'mammoth';
 import { PDFDocument } from 'pdf-lib';
 import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
+import { assessGeneratedQuestionBatch } from './mercuryDecide';
 import JSZip from 'jszip';
 
 export interface ExtractionJobEnv {
   OPENROUTER_API_KEY: string;
+  INCEPTION_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
 }
@@ -950,7 +952,11 @@ async function generateQuestionsFromText(
 
   if (!allQuestions.length) throw lastError instanceof Error ? lastError : new Error('The document did not contain any valid questions.');
   const finalQuestions = requestedCount ? allQuestions.slice(0, requestedCount) : allQuestions;
-  return { title, description, questions: finalQuestions, provider: [...providers].join(', ') || 'openrouter', chunks: totalChunks };
+  const mercuryAssessment = await assessGeneratedQuestionBatch(finalQuestions, sourceFileBaseName(job.source_file_name), env);
+  const reviewedQuestions = mercuryAssessment.needsReview
+    ? finalQuestions.map(question => ({ ...question, reviewRequired: true, extractionMethod: question.extractionMethod || 'mercury-review' }))
+    : finalQuestions;
+  return { title, description, questions: reviewedQuestions, provider: [...providers, ...(mercuryAssessment.qualityProbability != null ? ['mercury-decide'] : [])].join(', ') || 'openrouter', chunks: totalChunks };
 }
 
 export async function extractJobQuiz(
@@ -1035,12 +1041,16 @@ export async function extractJobQuiz(
   const questions = normalizeQuestions(quiz, parseAllowedQuestionTypes(job.custom_instruction));
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
   const finalQuestions = job.requested_question_count ? questions.slice(0, job.requested_question_count) : questions;
+  const mercuryAssessment = await assessGeneratedQuestionBatch(finalQuestions, sourceFileBaseName(job.source_file_name), env);
+  const reviewedQuestions = mercuryAssessment.needsReview
+    ? finalQuestions.map(question => ({ ...question, reviewRequired: true, extractionMethod: question.extractionMethod || 'mercury-review' }))
+    : finalQuestions;
   await onProgress(1, 1, finalQuestions.length);
   return {
     title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
     description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-    questions: finalQuestions,
-    provider: response.model,
+    questions: reviewedQuestions,
+    provider: mercuryAssessment.qualityProbability != null ? `${response.model}, mercury-decide` : response.model,
     chunks: 1,
   };
 }

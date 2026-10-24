@@ -22,6 +22,7 @@ import { handleCosmoRoutes } from './cosmoRoutes';
 import { handleExtractionRoutes } from './extractionRoutes';
 import { finishTask, retryDelaySeconds } from './taskLedger';
 import { extractAttachmentText, formatSourceForModel } from './attachmentPipeline';
+import { assessGeneratedQuestionBatch } from './mercuryDecide';
 export type { Env, ExtractionQueueMessage, WorkerExecutionContext } from './platform';
 
 type Provider = 'openrouter';
@@ -893,6 +894,19 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
           throw new Error('Generation did not return the requested number of questions.');
         }
         result.questions = result.questions.slice(0, body.amount);
+
+        // Mercury Decide is a bounded quality gate, not a generator. It only
+        // adds a review marker when the batch looks structurally questionable;
+        // if the optional service is unavailable, generation still succeeds.
+        const mercuryAssessment = await assessGeneratedQuestionBatch(result.questions, body.topic, env);
+        if (mercuryAssessment.needsReview) {
+          result.questions = result.questions.map((question: any) => ({
+            ...question,
+            reviewRequired: true,
+            extractionMethod: question.extractionMethod || 'mercury-review',
+          }));
+        }
+        result.generationQuality = mercuryAssessment.qualityProbability;
 
         if (userId !== 'guest') await logAiPerformance(env, authHeader, {
           user_id: userId,

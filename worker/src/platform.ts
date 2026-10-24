@@ -5,6 +5,8 @@ export interface Env {
   GROQ_API_KEY?: string;
   /** Optional direct OpenAI fallback for text generation. */
   OPENAI_API_KEY?: string;
+  /** Optional server-only Mercury Decide key for lossless extraction and validation. */
+  INCEPTION_API_KEY?: string;
   OPENROUTER_API_KEY: string;
   /** Server-only web search key; never expose this to the React bundle. */
   TAVILY_API_KEY?: string;

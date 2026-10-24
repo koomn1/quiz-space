@@ -1,7 +1,9 @@
 import { extractText as extractPdfText } from 'unpdf';
+import { extractQuestionBlocksWithMercury } from './mercuryDecide';
 
 export interface DocumentExtractionEnv {
   OPENROUTER_API_KEY: string;
+  INCEPTION_API_KEY?: string;
 }
 
 export interface DocumentExtractionResult {
@@ -340,6 +342,35 @@ export async function extractQuestionsFromText(
       provider: 'local-format-parser',
       sourceText: normalizedText,
     };
+  }
+
+  // Mercury Decide is deliberately reached only after the strict local parser
+  // cannot prove that the source is reliably structured. Its extract response
+  // is fed back into the same literal parser so wording and ordering stay intact.
+  if (env.INCEPTION_API_KEY) {
+    const mercuryBlocks = await extractQuestionBlocksWithMercury(normalizedText, env);
+    if (mercuryBlocks.length > 0) {
+      const mercuryQuestions = normalizeQuestions(parseLiteralQuestions(mercuryBlocks.join('\n')), allowedTypes)
+        .map((question, index) => ({
+          ...question,
+          number: question.number || index + 1,
+          extractionMethod: 'mercury-decide',
+          sourceText: question.sourceText || question.text,
+          reviewRequired: Boolean(question.reviewRequired),
+        }));
+      if (mercuryQuestions.length > 0) {
+        if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: mercuryQuestions.length });
+        return {
+          title: 'Extracted Quiz',
+          description: 'Questions extracted from the uploaded document.',
+          questions: mercuryQuestions,
+          rawResponses: [],
+          chunks: 1,
+          provider: 'mercury-decide',
+          sourceText: normalizedText,
+        };
+      }
+    }
   }
 
   const chunks = splitTextForExtraction(normalizedText);
