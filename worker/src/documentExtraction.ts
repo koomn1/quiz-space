@@ -202,13 +202,13 @@ export function parseLiteralQuestions(text: string): any[] {
   const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 
   for (const line of lines) {
-    const questionMatch = line.match(/^(?:(?:question|q)\s*)?(\d{1,4})[.)\-:]\s*(.+)$/i);
+    const questionMatch = line.match(/^(?:(?:question|q)\s*(\d{1,4})(?:[.)\-:]|\s+)|((?:\d{1,4})[.)\-:]))\s*(.+)$/i);
     if (questionMatch) {
       flush();
       sourceLines = [line];
       current = {
-        number: Number(questionMatch[1]),
-        text: questionMatch[2].trim(),
+        number: Number(String(questionMatch[1] || questionMatch[2]).replace(/[^0-9]/g, '')),
+        text: questionMatch[3].trim(),
         type: 'essay',
         options: [],
         correctIndex: -1,

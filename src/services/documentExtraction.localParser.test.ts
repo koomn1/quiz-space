@@ -101,4 +101,10 @@ C - 100°C`;
     expect(question.correctIndex).toBe(-1);
     expect(question.reviewRequired).toBe(true);
   });
+
+  it('accepts Q1 and Question 1 without punctuation after the number', () => {
+    const questions = parseLiteralQuestions(`Q1 What is two plus two?\nA. Three\nB. Four\nAnswer: B\n\nQuestion 2 What is three plus three?\nA. Five\nB. Six\nAnswer: B`);
+    expect(questions.map(question => question.number)).toEqual([1, 2]);
+    expect(questions.map(question => question.text)).toEqual(['What is two plus two?', 'What is three plus three?']);
+  });
 });
