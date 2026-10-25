@@ -2,6 +2,26 @@ import { describe, expect, it, vi } from 'vitest';
 import { extractQuestionsFromText, isReliableLiteralExtraction, parseLiteralQuestions, splitTextForExtraction } from '../../worker/src/documentExtraction';
 
 describe('structured document extraction fast path', () => {
+  it('uses Mercury Decide as the primary extractor when its key is configured', async () => {
+    const source = `1. What is the red planet?
+A. Earth
+B. Mars
+C. Venus
+Answer: B`;
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
+      model: 'mercury-decide',
+      answers: { question_blocks: { type: 'extract', spans: { question_1: [{ text: source, confidence: 0.98 }] } } },
+    }), { status: 200 }));
+
+    const result = await extractQuestionsFromText(source, { OPENROUTER_API_KEY: 'unused', INCEPTION_API_KEY: 'test-inception-key' });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(fetchSpy.mock.calls[0]?.[1]?.body)).model).toBe('mercury-decide');
+    expect(result.provider).toBe('mercury-decide');
+    expect(result.questions[0]).toMatchObject({ extractionMethod: 'mercury-decide', correctIndex: 1 });
+    fetchSpy.mockRestore();
+  });
+
   it('extracts a conventional question sheet without calling an external model', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     const progress: Array<{ processed: number; total: number; questionsExtracted: number }> = [];

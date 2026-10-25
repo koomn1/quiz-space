@@ -4,8 +4,7 @@ export interface MercuryDecideEnv {
 
 interface MercurySpan {
   text?: unknown;
-  start?: unknown;
-  end?: unknown;
+  confidence?: unknown;
 }
 
 interface MercuryDecisionResponse {
@@ -19,6 +18,9 @@ export interface MercuryExtractedBlock {
 
 const MERCURY_DECIDE_URL = 'https://api.inceptionlabs.ai/v1/decisions';
 const MERCURY_TIMEOUT_MS = 25_000;
+// Mercury Decide extract requests have a 32K-token limit. Keep a conservative
+// character budget and process large documents in bounded sections.
+const MERCURY_EXTRACT_CHUNK_CHARS = 100_000;
 
 async function requestDecision(
   env: MercuryDecideEnv,
@@ -52,57 +54,73 @@ function spanText(value: unknown): string {
   return typeof span.text === 'string' ? span.text : '';
 }
 
+function splitForMercury(text: string): string[] {
+  const chunks: string[] = [];
+  for (let start = 0; start < text.length;) {
+    const targetEnd = Math.min(start + MERCURY_EXTRACT_CHUNK_CHARS, text.length);
+    const boundary = targetEnd < text.length ? text.lastIndexOf('\n', targetEnd) : targetEnd;
+    const end = boundary > start + 30_000 ? boundary : targetEnd;
+    chunks.push(text.slice(start, end));
+    if (end >= text.length) break;
+    start = Math.max(start + 1, end);
+  }
+  return chunks;
+}
+
+async function extractOneChunk(source: string, env: MercuryDecideEnv): Promise<MercuryExtractedBlock[]> {
+  const criteria: Record<string, string> = {};
+  for (let index = 1; index <= 26; index += 1) {
+    criteria[`question_${index}`] = `The exact contiguous text of question ${index}, including its original number and all immediately associated answer choices. Return the original text only. If it is not present, mark it not stated.`;
+  }
+  const result = await requestDecision(env, { source }, {
+    question_blocks: {
+      type: 'extract',
+      source: 'source',
+      instructions: 'Extract complete numbered quiz question blocks exactly as written. Preserve wording, punctuation, line breaks, numbering, and choices. Never rewrite or summarize.',
+      criteria,
+    },
+  });
+  const blocks: MercuryExtractedBlock[] = [];
+  const spans = result?.answers?.question_blocks?.spans;
+  for (let index = 1; index <= 26; index += 1) {
+    const candidates = spans && typeof spans === 'object'
+      ? (spans as Record<string, unknown>)[`question_${index}`]
+      : [];
+    const span = (Array.isArray(candidates) ? candidates : [candidates])
+      .find(candidate => Boolean(spanText(candidate)));
+    const value = spanText(span);
+    if (!value) continue;
+    const confidence = span && typeof span === 'object' && typeof (span as MercurySpan).confidence === 'number'
+      ? Number((span as MercurySpan).confidence)
+      : null;
+    blocks.push({ text: value, confidence });
+  }
+  return blocks;
+}
+
 /**
- * Extracts up to 26 contiguous question blocks without rewriting them.
- * Mercury Decide is only a fallback; the local parser remains authoritative
- * whenever the source already has a reliable question layout.
+ * Mercury is the primary AI extractor when INCEPTION_API_KEY is configured.
+ * The caller feeds the exact spans back into the strict local parser, while
+ * this function keeps local parsing as the safe fallback if Mercury fails.
  */
 export async function extractQuestionBlocksWithMercury(
   text: string,
   env: MercuryDecideEnv,
 ): Promise<MercuryExtractedBlock[]> {
   if (!env.INCEPTION_API_KEY || !text.trim()) return [];
-  const criteria: Record<string, string> = {};
-  for (let index = 1; index <= 26; index += 1) {
-    criteria[`question_${index}`] = `The exact contiguous text of question ${index}, including its original number and all immediately associated answer choices. Return the original text only. If it is not present, mark it not stated.`;
-  }
-
   try {
-    const result = await requestDecision(env, { source: text.slice(0, 500_000) }, {
-      question_blocks: {
-        type: 'extract',
-        source: 'source',
-        instructions: 'Extract complete numbered quiz question blocks exactly as written. Preserve wording, punctuation, line breaks, numbering, and choices. Never rewrite or summarize.',
-        criteria,
-      },
-    });
-    const blocks: MercuryExtractedBlock[] = [];
-    const spans = result?.answers?.question_blocks?.spans;
-    for (let index = 1; index <= 26; index += 1) {
-      const candidates = spans && typeof spans === 'object'
-        ? (spans as Record<string, unknown>)[`question_${index}`]
-        : [];
-      const span = (Array.isArray(candidates) ? candidates : [candidates])
-        .find(candidate => Boolean(spanText(candidate)));
-      const value = spanText(span);
-      if (value) {
-        const confidence = span && typeof span === 'object' && typeof (span as MercurySpan & { confidence?: unknown }).confidence === 'number'
-          ? Number((span as MercurySpan & { confidence: number }).confidence)
-          : null;
-        blocks.push({ text: value, confidence });
-      }
+    const extracted: MercuryExtractedBlock[] = [];
+    for (const chunk of splitForMercury(text)) {
+      extracted.push(...await extractOneChunk(chunk, env));
     }
-    return blocks;
+    return extracted;
   } catch (error) {
-    console.warn('Mercury Decide question extraction failed; preserving other extraction fallbacks.', error);
+    console.warn('Mercury Decide question extraction failed; preserving local and provider fallbacks.', error);
     return [];
   }
 }
 
-/**
- * Validates a generated batch as a decision, never as a replacement generator.
- * A failed or unavailable decision leaves the generated quiz untouched.
- */
+/** Mercury validates generated batches; it does not generate quiz prose. */
 export async function assessGeneratedQuestionBatch(
   questions: unknown[],
   topic: string,

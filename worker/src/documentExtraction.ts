@@ -331,22 +331,9 @@ export async function extractQuestionsFromText(
   const normalizedText = text.trim();
   const allowedTypes = parseAllowedQuestionTypes(customInstruction);
   const directQuestions = normalizeQuestions(parseLiteralQuestions(normalizedText), allowedTypes);
-  if (isReliableLiteralExtraction(normalizedText, directQuestions)) {
-    if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: directQuestions.length });
-    return {
-      title: 'Extracted Quiz',
-      description: 'Questions extracted from the uploaded document.',
-      questions: directQuestions.map((question, index) => ({ ...question, number: question.number || index + 1, extractionMethod: 'direct' })),
-      rawResponses: [],
-      chunks: 1,
-      provider: 'local-format-parser',
-      sourceText: normalizedText,
-    };
-  }
-
-  // Mercury Decide is deliberately reached only after the strict local parser
-  // cannot prove that the source is reliably structured. Its extract response
-  // is fed back into the same literal parser so wording and ordering stay intact.
+  // Mercury Decide is the primary AI extractor when configured. Its exact
+  // spans are fed back into the same literal parser so wording, choices,
+  // answer indices, and source order remain deterministic.
   if (env.INCEPTION_API_KEY) {
     const mercuryBlocks = await extractQuestionBlocksWithMercury(normalizedText, env);
     if (mercuryBlocks.length > 0) {
@@ -371,6 +358,21 @@ export async function extractQuestionsFromText(
         };
       }
     }
+  }
+
+  // Safe, zero-network fallback for conventional question sheets or when
+  // Mercury is unavailable.
+  if (isReliableLiteralExtraction(normalizedText, directQuestions)) {
+    if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: directQuestions.length });
+    return {
+      title: 'Extracted Quiz',
+      description: 'Questions extracted from the uploaded document.',
+      questions: directQuestions.map((question, index) => ({ ...question, number: question.number || index + 1, extractionMethod: 'direct' })),
+      rawResponses: [],
+      chunks: 1,
+      provider: 'local-format-parser',
+      sourceText: normalizedText,
+    };
   }
 
   const chunks = splitTextForExtraction(normalizedText);

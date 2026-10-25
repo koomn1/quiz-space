@@ -1,4 +1,4 @@
-import type { Env } from './platform';
+import type { Env, WorkerExecutionContext } from './platform';
 
 export interface RouteContext {
   request: Request;
@@ -7,6 +7,7 @@ export interface RouteContext {
   userId: string;
   authHeader: string;
   startTime: number;
+  executionCtx?: WorkerExecutionContext;
 }
 
 export type RouteResult = Response | null;

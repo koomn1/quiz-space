@@ -798,7 +798,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   let aiModel: string | undefined;
 
   try {
-    const routeContext = { request, env, headers, userId, authHeader, startTime };
+    const routeContext = { request, env, headers, userId, authHeader, startTime, executionCtx: _ctx };
     const authRouteResponse = await handleAuthRoutes(routeContext);
     if (authRouteResponse) return authRouteResponse;
     const extractionRouteResponse = await handleExtractionRoutes(routeContext);

@@ -3,6 +3,7 @@ import {
   createOrGetExtractionJob,
   getExtractionJob,
   listActiveExtractionJobs,
+  processExtractionJob,
   restartExpiredJob,
   validateCreateExtractionJobInput,
   type ExtractionJobControl,
@@ -25,6 +26,26 @@ export function isExtractionJobRequest(request: Request): boolean {
 
 const controls = new Set<ExtractionJobControl>(['pause', 'resume', 'cancel', 'retry-failed']);
 
+function startPendingExtraction(context: RouteContext, jobId: string): void {
+  if (!context.executionCtx) return;
+  const workerAuthHeader = context.env.SUPABASE_SERVICE_ROLE_KEY
+    ? `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`
+    : context.authHeader;
+  context.executionCtx.waitUntil((async () => {
+    try {
+      await processExtractionJob(context.env, workerAuthHeader, jobId, async (parentJobId, chunkIds) => {
+        await Promise.all(chunkIds.map(chunkId => context.env.EXTRACTION_JOBS.send({
+          jobId: parentJobId,
+          chunkId,
+          ...(context.env.SUPABASE_SERVICE_ROLE_KEY ? {} : { authHeader: workerAuthHeader }),
+        })));
+      });
+    } catch (error) {
+      console.error('Inline extraction fallback failed; queue retry remains available.', { jobId, error });
+    }
+  })());
+}
+
 export async function handleExtractionRoutes(context: RouteContext): Promise<RouteResult> {
   const path = routePath(context.request);
   if (!isExtractionPath(path)) return null;
@@ -36,7 +57,10 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
       const resumable: ExtractionJobRow[] = [];
       for (const job of jobs) {
         const current = await restartExpiredJob(context.env, context.authHeader, job);
-        if (current.status === 'pending') await scheduleExtractionJob(context.env, context.authHeader, current.id);
+        if (current.status === 'pending') {
+          await scheduleExtractionJob(context.env, context.authHeader, current.id);
+          startPendingExtraction(context, current.id);
+        }
         resumable.push(current);
       }
       return json({ jobs: resumable.map(publicExtractionJob) }, 200, context.headers);
@@ -45,7 +69,10 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
     let job = await getExtractionJob(context.env, context.authHeader, jobId);
     if (!job) return json({ error: 'Extraction job not found' }, 404, context.headers);
     job = await restartExpiredJob(context.env, context.authHeader, job);
-    if (job.status === 'pending') await scheduleExtractionJob(context.env, context.authHeader, job.id);
+    if (job.status === 'pending') {
+      await scheduleExtractionJob(context.env, context.authHeader, job.id);
+      startPendingExtraction(context, job.id);
+    }
     return json(publicExtractionJob(job), 200, context.headers);
   }
 
@@ -56,7 +83,10 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
     if (!controls.has(control)) return json({ error: 'Unsupported job control' }, 400, context.headers);
     const job = await controlExtractionJob(context.env, context.authHeader, jobId, control);
     if (!job) return json({ error: 'Extraction job not found' }, 404, context.headers);
-    if (job.status === 'pending') await scheduleExtractionJob(context.env, context.authHeader, job.id);
+    if (job.status === 'pending') {
+      await scheduleExtractionJob(context.env, context.authHeader, job.id);
+      startPendingExtraction(context, job.id);
+    }
     return json(publicExtractionJob(job), 200, context.headers);
   }
 
@@ -90,6 +120,9 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
     console.error('Task ledger claim failed; extraction job remains available', error);
   }
   job = await restartExpiredJob(context.env, context.authHeader, job);
-  if (job.status === 'pending') await scheduleExtractionJob(context.env, context.authHeader, job.id, taskId);
+  if (job.status === 'pending') {
+    await scheduleExtractionJob(context.env, context.authHeader, job.id, taskId);
+    startPendingExtraction(context, job.id);
+  }
   return json({ job: publicExtractionJob(job) }, 202, context.headers);
 }
