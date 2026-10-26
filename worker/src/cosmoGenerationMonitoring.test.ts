@@ -5,71 +5,56 @@ import { describe, expect, it } from 'vitest';
 const workerSource = readFileSync(resolve(process.cwd(), 'worker/src/index.ts'), 'utf8');
 const authSource = readFileSync(resolve(process.cwd(), 'worker/src/auth.ts'), 'utf8');
 const cosmoRoutesSource = readFileSync(resolve(process.cwd(), 'worker/src/cosmoRoutes.ts'), 'utf8');
+const providerChainSource = readFileSync(resolve(process.cwd(), 'worker/src/providerChain.ts'), 'utf8');
 const routeSources = [workerSource, authSource, cosmoRoutesSource].join('\n');
 
 describe('Cosmo generation recovery contract', () => {
-  it('uses Groq first, OpenAI second, and OpenRouter as the final text fallback', () => {
-    expect(workerSource).toContain("const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b'");
-    expect(workerSource).toContain('if (env.GROQ_API_KEY && !hasMultimodalContent)');
-    expect(workerSource).toContain('falling back to OpenRouter');
-    expect(workerSource).toContain('https://api.groq.com/openai/v1/chat/completions');
-    expect(workerSource).toContain('https://api.openai.com/v1/chat/completions');
-    expect(workerSource).toContain('OPENAI_API_KEY');
-    expect(workerSource).toContain("selectedProvider = 'groq'");
+  it('uses Mercury 3, Groq, and OpenAI as the text provider chain', () => {
+    expect(providerChainSource).toContain("export const INCEPTION_MODEL = 'mercury-3'");
+    expect(providerChainSource).toContain("export const GROQ_MODEL = 'openai/gpt-oss-20b'");
+    expect(providerChainSource).toContain("export const OPENAI_MODEL = 'gpt-5-mini'");
+    expect(providerChainSource).toContain("[callInception, 'inception', INCEPTION_MODEL], [callGroq, 'groq', GROQ_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]");
   });
 
-  it('keeps live free-first OpenRouter models as the fallback route', () => {
-    expect(workerSource).toContain("const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free'");
-    expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
-    expect(workerSource).toContain("'nvidia/nemotron-3-ultra-550b-a55b:free'");
-    expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
-    expect(workerSource).toContain("'nvidia/nemotron-3.5-super-vl:free'");
-    expect(workerSource).toContain("'xingchen-agi/xing4.0-29b-a4b:free'");
-    expect(workerSource).toContain("'recursive/flint-v1.0:free'");
-    expect(workerSource).toContain("'openrouter/free'");
-    expect(workerSource).not.toContain("'google/gemini-2.0-flash-001'");
-    expect(workerSource).not.toContain("'openai/gpt-oss-120b:free'");
-    expect(workerSource).not.toContain("'mistralai/mistral-small-3.1-24b-instruct'");
-    expect(workerSource).not.toContain("'openai/gpt-4o-mini'");
-    expect(workerSource).not.toContain("'qwen/qwen3.7-flash'");
-    expect(workerSource).not.toContain("'google/gemini-2.5-flash'");
-    expect(workerSource).not.toContain("'qwen/qwen3.8-27b:free'");
-    expect(workerSource).not.toContain("'z-ai/glm-5.3-flash:free'");
+  it('uses Gemini first and OpenAI as the multimodal fallback', () => {
+    expect(providerChainSource).toContain("export const GEMINI_MODEL = 'gemini-3.8-flash'");
+    expect(providerChainSource).toContain("[callGemini, 'gemini', GEMINI_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]");
+    expect(providerChainSource).toContain('inlineData: { mimeType: match[1], data: match[2] }');
   });
 
-  it('uses the resilient OpenRouter model sequence for quiz generation', () => {
-    expect(workerSource).toContain('callOpenRouterWithFallback(');
-    expect(workerSource).toContain('OPENROUTER_TEXT_FALLBACKS');
-    expect(workerSource).toContain('max_tokens: 8_000');
+  it('batches Cosmo quiz generation within provider output limits', () => {
+    expect(workerSource).toContain("if (provider !== 'inception'");
+    expect(workerSource).toContain('const initialBatchSize = Math.min(body.amount, 25);');
+    expect(workerSource).toContain('providerText(provider, quizPrompt(body.topic, initialBatchSize, baseQuestions), env)');
+    expect(workerSource).toContain('Math.min(missing, 25)');
   });
 
   it('normalizes wrapped provider content and extracts balanced JSON safely', () => {
     expect(workerSource).toContain('function providerContentToText(value: unknown): string');
-    expect(workerSource).toContain('function balancedJsonCandidate(value: string): string | null');
-    expect(workerSource).toContain("['result', 'data', 'text', 'content', 'output', 'response', 'body']");
-    expect(workerSource).toContain('providerContentToText(d.choices?.[0]?.message?.content');
+    expect(workerSource).toContain("for (const key of ['text', 'content', 'output', 'result', 'data', 'response'])");
+    expect(workerSource).toContain('function balancedJsonCandidates(value: string): string[]');
+    expect(workerSource).toContain("for (const key of ['result', 'data', 'text', 'content', 'output', 'response', 'body'])");
+    expect(workerSource).toContain('providerContentToText(record[key])');
   });
 
-  it('keeps answer review on OpenRouter with bounded JSON validation', () => {
+  it('validates answer review before accepting a provider response and falling back', () => {
     expect(workerSource).toContain('const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000');
-    expect(workerSource).not.toContain('max_tokens: 4_000');
-    expect(workerSource).toContain('timeoutMs: ANSWER_REVIEW_MODEL_TIMEOUT_MS, expectedAnswerCount: expectedAnswerCount as number, allowPartial: true');
-    expect(workerSource).not.toContain('response_format: { type:');
+    expect(workerSource).toContain('validateResponse: (text, _provider, model) =>');
+    expect(workerSource).toContain('validateAnswerReviewResponse(text, expectedAnswerCount, model');
+    expect(workerSource).toContain('export async function callAiWithParallelAnswerReviewFallback(');
+    expect(workerSource).toContain('callOpenRouterWithParallelAnswerReviewFallback = callAiWithParallelAnswerReviewFallback');
+    expect(providerChainSource).toContain('options.validateResponse?.(text, provider, model)');
     expect(workerSource).toContain('Answer-review contract recovery activated');
-    expect(workerSource).toContain("aiOperation = isAnswerReview ? 'answer_review' : 'cosmo_chat'");
-    expect(workerSource).toContain('callOpenRouterWithParallelAnswerReviewFallback');
-    expect(workerSource).toContain('expectedAnswerCount as number');
-    expect(workerSource).toContain('errorCategory: safeAiErrorCategory(error)');
-    expect(workerSource).toContain('OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS');
   });
 
-  it('does not contain direct provider endpoints or direct-provider telemetry', () => {
-    expect(workerSource).toContain("type Provider = 'openrouter'");
-    expect(workerSource).not.toContain('api.deepseek.com');
-    expect(workerSource).toContain('api.groq.com');
-    expect(workerSource).toContain('api.openai.com');
+  it('limits the provider chain to configured supported endpoints', () => {
+    expect(providerChainSource).toContain('api.inceptionlabs.ai/v1/chat/completions');
+    expect(providerChainSource).toContain('api.groq.com/openai/v1/chat/completions');
+    expect(providerChainSource).toContain('generativelanguage.googleapis.com/v1beta/models');
+    expect(providerChainSource).toContain('api.openai.com/v1/chat/completions');
+    expect(providerChainSource).not.toContain('openrouter.ai');
+    expect(providerChainSource).not.toContain('api.deepseek.com');
     expect(workerSource).not.toContain("provider: 'deepseek'");
-    expect(workerSource).not.toContain("provider: 'direct'");
     expect(workerSource).not.toContain("provider: 'direct'");
   });
 
@@ -90,7 +75,7 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain("if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);");
     expect(workerSource).toContain("if (!(await hasPaidCosmoAccess(request, env, userId))) return json({ error: 'Cosmo explanations require an active paid plan.' }, 403, headers);");
     expect(routeSources).toContain('&limit=1');
-    expect(routeSources).toContain("Boolean(profile?.is_premium) || isPaidCosmoPlan(profile?.plan_name)");
+    expect(routeSources).toContain('Boolean(profile?.is_premium) || isPaidCosmoPlan(profile?.plan_name)');
   });
 
   it('bounds explanation inputs before constructing the provider prompt', () => {

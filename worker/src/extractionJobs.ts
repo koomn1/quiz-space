@@ -464,12 +464,13 @@ async function callAiWithFallback(
   env: ExtractionJobEnv,
   messages: any[],
   _models: string[],
-  options?: { maxTokens?: number; temperature?: number },
+  options?: { maxTokens?: number; temperature?: number; validateResponse?: (text: string) => void },
 ): Promise<{ text: string; model: string }> {
   const result = await generateWithProviderChain(env as any, messages, {
     max_tokens: options?.maxTokens,
     temperature: options?.temperature,
     timeoutMs: VISION_MODEL_TIMEOUT_MS,
+    validateResponse: options?.validateResponse ?? (text => { parseJson(text); }),
   });
   return { text: result.text, model: `${result.provider}/${result.model}` };
 }
@@ -505,12 +506,17 @@ async function extractPdfVision(
           { type: 'text', text: documentVisionPrompt(job) },
           { type: 'file', file: { filename: `pages-${start + offset + 1}.pdf`, file_data: `data:application/pdf;base64,${fileBase64}` } },
         ],
-      }], AI_VISION_FALLBACKS);
+      }], AI_VISION_FALLBACKS, { validateResponse: text => {
+        const quiz = parseJson(text);
+        if (!normalizeQuestions(quiz, parseAllowedQuestionTypes(job.custom_instruction)).length) {
+          throw new Error('The document did not contain any valid questions.');
+        }
+      } });
       return { model: request.model, quiz: parseJson(request.text) };
     }));
     for (const result of results) {
       providers.add(result.model);
-          questions.push(...normalizeQuestions(result.quiz, parseAllowedQuestionTypes(job.custom_instruction)));
+      questions.push(...normalizeQuestions(result.quiz, parseAllowedQuestionTypes(job.custom_instruction)));
       processed += 1;
       await onProgress(processed, chunks.length, questions.length);
     }
@@ -624,20 +630,25 @@ async function generateQuestionsFromText(
         { role: 'user', content: `${generatePrompt(chunkTarget, job.custom_instruction, sourceChunk)}\n\nمحتوى الملف المصدر — الجزء الحالي (استخرج كل النقاط القابلة للسؤال من هذا الجزء):\n${sourceChunk}` },
       ];
       let chunkError: unknown;
-      for (const model of AI_TEXT_FALLBACKS) {
-        try {
-          const response = await callAiWithFallback(env, chunkMessages, [model], { maxTokens: chunkTarget ? Math.min(12_000, Math.max(3_000, chunkTarget * 220)) : 12_000, temperature: 0.2 });
-          const quiz = parseJson(response.text);
-          const questions = normalizeQuestions(quiz, allowedTypes);
-          const verifiedQuestions = validateGeneratedQuestions(questions);
-          if (!verifiedQuestions.length) throw new Error('The document section did not contain valid generated questions.');
-          return { response, quiz, questions: verifiedQuestions };
-        } catch (error) {
-          chunkError = error;
-          console.warn(`Text generation section failed on model ${model}; trying fallback.`, error);
-        }
+      try {
+        const response = await callAiWithFallback(env, chunkMessages, AI_TEXT_FALLBACKS, {
+          maxTokens: chunkTarget ? Math.min(12_000, Math.max(3_000, chunkTarget * 220)) : 12_000,
+          temperature: 0.2,
+          validateResponse: text => {
+            const quiz = parseJson(text);
+            const questions = validateGeneratedQuestions(normalizeQuestions(quiz, allowedTypes));
+            if (!questions.length) throw new Error('The document section did not contain valid generated questions.');
+          },
+        });
+        const quiz = parseJson(response.text);
+        const verifiedQuestions = validateGeneratedQuestions(normalizeQuestions(quiz, allowedTypes));
+        if (!verifiedQuestions.length) throw new Error('The document section did not contain valid generated questions.');
+        return { response, quiz, questions: verifiedQuestions };
+      } catch (error) {
+        chunkError = error;
+        console.warn('Text generation section failed after all configured providers were tried.', error);
+        throw chunkError instanceof Error ? chunkError : new Error('All text generation providers failed for this section.');
       }
-      throw chunkError instanceof Error ? chunkError : new Error('All text generation models failed for this section.');
     }).map(promise => promise.catch(error => ({ error }))));
 
     for (const result of results) {

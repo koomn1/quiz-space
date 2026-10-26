@@ -36,7 +36,7 @@ describe('narrative text generation in extraction jobs', () => {
     const result = await extractJobQuiz(
       new TextEncoder().encode('Gravity keeps planets in orbit around the sun.'),
       job,
-      { OPENROUTER_API_KEY: 'test-key', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'anon' },
+      { INCEPTION_API_KEY: 'test-inception-key', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'anon' },
       vi.fn(),
     );
 
@@ -44,7 +44,7 @@ describe('narrative text generation in extraction jobs', () => {
     expect(request.messages[1].content).toContain('محتوى الملف المصدر');
     expect(request.messages[1].content).toContain('Gravity keeps planets in orbit');
     expect(JSON.stringify(request.messages[1].content)).not.toContain('image_url');
-    expect(result.provider).toBe('nvidia/nemotron-3.5-lightning:free');
+    expect(result.provider).toBe('inception/mercury-3');
     expect(result.questions).toHaveLength(1);
   });
 
@@ -75,7 +75,7 @@ describe('narrative text generation in extraction jobs', () => {
     const result = await extractJobQuiz(
       new TextEncoder().encode(source),
       job,
-      { OPENROUTER_API_KEY: 'test-key', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'anon' },
+      { INCEPTION_API_KEY: 'test-inception-key', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'anon' },
       vi.fn(),
     );
 

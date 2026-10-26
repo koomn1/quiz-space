@@ -8,7 +8,7 @@ const subscriptionsSource = readFileSync(new URL('../components/AdminSubscriptio
 describe('admin and Cosmo recovery contracts', () => {
   it('supports expanded Cosmo quiz counts and splits large generations into safe batches', () => {
     expect(cosmoSource).toContain('const COSMO_QUIZ_MAX_COUNT = 100');
-    expect(cosmoSource).toContain('const COSMO_QUIZ_BATCH_SIZE = 25');
+    expect(cosmoSource).toContain('const COSMO_QUIZ_BATCH_SIZE = 10');
     expect(cosmoSource).toContain('const COSMO_QUIZ_COUNT_OPTIONS = [5, 10, 20, 30, 50, 75, 100]');
     expect(cosmoSource).toContain('generateCosmoQuizInBatches');
     expect(cosmoSource).toContain('normalized.replace(/[٠-٩]/g');

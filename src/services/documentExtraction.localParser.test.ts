@@ -2,23 +2,22 @@ import { describe, expect, it, vi } from 'vitest';
 import { extractQuestionsFromText, isReliableLiteralExtraction, parseLiteralQuestions, splitTextForExtraction } from '../../worker/src/documentExtraction';
 
 describe('structured document extraction fast path', () => {
-  it('uses Mercury Decide as the primary extractor when its key is configured', async () => {
+  it('uses Mercury 3 when the document does not match the direct parser format', async () => {
     const source = `Item 1 — What is the red planet?
 Choice A: Earth
 Choice B: Mars
 Choice C: Venus
 Correct choice: B`;
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
-      model: 'mercury-decide',
-      answers: { question_blocks: { type: 'extract', spans: { question_1: [{ text: `1. What is the red planet?\nA. Earth\nB. Mars\nC. Venus\nAnswer: B`, confidence: 0.98 }] } } },
+      choices: [{ message: { content: JSON.stringify([{ number: 1, text: 'What is the red planet?', type: 'mcq', options: ['Earth', 'Mars', 'Venus'], correctIndex: 1, correctAnswer: 'Mars' }]) } }],
     }), { status: 200 }));
 
-    const result = await extractQuestionsFromText(source, { OPENROUTER_API_KEY: 'unused', INCEPTION_API_KEY: 'test-inception-key' });
+    const result = await extractQuestionsFromText(source, { INCEPTION_API_KEY: 'test-inception-key' });
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(String(fetchSpy.mock.calls[0]?.[1]?.body)).model).toBe('mercury-decide');
-    expect(result.provider).toBe('mercury-decide');
-    expect(result.questions[0]).toMatchObject({ extractionMethod: 'mercury-decide', correctIndex: 1 });
+    expect(JSON.parse(String(fetchSpy.mock.calls[0]?.[1]?.body)).model).toBe('mercury-3');
+    expect(result.provider).toBe('inception/mercury-3');
+    expect(result.questions[0]).toMatchObject({ number: 1, type: 'mcq', correctIndex: 1, correctAnswer: 'Mars' });
     fetchSpy.mockRestore();
   });
 

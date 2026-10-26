@@ -6,6 +6,7 @@ export type ProviderOptions = {
   temperature?: number;
   timeoutMs?: number;
   response_format?: { type: 'json_object' };
+  validateResponse?: (text: string, provider: string, model: string) => void;
 };
 
 export const INCEPTION_MODEL = 'mercury-3';
@@ -140,6 +141,7 @@ export async function generateWithProviderChain(env: Env, messages: ProviderMess
   for (const [call, provider, model] of attempts) {
     try {
       const text = await call(env, messages, options);
+      options.validateResponse?.(text, provider, model);
       return { text, provider, model };
     } catch (error) {
       lastError = error;

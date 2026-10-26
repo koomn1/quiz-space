@@ -354,10 +354,16 @@ async function callAiWithFallback(
   _plugins?: any[],
   options: AiRequestOptions = {},
 ): Promise<string> {
-  const result = await generateWithProviderChain(env, messages, options);
-  return options.expectedAnswerCount
-    ? validateAnswerReviewResponse(result.text, options.expectedAnswerCount, result.model, { allowPartial: options.allowPartial })
-    : result.text;
+  const { expectedAnswerCount, allowPartial, ...providerOptions } = options;
+  const result = await generateWithProviderChain(env, messages, {
+    ...providerOptions,
+    ...(expectedAnswerCount ? {
+      validateResponse: (text, _provider, model) => {
+        validateAnswerReviewResponse(text, expectedAnswerCount, model, { allowPartial });
+      },
+    } : {}),
+  });
+  return result.text;
 }
 
 export async function callAiWithParallelAnswerReviewFallback(
@@ -366,8 +372,17 @@ export async function callAiWithParallelAnswerReviewFallback(
   _models: string[],
   options: AiRequestOptions,
 ): Promise<AnswerReviewResult> {
-  const result = await generateWithProviderChain(env, messages, options);
-  return { text: validateAnswerReviewResponse(result.text, options.expectedAnswerCount || 1, result.model, { allowPartial: options.allowPartial }), model: result.model };
+  const expectedAnswerCount = options.expectedAnswerCount || 1;
+  const result = await generateWithProviderChain(env, messages, {
+    max_tokens: options.max_tokens,
+    temperature: options.temperature,
+    timeoutMs: options.timeoutMs,
+    response_format: options.response_format,
+    validateResponse: (text, _provider, model) => {
+      validateAnswerReviewResponse(text, expectedAnswerCount, model, { allowPartial: options.allowPartial });
+    },
+  });
+  return { text: result.text, model: result.model };
 }
 
 // Backward-compatible name used by the existing answer-review tests and

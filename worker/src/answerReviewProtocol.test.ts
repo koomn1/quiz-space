@@ -6,6 +6,7 @@ import {
 } from './index';
 
 const env = {
+  INCEPTION_API_KEY: 'test-key',
   OPENROUTER_API_KEY: 'test-key',
   OPENAI_API_KEY: 'test-key',
   GROQ_API_KEY: 'test-key',
@@ -52,12 +53,12 @@ describe('answer review protocol', () => {
     expect(validateAnswerReviewResponse(response, 1, 'test-model')).toContain('\"answers\"');
   });
 
-  it('does not let a malformed primary response win the parallel race', async () => {
+  it('falls through to the next provider when the primary answer-review response is malformed', async () => {
     const models: string[] = [];
     vi.stubGlobal('fetch', vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const payload = JSON.parse(String(init?.body || '{}')) as { model?: string };
       models.push(String(payload.model));
-      return payload.model === 'model-a'
+      return payload.model === 'mercury-3'
         ? providerResponse('{"answers":[]}')
         : providerResponse(validResponse());
     }));
@@ -65,12 +66,12 @@ describe('answer review protocol', () => {
     const result = await callOpenRouterWithParallelAnswerReviewFallback(
       env,
       [{ role: 'user', content: 'review' }],
-      ['model-a', 'model-b'],
+      ['mercury-3', 'openai/gpt-oss-20b'],
       { expectedAnswerCount: 1, timeoutMs: 500, response_format: { type: 'json_object' }, allowPartial: true },
     );
 
-    expect(result.model).toBe('model-b');
-    expect(models).toEqual(expect.arrayContaining(['model-a', 'model-b']));
+    expect(result.model).toBe('openai/gpt-oss-20b');
+    expect(models).toEqual(['mercury-3', 'openai/gpt-oss-20b']);
   });
 
   it('rejects when every provider response is incomplete', async () => {

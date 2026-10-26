@@ -34,6 +34,7 @@ const EXTRACTION_OPTIONS = { max_tokens: 12_000, temperature: 0.1 };
 
 function extractJson(text: string): unknown {
   const cleaned = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+  try { return JSON.parse(cleaned); } catch { /* find a balanced JSON value inside provider prose */ }
   const candidates: unknown[] = [];
   for (let start = 0; start < cleaned.length; start += 1) {
     const char = cleaned[start];
@@ -61,6 +62,9 @@ function extractJson(text: string): unknown {
       }
     }
   }
+  const structured = candidates.find(candidate => Array.isArray(candidate)
+    || Boolean(candidate && typeof candidate === 'object' && Array.isArray((candidate as any).questions)));
+  if (structured !== undefined) return structured;
   if (candidates.length > 0) return candidates[candidates.length - 1];
   throw new Error('No valid JSON object or array found in model response.');
 }
@@ -130,7 +134,7 @@ function normalizeTrueFalseOptions(questionText: string, options: string[]): str
   return options;
 }
 
-function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mcq', 'tf', 'essay']): any[] {
+function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mcq', 'tf', 'essay'], normalizationOptions: { preserveDuplicates?: boolean } = {}): any[] {
   const source = Array.isArray(raw) ? raw : Array.isArray(raw?.questions) ? raw.questions : [];
   const seen = new Set<string>();
   const questions: any[] = [];
@@ -140,7 +144,7 @@ function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mc
     const text = String(item.text ?? item.question ?? '').trim();
     if (!text) continue;
     const key = normalize(text);
-    if (seen.has(key)) continue;
+    if (!normalizationOptions.preserveDuplicates && seen.has(key)) continue;
     seen.add(key);
 
     const rawType = String(item.type || '').toLowerCase();
@@ -172,6 +176,9 @@ function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mc
       correctIndex,
       correctAnswer,
       explanation: item.explanation == null ? '' : String(item.explanation).trim(),
+      extractionMethod: item.extractionMethod === 'direct' ? 'direct' : undefined,
+      sourceText: typeof item.sourceText === 'string' ? item.sourceText : undefined,
+      reviewRequired: item.reviewRequired === true || (type !== 'essay' && correctIndex < 0),
     });
   }
   return questions;
@@ -184,22 +191,29 @@ const MODEL_TIMEOUT_MS = 35_000;
  * it only accepts numbered questions and clearly labelled options/answers, so
  * it cannot invent content when a document has no question structure.
  */
-function parseLiteralQuestions(text: string): any[] {
+const LITERAL_QUESTION_PATTERN = /^(?:(?:question|q)\s*)?(\d{1,4})(?:[.)\-:]|\s+)\s*(.+)$/i;
+
+export function parseLiteralQuestions(text: string): any[] {
   const questions: any[] = [];
   let current: any | null = null;
   const flush = () => {
-    if (current) questions.push(current);
+    if (current) {
+      current.reviewRequired = current.type !== 'essay' && current.correctIndex < 0;
+      questions.push(current);
+    }
     current = null;
   };
   const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 
   for (const line of lines) {
-    const questionMatch = line.match(/^(?:question\s*)?(\d{1,4})[.)\-:]\s*(.+)$/i);
+    const questionMatch = line.match(LITERAL_QUESTION_PATTERN);
     if (questionMatch) {
       flush();
       current = {
         number: Number(questionMatch[1]),
         text: questionMatch[2].trim(),
+        sourceText: line,
+        extractionMethod: 'direct',
         type: 'essay',
         options: [],
         correctIndex: -1,
@@ -210,10 +224,11 @@ function parseLiteralQuestions(text: string): any[] {
     }
     if (!current) continue;
 
-    const optionMatch = line.match(/^([A-H])\s*[).:\-]\s*(.+)$/i);
+    const optionMatch = line.match(/^([A-H])\s*(?:[).:\-–—])\s*(.+)$/i);
     if (optionMatch) {
       current.type = 'mcq';
       current.options.push(optionMatch[2].trim());
+      current.sourceText = `${current.sourceText}\n${line}`;
       continue;
     }
 
@@ -221,10 +236,16 @@ function parseLiteralQuestions(text: string): any[] {
     if (answerMatch) {
       const answer = answerMatch[1].trim();
       current.correctAnswer = answer;
+      current.sourceText = `${current.sourceText}\n${line}`;
       const letter = answer.match(/^([A-H])(?:[).:]|\s|$)/i);
       if (letter && current.options.length > 0) {
-        current.correctIndex = Math.max(0, Math.min(current.options.length - 1, letter[1].toUpperCase().charCodeAt(0) - 65));
-        current.correctAnswer = current.options[current.correctIndex];
+        const answerIndex = letter[1].toUpperCase().charCodeAt(0) - 65;
+        if (answerIndex < current.options.length) {
+          current.correctIndex = answerIndex;
+          current.correctAnswer = current.options[current.correctIndex];
+        } else {
+          current.correctAnswer = '';
+        }
       } else if (/^(true|false)$/i.test(answer)) {
         current.type = 'tf';
         current.options = ['True', 'False'];
@@ -240,10 +261,19 @@ function parseLiteralQuestions(text: string): any[] {
     // Preserve wrapped question lines, but never append obvious document headings.
     if (current.options.length === 0 && !/^(answer|section|chapter|page)\b/i.test(line)) {
       current.text = `${current.text} ${line}`.trim();
+      current.sourceText = `${current.sourceText}\n${line}`;
     }
   }
   flush();
   return questions;
+}
+
+export function isReliableLiteralExtraction(text: string, questions: any[]): boolean {
+  const questionMarkers = text.split(/\r?\n/).map(line => line.trim()).filter(line => LITERAL_QUESTION_PATTERN.test(line)).length;
+  return questionMarkers > 0
+    && questionMarkers === questions.length
+    && questions.every(question => Boolean(question?.text?.trim())
+      && (question.type === 'essay' || (Array.isArray(question.options) && question.options.length >= 2)));
 }
 
 export function splitTextForExtraction(text: string): string[] {
@@ -279,8 +309,8 @@ export async function extractQuestionsFromText(
 ): Promise<DocumentExtractionResult> {
   const normalizedText = text.trim();
   const allowedTypes = parseAllowedQuestionTypes(customInstruction);
-  const localFastPath = normalizeQuestions(parseLiteralQuestions(normalizedText), allowedTypes);
-  if (localFastPath.length > 0) {
+  const localFastPath = normalizeQuestions(parseLiteralQuestions(normalizedText), allowedTypes, { preserveDuplicates: true });
+  if (isReliableLiteralExtraction(normalizedText, localFastPath)) {
     if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: localFastPath.length });
     return {
       title: 'Extracted Quiz',
@@ -342,7 +372,7 @@ export async function extractQuestionsFromText(
     }
   }
   if (!questions.length) {
-    const literalQuestions = normalizeQuestions(parseLiteralQuestions(text), allowedTypes);
+    const literalQuestions = normalizeQuestions(parseLiteralQuestions(text), allowedTypes, { preserveDuplicates: true });
     if (literalQuestions.length > 0) {
       return {
         title: 'Extracted Quiz',

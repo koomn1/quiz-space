@@ -4,6 +4,7 @@ import { buildVisionChunkRanges, deriveQuizTitle, isGenericQuizTitle, selectVisi
 
 const extractionSource = readFileSync(new URL('./extractionJobs.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const indexSource = readFileSync(new URL('./index.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const providerChainSource = readFileSync(new URL('./providerChain.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 
 describe('dynamic vision chunk planning', () => {
   it('keeps the default four-page split for a normal scanned document', () => {
@@ -68,7 +69,9 @@ describe('dynamic vision chunk planning', () => {
   it('keeps answer accuracy strict instead of silently defaulting to option zero', () => {
     expect(extractionSource).toContain('If the source has no answer key, use null and do not guess.');
     expect(extractionSource).toContain('لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية');
-    expect(extractionSource).toContain('const correctIndex = type === \'essay\' ? -1 : resolveCorrectIndex(raw, options, type);');
+    expect(extractionSource).toContain("correctIndex: type === 'essay' ? -1 : resolveCorrectIndex(raw, options, type)");
+    expect(extractionSource).toContain('return -1;');
+    expect(extractionSource).toContain('question.correctIndex < 0');
   });
 
   it('derives a meaningful title from a document heading before falling back to the filename', () => {
@@ -92,15 +95,12 @@ describe('dynamic vision chunk planning', () => {
     expect(extractionSource).toContain('never fabricate an answer or explanation');
   });
 
-  it('races primary answer-review providers before using the bounded third fallback', () => {
-    expect(indexSource).toContain('async function callOpenRouterWithParallelAnswerReviewFallback(');
-    expect(indexSource).toContain("'openai/gpt-5-mini'");
-    expect(indexSource).toContain('Promise.any(primaryModels.map(model => callAnswerReviewModel(env, messages, model, options)))');
-    expect(indexSource).toContain('strict answer count/index contract');
-    expect(indexSource).toContain('models.slice(primaryModels.length)');
-    expect(indexSource).toContain('if (isAnswerReview) {');
-    expect(indexSource).toContain('callOpenRouterWithParallelAnswerReviewFallback(');
-    expect(indexSource).toContain('Answer-review contract recovery activated');
+  it('validates answer-review responses inside the bounded provider fallback chain', () => {
+    expect(indexSource).toContain('export async function callAiWithParallelAnswerReviewFallback(');
+    expect(indexSource).toContain('validateResponse: (text, _provider, model) =>');
+    expect(indexSource).toContain('validateAnswerReviewResponse(text, expectedAnswerCount, model');
+    expect(providerChainSource).toContain('options.validateResponse?.(text, provider, model)');
+    expect(providerChainSource).toContain("[callInception, 'inception', INCEPTION_MODEL], [callGroq, 'groq', GROQ_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]");
   });
 
   it('applies the source title fallback after literal text extraction returns', () => {
