@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock, LayoutGrid, X } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateQuizAttemptScore, updateGuestQuizAttemptScore, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
+import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateQuizAttemptScore, updateGuestQuizAttemptScore, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getUserRatedQuestions, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { gradeEssayWithAI } from '../services/aiWorkerClient';
@@ -176,6 +176,7 @@ export default function QuizResolver({
 
   // Question ratings states
   const [questionRatings, setQuestionRatings] = React.useState<Record<string, 'like' | 'dislike'>>({});
+  const [questionRatingErrors, setQuestionRatingErrors] = React.useState<Record<string, string>>({});
 
   // Flashcards state
   const [isFlashcardMode, setIsFlashcardMode] = React.useState(false);
@@ -246,28 +247,64 @@ export default function QuizResolver({
     }
   };
 
-  // Sync question ratings local state
+  // Load signed-in ratings from the database; guest ratings remain local-only.
   React.useEffect(() => {
     const activeUserId = userId || 'user-guest';
+    let active = true;
+    setQuestionRatingErrors({});
+    if (!isGuestIdentity(activeUserId)) {
+      getUserRatedQuestions(activeUserId).then((ratings) => {
+        if (!active) return;
+        const ratingMap: Record<string, 'like' | 'dislike'> = {};
+        ratings.filter(rating => rating.quizId === quiz?.id).forEach((rating) => {
+          ratingMap[rating.questionId] = rating.ratingValue;
+        });
+        setQuestionRatings(ratingMap);
+      }).catch((error) => console.error('Unable to load saved question ratings:', error));
+      return () => { active = false; };
+    }
     try {
       const localRatings = JSON.parse(localStorage.getItem('quiz_local_question_ratings') || '[]');
       const ratingMap: Record<string, 'like' | 'dislike'> = {};
       localRatings.forEach((r: any) => {
-        if (r.userId === activeUserId) {
+        if (r.userId === activeUserId && r.quizId === quiz?.id) {
           ratingMap[r.questionId] = r.ratingValue;
         }
       });
       setQuestionRatings(ratingMap);
     } catch (_) {}
-  }, [userId]);
+    return () => { active = false; };
+  }, [userId, quiz?.id]);
 
   const handleRateQuestion = async (qId: string, qText: string, rVal: 'like' | 'dislike') => {
     const activeUserId = userId || 'user-guest';
-    const newRatings = { ...questionRatings, [qId]: rVal };
-    setQuestionRatings(newRatings);
-    
-    if (quiz) {
+    if (!quiz) return;
+    setQuestionRatingErrors(previous => ({ ...previous, [qId]: '' }));
+
+    if (isGuestIdentity(activeUserId)) {
+      setQuestionRatings(previous => ({ ...previous, [qId]: rVal }));
+      try {
+        const storageKey = 'quiz_local_question_ratings';
+        const localRatings = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const id = `${activeUserId}_${quiz.id}_${qId}`;
+        const next = localRatings.filter((rating: any) => rating.id !== id);
+        next.push({ id, userId: activeUserId, quizId: quiz.id, questionId: qId, questionText: qText, ratingValue: rVal, createdAt: new Date().toISOString() });
+        localStorage.setItem(storageKey, JSON.stringify(next.slice(-500)));
+      } catch (error) {
+        console.warn('Guest question rating could not be kept locally:', error);
+      }
+      return;
+    }
+
+    try {
       await rateQuestion(activeUserId, quiz.id, quiz.title, qId, qText, rVal);
+      setQuestionRatings(previous => ({ ...previous, [qId]: rVal }));
+    } catch (error) {
+      console.error('Question rating was not persisted:', error);
+      setQuestionRatingErrors(previous => ({
+        ...previous,
+        [qId]: isAr ? 'تعذر حفظ تقييم السؤال في قاعدة البيانات. تحقق من الاتصال ثم أعد المحاولة.' : 'The question rating could not be saved. Check your connection and retry.',
+      }));
     }
   };
 
@@ -674,7 +711,7 @@ export default function QuizResolver({
     setIsReviewDirty(true);
   };
 
-  // Submit final scores & reviews to Firestore
+  // Submit final scores and reviews to Supabase.
   const handleSaveResult = async () => {
     if (!takerName.trim()) {
       alert('فضلاً قم بإدراج اسمك أولاً قبل حفظ النتيجة.');
@@ -728,7 +765,9 @@ export default function QuizResolver({
       setIsReviewSubmitted(true);
     } catch (e) {
       console.error(e);
-      alert('عذراً، فشل تسجيل التقييم في الفايربيز داتابيز.');
+      alert(isAr
+        ? 'تعذر تأكيد حفظ تقييمك في قاعدة البيانات. قد تكون النتيجة محفوظة؛ تحقق من الاتصال ثم أعد المحاولة.'
+        : 'Your rating could not be confirmed in the database. The quiz result may already be saved; check your connection and retry.');
     } finally {
       setIsSubmittingReview(false);
     }
@@ -797,9 +836,14 @@ export default function QuizResolver({
             }
             setHasRatedQuiz(true);
           } catch (reviewErr) {
-            // Rating is optional metadata and must never block a successfully
-            // saved quiz attempt from being submitted and closed.
-            console.warn('Optional review metadata skipped; saved completion remains valid:', reviewErr);
+            // Do not report success or leave the screen when the user explicitly
+            // selected a rating that the database rejected. The quiz score is
+            // already safe; keep the review open so the rating can be retried.
+            console.error('Quiz rating was not persisted:', reviewErr);
+            setSaveError(isAr
+              ? 'تم حفظ نتيجة الاختبار، لكن تعذر حفظ تقييمك. أعد المحاولة أو اخرج مع تخطي التقييم.'
+              : 'Your quiz result was saved, but the rating was not. Retry saving it or exit while skipping the rating.');
+            return;
           }
         }
         try { playNotificationSound('success'); } catch (_) {}
@@ -2221,6 +2265,11 @@ export default function QuizResolver({
                         </button>
                       </div>
                     </div>
+                    {questionRatingErrors[q.id || `q-${qIdx}`] && (
+                      <p role="alert" className="mt-2 text-[11px] font-semibold text-rose-600 dark:text-rose-300">
+                        {questionRatingErrors[q.id || `q-${qIdx}`]}
+                      </p>
+                    )}
                   </div>
                 );
               })}

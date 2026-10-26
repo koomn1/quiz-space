@@ -12,7 +12,10 @@ describe('admin and Cosmo recovery contracts', () => {
     expect(cosmoCountSource).toContain('COSMO_QUIZ_COUNT_OPTIONS = [5, 10, 20, 30, 50, 75, 100]');
     expect(cosmoSource).toContain('const COSMO_QUIZ_BATCH_SIZE = 10');
     expect(cosmoSource).toContain('generateCosmoQuizInBatches');
-    expect(cosmoSource).toContain('parseAutomaticQuestionCount');
+    expect(cosmoSource).toContain('chooseAutomaticCoveragePlan');
+    expect(cosmoSource).toContain('parseAutomaticCoveragePlan');
+    expect(cosmoSource).toContain('findSemanticCoverageRepairs');
+    expect(cosmoSource).toContain('validateCoverageAssignments');
     expect(cosmoSource).toContain('const amount = explicitCount ?? 0');
     expect(cosmoSource).toContain('pendingQuiz.amount === 0');
     expect(cosmoSource).not.toContain('Math.min(20, Math.max(3, amountMatch');

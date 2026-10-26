@@ -228,14 +228,22 @@ function quizPrompt(topic: string, amount: number, previous: string[]): string {
   const marker = topic.match(/\[QUESTION_TYPES_ALLOWED:\s*([^\]]+)\]/i);
   const allowed = (marker?.[1] || 'mcq,tf,essay').split(/[,+\s]+/).filter((type) => ['mcq', 'tf', 'essay'].includes(type));
   const allowedTypes = [...new Set(allowed.length ? allowed : ['mcq'])];
+  const hasCoverageTargets = topic.includes('[COSMO_COVERAGE_TARGETS:');
+  const coverageExample = hasCoverageTargets ? ',"coverageId":"C01"' : '';
   const typeInstruction = allowedTypes.length === 1
     ? `Allowed question type: ${allowedTypes[0]} only. Never return tf or essay questions.`
     : `Allowed question types only: ${allowedTypes.join(', ')}. Do not use any other type.`;
-  const typeExamples = allowedTypes.map((type) => type === 'mcq'
-    ? '{"text":"Question","type":"mcq","options":["Option A","Option B","Option C","Option D"],"correctIndex":0,"correctAnswer":"Option A","explanation":"Explanation"}'
-    : type === 'tf'
-      ? '{"text":"Statement","type":"tf","options":["True","False"],"correctIndex":0,"correctAnswer":"True","explanation":"Explanation"}'
-      : '{"text":"Question","type":"essay","options":[],"correctIndex":0,"correctAnswer":"Model answer","explanation":"Explanation"}').join(',\n  ');
+  const typeExamples = allowedTypes.map((type) => {
+    const example = type === 'mcq'
+      ? '{"text":"Question","type":"mcq","options":["Option A","Option B","Option C","Option D"],"correctIndex":0,"correctAnswer":"Option A","explanation":"Explanation"}'
+      : type === 'tf'
+        ? '{"text":"Statement","type":"tf","options":["True","False"],"correctIndex":0,"correctAnswer":"True","explanation":"Explanation"}'
+        : '{"text":"Question","type":"essay","options":[],"correctIndex":0,"correctAnswer":"Model answer","explanation":"Explanation"}';
+    return hasCoverageTargets ? example.replace(',"explanation"', `${coverageExample},"explanation"`) : example;
+  }).join(',\n  ');
+  const coverageInstruction = hasCoverageTargets
+    ? '\nCoverage contract: create exactly one question for each supplied coverage target, in the supplied order. Add the exact target id as coverageId on that question. Use every target id exactly once; do not invent ids, merge targets, repeat a concept, or add extra questions.'
+    : '';
   // The prompt can contain Arabic UI instructions while the attached/source
   // text is English. A single Arabic character must not flip the whole quiz
   // language; compare the dominant alphabet instead.
@@ -252,7 +260,7 @@ function quizPrompt(topic: string, amount: number, previous: string[]): string {
   // backticks (code-fence markers), so build the prompt without fences.
   const fence = String.fromCharCode(96, 96, 96); // ```
   return (countInstruction + exclusions + languageConstraint + `
-${typeInstruction}
+${typeInstruction}${coverageInstruction}
 أجب بـ JSON صالح فقط محاط بوسم ${fence}json ... ${fence} وفق الشكل التالي:
 {"title":"عنوان الاختبار","description":"وصف الاختبار","questions":[
   ${typeExamples}

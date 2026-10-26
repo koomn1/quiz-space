@@ -84,6 +84,7 @@ export function validateAndCleanQuiz(data: any): GeneratedQuiz {
 
     return {
       text: q.text.trim(),
+      ...(typeof q.coverageId === 'string' && q.coverageId.trim() ? { coverageId: q.coverageId.trim() } : {}),
       type,
       options,
       correctIndex,

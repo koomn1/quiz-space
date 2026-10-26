@@ -8,6 +8,7 @@ export interface Question {
   number?: number;
   type: 'mcq' | 'tf' | 'essay';
   text: string;
+  coverageId?: string;
   options: string[]; // empty for True/False, or contains ["صح", "خطأ"]. empty for essay.
   correctIndex: number; // 0-indexed correct option (e.g., 0 for True, 1 for False, or 0-3 for MCQ). For essay, 0.
   correctAnswer?: string; // model correct answer for open-ended essay questions
@@ -449,6 +450,7 @@ export interface QuestionRating {
 export interface GeneratedQuestion {
   number?: number;
   text: string;
+  coverageId?: string;
   type: 'mcq' | 'tf' | 'essay';
   options?: string[];
   correctIndex?: number;

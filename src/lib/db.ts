@@ -637,6 +637,11 @@ export async function submitGuestQuizAttempt(
     console.error('submit_guest_quiz_attempt RPC failed:', error);
     throw new Error('تعذر تسجيل نتيجة الاختبار حالياً. حاول مرة أخرى.');
   }
+  const completionRow = Array.isArray(result) ? result[0] : result;
+  if (!completionRow?.id) throw new Error('تعذر تأكيد تسجيل نتيجة الاختبار. حاول مرة أخرى.');
+  if (data.rating !== undefined && Number(completionRow.rating) !== data.rating) {
+    throw new Error('تم تسجيل النتيجة، لكن تعذر تأكيد حفظ تقييم الاختبار. حاول مرة أخرى.');
+  }
   return result;
 }
 
@@ -684,7 +689,8 @@ export async function updateGuestQuizAttemptReview(
     console.error('update_guest_quiz_attempt_review RPC failed:', error);
     throw new Error('تعذر حفظ تقييم الاختبار حالياً. حاول مرة أخرى.');
   }
-  return data === true;
+  if (data !== true) throw new Error('تعذر تأكيد حفظ تقييم الاختبار. حاول مرة أخرى.');
+  return true;
 }
 
 export async function submitQuizAttempt(
@@ -747,6 +753,9 @@ export async function submitQuizAttempt(
     if (dailyError) throw dailyError;
     const dailyRow = Array.isArray(dailyResult) ? dailyResult[0] : dailyResult;
     if (!dailyRow?.id) throw new Error('Daily quiz completion was not recorded.');
+    if (data.rating !== undefined && Number(dailyRow.rating) !== data.rating) {
+      throw new Error('تم تسجيل النتيجة اليومية، لكن تعذر تأكيد حفظ التقييم. حاول مرة أخرى.');
+    }
     // The daily RPC writes the private completion, ledger, balance, and slot
     // atomically because daily quiz IDs do not exist in public.quizzes.
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
@@ -763,6 +772,10 @@ export async function submitQuizAttempt(
   });
   if (!error) {
     const completionRow = Array.isArray(result) ? result[0] : result;
+    if (!completionRow?.id) throw new Error('Quiz completion was not recorded.');
+    if (data.rating !== undefined && Number(completionRow.rating) !== data.rating) {
+      throw new Error('Quiz result was recorded, but the rating could not be confirmed.');
+    }
     if (completionRow?.id) {
       const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: completionRow.id });
       if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
@@ -1874,27 +1887,57 @@ export async function rateQuestion(
   questionText: string,
   ratingValue: 'like' | 'dislike'
 ): Promise<void> {
-  if (isSupabaseConfigured) {
-    try {
-      const { error } = await supabase.from('question_ratings').upsert({
-        id: `${userId}_${questionId}`,
-        user_id: userId, quiz_id: quizId, quiz_title: quizTitle,
-        question_id: questionId, question_text: questionText, rating_value: ratingValue,
-      });
-      if (error) console.error('Error in rateQuestion:', error.message);
-    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; question rating cannot be saved.');
+  if (isGuestIdentity(userId)) throw new Error('Question ratings require a signed-in account.');
+  if (!quizId.trim() || !questionId.trim()) throw new Error('Quiz and question identifiers are required for a rating.');
+
+  const authApi = (supabase as any).auth;
+  if (typeof authApi?.getUser !== 'function') throw new Error('The authenticated session is unavailable.');
+  const { data: authData, error: authError } = await authApi.getUser();
+  const authenticatedUserId = authData?.user?.id;
+  if (authError || !authenticatedUserId) throw authError || new Error('Sign in before rating a question.');
+
+  const { error } = await supabase.from('question_ratings').upsert({
+    // Keep IDs quiz-scoped and use the natural triple as the conflict target,
+    // so legacy keys and newly rated rows cannot create duplicates.
+    id: `${authenticatedUserId}_${quizId}_${questionId}`,
+    user_id: authenticatedUserId,
+    quiz_id: quizId,
+    quiz_title: quizTitle,
+    question_id: questionId,
+    question_text: questionText,
+    rating_value: ratingValue,
+  }, { onConflict: 'user_id,quiz_id,question_id' });
+  if (error) {
+    console.error('Error in rateQuestion:', { message: error.message, code: error.code });
+    throw error;
   }
 }
 
 export async function getUserRatedQuestions(userId: string): Promise<QuestionRating[]> {
-  if (!userId) return [];
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase.from('question_ratings').select('*').eq('user_id', userId);
-      if (!error && data) return data;
-    } catch (e) { console.error('Unhandled Supabase error:', e); }
+  if (!userId || isGuestIdentity(userId) || !isSupabaseConfigured) return [];
+  try {
+    const authApi = (supabase as any).auth;
+    if (typeof authApi?.getUser !== 'function') return [];
+    const { data: authData, error: authError } = await authApi.getUser();
+    const authenticatedUserId = authData?.user?.id;
+    if (authError || !authenticatedUserId) return [];
+    const { data, error } = await supabase.from('question_ratings').select('id,user_id,quiz_id,quiz_title,question_id,question_text,rating_value,created_at').eq('user_id', authenticatedUserId);
+    if (error) throw error;
+    return (data || []).map((row: any) => ({
+      id: String(row.id),
+      userId: String(row.user_id),
+      quizId: String(row.quiz_id),
+      quizTitle: String(row.quiz_title || ''),
+      questionId: String(row.question_id),
+      questionText: String(row.question_text || ''),
+      ratingValue: row.rating_value === 'dislike' ? 'dislike' : 'like',
+      createdAt: String(row.created_at || ''),
+    }));
+  } catch (error) {
+    console.error('Error loading question ratings:', error);
+    throw error;
   }
-  return [];
 }
 
 // ---------------- MARKETING PROMOTIONS SYSTEMS (SUPABASE DIRECT) ----------------
@@ -2548,7 +2591,7 @@ export async function createNotification(
 
 export async function updateCompletionReview(completionId: string, rating: number, feedback = ''): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; review cannot be saved.');
-  const { error } = await supabase.rpc('update_completion_review', {
+  const { data, error } = await supabase.rpc('update_completion_review', {
     p_completion_id: completionId,
     p_rating: rating,
     p_feedback: feedback.trim(),
@@ -2557,6 +2600,7 @@ export async function updateCompletionReview(completionId: string, rating: numbe
     console.error('Error updating completion review:', error.message);
     throw error;
   }
+  if (data !== true) throw new Error('تعذر تأكيد حفظ تقييم الاختبار. حاول مرة أخرى.');
 }
 
 export async function createDirectMessageNotification(recipientId: string, senderName: string, preview: string): Promise<void> {
