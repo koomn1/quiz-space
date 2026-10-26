@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { buildVisionChunkRanges, deriveQuizTitle, isGenericQuizTitle, selectVisionChunkPlan, sourceFileBaseName, validateCreateExtractionJobInput, visionChunkRetryDelaySeconds } from './extractionJobs';
+import { applyRequestedQuestionCount, buildVisionChunkRanges, deriveQuizTitle, isGenericQuizTitle, selectVisionChunkPlan, sourceFileBaseName, validateCreateExtractionJobInput, visionChunkRetryDelaySeconds } from './extractionJobs';
 
 const extractionSource = readFileSync(new URL('./extractionJobs.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const indexSource = readFileSync(new URL('./index.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const routeSource = readFileSync(new URL('./extractionRoutes.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const providerChainSource = readFileSync(new URL('./providerChain.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 
 describe('dynamic vision chunk planning', () => {
@@ -61,9 +62,13 @@ describe('dynamic vision chunk planning', () => {
     expect(validateCreateExtractionJobInput({ ...base, mimeType: 'image/avif' }, '00000000-0000-4000-8000-000000000001')).toBeNull();
   });
 
-  it('keeps file extraction unbounded when no requested count is supplied', () => {
-    expect(extractionSource).toContain("job.requested_question_count\n    ? normalizedQuestions.slice(0, job.requested_question_count)\n    : normalizedQuestions");
+  it('never truncates literal extraction, even when a legacy job contains a requested count', () => {
+    const questions = Array.from({ length: 5 }, (_, index) => ({ text: `Question ${index + 1}` }));
+    expect(applyRequestedQuestionCount(questions, 'literal', 2)).toHaveLength(5);
+    expect(applyRequestedQuestionCount(questions, 'generate', 2)).toHaveLength(2);
+    expect(extractionSource).toContain("extractionMode !== 'generate'");
     expect(extractionSource).toContain("const requestedCount = job.requested_question_count || null;");
+    expect(routeSource).toContain("requestedQuestionCount: extractionMode === 'generate'");
   });
 
   it('keeps answer accuracy strict instead of silently defaulting to option zero', () => {

@@ -323,7 +323,7 @@ export default function LandingPage({
         {[
           { label: t.activeQuizzes, val: `${quizzes.length}`, color: 'from-emerald-400 to-cyan-400', bg: 'bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_30px_-10px_rgba(16,185,129,0.3)]' },
           { label: t.totalPlays, val: `${quizzes.reduce((acc, q) => acc + (q.totalPlays || 0), 0)}`, color: 'from-indigo-400 to-violet-500', bg: 'bg-indigo-500/10 border-indigo-500/20 shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)]' },
-          { label: t.aiEngines, val: 'OpenRouter', color: 'from-purple-400 to-pink-500', bg: 'bg-purple-500/10 border-purple-500/20 shadow-[0_0_30px_-10px_rgba(168,85,247,0.3)]' },
+          { label: t.aiEngines, val: 'Cosmo AI', color: 'from-purple-400 to-pink-500', bg: 'bg-purple-500/10 border-purple-500/20 shadow-[0_0_30px_-10px_rgba(168,85,247,0.3)]' },
           { label: t.avgRating, val: '4.9', color: 'from-amber-400 to-orange-500', bg: 'bg-amber-500/10 border-amber-500/20 shadow-[0_0_30px_-10px_rgba(245,158,11,0.3)]' }
         ].map((stat, i) => (
           <div key={i} className={`gsap-stat-card ${stat.bg} backdrop-blur-xl border p-6 sm:p-8 rounded-[32px] flex flex-col items-center justify-center text-center transition-all duration-500 select-none group hover:-translate-y-2 hover:scale-[1.02] relative overflow-hidden`}>

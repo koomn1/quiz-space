@@ -94,14 +94,15 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
     return json({ error: 'Method not allowed' }, 405, context.headers);
   }
   const body = await context.request.json() as Record<string, unknown>;
+  const extractionMode = body.extractionMode === 'generate' ? 'generate' as const : 'literal' as const;
   const input = {
     idempotencyKey: typeof body.idempotencyKey === 'string' ? body.idempotencyKey : '',
     fileStoragePath: typeof body.fileStoragePath === 'string' ? body.fileStoragePath : '',
     mimeType: typeof body.mimeType === 'string' ? body.mimeType : '',
     sourceFileName: typeof body.sourceFileName === 'string' ? body.sourceFileName.slice(0, 255) : undefined,
-    extractionMode: body.extractionMode === 'generate' ? 'generate' as const : 'literal' as const,
+    extractionMode,
     customInstruction: typeof body.customInstruction === 'string' ? body.customInstruction : undefined,
-    requestedQuestionCount: Number.isInteger(body.requestedQuestionCount) && Number(body.requestedQuestionCount) > 0 ? Number(body.requestedQuestionCount) : undefined,
+    requestedQuestionCount: extractionMode === 'generate' && Number.isInteger(body.requestedQuestionCount) && Number(body.requestedQuestionCount) > 0 ? Number(body.requestedQuestionCount) : undefined,
   };
   const validationError = validateCreateExtractionJobInput(input, context.userId);
   if (validationError) return json({ error: 'Invalid extraction job request' }, 400, context.headers);

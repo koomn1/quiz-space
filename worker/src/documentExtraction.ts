@@ -29,7 +29,6 @@ const DOCUMENT_EXTRACTION_MODELS = ['mercury-3', 'openai/gpt-oss-20b', 'gemini-3
 // Keep each provider request bounded: one huge 100–200 question prompt is slow,
 // exceeds output limits easily, and makes the whole extraction fail atomically.
 const DOCUMENT_SINGLE_REQUEST_LIMIT = 120_000;
-const DOCUMENT_CHUNK_OVERLAP = 4_000;
 const EXTRACTION_OPTIONS = { max_tokens: 12_000, temperature: 0.1 };
 
 function extractJson(text: string): unknown {
@@ -191,7 +190,9 @@ const MODEL_TIMEOUT_MS = 35_000;
  * it only accepts numbered questions and clearly labelled options/answers, so
  * it cannot invent content when a document has no question structure.
  */
-const LITERAL_QUESTION_PATTERN = /^(?:(?:question|q)\s*)?(\d{1,4})(?:[.)\-:]|\s+)\s*(.+)$/i;
+const LITERAL_QUESTION_PATTERN = /^(?:(?:question|q|سؤال)\s*)?([0-9٠-٩]{1,4})(?:[.)\-:]\s*|\s+)(.+)$/iu;
+const QUESTION_START_PATTERN = /^(?:(?:question|q|سؤال)\s*)?[0-9٠-٩]{1,4}(?:[.)\-:]|\s)\s*\S.*$/gim;
+const toAsciiDigits = (value: string) => value.replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
 
 export function parseLiteralQuestions(text: string): any[] {
   const questions: any[] = [];
@@ -210,7 +211,7 @@ export function parseLiteralQuestions(text: string): any[] {
     if (questionMatch) {
       flush();
       current = {
-        number: Number(questionMatch[1]),
+        number: Number(toAsciiDigits(questionMatch[1])),
         text: questionMatch[2].trim(),
         sourceText: line,
         extractionMethod: 'direct',
@@ -224,32 +225,37 @@ export function parseLiteralQuestions(text: string): any[] {
     }
     if (!current) continue;
 
-    const optionMatch = line.match(/^([A-H])\s*(?:[).:\-–—])\s*(.+)$/i);
-    if (optionMatch) {
+    const labelledOption = line.match(/^([A-H]|[أبجدهوزح])\s*(?:[).:،\-–—])\s*(.+)$/iu);
+    const bulletOption = line.match(/^[-*•▪◦–—]\s+(.+)$/u);
+    const optionText = labelledOption?.[2] || bulletOption?.[1];
+    if (optionText) {
       current.type = 'mcq';
-      current.options.push(optionMatch[2].trim());
+      current.options.push(optionText.trim());
       current.sourceText = `${current.sourceText}\n${line}`;
       continue;
     }
 
-    const answerMatch = line.match(/^(?:answer|correct\s*answer)\s*[:\-]\s*(.+)$/i);
+    const answerMatch = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?)\s*[:\-]\s*(.+)$/iu);
     if (answerMatch) {
       const answer = answerMatch[1].trim();
       current.correctAnswer = answer;
       current.sourceText = `${current.sourceText}\n${line}`;
-      const letter = answer.match(/^([A-H])(?:[).:]|\s|$)/i);
+      const letter = answer.match(/^([A-Hأبجدهوزح])(?:[).:]|\s|$)/iu);
       if (letter && current.options.length > 0) {
-        const answerIndex = letter[1].toUpperCase().charCodeAt(0) - 65;
-        if (answerIndex < current.options.length) {
+        const label = letter[1].toLocaleUpperCase();
+        const arabicLabels: Record<string, number> = { 'أ': 0, 'ب': 1, 'ج': 2, 'د': 3, 'ه': 4, 'و': 5, 'ز': 6, 'ح': 7 };
+        const answerIndex = /^[A-H]$/i.test(label) ? label.charCodeAt(0) - 65 : (arabicLabels[label] ?? -1);
+        if (answerIndex >= 0 && answerIndex < current.options.length) {
           current.correctIndex = answerIndex;
           current.correctAnswer = current.options[current.correctIndex];
         } else {
           current.correctAnswer = '';
         }
-      } else if (/^(true|false)$/i.test(answer)) {
+      } else if (/^(true|false|صح|خطأ)$/iu.test(answer)) {
         current.type = 'tf';
-        current.options = ['True', 'False'];
-        current.correctIndex = /^true$/i.test(answer) ? 0 : 1;
+        const isTrue = /^(true|صح)$/iu.test(answer);
+        current.options = /^(true|false)$/i.test(answer) ? ['True', 'False'] : ['صح', 'خطأ'];
+        current.correctIndex = isTrue ? 0 : 1;
       } else if (current.options.length > 0) {
         const answerKey = normalize(answer);
         const index = current.options.findIndex((option: string) => normalize(option) === answerKey);
@@ -258,10 +264,13 @@ export function parseLiteralQuestions(text: string): any[] {
       continue;
     }
 
-    // Preserve wrapped question lines, but never append obvious document headings.
-    if (current.options.length === 0 && !/^(answer|section|chapter|page)\b/i.test(line)) {
+    if (/^(?:section|chapter|page|explanation|تعليل|شرح|ملاحظة)\b/i.test(line)) continue;
+    current.sourceText = `${current.sourceText}\n${line}`;
+    if (current.options.length > 0) {
+      const lastOption = current.options.length - 1;
+      current.options[lastOption] = `${current.options[lastOption]} ${line}`.trim();
+    } else {
       current.text = `${current.text} ${line}`.trim();
-      current.sourceText = `${current.sourceText}\n${line}`;
     }
   }
   flush();
@@ -282,12 +291,16 @@ export function splitTextForExtraction(text: string): string[] {
   let start = 0;
   while (start < text.length) {
     const targetEnd = Math.min(start + DOCUMENT_SINGLE_REQUEST_LIMIT, text.length);
-    const boundary = targetEnd < text.length ? text.lastIndexOf('\n', targetEnd) : targetEnd;
-    const end = boundary > start + 50_000 ? boundary : targetEnd;
+    const remaining = text.slice(start, targetEnd);
+    const questionStarts = [...remaining.matchAll(QUESTION_START_PATTERN)];
+    const lastQuestionStart = questionStarts.at(-1)?.index;
+    const lineBoundary = targetEnd < text.length ? text.lastIndexOf('\n', targetEnd) : targetEnd;
+    const questionBoundary = typeof lastQuestionStart === 'number' ? start + lastQuestionStart : -1;
+    const end = questionBoundary > start + 50_000
+      ? questionBoundary
+      : lineBoundary > start + 50_000 ? lineBoundary + 1 : targetEnd;
     chunks.push(text.slice(start, end));
-    // Repeat the tail of the previous chunk so a question/options block that
-    // crosses a provider boundary remains visible in at least one request.
-    start = end >= text.length ? end : Math.max(start + 1, end - DOCUMENT_CHUNK_OVERLAP);
+    start = end;
   }
   return chunks;
 }
@@ -327,6 +340,7 @@ export async function extractQuestionsFromText(
 
   const rawResponses: string[] = [];
   const parsedResults: any[] = [];
+  const chunkErrors: unknown[] = [];
   const modelsUsed = new Set<string>();
   // Three bounded requests reduce wall-clock time while avoiding provider bursts.
   const CONCURRENCY = chunks.length === 1 ? 1 : 3;
@@ -336,10 +350,10 @@ export async function extractQuestionsFromText(
     const batch = chunks.slice(start, start + CONCURRENCY);
     const batchResults = await Promise.all(batch.map(async (chunk) => {
       try {
-        return { result: await callModel(chunk, env, customInstruction) };
+        return { chunk, result: await callModel(chunk, env, customInstruction) };
       } catch (error) {
-        console.error('Document extraction chunk failed; continuing with remaining chunks.', error);
-        return { error };
+        console.error('Document extraction chunk failed; refusing to return a partial result.', error);
+        return { chunk, error };
       }
     }));
     for (const item of batchResults) {
@@ -347,10 +361,17 @@ export async function extractQuestionsFromText(
         rawResponses.push(item.result.raw);
         modelsUsed.add(item.result.model);
         try {
-          parsedResults.push(extractJson(item.result.raw));
+          const parsed = extractJson(item.result.raw);
+          const markerCount = item.chunk.split(/\r?\n/).map(line => line.trim()).filter(line => LITERAL_QUESTION_PATTERN.test(line)).length;
+          const extractedCount = normalizeQuestions(parsed, allowedTypes).length;
+          if (markerCount > extractedCount) throw new Error(`Expected at least ${markerCount} source questions in a chunk, got ${extractedCount}.`);
+          parsedResults.push(parsed);
         } catch (error) {
-          console.error('Document extraction response was not valid JSON; trying the local literal parser.', error);
+          console.error('Document extraction response was incomplete or invalid.', error);
+          chunkErrors.push(error);
         }
+      } else {
+        chunkErrors.push(item.error);
       }
       processed += 1;
       if (onProgress) {
@@ -360,20 +381,27 @@ export async function extractQuestionsFromText(
     }
   }
 
-  const seen = new Set<string>();
-  const questions: any[] = [];
-  for (const result of parsedResults) {
-    for (const question of normalizeQuestions(result, allowedTypes)) {
-      const key = normalize(question.text);
-      if (!seen.has(key)) {
-        seen.add(key);
-        questions.push(question);
-      }
+  if (chunkErrors.length > 0) {
+    const literalQuestions = normalizeQuestions(parseLiteralQuestions(normalizedText), allowedTypes, { preserveDuplicates: true });
+    if (isReliableLiteralExtraction(normalizedText, literalQuestions)) {
+      return {
+        title: 'Extracted Quiz',
+        description: 'Questions extracted from the uploaded document.',
+        questions: literalQuestions.map((question, index) => ({ ...question, number: question.number || index + 1 })),
+        rawResponses,
+        chunks: chunks.length,
+        provider: `${[...modelsUsed].join(', ') || 'none'}, local-format-parser`,
+      };
     }
+    throw new Error('لم تكتمل قراءة جميع أجزاء المستند؛ لم يتم إرجاع نتيجة جزئية قد تُسقط أسئلة. أعد المحاولة أو قسّم الملف.');
   }
+
+  // Chunks are non-overlapping, so retaining duplicates here preserves repeated
+  // question occurrences that are genuinely present in the source.
+  const questions = parsedResults.flatMap(result => normalizeQuestions(result, allowedTypes));
   if (!questions.length) {
-    const literalQuestions = normalizeQuestions(parseLiteralQuestions(text), allowedTypes, { preserveDuplicates: true });
-    if (literalQuestions.length > 0) {
+    const literalQuestions = normalizeQuestions(parseLiteralQuestions(normalizedText), allowedTypes, { preserveDuplicates: true });
+    if (isReliableLiteralExtraction(normalizedText, literalQuestions)) {
       return {
         title: 'Extracted Quiz',
         description: 'Questions extracted from the uploaded document.',

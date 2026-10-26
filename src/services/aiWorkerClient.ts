@@ -3,7 +3,7 @@ import { getApiUrl } from '../lib/origin';
 import { GeneratedQuiz } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
-export type AiProvider = 'groq' | 'openrouter';
+export type AiProvider = 'groq' | 'openrouter' | 'inception';
 
 interface WorkerError {
   error?: string;
@@ -238,7 +238,9 @@ export async function generateQuizWithProvider(
 ): Promise<GeneratedQuiz> {
   try {
     return await workerRequest<GeneratedQuiz>('/api/ai/generate', {
-      provider,
+      // Legacy UI labels are kept at the call sites; this Worker route exposes
+      // its Mercury 3-first provider chain under the `inception` identifier.
+      provider: 'inception',
       topic,
       amount,
       alreadyGeneratedQuestions,

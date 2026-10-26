@@ -523,10 +523,17 @@ async function extractPdfVision(
   }
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
   const normalizedQuestions = normalizeQuestions(questions, parseAllowedQuestionTypes(job.custom_instruction));
-  const finalQuestions = job.requested_question_count
-    ? normalizedQuestions.slice(0, job.requested_question_count)
-    : normalizedQuestions;
+  const finalQuestions = applyRequestedQuestionCount(normalizedQuestions, job.extraction_mode, job.requested_question_count);
   return { title: deriveQuizTitle(job.source_file_name), description: `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`, questions: finalQuestions, provider: [...providers].join(', '), chunks: chunks.length };
+}
+
+export function applyRequestedQuestionCount(
+  questions: any[],
+  extractionMode: 'literal' | 'generate',
+  requestedCount: number | null | undefined,
+): any[] {
+  if (extractionMode !== 'generate' || !requestedCount) return questions;
+  return questions.slice(0, requestedCount);
 }
 
 export function shouldUseVisionForLargeScannedPdf(pageCount: number, sampledText: string): boolean {
@@ -702,7 +709,7 @@ export async function extractJobQuiz(
         });
         return {
           ...result,
-          questions: job.requested_question_count ? result.questions.slice(0, job.requested_question_count) : result.questions,
+          questions: applyRequestedQuestionCount(result.questions, job.extraction_mode, job.requested_question_count),
           title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
           description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
         };
@@ -731,7 +738,7 @@ export async function extractJobQuiz(
       });
       return {
         ...result,
-        questions: job.requested_question_count ? result.questions.slice(0, job.requested_question_count) : result.questions,
+        questions: applyRequestedQuestionCount(result.questions, job.extraction_mode, job.requested_question_count),
         title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
         description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
       };
@@ -751,12 +758,12 @@ export async function extractJobQuiz(
     env,
     [{ role: 'user', content }],
     AI_VISION_FALLBACKS,
-    { maxTokens: job.requested_question_count ? 8_000 : 12_000, temperature: 0.2 },
+    { maxTokens: job.extraction_mode === 'generate' && job.requested_question_count ? 8_000 : 12_000, temperature: 0.2 },
   );
   const quiz = parseJson(response.text);
   const questions = normalizeQuestions(quiz, parseAllowedQuestionTypes(job.custom_instruction));
   if (!questions.length) throw new Error('The document did not contain any valid questions.');
-  const finalQuestions = job.requested_question_count ? questions.slice(0, job.requested_question_count) : questions;
+  const finalQuestions = applyRequestedQuestionCount(questions, job.extraction_mode, job.requested_question_count);
   await onProgress(1, 1, finalQuestions.length);
   return {
     title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),

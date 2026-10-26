@@ -219,6 +219,12 @@ function extractJson(text: string, depth = 0): unknown {
 
 function quizPrompt(topic: string, amount: number, previous: string[]): string {
   const exclusions = previous.length ? `\nلا تكرر هذه الأسئلة: ${previous.join(' | ')}` : '';
+  const countInstruction = amount > 0
+    ? `أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.`
+    : `اقرأ المادة عن ${topic} واختر بنفسك عدد الأسئلة المناسب لتغطية جميع مفاهيمها المهمة دون تكرار. لا تفترض 30 سؤالًا ولا تتوقف عند رقم افتراضي؛ أخرج كل الأسئلة المفيدة التي تستحق السؤال عنها.`;
+  const countReminder = amount > 0
+    ? `— تذكير أخير: ${amount} سؤال بالضبط، لا أقل، ثم أغلق JSON.`
+    : '— تذكير أخير: اختر العدد بناءً على المادة نفسها، ولا تتوقف لمجرد بلوغ 30 سؤالاً.';
   const marker = topic.match(/\[QUESTION_TYPES_ALLOWED:\s*([^\]]+)\]/i);
   const allowed = (marker?.[1] || 'mcq,tf,essay').split(/[,+\s]+/).filter((type) => ['mcq', 'tf', 'essay'].includes(type));
   const allowedTypes = [...new Set(allowed.length ? allowed : ['mcq'])];
@@ -245,13 +251,13 @@ function quizPrompt(topic: string, amount: number, previous: string[]): string {
   // esbuild 0.25+ refuses template literals containing three consecutive
   // backticks (code-fence markers), so build the prompt without fences.
   const fence = String.fromCharCode(96, 96, 96); // ```
-  return (`أنشئ اختباراً يتكون من ${amount} سؤال بالضبط (الشرط الأهم: مصفوفة questions يجب أن تحتوي على ${amount} عنصر بالضبط — لا تقبل عددًا أقل مهما كان السبب، عدّها واحداً واحداً قبل إغلاق JSON ولا تتوقف مبكراً حتى ولو طالت الإجابة) عن: ${topic}.` + exclusions + languageConstraint + `
+  return (countInstruction + exclusions + languageConstraint + `
 ${typeInstruction}
 أجب بـ JSON صالح فقط محاط بوسم ${fence}json ... ${fence} وفق الشكل التالي:
 {"title":"عنوان الاختبار","description":"وصف الاختبار","questions":[
   ${typeExamples}
 ]
-— تذكير أخير: ${amount} سؤال بالضبط، لا أقل، ثم أغلق JSON.`);
+${countReminder}`);
 }
 
 interface LegacyAiRequestOptions {
