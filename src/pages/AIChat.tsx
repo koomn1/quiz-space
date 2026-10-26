@@ -1573,7 +1573,11 @@ export default function AIChat({
         return;
       }
       console.error(err);
-      setLastError(isAr ? 'حدث خطأ أثناء معالجة الرد. اضغط إعادة المحاولة.' : 'Error generating reply. Tap retry.');
+      const reason = err instanceof Error ? err.message.trim().slice(0, 360) : '';
+      const detail = reason && reason !== 'empty' ? reason : '';
+      setLastError(detail
+        ? (isAr ? `فشل Cosmo: ${detail}` : `Cosmo failed: ${detail}`)
+        : (isAr ? 'حدث خطأ أثناء معالجة الرد. اضغط إعادة المحاولة.' : 'Error generating reply. Tap retry.'));
       setStreamingText('');
     } finally {
       setIsAnalyzing(false);

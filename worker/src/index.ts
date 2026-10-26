@@ -1021,7 +1021,10 @@ ${extraInstruction}`;
             aiModel = models[0];
           }
         } else {
-          text = await callAiWithFallback(env, messages, models, undefined, undefined);
+          const result = await generateWithProviderChain(env, messages);
+          text = result.text;
+          aiProvider = result.provider;
+          aiModel = result.model;
         }
       } catch (aiProviderError) {
         throw aiProviderError;
@@ -1045,6 +1048,19 @@ ${extraInstruction}`;
       const accountContext = await getCosmoAccountContext(request, env, userId);
       const messages: any[] = [{ role: 'system', content: buildCosmoSystemInstruction(body.systemInstruction, accountContext, body) }, ...history, { role: 'user', content: await buildCosmoUserContent(body, env) }];
       const result = await generateWithProviderChain(env, messages, { timeoutMs: 60_000 });
+      aiOperation = 'cosmo_chat';
+      aiProvider = result.provider;
+      aiModel = result.model;
+      if (userId !== 'guest') {
+        await logAiPerformance(env, authHeader, {
+          user_id: userId,
+          operation: aiOperation,
+          provider: aiProvider,
+          model: aiModel,
+          status: 'success',
+          latency_ms: Date.now() - startTime,
+        });
+      }
       const encoder = new TextEncoder();
       const payload = `data: ${JSON.stringify({ choices: [{ delta: { content: result.text } }] })}\n\ndata: [DONE]\n\n`;
       return new Response(new ReadableStream({ start(controller) { controller.enqueue(encoder.encode(payload)); controller.close(); } }), {
@@ -1070,7 +1086,7 @@ ${extraInstruction}`;
     }
     const message = aiOperation === 'generation'
       ? 'Quiz generation providers are temporarily unavailable. Please retry shortly.'
-      : 'AI provider request failed. Please retry shortly.';
+      : safeAiErrorMessage(error) || 'AI provider request failed. Please retry shortly.';
       return json({ error: message, errorCategory: safeAiErrorCategory(error), retryable: true }, 502, headers);
   }
 }

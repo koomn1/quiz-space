@@ -357,7 +357,7 @@ export async function askAI(
   options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string; expectedAnswerCount?: number } = {},
 ): Promise<{ text: string }> {
   try {
-    return await workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options });
+    return await workerRequest<{ text: string }>('/api/ai/chat', { prompt, ...options });
   } catch (err) {
     throw err;
   }
@@ -421,7 +421,7 @@ export async function askAIStream(
   // caused Cosmo to answer that it could not read the attachment. The regular
   // route keeps the complete image/PDF payload available for model fallback.
   if (options.image || options.attachment) {
-    const result = await workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options }, AI_REQUEST_TIMEOUT_MS);
+    const result = await workerRequest<{ text: string }>('/api/ai/chat', { prompt, ...options }, AI_REQUEST_TIMEOUT_MS);
     if (result.text) onChunk(result.text, result.text);
     return result;
   }
@@ -458,7 +458,7 @@ export async function askAIStream(
   };
 
   try {
-    response = await fetchWithAuth(getApiUrl('/api/ai/openrouter/stream'), {
+    response = await fetchWithAuth(getApiUrl('/api/ai/chat/stream'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, ...options }),
@@ -468,7 +468,7 @@ export async function askAIStream(
     if (!response.ok || !response.body) {
       const payload = await response.json().catch(() => ({})) as WorkerError;
       if (response.status >= 500) {
-        return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
+        return workerRequest<{ text: string }>('/api/ai/chat', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
       }
       throw new Error(payload.error || `AI streaming failed (${response.status}).`);
     }
@@ -492,7 +492,7 @@ export async function askAIStream(
       return { text: fullText };
     }
     if (!fullText) {
-      return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
+      return workerRequest<{ text: string }>('/api/ai/chat', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
     }
     throw error;
   } finally {
@@ -504,7 +504,7 @@ export async function askAIStream(
   }
 
   if (!fullText) {
-    return workerRequest<{ text: string }>('/api/ai/openrouter', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
+    return workerRequest<{ text: string }>('/api/ai/chat', { prompt, ...options }, AI_STREAM_FALLBACK_TIMEOUT_MS);
   }
   return { text: fullText };
 }
