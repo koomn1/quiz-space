@@ -39,10 +39,12 @@ type Provider = 'openrouter';
 // mistralai/mistral-small-3.1-24b-instruct, openai/gpt-4o-mini) were replaced
 // by their current generations in the 2026-09 chain refresh.
 const OPENROUTER_TEXT_MODEL = 'nvidia/nemotron-3.5-lightning:free';
-const OPENROUTER_VISION_MODEL = 'google/gemma-4-31b-it:free';
+const OPENROUTER_VISION_MODEL = 'nvidia/nemotron-3.5-super-vl:free';
 const OPENROUTER_TEXT_FALLBACKS = [
-  'nvidia/nemotron-3-super-120b-a12b:free',
   'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'xingchen-agi/xing4.0-29b-a4b:free',
+  'recursive/flint-v1.0:free',
   'openrouter/free',
 ];
 const OPENROUTER_STREAM_TEXT_MODELS = [
@@ -51,24 +53,27 @@ const OPENROUTER_STREAM_TEXT_MODELS = [
   ...OPENROUTER_TEXT_FALLBACKS,
 ];
   const OPENROUTER_VISION_FALLBACKS = [
+  'nvidia/nemotron-3.5-super-vl:free',
   'google/gemma-4-31b-it:free',
-  'thinkingmachines/inkling-small:free',
-  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
+  'thinkingmachines/inkling-small:free',
   'dots-studio/dots-3-note-preview:free',
+  'openrouter/free',
 ];
 // Post-extraction answer review is a bounded JSON task. Use a short,
 // quality-first sequence so one slow provider cannot block every batch.
   const OPENROUTER_ANSWER_REVIEW_FALLBACKS = [
     'nvidia/nemotron-3.5-lightning:free',
+    'nvidia/nemotron-3-ultra-550b-a55b:free',
     'nvidia/nemotron-3-super-120b-a12b:free',
+    'xingchen-agi/xing4.0-29b-a4b:free',
     'openrouter/free',
-    'openai/gpt-5-mini',
   ];
   const OPENROUTER_ANSWER_REVIEW_VISION_FALLBACKS = [
+    'nvidia/nemotron-3.5-super-vl:free',
     'google/gemma-4-31b-it:free',
     'thinkingmachines/inkling-small:free',
-    'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+    'google/gemma-4-26b-a4b-it:free',
   ];
 // llama-3.3-70b-versatile was shut down by Groq on 2026-08-16.
 // GPT-OSS 20B is the fast, low-cost production replacement for routine text work.

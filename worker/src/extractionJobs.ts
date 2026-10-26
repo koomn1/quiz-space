@@ -145,16 +145,19 @@ export async function extractExcelText(source: Uint8Array): Promise<string> {
 
 const TEXT_MODEL_FALLBACKS = [
   'nvidia/nemotron-3.5-lightning:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
   'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'xingchen-agi/xing4.0-29b-a4b:free',
+  'recursive/flint-v1.0:free',
   'openrouter/free',
 ];
 const VISION_MODEL_FALLBACKS = [
+  'nvidia/nemotron-3.5-super-vl:free',
   'google/gemma-4-31b-it:free',
-  'thinkingmachines/inkling-small:free',
-  'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'google/gemma-4-26b-a4b-it:free',
+  'thinkingmachines/inkling-small:free',
   'dots-studio/dots-3-note-preview:free',
+  'openrouter/free',
 ];
 
 export function sourceFileBaseName(sourceFileName: string | null | undefined): string {

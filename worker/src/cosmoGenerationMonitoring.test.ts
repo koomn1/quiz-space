@@ -23,8 +23,10 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('const OPENROUTER_STREAM_TEXT_MODELS = [');
     expect(workerSource).toContain("'nvidia/nemotron-3-ultra-550b-a55b:free'");
     expect(workerSource).toContain("'nvidia/nemotron-3-super-120b-a12b:free'");
+    expect(workerSource).toContain("'nvidia/nemotron-3.5-super-vl:free'");
+    expect(workerSource).toContain("'xingchen-agi/xing4.0-29b-a4b:free'");
+    expect(workerSource).toContain("'recursive/flint-v1.0:free'");
     expect(workerSource).toContain("'openrouter/free'");
-    expect(workerSource).toContain("'openai/gpt-5-mini'");
     expect(workerSource).not.toContain("'google/gemini-2.0-flash-001'");
     expect(workerSource).not.toContain("'openai/gpt-oss-120b:free'");
     expect(workerSource).not.toContain("'mistralai/mistral-small-3.1-24b-instruct'");

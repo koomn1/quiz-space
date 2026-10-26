@@ -24,8 +24,10 @@ export interface DocumentExtractionProgress {
 
 const DOCUMENT_EXTRACTION_MODELS = [
   'nvidia/nemotron-3.5-lightning:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
   'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'xingchen-agi/xing4.0-29b-a4b:free',
+  'recursive/flint-v1.0:free',
   'openrouter/free',
 ];
 
