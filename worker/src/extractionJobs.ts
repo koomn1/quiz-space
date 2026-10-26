@@ -1,12 +1,14 @@
 import mammoth from 'mammoth';
 import { PDFDocument } from 'pdf-lib';
 import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
-import { assessGeneratedQuestionBatch } from './mercuryDecide';
+import { generateWithProviderChain } from './providerChain';
 import JSZip from 'jszip';
 
 export interface ExtractionJobEnv {
-  OPENROUTER_API_KEY: string;
   INCEPTION_API_KEY?: string;
+  GEMINI_API_KEY?: string;
+  OPENAI_API_KEY?: string;
+  GROQ_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
 }
@@ -143,21 +145,14 @@ export async function extractExcelText(source: Uint8Array): Promise<string> {
   return sheets.join('\n\n');
 }
 
-const TEXT_MODEL_FALLBACKS = [
-  'nvidia/nemotron-3.5-lightning:free',
-  'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'xingchen-agi/xing4.0-29b-a4b:free',
-  'recursive/flint-v1.0:free',
-  'openrouter/free',
+const AI_TEXT_FALLBACKS = [
+  'mercury-3',
+  'openai/gpt-oss-20b',
+  'gpt-5-mini',
 ];
-const VISION_MODEL_FALLBACKS = [
-  'nvidia/nemotron-3.5-super-vl:free',
-  'google/gemma-4-31b-it:free',
-  'google/gemma-4-26b-a4b-it:free',
-  'thinkingmachines/inkling-small:free',
-  'dots-studio/dots-3-note-preview:free',
-  'openrouter/free',
+const AI_VISION_FALLBACKS = [
+  'gemini-3.8-flash',
+  'gpt-5-mini',
 ];
 
 export function sourceFileBaseName(sourceFileName: string | null | undefined): string {
@@ -411,11 +406,15 @@ function normalizeQuestions(value: unknown, allowedTypes: AllowedQuestionType[] 
           : Array.isArray(container?.quiz?.questions)
             ? container.quiz.questions
             : [];
+  const seen = new Set<string>();
   const questions: any[] = [];
   for (const raw of source) {
     if (!raw || typeof raw !== 'object') continue;
     const text = String((raw as any).text ?? (raw as any).question ?? (raw as any).questionText ?? (raw as any).prompt ?? '').trim();
     if (!text) continue;
+    const key = text.replace(/\s+/g, ' ').toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
     const declaredType = String((raw as any).type ?? (raw as any).questionType ?? (raw as any).kind ?? '').toLowerCase();
     const type = declaredType === 'tf' || declaredType === 'true_false' || declaredType === 'true/false'
       ? 'tf'
@@ -428,18 +427,14 @@ function normalizeQuestions(value: unknown, allowedTypes: AllowedQuestionType[] 
       ? rawOptions.map((option: unknown) => String(typeof option === 'object' && option !== null ? ((option as any).text ?? (option as any).label ?? '') : option ?? '').trim()).filter(Boolean)
       : [];
     const options = type === 'tf' ? normalizeTrueFalseOptions(text, parsedOptions) : parsedOptions;
-    const correctIndex = type === 'essay' ? -1 : resolveCorrectIndex(raw, options, type);
     questions.push({
       number: Number.isInteger(Number((raw as any).number)) && Number((raw as any).number) > 0 ? Number((raw as any).number) : questions.length + 1,
       text,
       type,
       options: type === 'essay' ? [] : options,
-      correctIndex,
+      correctIndex: type === 'essay' ? -1 : resolveCorrectIndex(raw, options, type),
       correctAnswer: (raw as any).correctAnswer ?? (raw as any).correct_answer ?? (raw as any).answer ?? (raw as any).correctOption ?? '',
       explanation: (raw as any).explanation == null ? '' : String((raw as any).explanation),
-      extractionMethod: (raw as any).extractionMethod ?? (raw as any).extraction_method ?? 'ai',
-      reviewRequired: Boolean((raw as any).reviewRequired ?? (raw as any).review_required ?? (type !== 'essay' && correctIndex < 0)),
-      sourceText: (raw as any).sourceText ?? (raw as any).source_text ?? text,
     });
   }
   return questions;
@@ -465,47 +460,391 @@ function questionFingerprint(question: any): string {
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
-async function callOpenRouterWithFallback(
+async function callAiWithFallback(
   env: ExtractionJobEnv,
   messages: any[],
-  models: string[],
+  _models: string[],
   options?: { maxTokens?: number; temperature?: number },
 ): Promise<{ text: string; model: string }> {
-  let lastError: unknown;
-  for (const model of models) {
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const controller = new AbortController();
-      timeout = setTimeout(() => controller.abort(), VISION_MODEL_TIMEOUT_MS);
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://quiz-space-app.pages.dev/',
-          'X-Title': 'QuizSpace',
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          ...(options?.maxTokens ? { max_tokens: options.maxTokens } : {}),
-          ...(options?.temperature != null ? { temperature: options.temperature } : {}),
-        }),
-      });
-      if (!response.ok) throw new Error(`OpenRouter ${model} failed: ${response.status}`);
-      const data = await response.json() as any;
-      const text = data.choices?.[0]?.message?.content;
-      if (typeof text !== 'string' || !text.trim()) throw new Error(`OpenRouter ${model} returned an empty response`);
-      return { text, model };
-    } catch (error) {
-      lastError = error;
-      console.warn(`Extraction job model ${model} failed; trying fallback.`, error);
-    } finally {
-      if (timeout) clearTimeout(timeout);
+  const result = await generateWithProviderChain(env as any, messages, {
+    max_tokens: options?.maxTokens,
+    temperature: options?.temperature,
+    timeoutMs: VISION_MODEL_TIMEOUT_MS,
+  });
+  return { text: result.text, model: `${result.provider}/${result.model}` };
+}
+
+async function extractPdfVision(
+  source: Uint8Array,
+  job: ExtractionJobRow,
+  env: ExtractionJobEnv,
+  onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
+): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
+  const pdf = await PDFDocument.load(source);
+  const plan = selectVisionChunkPlan(pdf.getPageCount(), source.byteLength);
+  const chunkSize = plan.pageCountPerChunk;
+  const chunks: string[] = [];
+  for (let start = 0; start < pdf.getPageCount(); start += chunkSize) {
+    const chunkDocument = await PDFDocument.create();
+    const end = Math.min(start + chunkSize, pdf.getPageCount());
+    const pages = await chunkDocument.copyPages(pdf, Array.from({ length: end - start }, (_, offset) => start + offset));
+    pages.forEach(page => chunkDocument.addPage(page));
+    chunks.push(base64FromBytes(new Uint8Array(await chunkDocument.save())));
+  }
+
+  const questions: any[] = [];
+  const providers = new Set<string>();
+  const concurrency = plan.concurrency;
+  let processed = 0;
+  for (let start = 0; start < chunks.length; start += concurrency) {
+    const batch = chunks.slice(start, start + concurrency);
+    const results = await Promise.all(batch.map(async (fileBase64, offset) => {
+      const request = await callAiWithFallback(env, [{
+        role: 'user',
+        content: [
+          { type: 'text', text: documentVisionPrompt(job) },
+          { type: 'file', file: { filename: `pages-${start + offset + 1}.pdf`, file_data: `data:application/pdf;base64,${fileBase64}` } },
+        ],
+      }], AI_VISION_FALLBACKS);
+      return { model: request.model, quiz: parseJson(request.text) };
+    }));
+    for (const result of results) {
+      providers.add(result.model);
+          questions.push(...normalizeQuestions(result.quiz, parseAllowedQuestionTypes(job.custom_instruction)));
+      processed += 1;
+      await onProgress(processed, chunks.length, questions.length);
     }
   }
-  throw lastError instanceof Error ? lastError : new Error('All extraction models failed.');
+  if (!questions.length) throw new Error('The document did not contain any valid questions.');
+  const normalizedQuestions = normalizeQuestions(questions, parseAllowedQuestionTypes(job.custom_instruction));
+  const finalQuestions = job.requested_question_count
+    ? normalizedQuestions.slice(0, job.requested_question_count)
+    : normalizedQuestions;
+  return { title: deriveQuizTitle(job.source_file_name), description: `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`, questions: finalQuestions, provider: [...providers].join(', '), chunks: chunks.length };
+}
+
+export function shouldUseVisionForLargeScannedPdf(pageCount: number, sampledText: string): boolean {
+  return pageCount >= LARGE_PDF_PAGE_THRESHOLD && shouldUseVisionForScannedPdf(pageCount, sampledText);
+}
+
+export function shouldUseVisionForScannedPdf(pageCount: number, sampledText: string): boolean {
+  return pageCount > 0 && sampledText.trim().length <= 40;
+}
+
+async function samplePdfText(source: Uint8Array, pageCount: number): Promise<string> {
+  const sourcePdf = await PDFDocument.load(source);
+  const samplePdf = await PDFDocument.create();
+  const sampleCount = Math.min(PDF_TEXT_SAMPLE_PAGES, pageCount);
+  const pages = await samplePdf.copyPages(sourcePdf, Array.from({ length: sampleCount }, (_, index) => index));
+  pages.forEach(page => samplePdf.addPage(page));
+  return extractPdfTextContent(new Uint8Array(await samplePdf.save()));
+}
+
+async function getScannedPdfPageCount(source: Uint8Array, job: ExtractionJobRow): Promise<number | null> {
+  if (job.file_mime_type !== 'application/pdf') return null;
+  const pageCount = (await PDFDocument.load(source)).getPageCount();
+  const sampledText = await samplePdfText(source, pageCount);
+  return shouldUseVisionForScannedPdf(pageCount, sampledText) ? pageCount : null;
+}
+
+async function restartExpiredVisionChunks(env: ExtractionJobEnv, authHeader: string, jobId: string): Promise<void> {
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_job_chunks?parent_job_id=eq.${encodeURIComponent(jobId)}&status=eq.processing&processing_lease_expires_at=lt.${encodeURIComponent(new Date().toISOString())}`), {
+    method: 'PATCH',
+    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+    body: JSON.stringify({
+      status: 'pending',
+      processing_token: null,
+      processing_lease_expires_at: null,
+      error_message: null,
+    }),
+  });
+  if (!response.ok) throw new Error(`Expired chunk recovery failed: ${response.status}`);
+}
+
+async function generateQuestionsFromText(
+  text: string,
+  job: ExtractionJobRow,
+  env: ExtractionJobEnv,
+  onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
+): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
+  const requestedCount = job.requested_question_count || null;
+  // Large explicit requests must also cover the whole source. Sending 100/200
+  // questions in one prompt commonly reaches the model output limit and makes
+  // the whole job fail, so split the source and assign a proportional target
+  // to every section.
+  const sourceChunks: string[] = [];
+  const automaticChunkSize = 90_000;
+  const automaticOverlap = 3_000;
+  if (requestedCount && requestedCount <= 25) {
+    sourceChunks.push(text.slice(0, 500_000));
+  } else {
+    for (let start = 0; start < text.length; ) {
+      const targetEnd = Math.min(start + automaticChunkSize, text.length);
+      const boundary = targetEnd < text.length ? text.lastIndexOf('\n', targetEnd) : targetEnd;
+      const end = boundary > start + 30_000 ? boundary : targetEnd;
+      sourceChunks.push(text.slice(start, end));
+      if (end >= text.length) break;
+      start = Math.max(start + 1, end - automaticOverlap);
+    }
+  }
+  const totalChunks = Math.max(1, sourceChunks.length);
+  const chunkTargets: Array<number | null> = requestedCount
+    ? sourceChunks.map((chunk, index) => {
+        if (index === sourceChunks.length - 1) {
+          const assignedBeforeLast = sourceChunks.slice(0, -1).reduce(
+            (sum, current) => sum + Math.max(1, Math.round(requestedCount * current.length / Math.max(1, text.length))),
+            0,
+          );
+          return Math.max(1, requestedCount - assignedBeforeLast);
+        }
+        return Math.max(1, Math.round(requestedCount * chunk.length / Math.max(1, text.length)));
+      })
+    : sourceChunks.map(() => null);
+  const messages = [{
+    role: 'system',
+    content: 'أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ الجزء المرسل، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواه فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.',
+  }];
+  let lastError: unknown;
+  const allowedTypes = parseAllowedQuestionTypes(job.custom_instruction);
+  const allQuestions: any[] = [];
+  const seen = new Set<string>();
+  const providers = new Set<string>();
+  let title = deriveQuizTitle(job.source_file_name, text);
+  let description = `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`;
+
+  // Keep provider traffic bounded while processing every source section.
+  const concurrency = 3;
+  for (let start = 0; start < sourceChunks.length; start += concurrency) {
+    const batch = sourceChunks.slice(start, start + concurrency);
+    const results = await Promise.all(batch.map(async (sourceChunk) => {
+      const chunkIndex = sourceChunks.indexOf(sourceChunk, start);
+      const chunkTarget = chunkTargets[chunkIndex] || null;
+      const chunkMessages = [
+        messages[0],
+        { role: 'user', content: `${generatePrompt(chunkTarget, job.custom_instruction, sourceChunk)}\n\nمحتوى الملف المصدر — الجزء الحالي (استخرج كل النقاط القابلة للسؤال من هذا الجزء):\n${sourceChunk}` },
+      ];
+      let chunkError: unknown;
+      for (const model of AI_TEXT_FALLBACKS) {
+        try {
+          const response = await callAiWithFallback(env, chunkMessages, [model], { maxTokens: chunkTarget ? Math.min(12_000, Math.max(3_000, chunkTarget * 220)) : 12_000, temperature: 0.2 });
+          const quiz = parseJson(response.text);
+          const questions = normalizeQuestions(quiz, allowedTypes);
+          const verifiedQuestions = validateGeneratedQuestions(questions);
+          if (!verifiedQuestions.length) throw new Error('The document section did not contain valid generated questions.');
+          return { response, quiz, questions: verifiedQuestions };
+        } catch (error) {
+          chunkError = error;
+          console.warn(`Text generation section failed on model ${model}; trying fallback.`, error);
+        }
+      }
+      throw chunkError instanceof Error ? chunkError : new Error('All text generation models failed for this section.');
+    }).map(promise => promise.catch(error => ({ error }))));
+
+    for (const result of results) {
+      if ('error' in result) {
+        lastError = result.error;
+      } else {
+        providers.add(result.response.model);
+        if (!isGenericQuizTitle(result.quiz?.title)) title = String(result.quiz.title).trim();
+        if (typeof result.quiz?.description === 'string' && result.quiz.description.trim()) description = result.quiz.description.trim();
+        for (const question of result.questions) {
+          const key = String(question.text || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+          if (key && !seen.has(key)) {
+            seen.add(key);
+            allQuestions.push(question);
+          }
+        }
+      }
+      await onProgress(Math.min(start + results.length, totalChunks), totalChunks, allQuestions.length);
+    }
+  }
+
+  if (!allQuestions.length) throw lastError instanceof Error ? lastError : new Error('The document did not contain any valid questions.');
+  const finalQuestions = requestedCount ? allQuestions.slice(0, requestedCount) : allQuestions;
+  return { title, description, questions: finalQuestions, provider: [...providers].join(', ') || 'ai-provider', chunks: totalChunks };
+}
+
+export async function extractJobQuiz(
+  source: Uint8Array,
+  job: ExtractionJobRow,
+  env: ExtractionJobEnv,
+  onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
+): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
+  const mimeType = job.file_mime_type;
+  const isLiteral = job.extraction_mode === 'literal';
+  let text = '';
+
+  if (mimeType === 'application/pdf') {
+    const pageCount = (await PDFDocument.load(source)).getPageCount();
+    if (pageCount >= LARGE_PDF_PAGE_THRESHOLD) {
+      const sampledText = await samplePdfText(source, pageCount);
+      if (shouldUseVisionForLargeScannedPdf(pageCount, sampledText)) {
+        await onProgress(0, Math.ceil(pageCount / 5), 0);
+        return extractPdfVision(source, job, env, onProgress);
+      }
+    }
+    text = await extractPdfTextContent(source);
+    if (text.trim().length > 40) {
+      if (isLiteral) {
+        const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
+          await onProgress(progress.processed, progress.total, progress.questionsExtracted);
+        });
+        return {
+          ...result,
+          questions: job.requested_question_count ? result.questions.slice(0, job.requested_question_count) : result.questions,
+          title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
+          description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+        };
+      }
+      return generateQuestionsFromText(text, job, env, onProgress);
+    }
+    return extractPdfVision(source, job, env, onProgress);
+  }
+
+  if (mimeType.includes('wordprocessingml') || mimeType.includes('msword')) {
+    const wordDocument = new Uint8Array(source.byteLength);
+    wordDocument.set(source);
+    const result = await mammoth.extractRawText({ arrayBuffer: wordDocument.buffer });
+    text = result.value;
+  } else if (mimeType.includes('spreadsheetml') || mimeType.includes('ms-excel')) {
+    text = await extractExcelText(source);
+    } else if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
+    text = new TextDecoder().decode(source);
+  } else if (mimeType.includes('presentationml') || mimeType.includes('powerpoint')) {
+    text = await extractPowerPointText(source);
+  }
+  if (text.trim()) {
+    if (isLiteral) {
+      const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
+        await onProgress(progress.processed, progress.total, progress.questionsExtracted);
+      });
+      return {
+        ...result,
+        questions: job.requested_question_count ? result.questions.slice(0, job.requested_question_count) : result.questions,
+        title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
+        description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+      };
+    }
+
+    return generateQuestionsFromText(text, job, env, onProgress);
+  }
+
+  const prompt = isLiteral
+    ? extractionPrompt(job.custom_instruction, text)
+    : generatePrompt(job.requested_question_count, job.custom_instruction);
+  const base64 = base64FromBytes(source);
+  const content = mimeType === 'application/pdf' || mimeType.includes('powerpoint')
+    ? [{ type: 'text', text: prompt }, { type: 'file', file: { filename: 'uploaded-document', file_data: `data:${mimeType};base64,${base64}` } }]
+    : [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } }];
+  const response = await callAiWithFallback(
+    env,
+    [{ role: 'user', content }],
+    AI_VISION_FALLBACKS,
+    { maxTokens: job.requested_question_count ? 8_000 : 12_000, temperature: 0.2 },
+  );
+  const quiz = parseJson(response.text);
+  const questions = normalizeQuestions(quiz, parseAllowedQuestionTypes(job.custom_instruction));
+  if (!questions.length) throw new Error('The document did not contain any valid questions.');
+  const finalQuestions = job.requested_question_count ? questions.slice(0, job.requested_question_count) : questions;
+  await onProgress(1, 1, finalQuestions.length);
+  return {
+    title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
+    description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+    questions: finalQuestions,
+    provider: response.model,
+    chunks: 1,
+  };
+}
+
+export function validateCreateExtractionJobInput(input: CreateExtractionJobInput, userId: string): string | null {
+  if (!isValidIdempotencyKey(input.idempotencyKey)) return 'Invalid idempotency key.';
+  if (!isSafeStoragePath(input.fileStoragePath, userId)) return 'Invalid file storage path.';
+  if (!supportedMimeTypes.has(input.mimeType)) return 'Unsupported file type.';
+  if (input.extractionMode !== 'literal' && input.extractionMode !== 'generate') return 'Invalid extraction mode.';
+  if (input.customInstruction && input.customInstruction.length > 2000) return 'Custom instruction is too long.';
+  if (input.requestedQuestionCount != null && (!Number.isInteger(input.requestedQuestionCount) || input.requestedQuestionCount < 1 || input.requestedQuestionCount > 500)) return 'Invalid question count.';
+  return null;
+}
+
+export async function createOrGetExtractionJob(env: ExtractionJobEnv, authHeader: string, userId: string, input: CreateExtractionJobInput): Promise<ExtractionJobRow> {
+  const existingResponse = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?user_id=eq.${encodeURIComponent(userId)}&idempotency_key=eq.${encodeURIComponent(input.idempotencyKey)}&select=*`), {
+    headers: databaseHeaders(env, authHeader),
+  });
+  if (!existingResponse.ok) throw new Error(`Job lookup failed: ${existingResponse.status}`);
+  const existingRows = await existingResponse.json() as ExtractionJobRow[];
+  if (existingRows[0]) return existingRows[0];
+
+  const createResponse = await fetch(apiUrl(env, '/rest/v1/extraction_jobs'), {
+    method: 'POST',
+    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+    body: JSON.stringify({
+      user_id: userId,
+      idempotency_key: input.idempotencyKey,
+      file_storage_path: input.fileStoragePath,
+      file_mime_type: input.mimeType,
+      extraction_mode: input.extractionMode,
+      source_file_name: input.sourceFileName?.trim().slice(0, 255) || null,
+      custom_instruction: input.customInstruction?.trim() || null,
+      requested_question_count: input.requestedQuestionCount || null,
+      progress_message: 'تم استلام الملف وتجهيز مهمة الاستخراج.',
+    }),
+  });
+  if (createResponse.ok) {
+    const rows = await createResponse.json() as ExtractionJobRow[];
+    if (rows[0]) return rows[0];
+  }
+  if (createResponse.status === 409) {
+    const raced = await fetchJobByIdempotency(env, authHeader, userId, input.idempotencyKey);
+    if (raced) return raced;
+  }
+  throw new Error(`Job creation failed: ${createResponse.status}`);
+}
+
+async function fetchJobByIdempotency(env: ExtractionJobEnv, authHeader: string, userId: string, key: string): Promise<ExtractionJobRow | null> {
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?user_id=eq.${encodeURIComponent(userId)}&idempotency_key=eq.${encodeURIComponent(key)}&select=*`), {
+    headers: databaseHeaders(env, authHeader),
+  });
+  if (!response.ok) return null;
+  const rows = await response.json() as ExtractionJobRow[];
+  return rows[0] || null;
+}
+
+async function claimPendingJob(env: ExtractionJobEnv, authHeader: string, jobId: string): Promise<{ job: ExtractionJobRow; token: string } | null> {
+  const token = crypto.randomUUID();
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?id=eq.${encodeURIComponent(jobId)}&status=eq.pending`), {
+    method: 'PATCH',
+    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+    body: JSON.stringify({
+      status: 'processing',
+      processing_token: token,
+      processing_started_at: new Date().toISOString(),
+      processing_lease_expires_at: new Date(Date.now() + LEASE_MS).toISOString(),
+      progress_percentage: 1,
+      progress_message: 'جارٍ تجهيز الملف للاستخراج.',
+      error_message: null,
+    }),
+  });
+  if (!response.ok) throw new Error(`Job claim failed: ${response.status}`);
+  const rows = await response.json() as ExtractionJobRow[];
+  return rows[0] ? { job: rows[0], token } : null;
+}
+
+export async function restartExpiredJob(env: ExtractionJobEnv, authHeader: string, job: ExtractionJobRow): Promise<ExtractionJobRow> {
+  const leaseExpiry = job.processing_lease_expires_at ? new Date(job.processing_lease_expires_at).getTime() : 0;
+  if (job.status !== 'processing' || Number.isNaN(leaseExpiry) || leaseExpiry > Date.now()) return job;
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?id=eq.${encodeURIComponent(job.id)}&status=eq.processing&processing_lease_expires_at=lt.${encodeURIComponent(new Date().toISOString())}`), {
+    method: 'PATCH',
+    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+    body: JSON.stringify({
+      status: 'pending',
+      processing_token: null,
+      processing_lease_expires_at: null,
+      progress_message: 'استؤنفت مهمة الاستخراج بعد انقطاع قصير.',
+    }),
+  });
+  if (!response.ok) return job;
+  const rows = await response.json() as ExtractionJobRow[];
+  return rows[0] || job;
 }
 
 async function fetchJob(env: ExtractionJobEnv, authHeader: string, jobId: string): Promise<ExtractionJobRow | null> {
@@ -554,6 +893,44 @@ export function buildVisionChunkRanges(pageCount: number, pageCountPerChunk = VI
   }));
 }
 
+async function updateClaimedJob(
+  env: ExtractionJobEnv,
+  authHeader: string,
+  jobId: string,
+  token: string,
+  payload: Record<string, unknown>,
+): Promise<boolean> {
+  const response = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?id=eq.${encodeURIComponent(jobId)}&processing_token=eq.${encodeURIComponent(token)}`), {
+    method: 'PATCH',
+    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
+    body: JSON.stringify({
+      ...payload,
+      processing_lease_expires_at: payload.status === 'complete' || payload.status === 'error'
+        ? null
+        : new Date(Date.now() + LEASE_MS).toISOString(),
+    }),
+  });
+  if (!response.ok) throw new Error(`Job update failed: ${response.status}`);
+  return true;
+}
+
+async function downloadSourceFile(env: ExtractionJobEnv, authHeader: string, path: string): Promise<Uint8Array> {
+  const response = await fetch(apiUrl(env, `/storage/v1/object/authenticated/${BUCKET}/${encodeStoragePath(path)}`), {
+    headers: databaseHeaders(env, authHeader),
+  });
+  if (!response.ok) throw new Error(response.status === 404 ? 'Source upload is no longer available.' : `Source download failed: ${response.status}`);
+  const arrayBuffer = await response.arrayBuffer();
+  if (!arrayBuffer.byteLength || arrayBuffer.byteLength > MAX_SOURCE_BYTES) throw new Error('Source file exceeds the processing limit.');
+  return new Uint8Array(arrayBuffer);
+}
+
+function documentVisionPrompt(job: ExtractionJobRow): string {
+  if (job.extraction_mode === 'generate') {
+    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. IMPORTANT: detect the dominant language from the attached page itself and write the title, description, questions, options, answers, and explanations in that same language. If the page is English, every output field must be English even though these instructions contain Arabic. Do not translate. أعد JSON صالحاً فقط.`;
+  }
+  return `${extractionPrompt(job.custom_instruction)}\n\nIMPORTANT: The attached page image is the source of truth for language. Detect its dominant language from the page itself and return every title, question, option, answer, and explanation in that same language. Do not copy the Arabic language of these instructions into an English source. Do not translate.`;
+}
+
 async function createVisionChunks(env: ExtractionJobEnv, authHeader: string, jobId: string, pageCount: number, pageCountPerChunk = VISION_CHUNK_PAGE_COUNT): Promise<ExtractionJobChunkRow[]> {
   const chunks = buildVisionChunkRanges(pageCount, pageCountPerChunk).map(({ chunkIndex, pageStart, pageEnd }) => ({
     parent_job_id: jobId,
@@ -573,6 +950,36 @@ async function createVisionChunks(env: ExtractionJobEnv, authHeader: string, job
   if (!response.ok) throw new Error(`Chunk creation failed: ${response.status}`);
   const created = await response.json() as ExtractionJobChunkRow[];
   return created.length ? created : fetchJobChunks(env, authHeader, jobId);
+}
+
+async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: string, job: ExtractionJobRow, provider: string, status: 'success' | 'error', latencyMs: number, chunks?: number): Promise<void> {
+  try {
+    await fetch(apiUrl(env, '/rest/v1/ai_performance_logs'), {
+      method: 'POST',
+      headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        user_id: job.user_id,
+        operation: 'extraction_job',
+        provider,
+        chunk_count: chunks,
+        status,
+        latency_ms: latencyMs,
+      }),
+    });
+  } catch (error) {
+    console.warn('Extraction job telemetry write failed.', error);
+  }
+}
+
+async function deleteSourceFile(env: ExtractionJobEnv, authHeader: string, path: string): Promise<void> {
+  try {
+    await fetch(apiUrl(env, `/storage/v1/object/${BUCKET}/${encodeStoragePath(path)}`), {
+      method: 'DELETE',
+      headers: databaseHeaders(env, authHeader),
+    });
+  } catch (error) {
+    console.warn('Extraction source cleanup failed.', error);
+  }
 }
 
 async function claimPendingChunk(
@@ -595,27 +1002,6 @@ async function claimPendingChunk(
   if (!response.ok) throw new Error(`Chunk claim failed: ${response.status}`);
   const rows = await response.json() as ExtractionJobChunkRow[];
   return rows[0] ? { chunk: rows[0], token } : null;
-}
-
-async function updateClaimedJob(
-  env: ExtractionJobEnv,
-  authHeader: string,
-  jobId: string,
-  token: string,
-  payload: Record<string, unknown>,
-): Promise<boolean> {
-  const response = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?id=eq.${encodeURIComponent(jobId)}&processing_token=eq.${encodeURIComponent(token)}`), {
-    method: 'PATCH',
-    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
-    body: JSON.stringify({
-      ...payload,
-      processing_lease_expires_at: payload.status === 'complete' || payload.status === 'error'
-        ? null
-        : new Date(Date.now() + LEASE_MS).toISOString(),
-    }),
-  });
-  if (!response.ok) throw new Error(`Job update failed: ${response.status}`);
-  return true;
 }
 
 async function updateClaimedChunk(
@@ -718,437 +1104,6 @@ async function reconcileVisionParentJob(
   await deleteSourceFile(env, authHeader, parent.file_storage_path);
 }
 
-async function downloadSourceFile(env: ExtractionJobEnv, authHeader: string, path: string): Promise<Uint8Array> {
-  const response = await fetch(apiUrl(env, `/storage/v1/object/authenticated/${BUCKET}/${encodeStoragePath(path)}`), {
-    headers: databaseHeaders(env, authHeader),
-  });
-  if (!response.ok) throw new Error(response.status === 404 ? 'Source upload is no longer available.' : `Source download failed: ${response.status}`);
-  const arrayBuffer = await response.arrayBuffer();
-  if (!arrayBuffer.byteLength || arrayBuffer.byteLength > MAX_SOURCE_BYTES) throw new Error('Source file exceeds the processing limit.');
-  return new Uint8Array(arrayBuffer);
-}
-
-async function deleteSourceFile(env: ExtractionJobEnv, authHeader: string, path: string): Promise<void> {
-  try {
-    await fetch(apiUrl(env, `/storage/v1/object/${BUCKET}/${encodeStoragePath(path)}`), {
-      method: 'DELETE',
-      headers: databaseHeaders(env, authHeader),
-    });
-  } catch (error) {
-    console.warn('Extraction source cleanup failed.', error);
-  }
-}
-
-async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: string, job: ExtractionJobRow, provider: string, status: 'success' | 'error', latencyMs: number, chunks?: number): Promise<void> {
-  try {
-    await fetch(apiUrl(env, '/rest/v1/ai_performance_logs'), {
-      method: 'POST',
-      headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json' }),
-      body: JSON.stringify({
-        user_id: job.user_id,
-        operation: 'extraction_job',
-        provider,
-        chunk_count: chunks,
-        status,
-        latency_ms: latencyMs,
-      }),
-    });
-  } catch (error) {
-    console.warn('Extraction job telemetry write failed.', error);
-  }
-}
-
-function documentVisionPrompt(job: ExtractionJobRow): string {
-  if (job.extraction_mode === 'generate') {
-    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. IMPORTANT: detect the dominant language from the attached page itself and write the title, description, questions, options, answers, and explanations in that same language. If the page is English, every output field must be English even though these instructions contain Arabic. Do not translate. أعد JSON صالحاً فقط.`;
-  }
-  return `${extractionPrompt(job.custom_instruction)}\n\nIMPORTANT: The attached page image is the source of truth for language. Detect its dominant language from the page itself and return every title, question, option, answer, and explanation in that same language. Do not copy the Arabic language of these instructions into an English source. Do not translate.`;
-}
-async function extractPdfVision(
-  source: Uint8Array,
-  job: ExtractionJobRow,
-  env: ExtractionJobEnv,
-  onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
-): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
-  const pdf = await PDFDocument.load(source);
-  const plan = selectVisionChunkPlan(pdf.getPageCount(), source.byteLength);
-  const chunkSize = plan.pageCountPerChunk;
-  const chunks: string[] = [];
-  for (let start = 0; start < pdf.getPageCount(); start += chunkSize) {
-    const chunkDocument = await PDFDocument.create();
-    const end = Math.min(start + chunkSize, pdf.getPageCount());
-    const pages = await chunkDocument.copyPages(pdf, Array.from({ length: end - start }, (_, offset) => start + offset));
-    pages.forEach(page => chunkDocument.addPage(page));
-    chunks.push(base64FromBytes(new Uint8Array(await chunkDocument.save())));
-  }
-
-  const questions: any[] = [];
-  const providers = new Set<string>();
-  const concurrency = plan.concurrency;
-  let processed = 0;
-  for (let start = 0; start < chunks.length; start += concurrency) {
-    const batch = chunks.slice(start, start + concurrency);
-    const results = await Promise.all(batch.map(async (fileBase64, offset) => {
-      const request = await callOpenRouterWithFallback(env, [{
-        role: 'user',
-        content: [
-          { type: 'text', text: documentVisionPrompt(job) },
-          { type: 'file', file: { filename: `pages-${start + offset + 1}.pdf`, file_data: `data:application/pdf;base64,${fileBase64}` } },
-        ],
-      }], VISION_MODEL_FALLBACKS);
-      return { model: request.model, quiz: parseJson(request.text) };
-    }));
-    for (const result of results) {
-      providers.add(result.model);
-          questions.push(...normalizeQuestions(result.quiz, parseAllowedQuestionTypes(job.custom_instruction)));
-      processed += 1;
-      await onProgress(processed, chunks.length, questions.length);
-    }
-  }
-  if (!questions.length) throw new Error('The document did not contain any valid questions.');
-  const normalizedQuestions = normalizeQuestions(questions, parseAllowedQuestionTypes(job.custom_instruction));
-  const finalQuestions = job.requested_question_count
-    ? normalizedQuestions.slice(0, job.requested_question_count)
-    : normalizedQuestions;
-  return { title: deriveQuizTitle(job.source_file_name), description: `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`, questions: finalQuestions, provider: [...providers].join(', '), chunks: chunks.length };
-}
-
-export function shouldUseVisionForLargeScannedPdf(pageCount: number, sampledText: string): boolean {
-  return pageCount >= LARGE_PDF_PAGE_THRESHOLD && shouldUseVisionForScannedPdf(pageCount, sampledText);
-}
-
-export function shouldUseVisionForScannedPdf(pageCount: number, sampledText: string): boolean {
-  return pageCount > 0 && sampledText.trim().length <= 40;
-}
-
-async function samplePdfText(source: Uint8Array, pageCount: number): Promise<string> {
-  const sourcePdf = await PDFDocument.load(source);
-  const samplePdf = await PDFDocument.create();
-  const sampleCount = Math.min(PDF_TEXT_SAMPLE_PAGES, pageCount);
-  const pages = await samplePdf.copyPages(sourcePdf, Array.from({ length: sampleCount }, (_, index) => index));
-  pages.forEach(page => samplePdf.addPage(page));
-  return extractPdfTextContent(new Uint8Array(await samplePdf.save()));
-}
-
-async function getScannedPdfPageCount(source: Uint8Array, job: ExtractionJobRow): Promise<number | null> {
-  if (job.file_mime_type !== 'application/pdf') return null;
-  const pageCount = (await PDFDocument.load(source)).getPageCount();
-  // Sampling every PDF duplicates the text extraction work below and can
-  // leave a normal text-based document looking frozen before the first real
-  // progress event. Only large PDFs need the scanned-document probe.
-  if (pageCount < LARGE_PDF_PAGE_THRESHOLD) return null;
-  const sampledText = await samplePdfText(source, pageCount);
-  return shouldUseVisionForScannedPdf(pageCount, sampledText) ? pageCount : null;
-}
-
-async function restartExpiredVisionChunks(env: ExtractionJobEnv, authHeader: string, jobId: string): Promise<void> {
-  const response = await fetch(apiUrl(env, `/rest/v1/extraction_job_chunks?parent_job_id=eq.${encodeURIComponent(jobId)}&status=eq.processing&processing_lease_expires_at=lt.${encodeURIComponent(new Date().toISOString())}`), {
-    method: 'PATCH',
-    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
-    body: JSON.stringify({
-      status: 'pending',
-      processing_token: null,
-      processing_lease_expires_at: null,
-      error_message: null,
-    }),
-  });
-  if (!response.ok) throw new Error(`Expired chunk recovery failed: ${response.status}`);
-}
-
-async function generateQuestionsFromText(
-  text: string,
-  job: ExtractionJobRow,
-  env: ExtractionJobEnv,
-  onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
-): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
-  const requestedCount = job.requested_question_count || null;
-  // Large explicit requests must also cover the whole source. Sending 100/200
-  // questions in one prompt commonly reaches the model output limit and makes
-  // the whole job fail, so split the source and assign a proportional target
-  // to every section.
-  const sourceChunks: string[] = [];
-  const automaticChunkSize = 90_000;
-  const automaticOverlap = 3_000;
-  if (requestedCount && requestedCount <= 25) {
-    sourceChunks.push(text.slice(0, 500_000));
-  } else {
-    for (let start = 0; start < text.length; ) {
-      const targetEnd = Math.min(start + automaticChunkSize, text.length);
-      const boundary = targetEnd < text.length ? text.lastIndexOf('\n', targetEnd) : targetEnd;
-      const end = boundary > start + 30_000 ? boundary : targetEnd;
-      sourceChunks.push(text.slice(start, end));
-      if (end >= text.length) break;
-      start = Math.max(start + 1, end - automaticOverlap);
-    }
-  }
-  const totalChunks = Math.max(1, sourceChunks.length);
-  const chunkTargets: Array<number | null> = requestedCount
-    ? sourceChunks.map((chunk, index) => {
-        if (index === sourceChunks.length - 1) {
-          const assignedBeforeLast = sourceChunks.slice(0, -1).reduce(
-            (sum, current) => sum + Math.max(1, Math.round(requestedCount * current.length / Math.max(1, text.length))),
-            0,
-          );
-          return Math.max(1, requestedCount - assignedBeforeLast);
-        }
-        return Math.max(1, Math.round(requestedCount * chunk.length / Math.max(1, text.length)));
-      })
-    : sourceChunks.map(() => null);
-  const messages = [{
-    role: 'system',
-    content: 'أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ الجزء المرسل، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواه فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.',
-  }];
-  let lastError: unknown;
-  const allowedTypes = parseAllowedQuestionTypes(job.custom_instruction);
-  const allQuestions: any[] = [];
-  const seen = new Set<string>();
-  const providers = new Set<string>();
-  let title = deriveQuizTitle(job.source_file_name, text);
-  let description = `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`;
-
-  // Keep provider traffic bounded while processing every source section.
-  const concurrency = 3;
-  for (let start = 0; start < sourceChunks.length; start += concurrency) {
-    const batch = sourceChunks.slice(start, start + concurrency);
-    const results = await Promise.all(batch.map(async (sourceChunk) => {
-      const chunkIndex = sourceChunks.indexOf(sourceChunk, start);
-      const chunkTarget = chunkTargets[chunkIndex] || null;
-      const chunkMessages = [
-        messages[0],
-        { role: 'user', content: `${generatePrompt(chunkTarget, job.custom_instruction, sourceChunk)}\n\nمحتوى الملف المصدر — الجزء الحالي (استخرج كل النقاط القابلة للسؤال من هذا الجزء):\n${sourceChunk}` },
-      ];
-      let chunkError: unknown;
-      for (const model of TEXT_MODEL_FALLBACKS) {
-        try {
-          const response = await callOpenRouterWithFallback(env, chunkMessages, [model], { maxTokens: chunkTarget ? Math.min(12_000, Math.max(3_000, chunkTarget * 220)) : 12_000, temperature: 0.2 });
-          const quiz = parseJson(response.text);
-          const questions = normalizeQuestions(quiz, allowedTypes);
-          const verifiedQuestions = validateGeneratedQuestions(questions);
-          if (!verifiedQuestions.length) throw new Error('The document section did not contain valid generated questions.');
-          return { response, quiz, questions: verifiedQuestions };
-        } catch (error) {
-          chunkError = error;
-          console.warn(`Text generation section failed on model ${model}; trying fallback.`, error);
-        }
-      }
-      throw chunkError instanceof Error ? chunkError : new Error('All text generation models failed for this section.');
-    }).map(promise => promise.catch(error => ({ error }))));
-
-    for (const result of results) {
-      if ('error' in result) {
-        lastError = result.error;
-      } else {
-        providers.add(result.response.model);
-        if (!isGenericQuizTitle(result.quiz?.title)) title = String(result.quiz.title).trim();
-        if (typeof result.quiz?.description === 'string' && result.quiz.description.trim()) description = result.quiz.description.trim();
-        for (const question of result.questions) {
-          const key = String(question.text || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
-          if (key && !seen.has(key)) {
-            seen.add(key);
-            allQuestions.push(question);
-          }
-        }
-      }
-      await onProgress(Math.min(start + results.length, totalChunks), totalChunks, allQuestions.length);
-    }
-  }
-
-  if (!allQuestions.length) throw lastError instanceof Error ? lastError : new Error('The document did not contain any valid questions.');
-  const finalQuestions = requestedCount ? allQuestions.slice(0, requestedCount) : allQuestions;
-  const mercuryAssessment = await assessGeneratedQuestionBatch(finalQuestions, sourceFileBaseName(job.source_file_name), env);
-  const reviewedQuestions = mercuryAssessment.needsReview
-    ? finalQuestions.map(question => ({ ...question, reviewRequired: true, extractionMethod: question.extractionMethod || 'mercury-review' }))
-    : finalQuestions;
-  return { title, description, questions: reviewedQuestions, provider: [...providers, ...(mercuryAssessment.qualityProbability != null ? ['mercury-decide'] : [])].join(', ') || 'openrouter', chunks: totalChunks };
-}
-
-export async function extractJobQuiz(
-  source: Uint8Array,
-  job: ExtractionJobRow,
-  env: ExtractionJobEnv,
-  onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
-): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
-  const mimeType = job.file_mime_type;
-  const isLiteral = job.extraction_mode === 'literal';
-  let text = '';
-
-  if (mimeType === 'application/pdf') {
-    const pageCount = (await PDFDocument.load(source)).getPageCount();
-    if (pageCount >= LARGE_PDF_PAGE_THRESHOLD) {
-      const sampledText = await samplePdfText(source, pageCount);
-      if (shouldUseVisionForLargeScannedPdf(pageCount, sampledText)) {
-        await onProgress(0, Math.ceil(pageCount / 5), 0);
-        return extractPdfVision(source, job, env, onProgress);
-      }
-    }
-    text = await extractPdfTextContent(source);
-    if (text.trim().length > 40) {
-      if (isLiteral) {
-        const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
-          await onProgress(progress.processed, progress.total, progress.questionsExtracted);
-        });
-        return {
-          ...result,
-          questions: job.requested_question_count ? result.questions.slice(0, job.requested_question_count) : result.questions,
-          title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
-          description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-        };
-      }
-      return generateQuestionsFromText(text, job, env, onProgress);
-    }
-    return extractPdfVision(source, job, env, onProgress);
-  }
-
-  if (mimeType.includes('wordprocessingml') || mimeType.includes('msword')) {
-    const wordDocument = new Uint8Array(source.byteLength);
-    wordDocument.set(source);
-    const result = await mammoth.extractRawText({ arrayBuffer: wordDocument.buffer });
-    text = result.value;
-  } else if (mimeType.includes('spreadsheetml') || mimeType.includes('ms-excel')) {
-    text = await extractExcelText(source);
-    } else if (mimeType === 'text/plain' || mimeType === 'text/markdown') {
-    text = new TextDecoder().decode(source);
-  } else if (mimeType.includes('presentationml') || mimeType.includes('powerpoint')) {
-    text = await extractPowerPointText(source);
-  }
-  if (text.trim()) {
-    if (isLiteral) {
-      const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
-        await onProgress(progress.processed, progress.total, progress.questionsExtracted);
-      });
-      return {
-        ...result,
-        questions: job.requested_question_count ? result.questions.slice(0, job.requested_question_count) : result.questions,
-        title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
-        description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-      };
-    }
-
-    return generateQuestionsFromText(text, job, env, onProgress);
-  }
-
-  const prompt = isLiteral
-    ? extractionPrompt(job.custom_instruction, text)
-    : generatePrompt(job.requested_question_count, job.custom_instruction);
-  const base64 = base64FromBytes(source);
-  const content = mimeType === 'application/pdf' || mimeType.includes('powerpoint')
-    ? [{ type: 'text', text: prompt }, { type: 'file', file: { filename: 'uploaded-document', file_data: `data:${mimeType};base64,${base64}` } }]
-    : [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } }];
-  const response = await callOpenRouterWithFallback(
-    env,
-    [{ role: 'user', content }],
-    VISION_MODEL_FALLBACKS,
-    { maxTokens: job.requested_question_count ? 8_000 : 12_000, temperature: 0.2 },
-  );
-  const quiz = parseJson(response.text);
-  const questions = normalizeQuestions(quiz, parseAllowedQuestionTypes(job.custom_instruction));
-  if (!questions.length) throw new Error('The document did not contain any valid questions.');
-  const finalQuestions = job.requested_question_count ? questions.slice(0, job.requested_question_count) : questions;
-  const mercuryAssessment = await assessGeneratedQuestionBatch(finalQuestions, sourceFileBaseName(job.source_file_name), env);
-  const reviewedQuestions = mercuryAssessment.needsReview
-    ? finalQuestions.map(question => ({ ...question, reviewRequired: true, extractionMethod: question.extractionMethod || 'mercury-review' }))
-    : finalQuestions;
-  await onProgress(1, 1, finalQuestions.length);
-  return {
-    title: !isGenericQuizTitle(quiz?.title) ? String(quiz.title).trim() : deriveQuizTitle(job.source_file_name, text),
-    description: typeof quiz?.description === 'string' && quiz.description.trim() ? quiz.description.trim() : `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-    questions: reviewedQuestions,
-    provider: mercuryAssessment.qualityProbability != null ? `${response.model}, mercury-decide` : response.model,
-    chunks: 1,
-  };
-}
-
-export function validateCreateExtractionJobInput(input: CreateExtractionJobInput, userId: string): string | null {
-  if (!isValidIdempotencyKey(input.idempotencyKey)) return 'Invalid idempotency key.';
-  if (!isSafeStoragePath(input.fileStoragePath, userId)) return 'Invalid file storage path.';
-  if (!supportedMimeTypes.has(input.mimeType)) return 'Unsupported file type.';
-  if (input.extractionMode !== 'literal' && input.extractionMode !== 'generate') return 'Invalid extraction mode.';
-  if (input.customInstruction && input.customInstruction.length > 2000) return 'Custom instruction is too long.';
-  if (input.requestedQuestionCount != null && (!Number.isInteger(input.requestedQuestionCount) || input.requestedQuestionCount < 1 || input.requestedQuestionCount > 500)) return 'Invalid question count.';
-  return null;
-}
-
-export async function createOrGetExtractionJob(env: ExtractionJobEnv, authHeader: string, userId: string, input: CreateExtractionJobInput): Promise<ExtractionJobRow> {
-  const existingResponse = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?user_id=eq.${encodeURIComponent(userId)}&idempotency_key=eq.${encodeURIComponent(input.idempotencyKey)}&select=*`), {
-    headers: databaseHeaders(env, authHeader),
-  });
-  if (!existingResponse.ok) throw new Error(`Job lookup failed: ${existingResponse.status}`);
-  const existingRows = await existingResponse.json() as ExtractionJobRow[];
-  if (existingRows[0]) return existingRows[0];
-
-  const createResponse = await fetch(apiUrl(env, '/rest/v1/extraction_jobs'), {
-    method: 'POST',
-    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
-    body: JSON.stringify({
-      user_id: userId,
-      idempotency_key: input.idempotencyKey,
-      file_storage_path: input.fileStoragePath,
-      file_mime_type: input.mimeType,
-      extraction_mode: input.extractionMode,
-      source_file_name: input.sourceFileName?.trim().slice(0, 255) || null,
-      custom_instruction: input.customInstruction?.trim() || null,
-      requested_question_count: input.requestedQuestionCount || null,
-      progress_message: 'تم استلام الملف وتجهيز مهمة الاستخراج.',
-    }),
-  });
-  if (createResponse.ok) {
-    const rows = await createResponse.json() as ExtractionJobRow[];
-    if (rows[0]) return rows[0];
-  }
-  if (createResponse.status === 409) {
-    const raced = await fetchJobByIdempotency(env, authHeader, userId, input.idempotencyKey);
-    if (raced) return raced;
-  }
-  throw new Error(`Job creation failed: ${createResponse.status}`);
-}
-
-async function fetchJobByIdempotency(env: ExtractionJobEnv, authHeader: string, userId: string, key: string): Promise<ExtractionJobRow | null> {
-  const response = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?user_id=eq.${encodeURIComponent(userId)}&idempotency_key=eq.${encodeURIComponent(key)}&select=*`), {
-    headers: databaseHeaders(env, authHeader),
-  });
-  if (!response.ok) return null;
-  const rows = await response.json() as ExtractionJobRow[];
-  return rows[0] || null;
-}
-
-async function claimPendingJob(env: ExtractionJobEnv, authHeader: string, jobId: string): Promise<{ job: ExtractionJobRow; token: string } | null> {
-  const token = crypto.randomUUID();
-  const response = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?id=eq.${encodeURIComponent(jobId)}&status=eq.pending`), {
-    method: 'PATCH',
-    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
-    body: JSON.stringify({
-      status: 'processing',
-      processing_token: token,
-      processing_started_at: new Date().toISOString(),
-      processing_lease_expires_at: new Date(Date.now() + LEASE_MS).toISOString(),
-      progress_percentage: 1,
-      progress_message: 'جارٍ تجهيز الملف للاستخراج.',
-      error_message: null,
-    }),
-  });
-  if (!response.ok) throw new Error(`Job claim failed: ${response.status}`);
-  const rows = await response.json() as ExtractionJobRow[];
-  return rows[0] ? { job: rows[0], token } : null;
-}
-
-export async function restartExpiredJob(env: ExtractionJobEnv, authHeader: string, job: ExtractionJobRow): Promise<ExtractionJobRow> {
-  const leaseExpiry = job.processing_lease_expires_at ? new Date(job.processing_lease_expires_at).getTime() : 0;
-  if (job.status !== 'processing' || Number.isNaN(leaseExpiry) || leaseExpiry > Date.now()) return job;
-  const response = await fetch(apiUrl(env, `/rest/v1/extraction_jobs?id=eq.${encodeURIComponent(job.id)}&status=eq.processing&processing_lease_expires_at=lt.${encodeURIComponent(new Date().toISOString())}`), {
-    method: 'PATCH',
-    headers: databaseHeaders(env, authHeader, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
-    body: JSON.stringify({
-      status: 'pending',
-      processing_token: null,
-      processing_lease_expires_at: null,
-      progress_message: 'استؤنفت مهمة الاستخراج بعد انقطاع قصير.',
-    }),
-  });
-  if (!response.ok) return job;
-  const rows = await response.json() as ExtractionJobRow[];
-  return rows[0] || job;
-}
-
 export async function controlExtractionJob(
   env: ExtractionJobEnv,
   authHeader: string,
@@ -1205,38 +1160,13 @@ export async function processExtractionJob(
   if (!claimed) return;
   const { job, token } = claimed;
   const startedAt = Date.now();
-  let provider = 'openrouter';
+  let provider = 'ai-provider';
   let chunks = 0;
   try {
     const source = await downloadSourceFile(env, authHeader, job.file_storage_path);
     await updateClaimedJob(env, authHeader, job.id, token, {
       progress_percentage: 5,
       progress_message: 'تم فتح الملف، جارٍ قراءة المحتوى.',
-    });
-    // Publish a heartbeat before potentially expensive PDF inspection. This
-    // prevents the client from staying on its initial 0/1 placeholder while
-    // the worker is healthy but has not reached the extraction callback yet.
-    if (job.file_mime_type === 'application/pdf') {
-      const pageCount = (await PDFDocument.load(source)).getPageCount();
-      await updateClaimedJob(env, authHeader, job.id, token, {
-        progress_percentage: 7,
-        total_chunks: pageCount >= LARGE_PDF_PAGE_THRESHOLD ? Math.ceil(pageCount / VISION_CHUNK_PAGE_COUNT) : 1,
-        progress_message: pageCount >= LARGE_PDF_PAGE_THRESHOLD
-          ? `تم فتح ملف PDF (${pageCount} صفحة)، جارٍ تحديد طريقة الاستخراج المناسبة.`
-          : `تم فتح ملف PDF (${pageCount} صفحة)، جارٍ استخراج النص والأسئلة الحرفية.`,
-      });
-    } else {
-      await updateClaimedJob(env, authHeader, job.id, token, {
-        progress_percentage: 7,
-        total_chunks: 1,
-        progress_message: 'تم فتح الملف، جارٍ استخراج النص والأسئلة الحرفية.',
-      });
-    }
-    await updateClaimedJob(env, authHeader, job.id, token, {
-      progress_percentage: 10,
-      progress_message: job.extraction_mode === 'generate'
-        ? 'تم فتح الملف، جارٍ قراءة المحتوى وتجهيز الأسئلة المولدة.'
-        : 'تم فتح الملف، جارٍ قراءة الأسئلة واستخراجها بدقة.',
     });
     const scannedPageCount = await getScannedPdfPageCount(source, job);
     if (scannedPageCount) {
@@ -1326,7 +1256,7 @@ export async function processExtractionJobChunk(
       (_, offset) => chunk.page_start - 1 + offset,
     ));
     pages.forEach(page => chunkPdf.addPage(page));
-    const request = await callOpenRouterWithFallback(env, [{
+    const request = await callAiWithFallback(env, [{
       role: 'user',
       content: [
         { type: 'text', text: extractionPrompt(parent.custom_instruction) },
@@ -1338,7 +1268,7 @@ export async function processExtractionJobChunk(
           },
         },
       ],
-    }], VISION_MODEL_FALLBACKS);
+    }], AI_VISION_FALLBACKS);
     const questions = normalizeQuestions(parseJson(request.text), parseAllowedQuestionTypes(parent.custom_instruction)).map((question) => ({
       ...question,
       fingerprint: questionFingerprint(question),

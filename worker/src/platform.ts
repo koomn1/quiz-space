@@ -1,12 +1,15 @@
 import type { ExtractionJobRow } from './extractionJobs';
 
 export interface Env {
-  /** Primary text-generation provider; optional locally, required in production for Groq-first routing. */
+  /** Second text-generation provider after Inception. */
   GROQ_API_KEY?: string;
-  /** Optional direct OpenAI fallback for text generation. */
-  OPENAI_API_KEY?: string;
-  /** Optional server-only Mercury Decide key for lossless extraction and validation. */
+  /** Primary text-generation provider. */
   INCEPTION_API_KEY?: string;
+  /** Multimodal provider for images and PDFs. */
+  GEMINI_API_KEY?: string;
+  /** Final text/multimodal fallback. */
+  OPENAI_API_KEY?: string;
+  /** Legacy OpenRouter fallback used by the existing Cosmo service. */
   OPENROUTER_API_KEY: string;
   /** Server-only web search key; never expose this to the React bundle. */
   TAVILY_API_KEY?: string;
