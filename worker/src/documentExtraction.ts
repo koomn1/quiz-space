@@ -331,6 +331,22 @@ export async function extractQuestionsFromText(
   const normalizedText = text.trim();
   const allowedTypes = parseAllowedQuestionTypes(customInstruction);
   const directQuestions = normalizeQuestions(parseLiteralQuestions(normalizedText), allowedTypes);
+  // Conventional numbered sheets are deterministic and do not need a network
+  // round-trip. This prevents a valid 8-page PDF from sitting at the initial
+  // progress state while Mercury confirms text that the local parser already
+  // extracted exactly.
+  if (isReliableLiteralExtraction(normalizedText, directQuestions)) {
+    if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: directQuestions.length });
+    return {
+      title: 'Extracted Quiz',
+      description: 'Questions extracted from the uploaded document.',
+      questions: directQuestions.map((question, index) => ({ ...question, number: question.number || index + 1, extractionMethod: 'direct' })),
+      rawResponses: [],
+      chunks: 1,
+      provider: 'local-format-parser',
+      sourceText: normalizedText,
+    };
+  }
   // Mercury Decide is the primary AI extractor when configured. Its exact
   // spans are fed back into the same literal parser so wording, choices,
   // answer indices, and source order remain deterministic.
@@ -358,21 +374,6 @@ export async function extractQuestionsFromText(
         };
       }
     }
-  }
-
-  // Safe, zero-network fallback for conventional question sheets or when
-  // Mercury is unavailable.
-  if (isReliableLiteralExtraction(normalizedText, directQuestions)) {
-    if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: directQuestions.length });
-    return {
-      title: 'Extracted Quiz',
-      description: 'Questions extracted from the uploaded document.',
-      questions: directQuestions.map((question, index) => ({ ...question, number: question.number || index + 1, extractionMethod: 'direct' })),
-      rawResponses: [],
-      chunks: 1,
-      provider: 'local-format-parser',
-      sourceText: normalizedText,
-    };
   }
 
   const chunks = splitTextForExtraction(normalizedText);

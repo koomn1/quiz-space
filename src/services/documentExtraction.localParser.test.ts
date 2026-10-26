@@ -3,14 +3,14 @@ import { extractQuestionsFromText, isReliableLiteralExtraction, parseLiteralQues
 
 describe('structured document extraction fast path', () => {
   it('uses Mercury Decide as the primary extractor when its key is configured', async () => {
-    const source = `1. What is the red planet?
-A. Earth
-B. Mars
-C. Venus
-Answer: B`;
+    const source = `Item 1 — What is the red planet?
+Choice A: Earth
+Choice B: Mars
+Choice C: Venus
+Correct choice: B`;
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
       model: 'mercury-decide',
-      answers: { question_blocks: { type: 'extract', spans: { question_1: [{ text: source, confidence: 0.98 }] } } },
+      answers: { question_blocks: { type: 'extract', spans: { question_1: [{ text: `1. What is the red planet?\nA. Earth\nB. Mars\nC. Venus\nAnswer: B`, confidence: 0.98 }] } } },
     }), { status: 200 }));
 
     const result = await extractQuestionsFromText(source, { OPENROUTER_API_KEY: 'unused', INCEPTION_API_KEY: 'test-inception-key' });

@@ -1229,6 +1229,12 @@ export async function processExtractionJob(
         progress_message: 'تم فتح الملف، جارٍ استخراج النص والأسئلة الحرفية.',
       });
     }
+    await updateClaimedJob(env, authHeader, job.id, token, {
+      progress_percentage: 10,
+      progress_message: job.extraction_mode === 'generate'
+        ? 'تم فتح الملف، جارٍ قراءة المحتوى وتجهيز الأسئلة المولدة.'
+        : 'تم فتح الملف، جارٍ قراءة الأسئلة واستخراجها بدقة.',
+    });
     const scannedPageCount = await getScannedPdfPageCount(source, job);
     if (scannedPageCount) {
       await restartExpiredVisionChunks(env, authHeader, job.id);

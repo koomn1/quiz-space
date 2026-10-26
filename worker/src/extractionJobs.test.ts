@@ -68,7 +68,7 @@ describe('dynamic vision chunk planning', () => {
   it('keeps answer accuracy strict instead of silently defaulting to option zero', () => {
     expect(extractionSource).toContain('If the source has no answer key, use null and do not guess.');
     expect(extractionSource).toContain('لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية');
-    expect(extractionSource).toContain('correctIndex: type === \'essay\' ? -1 : resolveCorrectIndex(raw, options, type)');
+    expect(extractionSource).toContain('const correctIndex = type === \'essay\' ? -1 : resolveCorrectIndex(raw, options, type);');
   });
 
   it('derives a meaningful title from a document heading before falling back to the filename', () => {
