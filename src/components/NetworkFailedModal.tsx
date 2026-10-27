@@ -52,7 +52,7 @@ export default function NetworkFailedModal({
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-md mx-auto">
             {isAr 
-              ? 'تعذر الوصول إلى خوادم التحقق الآمنة من جوجل (Firebase Auth) بسبب قيود المتصفح داخل وضع المعاينة (Sandbox iFrame) أو قيود جدار الحماية للشبكة.' 
+              ? 'تعذر الوصول إلى خوادم التحقق الآمنة من جوجل (Google Auth / Supabase) بسبب قيود المتصفح داخل وضع المعاينة (Sandbox iFrame) أو قيود جدار الحماية للشبكة.' 
               : 'A network failure occurred when attempting to connect to Google Auth servers. This is common when running inside a sandboxed iframe or a secure proxy environment.'}
           </p>
         </div>

@@ -3,7 +3,6 @@ import { getUserNotificationPreferences } from '../lib/db';
 import { playNotificationSound } from '../lib/sound';
 import { pushNotificationsManager, type PushNotificationPayload } from '../lib/pushNotifications';
 import { supabase } from '../lib/supabaseClient';
-import { useVisibilityPolling } from './useVisibilityPolling';
 import { isGuestIdentity } from '../lib/guestIdentity';
 
 export function useNotificationsRealtime({
@@ -22,11 +21,6 @@ export function useNotificationsRealtime({
     const permission = pushNotificationsManager.getPermissionStatus();
     return permission !== 'granted' && localStorage.getItem('quiz_push_banner_dismissed') !== 'true';
   });
-  const [showQuotaWarning, setShowQuotaWarning] = useState(() => localStorage.getItem('firebase_quota_exceeded') === 'true');
-
-  useVisibilityPolling(() => {
-    if (localStorage.getItem('firebase_quota_exceeded') === 'true') setShowQuotaWarning(true);
-  }, 3000);
 
   useEffect(() => {
     if (!userId || userId.startsWith('user-guest')) return;
@@ -68,10 +62,6 @@ export function useNotificationsRealtime({
     };
     pushNotificationsManager.subscribe('app-root', handleNotification);
 
-    if (localStorage.getItem('firebase_quota_exceeded') === 'true') {
-      return () => pushNotificationsManager.unsubscribe('app-root');
-    }
-
     const sessionBootTime = new Date().toISOString();
     const channel = supabase
       .channel('notifications-feed')
@@ -98,7 +88,7 @@ export function useNotificationsRealtime({
   useEffect(() => {
     // Guest identities are local-only labels, not Supabase auth.uid values.
     // Querying direct_messages with one causes a predictable 401.
-    if (isGuestIdentity(userId) || localStorage.getItem('firebase_quota_exceeded') === 'true') {
+    if (isGuestIdentity(userId)) {
       setUnreadMessagesCount(0);
       return;
     }
@@ -118,17 +108,9 @@ export function useNotificationsRealtime({
 
         const senderName = message.sender_name || (lang === 'ar' ? 'مستخدم' : 'Scholar');
         const text = message.text || '';
-        if (typeof window !== 'undefined' && window.Notification?.permission === 'granted') {
-          try {
-            new window.Notification(lang === 'ar' ? `رسالة جديدة من ${senderName} 💬` : `New message from ${senderName} 💬`, {
-              body: text.length > 70 ? `${text.substring(0, 70)}...` : text,
-              icon: `${import.meta.env.BASE_URL || '/'}brand/quizspace-icon-192.webp`,
-            });
-          } catch (error) { console.warn('Native notification instantiation error:', error); }
-        }
         pushNotificationsManager.trigger({
-          title: lang === 'ar' ? `رسالة جديدة من ${senderName} 💬` : `New message from ${senderName} 💬`,
-          body: text,
+          title: `${senderName}`,
+          body: text.length > 50 ? `${text.slice(0, 50)}…` : text,
           icon: 'message',
         });
         try { playNotificationSound('chime'); } catch (_) {}
@@ -145,7 +127,5 @@ export function useNotificationsRealtime({
     pushNotificationsEnabled,
     showPushBanner,
     setShowPushBanner,
-    showQuotaWarning,
-    setShowQuotaWarning,
   };
 }

@@ -497,7 +497,7 @@ export default function LandingPage({
         {/* Search controls row */}
         <div className="space-y-4">
           <div className="relative">
-            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none text-slate-400">
               <Search className="w-5 h-5" />
             </div>
             <input
@@ -505,13 +505,13 @@ export default function LandingPage({
               placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900 pr-12 pl-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-xs"
+              className="w-full bg-white dark:bg-slate-900 ps-12 pe-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-xs"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="absolute inset-y-0 end-0 pe-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>

@@ -425,8 +425,6 @@ export default function App() {
     setActivePush,
     showPushBanner,
     setShowPushBanner,
-    showQuotaWarning,
-    setShowQuotaWarning,
   } = useNotificationsRealtime({ userId, userName, lang });
 
   const refreshPlatformSettings = React.useCallback(async () => {
@@ -875,8 +873,6 @@ export default function App() {
           isCommandPaletteOpen={isCommandPaletteOpen}
           setIsCommandPaletteOpen={setIsCommandPaletteOpen}
           isCosmoTab={isCosmoTab}
-          showQuotaWarning={showQuotaWarning}
-          setShowQuotaWarning={setShowQuotaWarning}
           showPushBanner={showPushBanner}
           setShowPushBanner={setShowPushBanner}
           activePush={activePush}

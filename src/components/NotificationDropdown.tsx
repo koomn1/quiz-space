@@ -6,6 +6,17 @@ import { claimDailyEngagementReward, getDailyBrainChallenge, getLearningStreakSt
 import { hasUsedLuckySpinToday } from '../lib/motivationData';
 import { pushNotificationsManager, PushNotificationPayload } from '../lib/pushNotifications';
 
+
+function parseJsonArray(value: string | null): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 type Notification = {
   id: string;
   title: string;
@@ -59,7 +70,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
       }
 
       const dismissedKey = `quizspace_daily_notifications:${userId}:${today}`;
-      const dismissed = new Set(JSON.parse(localStorage.getItem(dismissedKey) || '[]') as string[]);
+      const dismissed = new Set(parseJsonArray(localStorage.getItem(dismissedKey)));
       const daily: Notification[] = [];
       if (!hasUsedLuckySpinToday(motivation)) daily.push({ id: `daily-lucky-${today}`, title: isAr ? 'عجلة الحظ متاحة اليوم' : 'Lucky wheel is ready today', body: isAr ? 'لديك دورة مجانية اليوم. افتح العجلة وجرب حظك.' : 'Your free daily spin is ready. Open the wheel and try your luck.', type: 'daily_reward', is_read: false, created_at: new Date().toISOString() });
       if (Number(brain?.attempts_remaining ?? 1) > 0) daily.push({ id: `daily-brain-${today}`, title: isAr ? 'السؤال اليومي جاهز' : 'Daily question is ready', body: isAr ? 'أجب عن سؤال اليوم واحصل على مكافأتك.' : 'Answer today’s question and earn your reward.', type: 'daily_learning', is_read: false, created_at: new Date().toISOString() });
@@ -122,7 +133,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
   const dismissDailyNotifications = (ids: string[]) => {
     const today = new Date().toISOString().slice(0, 10);
     const key = `quizspace_daily_notifications:${userId}:${today}`;
-    const existing = new Set(JSON.parse(localStorage.getItem(key) || '[]') as string[]);
+    const existing = new Set(parseJsonArray(localStorage.getItem(key)));
     ids.forEach((id) => existing.add(id));
     localStorage.setItem(key, JSON.stringify([...existing]));
     setDailyNotifications((previous) => previous.filter((notification) => !ids.includes(notification.id)));
@@ -178,7 +189,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
     const group = getNotificationGroup(type);
     if (group === 'rewards') return <Award className="h-4 w-4 text-amber-500" />;
     if (group === 'learning') return <GraduationCap className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />;
-    return <ShieldCheck className="h-4 w-4 text-violet-600 dark:text-violet-400" />;
+    return <ShieldCheck className="h-4 w-4 text-primary dark:text-violet-400" />;
   };
 
   return (
@@ -220,7 +231,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
               <button
                 type="button"
                 onClick={markAllAsRead}
-                className="flex min-h-11 items-center gap-1 rounded-xl px-2 text-xs font-bold text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-950/30"
+                className="flex min-h-11 items-center gap-1 rounded-xl px-2 text-xs font-bold text-primary hover:bg-primary/10 dark:text-primary-light dark:hover:bg-primary/20"
               >
                 <CheckCheck className="h-3.5 w-3.5" />
                 {isAr ? 'تحديد الكل مقروء' : 'Mark all read'}
@@ -229,7 +240,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
           </div>
 
           {dailyNotifications.length > 0 && (
-            <div className="mt-3 rounded-2xl border border-violet-200/70 bg-gradient-to-br from-violet-600 via-indigo-600 to-cyan-600 p-3 text-white shadow-lg shadow-violet-500/20">
+            <div className="mt-3 rounded-2xl border border-violet-200/70 bg-gradient-to-br from-primary via-violet-600 to-cyan-600 p-3 text-white shadow-lg shadow-violet-500/20">
               <div className="flex items-start gap-2.5">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/15"><Sparkles className="h-4 w-4" /></div>
                 <div className="min-w-0">
@@ -245,13 +256,13 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
               ['rewards', isAr ? 'الجوائز' : 'Rewards', Award],
               ['learning', isAr ? 'التعلم' : 'Learning', BookOpenCheck],
               ['system', isAr ? 'النظام' : 'System', ShieldCheck],
-            ] as const).map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={filter === id} onClick={() => setFilter(id)} className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black transition-colors ${filter === id ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}
+            ] as const).map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={filter === id} onClick={() => setFilter(id)} className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black transition-colors ${filter === id ? 'bg-primary text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}
           </div>
 
           <div className="mt-3 max-h-[calc(100dvh-19rem)] min-h-0 overflow-y-auto overscroll-contain space-y-2.5 pr-1 [scrollbar-width:thin] sm:max-h-80">
             {loading ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-violet-600" />
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : filteredNotifications.length === 0 ? (
               <div className="py-12 text-center text-xs font-bold text-slate-400">
@@ -272,7 +283,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-2 text-xs font-black text-slate-900 dark:text-white">{getGroupIcon(notif.type)}<span className="truncate">{notif.title}</span>{notif.id.startsWith('daily-') && <span className="shrink-0 rounded-full bg-violet-600 px-1.5 py-0.5 text-[8px] font-black text-white">{isAr ? 'اليوم' : 'TODAY'}</span>}</span>
+                    <span className="flex min-w-0 items-center gap-2 text-xs font-black text-slate-900 dark:text-white">{getGroupIcon(notif.type)}<span className="truncate">{notif.title}</span>{notif.id.startsWith('daily-') && <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-black text-white">{isAr ? 'اليوم' : 'TODAY'}</span>}</span>
                     <span className="text-[10px] text-slate-400">
                       {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
