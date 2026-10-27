@@ -48,6 +48,7 @@ export function InteractiveQuizCard({
   const isAr = isArProp !== undefined ? isArProp : lang === 'ar';
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
   const canEdit = !isGuest && (isAdminProp || quiz.creatorId === currentUserId);
+  const canManageQuizAttempts = canEdit;
   const canViewAttempts = true;
   const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
   const [attemptsOpen, setAttemptsOpen] = useState(false);
@@ -91,6 +92,23 @@ export function InteractiveQuizCard({
       setAttemptsLoading(false);
     }
   };
+
+  const quizAttemptsButton = (
+    <button
+      type="button"
+      onClick={openAttempts}
+      disabled={!canViewAttempts}
+      className="inline-flex min-h-11 max-w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-cyan-300/80 bg-gradient-to-r from-cyan-50 to-indigo-50 px-4 py-2.5 text-xs font-black text-indigo-800 shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-cyan-700/70 dark:from-cyan-950/50 dark:to-indigo-950/50 dark:text-cyan-200 sm:text-sm"
+      title={isAr ? 'مشاهدة من دخلوا الاختبار' : 'View who took this quiz'}
+      aria-label={`${isAr ? 'مشاهدة من دخلوا الاختبار' : 'View who took this quiz'} (${quiz.totalPlays || 0})`}
+    >
+      <Users className="h-4 w-4 shrink-0" />
+      <span className="whitespace-nowrap">{isAr ? 'مشاهدة من دخلوا الاختبار' : 'View who took this quiz'}</span>
+      <span className="min-w-7 rounded-full bg-indigo-100 px-2 py-0.5 text-center text-[11px] font-black text-indigo-800 dark:bg-indigo-900/70 dark:text-cyan-100">
+        {quiz.totalPlays || 0}
+      </span>
+    </button>
+  );
 
   const printQuiz = () => {
     // Open synchronously from the click handler, then wait until the new
@@ -309,7 +327,9 @@ export function InteractiveQuizCard({
                 />
               </span>
               <span>•</span>
-              <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className={canViewAttempts ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canViewAttempts ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
+              {canManageQuizAttempts ? quizAttemptsButton : (
+                <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className={canViewAttempts ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canViewAttempts ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
+              )}
             </div>
           </div>
         </div>
@@ -458,7 +478,9 @@ export function InteractiveQuizCard({
               />
             </span>
             <span className="text-slate-300 dark:text-slate-700 select-none">•</span>
-            <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer font-bold transition-colors" title={isAr ? 'عرض قائمة المتفوقين والحلول' : 'View solvers list'}><Users className="h-3.5 w-3.5" /><span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span></button>
+            {canManageQuizAttempts ? quizAttemptsButton : (
+              <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer font-bold transition-colors" title={isAr ? 'عرض قائمة المتفوقين والحلول' : 'View solvers list'}><Users className="h-3.5 w-3.5" /><span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span></button>
+            )}
           </div>
         </div>
 
