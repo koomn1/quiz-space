@@ -49,7 +49,7 @@ export function InteractiveQuizCard({
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
   const canEdit = !isGuest && (isAdminProp || quiz.creatorId === currentUserId);
   const canManageQuizAttempts = canEdit;
-  const canViewAttempts = true;
+  const canViewAttempts = canManageQuizAttempts;
   const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
   const [attemptsOpen, setAttemptsOpen] = useState(false);
   const [attemptsLoading, setAttemptsLoading] = useState(false);
@@ -70,6 +70,7 @@ export function InteractiveQuizCard({
 
   const openAttempts = async (event: React.MouseEvent) => {
     event.stopPropagation();
+    if (!canViewAttempts) return;
     setAttemptsOpen(true);
     setAttemptsLoading(true);
     try {
@@ -334,7 +335,7 @@ export function InteractiveQuizCard({
               </span>
               <span>•</span>
               {canManageQuizAttempts ? quizAttemptsButton : (
-                <button type="button" data-card-action="attempts" onClick={(event) => { event.stopPropagation(); void openAttempts(event); }} disabled={!canViewAttempts} className={canViewAttempts ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canViewAttempts ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
+                <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 font-bold" aria-label={isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span>
               )}
             </div>
           </div>
@@ -485,7 +486,7 @@ export function InteractiveQuizCard({
             </span>
             <span className="text-slate-300 dark:text-slate-700 select-none">•</span>
             {canManageQuizAttempts ? quizAttemptsButton : (
-              <button type="button" data-card-action="attempts" onClick={(event) => { event.stopPropagation(); void openAttempts(event); }} disabled={!canViewAttempts} className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer font-bold transition-colors" title={isAr ? 'عرض قائمة المتفوقين والحلول' : 'View solvers list'}><Users className="h-3.5 w-3.5" /><span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span></button>
+              <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 font-bold" aria-label={isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`}><Users className="h-3.5 w-3.5" /><span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span></span>
             )}
           </div>
         </div>
