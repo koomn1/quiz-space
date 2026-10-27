@@ -83,4 +83,45 @@ describe('narrative text generation in extraction jobs', () => {
     expect(requestBodies.every((request) => String(request.messages[1].content).includes('محتوى الملف المصدر'))).toBe(true);
     expect(result.chunks).toBe(requestBodies.length);
   });
+  it('allows the AI to autonomously determine question count for every section when in auto mode', async () => {
+    const requestBodies: any[] = [];
+    globalThis.fetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      requestBodies.push(JSON.parse(String(init?.body)));
+      const chunkNum = requestBodies.length;
+      return new Response(JSON.stringify({
+        choices: [{ message: { content: JSON.stringify({
+          title: 'Autonomous multi-section quiz',
+          description: 'Generated with comprehensive section inspection.',
+          questions: [
+            { number: 1, text: `Concept A from section ${chunkNum}`, type: 'mcq', options: ['A', 'B'], correctIndex: 0, correctAnswer: 'A', explanation: '' },
+            { number: 2, text: `Concept B from section ${chunkNum}`, type: 'mcq', options: ['C', 'D'], correctIndex: 0, correctAnswer: 'C', explanation: '' },
+          ],
+        }) } }],
+      }), { status: 200 });
+    }) as typeof fetch;
+    const source = 'Section deep-dive on advanced topics and core mechanisms. '.repeat(1_000);
+    const job = {
+      id: '00000000-0000-0000-0000-000000000005',
+      user_id: '00000000-0000-0000-0000-000000000006',
+      idempotency_key: 'auto-count-generation-key',
+      file_storage_path: '00000000-0000-0000-0000-000000000006/test/auto.txt',
+      file_mime_type: 'text/plain',
+      extraction_mode: 'generate',
+      custom_instruction: null,
+      requested_question_count: null,
+    } as ExtractionJobRow;
+
+    const result = await extractJobQuiz(
+      new TextEncoder().encode(source),
+      job,
+      { INCEPTION_API_KEY: 'test-inception-key', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'anon' },
+      vi.fn(),
+    );
+
+    expect(requestBodies.length).toBeGreaterThan(1);
+    expect(requestBodies[0].messages[1].content).toContain('افحص هذا الجزء من المستند بدقة وتعمق شديد');
+    expect(result.chunks).toBe(requestBodies.length);
+    expect(result.questions.length).toBe(requestBodies.length * 2);
+  });
 });
+

@@ -302,8 +302,8 @@ ${customInstruction?.trim() ? `Additional instructions: ${customInstruction.trim
 
 function generatePrompt(amount: number | null | undefined, customInstruction?: string | null, sourceText = ''): string {
   const scopeInstruction = Number.isInteger(amount) && Number(amount) > 0
-    ? `استخرج أو أنشئ ${amount} سؤالاً فقط من محتوى الملف.`
-    : 'اقرأ محتوى المحاضرة بالكامل وأنشئ سؤالاً لكل نقطة أو معلومة أو مفهوم مهم يمكن أن يأتي منه سؤال. لا تضع حداً ثابتاً لعدد الأسئلة ولا تتوقف عند رقم افتراضي؛ غطِّ كل الأجزاء القابلة للسؤال، مع إزالة التكرار فقط.';
+    ? `استخرج أو أنشئ ${amount} سؤالاً بدقة متناهية من محتوى هذا الجزء من الملف.`
+    : 'افحص هذا الجزء من المستند بدقة وتعمق شديد؛ استخرج كل مفهوم أو تعريف أو معلومة أو فكرة رئيسية أو فرعية تستحق التقييم والاختبار. حدد تلقائياً عدد الأسئلة المناسب لكثافة المحتوى العلمي والمعرفي في هذا الجزء (بما يضمن التغطية الشاملة دون إهمال أي جزئية، ودون حشو سطحي أو تكرار). ركز على صياغة أسئلة احترافية تقيس الفهم والتحليل والتطبيق.';
   return `${scopeInstruction} ${sourceLanguageInstruction(sourceText)} ${allowedQuestionTypesInstruction(customInstruction)} حافظ على معلومات المستند ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، لا تغيّر النوع إلى نوع غير مسموح، بل أنشئ السؤال بأحد الأنواع المسموحة فقط. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
@@ -361,7 +361,7 @@ function base64FromBytes(bytes: Uint8Array): string {
 function normalizeAnswerText(value: unknown): string {
   return String(value ?? '')
     .normalize('NFKC')
-    .replace(/[\\u064B-\\u065F\\u0670]/g, '')
+    .replace(/[\u064B-\u065F\u0670]/gu, '')
     .replace(/[.,،؛:!?؟"'`()\\[\\]{}]/g, '')
     .replace(/\\s+/g, ' ')
     .trim()
@@ -586,15 +586,15 @@ async function generateQuestionsFromText(
   // the whole job fail, so split the source and assign a proportional target
   // to every section.
   const sourceChunks: string[] = [];
-  const automaticChunkSize = 90_000;
-  const automaticOverlap = 3_000;
-  if (requestedCount && requestedCount <= 25) {
-    sourceChunks.push(text.slice(0, 500_000));
+  const automaticChunkSize = 16_000;
+  const automaticOverlap = 1_500;
+  if (text.length <= automaticChunkSize) {
+    sourceChunks.push(text);
   } else {
     for (let start = 0; start < text.length; ) {
       const targetEnd = Math.min(start + automaticChunkSize, text.length);
       const boundary = targetEnd < text.length ? text.lastIndexOf('\n', targetEnd) : targetEnd;
-      const end = boundary > start + 30_000 ? boundary : targetEnd;
+      const end = boundary > start + 6_000 ? boundary : targetEnd;
       sourceChunks.push(text.slice(start, end));
       if (end >= text.length) break;
       start = Math.max(start + 1, end - automaticOverlap);
@@ -639,7 +639,7 @@ async function generateQuestionsFromText(
       let chunkError: unknown;
       try {
         const response = await callAiWithFallback(env, chunkMessages, AI_TEXT_FALLBACKS, {
-          maxTokens: chunkTarget ? Math.min(12_000, Math.max(3_000, chunkTarget * 220)) : 12_000,
+          maxTokens: chunkTarget ? Math.min(12_000, Math.max(3_000, chunkTarget * 240)) : 8_000,
           temperature: 0.2,
           validateResponse: text => {
             const quiz = parseJson(text);
@@ -666,7 +666,7 @@ async function generateQuestionsFromText(
         if (!isGenericQuizTitle(result.quiz?.title)) title = String(result.quiz.title).trim();
         if (typeof result.quiz?.description === 'string' && result.quiz.description.trim()) description = result.quiz.description.trim();
         for (const question of result.questions) {
-          const key = String(question.text || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+          const key = normalizeAnswerText(question.text || '');
           if (key && !seen.has(key)) {
             seen.add(key);
             allQuestions.push(question);
@@ -944,7 +944,7 @@ async function downloadSourceFile(env: ExtractionJobEnv, authHeader: string, pat
 
 function documentVisionPrompt(job: ExtractionJobRow): string {
   if (job.extraction_mode === 'generate') {
-    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة باعتبارها مادة شرح أو عرضاً تعليمياً، ثم أنشئ الأسئلة من المعلومات الموجودة فيها. لا تشترط وجود أسئلة مكتوبة داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. IMPORTANT: detect the dominant language from the attached page itself and write the title, description, questions, options, answers, and explanations in that same language. If the page is English, every output field must be English even though these instructions contain Arabic. Do not translate. أعد JSON صالحاً فقط.`;
+    return `${generatePrompt(job.requested_question_count, job.custom_instruction)}\n\nاقرأ الصفحات المرفقة بدقة وتعمق باعتبارها مادة شرح أو محتوى تعليمي، وافحص الرسوم والمخططات والمعادلات والنصوص. حدد الأسئلة بذكاء لتغطية كل النقاط الجوهرية وفق كثافة الصفحة. لا تشترط وجود أسئلة مكتوبة مسبقاً داخل الملف، ولا تقل إن الملف لا يحتوي أسئلة. IMPORTANT: detect the dominant language from the attached page itself and write the title, description, questions, options, answers, and explanations in that same language. If the page is English, every output field must be English even though these instructions contain Arabic. Do not translate. أعد JSON صالحاً فقط.`;
   }
   return `${extractionPrompt(job.custom_instruction)}\n\nIMPORTANT: The attached page image is the source of truth for language. Detect its dominant language from the page itself and return every title, question, option, answer, and explanation in that same language. Do not copy the Arabic language of these instructions into an English source. Do not translate.`;
 }

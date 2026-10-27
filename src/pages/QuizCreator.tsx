@@ -15,6 +15,7 @@ import { fetchWithAuth } from '../lib/authFetch';
 import { useQuizGenerator } from '../hooks/useQuizGenerator';
 import { askAI, askAIStream, getRememberedExtractionJobId, clearRememberedExtractionJobId, type AiChatAttachment } from '../services/aiWorkerClient';
 import DrivePicker from '../components/DrivePicker';
+import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
 import QuestionMedia from '../components/QuestionMedia';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
@@ -3223,7 +3224,7 @@ A computer is a digital electronic machine...
                 <label className="block text-xs font-black text-slate-600 dark:text-slate-350 border-b border-slate-200/50 dark:border-slate-800 pb-2">
                   ⚡ اختار الوضع المناسب لك — وضعان مستقلان تماماً:
                 </label>
-                <div className="rounded-2xl border border-cyan-200/70 bg-cyan-50/60 p-4 text-right dark:border-cyan-900/60 dark:bg-cyan-950/20">
+                <div className="uipro-glass-surface backdrop-blur-xl border border-cyan-500/30 dark:border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-violet-500/5 to-transparent p-5 rounded-2xl shadow-sm text-right">
                   <label htmlFor="file-question-count" className="block text-xs font-black text-cyan-800 dark:text-cyan-200">
                     {isAr ? 'عدد الأسئلة: تلقائي أو يدوي' : 'Question count: automatic or manual'}
                   </label>
@@ -3232,21 +3233,23 @@ A computer is a digital electronic machine...
                       ? 'تلقائي = تغطية كل الأسئلة أو النقاط القابلة للسؤال في الملف أو الصورة. اليدوي يحدد العدد الأقصى المطلوب.'
                       : 'Automatic covers all extractable questions or testable points. Manual sets the maximum number.'}
                   </p>
-                  <select
-                    id="file-question-count"
-                    value={pdfCount}
-                    onChange={(event) => setPdfCount(Number(event.target.value))}
-                    disabled={isProcessingOcr || isGenerating}
-                    className="mt-3 w-full rounded-xl border border-cyan-200 bg-white px-3 py-2.5 text-xs font-black text-slate-800 outline-none focus:ring-2 focus:ring-cyan-400/40 dark:border-cyan-900 dark:bg-slate-900 dark:text-slate-100"
-                  >
-                    {COUNT_OPTIONS_WITH_AUTO.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.value === 0
-                          ? (isAr ? 'تلقائي — كل الأسئلة الممكنة من الملف' : 'Automatic — all possible questions')
-                          : (isAr ? `يدوي — ${option.value} سؤال` : `Manual — ${option.value} questions`)}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mt-3">
+                    <LiquidGlassSelect
+                      id="file-question-count"
+                      value={pdfCount}
+                      onChange={(val) => setPdfCount(Number(val))}
+                      disabled={isProcessingOcr || isGenerating}
+                      options={COUNT_OPTIONS_WITH_AUTO.map((opt) => ({
+                        value: opt.value,
+                        label: opt.value === 0
+                          ? (isAr ? '✨ تلقائي — فحص شامل وتحديد ذكي لعدد الأسئلة' : '✨ Automatic — comprehensive inspection & smart count')
+                          : (isAr ? `🎯 يدوي — ${opt.value} سؤال` : `🎯 Manual — ${opt.value} questions`),
+                        description: opt.sub,
+                        badge: opt.value === 0 ? (isAr ? 'موصى به' : 'Recommended') : undefined,
+                      }))}
+                      dir="rtl"
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {/* Mode 1: literal extraction — existing questions only */}
@@ -3502,31 +3505,33 @@ A computer is a digital electronic machine...
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="relative">
-                      <select
+                      <LiquidGlassSelect
                         value={showCustomCategoryInput ? 'new' : category}
-                        onChange={(e) => {
-                          if (e.target.value === 'new') {
+                        onChange={(val) => {
+                          if (val === 'new') {
                             setShowCustomCategoryInput(true);
                             setCategory('');
                           } else {
                             setShowCustomCategoryInput(false);
-                            setCategory(e.target.value);
+                            setCategory(String(val));
                           }
                         }}
-                        className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner appearance-none relative z-10"
+                        options={[
+                          ...availableCategories.map((catName) => ({
+                            value: catName,
+                            label: catName,
+                            icon: '📁',
+                          })),
+                          {
+                            value: 'new',
+                            label: '🆕 تصنيف جديد غير موجود...',
+                            description: 'إنشاء تصنيف وتبويب مخصص جديد',
+                          },
+                        ]}
+                        leftIcon={<Tag className="w-4 h-4" />}
+                        size="lg"
                         dir="rtl"
-                      >
-                        {availableCategories.map((catName) => (
-                          <option key={catName} value={catName}>
-                            {catName}
-                          </option>
-                        ))}
-                        <option value="new">🆕 تصنيف جديد غير موجود...</option>
-                      </select>
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-violet-400 z-20">
-                        ▼
-                      </div>
-                      <Tag className="w-5 h-5 text-violet-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none z-20" />
+                      />
                     </div>
 
                     {showCustomCategoryInput && (
@@ -3871,10 +3876,11 @@ A computer is a digital electronic machine...
 
                         <div className="space-y-2 font-sans min-w-[210px]">
                           <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">نوع السؤال:</label>
-                          <select
+                          <LiquidGlassSelect
+                            size="sm"
                             value={question.type}
-                            onChange={(e) => {
-                              const newType = e.target.value as 'mcq' | 'tf' | 'essay';
+                            onChange={(val) => {
+                              const newType = val as 'mcq' | 'tf' | 'essay';
                               const newOptions = newType === 'tf' ? ['صح', 'خطأ'] : newType === 'essay' ? [] : ['', '', '', ''];
                               handleQuestionChange(qIdx, { 
                                 type: newType, 
@@ -3883,12 +3889,13 @@ A computer is a digital electronic machine...
                                 correctAnswer: newType === 'essay' ? 'اكتب الإجابة النموذجية الموصى بها هنا للتقييم الذاتي...' : ''
                               });
                             }}
-                            className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60 px-3 py-3 rounded-2xl outline-none text-xs text-slate-850 dark:text-slate-100 focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-all font-medium cursor-pointer text-right"
-                          >
-                            <option value="mcq">🧩 اختيار من متعدد (MCQ)</option>
-                            <option value="tf">⚖️ صح أو خطأ (True / False)</option>
-                            <option value="essay">✍️ سؤال مقالي إنشائي (Essay)</option>
-                          </select>
+                            options={[
+                              { value: 'mcq', label: '🧩 اختيار من متعدد (MCQ)' },
+                              { value: 'tf', label: '⚖️ صح أو خطأ (True / False)' },
+                              { value: 'essay', label: '✍️ سؤال مقالي إنشائي (Essay)' },
+                            ]}
+                            dir="rtl"
+                          />
                         </div>
 
                       </div>

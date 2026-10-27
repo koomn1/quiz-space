@@ -6,6 +6,7 @@ import { generateQuizWithFallback, validateAndCleanQuiz } from '../hooks/useQuiz
 import { GeneratedQuiz } from '../types';
 import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, archiveAIChatConversation, searchAIChatContent, AIChatConversation, CosmoSearchResult } from '../lib/db';
+import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
 import { COSMO_QUIZ_COUNT_OPTIONS, COSMO_QUIZ_MAX_COUNT, COSMO_QUIZ_MIN_COUNT, parseAutomaticCoveragePlan, parseCoverageAuditReplacementIds, parseExplicitQuestionCount, validateCoverageAssignments, type CosmoCoverageConcept } from '../lib/cosmoQuizCount';
 import {
   Image as ImageIcon,
@@ -2579,32 +2580,34 @@ export default function AIChat({
 
                     {/* Question Types & Focus Mode */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      <div className="rounded-2xl p-3 border" style={{ background: theme.INPUT_BG, borderColor: theme.BORDER }}>
+                      <div className="rounded-2xl p-3 border uipro-glass-surface backdrop-blur-xl" style={{ borderColor: theme.BORDER }}>
                         <label className="block text-[11px] font-bold text-slate-400 mb-1.5">{isAr ? 'نوعية الأسئلة' : 'Question Types'}</label>
-                        <select
+                        <LiquidGlassSelect
+                          size="sm"
                           value={pendingQuiz.questionTypes}
-                          onChange={e => setPendingQuiz(prev => prev ? { ...prev, questionTypes: e.target.value as any } : prev)}
-                          className="w-full bg-transparent outline-none font-bold text-xs"
-                          style={{ color: theme.FG }}
-                        >
-                          <option value="mixed">{isAr ? 'مزيج ذكي (اختيار من متعدد + صح وخطأ)' : 'Mixed (MCQ + True/False)'}</option>
-                          <option value="mcq">{isAr ? 'اختيار من متعدد فقط (4 خيارات)' : 'Multiple Choice Only'}</option>
-                          <option value="tf">{isAr ? 'صح أو خطأ فقط' : 'True / False Only'}</option>
-                        </select>
+                          onChange={(val) => setPendingQuiz(prev => prev ? { ...prev, questionTypes: val as any } : prev)}
+                          options={[
+                            { value: 'mixed', label: isAr ? 'مزيج ذكي (اختيار من متعدد + صح وخطأ)' : 'Mixed (MCQ + True/False)', icon: '✨' },
+                            { value: 'mcq', label: isAr ? 'اختيار من متعدد فقط (4 خيارات)' : 'Multiple Choice Only', icon: '🎯' },
+                            { value: 'tf', label: isAr ? 'صح أو خطأ فقط' : 'True / False Only', icon: '⚖️' },
+                          ]}
+                          dir={isAr ? 'rtl' : 'ltr'}
+                        />
                       </div>
 
-                      <div className="rounded-2xl p-3 border" style={{ background: theme.INPUT_BG, borderColor: theme.BORDER }}>
+                      <div className="rounded-2xl p-3 border uipro-glass-surface backdrop-blur-xl" style={{ borderColor: theme.BORDER }}>
                         <label className="block text-[11px] font-bold text-slate-400 mb-1.5">{isAr ? 'وضع التركيز' : 'Focus Mode'}</label>
-                        <select
+                        <LiquidGlassSelect
+                          size="sm"
                           value={pendingQuiz.focusMode}
-                          onChange={e => setPendingQuiz(prev => prev ? { ...prev, focusMode: e.target.value as any } : prev)}
-                          className="w-full bg-transparent outline-none font-bold text-xs"
-                          style={{ color: theme.FG }}
-                        >
-                          <option value="comprehensive">{isAr ? 'تغطية شاملة لكامل المنهج' : 'Comprehensive'}</option>
-                          <option value="exam_prep">{isAr ? 'مراجعة وتوقعات ليلة الامتحان' : 'Exam Prep'}</option>
-                          <option value="challenging">{isAr ? 'التركيز على نقاط الضعف والمفاهيم الصعبة' : 'Challenging Concepts'}</option>
-                        </select>
+                          onChange={(val) => setPendingQuiz(prev => prev ? { ...prev, focusMode: val as any } : prev)}
+                          options={[
+                            { value: 'comprehensive', label: isAr ? 'تغطية شاملة لكامل المنهج' : 'Comprehensive', icon: '📚' },
+                            { value: 'exam_prep', label: isAr ? 'مراجعة وتوقعات ليلة الامتحان' : 'Exam Prep', icon: '⚡' },
+                            { value: 'challenging', label: isAr ? 'التركيز على نقاط الضعف والمفاهيم الصعبة' : 'Challenging Concepts', icon: '🧠' },
+                          ]}
+                          dir={isAr ? 'rtl' : 'ltr'}
+                        />
                       </div>
                     </div>
 

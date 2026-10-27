@@ -7,7 +7,7 @@
   "start_url": "./#/dashboard/landing",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#0b0824",
   "theme_color": "#0b0824",
   "orientation": "portrait-primary",
