@@ -204,7 +204,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
             
             
             
-            className="bg-[#0c071e] border border-slate-800 rounded-[28px] shadow-[0_0_40px_rgba(155,81,224,0.15)] w-full max-w-lg p-6 relative overflow-hidden text-right font-sans text-white"
+            className="bg-[#0c071e] border border-slate-800 rounded-[28px] shadow-[0_0_40px_rgba(155,81,224,0.15)] w-full max-w-lg p-6 relative overflow-hidden text-start font-sans text-white"
             dir={isAr ? 'rtl' : 'ltr'}
           >
             {/* Ambient glows */}
@@ -362,7 +362,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                           <div className="p-2.5 bg-slate-900 group-hover:bg-primary/15 rounded-xl text-slate-400 group-hover:text-primary transition-all shrink-0 border border-slate-800/80">
                             {f.mimeType.startsWith('image/') ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
                           </div>
-                          <div className="text-right overflow-hidden">
+                          <div className="text-start overflow-hidden">
                             <p className="text-xs font-black text-slate-200 group-hover:text-white transition-colors truncate">{f.name}</p>
                             <p className="text-[10px] text-slate-500 font-medium mt-0.5">
                               {formatSize(f.size)} • {new Date(f.modifiedTime).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}
@@ -370,9 +370,9 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                           </div>
                         </div>
                         
-                        <div className="text-xs font-black text-slate-500 group-hover:text-primary transition-colors pl-2 flex items-center gap-1 shrink-0">
+                        <div className="text-xs font-black text-slate-500 group-hover:text-primary transition-colors ps-2 flex items-center gap-1 shrink-0">
                           <span>{isAr ? 'استيراد' : 'Import'}</span>
-                          <ArrowRight className={`w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 ${isAr ? 'rotate-180' : ''}`} />
+                          <ArrowRight className="w-3.5 h-3.5 transition-transform rtl:rotate-180 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
                         </div>
                       </div>
                     ))

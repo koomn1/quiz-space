@@ -206,7 +206,7 @@ export default function OnboardingTour({
                   onClick={handleBack}
                   className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
                 >
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5 rtl:rotate-0 ltr:rotate-180" />
                   <span>السابق</span>
                 </button>
               )}
@@ -216,7 +216,7 @@ export default function OnboardingTour({
                 className="flex items-center gap-1 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/20 transition hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
                 <span>{currentStepIndex === steps.length - 1 ? 'إنهاء الجولة' : 'التالي'}</span>
-                {currentStepIndex !== steps.length - 1 && <ArrowLeft className="w-3.5 h-3.5" />}
+                {currentStepIndex !== steps.length - 1 && <ArrowLeft className="w-3.5 h-3.5 rtl:rotate-0 ltr:rotate-180" />}
               </button>
             </div>
           </div>

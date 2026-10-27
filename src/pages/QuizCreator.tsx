@@ -2369,7 +2369,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
             onClick={onCancelEdit}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
           >
-            <ChevronLeft className="w-4 h-4 turn-on-rtl-flip" />
+            <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
             <span>إلغاء التعديل</span>
           </button>
         )}

@@ -1248,7 +1248,7 @@ export default function Classrooms({
                 <span className="text-[9px] font-mono text-slate-500">{c.code} • {isAr ? 'المعلم' : 'Teacher'}</span>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-500 shrink-0" />
+            <ChevronRight className="w-4 h-4 text-slate-500 shrink-0 rtl:rotate-180" />
           </button>
         ))}
 
@@ -1272,7 +1272,7 @@ export default function Classrooms({
                 <span className="text-[9px] font-mono text-slate-500">{c.code} • {c.creatorName}</span>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-500 shrink-0" />
+            <ChevronRight className="w-4 h-4 text-slate-500 shrink-0 rtl:rotate-180" />
           </button>
         ))}
 
@@ -1580,7 +1580,7 @@ export default function Classrooms({
                     <button
                       type="button"
                       onClick={() => setActiveWorkspaceTab('discussion')}
-                      className="p-4 bg-slate-900/60 border border-slate-800 rounded-2xl flex items-center gap-4 text-right hover:border-slate-700 transition-colors"
+                      className="p-4 bg-slate-900/60 border border-slate-800 rounded-2xl flex items-center gap-4 text-start hover:border-slate-700 transition-colors"
                     >
                       <div className="p-3 rounded-xl bg-teal-500/10 text-teal-400 shrink-0">
                         <MessageCircle className="w-5 h-5" />

@@ -106,7 +106,7 @@ export function EmailVerificationStep({ email, lang = 'ar', onVerified, onBack }
         <button
           type="submit"
           disabled={isSubmitting || code.length !== 6}
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 py-3.5 text-sm font-black text-white transition-colors hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-55"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-hover shadow-lg shadow-primary/25 px-5 py-3.5 text-sm font-black text-white transition-all hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-55"
         >
           {isSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
           {isAr ? 'تأكيد الرمز والمتابعة' : 'Verify and continue'}
@@ -119,7 +119,7 @@ export function EmailVerificationStep({ email, lang = 'ar', onVerified, onBack }
           type="button"
           onClick={handleResend}
           disabled={secondsRemaining > 0 || isResending}
-          className="min-h-11 text-xs font-bold text-violet-700 transition-colors hover:text-violet-600 disabled:cursor-not-allowed disabled:text-slate-400 dark:text-violet-300 dark:hover:text-violet-200"
+          className="min-h-11 text-xs font-bold text-primary transition-colors hover:text-primary-hover disabled:cursor-not-allowed disabled:text-slate-400"
         >
           {isResending
             ? (isAr ? 'جارٍ إرسال رمز جديد...' : 'Sending a new code...')
@@ -128,7 +128,7 @@ export function EmailVerificationStep({ email, lang = 'ar', onVerified, onBack }
               : (isAr ? 'إرسال رمز جديد' : 'Send a new code')}
         </button>
         <button type="button" onClick={onBack} className="flex min-h-11 w-full items-center justify-center gap-1 text-xs font-bold text-slate-600 transition-colors hover:text-slate-950 dark:text-slate-300 dark:hover:text-white">
-          <ArrowRight className="h-3.5 w-3.5" />
+          <ArrowRight className="h-3.5 w-3.5 rtl:rotate-0 ltr:rotate-180" />
           {isAr ? 'العودة وتعديل البريد' : 'Back and edit email'}
         </button>
       </div>

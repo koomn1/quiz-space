@@ -1077,7 +1077,7 @@ export default function QuizResolver({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
               title={isAr ? 'الخروج للرئيسية' : 'Exit to home'}
             >
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />
               <span>{isAr ? 'خروج' : 'Exit'}</span>
             </button>
           ) : (
@@ -1394,7 +1394,7 @@ export default function QuizResolver({
                   disabled={currentFlashcardIdx === 0}
                   className="px-4 py-2.5 rounded-xl border border-slate-205 dark:border-slate-805 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
                 >
-                  <ArrowRight className="w-4 h-4 text-slate-550" />
+                  <ArrowRight className="w-4 h-4 text-slate-550 rtl:rotate-0 ltr:rotate-180" />
                   <span>{isAr ? 'السابق' : 'Previous'}</span>
                 </button>
 
@@ -1429,7 +1429,7 @@ export default function QuizResolver({
                   className="px-4 py-2.5 rounded-xl border border-slate-205 dark:border-slate-805 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
                 >
                   <span>{isAr ? 'التالي' : 'Next'}</span>
-                  <ArrowLeft className="w-4 h-4 text-slate-550" />
+                  <ArrowLeft className="w-4 h-4 text-slate-550 rtl:rotate-0 ltr:rotate-180" />
                 </button>
               </div>
             </div>
@@ -1707,7 +1707,7 @@ export default function QuizResolver({
                     className="flex min-h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-hover px-6 sm:px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer animate-pulse-subtle"
                   >
                     <span>{currentIdx + 1 === quiz.questions.length ? (isAr ? 'إنهاء وحساب الدرجة' : 'Finish & Calculate Score') : (isAr ? 'السؤال التالي' : 'Next Question')}</span>
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />
                   </button>
                 ) : (
                   <div className="flex min-h-12 items-center px-4 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
