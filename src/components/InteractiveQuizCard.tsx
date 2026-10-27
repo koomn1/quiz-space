@@ -105,7 +105,7 @@ export function InteractiveQuizCard({
       data-card-action="attempts"
       onClick={openAttempts}
       disabled={!canViewAttempts}
-      className="inline-flex min-h-11 max-w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-cyan-300/80 bg-gradient-to-r from-cyan-50 to-indigo-50 px-4 py-2.5 text-xs font-black text-indigo-800 shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-cyan-700/70 dark:from-cyan-950/50 dark:to-indigo-950/50 dark:text-cyan-200 sm:text-sm"
+      className="inline-flex min-h-11 max-w-full touch-manipulation cursor-pointer select-none active:scale-95 items-center justify-center gap-2 rounded-xl border border-cyan-300/80 bg-gradient-to-r from-cyan-50 to-indigo-50 px-4 py-2.5 text-xs font-black text-indigo-800 shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-cyan-700/70 dark:from-cyan-950/50 dark:to-indigo-950/50 dark:text-cyan-200 sm:text-sm"
       title={isAr ? 'مشاهدة من دخلوا الاختبار' : 'View who took this quiz'}
       aria-label={`${isAr ? 'مشاهدة من دخلوا الاختبار' : 'View who took this quiz'} (${quiz.totalPlays || 0})`}
     >

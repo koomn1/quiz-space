@@ -269,7 +269,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
         <section className="min-w-0 flex-1 bg-white p-5 sm:p-8 dark:bg-slate-950">
           <div className="mb-7 flex items-start justify-between gap-4">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-[10px] font-black text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-[10px] font-black text-primary dark:border-primary/30 dark:bg-primary/20 dark:text-primary-light">
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                 {step === 'email' ? 'تأكيد البريد' : step === '2fa' ? 'حماية الحساب' : step === 'forgot' || step === 'forgot-sent' ? 'استعادة الوصول' : step === 'reset' || step === 'reset-success' ? 'تعيين كلمة المرور' : 'أهلاً بك في Quiz Space'}
               </div>
@@ -314,14 +314,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <div className="space-y-2">
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">تفعيل الحساب</h3>
                 <p className="mx-auto max-w-sm text-sm leading-7 text-slate-600 dark:text-slate-300">
-                  أرسلنا رابط تأكيد الحساب إلى <span className="break-all font-black text-violet-700 dark:text-violet-300" dir="ltr">{email}</span>.
+                  أرسلنا رابط تأكيد الحساب إلى <span className="break-all font-black text-primary dark:text-primary-light" dir="ltr">{email}</span>.
                 </p>
               </div>
               {success && <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">{success}</div>}
               <button
                 type="button"
                 onClick={() => { setStep('form'); setSuccess(''); }}
-                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
               >
                 العودة لتسجيل الدخول
               </button>
@@ -349,7 +349,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <button
                 type="submit"
                 disabled={isBusy || !email.trim()}
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
               >
                 {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <Mail className="h-4 w-4" aria-hidden="true" />}
                 إرسال رابط الاستعادة
@@ -357,7 +357,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <button
                 type="button"
                 onClick={() => { setStep('form'); setError(''); setSuccess(''); }}
-                className="min-h-11 w-full rounded-2xl px-4 text-xs font-black text-violet-700 transition-colors duration-200 hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30 dark:text-violet-300 dark:hover:bg-violet-500/10"
+                className="min-h-11 w-full rounded-2xl px-4 text-xs font-black text-primary transition-colors duration-200 hover:underline hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 dark:text-primary-light cursor-pointer"
               >
                 العودة لتسجيل الدخول
               </button>
@@ -369,7 +369,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">راجع بريدك الإلكتروني</h3>
-                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-600 dark:text-slate-300">إذا كان البريد مرتبطاً بحساب، ستجد رسالة الاستعادة على <span className="break-all font-black text-violet-700 dark:text-violet-300" dir="ltr">{email}</span>.</p>
+                <p className="mx-auto max-w-sm text-sm leading-7 text-slate-600 dark:text-slate-300">إذا كان البريد مرتبطاً بحساب، ستجد رسالة الاستعادة على <span className="break-all font-black text-primary dark:text-primary-light" dir="ltr">{email}</span>.</p>
               </div>
               {success && <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">{success}</div>}
               <div className="space-y-2">
@@ -383,7 +383,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 <button
                   type="button"
                   onClick={() => { setStep('form'); setSuccess(''); setError(''); }}
-                  className="min-h-11 w-full rounded-2xl px-4 text-xs font-black text-violet-700 transition-colors duration-200 hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30 dark:text-violet-300 dark:hover:bg-violet-500/10"
+                  className="min-h-11 w-full rounded-2xl px-4 text-xs font-black text-primary transition-colors duration-200 hover:underline hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 dark:text-primary-light cursor-pointer"
                 >
                   العودة لتسجيل الدخول
                 </button>
@@ -429,7 +429,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <button
                 type="submit"
                 disabled={loading || !newPassword || !confirmPassword}
-                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
               >
                 {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <ShieldCheck className="h-4 w-4" aria-hidden="true" />}
                 تحديث كلمة المرور
@@ -448,7 +448,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <button
                 type="button"
                 onClick={() => { setStep('form'); setSuccess(''); setError(''); }}
-                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+                className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
               >
                 تسجيل الدخول الآن
               </button>
@@ -471,7 +471,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                   placeholder="000000"
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? 'auth-error' : undefined}
-                  className="min-h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pr-12 text-center font-mono text-2xl font-black tracking-[0.4em] text-slate-950 outline-none transition duration-200 placeholder:text-slate-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  className="min-h-14 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 pr-12 text-center font-mono text-2xl font-black tracking-[0.4em] text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-slate-900 dark:focus:border-primary dark:focus:ring-primary/20"
                   dir="ltr"
                 />
               </div>
@@ -479,7 +479,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <button
                 type="submit"
                 disabled={isVerifying2FA || verificationCode.length !== 6}
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
               >
                 {isVerifying2FA ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <ShieldCheck className="h-4 w-4" aria-hidden="true" />}
                 تأكيد الرمز والمتابعة
@@ -539,7 +539,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                   <button
                     type="button"
                     onClick={() => { setStep('forgot'); setError(''); setSuccess(''); }}
-                    className="min-h-11 px-1 text-xs font-black text-violet-700 transition-colors duration-200 hover:text-violet-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30 dark:text-violet-300 dark:hover:text-violet-200"
+                    className="min-h-11 px-1 text-xs font-black text-primary transition-colors duration-200 hover:opacity-85 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 dark:text-primary-light cursor-pointer"
                   >
                     نسيت كلمة المرور؟
                   </button>
@@ -552,7 +552,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <button
                 type="submit"
                 disabled={isBusy}
-                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-950/15 transition-all duration-200 hover:bg-violet-700 hover:shadow-violet-700/20 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
               >
                 {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />}
                 {isRegister ? 'إنشاء الحساب' : 'تسجيل الدخول'}
@@ -568,7 +568,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 type="button"
                 onClick={() => void handleGoogleSignIn()}
                 disabled={isBusy}
-                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
               >
                 {googleLoading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <Chrome className="h-5 w-5 text-red-500" aria-hidden="true" />}
                 {googleLoading ? 'جارٍ فتح Google...' : 'المتابعة باستخدام Google'}
@@ -578,7 +578,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 <button
                   type="button"
                   onClick={switchMode}
-                  className="min-h-11 px-3 text-xs font-black text-violet-700 transition-colors duration-200 hover:text-violet-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30 dark:text-violet-300 dark:hover:text-violet-200"
+                  className="min-h-11 px-3 text-xs font-black text-primary transition-colors duration-200 hover:opacity-85 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 dark:text-primary-light cursor-pointer"
                 >
                   {isRegister ? 'لديك حساب بالفعل؟ سجّل دخولك' : 'مستخدم جديد؟ أنشئ حسابك الآن'}
                 </button>
@@ -592,12 +592,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   );
 };
 
-const fieldClassName = 'min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-4 pr-11 text-sm font-medium text-slate-950 outline-none transition duration-200 placeholder:text-slate-500 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-300';
+const fieldClassName = 'min-h-12 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 pl-4 pr-11 text-sm font-medium text-slate-900 outline-none transition duration-200 placeholder:text-slate-500 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-400 dark:focus:bg-slate-900 dark:focus:border-primary dark:focus:ring-primary/20';
 
 function AuthField({ label, htmlFor, icon, children }: { label: string; htmlFor: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <label htmlFor={htmlFor} className="block px-1 text-xs font-black text-slate-700 dark:text-slate-300">{label}</label>
+      <label htmlFor={htmlFor} className="block px-1 text-xs font-black text-slate-800 dark:text-slate-200">{label}</label>
       <div className="relative">
         <span className="pointer-events-none absolute inset-y-0 right-3.5 my-auto flex h-5 items-center text-slate-400">{icon}</span>
         {children}

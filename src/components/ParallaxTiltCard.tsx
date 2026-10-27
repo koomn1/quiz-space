@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 
@@ -20,9 +20,7 @@ export default function ParallaxTiltCard({
   idx = 0,
 }: ParallaxTiltCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [glareX, setGlareX] = useState(50);
-  const [glareY, setGlareY] = useState(50);
-  const [isHovered, setIsHovered] = useState(false);
+  const glareRef = useRef<HTMLDivElement>(null);
 
   const { contextSafe } = useGSAP({ scope: cardRef });
 
@@ -36,8 +34,12 @@ export default function ParallaxTiltCard({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    setGlareX((mouseX / width) * 100);
-    setGlareY((mouseY / height) * 100);
+    const x = Math.round((mouseX / width) * 100);
+    const y = Math.round((mouseY / height) * 100);
+
+    if (glareRef.current) {
+      glareRef.current.style.background = `radial-gradient(circle 220px at ${x}% ${y}%, rgba(255, 255, 255, 0.15), transparent)`;
+    }
 
     gsap.to(card, {
       boxShadow: '0 18px 42px -24px color-mix(in srgb, var(--color-primary) 42%, transparent), 0 0 28px color-mix(in srgb, var(--color-primary) 14%, transparent)',
@@ -47,12 +49,7 @@ export default function ParallaxTiltCard({
     });
   });
 
-  const handleMouseEnter = contextSafe(() => {
-    setIsHovered(true);
-  });
-
   const handleMouseLeave = contextSafe(() => {
-    setIsHovered(false);
     if (!cardRef.current) return;
     gsap.to(cardRef.current, {
       boxShadow: 'var(--app-shadow)',
@@ -88,7 +85,6 @@ export default function ParallaxTiltCard({
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
       className={`group relative duration-350 cursor-pointer glass-card glass-flat-hover ${className}`}
@@ -101,9 +97,10 @@ export default function ParallaxTiltCard({
 
       {/* Flat Glass flare follows the pointer without moving the card. */}
       <div 
+        ref={glareRef}
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-3xl" 
         style={{
-          background: `radial-gradient(circle 220px at ${glareX}% ${glareY}%, rgba(255, 255, 255, 0.15), transparent)`,
+          background: 'radial-gradient(circle 220px at 50% 50%, rgba(255, 255, 255, 0.15), transparent)',
           zIndex: 5
         }}
       />

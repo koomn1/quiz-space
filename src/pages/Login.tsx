@@ -140,7 +140,7 @@ export default function Login() {
 
   return (
     <main
-      className="relative min-h-screen overflow-hidden bg-[#070b18] px-4 py-5 text-slate-900 sm:px-6 lg:px-10"
+      className="relative min-h-screen overflow-hidden bg-[#070b18] px-4 py-5 text-slate-100 sm:px-6 lg:px-10"
       dir={isAr ? 'rtl' : 'ltr'}
     >
       <div
@@ -151,14 +151,14 @@ export default function Login() {
           maskImage: 'linear-gradient(to bottom, black, transparent 90%)',
         }}
       />
-      <div className="pointer-events-none absolute -right-40 top-20 h-[28rem] w-[28rem] rounded-full bg-violet-600/20 blur-[130px]" />
+      <div className="pointer-events-none absolute -right-40 top-20 h-[28rem] w-[28rem] rounded-full bg-primary/20 blur-[130px]" />
       <div className="pointer-events-none absolute -bottom-52 -left-40 h-[30rem] w-[30rem] rounded-full bg-cyan-500/10 blur-[140px]" />
 
       <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between">
         <button
           type="button"
           onClick={goHome}
-          className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 text-xs font-bold text-white/75 transition-colors duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/80"
+          className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 text-xs font-bold text-white/90 transition-colors duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/80 cursor-pointer"
           aria-label={isAr ? 'العودة إلى الصفحة الرئيسية' : 'Return to the home page'}
         >
           <ChevronLeft className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5 rtl:rotate-180" aria-hidden="true" />
@@ -175,7 +175,7 @@ export default function Login() {
           <button
             type="button"
             onClick={handleToggleLang}
-            className="min-h-11 rounded-full border border-white/10 bg-white/[0.06] px-3.5 text-xs font-bold text-white/75 transition-colors duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/80"
+            className="min-h-11 rounded-full border border-white/10 bg-white/[0.06] px-3.5 text-xs font-bold text-white/90 transition-colors duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/80 cursor-pointer"
             aria-label={isAr ? 'تغيير لغة الواجهة إلى الإنجليزية' : 'Switch interface language to Arabic'}
           >
             {isAr ? 'English' : 'العربية'}
@@ -185,19 +185,19 @@ export default function Login() {
 
       <div className="relative z-10 mx-auto grid min-h-[calc(100vh-5.5rem)] w-full max-w-6xl items-center gap-10 py-10 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-16 lg:py-16">
         <section className="order-2 flex flex-col justify-center lg:order-1">
-          <div className="mb-7 inline-flex w-fit items-center gap-2 rounded-full border border-violet-300/15 bg-violet-300/[0.08] px-3.5 py-2 text-[11px] font-black tracking-wide text-violet-200">
+          <div className="mb-7 inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-2 text-[11px] font-black tracking-wide text-primary-light">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_0_4px_rgba(103,232,249,0.12)]" aria-hidden="true" />
             {isAr ? 'منصة تعلم ذكية بالعربية' : 'A smarter learning space'}
           </div>
 
           <h1 className="max-w-xl text-4xl font-black leading-[1.18] tracking-tight text-white sm:text-5xl lg:text-[4.35rem]">
             {isAr ? (
-              <>رحلتك تبدأ من <span className="bg-gradient-to-l from-cyan-200 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">سؤال.</span></>
+              <>رحلتك تبدأ من <span className="bg-gradient-to-l from-cyan-200 via-primary-light to-fuchsia-300 bg-clip-text text-transparent">سؤال.</span></>
             ) : (
-              <>Your journey starts with a <span className="bg-gradient-to-r from-cyan-200 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">question.</span></>
+              <>Your journey starts with a <span className="bg-gradient-to-r from-cyan-200 via-primary-light to-fuchsia-300 bg-clip-text text-transparent">question.</span></>
             )}
           </h1>
-          <p className="mt-6 max-w-lg text-sm leading-8 text-slate-300/80 sm:text-base">
+          <p className="mt-6 max-w-lg text-sm leading-8 text-slate-200 sm:text-base">
             {isAr
               ? 'احفظ اختباراتك، تابع تقدمك، وخلي الذكاء الاصطناعي يساعدك تذاكر بطريقة أذكى وأوضح.'
               : 'Save your quizzes, track your progress, and let AI make the way you learn clearer and more personal.'}
@@ -211,27 +211,27 @@ export default function Login() {
             ].map(({ icon: Icon, ar, en }) => (
               <div key={en} className="rounded-2xl border border-white/10 bg-white/[0.055] p-3.5 backdrop-blur-sm">
                 <Icon className="h-4 w-4 text-cyan-200" aria-hidden="true" />
-                <p className="mt-2 text-[11px] font-bold text-white/80">{isAr ? ar : en}</p>
+                <p className="mt-2 text-[11px] font-bold text-white/90">{isAr ? ar : en}</p>
               </div>
             ))}
           </div>
 
           <div className="relative mt-10 hidden max-w-lg overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.1] to-white/[0.025] p-5 shadow-2xl shadow-violet-950/20 sm:block">
             <div className="absolute -left-12 -top-16 h-40 w-40 rounded-full border border-cyan-200/20" />
-            <div className="absolute -left-5 -top-9 h-28 w-28 rounded-full border border-violet-200/20" />
+            <div className="absolute -left-5 -top-9 h-28 w-28 rounded-full border border-primary/20" />
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200/70">Cosmo signal</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200/90">Cosmo signal</p>
                 <p className="mt-2 text-sm font-black text-white">{isAr ? 'مساحتك الخاصة للتعلّم' : 'Your personal learning orbit'}</p>
               </div>
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 shadow-lg shadow-violet-950/40">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-cyan-400 shadow-lg shadow-violet-950/40">
                 <Sparkles className="h-5 w-5 text-white" aria-hidden="true" />
               </div>
             </div>
             <div className="mt-5 flex items-center gap-2">
               {[0.35, 0.55, 0.82, 0.66, 0.94, 0.72, 0.88].map((height, index) => (
                 <span key={index} className="h-1.5 flex-1 rounded-full bg-white/10">
-                  <span className="block h-full rounded-full bg-gradient-to-r from-cyan-300 to-violet-400" style={{ width: `${height * 100}%` }} />
+                  <span className="block h-full rounded-full bg-gradient-to-r from-cyan-300 to-primary" style={{ width: `${height * 100}%` }} />
                 </span>
               ))}
             </div>
@@ -239,7 +239,7 @@ export default function Login() {
         </section>
 
         <section className="order-1 lg:order-2">
-          <div className="mx-auto w-full max-w-[29rem] rounded-[2rem] border border-white/70 bg-white p-5 shadow-[0_30px_90px_-35px_rgba(167,139,250,0.8)] sm:p-8">
+          <div className="mx-auto w-full max-w-[29rem] rounded-[2rem] border border-slate-200/80 bg-white p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900/95 sm:p-8 backdrop-blur-xl">
             {authStep === 'email' ? (
               <EmailVerificationStep
                 email={email.trim().toLowerCase()}
@@ -254,19 +254,19 @@ export default function Login() {
               <div dir={isAr ? 'rtl' : 'ltr'}>
                 <div className="mb-7 flex items-start justify-between gap-4">
                   <div>
-                    <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+                    <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       <LogIn className="h-5 w-5" aria-hidden="true" />
                     </div>
-                    <h2 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                    <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-3xl">
                       {isRegister ? (isAr ? 'أنشئ حسابك' : 'Create your account') : (isAr ? 'أهلاً بعودتك' : 'Welcome back')}
                     </h2>
-                    <p className="mt-2 text-xs leading-6 text-slate-500 sm:text-sm">
+                    <p className="mt-2 text-xs leading-6 text-slate-600 dark:text-slate-300 sm:text-sm">
                       {isRegister
                         ? (isAr ? 'ابدأ مساحة تعلمك في أقل من دقيقة.' : 'Start your learning space in less than a minute.')
                         : (isAr ? 'سجّل الدخول لمتابعة اختباراتك وتقدمك.' : 'Sign in to continue your quizzes and progress.')}
                     </p>
                   </div>
-                  <div className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-500">
+                  <div className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[10px] font-black text-slate-600 dark:text-slate-300">
                     {isRegister ? '01 / 02' : '01'}
                   </div>
                 </div>
@@ -274,7 +274,7 @@ export default function Login() {
                 <form onSubmit={handleAuth} className="space-y-4" noValidate>
                   {isRegister && (
                     <div className="space-y-2">
-                      <label htmlFor="login-username" className="block px-1 text-xs font-black text-slate-700">
+                      <label htmlFor="login-username" className="block px-1 text-xs font-black text-slate-800 dark:text-slate-200">
                         {isAr ? 'اسم المستخدم' : 'Username'}
                       </label>
                       <div className="relative">
@@ -287,14 +287,14 @@ export default function Login() {
                           required
                           autoComplete="name"
                           placeholder={isAr ? 'مثال: أحمد' : 'e.g. Alex'}
-                          className="min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-4 pr-11 text-sm text-slate-950 outline-none transition duration-200 placeholder:text-slate-400 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10"
+                          className="min-h-12 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 pl-4 pr-11 text-sm font-medium text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15 dark:border-slate-700 dark:bg-slate-800/90 dark:text-white dark:placeholder:text-slate-400 dark:focus:bg-slate-800 dark:focus:border-primary dark:focus:ring-primary/20"
                         />
                       </div>
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <label htmlFor="login-email" className="block px-1 text-xs font-black text-slate-700">
+                    <label htmlFor="login-email" className="block px-1 text-xs font-black text-slate-800 dark:text-slate-200">
                       {isAr ? 'البريد الإلكتروني' : 'Email address'}
                     </label>
                     <div className="relative">
@@ -309,14 +309,14 @@ export default function Login() {
                         placeholder="name@example.com"
                         aria-invalid={Boolean(error)}
                         aria-describedby={error ? 'login-auth-error' : undefined}
-                        className="min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-4 pr-11 text-sm text-slate-950 outline-none transition duration-200 placeholder:text-slate-400 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10"
+                        className="min-h-12 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 pl-4 pr-11 text-sm font-medium text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15 dark:border-slate-700 dark:bg-slate-800/90 dark:text-white dark:placeholder:text-slate-400 dark:focus:bg-slate-800 dark:focus:border-primary dark:focus:ring-primary/20"
                         dir="ltr"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label htmlFor="login-password" className="block px-1 text-xs font-black text-slate-700">
+                    <label htmlFor="login-password" className="block px-1 text-xs font-black text-slate-800 dark:text-slate-200">
                       {isAr ? 'كلمة المرور' : 'Password'}
                     </label>
                     <div className="relative">
@@ -331,19 +331,19 @@ export default function Login() {
                         autoComplete={isRegister ? 'new-password' : 'current-password'}
                         aria-describedby={isRegister ? 'login-password-help' : error ? 'login-auth-error' : undefined}
                         placeholder="••••••••"
-                        className="min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pl-4 pr-11 text-sm text-slate-950 outline-none transition duration-200 placeholder:text-slate-400 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10"
+                        className="min-h-12 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 pl-4 pr-11 text-sm font-medium text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15 dark:border-slate-700 dark:bg-slate-800/90 dark:text-white dark:placeholder:text-slate-400 dark:focus:bg-slate-800 dark:focus:border-primary dark:focus:ring-primary/20"
                         dir="ltr"
                       />
                     </div>
                     {isRegister && (
-                      <p id="login-password-help" className="px-1 text-[11px] leading-5 text-slate-500">
+                      <p id="login-password-help" className="px-1 text-[11px] leading-5 text-slate-600 dark:text-slate-300">
                         {passwordRequirementMessage(lang)}
                       </p>
                     )}
                   </div>
 
                   {error && (
-                    <div id="login-auth-error" role="alert" aria-live="assertive" className="flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold leading-5 text-rose-700">
+                    <div id="login-auth-error" role="alert" aria-live="assertive" className="flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold leading-5 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
                       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                       <span>{error}</span>
                     </div>
@@ -352,7 +352,7 @@ export default function Login() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-950/15 transition-all duration-200 hover:bg-violet-700 hover:shadow-violet-700/20 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/25"
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
                   >
                     {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <LogIn className="h-4 w-4" aria-hidden="true" />}
                     <span>{isRegister ? (isAr ? 'إنشاء الحساب' : 'Create account') : (isAr ? 'تسجيل الدخول' : 'Sign in')}</span>
@@ -360,16 +360,16 @@ export default function Login() {
                 </form>
 
                 <div className="my-5 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-slate-200" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{isAr ? 'أو' : 'or'}</span>
-                  <span className="h-px flex-1 bg-slate-200" />
+                  <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">{isAr ? 'أو' : 'or'}</span>
+                  <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
                 </div>
 
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
+                  className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-800 transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 dark:border-slate-700 dark:bg-slate-800/80 dark:text-white dark:hover:bg-slate-800 cursor-pointer"
                 >
                   <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -380,11 +380,11 @@ export default function Login() {
                   <span>{isAr ? 'المتابعة بحساب Google' : 'Continue with Google'}</span>
                 </button>
 
-                <div className="mt-6 border-t border-slate-100 pt-5 text-center">
+                <div className="mt-6 border-t border-slate-100 dark:border-slate-800 pt-5 text-center">
                   <button
                     type="button"
                     onClick={switchMode}
-                    className="min-h-11 px-3 text-xs font-black text-violet-700 transition-colors duration-200 hover:text-violet-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30"
+                    className="min-h-11 px-3 text-xs font-black text-primary transition-colors duration-200 hover:opacity-85 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer dark:text-primary-light"
                   >
                     {isRegister
                       ? (isAr ? 'لديك حساب بالفعل؟ سجّل دخولك' : 'Already have an account? Sign in')
@@ -394,13 +394,13 @@ export default function Login() {
               </div>
             ) : (
               <div className="text-center" dir={isAr ? 'rtl' : 'ltr'}>
-                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <ShieldCheck className="h-7 w-7" aria-hidden="true" />
                 </div>
-                <h2 className="text-2xl font-black tracking-tight text-slate-950">
+                <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                   {isAr ? 'تأكيد إضافي للحساب' : 'Extra account verification'}
                 </h2>
-                <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-slate-500">
+                <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-slate-600 dark:text-slate-300">
                   {isAr
                     ? 'حسابك محمي بالمصادقة الثنائية. أدخل الرمز المكوّن من 6 أرقام من تطبيق التحقق للمتابعة.'
                     : 'Your account is protected with two-factor authentication. Enter the 6-digit code from your authenticator app.'}
@@ -420,12 +420,12 @@ export default function Login() {
                     placeholder="000000"
                     aria-invalid={Boolean(error)}
                     aria-describedby={error ? 'login-auth-error' : undefined}
-                    className="min-h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-center font-mono text-2xl font-black tracking-[0.4em] text-slate-950 outline-none transition duration-200 placeholder:text-slate-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10"
+                    className="min-h-14 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 text-center font-mono text-2xl font-black tracking-[0.4em] text-slate-900 outline-none transition duration-200 placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/15 dark:border-slate-700 dark:bg-slate-800/90 dark:text-white dark:placeholder:text-slate-400 dark:focus:bg-slate-800 dark:focus:border-primary dark:focus:ring-primary/20"
                     dir="ltr"
                   />
 
                   {error && (
-                    <div id="login-auth-error" role="alert" aria-live="assertive" className="flex items-start justify-center gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold leading-5 text-rose-700">
+                    <div id="login-auth-error" role="alert" aria-live="assertive" className="flex items-start justify-center gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold leading-5 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
                       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                       <span>{error}</span>
                     </div>
@@ -434,7 +434,7 @@ export default function Login() {
                   <button
                     type="submit"
                     disabled={loading || otpCode.length !== 6}
-                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition-all duration-200 hover:bg-violet-700 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/25"
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
                   >
                     {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <ShieldCheck className="h-4 w-4" aria-hidden="true" />}
                     <span>{isAr ? 'تأكيد الرمز والمتابعة' : 'Verify and continue'}</span>
@@ -444,7 +444,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={goHome}
-                  className="mt-5 inline-flex min-h-11 items-center gap-1.5 px-3 text-xs font-bold text-slate-500 transition-colors duration-200 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30"
+                  className="mt-5 inline-flex min-h-11 items-center gap-1.5 px-3 text-xs font-bold text-slate-600 transition-colors duration-200 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
                 >
                   <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden="true" />
                   <span>{isAr ? 'العودة للصفحة الرئيسية' : 'Return home'}</span>
