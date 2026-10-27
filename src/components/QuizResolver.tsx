@@ -301,9 +301,11 @@ export default function QuizResolver({
       setQuestionRatings(previous => ({ ...previous, [qId]: rVal }));
     } catch (error) {
       console.error('Question rating was not persisted:', error);
+      const errorCode = typeof (error as any)?.code === 'string' ? (error as any).code : '';
+      const codeSuffix = errorCode ? ` (${errorCode})` : '';
       setQuestionRatingErrors(previous => ({
         ...previous,
-        [qId]: isAr ? 'تعذر حفظ تقييم السؤال في قاعدة البيانات. تحقق من الاتصال ثم أعد المحاولة.' : 'The question rating could not be saved. Check your connection and retry.',
+        [qId]: isAr ? `تعذر حفظ تقييم السؤال. تحقق من الاتصال ثم أعد المحاولة.${codeSuffix}` : `The question rating could not be saved. Check your connection and retry.${codeSuffix}`,
       }));
     }
   };
@@ -315,11 +317,28 @@ export default function QuizResolver({
     if (!userId || !quizId) return () => { active = false; };
     const source = isDailyQuiz ? 'daily_quiz_completions' : 'completions';
     const userColumn = isDailyQuiz ? 'user_id' : 'taker_id';
-    supabase.from(source).select('id').eq('quiz_id', quizId).eq(userColumn, userId)
-      .not('rating', 'is', null).limit(1).maybeSingle()
-      .then(({ data, error }) => { if (active && !error) setHasRatedQuiz(!!data); });
+    void (async () => {
+      try {
+        let lookupUserId = userId;
+        if (!isDailyQuiz && !isGuest) {
+          const { data: authData, error: authError } = await supabase.auth.getUser();
+          if (authError || !authData.user?.id) {
+            console.warn('Could not resolve Auth UID while checking saved quiz ratings:', authError);
+            return;
+          }
+          lookupUserId = authData.user.id;
+        }
+        const { data, error } = await supabase.from(source).select('id')
+          .eq('quiz_id', quizId).eq(userColumn, lookupUserId)
+          .not('rating', 'is', null).limit(1).maybeSingle();
+        if (active && !error) setHasRatedQuiz(!!data);
+        if (error) console.error('Could not check whether this quiz was already rated:', error);
+      } catch (error) {
+        if (active) console.error('Could not check whether this quiz was already rated:', error);
+      }
+    })();
     return () => { active = false; };
-  }, [quizId, userId, isDailyQuiz]);
+  }, [quizId, userId, isDailyQuiz, isGuest]);
 
   // Completing a quiz must never trap the student on the result screen.
   // Rating is optional feedback, not a prerequisite for saving or leaving.
@@ -2016,6 +2035,7 @@ export default function QuizResolver({
             essayAssessments={essayAssessments}
             lang={lang}
             questionRatings={questionRatings}
+            questionRatingErrors={questionRatingErrors}
             onRateQuestion={handleRateQuestion}
           />
 

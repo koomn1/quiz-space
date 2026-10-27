@@ -1889,7 +1889,9 @@ export async function rateQuestion(
 ): Promise<void> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; question rating cannot be saved.');
   if (isGuestIdentity(userId)) throw new Error('Question ratings require a signed-in account.');
-  if (!quizId.trim() || !questionId.trim()) throw new Error('Quiz and question identifiers are required for a rating.');
+  const normalizedQuizId = String(quizId ?? '').trim();
+  const normalizedQuestionId = String(questionId ?? '').trim();
+  if (!normalizedQuizId || !normalizedQuestionId) throw new Error('Quiz and question identifiers are required for a rating.');
 
   const authApi = (supabase as any).auth;
   if (typeof authApi?.getUser !== 'function') throw new Error('The authenticated session is unavailable.');
@@ -1897,20 +1899,29 @@ export async function rateQuestion(
   const authenticatedUserId = authData?.user?.id;
   if (authError || !authenticatedUserId) throw authError || new Error('Sign in before rating a question.');
 
-  const { error } = await supabase.from('question_ratings').upsert({
+  const { data, error } = await supabase.from('question_ratings').upsert({
     // Keep IDs quiz-scoped and use the natural triple as the conflict target,
     // so legacy keys and newly rated rows cannot create duplicates.
-    id: `${authenticatedUserId}_${quizId}_${questionId}`,
+    id: `${authenticatedUserId}_${normalizedQuizId}_${normalizedQuestionId}`,
     user_id: authenticatedUserId,
-    quiz_id: quizId,
+    quiz_id: normalizedQuizId,
     quiz_title: quizTitle,
-    question_id: questionId,
+    question_id: normalizedQuestionId,
     question_text: questionText,
     rating_value: ratingValue,
-  }, { onConflict: 'user_id,quiz_id,question_id' });
+  }, { onConflict: 'user_id,quiz_id,question_id' })
+    .select('user_id,quiz_id,question_id,rating_value')
+    .single();
   if (error) {
     console.error('Error in rateQuestion:', { message: error.message, code: error.code });
     throw error;
+  }
+  if (!data
+    || data.user_id !== authenticatedUserId
+    || String(data.quiz_id) !== normalizedQuizId
+    || String(data.question_id) !== normalizedQuestionId
+    || data.rating_value !== ratingValue) {
+    throw Object.assign(new Error('Supabase did not confirm the saved question rating.'), { code: 'RATING_SAVE_UNCONFIRMED' });
   }
 }
 

@@ -25,7 +25,11 @@ describe('question and quiz rating persistence', () => {
   });
 
   it('uses the authenticated UID and a quiz-scoped conflict key', async () => {
-    const upsert = vi.fn().mockResolvedValue({ error: null });
+    const single = vi.fn().mockResolvedValue({ data: {
+      user_id: 'auth-user-1', quiz_id: 'quiz-42', question_id: 'q-0', rating_value: 'like',
+    }, error: null });
+    const select = vi.fn().mockReturnValue({ single });
+    const upsert = vi.fn().mockReturnValue({ select });
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'auth-user-1' } }, error: null });
     mocks.from.mockReturnValue({ upsert });
 
@@ -39,6 +43,24 @@ describe('question and quiz rating persistence', () => {
       question_id: 'q-0',
       rating_value: 'like',
     }), { onConflict: 'user_id,quiz_id,question_id' });
+    expect(select).toHaveBeenCalledWith('user_id,quiz_id,question_id,rating_value');
+    expect(single).toHaveBeenCalledOnce();
+  });
+
+  it('normalizes a runtime numeric question id before writing', async () => {
+    const single = vi.fn().mockResolvedValue({ data: {
+      user_id: 'auth-user-1', quiz_id: 'quiz-42', question_id: '7', rating_value: 'dislike',
+    }, error: null });
+    const select = vi.fn().mockReturnValue({ single });
+    const upsert = vi.fn().mockReturnValue({ select });
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'auth-user-1' } }, error: null });
+    mocks.from.mockReturnValue({ upsert });
+
+    await rateQuestion('auth-user-1', 'quiz-42', 'Biology', 7 as unknown as string, 'Question', 'dislike');
+
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ question_id: '7' }), {
+      onConflict: 'user_id,quiz_id,question_id',
+    });
   });
 
   it('rejects if there is no authenticated session instead of pretending to save', async () => {
@@ -51,12 +73,25 @@ describe('question and quiz rating persistence', () => {
 
   it('propagates a rejected Supabase upsert to the UI', async () => {
     const databaseError = Object.assign(new Error('row-level security policy denied'), { code: '42501' });
-    const upsert = vi.fn().mockResolvedValue({ error: databaseError });
+    const single = vi.fn().mockResolvedValue({ data: null, error: databaseError });
+    const select = vi.fn().mockReturnValue({ single });
+    const upsert = vi.fn().mockReturnValue({ select });
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'auth-user-1' } }, error: null });
     mocks.from.mockReturnValue({ upsert });
 
     await expect(rateQuestion('auth-user-1', 'quiz-42', 'Biology', 'q-0', 'Question', 'dislike'))
       .rejects.toBe(databaseError);
+  });
+
+  it('rejects a successful-looking upsert if Supabase returns no matching saved row', async () => {
+    const single = vi.fn().mockResolvedValue({ data: null, error: null });
+    const select = vi.fn().mockReturnValue({ single });
+    const upsert = vi.fn().mockReturnValue({ select });
+    mocks.getUser.mockResolvedValue({ data: { user: { id: 'auth-user-1' } }, error: null });
+    mocks.from.mockReturnValue({ upsert });
+
+    await expect(rateQuestion('auth-user-1', 'quiz-42', 'Biology', 'q-0', 'Question', 'like'))
+      .rejects.toMatchObject({ code: 'RATING_SAVE_UNCONFIRMED' });
   });
 
   it('maps persisted snake_case rows to the UI QuestionRating shape', async () => {

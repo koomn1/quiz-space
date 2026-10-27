@@ -13,6 +13,7 @@ interface QuizDetailedReportProps {
   essayAssessments: Record<number, boolean>;
   lang?: 'ar' | 'en';
   questionRatings: Record<string, 'like' | 'dislike'>;
+  questionRatingErrors: Record<string, string>;
   onRateQuestion: (qId: string, qText: string, rating: 'like' | 'dislike') => void;
 }
 
@@ -23,6 +24,7 @@ export default function QuizDetailedReport({
   essayAssessments,
   lang = 'ar',
   questionRatings,
+  questionRatingErrors,
   onRateQuestion
 }: QuizDetailedReportProps) {
   const isAr = lang === 'ar';
@@ -395,6 +397,11 @@ export default function QuizDetailedReport({
                       </button>
                     </div>
                   </div>
+                  {questionRatingErrors[qId] && (
+                    <p role="alert" className="mt-2 text-[11px] font-semibold text-rose-600 dark:text-rose-300">
+                      {questionRatingErrors[qId]}
+                    </p>
+                  )}
                 </div>
               );
             })
