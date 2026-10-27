@@ -93,9 +93,15 @@ export function InteractiveQuizCard({
     }
   };
 
+  const handleCardClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target instanceof Element && event.target.closest('[data-card-action]')) return;
+    onStartQuiz(quiz.id);
+  };
+
   const quizAttemptsButton = (
     <button
       type="button"
+      data-card-action="attempts"
       onClick={openAttempts}
       disabled={!canViewAttempts}
       className="inline-flex min-h-11 max-w-full touch-manipulation items-center justify-center gap-2 rounded-xl border border-cyan-300/80 bg-gradient-to-r from-cyan-50 to-indigo-50 px-4 py-2.5 text-xs font-black text-indigo-800 shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-cyan-700/70 dark:from-cyan-950/50 dark:to-indigo-950/50 dark:text-cyan-200 sm:text-sm"
@@ -279,7 +285,7 @@ export function InteractiveQuizCard({
       <>
       <ParallaxTiltCard
         idx={idx}
-        onClick={() => onStartQuiz(quiz.id)}
+        onClick={handleCardClick}
         className="glass-card hover:border-primary/45 dark:hover:border-primary/50 p-4 rounded-[20px] hover:shadow-[0_12px_24px_rgba(99,102,241,0.06)] hover:scale-[1.015] duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4 overflow-hidden relative"
       >
         <div className="absolute -inset-[1px] rounded-[20px] bg-gradient-to-r from-primary/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 pointer-events-none" />
@@ -328,7 +334,7 @@ export function InteractiveQuizCard({
               </span>
               <span>•</span>
               {canManageQuizAttempts ? quizAttemptsButton : (
-                <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className={canViewAttempts ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canViewAttempts ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
+                <button type="button" data-card-action="attempts" onClick={(event) => { event.stopPropagation(); void openAttempts(event); }} disabled={!canViewAttempts} className={canViewAttempts ? 'cursor-pointer text-primary hover:underline' : 'cursor-default'} title={canViewAttempts ? (isAr ? 'عرض الأعضاء الذين حلوا الاختبار' : 'View members who solved it') : undefined}><Users className="mr-0.5 inline h-3 w-3" />{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</button>
               )}
             </div>
           </div>
@@ -415,7 +421,7 @@ export function InteractiveQuizCard({
     <>
     <ParallaxTiltCard
       idx={idx}
-      onClick={() => onStartQuiz(quiz.id)}
+      onClick={handleCardClick}
       className="uipro-clay-card rounded-[28px] duration-300 ease-out flex flex-col justify-between overflow-hidden group relative cursor-pointer"
     >
       {/* Soft Specular Light Highlight on Hover */}
@@ -479,7 +485,7 @@ export function InteractiveQuizCard({
             </span>
             <span className="text-slate-300 dark:text-slate-700 select-none">•</span>
             {canManageQuizAttempts ? quizAttemptsButton : (
-              <button type="button" onClick={openAttempts} disabled={!canViewAttempts} className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer font-bold transition-colors" title={isAr ? 'عرض قائمة المتفوقين والحلول' : 'View solvers list'}><Users className="h-3.5 w-3.5" /><span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span></button>
+              <button type="button" data-card-action="attempts" onClick={(event) => { event.stopPropagation(); void openAttempts(event); }} disabled={!canViewAttempts} className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer font-bold transition-colors" title={isAr ? 'عرض قائمة المتفوقين والحلول' : 'View solvers list'}><Users className="h-3.5 w-3.5" /><span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span></button>
             )}
           </div>
         </div>

@@ -20,4 +20,11 @@ describe('quiz attempts button by role', () => {
     expect(source).toContain('text-primary hover:underline cursor-pointer');
     expect(source).toContain('t?.playedTimes?.replace');
   });
+
+  it('does not start the quiz when the attempts action is clicked inside a clickable card', () => {
+    expect(source).toContain("target.closest('[data-card-action]')");
+    expect(source.match(/onClick={handleCardClick}/g)).toHaveLength(2);
+    expect(source.match(/data-card-action="attempts"/g)).toHaveLength(3);
+    expect(source).toContain('event.stopPropagation(); void openAttempts(event);');
+  });
 });
