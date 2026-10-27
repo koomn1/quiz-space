@@ -54,7 +54,7 @@ export default function CommandPalette({ isOpen, lang, onOpen, onClose, onNaviga
     onClose();
   };
 
-  if (!isOpen) return <button type="button" onClick={onOpen} className="uipro-glass-surface fixed bottom-5 end-5 z-[11000] inline-flex min-h-11 items-center gap-2 rounded-2xl border border-violet-300/80 px-3 text-xs font-black text-violet-800 shadow-lg shadow-violet-950/10 transition hover:-translate-y-0.5 hover:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:border-violet-700/70 dark:text-violet-200" aria-label={isAr ? 'فتح التنقل السريع' : 'Open quick navigation'}><Command className="h-4 w-4" aria-hidden="true" /><span className="hidden sm:inline">{isAr ? 'تنقل سريع' : 'Quick nav'}</span><kbd className="hidden rounded border border-current/20 px-1.5 py-0.5 text-[9px] sm:inline">⌘K</kbd></button>;
+  if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[12000] flex items-start justify-center bg-slate-950/45 px-4 pt-[12vh] backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="uipro-glass-surface w-full max-w-xl overflow-hidden rounded-[1.5rem] border border-violet-200 dark:border-violet-800/50 shadow-2xl shadow-violet-950/25" dir={isAr ? 'rtl' : 'ltr'} role="dialog" aria-modal="true" aria-labelledby="command-palette-title">

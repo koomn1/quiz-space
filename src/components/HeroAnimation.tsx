@@ -85,12 +85,12 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
   }, { scope: containerRef, dependencies: [isAr, topicsToUse.join('|')] });
 
   return (
-    <div ref={containerRef} className="light-hero relative w-full h-[80vh] min-h-[600px] bg-[#020617] overflow-hidden flex flex-col items-center justify-center rounded-[40px] shadow-[0_20px_60px_-15px_rgba(109,40,217,0.3)] border border-indigo-500/20">
+    <div ref={containerRef} className="light-hero relative w-full py-16 sm:py-20 md:py-28 overflow-hidden flex flex-col items-center justify-center rounded-[32px] sm:rounded-[40px] bg-gradient-to-b from-indigo-950/20 via-slate-900/10 to-transparent border border-indigo-500/15 shadow-[0_8px_32px_0_rgba(79,70,229,0.06)] backdrop-blur-xs transition-all duration-300">
       
       {/* Dynamic Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e512_1px,transparent_1px),linear-gradient(to_bottom,#4f46e512_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_70%,transparent_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e50d_1px,transparent_1px),linear-gradient(to_bottom,#4f46e50d_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_45%,#000_15%,transparent_80%)]" />
         
         {/* Glowing Orbs - Diversified colors (Indigo, Emerald, Rose, Amber) */}
         <div ref={el => { orbsRef.current[0] = el; }} className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-600/25 blur-[120px] mix-blend-screen" />

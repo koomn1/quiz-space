@@ -1174,7 +1174,7 @@ body {
 }
 
 .liquid-header__bar {
-  max-width: 1440px;
+  max-width: min(100%, 76rem);
   margin: 0 auto;
   height: clamp(4rem, calc(3.75rem + 1vw), 4.75rem);
   min-height: clamp(4rem, calc(3.75rem + 1vw), 4.75rem);

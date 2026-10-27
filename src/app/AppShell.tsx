@@ -123,10 +123,10 @@ export default function AppShell(props: AppShellProps) {
             />
           </div>
 
-          {/* Dark mode background elements (similar to Landing Page Hero) */}
+          {/* Dark mode background elements */}
           <div className="absolute inset-0 hidden dark:block opacity-100">
-            {/* Grid pattern */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e512_1px,transparent_1px),linear-gradient(to_bottom,#4f46e512_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_100%_100%_at_50%_0%,#000_80%,transparent_100%)]" />
+
+
             
             {/* Glowing Orbs */}
             <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-violet-600/10 blur-[120px] mix-blend-screen" />

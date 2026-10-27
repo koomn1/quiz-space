@@ -318,7 +318,7 @@ export default function LandingPage({
       
       <HeroAnimation t={t} isAr={isAr} onCreateQuizTab={onCreateQuizTab} cosmoAITopics={currentCosmoAITopics} />
 
-      <div className="gsap-stats-container grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-12 relative z-10">
+      <div className="gsap-stats-container grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 relative z-10">
         <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10 blur-[100px] -z-10 rounded-full"></div>
         {[
           { label: t.activeQuizzes, val: `${quizzes.length}`, color: 'from-emerald-400 to-cyan-400', bg: 'bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_30px_-10px_rgba(16,185,129,0.3)]' },
