@@ -233,7 +233,7 @@ export default function AppShell(props: AppShellProps) {
               
               
               
-              className="fixed top-24 sm:top-28 right-4 left-4 sm:left-auto sm:right-6 sm:w-96 z-50 p-4 rounded-2xl bg-[#0b0f19] text-white border border-primary/25 shadow-2xl flex gap-3.5 items-start cursor-pointer select-none ring-1 ring-primary/40"
+              className="uipro-glass-surface fixed top-24 sm:top-28 right-4 left-4 sm:left-auto sm:right-6 sm:w-96 z-50 p-4 rounded-2xl border border-primary/25 text-[var(--lg-text)] flex gap-3.5 items-start cursor-pointer select-none ring-1 ring-primary/40"
               dir={lang === 'ar' ? 'rtl' : 'ltr'}
               onClick={() => {
                 setActiveQuizId(activePush.quizId === 'mock-quiz-id' ? quizzes[0]?.id || null : activePush.quizId);
@@ -244,13 +244,13 @@ export default function AppShell(props: AppShellProps) {
                 <Award className="w-5 h-5" />
               </div>
               <div className="space-y-1 text-right flex-1" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
-                <h5 className="font-display font-black text-xs text-amber-300 flex items-center gap-1">
+                <h5 className="font-display font-black text-xs text-amber-800 dark:text-amber-300 flex items-center gap-1">
                   <span>{lang === 'ar' ? '🏆 كسر الرقم القياسي للتو!' : '🏆 Leaderboard Record Broken!'}</span>
                 </h5>
-                <p className="text-[11px] text-slate-300 leading-relaxed font-semibold">
+                <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">
                   {activePush.body}
                 </p>
-                <div className="flex items-center justify-between text-[9px] text-slate-500 pt-1 border-t border-slate-800/80 mt-1.5">
+                <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/80 dark:border-slate-700/80 mt-1.5">
                   <span>{lang === 'ar' ? 'اضغط لتحدي البطل من جديد ⚡' : 'Click to reclaim your throne ⚡'}</span>
                   <span className="font-mono">Web Push API</span>
                 </div>
@@ -260,7 +260,7 @@ export default function AppShell(props: AppShellProps) {
                   e.stopPropagation();
                   setActivePush(null);
                 }}
-                className="text-slate-500 hover:text-white text-xs"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white text-xs"
               >
                 ✕
               </button>

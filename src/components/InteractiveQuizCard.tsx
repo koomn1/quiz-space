@@ -197,7 +197,7 @@ export function InteractiveQuizCard({
 
   const attemptsPanel = attemptsOpen && typeof document !== 'undefined' ? createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md animate-fade-in" onClick={() => setAttemptsOpen(false)} role="dialog" aria-modal="true" aria-labelledby={`attempts-title-${quiz.id}`}>
-      <div className="w-full max-w-lg max-h-[min(660px,90vh)] overflow-hidden rounded-[28px] border border-violet-200/80 bg-white/95 shadow-2xl dark:border-violet-500/20 dark:bg-[#0d1322]/95 backdrop-blur-xl" onClick={(e) => e.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
+      <div className="uipro-glass-surface w-full max-w-lg max-h-[min(660px,90vh)] overflow-hidden rounded-[28px] border border-violet-200/80 dark:border-violet-500/20 shadow-2xl" onClick={(e) => e.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 px-6 py-4.5 dark:border-slate-800/80 bg-gradient-to-r from-violet-500/5 via-primary/5 to-cyan-500/5">
           <div>
             <h3 id={`attempts-title-${quiz.id}`} className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -257,7 +257,7 @@ export function InteractiveQuizCard({
 
   const previewPanel = previewOpen && typeof document !== 'undefined' ? createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onClick={() => setPreviewOpen(false)} role="dialog" aria-modal="true" aria-labelledby={`quiz-preview-title-${quiz.id}`}>
-      <div className="max-h-[min(760px,92vh)] w-full max-w-2xl overflow-hidden rounded-[28px] border border-violet-200 bg-white shadow-2xl dark:border-violet-500/20 dark:bg-slate-950" onClick={(event) => event.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
+      <div className="uipro-glass-surface max-h-[min(760px,92vh)] w-full max-w-2xl overflow-hidden rounded-[28px] border border-violet-200 dark:border-violet-500/20 shadow-2xl" onClick={(event) => event.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
         <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-violet-50 to-indigo-50 px-5 py-4 dark:border-slate-800 dark:from-violet-950/40 dark:to-indigo-950/30">
           <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-600 dark:text-violet-300">{isAr ? 'معاينة الاختبار' : 'Quiz preview'}</p><h3 id={`quiz-preview-title-${quiz.id}`} className="mt-1 text-lg font-black text-slate-900 dark:text-white">{quiz.title}</h3></div>
           <button type="button" onClick={() => setPreviewOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-white/70 dark:hover:bg-slate-800" aria-label={isAr ? 'إغلاق المعاينة' : 'Close preview'}><X className="h-5 w-5" /></button>

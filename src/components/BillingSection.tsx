@@ -797,34 +797,34 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
           <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
             
             {/* Box 1: Plan Tier */}
-            <div className="rounded-2xl border border-white/10 bg-black/25 backdrop-blur-md p-4 flex flex-col justify-between">
+            <div className="uipro-glass-surface rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">
                   {isAr ? 'الباقة النشطة' : 'Active Plan'}
                 </span>
-                <p className="mt-1 text-base sm:text-lg font-black text-white flex items-center gap-1.5">
+                <p className="mt-1 text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                   {currentIsPremium && <Crown className="w-4 h-4 text-amber-400 shrink-0" />}
                   <span>{currentPlanLabel}</span>
                 </p>
               </div>
-              <p className="mt-2 text-[11px] text-cyan-300 font-bold">
+              <p className="mt-2 text-[11px] text-cyan-800 dark:text-cyan-300 font-bold">
                 {currentIsPremium ? (isAr ? 'مزايا متقدمة مفعّلة' : 'Premium features unlocked') : (isAr ? 'باقة البداية المجانية' : 'Starter tier')}
               </p>
             </div>
 
             {/* Box 2: Expiration / Renewal */}
-            <div className="rounded-2xl border border-white/10 bg-black/25 backdrop-blur-md p-4 flex flex-col justify-between">
+            <div className="uipro-glass-surface rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">
                   {isAr ? 'صلاحية الاشتراك' : 'Validity & Renewal'}
                 </span>
-                <p className="mt-1 text-base sm:text-lg font-black text-white">
+                <p className="mt-1 text-base sm:text-lg font-black text-slate-900 dark:text-white">
                   {membership?.isLifetime || membership?.isFounder
                     ? (isAr ? 'مدى الحياة (VIP) 🚀' : 'Lifetime Access 🚀')
                     : formattedRenewalDate || (isAr ? 'غير محدد' : 'Active / Rolling')}
                 </p>
               </div>
-              <p className="mt-2 text-[11px] text-slate-400 font-bold">
+              <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300 font-bold">
                 {currentIsPremium 
                   ? (isAr ? 'تجديد شهري عند الدفع' : 'Renews via receipt confirmation')
                   : (isAr ? 'حساب دائم بدون انتهاء' : 'Permanent free access')}
@@ -832,18 +832,18 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             </div>
 
             {/* Box 3: AI Quota & Capabilities */}
-            <div className="rounded-2xl border border-white/10 bg-black/25 backdrop-blur-md p-4 flex flex-col justify-between">
+            <div className="uipro-glass-surface rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">
                   {isAr ? 'الذكاء الاصطناعي وكوزمو' : 'AI Capabilities'}
                 </span>
-                <p className="mt-1 text-sm sm:text-base font-black text-emerald-300">
+                <p className="mt-1 text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-300">
                   {currentIsPremium 
                     ? (isAr ? 'توليد لا محدود ومساعد فوري' : 'Unlimited AI Generation')
                     : (isAr ? '3 اختبارات بالـ AI أسبوعياً' : '3 AI Quizzes / Week')}
                 </p>
               </div>
-              <p className="mt-2 text-[11px] text-slate-400 font-bold">
+              <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300 font-bold">
                 {currentIsPremium 
                   ? (isAr ? 'تصدير PDF مفصل وتقارير' : 'Detailed PDF solutions')
                   : (isAr ? 'تصدير PDF عادي' : 'Standard exports')}
@@ -851,12 +851,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             </div>
 
             {/* Box 4: Quick Action */}
-            <div className="rounded-2xl border border-primary/30 bg-primary/10 backdrop-blur-md p-4 flex flex-col justify-between">
+            <div className="uipro-glass-surface rounded-2xl border border-primary/30 p-4 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-black uppercase text-primary-hover tracking-wider">
+                <span className="text-[10px] font-black uppercase text-primary tracking-wider">
                   {isAr ? 'الترقية والتجديد' : 'Plan Upgrade'}
                 </span>
-                <p className="mt-1 text-xs sm:text-sm font-black text-white leading-relaxed">
+                <p className="mt-1 text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-relaxed">
                   {currentIsPremium 
                     ? (isAr ? 'ترقية لمستوى أعلى أو تمديد' : 'Upgrade tier or extend')
                     : (isAr ? 'اختر باقة وفعل حسابك الآن' : 'Choose a plan to upgrade')}
@@ -890,16 +890,16 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         };
 
         return (
-          <div className="w-full bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 border border-indigo-500/30 rounded-3xl p-6 text-white shadow-xl">
+          <div className="uipro-glass-surface w-full border border-indigo-400/50 dark:border-indigo-500/30 rounded-3xl p-6 text-slate-900 dark:text-white shadow-xl">
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-800 dark:text-indigo-300 border border-indigo-500/30">
                 <Gift className="w-6 h-6 animate-pulse" />
               </div>
               <div>
                 <h3 className="font-extrabold text-lg">
                   {isAr ? 'عروض الفترات التجريبية النشطة (مقدمة من الإدارة)' : 'Active Trial Offers'}
                 </h3>
-                <p className="text-xs text-indigo-200/80 mt-0.5">
+                <p className="text-xs text-indigo-800 dark:text-indigo-200 mt-0.5">
                   {isAr ? 'عروض تجريبية مجانية — اختر العرض لطلب تفعيل فوري ومراجعة من الإدارة' : 'Free trial offers — select and submit for activation'}
                 </p>
               </div>
@@ -909,13 +909,13 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
               {activeTrialOffers.map((days) => {
                 const meta = allOffersMeta[days];
                 return (
-                  <div key={days} className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
+                  <div key={days} className="uipro-glass-surface border border-indigo-200/80 dark:border-indigo-800/70 rounded-2xl p-4 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 border border-indigo-500/30">
                         {isAr ? `عرض ${days} يوم` : `${days}-Day Trial`}
                       </span>
-                      <h4 className="font-black text-sm text-white mt-3">{isAr ? meta.titleAr : meta.titleEn}</h4>
-                      <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{isAr ? meta.descAr : meta.descEn}</p>
+                      <h4 className="font-black text-sm text-slate-900 dark:text-white mt-3">{isAr ? meta.titleAr : meta.titleEn}</h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{isAr ? meta.descAr : meta.descEn}</p>
                     </div>
                     <button
                       type="button"
@@ -967,7 +967,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       })()}
 
       {/* 4. PROMO CODE BOX */}
-      <div className="gsap-promo-box max-w-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+      <div className="uipro-glass-surface gsap-promo-box max-w-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
         <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-2 flex items-center gap-1.5">
           <PartyPopper className="w-4 h-4 text-emerald-500" />
           <span>{isAr ? 'لديك كود خصم للباقات؟ (اختياري)' : 'Have a Promo / Discount Code?'}</span>
@@ -1026,11 +1026,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
               <div 
                 key={p.id}
                 onClick={() => setSelectedPlan(p.id)}
-                className={`gsap-plan-card rounded-3xl p-5 sm:p-6 transition-all duration-300 relative cursor-pointer border flex flex-col justify-between ${
-                  isSelected 
-                    ? 'bg-gradient-to-b from-primary/15 via-white/5 to-transparent dark:from-primary/20 dark:via-slate-900/60 border-2 border-primary shadow-2xl scale-[1.02] z-10' 
-                    : 'bg-white/80 dark:bg-slate-900/50 backdrop-blur-md border-slate-200/80 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 shadow-sm'
-                }`}
+                data-selected={isSelected}
+                className={`uipro-glass-plan gsap-plan-card rounded-3xl p-5 sm:p-6 relative cursor-pointer flex flex-col justify-between ${isSelected ? 'scale-[1.02] z-10' : ''}`}
               >
                 <div>
                   {/* Badge */}
@@ -1112,7 +1109,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-4">
         
         {/* Payment Methods Info Box (5 cols) */}
-        <div className="gsap-action-card lg:col-span-5 bg-white dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 p-6 rounded-3xl space-y-5 shadow-sm">
+        <div className="uipro-glass-surface gsap-action-card lg:col-span-5 border border-slate-200/80 dark:border-slate-800 p-6 rounded-3xl space-y-5 shadow-sm">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-black text-primary mb-1">
               <CreditCard className="w-4 h-4" />
@@ -1135,7 +1132,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 <div 
                   key={m.id}
                   onClick={() => setSelectedMethod(m.id)}
-                  className={`border p-4 rounded-2xl transition-all cursor-pointer ${
+                  className={`uipro-glass-surface border p-4 rounded-2xl transition-all cursor-pointer ${
                     activeMethod 
                       ? 'border-primary bg-primary/5 dark:bg-primary/10 shadow-sm' 
                       : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700'
@@ -1148,7 +1145,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                       </div>
                       <div>
                         <h4 className="text-xs font-black text-slate-900 dark:text-slate-100">{m.title}</h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5">{m.subtitle}</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{m.subtitle}</p>
                       </div>
                     </div>
                     <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">

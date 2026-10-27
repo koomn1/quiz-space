@@ -323,17 +323,17 @@ export default function Sidebar({
         {(() => {
           if (activePlanId === 'diamond') {
             return (
-              <div className="bg-gradient-to-br from-[#9b51e0]/10 via-[#ec4899]/5 to-transparent border border-[#9b51e0]/30 p-2 rounded-2xl text-center space-y-0.5 relative overflow-hidden select-none shadow-md shrink-0">
+              <div className="uipro-glass-surface bg-gradient-to-br from-[#9b51e0]/10 via-[#ec4899]/5 to-transparent border border-[#9b51e0]/30 p-2 rounded-2xl text-center space-y-0.5 relative overflow-hidden select-none shadow-md shrink-0">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-[#b175ff]/10 rounded-full blur-xl pointer-events-none" />
                 <div className="flex justify-center gap-1.5 text-lg text-amber-500 animate-pulse mb-0.5">
                   <Gem className="w-4 h-4 text-indigo-400" />
                   <Crown className="w-4 h-4 text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-amber-400 font-extrabold text-[10px]">
+                  <p className="text-amber-800 dark:text-amber-300 font-extrabold text-[10px]">
                     {isAr ? 'الباقة الماسية الفاخرة (القصوى)' : 'Diamond Elite VIP Member'}
                   </p>
-                  <p className="text-[9px] text-slate-400 leading-normal font-bold hidden sm:block mt-0.5">
+                  <p className="text-[9px] text-slate-600 dark:text-slate-300 leading-normal font-bold hidden sm:block mt-0.5">
                     {isAr ? 'نشكرك على ثقتك الغالية وشراكتك في نجاح Quiz Space! ❤️' : 'Thank you for your support and partnership! ❤️'}
                   </p>
                 </div>
@@ -341,14 +341,14 @@ export default function Sidebar({
             );
           } else if (activePlanId === 'gold') {
             return (
-              <div className="bg-gradient-to-br from-[#130b2b]/60 via-[#1b0e3c]/40 to-slate-900 border border-[#b175ff]/15 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
+              <div className="uipro-glass-surface bg-gradient-to-br from-[#130b2b]/60 via-[#1b0e3c]/40 to-slate-900 border border-[#b175ff]/15 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-[#b175ff]/10 rounded-full blur-xl pointer-events-none" />
                 <Crown className="w-4 h-4 mx-auto text-amber-400 animate-pulse" />
                 <div>
-                  <p className="text-white font-black text-[10px] sm:text-xs">
+                  <p className="text-slate-900 dark:text-white font-black text-[10px] sm:text-xs">
                     {isAr ? 'أنت في الباقة الذهبية' : 'Active: Educator Gold'}
                   </p>
-                  <p className="text-[9px] text-slate-400 leading-normal font-medium hidden sm:block mt-0.5">
+                  <p className="text-[9px] text-slate-600 dark:text-slate-300 leading-normal font-medium hidden sm:block mt-0.5">
                     {isAr ? 'اصعد بصلاحياتك لتشمل تصدير excel للمدارس.' : 'Upgrade your tier to export class scores to Excel.'}
                   </p>
                 </div>
@@ -363,14 +363,14 @@ export default function Sidebar({
             );
           } else if (activePlanId === 'silver') {
             return (
-              <div className="bg-gradient-to-br from-[#130b2b]/60 via-[#1b0e3c]/40 to-slate-900 border border-[#b175ff]/15 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
+              <div className="uipro-glass-surface bg-gradient-to-br from-[#130b2b]/60 via-[#1b0e3c]/40 to-slate-900 border border-[#b175ff]/15 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-[#b175ff]/10 rounded-full blur-xl pointer-events-none" />
                 <Medal className="w-4 h-4 mx-auto text-slate-400 animate-pulse" />
                 <div>
-                  <p className="text-white font-black text-[10px] sm:text-xs">
+                  <p className="text-slate-900 dark:text-white font-black text-[10px] sm:text-xs">
                     {isAr ? 'أنت في الباقة الفضية' : 'Active: Student Silver'}
                   </p>
-                  <p className="text-[9px] text-slate-400 leading-normal font-medium hidden sm:block mt-0.5">
+                  <p className="text-[9px] text-slate-600 dark:text-slate-300 leading-normal font-medium hidden sm:block mt-0.5">
                     {isAr ? 'احصل على ميزات طباعة تقارير الإجابات PDF.' : 'Unlock downloading professional PDF analysis.'}
                   </p>
                 </div>
@@ -386,14 +386,14 @@ export default function Sidebar({
           } else {
             // Free / Guest tier
             return (
-              <div className="bg-gradient-to-br from-[#130b2b]/60 via-[#1b0e3c]/40 to-slate-900 border border-[#b175ff]/15 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
+              <div className="uipro-glass-surface bg-gradient-to-br from-[#130b2b]/60 via-[#1b0e3c]/40 to-slate-900 border border-[#b175ff]/15 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-full blur-xl pointer-events-none" />
                 <Crown className="w-4 h-4 mx-auto text-[#b175ff] animate-pulse" />
                 <div>
-                  <p className="text-white font-black text-[10px] sm:text-xs">
+                  <p className="text-slate-900 dark:text-white font-black text-[10px] sm:text-xs">
                     {isAr ? 'الترقية للميزات الكبرى ✨' : 'Unlock Educator Pro ✨'}
                   </p>
-                  <p className="text-[9px] text-slate-400 leading-normal hidden sm:block mt-0.5">
+                  <p className="text-[9px] text-slate-600 dark:text-slate-300 leading-normal hidden sm:block mt-0.5">
                     {isAr ? 'توليد غير محدود بالذكاء الاصطناعي وبدون إعلانات.' : 'Uncaps AI creation features forever.'}
                   </p>
                 </div>

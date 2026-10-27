@@ -159,7 +159,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
       dir={ar ? 'rtl' : 'ltr'}
       aria-label={ar ? 'إشعار معالجة الملفات' : 'Document processing notification'}
     >
-      <div className="pointer-events-auto overflow-hidden rounded-2xl border border-violet-300/60 bg-white/95 shadow-[0_16px_45px_rgba(30,27,75,0.2)] backdrop-blur-xl dark:border-violet-700/50 dark:bg-slate-950/95">
+      <div className="uipro-glass-surface pointer-events-auto overflow-hidden rounded-2xl border border-violet-300/60 dark:border-violet-700/50">
         <div className="flex items-center gap-2.5 p-3">
           <div
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
@@ -179,7 +179,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <strong className="truncate text-xs font-black text-slate-900 dark:text-white">
+              <strong className="truncate text-sm font-black text-slate-900 dark:text-white">
                 {ar ? 'مهمتك محفوظة وتعمل بالخلفية' : 'Your task is saved and running'}
               </strong>
               <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-black ${
@@ -190,7 +190,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
                 {statusText(job.status, ar)}
               </span>
             </div>
-            <p className="mt-1 truncate text-[10px] font-bold text-slate-500 dark:text-slate-400">
+            <p className="mt-1 truncate text-[11px] font-bold text-slate-600 dark:text-slate-300">
               {job.sourceFileName || (ar ? 'ملف مرفوع' : 'Uploaded document')} · {percentage}%
             </p>
             <div
@@ -210,7 +210,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
           <button
             type="button"
             onClick={() => setExpanded((value) => !value)}
-            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:hover:bg-slate-800"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:text-slate-300 dark:hover:bg-slate-800"
             aria-expanded={expanded}
             aria-label={ar ? 'عرض تفاصيل المعالجة' : 'Show processing details'}
           >
@@ -219,7 +219,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
           <button
             type="button"
             onClick={() => dismissJob(job)}
-            className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:hover:bg-slate-800"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:text-slate-300 dark:hover:bg-slate-800"
             aria-label={ar ? 'إخفاء الإشعار نهائياً' : 'Dismiss notification permanently'}
           >
             <X className="h-4 w-4" />

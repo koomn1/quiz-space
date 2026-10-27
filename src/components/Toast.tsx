@@ -28,9 +28,9 @@ export function showToast(type: ToastType, text: string) {
 }
 
 const ICONS: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />,
-  error: <XCircle className="w-5 h-5 text-red-400 shrink-0" />,
-  info: <Info className="w-5 h-5 text-sky-400 shrink-0" />,
+  success: <CheckCircle2 className="w-5 h-5 text-emerald-700 dark:text-emerald-300 shrink-0" />,
+  error: <XCircle className="w-5 h-5 text-red-700 dark:text-red-300 shrink-0" />,
+  info: <Info className="w-5 h-5 text-sky-700 dark:text-sky-300 shrink-0" />,
 };
 
 const BORDER: Record<ToastType, string> = {
@@ -65,20 +65,20 @@ export function ToastHost() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 inset-x-0 z-[999] flex flex-col items-center gap-2 pointer-events-none px-4">
+    <div className="fixed top-[calc(env(safe-area-inset-top)+1rem)] inset-x-0 z-[999] flex flex-col items-center gap-2 pointer-events-none px-4">
       {toasts.map((t) => (
         <div
           key={t.id}
           role={t.type === 'error' ? 'alert' : 'status'}
           aria-live={t.type === 'error' ? 'assertive' : 'polite'}
-          className={`pointer-events-auto w-full max-w-sm flex items-center gap-2.5 px-4 py-3 rounded-xl border ${BORDER[t.type]} bg-slate-950/95 backdrop-blur shadow-xl text-white text-sm font-bold animate-[toast-in_0.2s_ease-out]`}
+          className={`uipro-glass-surface pointer-events-auto w-full max-w-sm flex items-center gap-2.5 px-4 py-3 rounded-xl border ${BORDER[t.type]} text-[var(--lg-text)] text-sm font-bold animate-[toast-in_0.2s_ease-out]`}
         >
           {ICONS[t.type]}
           <span className="flex-1 leading-snug">{t.text}</span>
           <button
             type="button"
             onClick={() => dismiss(t.id)}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-primary/10 hover:text-primary dark:text-slate-300 dark:hover:text-white transition-colors"
             aria-label="Dismiss notification"
           >
             <X className="w-4 h-4" />

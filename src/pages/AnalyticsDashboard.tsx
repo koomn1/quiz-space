@@ -225,9 +225,9 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                   bg: 'bg-purple-500/5 border-purple-500/10'
                 }
               ].map((m) => (
-                <div key={m.label} className="flex items-center justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-950/55 dark:hover:border-indigo-500/50">
+                <div key={m.label} className="uipro-glass-surface flex items-center justify-between rounded-3xl border border-slate-200 p-5 shadow-sm transition-colors hover:border-indigo-300 dark:border-slate-800 dark:hover:border-indigo-500/50">
                   <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">{m.label}</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block">{m.label}</span>
                     <span className="text-xl font-black text-slate-800 dark:text-white font-mono block">{m.val}</span>
                   </div>
                   <div className={`p-3 rounded-xl border flex items-center justify-center shrink-0 ${m.bg}`}>
@@ -253,13 +253,13 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
             {/* CHARTS CONTAINER */}
             {totalQuizzesSolved === 0 ? (
-              <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-[32px] border border-slate-250/60 dark:border-slate-850 flex flex-col items-center justify-center space-y-4">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-450">
+              <div className="uipro-glass-surface text-center py-20 rounded-[32px] border border-slate-250/60 dark:border-slate-850 flex flex-col items-center justify-center space-y-4">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300">
                   <GraduationCap className="w-8 h-8" />
                 </div>
                 <div className="space-y-2">
                   <h4 className="font-bold text-slate-700 dark:text-slate-200">{isAr ? 'لا توجد اختبارات محلولة بعد' : 'No Study Records Found'}</h4>
-                  <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium max-w-sm mx-auto leading-relaxed">
                     {isAr ? 'قم بحل أي اختبار من الصفحة الرئيسية لتبدأ إحصاءاتك بالظهور والتحليل التفصيلي هنا!' : 'Solve any science quiz from the exploration catalog to initiate your intelligence charts here.'}
                   </p>
                 </div>
@@ -268,7 +268,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
                 {/* Score progress over time Line Chart */}
-                <div className="lg:col-span-8 bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
+                <div className="uipro-glass-surface lg:col-span-8 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
                     <TrendingUp className="w-4.5 h-4.5 text-primary" />
                     <span>{isAr ? 'منحنى التطور المعرفي الأكاديمي' : 'Cognitive Growth Curve'}</span>
@@ -308,7 +308,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 </div>
 
                 {/* Score Range Distribution Bar Chart */}
-                <div className="lg:col-span-4 bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
+                <div className="uipro-glass-surface lg:col-span-4 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
                     <Activity className="w-4.5 h-4.5 text-indigo-500" />
                     <span>{isAr ? 'توزيع درجات الإجابات' : 'Result Category Ratios'}</span>
@@ -335,7 +335,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
             {/* SOLVING LOG TABLE */}
             {totalQuizzesSolved > 0 && (
-              <div className="bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
+              <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'سجل المحاولات والأداء التفصيلي 📖' : 'Study Attempt History 📖'}</h3>
                   <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{totalQuizzesSolved} {isAr ? 'محاولات' : 'Attempts'}</span>
@@ -446,9 +446,9 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                   bg: 'bg-emerald-500/5 border-emerald-500/10'
                 }
               ].map((m) => (
-                <div key={m.label} className="flex items-center justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-950/55 dark:hover:border-indigo-500/50">
+                <div key={m.label} className="uipro-glass-surface flex items-center justify-between rounded-3xl border border-slate-200 p-5 shadow-sm transition-colors hover:border-indigo-300 dark:border-slate-800 dark:hover:border-indigo-500/50">
                   <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">{m.label}</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block">{m.label}</span>
                     <span className="text-xl font-black text-slate-800 dark:text-white font-mono block">{m.val}</span>
                   </div>
                   <div className={`p-3 rounded-xl border flex items-center justify-center shrink-0 ${m.bg}`}>
@@ -458,14 +458,14 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               ))}
             </div>
 
-            {myCreatedQuizzes.length === 0 ? (
-              <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-[32px] border border-slate-250/60 dark:border-slate-850 flex flex-col items-center justify-center space-y-4">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-450">
+              {myCreatedQuizzes.length === 0 ? (
+              <div className="uipro-glass-surface text-center py-20 rounded-[32px] border border-slate-250/60 dark:border-slate-850 flex flex-col items-center justify-center space-y-4">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300">
                   <BookOpen className="w-8 h-8" />
                 </div>
                 <div className="space-y-2">
                   <h4 className="font-bold text-slate-700 dark:text-slate-200">{isAr ? 'لم تقم بتأليف اختبارات بعد' : 'No Created Quizzes'}</h4>
-                  <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-medium max-w-sm mx-auto leading-relaxed">
                     {isAr ? 'أنت لست ناشراً بعد. يمكنك استخدام صفحة إنشاء اختبار لتصميم اختبارات كوزمو الخاصة بك ومشاركتها مع الطلاب!' : 'Author dynamic quizzes inside the Creator workspace to populate student interaction logs and earn premium payout.'}
                   </p>
                 </div>
@@ -474,7 +474,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
                 {/* Creator Quiz Performance Plays (Bar) */}
-                <div className="lg:col-span-7 bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
+                <div className="uipro-glass-surface lg:col-span-7 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
                     <Users className="w-4.5 h-4.5 text-primary" />
                     <span>{isAr ? 'معدل لعب الطلاب لكل اختبار' : 'Quiz Interactive Engagement'}</span>
@@ -496,7 +496,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 </div>
 
                 {/* Creator Category Breakdown (Pie) */}
-                <div className="lg:col-span-5 bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
+                <div className="uipro-glass-surface lg:col-span-5 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
                     <BarChart3 className="w-4.5 h-4.5 text-purple-500" />
                     <span>{isAr ? 'توزيع الاختبارات حسب الفئات' : 'Category Authored Ratios'}</span>
@@ -536,7 +536,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
             )}
 
             {myCreatedQuizzes.length > 0 && (
-              <section className="space-y-5 rounded-[28px] border border-indigo-200/80 bg-gradient-to-br from-indigo-50/80 via-white to-violet-50/70 p-5 shadow-sm dark:border-indigo-500/20 dark:from-indigo-950/40 dark:via-slate-950/60 dark:to-violet-950/30 sm:p-6">
+              <section className="uipro-glass-surface space-y-5 rounded-[28px] border border-indigo-200/80 p-5 shadow-sm dark:border-indigo-500/20 sm:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-300"><Target className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">{isAr ? 'قراءة المدرّس' : 'Teacher intelligence'}</span></div>
@@ -549,9 +549,9 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                     { label: isAr ? 'متوسط دقة الطلاب' : 'Student accuracy', value: `${teacherAverageAccuracy}%`, icon: <ShieldCheck className="h-4 w-4 text-emerald-500" /> },
                     { label: isAr ? 'إجمالي المحاولات' : 'Total attempts', value: totalTeacherAttempts, icon: <Users className="h-4 w-4 text-violet-500" /> },
                     { label: isAr ? 'يحتاج مراجعة' : 'Needs review', value: hardestTeacherQuiz?.quiz.title || (isAr ? 'لا توجد بيانات' : 'No data'), icon: <Target className="h-4 w-4 text-amber-500" /> },
-                  ].map((item) => <div key={item.label} className="rounded-2xl border border-white/80 bg-white/80 p-4 dark:border-slate-800/80 dark:bg-slate-950/50"><div className="flex items-center gap-2 text-[10px] font-black text-slate-500 dark:text-slate-400">{item.icon}{item.label}</div><p className="mt-2 truncate text-base font-black text-slate-900 dark:text-white" title={String(item.value)}>{item.value}</p></div>)}
+                  ].map((item) => <div key={item.label} className="uipro-glass-surface rounded-2xl border border-white/80 p-4 dark:border-slate-800/80"><div className="flex items-center gap-2 text-[10px] font-black text-slate-600 dark:text-slate-300">{item.icon}{item.label}</div><p className="mt-2 truncate text-base font-black text-slate-900 dark:text-white" title={String(item.value)}>{item.value}</p></div>)}
                 </div>
-                <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-950/60">
+                <div className="uipro-glass-surface overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
                   <table className="w-full min-w-[640px] text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <thead><tr className="border-b border-slate-100 bg-slate-50/80 text-[10px] font-black text-slate-500 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400"><th className="px-4 py-3">{isAr ? 'الاختبار' : 'Quiz'}</th><th className="px-4 py-3">{isAr ? 'طلاب' : 'Students'}</th><th className="px-4 py-3">{isAr ? 'محاولات' : 'Attempts'}</th><th className="px-4 py-3">{isAr ? 'الدقة' : 'Accuracy'}</th><th className="px-4 py-3">{isAr ? 'الاجتياز' : 'Pass rate'}</th></tr></thead>
                     <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700 dark:divide-slate-800 dark:text-slate-200">{teacherQuizPerformance.map((item) => <tr key={item.quiz.id} className="transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20"><td className="max-w-[230px] truncate px-4 py-3" title={item.quiz.title}>{item.quiz.title}</td><td className="px-4 py-3 font-mono">{item.studentCount}</td><td className="px-4 py-3 font-mono">{item.attempts.length}</td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 font-mono ${item.averageAccuracy < 50 ? 'bg-rose-500/10 text-rose-600' : item.averageAccuracy < 80 ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>{item.averageAccuracy}%</span></td><td className="px-4 py-3 font-mono">{item.passRate}%</td></tr>)}</tbody>
@@ -562,7 +562,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
             {/* AUTHORING QUIZZES LOG */}
             {myCreatedQuizzes.length > 0 && (
-              <div className="bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
+              <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'تحليلات الاختبارات المؤلّفة 🏫' : 'Authoring Performance Index 🏫'}</h3>
                   <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{myCreatedQuizzes.length} {isAr ? 'اختبار' : 'Quizzes'}</span>

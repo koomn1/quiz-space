@@ -226,11 +226,11 @@ export function AdminPaymentNotificationToast({
         onMouseLeave={() => {
           if (!isDraggingRef.current) setIsPaused(false);
         }}
-        className="relative overflow-hidden rounded-2xl border-2 border-amber-400/70 bg-gradient-to-br from-slate-950 via-[#181102] to-slate-950 p-4 sm:p-5 text-white shadow-[0_20px_50px_rgba(245,158,11,0.22)] backdrop-blur-2xl transition-shadow hover:shadow-[0_25px_60px_rgba(245,158,11,0.32)] cursor-grab active:cursor-grabbing"
+        className="uipro-glass-surface uipro-glass-surface--amber relative overflow-hidden rounded-2xl border border-amber-500/50 p-4 sm:p-5 text-[var(--lg-text)] cursor-grab active:cursor-grabbing"
       >
         {/* Ambient celestial gold glow */}
-        <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/25 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-amber-400/15 rounded-full blur-xl pointer-events-none" />
+        <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-amber-400/8 rounded-full blur-xl pointer-events-none" />
 
         {/* Top header row */}
         <div className="flex items-start justify-between gap-3 relative z-10">
@@ -245,7 +245,7 @@ export function AdminPaymentNotificationToast({
             {/* Title & Badge */}
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black tracking-wide uppercase bg-amber-500/15 text-amber-900 dark:text-amber-200 border border-amber-400/40">
                   <Sparkles className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '4s' }} />
                   {isAr ? 'طلب دفع واشتراك جديد' : 'New Payment Request'}
                 </span>
@@ -255,7 +255,7 @@ export function AdminPaymentNotificationToast({
                 </span>
               </div>
 
-              <h4 className="text-xs sm:text-sm font-black text-white truncate">
+              <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">
                 {isAr
                   ? `${totalCount} ${totalCount === 1 ? 'طلب دفع معلق يحتاج اعتمادك' : 'طلبات دفع معلقة'}`
                   : `${totalCount} pending payment ${totalCount === 1 ? 'request' : 'requests'}`}
@@ -282,19 +282,19 @@ export function AdminPaymentNotificationToast({
         <div className="mt-3 relative z-10">
           {effectiveAlerts.length === 1 ? (
             /* Single Request Card */
-            <div className="rounded-xl bg-white/[0.06] border border-amber-400/20 p-2.5 sm:p-3 text-xs text-slate-200">
+            <div className="rounded-xl bg-white/60 dark:bg-white/[0.06] border border-amber-400/25 p-2.5 sm:p-3 text-xs text-slate-700 dark:text-slate-200">
               <div className="flex items-center justify-between gap-2">
-                <strong className="truncate font-black text-amber-200 text-sm">
+                  <strong className="truncate font-black text-amber-900 dark:text-amber-200 text-sm">
                   {primaryAlert.name}
                 </strong>
                 {primaryAlert.amount !== undefined && (
-                  <span className="shrink-0 px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-400/30">
+                  <span className="shrink-0 px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-black text-xs border border-emerald-400/30">
                     {primaryAlert.amount} {isAr ? 'ج.م' : 'EGP'}
                   </span>
                 )}
               </div>
-              <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-300 flex-wrap">
-                <span className="font-semibold text-amber-100">{primaryAlert.planName}</span>
+              <div className="mt-1 flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 flex-wrap">
+                <span className="font-semibold text-amber-900 dark:text-amber-100">{primaryAlert.planName}</span>
                 {primaryAlert.paymentMethod && (
                   <span className="text-slate-400 flex items-center gap-1">
                     · {primaryAlert.paymentMethod === 'instapay'
@@ -307,7 +307,7 @@ export function AdminPaymentNotificationToast({
                   </span>
                 )}
                 {primaryAlert.email && (
-                  <span className="text-slate-500 truncate max-w-[140px] text-[10px]">
+                  <span className="text-slate-600 dark:text-slate-400 truncate max-w-[140px] text-[11px]">
                     ({primaryAlert.email})
                   </span>
                 )}
@@ -320,18 +320,18 @@ export function AdminPaymentNotificationToast({
                 {(isExpanded ? effectiveAlerts : effectiveAlerts.slice(0, 2)).map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-xl bg-white/[0.06] border border-white/5 p-2 text-[11px] text-slate-200 flex items-center justify-between gap-2 hover:bg-white/[0.09] transition-colors"
+                    className="rounded-xl bg-white/60 dark:bg-white/[0.06] border border-amber-200/50 dark:border-white/10 p-2 text-xs text-slate-700 dark:text-slate-200 flex items-center justify-between gap-2 hover:bg-white/80 dark:hover:bg-white/[0.09] transition-colors"
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <strong className="truncate font-bold text-amber-200">{item.name}</strong>
+                        <strong className="truncate font-bold text-amber-900 dark:text-amber-200">{item.name}</strong>
                         {item.amount !== undefined && (
-                          <span className="text-emerald-300 font-black text-[10px]">
+                          <span className="text-emerald-800 dark:text-emerald-300 font-black text-[11px]">
                             {item.amount} {isAr ? 'ج.م' : 'EGP'}
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate">
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 truncate">
                         {item.planName}
                         {item.paymentMethod && ` · ${item.paymentMethod}`}
                       </div>
@@ -343,7 +343,7 @@ export function AdminPaymentNotificationToast({
                           e.stopPropagation();
                           onDismissAlert(item.id);
                         }}
-                        className="shrink-0 text-slate-400 hover:text-white p-1 rounded-md hover:bg-white/10"
+                        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-slate-600 hover:text-slate-900 hover:bg-amber-500/10 dark:text-slate-300 dark:hover:text-white"
                         aria-label={isAr ? 'إخفاء هذا الطلب' : 'Hide request'}
                       >
                         ×
@@ -360,7 +360,7 @@ export function AdminPaymentNotificationToast({
                     e.stopPropagation();
                     setIsExpanded(!isExpanded);
                   }}
-                  className="w-full py-1 text-[10px] font-bold text-amber-400 hover:text-amber-300 flex items-center justify-center gap-1 transition-colors"
+                  className="w-full min-h-11 py-1 text-xs font-bold text-amber-800 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-200 flex items-center justify-center gap-1 transition-colors"
                 >
                   {isExpanded
                     ? (isAr ? 'عرض أقل' : 'Show less')
@@ -374,7 +374,7 @@ export function AdminPaymentNotificationToast({
 
         {/* Action Controls & Swipe Helper */}
         <div className="mt-3.5 pt-3 border-t border-amber-400/20 flex items-center justify-between gap-2 relative z-10">
-          <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300">
             <MoveHorizontal className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
             <span>{isAr ? 'اسحب لأي جانب للإغلاق' : 'Swipe to dismiss'}</span>
           </div>
@@ -386,7 +386,7 @@ export function AdminPaymentNotificationToast({
               handleDismiss('fade');
               onNavigateToPayments();
             }}
-            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-amber-500/30 active:scale-95"
+            className="min-h-11 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-amber-500/30 active:scale-95"
           >
             <span>{isAr ? 'مراجعة وتفعيل الطلب' : 'Review & Activate'}</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
