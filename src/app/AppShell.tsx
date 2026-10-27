@@ -138,7 +138,7 @@ export default function AppShell(props: AppShellProps) {
         <div className={`absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none ${isCosmoTab ? 'hidden' : ''}`} />
 
         {/* Padding applied here to clear the fixed header for all banners and main content */}
-        <div className={`${isCosmoTab ? 'h-[calc(100dvh-3.5rem)] pt-14 sm:h-[calc(100dvh-4rem)] sm:pt-16 overflow-hidden flex-1 min-h-0' : (showAppHeader ? 'pt-20 sm:pt-24 md:pt-28' : 'pt-0')} flex flex-col w-full relative z-10`}>
+        <div className={`${isCosmoTab ? 'h-[calc(100dvh-3.5rem)] pt-14 sm:h-[calc(100dvh-4rem)] sm:pt-16 overflow-hidden flex-1 min-h-0' : (showAppHeader ? 'pt-16 sm:pt-20 md:pt-24' : 'pt-0')} flex flex-col w-full relative z-10`}>
           {showQuotaWarning && localStorage.getItem('firebase_quota_exceeded_dismissed') !== 'true' && (
             <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-3 text-amber-700 dark:text-amber-300 font-sans z-30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
               <div className="flex items-center gap-2 max-w-4xl" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>

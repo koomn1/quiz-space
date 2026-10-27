@@ -1176,7 +1176,8 @@ body {
 .liquid-header__bar {
   max-width: 1440px;
   margin: 0 auto;
-  min-height: 4.1rem;
+  height: clamp(4rem, calc(3.75rem + 1vw), 4.75rem);
+  min-height: clamp(4rem, calc(3.75rem + 1vw), 4.75rem);
   border: 1px solid var(--app-border) !important;
   border-radius: 1.35rem !important;
   background: var(--app-surface) !important;
@@ -1515,7 +1516,8 @@ html:not(.dark) .liquid-sidebar div[class~="text-white"] {
   }
 
   .liquid-header__bar {
-    min-height: 3.75rem;
+    height: clamp(3.5rem, calc(3.5rem + 1.2vw), 4.25rem);
+    min-height: clamp(3.5rem, calc(3.5rem + 1.2vw), 4.25rem);
     border-inline: 0 !important;
     border-top: 0 !important;
     border-radius: 0 !important;
