@@ -207,7 +207,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
         aria-label={isAr ? 'فتح مركز الإشعارات' : 'Open notification centre'}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        className="relative flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white/80 p-2.5 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="relative flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/70 dark:border-slate-700/60 dark:bg-slate-900/50 backdrop-blur-md p-2.5 text-slate-700 shadow-xs transition-all hover:bg-white/95 dark:hover:bg-slate-850 dark:text-slate-200 hover:border-primary/40 active:scale-95"
         title={isAr ? 'الإشعارات' : 'Notifications'}
       >
         <Bell className="h-5 w-5" />
@@ -219,7 +219,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
       </button>
 
       {isOpen && (
-        <div role="dialog" aria-label={isAr ? 'مركز الإشعارات' : 'Notification centre'} className={`uipro-glass-surface fixed inset-x-2 top-20 z-[150] max-h-[calc(100dvh-6rem)] w-auto max-w-none overflow-hidden rounded-3xl border border-slate-300/80 p-3 shadow-2xl dark:border-slate-700/80 sm:absolute sm:inset-x-auto sm:top-full sm:mt-3 sm:max-h-[min(42rem,calc(100dvh-7rem))] sm:w-[min(22rem,calc(100vw-2rem))] sm:p-4 ${isAr ? 'sm:left-0 sm:right-auto' : 'sm:right-0 sm:left-auto'} animate-in fade-in zoom-in-95 duration-200`}>
+        <div role="dialog" aria-label={isAr ? 'مركز الإشعارات' : 'Notification centre'} className={`uipro-glass-surface fixed inset-x-2 top-20 z-[150] max-h-[calc(100dvh-6rem)] w-auto max-w-none overflow-hidden rounded-3xl border border-white/60 dark:border-white/10 p-3 shadow-2xl backdrop-blur-2xl sm:absolute sm:inset-x-auto sm:top-full sm:mt-3 sm:max-h-[min(42rem,calc(100dvh-7rem))] sm:w-[min(22rem,calc(100vw-2rem))] sm:p-4 ${isAr ? 'sm:left-0 sm:right-auto' : 'sm:right-0 sm:left-auto'} animate-in fade-in zoom-in-95 duration-200`}>
           <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <Bell className="h-4 w-4 text-violet-600" />

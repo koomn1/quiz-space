@@ -25,7 +25,7 @@ export default function NetworkFailedModal({
         
         
         
-        className="w-full max-w-lg bg-white dark:bg-[#111827] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-indigo-150 dark:border-indigo-950/80 text-right relative overflow-hidden"
+        className="uipro-glass-surface w-full max-w-lg bg-white/90 dark:bg-[#111827]/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-white/60 dark:border-white/10 text-right relative overflow-hidden"
         dir={isAr ? 'rtl' : 'ltr'}
         style={{ textAlign: isAr ? 'right' : 'left' }}
       >

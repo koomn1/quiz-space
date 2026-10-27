@@ -71,7 +71,7 @@ export function ToastHost() {
           key={t.id}
           role={t.type === 'error' ? 'alert' : 'status'}
           aria-live={t.type === 'error' ? 'assertive' : 'polite'}
-          className={`uipro-glass-surface pointer-events-auto w-full max-w-sm flex items-center gap-2.5 px-4 py-3 rounded-xl border ${BORDER[t.type]} text-[var(--lg-text)] text-sm font-bold animate-[toast-in_0.2s_ease-out]`}
+          className={`uipro-glass-surface pointer-events-auto w-full max-w-sm flex items-center gap-2.5 px-4 py-3 rounded-xl border ${BORDER[t.type]} text-[var(--lg-text)] text-sm font-bold shadow-xl backdrop-blur-2xl animate-[toast-in_0.2s_ease-out]`}
         >
           {ICONS[t.type]}
           <span className="flex-1 leading-snug">{t.text}</span>

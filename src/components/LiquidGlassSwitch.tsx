@@ -39,22 +39,22 @@ export function LiquidGlassSwitch({
         onClick={() => onChange(!checked)}
         className={`
           ${currentSize.width} ${currentSize.height}
-          relative flex items-center rounded-full border-2 p-1 outline-none transition-colors duration-200
-          focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white
+          relative flex items-center rounded-full border p-1 outline-none transition-all duration-300 backdrop-blur-md shadow-inner
+          focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white
           dark:focus-visible:ring-offset-slate-950
-          ${disabled ? 'cursor-not-allowed opacity-55' : 'cursor-pointer'}
+          ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:brightness-105 active:scale-95'}
           ${checked
-            ? 'border-violet-500 bg-violet-100 dark:border-violet-400 dark:bg-violet-950/50'
-            : 'border-slate-300 bg-slate-100 dark:border-slate-700 dark:bg-slate-800'}
+            ? 'border-primary/40 bg-gradient-to-r from-primary/25 to-primary-hover/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1),0_2px_8px_rgba(124,58,237,0.25)]'
+            : 'border-slate-300/80 bg-slate-200/50 dark:border-slate-700/60 dark:bg-slate-800/40 shadow-inner'}
         `}
       >
         <span
           className={`
             ${currentSize.knob}
-            absolute left-1 z-10 flex items-center justify-center rounded-full border shadow-sm transition-transform duration-200 ease-out
+            absolute left-1 z-10 flex items-center justify-center rounded-full border shadow-md transition-all duration-300 ease-out backdrop-blur-sm
             ${checked
-              ? 'border-violet-500 bg-violet-600 text-white dark:border-violet-300 dark:bg-violet-400 dark:text-slate-950'
-              : 'border-slate-300 bg-white text-slate-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400'}
+              ? 'border-white/40 bg-gradient-to-tr from-primary to-primary-hover text-white shadow-lg shadow-primary/35'
+              : 'border-white/60 bg-white/90 text-slate-500 shadow-sm dark:border-slate-600/50 dark:bg-slate-800/90 dark:text-slate-400'}
           `}
           style={{ transform: `translateX(${checked ? currentSize.translate : 0}px)` }}
         >

@@ -128,10 +128,10 @@ export default function Header({
   const isGuest = !userId || userId.startsWith('user-');
 
   return (
-    <header className="liquid-header fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 bg-white/95 px-0 pb-2 pt-0 backdrop-blur-xl dark:bg-[#020617]/95 sm:pb-3">
+    <header className="liquid-header fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 pointer-events-none">
       <div className="w-full">
         <div
-          className="liquid-header__bar flex min-w-0 items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white/90 dark:bg-slate-950/90 border-b border-slate-100 dark:border-slate-800/80 rounded-b-2xl px-3 sm:px-6 lg:px-10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
+          className="liquid-header__bar pointer-events-auto flex min-w-0 items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white/75 dark:bg-slate-950/75 backdrop-blur-2xl border border-white/60 dark:border-white/10 rounded-2xl px-3 sm:px-6 lg:px-10 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all duration-500"
 
 
 
@@ -183,7 +183,7 @@ export default function Header({
 	                <button
 	                  type="button"
 	                  onClick={() => setTab('profile')}
-	                  className="hidden min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-right shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 sm:flex"
+	                  className="hidden min-h-11 items-center gap-2 rounded-xl border border-slate-200/80 bg-white/75 backdrop-blur-md px-2.5 py-1.5 text-right shadow-xs transition-all hover:bg-white/95 hover:border-primary/40 dark:border-slate-700/60 dark:bg-slate-900/60 dark:hover:bg-slate-800/80 sm:flex"
 	                  aria-label={lang === 'ar' ? 'فتح الملف الشخصي' : 'Open profile'}
 	                >
 	                  {photoURL ? (
@@ -200,7 +200,7 @@ export default function Header({
               {isGuest ? (
                 <button
                   onClick={onLogin}
-                  className="flex h-11 w-11 items-center justify-center sm:w-auto sm:px-3 rounded-xl bg-primary hover:bg-primary-hover text-white font-black text-[10px] sm:text-xs transition-colors cursor-pointer shadow-sm shadow-primary/15"
+                  className="flex h-11 w-11 items-center justify-center sm:w-auto sm:px-3 rounded-xl bg-gradient-to-r from-primary to-primary-hover hover:brightness-110 active:scale-95 text-white font-black text-[10px] sm:text-xs transition-all cursor-pointer shadow-md shadow-primary/20"
                   title={lang === 'ar' ? 'التسجيل / الدخول' : 'Register / Login'}
                 >
                   <LogIn className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
@@ -209,7 +209,7 @@ export default function Header({
               ) : (
                 <button
                   onClick={onLogout}
-                  className="flex h-11 w-11 items-center justify-center sm:w-auto sm:px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/20 text-slate-500 hover:text-red-500 font-bold text-[10px] sm:text-xs transition-colors cursor-pointer border border-transparent hover:border-red-100 dark:hover:border-red-950/30"
+                  className="flex h-11 w-11 items-center justify-center sm:w-auto sm:px-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 backdrop-blur-md hover:bg-red-50/80 dark:hover:bg-red-950/30 text-slate-500 hover:text-red-500 font-bold text-[10px] sm:text-xs transition-all cursor-pointer border border-transparent hover:border-red-200/50 dark:hover:border-red-900/40"
                   title={t.logout}
                 >
                   <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5" />

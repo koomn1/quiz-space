@@ -151,7 +151,7 @@ export default function ShareModal({
         
         
         
-        className="my-auto max-h-[min(720px,90dvh)] w-full max-w-lg overflow-y-auto bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 dark:border-slate-700/80 text-right"
+        className="uipro-glass-surface my-auto max-h-[min(720px,90dvh)] w-full max-w-lg overflow-y-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-white/60 dark:border-white/10 text-right"
         dir={isAr ? 'rtl' : 'ltr'}
       >
         {/* Header */}

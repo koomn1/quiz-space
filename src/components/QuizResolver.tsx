@@ -1579,13 +1579,13 @@ export default function QuizResolver({
                   const isCorrect = oIdx === currentQuestion.correctIndex;
                   const showFeedback = isAnswersFrozen;
 
-                  let optClass = 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 border hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50/50 dark:hover:bg-slate-800/40';
+                  let optClass = 'border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/50 backdrop-blur-md border hover:border-primary/40 dark:hover:border-primary/40 text-slate-700 dark:text-slate-200 hover:bg-white/90 dark:hover:bg-slate-800/60 shadow-2xs hover:shadow-sm';
                   
                   if (showFeedback) {
                     if (isCorrect) {
-                      optClass = 'border-emerald-500 bg-emerald-50/60 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-500/60 dark:text-emerald-300 border-2';
+                      optClass = 'border-emerald-500 bg-emerald-50/70 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-500/70 dark:text-emerald-300 border-2 backdrop-blur-md shadow-md shadow-emerald-500/10';
                     } else if (isSelected) {
-                      optClass = 'border-rose-500 bg-rose-50/60 text-rose-800 dark:bg-rose-950/30 dark:border-rose-500/60 dark:text-rose-300 border-2';
+                      optClass = 'border-rose-500 bg-rose-50/70 text-rose-800 dark:bg-rose-950/40 dark:border-rose-500/70 dark:text-rose-300 border-2 backdrop-blur-md shadow-md shadow-rose-500/10';
                     } else {
                       optClass = 'opacity-40 border-slate-100 bg-transparent text-slate-400 dark:border-slate-800 border';
                     }
@@ -1685,7 +1685,7 @@ export default function QuizResolver({
           {/* Action button bar — Fixed to bottom for instant accessibility on mobile and desktop */}
           <div
             style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
-            className="quiz-action-bar fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.4)] transition-all print:hidden sticky bottom-2"
+            className="quiz-action-bar fixed bottom-0 inset-x-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-t border-white/60 dark:border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.35)] transition-all print:hidden sticky bottom-2"
           >
             <div className="mx-auto max-w-3xl px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">

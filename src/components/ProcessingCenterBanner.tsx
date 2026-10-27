@@ -159,7 +159,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
       dir={ar ? 'rtl' : 'ltr'}
       aria-label={ar ? 'إشعار معالجة الملفات' : 'Document processing notification'}
     >
-      <div className="uipro-glass-surface pointer-events-auto overflow-hidden rounded-2xl border border-violet-300/60 dark:border-violet-700/50">
+      <div className="uipro-glass-surface pointer-events-auto overflow-hidden rounded-2xl border border-white/60 dark:border-white/10 shadow-xl backdrop-blur-2xl">
         <div className="flex items-center gap-2.5 p-3">
           <div
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${

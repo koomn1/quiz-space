@@ -62,7 +62,7 @@ function DeleteQuizConfirmDialog({ isAr, onCancel, onConfirm }: DeleteQuizConfir
       }}
     >
       <div
-        className="my-auto max-h-[min(640px,90dvh)] w-full max-w-sm overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 text-right shadow-xl dark:border-slate-700 dark:bg-slate-800 sm:w-96 animate-in zoom-in-95 duration-200"
+        className="uipro-glass-surface my-auto max-h-[min(640px,90dvh)] w-full max-w-sm overflow-y-auto rounded-3xl border border-white/40 dark:border-white/10 p-6 text-right shadow-2xl backdrop-blur-2xl sm:w-96 animate-in zoom-in-95 duration-200"
         dir={isAr ? 'rtl' : 'ltr'}
         role="dialog"
         aria-modal="true"
@@ -505,7 +505,7 @@ export default function LandingPage({
               placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900 ps-12 pe-10 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-xs"
+              className="w-full bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl ps-12 pe-10 py-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white/95 dark:focus:bg-slate-900/90 transition-all shadow-xs hover:border-slate-300 dark:hover:border-slate-600"
             />
             {searchQuery && (
               <button
@@ -520,7 +520,7 @@ export default function LandingPage({
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             {/* Ownership Filter */}
-            <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
+            <div className="flex bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-2xl border border-slate-200/80 dark:border-slate-800/70 shadow-2xs">
               <button
                 onClick={() => setOwnershipFilter('all')}
                 className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
@@ -576,7 +576,7 @@ export default function LandingPage({
         {isLoading ? (
           <QuizCatalogSkeleton lang={lang} />
         ) : filteredQuizzes.length === 0 ? (
-          <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-[32px] p-8 sm:p-12 text-center max-w-xl mx-auto space-y-6 flex flex-col items-center justify-center glow-card">
+          <div className="uipro-glass-surface rounded-[32px] border border-white/60 dark:border-white/10 p-8 sm:p-12 text-center max-w-xl mx-auto space-y-6 flex flex-col items-center justify-center glow-card shadow-xl backdrop-blur-2xl">
             <div className="animate-pulse">
               <ThreeDIcon name="science" className="w-28 h-28 mx-auto drop-shadow-[0_20px_20px_rgba(124,58,237,0.3)] filter brightness-110" />
             </div>

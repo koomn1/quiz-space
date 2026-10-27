@@ -56,8 +56,8 @@ export default function CommandPalette({ isOpen, lang, onOpen, onClose, onNaviga
 
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[12000] flex items-start justify-center bg-slate-950/45 px-4 pt-[12vh] backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div className="uipro-glass-surface w-full max-w-xl overflow-hidden rounded-[1.5rem] border border-violet-200 dark:border-violet-800/50 shadow-2xl shadow-violet-950/25" dir={isAr ? 'rtl' : 'ltr'} role="dialog" aria-modal="true" aria-labelledby="command-palette-title">
+    <div className="fixed inset-0 z-[12000] flex items-start justify-center bg-slate-950/50 px-4 pt-[12vh] backdrop-blur-md" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div className="uipro-glass-surface w-full max-w-xl overflow-hidden rounded-[1.5rem] border border-white/60 dark:border-white/10 shadow-[0_25px_70px_rgba(0,0,0,0.35)] backdrop-blur-2xl" dir={isAr ? 'rtl' : 'ltr'} role="dialog" aria-modal="true" aria-labelledby="command-palette-title">
         <div className="flex items-center gap-3 border-b border-slate-200 px-4 dark:border-slate-800">
           <Search className="h-5 w-5 shrink-0 text-violet-500" aria-hidden="true" />
           <label id="command-palette-title" htmlFor="command-palette-input" className="sr-only">{isAr ? 'البحث في الأوامر' : 'Search commands'}</label>

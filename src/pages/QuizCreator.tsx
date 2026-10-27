@@ -2249,7 +2249,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       {showResumeExtractedDraft && pendingExtractedDraft && (
         <OverlayPortal>
           <div className="fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-md" role="dialog" aria-modal="true" dir={isAr ? 'rtl' : 'ltr'}>
-            <div className="w-full max-w-md rounded-[28px] border border-violet-300/30 bg-white p-6 text-center shadow-2xl dark:border-violet-500/30 dark:bg-slate-900 sm:p-8">
+            <div className="uipro-glass-surface w-full max-w-md rounded-[28px] border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl p-6 text-center shadow-2xl sm:p-8">
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300">
                 <FileText className="h-8 w-8" />
               </div>
@@ -2407,7 +2407,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           </button>
 
           {isModeMenuOpen && (
-            <div role="listbox" className="absolute inset-x-0 top-[calc(100%+0.5rem)] overflow-hidden rounded-2xl border border-violet-500/20 bg-white/95 p-2 shadow-2xl shadow-slate-950/20 backdrop-blur-xl dark:bg-slate-900/95">
+            <div role="listbox" className="uipro-glass-surface absolute inset-x-0 top-[calc(100%+0.5rem)] overflow-hidden rounded-2xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 p-2 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl">
               {([
                 { id: 'manual', label: 'كتابة يدوية', hint: 'أضف الأسئلة والاختيارات بنفسك', icon: Plus },
                 { id: 'ocr', label: 'صورة أو PDF', hint: 'استخرج الأسئلة من ملف أو صورة', icon: Camera },

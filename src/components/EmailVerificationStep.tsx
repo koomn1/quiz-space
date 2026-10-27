@@ -94,7 +94,7 @@ export function EmailVerificationStep({ email, lang = 'ar', onVerified, onBack }
           placeholder="000000"
           aria-invalid={Boolean(error)}
           aria-describedby={error ? 'signup-email-code-error' : 'signup-email-code-help'}
-          className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3.5 text-center font-mono text-2xl font-black tracking-[0.45em] text-slate-900 outline-none transition-colors placeholder:tracking-[0.35em] focus:border-violet-500 focus:ring-4 focus:ring-violet-500/15 dark:border-slate-700 dark:bg-slate-900/60 dark:text-white"
+          className="w-full rounded-2xl border border-slate-300/80 bg-white/70 dark:border-slate-700/60 dark:bg-slate-900/50 backdrop-blur-xl px-4 py-3.5 text-center font-mono text-2xl font-black tracking-[0.45em] text-slate-900 dark:text-white outline-none transition-all placeholder:tracking-[0.35em] focus:border-primary focus:ring-4 focus:ring-primary/20 shadow-inner"
         />
         <p id="signup-email-code-help" className="text-xs text-slate-500 dark:text-slate-400">
           {isAr ? 'لا تشارك هذا الرمز مع أي شخص.' : 'Never share this code with anyone.'}

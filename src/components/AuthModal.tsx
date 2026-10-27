@@ -222,7 +222,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-dialog-title"
-        className="relative my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-white/80 bg-white shadow-[0_30px_100px_-35px_rgba(15,23,42,0.75)] motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200 dark:border-slate-700 dark:bg-slate-950 sm:max-h-[calc(100dvh-3rem)]"
+        className="uipro-glass-surface relative my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-950/85 backdrop-blur-2xl shadow-[0_30px_100px_-35px_rgba(0,0,0,0.65)] motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200 sm:max-h-[calc(100dvh-3rem)]"
         onClick={(event) => event.stopPropagation()}
       >
         <section className="relative hidden w-[42%] shrink-0 overflow-hidden bg-[#0a1022] p-8 text-white lg:flex lg:flex-col lg:justify-between">
@@ -266,7 +266,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
           </div>
         </section>
 
-        <section className="min-w-0 flex-1 bg-white p-5 sm:p-8 dark:bg-slate-950">
+        <section className="min-w-0 flex-1 bg-white/80 dark:bg-slate-950/70 backdrop-blur-xl p-5 sm:p-8">
           <div className="mb-7 flex items-start justify-between gap-4">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-[10px] font-black text-primary dark:border-primary/30 dark:bg-primary/20 dark:text-primary-light">

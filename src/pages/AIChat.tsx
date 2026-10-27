@@ -2762,7 +2762,7 @@ export default function AIChat({
             {/* Composer Capsule */}
             <BorderBeam size="md" colorVariant="colorful" strength={0.65} active={!isAnalyzing} theme={darkMode ? 'dark' : 'light'}>
               <div
-                className="rounded-3xl overflow-hidden shadow-xl transition-all border focus-within:ring-2 focus-within:ring-indigo-500/30"
+                className="rounded-3xl overflow-hidden shadow-2xl transition-all border backdrop-blur-2xl focus-within:ring-2 focus-within:ring-indigo-500/30"
                 style={{ background: theme.SURFACE, borderColor: theme.BORDER }}
               >
                 <textarea
@@ -2800,7 +2800,7 @@ export default function AIChat({
 
                       {showModeSelector && (
                         <div
-                          className="absolute bottom-full mb-2 right-0 w-72 sm:w-80 rounded-2xl p-2.5 shadow-2xl border backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150"
+                          className="uipro-glass-surface absolute bottom-full mb-2 right-0 w-72 sm:w-80 rounded-2xl p-2.5 shadow-2xl border border-white/60 dark:border-white/10 backdrop-blur-2xl z-50 animate-in fade-in zoom-in-95 duration-150"
                           style={{
                             background: theme.IS_DARK ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.98)',
                             borderColor: theme.BORDER,

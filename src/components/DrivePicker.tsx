@@ -204,7 +204,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
             
             
             
-            className="bg-[#0c071e] border border-slate-800 rounded-[28px] shadow-[0_0_40px_rgba(155,81,224,0.15)] w-full max-w-lg p-6 relative overflow-hidden text-start font-sans text-white"
+            className="uipro-glass-surface bg-[#0c071e]/90 backdrop-blur-2xl border border-violet-400/25 rounded-[28px] shadow-[0_0_50px_rgba(155,81,224,0.2)] w-full max-w-lg p-6 relative overflow-hidden text-start font-sans text-white"
             dir={isAr ? 'rtl' : 'ltr'}
           >
             {/* Ambient glows */}
@@ -356,7 +356,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                       <div
                         
                         onClick={() => handleImportFile(f.id, f.name, f.mimeType)}
-                        className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-900 bg-slate-950/40 hover:bg-slate-900/40 hover:border-slate-800 transition-all cursor-pointer group"
+                        className="flex items-center justify-between p-3.5 rounded-2xl border border-white/5 bg-white/[0.03] backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 transition-all cursor-pointer group shadow-xs"
                       >
                         <div className="flex items-center gap-3 overflow-hidden">
                           <div className="p-2.5 bg-slate-900 group-hover:bg-primary/15 rounded-xl text-slate-400 group-hover:text-primary transition-all shrink-0 border border-slate-800/80">
