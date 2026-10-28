@@ -85,56 +85,56 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
   }, { scope: containerRef, dependencies: [isAr, topicsToUse.join('|')] });
 
   return (
-    <div ref={containerRef} className="light-hero relative w-full py-16 sm:py-20 md:py-28 overflow-hidden flex flex-col items-center justify-center rounded-[32px] sm:rounded-[40px] bg-gradient-to-b from-indigo-950/20 via-slate-900/10 to-transparent border border-indigo-500/15 shadow-[0_8px_32px_0_rgba(79,70,229,0.06)] backdrop-blur-xs transition-all duration-300">
+    <div ref={containerRef} className="light-hero relative w-full py-16 sm:py-20 md:py-28 overflow-hidden flex flex-col items-center justify-center rounded-[32px] sm:rounded-[40px] transition-all duration-300">
       
       {/* Dynamic Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e50d_1px,transparent_1px),linear-gradient(to_bottom,#4f46e50d_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_45%,#000_15%,transparent_80%)]" />
+        <div className="light-hero__grid absolute inset-0 bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_45%,#000_15%,transparent_80%)]" />
         
         {/* Glowing Orbs - Diversified colors (Indigo, Emerald, Rose, Amber) */}
-        <div ref={el => { orbsRef.current[0] = el; }} className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-600/25 blur-[120px] mix-blend-screen" />
-        <div ref={el => { orbsRef.current[1] = el; }} className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-500/20 blur-[120px] mix-blend-screen" />
-        <div ref={el => { orbsRef.current[2] = el; }} className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-rose-500/15 blur-[100px] mix-blend-screen" />
-        <div ref={el => { orbsRef.current[3] = el; }} className="absolute bottom-[10%] right-[20%] w-[35vw] h-[35vw] rounded-full bg-amber-500/10 blur-[110px] mix-blend-screen" />
+        <div ref={el => { orbsRef.current[0] = el; }} className="light-hero__orb light-hero__orb--one absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full blur-[120px] mix-blend-screen" />
+        <div ref={el => { orbsRef.current[1] = el; }} className="light-hero__orb light-hero__orb--two absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[120px] mix-blend-screen" />
+        <div ref={el => { orbsRef.current[2] = el; }} className="light-hero__orb light-hero__orb--three absolute top-[20%] left-[20%] w-[40vw] h-[40vw] rounded-full blur-[100px] mix-blend-screen" />
+        <div ref={el => { orbsRef.current[3] = el; }} className="light-hero__orb light-hero__orb--four absolute bottom-[10%] right-[20%] w-[35vw] h-[35vw] rounded-full blur-[110px] mix-blend-screen" />
         
         {/* Floating Educational & Achievement Icons (Removed Stars/Space theme) */}
-        <div ref={el => { iconsRef.current[0] = el; }} className="absolute top-[15%] right-[15%] text-emerald-400/40"><GraduationCap size={56} /></div>
-        <div ref={el => { iconsRef.current[1] = el; }} className="absolute bottom-[20%] left-[10%] text-indigo-400/40"><BookOpen size={72} /></div>
-        <div ref={el => { iconsRef.current[2] = el; }} className="absolute top-[30%] left-[15%] text-rose-400/35"><Brain size={64} /></div>
-        <div ref={el => { iconsRef.current[3] = el; }} className="absolute bottom-[30%] right-[10%] text-amber-400/35"><Trophy size={48} /></div>
-        <div ref={el => { iconsRef.current[4] = el; }} className="absolute top-[10%] left-[40%] text-cyan-400/35"><Target size={40} /></div>
+        <div ref={el => { iconsRef.current[0] = el; }} className="light-hero__icon light-hero__icon--one absolute top-[15%] right-[15%]"><GraduationCap size={56} /></div>
+        <div ref={el => { iconsRef.current[1] = el; }} className="light-hero__icon light-hero__icon--two absolute bottom-[20%] left-[10%]"><BookOpen size={72} /></div>
+        <div ref={el => { iconsRef.current[2] = el; }} className="light-hero__icon light-hero__icon--three absolute top-[30%] left-[15%]"><Brain size={64} /></div>
+        <div ref={el => { iconsRef.current[3] = el; }} className="light-hero__icon light-hero__icon--four absolute bottom-[30%] right-[10%]"><Trophy size={48} /></div>
+        <div ref={el => { iconsRef.current[4] = el; }} className="light-hero__icon light-hero__icon--five absolute top-[10%] left-[40%]"><Target size={40} /></div>
       </div>
 
       <div className="relative z-20 flex flex-col items-center text-center px-6 max-w-6xl w-full">
         <div className="perspective-[1000px] overflow-visible p-4 mb-2">
           <h1 
             ref={headlineRef} 
-            className={`text-[10vw] sm:text-[7vw] md:text-[5rem] leading-[1.1] font-black text-slate-50 dark:text-white font-display ${isAr ? '' : 'tracking-tighter'}`}
-            style={{ opacity: 1, textShadow: '0 10px 30px rgba(2, 6, 23, 0.55)' }}
+            className={`light-hero__title text-[10vw] sm:text-[7vw] md:text-[5rem] leading-[1.1] font-black font-display ${isAr ? '' : 'tracking-tighter'}`}
+            style={{ opacity: 1 }}
           >
             {mainTitle}
           </h1>
         </div>
         
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2.5 min-h-[70px]">
-          <span className="text-2xl md:text-5xl text-slate-300 font-bold drop-shadow-md">
+          <span className="light-hero__muted text-2xl md:text-5xl font-bold drop-shadow-md">
             {isAr ? 'في مجال' : 'IN'}
           </span>
           <div className="flex items-center">
             <span 
               ref={cosmoAITextRef} 
-              className={`text-2xl md:text-5xl text-emerald-300 font-black ${isAr ? "" : "tracking-wide"}`}
+              className={`light-hero__accent text-2xl md:text-5xl font-black ${isAr ? "" : "tracking-wide"}`}
             >
             </span>
-            <span className="ml-1 h-8 w-1 md:h-12 md:w-1.5 bg-emerald-300 motion-reduce:hidden animate-[pulse_0.8s_ease-in-out_infinite]" />
+            <span className="light-hero__accent ml-1 h-8 w-1 md:h-12 md:w-1.5 motion-reduce:hidden animate-[pulse_0.8s_ease-in-out_infinite]" />
           </div>
         </div>
 
         <div ref={btnsRef} className="mt-12 flex flex-col sm:flex-row justify-center items-center gap-6">
           <button
             onClick={onCreateQuizTab}
-            className="group relative min-h-12 rounded-2xl bg-gradient-to-r from-emerald-400 via-emerald-300 to-cyan-300 px-8 py-4 text-lg font-black tracking-wide text-slate-950 shadow-lg shadow-emerald-950/20 transition-transform duration-200 hover:scale-[1.02] overflow-hidden"
+            className="light-hero__primary group relative min-h-12 rounded-2xl px-8 py-4 text-lg font-black tracking-wide shadow-lg transition-transform duration-200 hover:scale-[1.02] overflow-hidden"
           >
             <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
             <span className="relative z-10 flex items-center gap-3">
@@ -144,7 +144,7 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
           </button>
           
           <button
-            className="group min-h-12 rounded-2xl border border-white/25 bg-white/10 px-8 py-4 text-lg font-bold tracking-wide text-white backdrop-blur-sm transition-colors duration-200 hover:border-white/45 hover:bg-white/15"
+            className="light-hero__secondary group min-h-12 rounded-2xl px-8 py-4 text-lg font-bold tracking-wide transition-colors duration-200"
             onClick={() => {
               document.getElementById('quizzes-catalog')?.scrollIntoView({ behavior: 'smooth' });
             }}

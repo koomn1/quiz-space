@@ -64,8 +64,8 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
   ];
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white" dir={isAr ? 'rtl' : 'ltr'}>
-      <section className="relative overflow-hidden light-hero bg-gradient-to-br from-[#061027] via-[#16255c] to-[#3b176c] px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-16">
+    <main className="guest-landing theme-page min-h-screen" dir={isAr ? 'rtl' : 'ltr'}>
+      <section className="guest-landing__hero relative overflow-hidden px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-16">
         <div className="pointer-events-none absolute -right-24 top-0 h-80 w-80 rounded-full bg-cyan-400/20 blur-[120px]" />
         <div className="pointer-events-none absolute -bottom-28 -left-20 h-80 w-80 rounded-full bg-violet-500/30 blur-[120px]" />
 
@@ -75,7 +75,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
             <button
               type="button"
               onClick={onLogin}
-              className="min-h-11 rounded-xl bg-white px-4 py-2 text-sm font-black text-slate-950 shadow-lg transition-transform duration-200 hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="guest-landing__login min-h-11 rounded-xl px-4 py-2 text-sm font-black shadow-lg transition-transform duration-200 hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               {isAr ? 'تسجيل الدخول' : 'Sign in'}
             </button>
@@ -83,13 +83,13 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
 
           <div className="grid items-center gap-12 py-14 lg:grid-cols-[1.05fr_.95fr] lg:py-24">
             <div className="text-center lg:text-right">
-              <p className="mb-5 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-sm">
+              <p className="guest-landing__eyebrow mb-5 inline-flex rounded-full px-4 py-2 text-xs font-bold backdrop-blur-sm">
                 {isAr ? 'مساحة منظمة للتعلم والاختبارات والتقدم' : 'A focused home for learning, quizzes, and progress'}
               </p>
-              <h1 className="text-4xl font-black leading-[1.18] tracking-tight text-white sm:text-6xl">
+              <h1 className="guest-landing__title text-4xl font-black leading-[1.18] tracking-tight sm:text-6xl">
                 {isAr ? 'QuizSpace — كل ما تحتاجه لتجربة تعلم أكثر وضوحاً وتحفيزاً.' : 'QuizSpace — everything you need for a clearer, more motivating learning journey.'}
               </h1>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-slate-100 sm:text-lg lg:mx-0">
+              <p className="guest-landing__copy mx-auto mt-6 max-w-2xl text-base leading-8 sm:text-lg lg:mx-0">
                 {isAr
                   ? 'QuizSpace يجمع الاختبارات، التحديات، والجوائز في تجربة واحدة مصممة للطلاب والمعلمين والمؤسسات.'
                   : 'QuizSpace brings quizzes, challenges, and rewards into one experience for students, educators, and institutions.'}
@@ -98,7 +98,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
                 <button
                   type="button"
                   onClick={onLogin}
-                  className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-[#f2b94b] px-6 py-3 text-sm font-black text-slate-950 shadow-lg shadow-amber-950/20 transition-transform duration-200 hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
+                  className="guest-landing__primary inline-flex min-h-12 items-center gap-2 rounded-2xl px-6 py-3 text-sm font-black shadow-lg transition-transform duration-200 hover:scale-[1.02] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   <span>{isAr ? 'أنشئ حسابك مجاناً' : 'Create a free account'}</span>
                   <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
@@ -106,23 +106,23 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
                 <button
                   type="button"
                   onClick={onExplore}
-                  className="min-h-12 rounded-2xl border border-white/25 bg-white/10 px-6 py-3 text-sm font-bold text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  className="guest-landing__secondary min-h-12 rounded-2xl px-6 py-3 text-sm font-bold backdrop-blur-sm transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   {isAr ? 'استكشف الاختبارات' : 'Explore quizzes'}
                 </button>
               </div>
             </div>
 
-            <div className="relative mx-auto w-full max-w-xl rounded-[28px] border border-white/20 bg-slate-950/45 p-3 shadow-2xl backdrop-blur-md">
+            <div className="guest-landing__preview relative mx-auto w-full max-w-xl rounded-[28px] p-3 shadow-2xl backdrop-blur-md">
               <img
                 src={productAsset('/showcase/home-dashboard.webp')}
                 alt={isAr ? 'لقطة حقيقية من الصفحة الرئيسية لمنصة QuizSpace' : 'Real QuizSpace home page screenshot'}
                 loading="eager"
                 className="aspect-[4/3] w-full rounded-[20px] object-cover object-top"
               />
-              <div className="absolute bottom-7 right-7 rounded-xl border border-white/20 bg-slate-950/75 px-4 py-3 text-right text-xs text-white shadow-xl backdrop-blur-md">
+              <div className="guest-landing__preview-note absolute bottom-7 right-7 rounded-xl px-4 py-3 text-right text-xs shadow-xl backdrop-blur-md">
                 <p className="font-black">{isAr ? 'لوحة واحدة لكل ما يهمك' : 'One dashboard for what matters'}</p>
-                <p className="mt-1 text-slate-200">{isAr ? 'اختبارات، مهام، ومتابعة تقدمك' : 'Quizzes, tasks, and progress tracking'}</p>
+                <p className="guest-landing__preview-muted mt-1">{isAr ? 'اختبارات، مهام، ومتابعة تقدمك' : 'Quizzes, tasks, and progress tracking'}</p>
               </div>
             </div>
           </div>

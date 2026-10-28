@@ -1921,3 +1921,50 @@ html.dark textarea:focus {
   background-color: var(--app-surface-raised, #0f172a);
   color: #ffffff !important;
 }
+
+/* Final theme pass: shared surfaces and the landing hero use the active preset. */
+.light-hero {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--app-surface-strong) 84%, var(--theme-primary) 16%), color-mix(in srgb, var(--app-surface-tint) 82%, var(--theme-gradient-to) 18%));
+  border: 1px solid var(--app-border);
+  box-shadow: 0 14px 40px color-mix(in srgb, var(--theme-primary) 12%, transparent);
+  color: var(--app-text);
+}
+.light-hero__grid { background-image: linear-gradient(to right, color-mix(in srgb, var(--theme-primary) 13%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--theme-primary) 13%, transparent) 1px, transparent 1px); }
+.light-hero__orb--one { background: color-mix(in srgb, var(--theme-gradient-from) 28%, transparent); }
+.light-hero__orb--two { background: color-mix(in srgb, var(--theme-gradient-to) 22%, transparent); }
+.light-hero__orb--three { background: color-mix(in srgb, var(--theme-primary) 16%, transparent); }
+.light-hero__orb--four { background: color-mix(in srgb, var(--theme-gradient-to) 14%, transparent); }
+.light-hero__icon { color: color-mix(in srgb, var(--theme-primary) 46%, transparent); }
+.light-hero__title { color: var(--app-text); text-shadow: 0 8px 26px color-mix(in srgb, var(--theme-primary-dark) 20%, transparent); }
+.light-hero__muted { color: var(--app-text-muted); }
+.light-hero__accent { color: var(--theme-primary); }
+.light-hero__primary { color: #fff; background: linear-gradient(100deg, var(--theme-primary), var(--theme-gradient-to)); box-shadow: 0 12px 26px color-mix(in srgb, var(--theme-primary) 24%, transparent); }
+.light-hero__secondary { color: var(--theme-primary-dark); border: 1px solid var(--app-border-strong); background: color-mix(in srgb, var(--app-surface-strong) 72%, var(--theme-primary) 28%); }
+html.dark .light-hero__secondary { color: var(--app-text); }
+
+.liquid-sidebar { background: var(--app-surface-strong) !important; border-color: var(--app-border) !important; color: var(--app-text) !important; }
+.liquid-sidebar [class*="bg-[#0a0518]"], .liquid-sidebar [class*="bg-[#130b2b]"], .liquid-sidebar [class*="bg-[#1b0e3c]"] { background: var(--app-surface) !important; }
+.liquid-sidebar [class*="text-slate-200"], .liquid-sidebar [class*="text-white"] { color: var(--app-text) !important; }
+.liquid-header__theme-toggle { background: var(--app-surface-raised) !important; border-color: var(--app-border) !important; color: var(--app-text) !important; }
+
+@media (max-width: 768px) {
+  .light-hero { border-radius: 1.75rem; }
+}
+
+.guest-landing__hero {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--app-surface-strong) 82%, var(--theme-primary) 18%), color-mix(in srgb, var(--app-surface-tint) 78%, var(--theme-gradient-to) 22%));
+  color: var(--app-text);
+}
+.guest-landing__hero > div:first-of-type { background: color-mix(in srgb, var(--theme-gradient-to) 18%, transparent); }
+.guest-landing__hero > div:nth-of-type(2) { background: color-mix(in srgb, var(--theme-primary) 22%, transparent); }
+.guest-landing__login { background: var(--app-surface-strong); color: var(--app-text); }
+.guest-landing__eyebrow { border: 1px solid var(--app-border); background: color-mix(in srgb, var(--app-surface-strong) 72%, var(--theme-primary) 28%); color: var(--app-text); }
+.guest-landing__title { color: var(--app-text); }
+.guest-landing__copy { color: var(--app-text-muted); }
+.guest-landing__primary { color: #fff; background: linear-gradient(100deg, var(--theme-primary), var(--theme-gradient-to)); }
+.guest-landing__secondary { border: 1px solid var(--app-border-strong); background: color-mix(in srgb, var(--app-surface-strong) 72%, var(--theme-primary) 28%); color: var(--app-text); }
+.guest-landing__preview { border: 1px solid var(--app-border); background: color-mix(in srgb, var(--app-surface-strong) 78%, var(--theme-primary) 22%); }
+.guest-landing__preview-note { border: 1px solid var(--app-border); background: color-mix(in srgb, var(--app-surface-strong) 88%, var(--theme-primary) 12%); color: var(--app-text); }
+.guest-landing__preview-muted { color: var(--app-text-muted); }
+.guest-landing article { border-color: var(--app-border) !important; background: var(--app-surface) !important; color: var(--app-text); }
+.guest-landing article > div:first-child { background: var(--app-surface-tint) !important; }

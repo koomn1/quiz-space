@@ -1053,7 +1053,7 @@ export default function App() {
               aria-modal="true"
               aria-label={lang === 'ar' ? 'القائمة الرئيسية' : 'Primary navigation'}
               tabIndex={-1}
-              className={`fixed inset-y-0 ${lang === 'ar' ? 'right-0' : 'left-0'} z-[9999] w-64 h-[100dvh] flex flex-col overflow-hidden transform-gpu bg-[#0a0518] border-x border-[#3d1d6d]/60 shadow-2xl`}
+              className={`liquid-sidebar fixed inset-y-0 ${lang === 'ar' ? 'right-0' : 'left-0'} z-[9999] w-64 h-[100dvh] flex flex-col overflow-hidden transform-gpu shadow-2xl`}
               style={{ backfaceVisibility: 'hidden', isolation: 'isolate' }}
             >
               <Sidebar 
