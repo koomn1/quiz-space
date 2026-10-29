@@ -15,6 +15,14 @@
   --color-primary-dark: var(--theme-primary-dark, #1E1B4B);
   --color-gradient-from: var(--theme-gradient-from, #7C3AED);
   --color-gradient-to: var(--theme-gradient-to, #0891B2);
+  --color-secondary: var(--theme-secondary, #22D3EE);
+  --color-theme-canvas: var(--theme-canvas, #0D0A1A);
+  --color-theme-surface: var(--theme-surface, #17112B);
+  --color-theme-surface-strong: var(--theme-surface-strong, #24183D);
+  --color-theme-border: var(--theme-border, rgba(167,139,250,.24));
+  --color-theme-text: var(--theme-text, #F7F3FF);
+  --color-theme-muted: var(--theme-muted, #B9AED1);
+  --color-theme-glow: var(--theme-glow, rgba(139,92,246,.22));
 
   /* Cosmo AI Design System Tokens */
   --color-cosmo-canvas: #070913;
@@ -76,14 +84,22 @@
 
 html, body {
   font-family: var(--font-sans);
-  background-color: #FAF5FF;
+  background-color: var(--color-theme-canvas);
   direction: rtl;
-  color: #1E1B4B;
+  color: var(--color-theme-text);
 }
 
 html.dark, body.dark {
-  background-color: #020617;
-  color: #F8FAFC;
+  background-color: var(--color-theme-canvas);
+  color: var(--color-theme-text);
+}
+
+body {
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 32%),
+    radial-gradient(circle at 92% 12%, color-mix(in srgb, var(--color-secondary) 11%, transparent), transparent 28%);
+  background-attachment: fixed;
 }
 
 button {
@@ -171,35 +187,35 @@ a {
 
 /* Redesign Modern Utility Classes */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--color-theme-surface) 86%, transparent);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-theme-border);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--color-theme-canvas) 16%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--color-secondary) 8%, transparent);
 }
 
 .dark .glass-panel {
-  background: rgba(15, 23, 42, 0.65);
+  background: color-mix(in srgb, var(--color-theme-surface) 88%, transparent);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-theme-border);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--color-theme-canvas) 38%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--color-secondary) 10%, transparent);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.7);
+  background: color-mix(in srgb, var(--color-theme-surface) 92%, transparent);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--color-theme-border);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-theme-canvas) 14%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--color-secondary) 8%, transparent);
 }
 
 .dark .glass-card {
-  background: rgba(30, 41, 59, 0.5);
+  background: color-mix(in srgb, var(--color-theme-surface) 90%, transparent);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-theme-border);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-theme-canvas) 42%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--color-secondary) 10%, transparent);
 }
 
 .glass-panel::before, .glass-card::before {
@@ -209,7 +225,7 @@ a {
   border-radius: inherit;
   background: radial-gradient(
     300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(124, 58, 237, 0.08),
+    color-mix(in srgb, var(--color-primary) 10%, transparent),
     transparent 40%
   );
   opacity: 0;
@@ -221,7 +237,7 @@ a {
 .dark .glass-panel::before, .dark .glass-card::before {
   background: radial-gradient(
     300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(205, 252, 138, 0.15),
+    color-mix(in srgb, var(--color-secondary) 14%, transparent),
     transparent 40%
   );
 }
@@ -560,12 +576,12 @@ body,
 
 html {
   min-height: 100%;
-  background: var(--app-background, #f8fafc);
+  background: var(--app-page-bg, var(--theme-canvas, #f8fafc));
   color-scheme: light;
 }
 
 html.dark {
-  background: #020617;
+  background: var(--app-page-bg, var(--theme-canvas, #020617));
   color-scheme: dark;
 }
 
@@ -646,7 +662,7 @@ svg {
 }
 
 .dark body {
-  background: #020617;
+  background: var(--app-page-bg, var(--theme-canvas, #020617));
 }
 
 /* Premium Glassmorphic and Cosmic hover effects */
@@ -1096,57 +1112,57 @@ html:not(.dark) .light-readable-ui .light-dark-card [class~="text-indigo-400"] {
    explicit on-surface tokens so glass never reduces readability.
    ======================================================================== */
 :root {
-  --lg-bg: #faf5ff;
-  --lg-bg-deep: #f3e8ff;
-  --lg-surface: rgba(255, 255, 255, 0.78);
-  --lg-surface-strong: rgba(255, 255, 255, 0.92);
-  --lg-surface-muted: rgba(235, 242, 249, 0.76);
-  --lg-border: rgba(88, 111, 140, 0.18);
-  --lg-border-strong: rgba(88, 111, 140, 0.28);
-  --lg-text: #10233f;
-  --lg-text-muted: #52657e;
-  --lg-accent: var(--theme-primary, #7c3aed);
-  --lg-accent-soft: color-mix(in srgb, var(--theme-primary, #7c3aed) 16%, transparent);
-  --lg-secondary: #0891b2;
+  --lg-bg: var(--theme-canvas, #f5f7fb);
+  --lg-bg-deep: var(--theme-surface-strong, #eef2ff);
+  --lg-surface: color-mix(in srgb, var(--theme-surface, #ffffff) 90%, transparent);
+  --lg-surface-strong: var(--theme-surface, #ffffff);
+  --lg-surface-muted: color-mix(in srgb, var(--theme-surface-strong, #eef2ff) 76%, transparent);
+  --lg-border: var(--theme-border, rgba(88, 111, 140, 0.18));
+  --lg-border-strong: color-mix(in srgb, var(--theme-border, rgba(88, 111, 140, 0.18)) 150%, var(--theme-primary, #4f46e5));
+  --lg-text: var(--theme-text, #17233b);
+  --lg-text-muted: var(--theme-muted, #5e6f87);
+  --lg-accent: var(--theme-primary, #4f46e5);
+  --lg-accent-soft: color-mix(in srgb, var(--theme-primary-light, #eef2ff) 88%, transparent);
+  --lg-secondary: var(--theme-secondary, #0891b2);
   --lg-danger: #c84b5b;
   --lg-shadow: 0 18px 55px rgba(47, 76, 112, 0.10);
   --lg-shadow-soft: 0 8px 26px rgba(47, 76, 112, 0.08);
-  --app-page-bg: color-mix(in srgb, #faf5ff 94%, var(--theme-primary, #7c3aed) 6%);
-  --app-surface: color-mix(in srgb, #ffffff 95%, var(--theme-primary, #7c3aed) 5%);
-  --app-surface-strong: color-mix(in srgb, #ffffff 98%, var(--theme-primary, #7c3aed) 2%);
-  --app-surface-raised: #ffffff;
-  --app-surface-tint: color-mix(in srgb, #f5f3ff 86%, var(--theme-primary, #7c3aed) 14%);
-  --app-border: color-mix(in srgb, #8ca4c0 24%, var(--theme-primary, #7c3aed) 16%);
-  --app-border-strong: color-mix(in srgb, #6e89aa 32%, var(--theme-primary, #7c3aed) 24%);
-  --app-text: #17233b;
-  --app-text-muted: #5e6f87;
+  --app-page-bg: var(--theme-canvas, #f5f7fb);
+  --app-surface: var(--theme-surface, #ffffff);
+  --app-surface-strong: var(--theme-surface-strong, #eef2ff);
+  --app-surface-raised: var(--theme-surface, #ffffff);
+  --app-surface-tint: color-mix(in srgb, var(--theme-surface-strong, #eef2ff) 78%, var(--theme-primary, #4f46e5) 22%);
+  --app-border: var(--theme-border, rgba(88, 111, 140, 0.18));
+  --app-border-strong: color-mix(in srgb, var(--theme-border, rgba(88, 111, 140, 0.18)) 150%, var(--theme-primary, #4f46e5));
+  --app-text: var(--theme-text, #17233b);
+  --app-text-muted: var(--theme-muted, #5e6f87);
 }
 
 html.dark {
-  --lg-bg: #081321;
-  --lg-bg-deep: #0c1b2d;
-  --lg-surface: rgba(17, 33, 52, 0.72);
-  --lg-surface-strong: rgba(20, 39, 61, 0.9);
-  --lg-surface-muted: rgba(19, 37, 58, 0.62);
-  --lg-border: rgba(173, 201, 232, 0.16);
-  --lg-border-strong: rgba(173, 201, 232, 0.28);
-  --lg-text: #e8f1fb;
-  --lg-text-muted: #aabbd0;
-  --lg-accent: var(--theme-primary-light, var(--theme-primary, #a78bfa));
-  --lg-accent-soft: color-mix(in srgb, var(--theme-primary, #a78bfa) 20%, transparent);
-  --lg-secondary: #67e8f9;
+  --lg-bg: color-mix(in srgb, var(--theme-canvas, #0d0a1a) 72%, #050811 28%);
+  --lg-bg-deep: color-mix(in srgb, var(--theme-surface-strong, #24183d) 72%, #050811 28%);
+  --lg-surface: color-mix(in srgb, var(--theme-surface, #17112b) 84%, #070b16 16%);
+  --lg-surface-strong: color-mix(in srgb, var(--theme-surface-strong, #24183d) 84%, #070b16 16%);
+  --lg-surface-muted: color-mix(in srgb, var(--theme-surface, #17112b) 65%, #070b16 35%);
+  --lg-border: color-mix(in srgb, var(--theme-border, rgba(167,139,250,.24)) 130%, var(--theme-secondary, #22d3ee));
+  --lg-border-strong: color-mix(in srgb, var(--theme-border, rgba(167,139,250,.24)) 180%, var(--theme-secondary, #22d3ee));
+  --lg-text: var(--theme-text, #f7f3ff);
+  --lg-text-muted: var(--theme-muted, #b9aed1);
+  --lg-accent: var(--theme-primary, #a78bfa);
+  --lg-accent-soft: color-mix(in srgb, var(--theme-primary, #a78bfa) 22%, transparent);
+  --lg-secondary: var(--theme-secondary, #67e8f9);
   --lg-danger: #ff9aa5;
   --lg-shadow: 0 20px 60px rgba(0, 0, 0, 0.26);
   --lg-shadow-soft: 0 10px 32px rgba(0, 0, 0, 0.18);
-  --app-page-bg: color-mix(in srgb, #081321 91%, var(--theme-primary, #a78bfa) 9%);
-  --app-surface: color-mix(in srgb, #122238 86%, var(--theme-primary, #a78bfa) 14%);
-  --app-surface-strong: color-mix(in srgb, #142940 91%, var(--theme-primary, #a78bfa) 9%);
-  --app-surface-raised: #172d46;
-  --app-surface-tint: color-mix(in srgb, #1b3552 78%, var(--theme-primary, #a78bfa) 22%);
-  --app-border: color-mix(in srgb, #a9c4e5 20%, var(--theme-primary, #a78bfa) 18%);
-  --app-border-strong: color-mix(in srgb, #b7d0ef 30%, var(--theme-primary, #a78bfa) 24%);
-  --app-text: #edf5ff;
-  --app-text-muted: #afc0d5;
+  --app-page-bg: var(--lg-bg);
+  --app-surface: var(--lg-surface);
+  --app-surface-strong: var(--lg-surface-strong);
+  --app-surface-raised: var(--lg-surface-strong);
+  --app-surface-tint: color-mix(in srgb, var(--lg-surface-strong) 78%, var(--theme-primary, #a78bfa) 22%);
+  --app-border: var(--lg-border);
+  --app-border-strong: var(--lg-border-strong);
+  --app-text: var(--lg-text);
+  --app-text-muted: var(--lg-text-muted);
 }
 
 html,
@@ -1180,15 +1196,15 @@ body {
 
 .light-readable-ui {
   background:
-    radial-gradient(circle at 8% 0%, rgba(116, 164, 255, 0.14), transparent 32rem),
-    radial-gradient(circle at 92% 14%, rgba(8, 145, 178, 0.12), transparent 28rem),
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--theme-primary) 13%, transparent), transparent 32rem),
+    radial-gradient(circle at 92% 14%, color-mix(in srgb, var(--theme-secondary) 12%, transparent), transparent 28rem),
     var(--app-page-bg) !important;
 }
 
 .dark .light-readable-ui {
   background:
-    radial-gradient(circle at 10% 0%, rgba(79, 111, 211, 0.17), transparent 34rem),
-    radial-gradient(circle at 94% 18%, rgba(26, 133, 132, 0.13), transparent 30rem),
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--theme-primary) 16%, transparent), transparent 34rem),
+    radial-gradient(circle at 94% 18%, color-mix(in srgb, var(--theme-secondary) 14%, transparent), transparent 30rem),
     var(--app-page-bg) !important;
 }
 
@@ -1275,7 +1291,7 @@ html:not(.dark) .liquid-sidebar div[class~="text-white"] {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(135deg, rgba(255,255,255,0.24), transparent 34%, rgba(49,91,214,0.035));
+  background: linear-gradient(135deg, rgba(255,255,255,0.24), transparent 34%, color-mix(in srgb, var(--theme-secondary) 5%, transparent));
   z-index: -1;
 }
 
@@ -1283,7 +1299,7 @@ html:not(.dark) .liquid-sidebar div[class~="text-white"] {
 .dark .liquid-glass::after,
 .dark .glass-panel::after,
 .dark .glass-card::after {
-  background: linear-gradient(135deg, rgba(255,255,255,0.07), transparent 36%, rgba(143,174,255,0.05));
+  background: linear-gradient(135deg, rgba(255,255,255,0.07), transparent 36%, color-mix(in srgb, var(--theme-secondary) 7%, transparent));
 }
 
 .liquid-container:hover,

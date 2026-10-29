@@ -60,6 +60,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty('--theme-primary-hover', selected.primaryHover);
     root.style.setProperty('--theme-primary-light', selected.primaryLight);
     root.style.setProperty('--theme-primary-dark', selected.primaryDark);
+    root.style.setProperty('--theme-secondary', selected.secondary);
+    root.style.setProperty('--theme-canvas', selected.canvas);
+    root.style.setProperty('--theme-surface', selected.surface);
+    root.style.setProperty('--theme-surface-strong', selected.surfaceStrong);
+    root.style.setProperty('--theme-border', selected.border);
+    root.style.setProperty('--theme-text', selected.text);
+    root.style.setProperty('--theme-muted', selected.muted);
+    root.style.setProperty('--theme-glow', selected.glow);
     root.style.colorScheme = darkMode ? 'dark' : 'light';
 
     window.localStorage.setItem('quiz_theme', darkMode ? 'dark' : 'light');
