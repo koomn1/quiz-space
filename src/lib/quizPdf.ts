@@ -25,6 +25,8 @@ export interface QuizPdfBranding {
   primaryColor?: string | null;
   studentName?: string | null;
   score?: number | null;
+  /** Answer writing area in PDF points. Clamped to 56–320 for page safety. */
+  essayAnswerHeight?: number | null;
 }
 
 const OPTION_PREFIXES_AR = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح'];
@@ -66,6 +68,12 @@ function getBrandColor(branding?: QuizPdfBranding | null): [number, number, numb
   const value = branding?.primaryColor;
   if (!value || !/^#[0-9a-fA-F]{6}$/.test(value)) return [109, 40, 217]; // #6d28d9
   return [parseInt(value.slice(1, 3), 16), parseInt(value.slice(3, 5), 16), parseInt(value.slice(5, 7), 16)];
+}
+
+function getEssayAnswerHeight(branding?: QuizPdfBranding | null) {
+  const requested = Number(branding?.essayAnswerHeight);
+  if (!Number.isFinite(requested)) return 120;
+  return Math.min(320, Math.max(56, Math.round(requested)));
 }
 
 function addPageHeader(pdf: PdfDocument, pageNumber: number, branding?: QuizPdfBranding | null) {
@@ -194,6 +202,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   };
 
   const brandColor = getBrandColor(branding);
+  const essayAnswerHeight = getEssayAnswerHeight(branding);
   addPageHeader(pdf, pageNumber, branding);
 
   // Institution Banner / Title Header
@@ -317,7 +326,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
 
     let optionHeight = 0;
     if (question.type === 'essay') {
-      optionHeight = 72;
+      optionHeight = essayAnswerHeight + 16;
     } else if (options.length) {
       pdf.setFont('Cairo', 'normal');
       pdf.setFontSize(10);
@@ -402,7 +411,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     if (question.type === 'essay') {
       pdf.setFillColor(248, 250, 252);
       pdf.setDrawColor(203, 213, 225);
-      pdf.roundedRect(MARGIN + 12, y, CONTENT_WIDTH - 24, 56, 6, 6, 'FD');
+      pdf.roundedRect(MARGIN + 12, y, CONTENT_WIDTH - 24, essayAnswerHeight, 6, 6, 'FD');
       pdf.setFont('Cairo', 'normal');
       pdf.setFontSize(9);
       pdf.setTextColor(148, 163, 184);
@@ -412,7 +421,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
         isInputRtl: true,
         isOutputRtl: true,
       });
-      y += 66;
+      y += essayAnswerHeight + 10;
     } else {
       const optionWidth = (CONTENT_WIDTH - 18) / 2;
       const cellTextWidth = optionWidth - 36;
