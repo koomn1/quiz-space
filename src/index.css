@@ -1941,6 +1941,10 @@ html.dark textarea:focus {
 .light-hero__primary { color: #fff; background: linear-gradient(100deg, var(--theme-primary), var(--theme-gradient-to)); box-shadow: 0 12px 26px color-mix(in srgb, var(--theme-primary) 24%, transparent); }
 .light-hero__secondary { color: var(--theme-primary-dark); border: 1px solid var(--app-border-strong); background: color-mix(in srgb, var(--app-surface-strong) 72%, var(--theme-primary) 28%); }
 html.dark .light-hero__secondary { color: var(--app-text); }
+html.dark .light-hero { background: linear-gradient(135deg, color-mix(in srgb, var(--app-page-bg) 78%, var(--theme-primary) 22%), color-mix(in srgb, var(--app-surface-strong) 72%, var(--theme-gradient-to) 28%)); border-color: color-mix(in srgb, var(--theme-primary) 42%, var(--app-border) 58%); }
+html.dark .light-hero__title { color: #ffffff; text-shadow: 0 8px 26px rgba(0, 0, 0, 0.42); }
+html.dark .light-hero__muted { color: color-mix(in srgb, var(--app-text) 72%, var(--theme-gradient-to) 28%); }
+html.dark .light-hero__accent { color: color-mix(in srgb, var(--app-text) 70%, var(--theme-gradient-to) 30%); text-shadow: 0 2px 16px color-mix(in srgb, var(--theme-gradient-to) 48%, transparent); }
 
 .liquid-sidebar { background: var(--app-surface-strong) !important; border-color: var(--app-border) !important; color: var(--app-text) !important; }
 .liquid-sidebar [class*="bg-[#0a0518]"], .liquid-sidebar [class*="bg-[#130b2b]"], .liquid-sidebar [class*="bg-[#1b0e3c]"] { background: var(--app-surface) !important; }
