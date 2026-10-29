@@ -57,16 +57,35 @@ export function InteractiveQuizCard({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pdfSettingsOpen, setPdfSettingsOpen] = useState(false);
   const [essayAnswerHeight, setEssayAnswerHeight] = useState(120);
+  const [pdfTitle, setPdfTitle] = useState(quiz.title);
+  const [pdfDescription, setPdfDescription] = useState(quiz.description || '');
+  const [pdfStudentName, setPdfStudentName] = useState('');
+  const [pdfExamDate, setPdfExamDate] = useState('');
+  const [pdfScore, setPdfScore] = useState('');
 
   const openPdfSettings = () => {
     setExportMenuOpen(false);
+    setPdfTitle(quiz.title);
+    setPdfDescription(quiz.description || '');
+    setPdfStudentName('');
+    setPdfExamDate(new Date().toLocaleDateString(isAr ? 'ar-EG' : 'en-US'));
+    setPdfScore('');
     setPdfSettingsOpen(true);
   };
 
   const downloadPdf = async () => {
     setPdfSettingsOpen(false);
     try {
-      const branding = quiz.creatorName ? { institutionName: quiz.creatorName, essayAnswerHeight } : { institutionName: '', essayAnswerHeight };
+      const parsedScore = pdfScore.trim() === '' ? null : Number(pdfScore);
+      const branding = {
+        institutionName: quiz.creatorName || '',
+        pdfTitle,
+        pdfDescription,
+        studentName: pdfStudentName,
+        examDate: pdfExamDate,
+        score: Number.isFinite(parsedScore) ? parsedScore : null,
+        essayAnswerHeight,
+      };
       const bytes = await createQuizPdfBytes(quiz, branding);
       downloadQuizPdfBytes(bytes, getQuizPdfFileName(quiz, branding));
     } catch (error) {
@@ -141,12 +160,12 @@ export function InteractiveQuizCard({
     const questionsHtml = questions.map((question, index) => {
       const options = Array.isArray(question.options) && question.options.length
         ? `<table class="options-table"><tbody>${question.options.map((option, optionIndex) => `<tr><td class="choice-box">□</td><td class="choice-label">${String.fromCharCode(65 + optionIndex)}.</td><td>${escapeHtml(option)}</td></tr>`).join('')}</tbody></table>`
-        : '<div class="answer-area"><span>إجابة الطالب / Student answer</span></div>';
+        : `<div class="answer-area"></div>`;
       return `<table class="question-table"><tbody><tr><td class="question-number">${index + 1}</td><td><div class="question-text">${escapeHtml(question.text)}</div>${options}</td></tr></tbody></table>`;
     }).join('');
-    const html = `<!doctype html><html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${escapeHtml(quiz.title)}</title><style>
-      *{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#111827;max-width:900px;margin:0 auto;padding:28px;line-height:1.65;background:#fff}header{border-bottom:3px solid #4f46e5;padding-bottom:18px;margin-bottom:18px}h1{font-size:26px;margin:0 0 5px;color:#312e81}p{color:#475569;margin:0 0 18px}.meta{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:16px 0 22px}.meta div{border:1px solid #cbd5e1;border-radius:8px;min-height:42px;padding:8px 10px;font-size:12px;color:#475569}.meta strong{color:#111827;display:block;font-size:10px;margin-bottom:3px}.question-table{width:100%;border-collapse:separate;border-spacing:0;margin:0 0 14px;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;break-inside:avoid}.question-table td{vertical-align:top}.question-number{width:42px;background:#eef2ff;color:#3730a3;font-size:18px;font-weight:bold;text-align:center;padding:14px 8px;border-left:1px solid #cbd5e1}.question-text{font-size:15px;font-weight:bold;padding:13px 14px 8px}.options-table{width:100%;border-collapse:collapse;margin:0 14px 13px;width:calc(100% - 28px);font-size:12px}.options-table td{border:1px solid #e2e8f0;padding:7px 8px}.choice-box{width:26px;text-align:center;font-size:18px}.choice-label{width:28px;color:#4f46e5;font-weight:bold}.answer-area{height:88px;border:1px dashed #94a3b8;border-radius:7px;margin:4px 14px 14px;padding:9px;color:#94a3b8;font-size:11px}.footer-note{margin-top:18px;text-align:center;font-size:10px;color:#94a3b8}@media print{body{padding:0;max-width:none}.question-table{break-inside:avoid}header{margin-top:0}.meta div{min-height:38px}}
-    </style></head><body><header><h1>${escapeHtml(quiz.title)}</h1><p>${escapeHtml(quiz.description || '')}</p></header><section class="meta"><div><strong>اسم الطالب / Student name</strong></div><div><strong>الدرجة / Score</strong></div><div><strong>التاريخ / Date</strong></div></section>${questionsHtml}<p class="footer-note">Quiz Space · ${questions.length} questions</p></body></html>`;
+    const html = `<!doctype html><html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${escapeHtml(pdfTitle)}</title><style>
+      *{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#111827;max-width:900px;margin:0 auto;padding:28px;line-height:1.65;background:#fff}header{border-bottom:3px solid #4f46e5;padding-bottom:18px;margin-bottom:18px}h1{font-size:26px;margin:0 0 5px;color:#312e81}p{color:#475569;margin:0 0 18px}.meta{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:16px 0 22px}.meta div{border:1px solid #cbd5e1;border-radius:8px;min-height:42px;padding:8px 10px;font-size:12px;color:#475569}.meta strong{color:#111827;display:block;font-size:10px;margin-bottom:3px}.meta span{display:block;margin-top:4px}.question-table{width:100%;border-collapse:separate;border-spacing:0;margin:0 0 14px;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;break-inside:avoid}.question-table td{vertical-align:top}.question-number{width:42px;background:#eef2ff;color:#3730a3;font-size:18px;font-weight:bold;text-align:center;padding:14px 8px;border-left:1px solid #cbd5e1}.question-text{font-size:15px;font-weight:bold;padding:13px 14px 8px}.options-table{width:calc(100% - 28px);border-collapse:collapse;margin:0 14px 13px;font-size:12px}.options-table td{border:1px solid #e2e8f0;padding:7px 8px}.choice-box{width:26px;text-align:center;font-size:18px}.choice-label{width:28px;color:#4f46e5;font-weight:bold}.answer-area{height:${essayAnswerHeight}px;border:1px dashed #94a3b8;border-radius:7px;margin:4px 14px 14px;padding:9px}.footer-note{margin-top:18px;text-align:center;font-size:10px;color:#94a3b8}@media print{body{padding:0;max-width:none}.question-table{break-inside:avoid}header{margin-top:0}.meta div{min-height:38px}}
+    </style></head><body><header><h1>${escapeHtml(pdfTitle)}</h1><p>${escapeHtml(pdfDescription)}</p></header><section class="meta"><div><strong>اسم الطالب / Student name</strong><span>${escapeHtml(pdfStudentName || '____________________________')}</span></div><div><strong>الدرجة / Score</strong><span>${escapeHtml(pdfScore || '____')}</span></div><div><strong>التاريخ / Date</strong><span>${escapeHtml(pdfExamDate || '____________________________')}</span></div></section>${questionsHtml}<p class="footer-note">Quiz Space · ${questions.length} questions</p></body></html>`;
 
     let printed = false;
     const printWhenReady = () => {
@@ -270,25 +289,33 @@ export function InteractiveQuizCard({
   ) : null;
 
   const pdfSettingsPanel = pdfSettingsOpen && typeof document !== 'undefined' ? createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md" onClick={() => setPdfSettingsOpen(false)} role="dialog" aria-modal="true" aria-labelledby={`pdf-settings-title-${quiz.id}`}>
-      <div className="uipro-glass-surface w-full max-w-md rounded-[28px] border border-violet-200/80 p-5 shadow-2xl dark:border-violet-500/20" onClick={(event) => event.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 id={`pdf-settings-title-${quiz.id}`} className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-white"><Settings2 className="h-5 w-5 text-violet-500" />{isAr ? 'إعدادات ملف PDF' : 'PDF settings'}</h3>
-            <p className="mt-1 text-xs font-bold leading-6 text-slate-500 dark:text-slate-400">{isAr ? 'حدد مساحة الكتابة التي تريدها تحت كل سؤال مقالي.' : 'Choose the writing space under every essay question.'}</p>
-          </div>
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/70 p-3 backdrop-blur-md" onClick={() => setPdfSettingsOpen(false)} role="dialog" aria-modal="true" aria-labelledby={`pdf-settings-title-${quiz.id}`}>
+      <div className="uipro-glass-surface flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-violet-200/80 shadow-2xl dark:border-violet-500/20" onClick={(event) => event.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="flex items-start justify-between gap-3 border-b border-slate-200/80 bg-gradient-to-r from-violet-500/10 via-primary/5 to-cyan-500/10 px-5 py-4 dark:border-slate-800/80">
+          <div><h3 id={`pdf-settings-title-${quiz.id}`} className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-white"><Settings2 className="h-5 w-5 text-violet-500" />{isAr ? 'معاينة وتجهيز التصدير' : 'Export preview & setup'}</h3><p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{isAr ? 'راجع البيانات، ثم اختر إنشاء PDF أو الطباعة.' : 'Review the information, then create the PDF or print it.'}</p></div>
           <button type="button" onClick={() => setPdfSettingsOpen(false)} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={isAr ? 'إغلاق' : 'Close'}><X className="h-4 w-4" /></button>
         </div>
-        <div className="mt-5 rounded-2xl border border-violet-200/70 bg-violet-50/70 p-4 dark:border-violet-500/20 dark:bg-violet-950/20">
-          <div className="flex items-center justify-between gap-3 text-sm font-black text-slate-800 dark:text-slate-100">
-            <label htmlFor={`essay-height-${quiz.id}`}>{isAr ? 'ارتفاع مساحة الإجابة' : 'Answer area height'}</label>
-            <div className="flex items-center gap-1"><input type="number" min={56} max={320} step={8} value={essayAnswerHeight} onChange={(event) => setEssayAnswerHeight(Math.min(320, Math.max(56, Number(event.target.value) || 56)))} className="w-20 rounded-xl border border-violet-200 bg-white px-2 py-1.5 text-center text-sm font-black text-violet-700 outline-none focus:ring-2 focus:ring-violet-400 dark:border-violet-700 dark:bg-slate-900 dark:text-violet-300" /><span className="text-[10px] text-slate-500">pt</span></div>
+        <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_250px]">
+          <div className="space-y-3">
+            <div><label className="mb-1 block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'اسم الاختبار' : 'Quiz title'}</label><input value={pdfTitle} onChange={(event) => setPdfTitle(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white" /></div>
+            <div><label className="mb-1 block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'وصف الاختبار' : 'Quiz description'}</label><textarea value={pdfDescription} onChange={(event) => setPdfDescription(event.target.value)} rows={3} className="w-full resize-y rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-medium leading-6 text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white" /></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><label className="mb-1 block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'اسم الطالب' : 'Student name'}</label><input value={pdfStudentName} onChange={(event) => setPdfStudentName(event.target.value)} placeholder={isAr ? 'يُترك فارغًا للكتابة اليدوية' : 'Leave blank for handwriting'} className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white" /></div>
+              <div><label className="mb-1 block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'التاريخ' : 'Date'}</label><input value={pdfExamDate} onChange={(event) => setPdfExamDate(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white" /></div>
+            </div>
+            <div><label className="mb-1 block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'الدرجة (اختياري)' : 'Score (optional)'}</label><input type="number" min={0} max={quiz.questions.length} value={pdfScore} onChange={(event) => setPdfScore(event.target.value)} placeholder={`____ / ${quiz.questions.length}`} className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white" /></div>
           </div>
-          <input id={`essay-height-${quiz.id}`} type="range" min={56} max={320} step={8} value={essayAnswerHeight} onChange={(event) => setEssayAnswerHeight(Number(event.target.value))} className="mt-4 w-full accent-violet-600" />
-          <div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400"><span>56 pt</span><span>{isAr ? 'افتراضي: 120 pt' : 'Default: 120 pt'}</span><span>320 pt</span></div>
+          <aside className="rounded-2xl border border-violet-200/70 bg-violet-50/70 p-4 dark:border-violet-500/20 dark:bg-violet-950/20">
+            <h4 className="text-sm font-black text-slate-800 dark:text-slate-100">{isAr ? 'مساحة إجابة المقالي' : 'Essay answer space'}</h4>
+            <p className="mt-1 text-[11px] font-bold leading-5 text-slate-500 dark:text-slate-400">{isAr ? 'الاسم يظهر فوق الخط، والمساحة أسفل السؤال للكتابة.' : 'The name appears above its line; this space is below each essay question.'}</p>
+            <div className="mt-4 flex items-center gap-2"><input type="number" min={56} max={320} step={8} value={essayAnswerHeight} onChange={(event) => setEssayAnswerHeight(Math.min(320, Math.max(56, Number(event.target.value) || 56)))} className="w-20 rounded-xl border border-violet-200 bg-white px-2 py-1.5 text-center text-sm font-black text-violet-700 outline-none dark:border-violet-700 dark:bg-slate-900 dark:text-violet-300" /><span className="text-[10px] font-bold text-slate-500">pt</span></div>
+            <input aria-label={isAr ? 'ارتفاع مساحة إجابة المقال' : 'Essay answer height'} type="range" min={56} max={320} step={8} value={essayAnswerHeight} onChange={(event) => setEssayAnswerHeight(Number(event.target.value))} className="mt-4 w-full accent-violet-600" />
+            <div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400"><span>56</span><span>120</span><span>320</span></div>
+            <button type="button" onClick={() => setEssayAnswerHeight(120)} className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-[11px] font-black text-slate-600 hover:bg-white dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">{isAr ? 'إعادة الافتراضي' : 'Reset default'}</button>
+          </aside>
         </div>
-        <div className="mt-5 flex gap-2">
-          <button type="button" onClick={() => setEssayAnswerHeight(120)} className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-xs font-black text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">{isAr ? 'إعادة الافتراضي' : 'Reset default'}</button>
+        <div className="flex flex-wrap gap-2 border-t border-slate-200/80 p-4 dark:border-slate-800/80">
+          <button type="button" onClick={printQuiz} className="flex-1 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-xs font-black text-violet-700 hover:bg-violet-100 dark:border-violet-700/50 dark:bg-violet-950/30 dark:text-violet-300"><Printer className="me-1 inline h-4 w-4" />{isAr ? 'معاينة الطباعة' : 'Print preview'}</button>
           <button type="button" onClick={downloadPdf} className="flex-1 rounded-2xl bg-gradient-to-r from-primary to-violet-600 px-4 py-3 text-xs font-black text-white shadow-lg shadow-primary/20"><Download className="me-1 inline h-4 w-4" />{isAr ? 'إنشاء PDF' : 'Create PDF'}</button>
         </div>
       </div>
@@ -376,7 +403,7 @@ export function InteractiveQuizCard({
 
         {/* Right section: Action Buttons */}
         <div className="flex items-center gap-2 shrink-0 justify-end mt-2 md:mt-0">
-          <div className="relative flex items-center gap-1">
+          <div data-card-action="export" className="relative flex items-center gap-1">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -389,10 +416,10 @@ export function InteractiveQuizCard({
             <Printer className="w-3.5 h-3.5" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute end-0 bottom-full mb-2 z-[90] w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
-              <button type="button" onClick={() => { setExportMenuOpen(false); setPreviewOpen(true); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Eye className="h-4 w-4 text-violet-500" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
+            <div data-card-action="export" className="absolute end-0 bottom-full mb-2 z-[90] w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
+              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Eye className="h-4 w-4 text-violet-500" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
               <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تصدير PDF احترافي' : 'Export professional PDF'}</button>
-              <button type="button" onClick={() => { setExportMenuOpen(false); printQuiz(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
+              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
             </div>
           )}
             <button
@@ -577,7 +604,7 @@ export function InteractiveQuizCard({
           )}
         </div>
 
-        <div className="relative flex items-center gap-1.5">
+        <div data-card-action="export" className="relative flex items-center gap-1.5">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -591,10 +618,10 @@ export function InteractiveQuizCard({
             <ChevronDown className="h-3.5 w-3.5" />
           </button>
           {exportMenuOpen && (
-            <div className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200/80 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95" dir={isAr ? 'rtl' : 'ltr'}>
-              <button type="button" onClick={() => { setExportMenuOpen(false); setPreviewOpen(true); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Eye className="h-4 w-4 text-violet-500" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
+            <div data-card-action="export" className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200/80 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95" dir={isAr ? 'rtl' : 'ltr'}>
+              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Eye className="h-4 w-4 text-violet-500" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
               <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تصدير PDF احترافي' : 'Export professional PDF'}</button>
-              <button type="button" onClick={() => { setExportMenuOpen(false); printQuiz(); }} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
+              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
             </div>
           )}
           <button

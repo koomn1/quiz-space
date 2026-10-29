@@ -22,8 +22,11 @@ type PdfDocument = jsPDF;
 
 export interface QuizPdfBranding {
   institutionName: string;
+  pdfTitle?: string | null;
+  pdfDescription?: string | null;
   primaryColor?: string | null;
   studentName?: string | null;
+  examDate?: string | null;
   score?: number | null;
   /** Answer writing area in PDF points. Clamped to 56–320 for page safety. */
   essayAnswerHeight?: number | null;
@@ -48,7 +51,7 @@ function sanitizeFilePart(value: string) {
 
 export function getQuizPdfFileName(quiz: Quiz, branding?: QuizPdfBranding | null) {
   const prefix = branding?.institutionName ? sanitizeFilePart(branding.institutionName) : 'اختبار';
-  return `${prefix}_${sanitizeFilePart(quiz.title)}.pdf`;
+  return `${prefix}_${sanitizeFilePart(branding?.pdfTitle || quiz.title)}.pdf`;
 }
 
 function normaliseText(value: unknown) {
@@ -233,14 +236,15 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   y += 24;
 
   // Quiz Header Box
-  const title = normaliseText(quiz.title) || 'اختبار تقييمي';
-  const description = normaliseText(quiz.description);
+  const title = normaliseText(branding?.pdfTitle || quiz.title) || 'اختبار تقييمي';
+  const description = normaliseText(branding?.pdfDescription ?? quiz.description);
   const studentLabel = branding?.studentName?.trim() || '____________________________';
+  const examDate = branding?.examDate?.trim() || '____________________________';
   const scoreLabel = typeof branding?.score === 'number' ? `${branding.score} / ${quiz.questions.length}` : '____ / ' + quiz.questions.length;
   
   const titleLines = pdf.splitTextToSize(title, CONTENT_WIDTH - 24) as string[];
   const descriptionLines = description ? (pdf.splitTextToSize(description, CONTENT_WIDTH - 24) as string[]) : [];
-  const infoHeight = 36 + titleLines.length * 22 + descriptionLines.length * 16 + 32;
+  const infoHeight = 36 + titleLines.length * 22 + descriptionLines.length * 16 + 58;
   ensureSpace(infoHeight);
 
   // Styled Container Box for Quiz Details & Student Metadata
@@ -284,26 +288,44 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   pdf.setLineWidth(0.5);
   pdf.line(MARGIN + 14, infoY + 6, CONTENT_RIGHT - 14, infoY + 6);
 
-  // Metadata Bar (Student name & score)
+  // Metadata fields: labels are above the writing lines so students can fill
+  // them in by hand without the label being trapped inside the blank.
   pdf.setFont('Cairo', 'bold');
   pdf.setFontSize(9.5);
   pdf.setTextColor(71, 85, 105);
-  pdf.text(`اسم الطالب: ${studentLabel}`, CONTENT_RIGHT - 14, infoY + 22, {
+  pdf.text('اسم الطالب', CONTENT_RIGHT - 14, infoY + 20, {
     align: 'right',
     isInputVisual: true,
     isInputRtl: true,
     isOutputRtl: true,
   });
 
-  pdf.text(`عدد الأسئلة: ${quiz.questions.length}`, MARGIN + 120, infoY + 22, {
+  pdf.setFont('Cairo', 'normal');
+  pdf.setFontSize(9.5);
+  pdf.text(studentLabel, CONTENT_RIGHT - 14, infoY + 38, {
     align: 'right',
     isInputVisual: true,
     isInputRtl: true,
     isOutputRtl: true,
   });
 
-  pdf.text(`الدرجة: ${scoreLabel}`, MARGIN + 20, infoY + 22, {
+  pdf.setFont('Cairo', 'bold');
+  pdf.text(`الدرجة: ${scoreLabel}`, MARGIN + 20, infoY + 30, {
+    align: 'right',
+    isInputVisual: true,
+    isInputRtl: true,
+    isOutputRtl: true,
+  });
+
+  pdf.text(`التاريخ: ${examDate}`, MARGIN + 150, infoY + 30, {
     align: 'left',
+    isInputVisual: true,
+    isInputRtl: true,
+    isOutputRtl: true,
+  });
+
+  pdf.text(`عدد الأسئلة: ${quiz.questions.length}`, MARGIN + 310, infoY + 30, {
+    align: 'right',
     isInputVisual: true,
     isInputRtl: true,
     isOutputRtl: true,
