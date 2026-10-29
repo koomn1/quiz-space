@@ -25,7 +25,7 @@ describe('Cosmo automatic quiz count', () => {
     expect(parseAutomaticQuestionCount('{"amount": 47}')).toBe(47);
     expect(parseAutomaticQuestionCount('23')).toBe(23);
     expect(parseAutomaticQuestionCount('{"amount": 0}')).toBeNull();
-    expect(parseAutomaticQuestionCount('{"amount": 101}')).toBeNull();
+    expect(parseAutomaticQuestionCount('{"amount": 101}')).toBe(101);
     expect(parseAutomaticQuestionCount('about thirty questions')).toBeNull();
   });
 
@@ -48,7 +48,7 @@ describe('Cosmo automatic quiz count', () => {
       { id: 'C02', concept: 'الغشاءُ الخلويّ' },
       { id: 'C03', concept: 'النواة' },
     ] }))).toBeNull();
-    expect(parseAutomaticCoveragePlan(JSON.stringify({ coveragePlan: Array.from({ length: 101 }, (_, i) => ({ id: `C${i}`, concept: `مفهوم ${i}` })) }))).toBeNull();
+    expect(parseAutomaticCoveragePlan(JSON.stringify({ coveragePlan: Array.from({ length: 501 }, (_, i) => ({ id: `C${i}`, concept: `مفهوم ${i}` })) }))).toBeNull();
   });
 
   it('requires a one-to-one mapping between planned concepts and generated questions', () => {

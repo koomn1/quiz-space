@@ -1,6 +1,8 @@
 export const COSMO_QUIZ_MIN_COUNT = 3;
-export const COSMO_QUIZ_MAX_COUNT = 100;
-export const COSMO_QUIZ_COUNT_OPTIONS = [5, 10, 20, 30, 50, 75, 100] as const;
+// Large documents are generated in bounded batches, so this is a safety
+// boundary rather than a single provider-response boundary.
+export const COSMO_QUIZ_MAX_COUNT = 500;
+export const COSMO_QUIZ_COUNT_OPTIONS = [5, 10, 20, 30, 50, 75, 100, 200, 300, 500] as const;
 
 export interface CosmoCoverageConcept {
   id: string;

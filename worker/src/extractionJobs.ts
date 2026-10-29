@@ -580,7 +580,12 @@ async function generateQuestionsFromText(
   env: ExtractionJobEnv,
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
-  const requestedCount = job.requested_question_count || null;
+  // Automatic generation now gets a bounded, content-derived target instead of
+  // leaving the provider free to stop at its habitual 30-question default.
+  // The source is still split into small sections, so this does not create one
+  // oversized model response. Explicit counts remain exact upper bounds.
+  const automaticCount = Math.min(500, Math.max(3, Math.ceil(text.length / 1400)));
+  const requestedCount = job.requested_question_count || automaticCount;
   // Large explicit requests must also cover the whole source. Sending 100/200
   // questions in one prompt commonly reaches the model output limit and makes
   // the whole job fail, so split the source and assign a proportional target
@@ -678,7 +683,7 @@ async function generateQuestionsFromText(
   }
 
   if (!allQuestions.length) throw lastError instanceof Error ? lastError : new Error('The document did not contain any valid questions.');
-  const finalQuestions = requestedCount ? allQuestions.slice(0, requestedCount) : allQuestions;
+  const finalQuestions = allQuestions.slice(0, requestedCount);
   return { title, description, questions: finalQuestions, provider: [...providers].join(', ') || 'ai-provider', chunks: totalChunks };
 }
 

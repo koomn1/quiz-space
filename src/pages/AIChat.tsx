@@ -346,11 +346,11 @@ async function chooseAutomaticCoveragePlan(
   const source = topic.trim();
   if (!source) throw new Error('لا توجد مادة كافية لاستخراج خطة التغطية.');
   const sections = splitCosmoCoverageSource(source);
-  const systemInstruction = 'You are a precise quiz coverage planner. Return only JSON with coveragePlan: an array of unique, important, source-supported concepts. Do not default to 30. Never split one concept into synonyms or duplicate concepts. Use ids C01..C100 for a final plan; for section extraction use the requested section prefix.';
+  const systemInstruction = 'You are a precise quiz coverage planner. Return only JSON with coveragePlan: an array of unique, important, source-supported concepts. Do not default to 30 or 100. Cover every distinct assessable concept supported by the source, without padding or duplicates. Use ids C01..C500 for a final plan; for section extraction use the requested section prefix.';
 
   if (sections.length === 1) {
     const { text } = await askAI(
-      `حلّل المادة كاملة واختر خطة مفاهيم تغطي كل المفاهيم التعليمية المهمة والمتميزة دون تكرار. لا تحوّل كل جملة إلى سؤال إذا كانت تشرح المفهوم نفسه. اختر بين ${COSMO_QUIZ_MIN_COUNT} و${COSMO_QUIZ_MAX_COUNT} مفهومًا بحسب اتساع المادة، واجعل عدد الأسئلة مساويًا تمامًا لعدد المفاهيم. أعد JSON فقط: {"coveragePlan":[{"id":"C01","concept":"اسم مفهوم محدد"}]}.\nالمستوى: ${options.difficulty}. نمط التغطية: ${options.focusMode}. أنواع الأسئلة: ${options.questionTypes}.\nالمادة كاملة:\n${source}`,
+      `حلّل المادة كاملة واختر خطة مفاهيم تغطي كل المفاهيم التعليمية المهمة والمتميزة دون تكرار. لا تحوّل كل جملة إلى سؤال إذا كانت تشرح المفهوم نفسه، ولا تتوقف عند 30 أو 100 سؤالًا إذا كانت المادة أوسع. اختر بين ${COSMO_QUIZ_MIN_COUNT} و${COSMO_QUIZ_MAX_COUNT} مفهومًا بحسب اتساع المادة، واجعل عدد الأسئلة مساويًا تمامًا لعدد المفاهيم. أعد JSON فقط: {"coveragePlan":[{"id":"C01","concept":"اسم مفهوم محدد"}]}.\nالمستوى: ${options.difficulty}. نمط التغطية: ${options.focusMode}. أنواع الأسئلة: ${options.questionTypes}.\nالمادة كاملة:\n${source}`,
       { systemInstruction },
     );
     const plan = parseAutomaticCoveragePlan(text);
@@ -373,7 +373,7 @@ async function chooseAutomaticCoveragePlan(
 
   const candidates = sectionConcepts.map(item => `${item.id}: ${item.concept}`).join('\n');
   const { text } = await askAI(
-    `ادمج قوائم الأجزاء التالية في خطة واحدة. احذف المفاهيم المتكررة دلاليًا حتى لو اختلفت صياغتها، واحتفظ بكل مفهوم مهم ومتميز تدعمه المادة. اختر بين ${COSMO_QUIZ_MIN_COUNT} و${COSMO_QUIZ_MAX_COUNT} مفهومًا؛ عدد الأسئلة النهائي سيكون عدد عناصر الخطة بالضبط. أعد معرفات نهائية C01 ثم C02 وهكذا. أعد JSON فقط: {"coveragePlan":[{"id":"C01","concept":"اسم مفهوم محدد"}]}.\nالمستوى: ${options.difficulty}. نمط التغطية: ${options.focusMode}. أنواع الأسئلة: ${options.questionTypes}.\nالمفاهيم المرشحة المستخرجة من كامل المادة:\n${candidates}`,
+    `ادمج قوائم الأجزاء التالية في خطة واحدة. احذف المفاهيم المتكررة دلاليًا حتى لو اختلفت صياغتها، واحتفظ بكل مفهوم مهم ومتميز تدعمه المادة. لا تختصر الخطة إلى 30 أو 100 سؤالًا لمجرد أنها أرقام شائعة. اختر بين ${COSMO_QUIZ_MIN_COUNT} و${COSMO_QUIZ_MAX_COUNT} مفهومًا؛ عدد الأسئلة النهائي سيكون عدد عناصر الخطة بالضبط. أعد معرفات نهائية C01 ثم C02 وهكذا. أعد JSON فقط: {"coveragePlan":[{"id":"C01","concept":"اسم مفهوم محدد"}]}.\nالمستوى: ${options.difficulty}. نمط التغطية: ${options.focusMode}. أنواع الأسئلة: ${options.questionTypes}.\nالمفاهيم المرشحة المستخرجة من كامل المادة:\n${candidates}`,
     { systemInstruction },
   );
   const plan = parseAutomaticCoveragePlan(text);

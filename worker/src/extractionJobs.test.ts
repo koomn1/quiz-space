@@ -67,7 +67,8 @@ describe('dynamic vision chunk planning', () => {
     expect(applyRequestedQuestionCount(questions, 'literal', 2)).toHaveLength(5);
     expect(applyRequestedQuestionCount(questions, 'generate', 2)).toHaveLength(2);
     expect(extractionSource).toContain("extractionMode !== 'generate'");
-    expect(extractionSource).toContain("const requestedCount = job.requested_question_count || null;");
+    expect(extractionSource).toContain('const automaticCount = Math.min(500, Math.max(3, Math.ceil(text.length / 1400)));');
+    expect(extractionSource).toContain('const requestedCount = job.requested_question_count || automaticCount;');
     expect(routeSource).toContain("requestedQuestionCount: extractionMode === 'generate'");
   });
 
