@@ -11,6 +11,7 @@ interface QuizDetailedReportProps {
   userAnswers: number[];
   essayAnswers: string[];
   essayAssessments: Record<number, boolean>;
+  essayGradingMode?: 'manual' | 'ai';
   lang?: 'ar' | 'en';
   questionRatings: Record<string, 'like' | 'dislike'>;
   questionRatingErrors: Record<string, string>;
@@ -22,6 +23,7 @@ export default function QuizDetailedReport({
   userAnswers,
   essayAnswers,
   essayAssessments,
+  essayGradingMode = 'manual',
   lang = 'ar',
   questionRatings,
   questionRatingErrors,
@@ -225,22 +227,34 @@ export default function QuizDetailedReport({
                       {/* Written essay feedback */}
                       <div className="p-3.5 bg-slate-50 dark:bg-slate-900/40 rounded-xl space-y-1.5 border border-slate-100 dark:border-slate-800">
                         <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded leading-none inline-block">
-                          {isAr ? 'إجابتك المسودة:' : 'Your draft answer:'}
+                          {isAr ? 'إجابتك المكتوبة المسجلة:' : 'Your submitted answer:'}
                         </span>
                         <p className="text-slate-750 dark:text-slate-300 leading-relaxed whitespace-pre-wrap italic">
                           {essayAnswers[originalIdx] || (isAr ? 'لم تكتب إجابة مسبقة.' : 'No draft answer recorded.')}
                         </p>
                       </div>
 
-                      {/* Correct answer standard */}
-                      <div className="p-3.5 bg-emerald-500/[0.03] dark:bg-emerald-950/[0.05] rounded-xl space-y-1.5 border border-emerald-100/50 dark:border-emerald-900/20">
-                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded leading-none inline-block">
-                          {isAr ? 'الجواب النموذجي المرصود:' : 'Model Answer Standard:'}
-                        </span>
-                        <p className="text-slate-800 dark:text-slate-200 font-bold leading-relaxed whitespace-pre-wrap">
-                          {q.correctAnswer || (isAr ? 'لم يتم صياغة إجابة نموذجية.' : 'No standard answer supplied.')}
-                        </p>
-                      </div>
+                      {essayGradingMode !== 'ai' ? (
+                        <div className="p-3.5 bg-amber-500/[0.05] dark:bg-amber-950/[0.1] rounded-xl space-y-1.5 border border-amber-200/60 dark:border-amber-900/30">
+                          <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/40 px-2 py-0.5 rounded leading-none inline-block">
+                            {isAr ? 'حالة التقييم:' : 'Evaluation Status:'}
+                          </span>
+                          <p className="text-amber-800 dark:text-amber-200 font-bold leading-relaxed flex items-center gap-2">
+                            <span>⏳</span>
+                            <span>{isAr ? 'بانتظار مراجعة وتصحيح منشئ الاختبار' : 'Pending Creator Review & Grading'}</span>
+                          </p>
+                        </div>
+                      ) : (
+                        /* Correct answer standard for AI mode */
+                        <div className="p-3.5 bg-emerald-500/[0.03] dark:bg-emerald-950/[0.05] rounded-xl space-y-1.5 border border-emerald-100/50 dark:border-emerald-900/20">
+                          <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded leading-none inline-block">
+                            {isAr ? 'الجواب النموذجي المرصود:' : 'Model Answer Standard:'}
+                          </span>
+                          <p className="text-slate-800 dark:text-slate-200 font-bold leading-relaxed whitespace-pre-wrap">
+                            {q.correctAnswer || (isAr ? 'لم يتم صياغة إجابة نموذجية.' : 'No standard answer supplied.')}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : q.type === 'mcq' ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">

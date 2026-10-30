@@ -34,6 +34,7 @@ export interface Quiz {
   category?: string;
   distributionRouting?: 'public' | 'classroom' | 'community';
   classroomId?: string;
+  essayGradingMode?: 'manual' | 'ai';
 }
 
 export interface QuizCompletion {
@@ -47,6 +48,30 @@ export interface QuizCompletion {
   rating?: number; // 1-5 stars (optional)
   feedback?: string; // written review
   createdAt: string;
+  attemptNumber?: number;
+  isBest?: boolean;
+  essayAnswers?: Record<string, string> | string[];
+  reviewStatus?: 'completed' | 'pending_creator_review';
+  creatorFeedback?: string;
+  reviewedAt?: string;
+  hasPendingEssay?: boolean;
+}
+
+export interface PendingEssayReview {
+  completionId: string;
+  quizId: string;
+  quizTitle: string;
+  takerId: string;
+  takerName: string;
+  isGuest: boolean;
+  score: number;
+  totalQuestions: number;
+  essayAnswers?: Record<string, string> | string[];
+  questions: Question[];
+  createdAt: string;
+  reviewStatus: 'completed' | 'pending_creator_review';
+  creatorFeedback?: string;
+  attemptNumber?: number;
 }
 
 export interface SubscriptionPlan {

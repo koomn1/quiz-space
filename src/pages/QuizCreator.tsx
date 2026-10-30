@@ -416,6 +416,7 @@ export default function QuizCreator({
   const [loadingClassrooms, setLoadingClassrooms] = React.useState(false);
   const [creatorName, setCreatorName] = React.useState(userName || 'صانع غامض');
   const [timeLimit, setTimeLimit] = React.useState<number>(0);
+  const [essayGradingMode, setEssayGradingMode] = React.useState<'manual' | 'ai'>('manual');
   const [questions, setQuestions] = React.useState<Question[]>([
     {
       id: 'q-initial-0',
@@ -501,6 +502,7 @@ export default function QuizCreator({
           if (parsed.description) setDescription(parsed.description);
           if (parsed.category) setCategory(parsed.category);
           if (typeof parsed.timeLimit === 'number') setTimeLimit(parsed.timeLimit);
+          if (parsed.essayGradingMode) setEssayGradingMode(parsed.essayGradingMode);
           setQuestions(parsed.questions);
         }
       }
@@ -522,12 +524,13 @@ export default function QuizCreator({
           description,
           category,
           timeLimit,
+          essayGradingMode,
           questions,
           savedAt: Date.now()
         }));
       }
     } catch (_) {}
-  }, [title, description, category, timeLimit, questions, draftOwnerId, quizToEdit, postExtractionSolvePending]);
+  }, [title, description, category, timeLimit, essayGradingMode, questions, draftOwnerId, quizToEdit, postExtractionSolvePending]);
 
   // Extracted drafts are separate from ordinary editor drafts and are surfaced
   // as an explicit continuation choice when the creator is opened again.
@@ -763,6 +766,7 @@ export default function QuizCreator({
       setTitle(quizToEdit.title || '');
       setDescription(quizToEdit.description || '');
       setTimeLimit(quizToEdit.timeLimit || 0);
+      setEssayGradingMode(quizToEdit.essayGradingMode || 'manual');
       setCreatorName(quizToEdit.creatorName || userName);
       setCategory(quizToEdit.category || 'عام');
       if (quizToEdit.questions && Array.isArray(quizToEdit.questions)) {
@@ -2060,6 +2064,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           questions: sanitizedQuestions,
           timeLimit: timeLimit,
           category: category,
+          essayGradingMode: essayGradingMode,
           distributionRouting: distributionRouting,
           classroomId: distributionRouting === 'classroom' ? selectedClassroomId : null
         });
@@ -2074,6 +2079,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           questions: sanitizedQuestions,
           timeLimit: timeLimit,
           category: category,
+          essayGradingMode: essayGradingMode,
           distributionRouting: distributionRouting,
           classroomId: distributionRouting === 'classroom' ? selectedClassroomId : null
         });
@@ -3566,6 +3572,68 @@ A computer is a digital electronic machine...
                         </button>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Essay Grading Mode Option */}
+                <div className="space-y-2 sm:col-span-2 text-right">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block uppercase tracking-wide px-1">
+                    {isAr ? 'نظام تصحيح الأسئلة المقالية (إن وُجدت) ✍️:' : 'Essay Questions Evaluation System:'}
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEssayGradingMode('manual')}
+                      className={`p-4 rounded-2xl border text-right transition-all flex flex-col gap-1.5 cursor-pointer ${
+                        essayGradingMode === 'manual'
+                          ? 'border-violet-500 bg-violet-500/10 shadow-sm text-violet-900 dark:text-violet-100 ring-2 ring-violet-500/30'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-violet-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-black text-sm flex items-center gap-2">
+                          <span>✍️</span>
+                          <span>{isAr ? 'تصحيح يدوي من منشئ الاختبار (موصى به)' : 'Manual Review by Creator'}</span>
+                        </span>
+                        {essayGradingMode === 'manual' && (
+                          <span className="text-[10px] bg-violet-600 text-white font-black px-2 py-0.5 rounded-full">
+                            {isAr ? 'مُفعّل' : 'Active'}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                        {isAr
+                          ? 'تظهر النتيجة للطالب «بانتظار مراجعة المنشئ»، ويقوم المعلم بمراجعة الإجابات المكتوبة ورصد الدرجة يدويًا.'
+                          : 'Student sees "Pending Creator Review" and creator grades written answers manually.'}
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setEssayGradingMode('ai')}
+                      className={`p-4 rounded-2xl border text-right transition-all flex flex-col gap-1.5 cursor-pointer ${
+                        essayGradingMode === 'ai'
+                          ? 'border-violet-500 bg-violet-500/10 shadow-sm text-violet-900 dark:text-violet-100 ring-2 ring-violet-500/30'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-violet-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-black text-sm flex items-center gap-2">
+                          <span>🤖</span>
+                          <span>{isAr ? 'تصحيح فوري بالذكاء الاصطناعي (AI)' : 'Instant AI Grading'}</span>
+                        </span>
+                        {essayGradingMode === 'ai' && (
+                          <span className="text-[10px] bg-violet-600 text-white font-black px-2 py-0.5 rounded-full">
+                            {isAr ? 'مُفعّل' : 'Active'}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                        {isAr
+                          ? 'يقوم الذكاء الاصطناعي بتقييم إجابة الطالب المقالية فورياً واحتساب الدرجة تلقائياً عند التسليم.'
+                          : 'AI automatically grades essay answers against model answer upon submission.'}
+                      </p>
+                    </button>
                   </div>
                 </div>
 

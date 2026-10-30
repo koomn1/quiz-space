@@ -8,6 +8,7 @@ import { getQuizTakersUnique, getCompletionsByQuizId } from '../lib/db';
 import { QuizCompletion } from '../types';
 import { createPortal } from 'react-dom';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
+import { EssayReviewModal } from './EssayReviewModal';
 // Keep the modal and print window independent from transformed/overflow-hidden card ancestors.
 
 interface InteractiveQuizCardProps {
@@ -53,6 +54,14 @@ export function InteractiveQuizCard({
   const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
   const [attemptsOpen, setAttemptsOpen] = useState(false);
   const [attemptsLoading, setAttemptsLoading] = useState(false);
+  const [essayReviewOpen, setEssayReviewOpen] = useState(false);
+
+  const refreshAttempts = async () => {
+    try {
+      const res = await getQuizTakersUnique(quiz.id);
+      if (res && res.length > 0) setAttempts(res);
+    } catch (_) {}
+  };
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pdfSettingsOpen, setPdfSettingsOpen] = useState(false);
@@ -240,6 +249,17 @@ export function InteractiveQuizCard({
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 font-bold truncate max-w-xs">{quiz.title}</p>
           </div>
           <div className="flex items-center gap-2">
+            {quiz.questions.some(q => q.type === 'essay') && (
+              <button
+                type="button"
+                onClick={() => setEssayReviewOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/10 px-3 py-2 text-[11px] font-black text-amber-600 transition-all hover:bg-amber-500/20 dark:text-amber-400 cursor-pointer border border-amber-500/20"
+                title={isAr ? 'مراجعة وتصحيح المقالي' : 'Grade Essays'}
+              >
+                <span>✍️</span>
+                <span>{isAr ? 'تصحيح المقالي' : 'Grade Essays'}</span>
+              </button>
+            )}
             <button type="button" onClick={exportAttemptsCsv} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-2 text-[11px] font-black text-emerald-600 transition-all hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400" title="CSV"><Download className="h-3.5 w-3.5" />CSV</button>
             <button type="button" onClick={exportAttemptsExcel} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 px-3 py-2 text-[11px] font-black text-blue-600 transition-all hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-blue-400" title="Excel"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
             <button type="button" onClick={() => setAttemptsOpen(false)} className="rounded-xl p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><X className="h-4 w-4" /></button>
@@ -261,6 +281,7 @@ export function InteractiveQuizCard({
               {attempts.map((attempt, aIdx) => {
                 const medal = aIdx === 0 ? '🥇' : aIdx === 1 ? '🥈' : aIdx === 2 ? '🥉' : `#${aIdx + 1}`;
                 const pct = attempt.totalQuestions > 0 ? Math.round((attempt.score / attempt.totalQuestions) * 100) : 100;
+                const isPendingEssay = attempt.hasPendingEssay || attempt.reviewStatus === 'pending_creator_review';
                 return (
                   <div key={attempt.id || aIdx} className="flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3.5 dark:border-slate-800 dark:bg-slate-900/60 hover:border-primary/30 transition-colors">
                     <div className="flex items-center gap-3">
@@ -269,11 +290,32 @@ export function InteractiveQuizCard({
                         {attempt.takerName ? attempt.takerName.slice(0, 1) : '👤'}
                       </div>
                       <div>
-                        <p className="font-bold text-xs text-slate-900 dark:text-slate-100">{attempt.takerName || (isAr ? 'زائر متميز' : 'Member')}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-xs text-slate-900 dark:text-slate-100">{attempt.takerName || (isAr ? 'زائر متميز' : 'Member')}</p>
+                          {isPendingEssay && (
+                            <span className="rounded-md bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-black text-amber-600 dark:text-amber-400">
+                              {isAr ? 'بانتظار التصحيح' : 'Pending Review'}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[10px] font-bold text-slate-400 mt-0.5">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {isPendingEssay && canManageQuizAttempts && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAttemptsOpen(false);
+                            setEssayReviewOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-xl bg-amber-500/10 px-2.5 py-1 text-xs font-black text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer"
+                          title={isAr ? 'مراجعة وتصحيح المقالي' : 'Review & Grade'}
+                        >
+                          <span>✍️</span>
+                          <span>{isAr ? 'تصحيح' : 'Grade'}</span>
+                        </button>
+                      )}
                       <span className="rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 px-2.5 py-1 text-xs font-black font-mono text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">{pct}%</span>
                       <span className="rounded-xl bg-primary/10 px-2.5 py-1 text-xs font-black text-primary font-mono">{attempt.score}/{attempt.totalQuestions}</span>
                     </div>
@@ -549,6 +591,21 @@ export function InteractiveQuizCard({
             {canManageQuizAttempts ? quizAttemptsButton : (
               <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 font-bold" aria-label={isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`}><Users className="h-3.5 w-3.5" /><span>{t?.playedTimes?.replace('{count}', String(quiz.totalPlays || 0)) || (isAr ? `لُعب ${quiz.totalPlays || 0} مرة` : `Played ${quiz.totalPlays || 0} times`)}</span></span>
             )}
+            {canManageQuizAttempts && quiz.questions.some(q => q.type === 'essay') && (
+              <button
+                type="button"
+                data-card-action="grade-essays"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEssayReviewOpen(true);
+                }}
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-amber-300/80 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2 text-xs font-black text-amber-800 shadow-sm transition-all hover:shadow-md hover:bg-amber-100/70 active:scale-95 dark:border-amber-700/70 dark:from-amber-950/50 dark:to-orange-950/50 dark:text-amber-200 cursor-pointer"
+                title={isAr ? 'تصحيح الإجابات المقالية' : 'Grade essay answers'}
+              >
+                <span>✍️</span>
+                <span>{isAr ? 'تصحيح المقالي' : 'Grade Essays'}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -641,6 +698,14 @@ export function InteractiveQuizCard({
     {attemptsPanel}
     {pdfSettingsPanel}
     {previewPanel}
+    <EssayReviewModal
+      isOpen={essayReviewOpen}
+      onClose={() => setEssayReviewOpen(false)}
+      quizId={quiz.id}
+      quizTitle={quiz.title}
+      lang={isAr ? 'ar' : 'en'}
+      onGraded={refreshAttempts}
+    />
     </>
   );
 }

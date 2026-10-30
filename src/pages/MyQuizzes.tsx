@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Quiz } from '../types';
 import { translations } from '../lib/i18n';
 import { BookOpen, RefreshCw } from 'lucide-react';
 import { InteractiveQuizCard } from '../components/InteractiveQuizCard';
+import { EssayReviewModal } from '../components/EssayReviewModal';
+import { getPendingEssayReviews } from '../lib/db';
 
 interface MyQuizzesProps {
   quizzes: Quiz[];
@@ -35,7 +37,22 @@ export function MyQuizzes({
   const myQuizzes = quizzes.filter(q => q.creatorId === userId);
   const t = translations[lang];
   const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
+  const [pendingCount, setPendingCount] = useState<number>(0);
+  const [essayModalOpen, setEssayModalOpen] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const checkPendingReviews = async () => {
+    try {
+      const pending = await getPendingEssayReviews();
+      setPendingCount(pending.length);
+    } catch (_) {
+      setPendingCount(0);
+    }
+  };
+
+  useEffect(() => {
+    checkPendingReviews();
+  }, [userId, quizzes]);
 
   useGSAP(() => {
     if (myQuizzes.length > 0 && containerRef.current) {
@@ -78,6 +95,37 @@ export function MyQuizzes({
           <span>{isAr ? 'تحديث القائمة' : 'Refresh List'}</span>
         </button>
       </div>
+
+      {pendingCount > 0 && (
+        <div className="rounded-2xl border border-amber-300/80 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm animate-fade-in" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 text-xl font-bold">
+              ✍️
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <span>{isAr ? 'يوجد إجابات مقالية بانتظار تصحيحك ومراجعتك' : 'Pending essay answers need your grading'}</span>
+                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-black text-white">
+                  {pendingCount}
+                </span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {isAr
+                  ? 'قام بعض الطلاب بحل اختباراتك المقالية؛ قم بالاطلاع على إجاباتهم ورصد الدرجات والملاحظات.'
+                  : 'Students have completed your essay quizzes. Review their answers and record scores & feedback.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setEssayModalOpen(true)}
+            className="uipro-btn-tactile inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-xs font-black text-white shadow-md hover:from-amber-600 hover:to-orange-600 cursor-pointer active:scale-95 transition-all"
+          >
+            <span>✍️</span>
+            <span>{isAr ? 'مراجعة وتصحيح الإجابات الآن' : 'Review & Grade Essays Now'}</span>
+          </button>
+        </div>
+      )}
 
       {myQuizzes.length === 0 ? (
         <div className="uipro-clay-card text-center py-20 rounded-[32px] border-dashed border-2 border-slate-200 dark:border-slate-800 max-w-xl mx-auto flex flex-col items-center justify-center space-y-4 p-8">
@@ -140,6 +188,16 @@ export function MyQuizzes({
           </div>
         </div>
       )}
+
+      <EssayReviewModal
+        isOpen={essayModalOpen}
+        onClose={() => setEssayModalOpen(false)}
+        lang={lang}
+        onGraded={() => {
+          checkPendingReviews();
+          fetchQuizzesList();
+        }}
+      />
     </div>
   );
 }

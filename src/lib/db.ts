@@ -4,7 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { Quiz, QuizCompletion, UserStats, Question, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, PdfExportRecord, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab } from '../types';
+import { Quiz, QuizCompletion, UserStats, Question, QuestionRating, Promotion, Coupon, SubscriptionPlan, AccountCategory, CouponUsage, Season, SeasonMember, RewardsSummary, RewardLevel, RewardBadge, RewardLedgerEntry, RewardLedgerPage, PdfExportRecord, VipTier, RewardChallenge, DailyGiftStatus, WeeklyTask, WeeklyVipLeaderboardEntry, MotivationUsageSummary, MotivationUsageTab, PendingEssayReview } from '../types';
 import { availableBadgeTiers, availableBadgeColors, availableNameColors, normalizeBadgeColor, normalizeBadgeTier, normalizeNameColor, BadgeTier, NameColorKey, BadgeColorKey } from '../components/PremiumNameTag';
 import { normalizeKnowledgeDuelPayload, normalizeLearningSeasonPayload, normalizeMotivationUsageSummary, normalizePersonalLearningImprovement, normalizeSmartReviewPayload } from './motivationData';
 import { resolveProfileImageUrl } from '../constants/profileAssets';
@@ -349,6 +349,7 @@ function mapQuizRow(row: any): Quiz {
     createdAt: row.created_at,
     category: row.category,
     classroomId: row.classroom_id || undefined,
+    essayGradingMode: row.essay_grading_mode || 'manual',
   } as Quiz;
 }
 
@@ -523,6 +524,7 @@ export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPla
     category: quiz.category || 'عام',
     classroom_id: quiz.classroomId || null,
     distribution_routing: quiz.classroomId ? 'classroom' : 'public',
+    essay_grading_mode: quiz.essayGradingMode || 'manual',
   }).select().single();
 
   if (error) {
@@ -585,6 +587,9 @@ export async function updateQuiz(quizId: string, updatedQuiz: Partial<Quiz>): Pr
     questions: updatedQuiz.questions,
     time_limit: updatedQuiz.timeLimit,
     category: updatedQuiz.category,
+    ...(updatedQuiz.essayGradingMode !== undefined ? {
+      essay_grading_mode: updatedQuiz.essayGradingMode,
+    } : {}),
     ...(updatedQuiz.classroomId !== undefined ? {
       classroom_id: updatedQuiz.classroomId || null,
       distribution_routing: updatedQuiz.classroomId ? 'classroom' : 'public',
@@ -621,6 +626,7 @@ export async function submitGuestQuizAttempt(
     clientAttemptKey: string;
     rating?: number;
     feedback?: string;
+    essayAnswers?: any;
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
@@ -632,6 +638,7 @@ export async function submitGuestQuizAttempt(
     p_client_attempt_key: data.clientAttemptKey,
     p_rating: data.rating ?? null,
     p_feedback: data.feedback || '',
+    p_essay_answers: data.essayAnswers ?? null,
   });
   if (error) {
     console.error('submit_guest_quiz_attempt RPC failed:', error);
@@ -703,6 +710,7 @@ export async function submitQuizAttempt(
     feedback?: string;
     clientAttemptKey?: string;
     totalQuestions?: number;
+    essayAnswers?: any;
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
@@ -718,6 +726,7 @@ export async function submitQuizAttempt(
       clientAttemptKey: data.clientAttemptKey,
       rating: data.rating,
       feedback: data.feedback,
+      essayAnswers: data.essayAnswers,
     });
   }
   // Profile state can lag one render behind the Auth session after login or a
@@ -769,6 +778,7 @@ export async function submitQuizAttempt(
     p_score: data.score,
     p_rating: data.rating ?? null,
     p_feedback: data.feedback || '',
+    p_essay_answers: data.essayAnswers ?? null,
   });
   if (!error) {
     const completionRow = Array.isArray(result) ? result[0] : result;
@@ -2118,6 +2128,13 @@ function mapCompletionRow(row: any): QuizCompletion {
     rating: row.rating ?? undefined,
     feedback: row.feedback ?? undefined,
     createdAt: row.created_at ?? row.createdAt ?? new Date().toISOString(),
+    attemptNumber: row.attempt_number ? Number(row.attempt_number) : undefined,
+    isBest: row.is_best ?? undefined,
+    essayAnswers: row.essay_answers ?? undefined,
+    reviewStatus: row.review_status ?? 'completed',
+    creatorFeedback: row.creator_feedback ?? '',
+    reviewedAt: row.reviewed_at ?? undefined,
+    hasPendingEssay: row.has_pending_essay === true || row.review_status === 'pending_creator_review',
   };
 }
 
@@ -2177,6 +2194,8 @@ export async function getQuizTakersUnique(quizId: string): Promise<QuizCompletio
           attemptNumber: row.attempts_count,
           isBest: true,
           createdAt: row.last_attempt_at,
+          reviewStatus: row.review_status || 'completed',
+          hasPendingEssay: row.has_pending_essay === true || row.review_status === 'pending_creator_review',
         }));
       }
     } catch (e) { console.warn('get_quiz_takers_unique RPC failed, falling back to client dedup:', e); }
@@ -2191,6 +2210,58 @@ export async function getQuizTakersUnique(quizId: string): Promise<QuizCompletio
     }
   }
   return Array.from(map.values());
+}
+
+export async function getPendingEssayReviews(quizId?: string): Promise<PendingEssayReview[]> {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase.rpc('get_pending_essay_reviews', {
+      p_quiz_id: quizId || null,
+    });
+    if (error) {
+      console.warn('get_pending_essay_reviews RPC failed:', error);
+      return [];
+    }
+    return (Array.isArray(data) ? data : []).map((row: any) => ({
+      completionId: String(row.completion_id || ''),
+      quizId: String(row.quiz_id || ''),
+      quizTitle: String(row.quiz_title || ''),
+      takerId: String(row.taker_id || ''),
+      takerName: String(row.taker_name || 'طالب'),
+      isGuest: row.is_guest === true,
+      score: Number(row.score ?? 0),
+      totalQuestions: Number(row.total_questions ?? 0),
+      essayAnswers: row.essay_answers || {},
+      questions: Array.isArray(row.questions) ? row.questions : [],
+      createdAt: row.created_at || new Date().toISOString(),
+      reviewStatus: (row.review_status || 'pending_creator_review') as 'pending_creator_review' | 'completed',
+      creatorFeedback: String(row.creator_feedback || ''),
+      attemptNumber: row.attempt_number ? Number(row.attempt_number) : undefined,
+    }));
+  } catch (err) {
+    console.error('Error fetching pending essay reviews:', err);
+    return [];
+  }
+}
+
+export async function gradeQuizEssayAttempt(
+  completionId: string,
+  isGuest: boolean,
+  awardedScore: number,
+  feedback = ''
+): Promise<boolean> {
+  if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+  const { data, error } = await supabase.rpc('grade_quiz_essay_attempt', {
+    p_completion_id: completionId,
+    p_is_guest: isGuest,
+    p_awarded_score: awardedScore,
+    p_feedback: feedback,
+  });
+  if (error) {
+    console.error('grade_quiz_essay_attempt failed:', error);
+    throw error;
+  }
+  return data === true;
 }
 
 export async function getSiteStats(): Promise<any> {

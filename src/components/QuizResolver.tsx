@@ -224,6 +224,15 @@ export default function QuizResolver({
   };
 
   const gradeEssayAnswer = async (questionIndex: number, question: Question, answer: string) => {
+    // If not explicit 'ai' grading mode, manual creator review is the default
+    if (quiz?.essayGradingMode !== 'ai') {
+      setEssayAssessments(prev => ({ ...prev, [questionIndex]: false }));
+      setEssayAssessed(null);
+      if (quiz && questionIndex + 1 === quiz.questions.length) {
+        setIsQuizCompleted(true);
+      }
+      return;
+    }
     setEssayGrading(prev => ({ ...prev, [questionIndex]: true }));
     try {
       const result = await gradeEssayWithAI(question.text, question.correctAnswer || '', answer);
@@ -379,6 +388,19 @@ export default function QuizResolver({
     })));
   }, [answerTextForQuestion, correctTextForQuestion, essayAssessments, isDailyQuiz, isGuest, quiz, quizId, userAnswers, userId]);
 
+  const getEssayAnswersPayload = React.useCallback((): Record<string, string> | undefined => {
+    if (!quiz) return undefined;
+    const payload: Record<string, string> = {};
+    let hasAny = false;
+    quiz.questions.forEach((q, idx) => {
+      if (q.type === 'essay' && essayAnswers[idx] && essayAnswers[idx].trim()) {
+        payload[String(idx)] = essayAnswers[idx].trim();
+        hasAny = true;
+      }
+    });
+    return hasAny ? payload : undefined;
+  }, [quiz, essayAnswers]);
+
   // Play premium success sound when quiz finishes & trigger auto-save + route lock
   React.useEffect(() => {
     if (isQuizCompleted) {
@@ -397,6 +419,7 @@ export default function QuizResolver({
             return;
           }
           const finalName = takerName.trim() || userName.trim() || 'طالب زائر';
+          const essayPayload = getEssayAnswersPayload();
           const res = isGuest
             ? await submitGuestQuizAttempt(quizId, {
                 guestId: userId,
@@ -404,6 +427,7 @@ export default function QuizResolver({
                 score,
                 clientAttemptKey: attemptKeyRef.current,
                 feedback: '',
+                essayAnswers: essayPayload,
               })
               : await submitQuizAttempt(quizId, {
                 // submitQuizAttempt resolves the authoritative Supabase Auth
@@ -416,7 +440,8 @@ export default function QuizResolver({
                 rating: undefined,
                 feedback: '',
                 clientAttemptKey: attemptKeyRef.current,
-                totalQuestions: quiz.questions.length
+                totalQuestions: quiz.questions.length,
+                essayAnswers: essayPayload,
               });
 
           // Supabase RPC table results are returned as an array, while the
@@ -756,6 +781,7 @@ export default function QuizResolver({
           clientAttemptKey: attemptKeyRef.current,
           rating,
           feedback: feedback.trim(),
+          essayAnswers: getEssayAnswersPayload(),
         });
         const completionRow = Array.isArray(result) ? result[0] : result;
         if (completionRow?.id) setSavedCompletionId(completionRow.id);
@@ -765,7 +791,8 @@ export default function QuizResolver({
           takerName: takerName.trim(),
           score,
           rating,
-          feedback: feedback.trim()
+          feedback: feedback.trim(),
+          essayAnswers: getEssayAnswersPayload(),
         });
         const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
         if (completionRow?.id) setSavedCompletionId(completionRow.id);
@@ -877,6 +904,7 @@ export default function QuizResolver({
           clientAttemptKey: attemptKeyRef.current,
           rating: selectedRating > 0 ? selectedRating : undefined,
           feedback: feedbackText.trim(),
+          essayAnswers: getEssayAnswersPayload(),
         });
         const completionRow = Array.isArray(result) ? result[0] : result;
         if (completionRow?.id) {
@@ -891,7 +919,8 @@ export default function QuizResolver({
           rating: selectedRating > 0 ? selectedRating : undefined,
           feedback: feedbackText.trim(),
           clientAttemptKey: attemptKeyRef.current,
-          totalQuestions: quiz.questions.length
+          totalQuestions: quiz.questions.length,
+          essayAnswers: getEssayAnswersPayload(),
         });
         const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
         if (completionRow?.id) {
@@ -1540,7 +1569,11 @@ export default function QuizResolver({
                       className="w-full py-4 bg-primary hover:bg-primary-hover disabled:opacity-40 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
                     >
                       <CheckCircle2 className="w-5 h-5" />
-                      <span>تأكيد الإجابة وقراءة الجواب النموذجي</span>
+                      <span>
+                        {quiz?.essayGradingMode === 'ai'
+                          ? (isAr ? 'تأكيد الإجابة وقراءة الجواب النموذجي' : 'Confirm & Read Model Answer')
+                          : (isAr ? 'تأكيد وحفظ الإجابة المقالية ✍️' : 'Confirm & Save Written Answer ✍️')}
+                      </span>
                     </button>
                   </div>
                 ) : (
@@ -1550,24 +1583,39 @@ export default function QuizResolver({
                         <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">إجابتك المكتوبة:</span>
                         <p className="text-xs text-slate-705 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{essayAnswerText || 'لا توجد إجابة مكتوبة.'}</p>
                       </div>
-                      <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-150 dark:border-emerald-900 space-y-1.5">
-                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded">الجواب النموذجي المرصود بالذكاء الاصطناعي:</span>
-                        <p className="text-xs text-slate-800 dark:text-slate-205 whitespace-pre-wrap leading-relaxed font-semibold">{currentQuestion.correctAnswer || 'لم يتم تحديد إجابة تفصيلية.'}</p>
-                      </div>
+                      {quiz?.essayGradingMode === 'ai' ? (
+                        <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-150 dark:border-emerald-900 space-y-1.5">
+                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded">الجواب النموذجي المرصود بالذكاء الاصطناعي:</span>
+                          <p className="text-xs text-slate-800 dark:text-slate-205 whitespace-pre-wrap leading-relaxed font-semibold">{currentQuestion.correctAnswer || 'لم يتم تحديد إجابة تفصيلية.'}</p>
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 space-y-1.5">
+                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded">
+                            {isAr ? 'حالة التصحيح: بانتظار مراجعة المنشئ ⏳' : 'Status: Pending Creator Review ⏳'}
+                          </span>
+                          <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold">
+                            {isAr
+                              ? 'تم حفظ إجابتك بنجاح. ستتم مراجعتها وتصحيحها ورصد الدرجة يدويًا من قِبل منشئ الاختبار.'
+                              : 'Your answer is recorded. It will be reviewed and graded manually by the creator.'}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
-                    {essayGrading[currentIdx] ? (
-                      <div className="p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-dashed border-primary/20 text-center text-xs font-bold text-primary animate-pulse">جارٍ تصحيح الإجابة المقالية بالذكاء الاصطناعي...</div>
-                    ) : essayAssessed === null ? (
-                      <div className="p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-dashed border-primary/20 text-center text-xs font-bold text-primary animate-pulse">جاري التحقق من صحة الإجابة تلقائياً...</div>
-                    ) : (
-                      <div className="p-3.5 rounded-xl border border-dotted border-slate-300/60 text-center text-xs font-semibold bg-slate-50 dark:bg-slate-900/40">
-                        {essayAssessed ? (
-                          <span className="text-emerald-600 dark:text-emerald-400">🎉 رائع! قمت باحتساب الإجابة صحيحة (+1 نقطة في محصلتك).</span>
-                        ) : (
-                          <span className="text-slate-500 dark:text-slate-400">تم رصد السؤال كإجابة تحتاج لمزيد من المراجعة والتحصيل الفردي.</span>
-                        )}
-                      </div>
+                    {quiz?.essayGradingMode === 'ai' && (
+                      essayGrading[currentIdx] ? (
+                        <div className="p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-dashed border-primary/20 text-center text-xs font-bold text-primary animate-pulse">جارٍ تصحيح الإجابة المقالية بالذكاء الاصطناعي...</div>
+                      ) : essayAssessed === null ? (
+                        <div className="p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-dashed border-primary/20 text-center text-xs font-bold text-primary animate-pulse">جاري التحقق من صحة الإجابة تلقائياً...</div>
+                      ) : (
+                        <div className="p-3.5 rounded-xl border border-dotted border-slate-300/60 text-center text-xs font-semibold bg-slate-50 dark:bg-slate-900/40">
+                          {essayAssessed ? (
+                            <span className="text-emerald-600 dark:text-emerald-400">🎉 رائع! قمت باحتساب الإجابة صحيحة (+1 نقطة في محصلتك).</span>
+                          ) : (
+                            <span className="text-slate-500 dark:text-slate-400">تم رصد السؤال كإجابة تحتاج لمزيد من المراجعة والتحصيل الفردي.</span>
+                          )}
+                        </div>
+                      )
                     )}
                   </div>
                 )}
@@ -1735,27 +1783,56 @@ export default function QuizResolver({
             </div>
 
             {/* Score circle layout */}
-            <div className="relative mx-auto w-32 h-32 flex items-center justify-center rounded-full bg-primary-light/50 dark:bg-slate-900 border-4 border-primary">
-              <div className="text-center">
-                <span className="font-display font-black text-3xl text-primary block">
-                  {Math.round((score / quiz.questions.length) * 100)}%
-                </span>
-                <span className="text-[10px] text-slate-400 font-medium">
-                  {score} من أصل {quiz.questions.length} صحيح
-                </span>
-              </div>
-            </div>
+            {quiz.questions.some(q => q.type === 'essay') && quiz.essayGradingMode !== 'ai' ? (
+              <div className="space-y-4">
+                <div className="relative mx-auto w-32 h-32 flex items-center justify-center rounded-full bg-amber-500/10 dark:bg-amber-950/20 border-4 border-amber-500">
+                  <div className="text-center">
+                    <span className="font-display font-black text-2xl text-amber-500 block">
+                      {score} / {quiz.questions.filter(q => q.type !== 'essay').length}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium block">
+                      {isAr ? 'درجة الموضوعي' : 'Objective Score'}
+                    </span>
+                  </div>
+                </div>
 
-            {/* User score assessment feedback banner */}
-            <div className="max-w-md mx-auto text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              {score === quiz.questions.length ? (
-                <span className="p-2 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 font-bold block">علامة كاملة وممتازة! أنت خبير ومتقن لهذا الموضوع بالكامل. 🏆</span>
-              ) : score >= quiz.questions.length / 2 ? (
-                <span className="p-2 py-1.5 rounded-xl bg-primary-light dark:bg-primary/20 text-primary font-bold block">نتيجة مميزة جداً! استمر في التعلم والدراسة لتسجيل الدرجة النهائية. 👍</span>
-              ) : (
-                <span className="p-2 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 font-bold block">جيد، حاول مراجعة الإجابات الخاطئة وإعادة المحاولة لتحسين نتيجتك وتدريب مهاراتك. 📚</span>
-              )}
-            </div>
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-center space-y-1.5 max-w-md mx-auto">
+                  <div className="flex items-center justify-center gap-2 font-black text-sm">
+                    <span className="text-base">⏳</span>
+                    <span>{isAr ? 'حالة النتيجة: بانتظار مراجعة وتصحيح المنشئ' : 'Status: Pending Creator Review'}</span>
+                  </div>
+                  <p className="text-xs leading-relaxed opacity-95">
+                    {isAr
+                      ? `تم تسليم الاختبار وحفظ إجاباتك بنجاح. سيقوم صانع الاختبار أو المعلم بمراجعة أسئلتك المقالية ورصد النتيجة النهائية.`
+                      : 'Your attempt has been submitted. The creator will review and grade your essay answers.'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="relative mx-auto w-32 h-32 flex items-center justify-center rounded-full bg-primary-light/50 dark:bg-slate-900 border-4 border-primary">
+                  <div className="text-center">
+                    <span className="font-display font-black text-3xl text-primary block">
+                      {Math.round((score / quiz.questions.length) * 100)}%
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      {score} من أصل {quiz.questions.length} صحيح
+                    </span>
+                  </div>
+                </div>
+
+                {/* User score assessment feedback banner */}
+                <div className="max-w-md mx-auto text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {score === quiz.questions.length ? (
+                    <span className="p-2 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 font-bold block">علامة كاملة وممتازة! أنت خبير ومتقن لهذا الموضوع بالكامل. 🏆</span>
+                  ) : score >= quiz.questions.length / 2 ? (
+                    <span className="p-2 py-1.5 rounded-xl bg-primary-light dark:bg-primary/20 text-primary font-bold block">نتيجة مميزة جداً! استمر في التعلم والدراسة لتسجيل الدرجة النهائية. 👍</span>
+                  ) : (
+                    <span className="p-2 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 font-bold block">جيد، حاول مراجعة الإجابات الخاطئة وإعادة المحاولة لتحسين نتيجتك وتدريب مهاراتك. 📚</span>
+                  )}
+                </div>
+              </div>
+            )}
 
             <button
               type="button"
@@ -2033,6 +2110,7 @@ export default function QuizResolver({
             userAnswers={userAnswers}
             essayAnswers={essayAnswers}
             essayAssessments={essayAssessments}
+            essayGradingMode={quiz.essayGradingMode}
             lang={lang}
             questionRatings={questionRatings}
             questionRatingErrors={questionRatingErrors}

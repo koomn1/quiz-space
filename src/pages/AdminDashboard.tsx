@@ -4,11 +4,12 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Shield, Users, Database, LayoutDashboard, Crown, Ticket, AlertTriangle, Settings, Bell, Search, Activity, BarChart3, Trash2, Edit2, Play, PlusCircle, EyeOff, MessageSquare, Lock, ShieldCheck, Gift, Coins, WalletCards, CheckCircle2, XCircle, Loader2, ArrowUpRight, RefreshCw, UserRoundCheck } from 'lucide-react';
 import { Quiz } from '../types';
-import { getAdminOverviewSnapshot, getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings, getPendingPaymentRequestsCount } from '../lib/db';
+import { getAdminOverviewSnapshot, getAllProfiles, sendDirectMessage, broadcastPlatformNotification, getCoupons, saveCoupon, deleteCoupon, COSMO_SYSTEM_UID, getAiPerformanceLogs, adminGrantRewardPoints, adminReviewRewardOrder, getRewardStoreOrders, getPlatformSettings, updatePlatformSettings, getPendingPaymentRequestsCount, getPendingEssayReviews } from '../lib/db';
 import { LiquidGlassSwitch } from '../components/LiquidGlassSwitch';
 import AdminRewardCatalogPanel from '../components/AdminRewardCatalogPanel';
 import { getApiUrl } from '../lib/origin';
 import { decryptMessage } from '../lib/encryption';
+import { EssayReviewModal } from '../components/EssayReviewModal';
 
 import AdminSubscriptions from '../components/AdminSubscriptions';
 import AdminMotivationUsagePanel from '../components/AdminMotivationUsagePanel';
@@ -97,6 +98,23 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
   const [overviewLoadError, setOverviewLoadError] = useState<string | null>(null);
   const [overviewRefreshKey, setOverviewRefreshKey] = useState(0);
   const [pendingPaymentCount, setPendingPaymentCount] = useState<number>(0);
+  const [pendingEssayCount, setPendingEssayCount] = useState<number>(0);
+  const [adminEssayModalOpen, setAdminEssayModalOpen] = useState<boolean>(false);
+  const [selectedReviewQuizId, setSelectedReviewQuizId] = useState<string | undefined>(undefined);
+  const [selectedReviewQuizTitle, setSelectedReviewQuizTitle] = useState<string | undefined>(undefined);
+
+  const refreshPendingEssays = async () => {
+    try {
+      const data = await getPendingEssayReviews();
+      setPendingEssayCount(data.length);
+    } catch (_) {
+      setPendingEssayCount(0);
+    }
+  };
+
+  useEffect(() => {
+    void refreshPendingEssays();
+  }, [overviewRefreshKey]);
 
   useEffect(() => {
     let mounted = true;
@@ -112,6 +130,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
 
     const handleNewRequest = () => {
       void refreshPending();
+      void refreshPendingEssays();
     };
     window.addEventListener('quizspace-payment-request-submitted', handleNewRequest);
     return () => {
@@ -355,7 +374,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
     { id: 'overview', name: isAr ? 'نظرة عامة' : 'Overview', icon: LayoutDashboard },
     { id: 'users', name: isAr ? 'المستخدمين' : 'Users', icon: Users },
     { id: 'classrooms', name: isAr ? 'الفصول (وضع التخفي)' : 'Classrooms (Stealth Mode)', icon: EyeOff },
-    { id: 'quizzes', name: isAr ? 'الاختبارات' : 'Quizzes', icon: Database },
+    { id: 'quizzes', name: isAr ? 'الاختبارات' : 'Quizzes', icon: Database, badge: pendingEssayCount > 0 ? pendingEssayCount : null },
     { id: 'subscriptions', name: isAr ? 'الاشتراكات' : 'Subscriptions', icon: Crown, badge: pendingPaymentCount > 0 ? pendingPaymentCount : null },
     { id: 'coupons', name: isAr ? 'الكوبونات' : 'Coupons', icon: Ticket },
     { id: 'ai_monitoring', name: isAr ? 'مراقبة الذكاء الاصطناعي' : 'AI Monitoring', icon: Activity },
@@ -473,6 +492,41 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                         className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0"
                       >
                         <span>{isAr ? 'الانتقال لطلبات الدفع' : 'Review Requests'}</span>
+                        <ArrowUpRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {pendingEssayCount > 0 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-3xl border border-violet-500/30 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent text-violet-900 dark:text-violet-100 shadow-sm animate-fade-in">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-11 h-11 rounded-2xl bg-violet-500/20 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-500/30 text-xl font-bold">
+                          ✍️
+                        </div>
+                        <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                              {isAr ? `يوجد ${pendingEssayCount} إجابة مقالية معلقة بانتظار التصحيح والتقييم` : `${pendingEssayCount} pending essay answer(s) awaiting grading`}
+                            </h4>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-violet-500 text-white animate-pulse">
+                              {isAr ? 'تصحيح مقالي' : 'Essay Review'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                            {isAr ? 'بصفتك مسؤولاً عاماً، يمكنك مراجعة وتقييم إجابات الطلاب على مستوى المنصة ورصد الدرجات.' : 'As super admin, you can review, grade, and feedback student essay submissions across the platform.'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedReviewQuizId(undefined);
+                          setSelectedReviewQuizTitle(undefined);
+                          setAdminEssayModalOpen(true);
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0"
+                      >
+                        <span>{isAr ? 'تصحيح الإجابات الآن' : 'Grade Essays Now'}</span>
                         <ArrowUpRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -607,10 +661,27 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
 
               {activeAdminTab === 'quizzes' && (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                      <h3 className="font-bold text-lg text-slate-800 dark:text-white">
                         {isAr ? 'إدارة الاختبارات' : 'Quiz Management'}
                      </h3>
+                     <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedReviewQuizId(undefined);
+                          setSelectedReviewQuizTitle(undefined);
+                          setAdminEssayModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-500 px-3.5 py-2 text-xs font-black text-white shadow-sm transition-all cursor-pointer"
+                     >
+                        <span>✍️</span>
+                        <span>{isAr ? 'مراجعة وتصحيح المقالي' : 'Grade Essays'}</span>
+                        {pendingEssayCount > 0 && (
+                          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black">
+                            {pendingEssayCount}
+                          </span>
+                        )}
+                     </button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                      {quizzes.map((quiz, idx) => (
@@ -622,6 +693,20 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                            <div className="flex items-center justify-between mt-4">
                               <span className="text-[10px] bg-primary/10 text-primary px-2 py-1 rounded-md font-bold">General</span>
                               <div className="flex items-center gap-1">
+                                 {quiz.questions?.some(q => q.type === 'essay') && (
+                                   <button
+                                     type="button"
+                                     onClick={() => {
+                                       setSelectedReviewQuizId(quiz.id);
+                                       setSelectedReviewQuizTitle(quiz.title);
+                                       setAdminEssayModalOpen(true);
+                                     }}
+                                     title={isAr ? 'تصحيح الإجابات المقالية لهذا الاختبار' : 'Grade essay answers for this quiz'}
+                                     className="min-h-11 min-w-11 text-amber-500 hover:bg-amber-500/10 rounded-lg flex items-center justify-center cursor-pointer"
+                                   >
+                                     <span className="text-sm">✍️</span>
+                                   </button>
+                                 )}
                                  <button type="button" onClick={() => onEditQuiz?.(quiz)} disabled={!onEditQuiz} title={isAr ? 'تعديل الاختبار' : 'Edit quiz'} className="min-h-11 min-w-11 text-blue-500 hover:bg-blue-500/10 rounded-lg disabled:opacity-40"><Edit2 className="mx-auto w-4 h-4" /></button>
                                  <button type="button" onClick={async () => {
                                    if (!onDeleteQuiz || deletingQuizId) return;
@@ -1250,6 +1335,21 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
           </div>
           </OverlayPortal>
         )}
+
+      <EssayReviewModal
+        isOpen={adminEssayModalOpen}
+        onClose={() => {
+          setAdminEssayModalOpen(false);
+          setSelectedReviewQuizId(undefined);
+          setSelectedReviewQuizTitle(undefined);
+        }}
+        quizId={selectedReviewQuizId}
+        quizTitle={selectedReviewQuizTitle}
+        lang={lang}
+        onGraded={() => {
+          void refreshPendingEssays();
+        }}
+      />
       
     </div>
   );
