@@ -1267,7 +1267,7 @@ export default function QuizResolver({
                     {isAr ? 'انقر على كارت السؤال لقلبه ومعاينة الإجابة والتحليل وتدبر نظريته العلمية.' : 'Click any question card to flip and analyze the detailed scientific key solution.'}
                   </p>
                 </div>
-                <div className="text-[10px] bg-purple-50 dark:bg-purple-950/40 text-purple-650 dark:text-purple-400 font-black px-3 py-1.5 rounded-xl border border-purple-500/10 tracking-wide font-sans">
+                <div className="text-[10px] bg-primary/10 text-primary dark:text-primary-light font-black px-3 py-1.5 rounded-xl border border-primary/20 tracking-wide font-sans">
                   {isAr ? 'الكارت' : 'Card'} {currentFlashcardIdx + 1} / {quiz.questions.length}
                 </div>
               </div>
@@ -1293,7 +1293,7 @@ export default function QuizResolver({
                   {/* FRONT SIDE (Question) */}
                   <div className="absolute inset-0 w-full h-full backface-hidden rounded-x3 rounded-3xl bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-805 p-8 flex flex-col justify-between shadow-xs transition-all hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-purple-650 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 px-3 py-1 rounded-full">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-primary dark:text-primary-light bg-primary/10 px-3 py-1 rounded-full">
                         {quiz.questions[currentFlashcardIdx].type === 'mcq'
                           ? (isAr ? '❓ اختيار من متعدد' : '❓ Multiple Choice')
                           : quiz.questions[currentFlashcardIdx].type === 'tf'
@@ -1366,8 +1366,8 @@ export default function QuizResolver({
                         {/* Custom lesson explanation block generated live on-demand */}
                         {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id] && (
                           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
-                            <span className="text-[9px] uppercase font-black text-purple-650 dark:text-purple-400 block">{isAr ? '⚡ شرح كوزمو المعلم الرقمي:' : '⚡ Lesson by AI Tutor AI:'}</span>
-                            <p className="text-[11px] text-purple-950 dark:text-purple-105 leading-relaxed bg-purple-500/5 dark:bg-purple-950/20 p-2.5 rounded-xl border border-purple-500/10 whitespace-pre-line font-medium text-right">
+                            <span className="text-[9px] uppercase font-black text-primary dark:text-primary-light block">{isAr ? '⚡ شرح كوزمو المعلم الرقمي:' : '⚡ Lesson by AI Tutor AI:'}</span>
+                            <p className="text-[11px] text-slate-900 dark:text-slate-100 leading-relaxed bg-primary/5 dark:bg-primary/10 p-2.5 rounded-xl border border-primary/20 whitespace-pre-line font-medium text-right">
                               {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id]}
                             </p>
                           </div>
@@ -1386,13 +1386,13 @@ export default function QuizResolver({
                         disabled={aiFlashcardLoading[quiz.questions[currentFlashcardIdx].id]}
                         className={`px-3 py-1.5 rounded-xl text-[10px] font-black cursor-pointer transition-all border shrink-0 flex items-center gap-1 ${
                           aiFlashcardLoading[quiz.questions[currentFlashcardIdx].id]
-                            ? 'bg-purple-100 dark:bg-purple-950/50 text-purple-605 dark:text-purple-350 border-purple-200/55 animate-pulse'
+                            ? 'bg-primary/20 text-primary border-primary/40 animate-pulse'
                             : aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id]
                             ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                            : 'bg-purple-500/10 text-purple-650 dark:text-purple-400 hover:bg-purple-500/20 border-purple-500/20'
+                            : 'bg-primary/10 text-primary dark:text-primary-light hover:bg-primary/20 border-primary/20'
                         }`}
                       >
-                        <Sparkles className="w-3 h-3 text-purple-500" />
+                        <Sparkles className="w-3 h-3 text-primary" />
                         <span>
                           {aiFlashcardLoading[quiz.questions[currentFlashcardIdx].id]
                             ? (isAr ? 'استحضار كوزمو...' : 'Summoning AI...')
@@ -1430,7 +1430,7 @@ export default function QuizResolver({
                 <div className="flex gap-1.5 justify-center items-center flex-wrap max-w-[150px]">
                   {quiz.questions.map((_, i) => (
                     <button
-                      
+                      key={i}
                       onClick={() => {
                         setCurrentFlashcardIdx(i);
                         setIsFlipped(false);
@@ -1438,7 +1438,7 @@ export default function QuizResolver({
                       }}
                       className={`h-2 rounded-full transition-all ${
                         i === currentFlashcardIdx 
-                          ? 'w-5 bg-purple-650 dark:bg-purple-400' 
+                          ? 'w-5 bg-primary' 
                           : 'w-2 bg-slate-205 dark:bg-slate-800 hover:bg-slate-300'
                       }`}
                       title={`${isAr ? 'كارت' : 'Card'} ${i + 1}`}

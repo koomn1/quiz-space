@@ -136,7 +136,7 @@ export default function Sidebar({
   };
 
   return (
-    <aside aria-label={isAr ? 'التنقل الرئيسي' : 'Primary navigation'} className="liquid-sidebar w-full h-full bg-[#0a0518]/95 backdrop-blur-3xl border-none text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
+    <aside aria-label={isAr ? 'التنقل الرئيسي' : 'Primary navigation'} className="liquid-sidebar w-full h-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-3xl border-none text-slate-700 dark:text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
       {/* Premium Custom SVG Logo */}
       <div className="flex items-center gap-2 justify-start select-none py-1 mb-1 shrink-0" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
         <div 
@@ -173,12 +173,12 @@ export default function Sidebar({
         </div>
       </div>
  
-      {/* User profile card with purple border ring and hover glow */}
+      {/* User profile card with subtle border ring and hover glow */}
       <div className="mt-1 mb-1.5 shrink-0" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
         {isGuest ? (
-          <div className="p-2 sm:p-3 rounded-2xl bg-slate-900/40 border border-[#3d1d6d]/30 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-[11px] font-black text-slate-300">
-              <Sparkles aria-hidden="true" className="h-4 w-4 shrink-0 text-cyan-300" />
+          <div className="p-2 sm:p-3 rounded-2xl bg-slate-100/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-primary/20 backdrop-blur-md">
+            <div className="flex items-center gap-2 text-[11px] font-black text-slate-700 dark:text-slate-300">
+              <Sparkles aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
               <span>{isAr ? 'مرحباً بك كطالب زائر!' : 'Welcome Guest!'}</span>
             </div>
           </div>
@@ -187,13 +187,13 @@ export default function Sidebar({
             onClick={() => setTab('profile')} 
             type="button"
             aria-label={isAr ? 'فتح الملف الشخصي' : 'Open profile'}
-            className="w-full p-2 sm:p-2.5 rounded-2xl bg-slate-900/50 hover:bg-[#130b2b]/60 border-2 border-[#b175ff]/20 hover:border-[#b175ff]/60 hover:shadow-[0_0_20px_rgba(177,117,255,0.25)] transition-all duration-300 cursor-pointer text-right relative overflow-hidden group" 
+            className="w-full p-2 sm:p-2.5 rounded-2xl bg-slate-100/70 hover:bg-slate-200/60 dark:bg-slate-900/50 dark:hover:bg-slate-800/60 border border-slate-200/80 dark:border-primary/20 hover:border-primary/50 transition-all duration-300 cursor-pointer text-right relative overflow-hidden group shadow-2xs hover:shadow-xs" 
             style={{ textAlign: isAr ? 'right' : 'left' }}
           >
             <div className="flex items-center gap-2.5 w-full">
               {/* Glowing ring container around avatar */}
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-[#9b51e0] to-[#b175ff] p-[2px] shrink-0 shadow-md ring-2 ring-offset-2 ring-offset-[#130b2b] ring-[#9b51e0] group-hover:ring-[#b175ff] group-hover:scale-105 transition-all duration-300 animate-[pulse_3s_infinite]">
-                <div className="w-full h-full rounded-full bg-[#0a0518] flex items-center justify-center overflow-hidden">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-primary to-accent p-[2px] shrink-0 shadow-xs ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-950 ring-primary/40 group-hover:ring-primary group-hover:scale-105 transition-all duration-300">
+                <div className="w-full h-full rounded-full bg-white dark:bg-slate-950 flex items-center justify-center overflow-hidden">
                   <ProfileAvatar
                     src={photoUrl || avatar_url}
                     alt={userName}
@@ -201,13 +201,13 @@ export default function Sidebar({
                     eager
                     className="h-full w-full rounded-full"
                     imageClassName="h-full w-full object-cover"
-                    fallbackClassName="text-[#b175ff] font-black text-sm"
+                    fallbackClassName="text-primary font-black text-sm"
                   />
                 </div>
               </div>
               
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="text-[11px] sm:text-xs font-black text-white truncate w-full flex items-center gap-1.5">
+                <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white truncate w-full flex items-center gap-1.5">
                   <PremiumNameTag
                     name={userName}
                     isPremium={isPremium}
@@ -215,10 +215,10 @@ export default function Sidebar({
                     nameColor={nameColor}
                     badgeColor={badgeColor}
                     badgeSize="sm"
-                    className="truncate text-white"
+                    className="truncate text-slate-900 dark:text-white"
                   />
                 </div>
-                <p className="text-[8px] sm:text-[9px] text-slate-400 font-bold truncate mt-0.5">
+                <p className="text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-400 font-bold truncate mt-0.5">
                   {isAr ? 'عرض الملف الشخصي' : 'View Profile'}
                 </p>
               </div>
@@ -307,14 +307,14 @@ export default function Sidebar({
       </nav>
 
       {/* Sidebar Footer options - Pinned at the bottom */}
-      <div className="border-t border-[#3d1d6d]/30 pt-2 mt-auto space-y-1 shrink-0">
+      <div className="border-t border-slate-200/80 dark:border-primary/20 pt-2 mt-auto space-y-1 shrink-0">
         {!isGuest && (
           <button 
             onClick={onLogout} 
-            className="w-full flex items-center gap-3 px-3 py-1.5 text-xs font-bold rounded-xl hover:bg-red-950/20 text-red-400 cursor-pointer group shrink-0"
+            className="w-full flex items-center gap-3 px-3 py-1.5 text-xs font-bold rounded-xl hover:bg-red-500/10 text-rose-600 dark:text-rose-400 cursor-pointer group shrink-0 transition-colors"
             style={{ direction: isAr ? 'rtl' : 'ltr' }}
           >
-            <LogOut size={14} className="text-red-400 group-hover:translate-x-[-2px] transition-transform duration-200" />
+            <LogOut size={14} className="text-rose-500 dark:text-rose-400 group-hover:translate-x-[-2px] transition-transform duration-200" />
             <span>{t.tabLogout || (isAr ? 'تسجيل الخروج' : 'Logout')}</span>
           </button>
         )}
@@ -323,17 +323,17 @@ export default function Sidebar({
         {(() => {
           if (activePlanId === 'diamond') {
             return (
-              <div className="uipro-glass-surface bg-gradient-to-br from-[#9b51e0]/10 via-[#ec4899]/5 to-transparent border border-[#9b51e0]/30 p-2 rounded-2xl text-center space-y-0.5 relative overflow-hidden select-none shadow-md shrink-0">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-[#b175ff]/10 rounded-full blur-xl pointer-events-none" />
+              <div className="uipro-glass-surface bg-gradient-to-br from-primary/10 via-amber-500/5 to-transparent border border-primary/25 p-2 rounded-2xl text-center space-y-0.5 relative overflow-hidden select-none shadow-xs shrink-0">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-full blur-xl pointer-events-none" />
                 <div className="flex justify-center gap-1.5 text-lg text-amber-500 animate-pulse mb-0.5">
-                  <Gem className="w-4 h-4 text-indigo-400" />
+                  <Gem className="w-4 h-4 text-primary" />
                   <Crown className="w-4 h-4 text-amber-400" />
                 </div>
                 <div>
                   <p className="text-amber-800 dark:text-amber-300 font-extrabold text-[10px]">
                     {isAr ? 'الباقة الماسية الفاخرة (القصوى)' : 'Diamond Elite VIP Member'}
                   </p>
-                  <p className="text-[9px] text-slate-600 dark:text-slate-300 leading-normal font-bold hidden sm:block mt-0.5">
+                  <p className="text-[9px] text-slate-600 dark:text-slate-400 leading-normal font-bold hidden sm:block mt-0.5">
                     {isAr ? 'نشكرك على ثقتك الغالية وشراكتك في نجاح Quiz Space! ❤️' : 'Thank you for your support and partnership! ❤️'}
                   </p>
                 </div>
@@ -341,14 +341,14 @@ export default function Sidebar({
             );
           } else if (activePlanId === 'gold') {
             return (
-              <div className="uipro-glass-surface bg-gradient-to-br from-[#130b2b]/60 via-[#1b0e3c]/40 to-slate-900 border border-[#b175ff]/15 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-[#b175ff]/10 rounded-full blur-xl pointer-events-none" />
-                <Crown className="w-4 h-4 mx-auto text-amber-400 animate-pulse" />
+              <div className="uipro-glass-surface bg-slate-100/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-primary/20 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
+                <Crown className="w-4 h-4 mx-auto text-amber-500 animate-pulse" />
                 <div>
                   <p className="text-slate-900 dark:text-white font-black text-[10px] sm:text-xs">
                     {isAr ? 'أنت في الباقة الذهبية' : 'Active: Educator Gold'}
                   </p>
-                  <p className="text-[9px] text-slate-600 dark:text-slate-300 leading-normal font-medium hidden sm:block mt-0.5">
+                  <p className="text-[9px] text-slate-600 dark:text-slate-400 leading-normal font-medium hidden sm:block mt-0.5">
                     {isAr ? 'اصعد بصلاحياتك لتشمل تصدير excel للمدارس.' : 'Upgrade your tier to export class scores to Excel.'}
                   </p>
                 </div>
@@ -363,14 +363,14 @@ export default function Sidebar({
             );
           } else if (activePlanId === 'silver') {
             return (
-              <div className="uipro-glass-surface bg-gradient-to-br from-[#130b2b]/60 via-[#1b0e3c]/40 to-slate-900 border border-[#b175ff]/15 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-[#b175ff]/10 rounded-full blur-xl pointer-events-none" />
+              <div className="uipro-glass-surface bg-slate-100/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-primary/20 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-full blur-xl pointer-events-none" />
                 <Medal className="w-4 h-4 mx-auto text-slate-400 animate-pulse" />
                 <div>
                   <p className="text-slate-900 dark:text-white font-black text-[10px] sm:text-xs">
                     {isAr ? 'أنت في الباقة الفضية' : 'Active: Student Silver'}
                   </p>
-                  <p className="text-[9px] text-slate-600 dark:text-slate-300 leading-normal font-medium hidden sm:block mt-0.5">
+                  <p className="text-[9px] text-slate-600 dark:text-slate-400 leading-normal font-medium hidden sm:block mt-0.5">
                     {isAr ? 'احصل على ميزات طباعة تقارير الإجابات PDF.' : 'Unlock downloading professional PDF analysis.'}
                   </p>
                 </div>
@@ -386,14 +386,14 @@ export default function Sidebar({
           } else {
             // Free / Guest tier
             return (
-              <div className="uipro-glass-surface bg-gradient-to-br from-[#130b2b]/60 via-[#1b0e3c]/40 to-slate-900 border border-[#b175ff]/15 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
+              <div className="uipro-glass-surface bg-slate-100/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-primary/20 p-2 rounded-2xl text-center space-y-1 relative overflow-hidden select-none shadow-xs shrink-0">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-full blur-xl pointer-events-none" />
-                <Crown className="w-4 h-4 mx-auto text-[#b175ff] animate-pulse" />
+                <Crown className="w-4 h-4 mx-auto text-primary animate-pulse" />
                 <div>
                   <p className="text-slate-900 dark:text-white font-black text-[10px] sm:text-xs">
                     {isAr ? 'الترقية للميزات الكبرى ✨' : 'Unlock Educator Pro ✨'}
                   </p>
-                  <p className="text-[9px] text-slate-600 dark:text-slate-300 leading-normal hidden sm:block mt-0.5">
+                  <p className="text-[9px] text-slate-600 dark:text-slate-400 leading-normal hidden sm:block mt-0.5">
                     {isAr ? 'توليد غير محدود بالذكاء الاصطناعي وبدون إعلانات.' : 'Uncaps AI creation features forever.'}
                   </p>
                 </div>

@@ -222,7 +222,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
         <div role="dialog" aria-label={isAr ? 'مركز الإشعارات' : 'Notification centre'} className={`uipro-glass-surface fixed inset-x-2 top-20 z-[150] max-h-[calc(100dvh-6rem)] w-auto max-w-none overflow-hidden rounded-3xl border border-white/60 dark:border-white/10 p-3 shadow-2xl backdrop-blur-2xl sm:absolute sm:inset-x-auto sm:top-full sm:mt-3 sm:max-h-[min(42rem,calc(100dvh-7rem))] sm:w-[min(22rem,calc(100vw-2rem))] sm:p-4 ${isAr ? 'sm:left-0 sm:right-auto' : 'sm:right-0 sm:left-auto'} animate-in fade-in zoom-in-95 duration-200`}>
           <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
             <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-violet-600" />
+              <Bell className="h-4 w-4 text-primary" />
               <h3 className="text-sm font-black text-slate-900 dark:text-white">
                 {isAr ? 'الإشعارات' : 'Notifications'}
               </h3>
@@ -240,11 +240,11 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
           </div>
 
           {dailyNotifications.length > 0 && (
-            <div className="mt-3 rounded-2xl border border-violet-200/70 bg-gradient-to-br from-primary via-violet-600 to-cyan-600 p-3 text-white shadow-lg shadow-violet-500/20">
+            <div className="mt-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary via-primary-hover to-accent/80 p-3 text-white shadow-lg shadow-primary/20">
               <div className="flex items-start gap-2.5">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/15"><Sparkles className="h-4 w-4" /></div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-100">{isAr ? 'تحديثات اليوم' : 'Today’s updates'}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/80">{isAr ? 'تحديثات اليوم' : 'Today’s updates'}</p>
                   <p className="mt-1 text-xs font-bold leading-5 text-white/90">{isAr ? 'أنشطة جديدة جاهزة لك اليوم. اختر نشاطًا وابدأ مباشرة.' : 'Fresh activities are ready for you today. Pick one and start now.'}</p>
                 </div>
               </div>
@@ -274,12 +274,12 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
                   type="button"
                   key={notif.id}
                   onClick={() => void markNotificationAsRead(notif.id)}
-                  className={`flex flex-col gap-1 rounded-2xl p-3 text-start transition hover:-translate-y-0.5 hover:shadow-sm ${
+                  className={`flex flex-col gap-1 rounded-2xl p-3 text-start transition hover:-translate-y-0.5 hover:shadow-xs ${
                     notif.id.startsWith('daily-')
-                      ? 'border border-violet-200 bg-gradient-to-br from-violet-50 to-cyan-50 shadow-sm dark:border-violet-800/50 dark:from-violet-950/40 dark:to-cyan-950/20'
+                      ? 'border border-primary/25 bg-gradient-to-br from-primary/10 to-accent/10 shadow-xs dark:border-primary/30 dark:from-primary/15 dark:to-accent/15'
                       : notif.is_read
                         ? 'bg-slate-50 dark:bg-slate-800/40 opacity-75'
-                        : 'border border-violet-100 bg-violet-50/70 hover:border-violet-300 dark:border-violet-900/40 dark:bg-violet-950/30'
+                        : 'border border-primary/20 bg-primary/5 hover:border-primary/40 dark:border-primary/30 dark:bg-primary/10'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">

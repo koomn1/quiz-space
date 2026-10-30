@@ -1944,38 +1944,38 @@ export function SettingsSection({
                       className={`relative flex flex-col gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                         colorTheme === t.id 
                           ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(155,81,224,0.3)] ring-2 ring-primary/30' 
-                          : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                          : 'bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
                       {!isPremium && t.id !== 'indigo' && (
-                        <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-[1.5px] rounded-2xl z-10 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/70 backdrop-blur-[1.5px] rounded-2xl z-10 flex items-center justify-center">
                           <span className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-[9px] px-2 py-0.5 rounded shadow-sm font-black uppercase">Premium</span>
                         </div>
                       )}
                       <div className={`h-10 w-full rounded-xl bg-gradient-to-r ${t.color}`} />
-                      <span className="text-[11px] font-black text-slate-200 text-center">{t.name}</span>
+                      <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 text-center">{t.name}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Toggle Switches list */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
-                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-950/40 border border-slate-800">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800">
                   <div>
-                    <h4 className="text-xs font-bold text-white">{isAr ? 'الوضع الداكن الفاخر' : 'Luxury Dark Mode'}</h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'تبديل واجهات النظام الكاملة للوضع الداكن' : 'Toggle application-wide dark aesthetic'}</p>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">{isAr ? 'الوضع الداكن الفاخر' : 'Luxury Dark Mode'}</h4>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{isAr ? 'تبديل واجهات النظام الكاملة للوضع الداكن' : 'Toggle application-wide dark aesthetic'}</p>
                   </div>
                   <div className="shrink-0">
                     <NeumorphismToggle checked={darkMode} onChange={setDarkMode} size="sm" />
                   </div>
                 </div>
-                <div className="md:col-span-2 rounded-2xl bg-slate-950/40 border border-slate-800 p-4">
-                  <h4 className="text-xs font-bold text-white">{isAr ? 'تفضيل الثيم' : 'Theme preference'}</h4>
-                  <p className="text-[10px] text-slate-400 mt-0.5 mb-3">{isAr ? 'اختَر الوضع الفاتح أو الداكن أو اتبع إعداد الجهاز تلقائيًا.' : 'Choose light, dark, or follow the device automatically.'}</p>
+                <div className="md:col-span-2 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-4">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">{isAr ? 'تفضيل الثيم' : 'Theme preference'}</h4>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 mb-3">{isAr ? 'اختَر الوضع الفاتح أو الداكن أو اتبع إعداد الجهاز تلقائيًا.' : 'Choose light, dark, or follow the device automatically.'}</p>
                   <div className="grid grid-cols-3 gap-2">
                     {(['light', 'dark', 'system'] as const).map((preference) => (
-                      <button key={preference} type="button" onClick={() => setThemePreference(preference)} className={`min-h-10 rounded-xl border text-[11px] font-black transition ${themePreference === preference ? 'border-primary bg-primary/15 text-primary' : 'border-slate-700 text-slate-300 hover:border-slate-500'}`}>
+                      <button key={preference} type="button" onClick={() => setThemePreference(preference)} className={`min-h-10 rounded-xl border text-[11px] font-black transition ${themePreference === preference ? 'border-primary bg-primary/15 text-primary' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/40'}`}>
                         {preference === 'light' ? (isAr ? 'فاتح' : 'Light') : preference === 'dark' ? (isAr ? 'داكن' : 'Dark') : (isAr ? 'حسب الجهاز' : 'System')}
                       </button>
                     ))}

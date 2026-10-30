@@ -149,19 +149,19 @@ export function LiquidGlassSelect<T extends string | number = string | number>({
         className={`group relative w-full flex items-center justify-between gap-2.5 transition-all duration-300 font-bold select-none outline-none
           backdrop-blur-xl border shadow-xs active:scale-[0.99]
           bg-white/80 hover:bg-white/95 dark:bg-slate-900/80 dark:hover:bg-slate-900/95
-          border-slate-200/80 hover:border-violet-400/60 dark:border-white/10 dark:hover:border-violet-500/40
+          border-slate-200/80 hover:border-primary/50 dark:border-white/10 dark:hover:border-primary/50
           text-slate-800 dark:text-slate-100
-          focus-visible:ring-2 focus-visible:ring-violet-400/40 dark:focus-visible:ring-violet-500/40
+          focus-visible:ring-2 focus-visible:ring-primary/40 dark:focus-visible:ring-primary/40
           ${sizeClasses} ${className}`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
-          {leftIcon && <span className="shrink-0 text-violet-500 dark:text-violet-400">{leftIcon}</span>}
+          {leftIcon && <span className="shrink-0 text-primary">{leftIcon}</span>}
           {selectedOption?.icon && <span className="shrink-0">{selectedOption.icon}</span>}
           <span className="truncate block font-extrabold text-slate-800 dark:text-slate-100">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           {selectedOption?.badge && (
-            <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-300 border border-violet-500/20">
+            <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
               {selectedOption.badge}
             </span>
           )}
@@ -169,8 +169,8 @@ export function LiquidGlassSelect<T extends string | number = string | number>({
 
         {/* Animated Chevron */}
         <ChevronDown
-          className={`w-4 h-4 shrink-0 text-slate-400 group-hover:text-violet-500 dark:group-hover:text-violet-400 transition-transform duration-300 ease-out ${
-            isOpen ? 'rotate-180 text-violet-500 dark:text-violet-400 scale-110' : ''
+          className={`w-4 h-4 shrink-0 text-slate-400 group-hover:text-primary transition-transform duration-300 ease-out ${
+            isOpen ? 'rotate-180 text-primary scale-110' : ''
           }`}
         />
       </button>
@@ -181,7 +181,7 @@ export function LiquidGlassSelect<T extends string | number = string | number>({
           className={`absolute left-0 right-0 mt-2 z-50 overflow-hidden rounded-2xl border
             backdrop-blur-2xl bg-white/95 dark:bg-slate-950/95
             border-white/80 dark:border-white/10
-            shadow-2xl shadow-violet-500/10 dark:shadow-black/60
+            shadow-2xl shadow-primary/10 dark:shadow-black/60
             animate-in fade-in-0 zoom-in-95 duration-200 origin-top ${popoverClassName}`}
           style={{
             maxHeight: '320px',
@@ -211,7 +211,7 @@ export function LiquidGlassSelect<T extends string | number = string | number>({
                   }}
                   className={`group/item flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-xs sm:text-sm font-bold transition-all duration-150 select-none ${
                     isSelected
-                      ? 'bg-violet-500/15 text-violet-900 dark:text-violet-200 border border-violet-500/25 shadow-xs'
+                      ? 'bg-primary/15 text-slate-900 dark:text-white border border-primary/30 shadow-xs'
                       : isHighlighted
                       ? 'bg-slate-100/90 dark:bg-slate-800/80 text-slate-900 dark:text-white'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/60 dark:hover:bg-slate-800/60'
@@ -225,11 +225,11 @@ export function LiquidGlassSelect<T extends string | number = string | number>({
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={`truncate block ${isSelected ? 'font-black text-violet-700 dark:text-violet-300' : 'font-bold'}`}>
+                        <span className={`truncate block ${isSelected ? 'font-black text-primary' : 'font-bold'}`}>
                           {option.label}
                         </span>
                         {option.badge && (
-                          <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-300">
+                          <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-primary/10 text-primary">
                             {option.badge}
                           </span>
                         )}
@@ -243,7 +243,7 @@ export function LiquidGlassSelect<T extends string | number = string | number>({
                   </div>
 
                   {isSelected && (
-                    <span className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-violet-500 text-white shadow-xs animate-in zoom-in-75 duration-150">
+                    <span className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-primary text-white shadow-xs animate-in zoom-in-75 duration-150">
                       <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                     </span>
                   )}

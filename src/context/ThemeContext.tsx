@@ -54,6 +54,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.classList.add('theme-switching');
     root.classList.toggle('dark', darkMode);
     root.dataset.colorTheme = selected.id;
+
+    const modeTokens = darkMode ? selected.dark : selected.light;
     root.style.setProperty('--theme-gradient-from', selected.gradientFrom);
     root.style.setProperty('--theme-gradient-to', selected.gradientTo);
     root.style.setProperty('--theme-primary', selected.primary);
@@ -61,13 +63,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty('--theme-primary-light', selected.primaryLight);
     root.style.setProperty('--theme-primary-dark', selected.primaryDark);
     root.style.setProperty('--theme-secondary', selected.secondary);
-    root.style.setProperty('--theme-canvas', selected.canvas);
-    root.style.setProperty('--theme-surface', selected.surface);
-    root.style.setProperty('--theme-surface-strong', selected.surfaceStrong);
-    root.style.setProperty('--theme-border', selected.border);
-    root.style.setProperty('--theme-text', selected.text);
-    root.style.setProperty('--theme-muted', selected.muted);
-    root.style.setProperty('--theme-glow', selected.glow);
+    root.style.setProperty('--theme-canvas', modeTokens.canvas);
+    root.style.setProperty('--theme-surface', modeTokens.surface);
+    root.style.setProperty('--theme-surface-strong', modeTokens.surfaceStrong);
+    root.style.setProperty('--theme-border', modeTokens.border);
+    root.style.setProperty('--theme-text', modeTokens.text);
+    root.style.setProperty('--theme-muted', modeTokens.muted);
+    root.style.setProperty('--theme-glow', modeTokens.glow);
     root.style.colorScheme = darkMode ? 'dark' : 'light';
 
     window.localStorage.setItem('quiz_theme', darkMode ? 'dark' : 'light');

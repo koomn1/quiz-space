@@ -498,9 +498,9 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                   )}
 
                   {pendingEssayCount > 0 && (
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-3xl border border-violet-500/30 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent text-violet-900 dark:text-violet-100 shadow-sm animate-fade-in">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-3xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary-hover/5 to-transparent text-slate-900 dark:text-slate-100 shadow-sm animate-fade-in">
                       <div className="flex items-center gap-3.5">
-                        <div className="w-11 h-11 rounded-2xl bg-violet-500/20 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-500/30 text-xl font-bold">
+                        <div className="w-11 h-11 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shrink-0 border border-primary/25 text-xl font-bold">
                           ✍️
                         </div>
                         <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
@@ -508,7 +508,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                             <h4 className="text-sm font-black text-slate-900 dark:text-white">
                               {isAr ? `يوجد ${pendingEssayCount} إجابة مقالية معلقة بانتظار التصحيح والتقييم` : `${pendingEssayCount} pending essay answer(s) awaiting grading`}
                             </h4>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-violet-500 text-white animate-pulse">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-primary text-white animate-pulse">
                               {isAr ? 'تصحيح مقالي' : 'Essay Review'}
                             </span>
                           </div>
@@ -524,7 +524,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                           setSelectedReviewQuizTitle(undefined);
                           setAdminEssayModalOpen(true);
                         }}
-                        className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0"
+                        className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-black text-xs transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0"
                       >
                         <span>{isAr ? 'تصحيح الإجابات الآن' : 'Grade Essays Now'}</span>
                         <ArrowUpRight className="w-4 h-4" />
@@ -672,7 +672,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                           setSelectedReviewQuizTitle(undefined);
                           setAdminEssayModalOpen(true);
                         }}
-                        className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-500 px-3.5 py-2 text-xs font-black text-white shadow-sm transition-all cursor-pointer"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary-hover px-3.5 py-2 text-xs font-black text-white shadow-sm transition-all cursor-pointer"
                      >
                         <span>✍️</span>
                         <span>{isAr ? 'مراجعة وتصحيح المقالي' : 'Grade Essays'}</span>
@@ -1236,44 +1236,44 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                   </h4>
                   <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
                     {adminStudents.filter(s => s.classCode === activeAdminClassroom.code).map((s, idx) => (
-                      <div key={s.id || idx} className="p-3 bg-slate-950/60 rounded-xl border border-slate-900/80 flex items-center justify-between gap-3 text-xs">
+                      <div key={s.id || idx} className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200/80 dark:border-slate-900/80 flex items-center justify-between gap-3 text-xs">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-200 overflow-hidden text-[10px]">
+                          <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200 overflow-hidden text-[10px]">
                             {s.studentPhoto ? <img src={s.studentPhoto} alt={s.studentName} className="w-full h-full object-cover" /> : s.studentName.charAt(0)}
                           </div>
                           <div className="text-right sm:text-left" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                            <span className="font-bold text-white block">{s.studentName}</span>
-                            <span className="text-[8px] text-slate-400">
+                            <span className="font-bold text-slate-900 dark:text-white block">{s.studentName}</span>
+                            <span className="text-[8px] text-slate-500 dark:text-slate-400">
                               {s.role === 'co-moderator' ? '⭐️ Co-Moderator' : 'Student'}
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400">
                           <span>Avg: {s.avgScore}%</span>
                         </div>
                       </div>
                     ))}
 
                     {adminStudents.filter(s => s.classCode === activeAdminClassroom.code).length === 0 && (
-                      <p className="text-center py-6 text-slate-600 text-xs">{isAr ? 'لا يوجد طلاب منضمين حالياً' : 'No students joined'}</p>
+                      <p className="text-center py-6 text-slate-500 text-xs">{isAr ? 'لا يوجد طلاب منضمين حالياً' : 'No students joined'}</p>
                     )}
                   </div>
                 </div>
 
                 {/* E2EE Chat log & Master audit recovery */}
                 <div className="space-y-4">
-                  <h4 className="font-black text-white text-xs flex items-center justify-between" style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}>
+                  <h4 className="font-black text-slate-900 dark:text-white text-xs flex items-center justify-between" style={{ flexDirection: isAr ? 'row-reverse' : 'row' }}>
                     <span className="flex items-center gap-1.5">
-                      <Lock className="w-4 h-4 text-purple-400" />
+                      <Lock className="w-4 h-4 text-primary" />
                       <span>{isAr ? 'مراقبة المحادثات المشفرة (E2EE)' : 'E2EE Secure Chat Monitor'}</span>
                     </span>
-                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[8px] font-bold rounded-lg flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-bold rounded-lg flex items-center gap-1">
                       <ShieldCheck className="w-3 h-3" />
                       <span>{isAr ? 'محلول التشفير الفوري' : 'Decrypted Live'}</span>
                     </span>
                   </h4>
 
-                  <div className="p-4 bg-slate-950/60 rounded-2xl border border-slate-800/80 space-y-3">
+                  <div className="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 space-y-3">
                     <div className="h-[200px] overflow-y-auto space-y-2 pr-1 no-scrollbar">
                       {adminMessages.map(msg => (
                         <DecryptedMessageItem

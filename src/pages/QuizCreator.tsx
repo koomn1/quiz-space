@@ -3586,8 +3586,8 @@ A computer is a digital electronic machine...
                       onClick={() => setEssayGradingMode('manual')}
                       className={`p-4 rounded-2xl border text-right transition-all flex flex-col gap-1.5 cursor-pointer ${
                         essayGradingMode === 'manual'
-                          ? 'border-violet-500 bg-violet-500/10 shadow-sm text-violet-900 dark:text-violet-100 ring-2 ring-violet-500/30'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-violet-300'
+                          ? 'border-primary bg-primary/10 shadow-xs text-slate-900 dark:text-white ring-2 ring-primary/30'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-primary/40'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
@@ -3596,7 +3596,7 @@ A computer is a digital electronic machine...
                           <span>{isAr ? 'تصحيح يدوي من منشئ الاختبار (موصى به)' : 'Manual Review by Creator'}</span>
                         </span>
                         {essayGradingMode === 'manual' && (
-                          <span className="text-[10px] bg-violet-600 text-white font-black px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] bg-primary text-white font-black px-2 py-0.5 rounded-full">
                             {isAr ? 'مُفعّل' : 'Active'}
                           </span>
                         )}
@@ -3613,8 +3613,8 @@ A computer is a digital electronic machine...
                       onClick={() => setEssayGradingMode('ai')}
                       className={`p-4 rounded-2xl border text-right transition-all flex flex-col gap-1.5 cursor-pointer ${
                         essayGradingMode === 'ai'
-                          ? 'border-violet-500 bg-violet-500/10 shadow-sm text-violet-900 dark:text-violet-100 ring-2 ring-violet-500/30'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-violet-300'
+                          ? 'border-primary bg-primary/10 shadow-xs text-slate-900 dark:text-white ring-2 ring-primary/30'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-primary/40'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
@@ -3623,7 +3623,7 @@ A computer is a digital electronic machine...
                           <span>{isAr ? 'تصحيح فوري بالذكاء الاصطناعي (AI)' : 'Instant AI Grading'}</span>
                         </span>
                         {essayGradingMode === 'ai' && (
-                          <span className="text-[10px] bg-violet-600 text-white font-black px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] bg-primary text-white font-black px-2 py-0.5 rounded-full">
                             {isAr ? 'مُفعّل' : 'Active'}
                           </span>
                         )}
@@ -3655,8 +3655,8 @@ A computer is a digital electronic machine...
                     {/* Option 1: Public */}
                     <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all select-none ${
                       distributionRouting === 'public' 
-                        ? 'bg-violet-500/15 border-violet-500 text-white shadow-lg shadow-violet-500/5' 
-                        : 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                        ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs' 
+                        : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}>
                       <input 
                         type="radio" 
@@ -3667,11 +3667,11 @@ A computer is a digital electronic machine...
                         className="sr-only"
                       />
                       <div className="flex flex-col text-right w-full" style={{ direction: 'rtl', textAlign: 'right' }}>
-                        <span className="text-xs font-black text-white flex items-center gap-1.5 justify-start">
-                          <span className="text-emerald-400">🌐</span>
+                        <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5 justify-start">
+                          <span className="text-emerald-500">🌐</span>
                           <span>{isAr ? 'نشر عام للجميع' : 'Public Distribution'}</span>
                         </span>
-                        <span className="text-[9px] text-slate-400 mt-1">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                           {isAr ? 'يكون الاختبار متاحاً للبحث والاستكشاف لجميع الطلاب في المنصة' : 'The quiz will be discoverable on the global public marketplace'}
                         </span>
                       </div>
@@ -3680,8 +3680,8 @@ A computer is a digital electronic machine...
                     {/* Option 2: Classroom Restricted */}
                     <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all select-none ${
                       distributionRouting === 'classroom' 
-                        ? 'bg-violet-500/15 border-violet-500 text-white shadow-lg shadow-violet-500/5' 
-                        : 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                        ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs' 
+                        : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}>
                       <input 
                         type="radio" 
@@ -3692,11 +3692,11 @@ A computer is a digital electronic machine...
                         className="sr-only"
                       />
                       <div className="flex flex-col text-right w-full" style={{ direction: 'rtl', textAlign: 'right' }}>
-                        <span className="text-xs font-black text-white flex items-center gap-1.5 justify-start">
-                          <span className="text-indigo-400">🎓</span>
+                        <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5 justify-start">
+                          <span className="text-primary">🎓</span>
                           <span>{isAr ? 'فصل دراسي خاص' : 'Classroom Restricted'}</span>
                         </span>
-                        <span className="text-[9px] text-slate-400 mt-1">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                           {isAr ? 'محصور وموجه فقط للفصول والقاعات الدراسية والطلاب المنضمين بكود' : 'Exclusive to students enrolled in your verified classrooms'}
                         </span>
                       </div>
@@ -3705,8 +3705,8 @@ A computer is a digital electronic machine...
                     {/* Option 3: Community Group Sync */}
                     <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all select-none ${
                       distributionRouting === 'community' 
-                        ? 'bg-violet-500/15 border-violet-500 text-white shadow-lg shadow-violet-500/5' 
-                        : 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                        ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs' 
+                        : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}>
                       <input 
                         type="radio" 
@@ -3717,11 +3717,11 @@ A computer is a digital electronic machine...
                         className="sr-only"
                       />
                       <div className="flex flex-col text-right w-full" style={{ direction: 'rtl', textAlign: 'right' }}>
-                        <span className="text-xs font-black text-white flex items-center gap-1.5 justify-start">
-                          <span className="text-pink-400">👥</span>
+                        <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5 justify-start">
+                          <span className="text-pink-500">👥</span>
                           <span>{isAr ? 'مزامنة مجتمعية' : 'Community Group Sync'}</span>
                         </span>
-                        <span className="text-[9px] text-slate-400 mt-1">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                           {isAr ? 'يتم بث ومشاركة الاختبار مباشرة في ساحات نقاش مجموعات الاهتمام' : 'Broadcasting straight into public and private interest circle feeds'}
                         </span>
                       </div>
@@ -3731,7 +3731,7 @@ A computer is a digital electronic machine...
                   {distributionRouting === 'classroom' && (
                     <div className="mt-4 p-4 rounded-2xl bg-slate-500/5 border border-slate-200 dark:border-slate-800 text-right space-y-3" style={{ direction: 'rtl' }}>
                       <div className="flex items-center justify-between flex-row-reverse">
-                        <label className="text-xs font-black text-slate-300 flex items-center gap-2">
+                        <label className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-2">
                           <span className="text-lg">🏫</span>
                           <span>{isAr ? 'اختر الفصل الدراسي المستهدف لنشر الاختبار:' : 'Select the target classroom to publish the quiz:'}</span>
                         </label>
@@ -3752,19 +3752,18 @@ A computer is a digital electronic machine...
                               const isSelected = selectedClassroomId === c.id;
                               return (
                                 <div 
-                                  
                                   onClick={() => setSelectedClassroomId(c.id)}
                                   className={`p-3.5 rounded-2xl border cursor-pointer transition-all text-right select-none ${
                                     isSelected 
-                                      ? 'bg-violet-500/15 border-violet-500 text-white shadow-lg shadow-violet-500/5' 
-                                      : 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                                      ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs' 
+                                      : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                                   }`} key={c.id}
                                 >
-                                  <div className="font-black text-xs text-white flex items-center justify-between flex-row-reverse">
+                                  <div className="font-black text-xs text-slate-900 dark:text-white flex items-center justify-between flex-row-reverse">
                                     <span>{c.name}</span>
-                                    {isSelected && <span className="text-violet-400 text-xs font-bold">✓ {isAr ? 'محدد' : 'Selected'}</span>}
+                                    {isSelected && <span className="text-primary text-xs font-bold">✓ {isAr ? 'محدد' : 'Selected'}</span>}
                                   </div>
-                                  <div className="text-[10px] text-slate-450 mt-1.5 flex items-center gap-1.5 justify-end">
+                                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1.5 justify-end">
                                     <span>👤 {c.creatorName}</span>
                                     <span>•</span>
                                     <span>🔑 {isAr ? 'كود الفصل:' : 'Code:'} {c.code}</span>

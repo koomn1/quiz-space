@@ -128,12 +128,12 @@ export function EssayReviewModal({
       aria-modal="true"
     >
       <div
-        className="w-full max-w-4xl max-h-[min(780px,92vh)] overflow-hidden rounded-[28px] border border-violet-300/60 dark:border-violet-500/30 bg-white/95 dark:bg-slate-900/95 shadow-2xl backdrop-blur-xl flex flex-col"
+        className="w-full max-w-4xl max-h-[min(780px,92vh)] overflow-hidden rounded-[28px] border border-primary/25 dark:border-primary/30 bg-white/95 dark:bg-slate-900/95 shadow-2xl backdrop-blur-xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
         dir={isAr ? 'rtl' : 'ltr'}
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 px-6 py-4.5 dark:border-slate-800/80 bg-gradient-to-r from-violet-500/10 via-primary/5 to-amber-500/10 shrink-0">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 px-6 py-4.5 dark:border-slate-800/80 bg-gradient-to-r from-primary/10 via-primary/5 to-amber-500/10 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
               ✍️
@@ -142,7 +142,7 @@ export function EssayReviewModal({
               <h3 className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <span>{isAr ? 'مراجعة وتصحيح الأسئلة المقالية' : 'Essay Questions Review & Grading'}</span>
                 {reviews.length > 0 && (
-                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-300">
+                  <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-300">
                     {reviews.length} {isAr ? 'معلقة' : 'pending'}
                   </span>
                 )}
@@ -200,8 +200,8 @@ export function EssayReviewModal({
                       onClick={() => setActiveReviewId(rev.completionId)}
                       className={`w-full text-right p-3 rounded-2xl border transition-all cursor-pointer flex flex-col gap-1 ${
                         isSelected
-                          ? 'border-violet-500 bg-violet-500/10 dark:bg-violet-950/30 text-violet-900 dark:text-violet-100 shadow-xs'
-                          : 'border-slate-200/70 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-violet-300'
+                          ? 'border-primary bg-primary/10 dark:bg-primary/20 text-primary-dark dark:text-primary-light shadow-xs'
+                          : 'border-slate-200/70 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-primary/40'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -230,7 +230,7 @@ export function EssayReviewModal({
               {activeReview ? (
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
                   {/* Solver banner */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-violet-500/10 to-primary/10 border border-violet-200/60 dark:border-violet-800/40">
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
                     <div>
                       <h4 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
                         <span>👤</span>
@@ -256,7 +256,7 @@ export function EssayReviewModal({
                   {/* Essay Questions List */}
                   <div className="space-y-4">
                     <h5 className="font-black text-xs text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-violet-500" />
+                      <FileText className="w-4 h-4 text-primary" />
                       <span>{isAr ? 'الأسئلة المقالية وإجابات الطالب:' : 'Essay Questions & Student Answers:'}</span>
                     </h5>
 
@@ -276,7 +276,7 @@ export function EssayReviewModal({
                             className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3.5 shadow-sm"
                           >
                             <div className="flex items-start gap-2.5">
-                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-xs font-black text-white">
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-black text-white">
                                 {essayOrder + 1}
                               </span>
                               <p className="font-bold text-sm text-slate-900 dark:text-slate-100 leading-relaxed">
@@ -285,8 +285,8 @@ export function EssayReviewModal({
                             </div>
 
                             {/* Student Answer Box */}
-                            <div className="p-3.5 rounded-xl bg-violet-50/60 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900/30 space-y-1.5">
-                              <span className="text-[10px] font-black text-violet-700 dark:text-violet-300 bg-violet-100 dark:bg-violet-900/40 px-2 py-0.5 rounded inline-block">
+                            <div className="p-3.5 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/15 space-y-1.5">
+                              <span className="text-[10px] font-black text-primary dark:text-primary-light bg-primary/10 dark:bg-primary/20 px-2 py-0.5 rounded inline-block">
                                 {isAr ? 'إجابة الطالب المكتوبة:' : 'Student Written Answer:'}
                               </span>
                               <p className="text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-medium">
@@ -315,7 +315,7 @@ export function EssayReviewModal({
                   </div>
 
                   {/* Grading Inputs */}
-                  <div className="p-4 sm:p-5 rounded-2xl border border-violet-200/80 dark:border-violet-800/40 bg-slate-50 dark:bg-slate-900/80 space-y-4">
+                  <div className="p-4 sm:p-5 rounded-2xl border border-primary/20 dark:border-primary/30 bg-slate-50 dark:bg-slate-900/80 space-y-4">
                     <h5 className="font-black text-xs text-slate-800 dark:text-slate-200 flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-amber-500" />
                       <span>{isAr ? 'رصد الدرجة واعتماد النتيجة النهائية:' : 'Final Grade & Creator Remarks:'}</span>
@@ -407,3 +407,4 @@ export function EssayReviewModal({
     document.body
   );
 }
+

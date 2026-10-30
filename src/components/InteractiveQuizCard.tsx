@@ -599,7 +599,7 @@ export function InteractiveQuizCard({
                   e.stopPropagation();
                   setEssayReviewOpen(true);
                 }}
-                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-amber-300/80 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2 text-xs font-black text-amber-800 shadow-sm transition-all hover:shadow-md hover:bg-amber-100/70 active:scale-95 dark:border-amber-700/70 dark:from-amber-950/50 dark:to-orange-950/50 dark:text-amber-200 cursor-pointer"
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-2 text-xs font-black text-amber-700 dark:text-amber-300 shadow-xs transition-all active:scale-95 cursor-pointer"
                 title={isAr ? 'تصحيح الإجابات المقالية' : 'Grade essay answers'}
               >
                 <span>✍️</span>
@@ -667,7 +667,7 @@ export function InteractiveQuizCard({
               e.stopPropagation();
               setExportMenuOpen((open) => !open);
             }}
-            className="flex shrink-0 whitespace-nowrap items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-violet-100/80 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 font-black text-xs transition-all hover:scale-105 cursor-pointer border border-violet-200/70 dark:border-violet-800/50"
+            className="flex shrink-0 whitespace-nowrap items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-light font-black text-xs transition-all hover:scale-105 cursor-pointer border border-primary/20"
             title={isAr ? 'تحويل إلى PDF أو طباعة' : 'Export PDF or print'}
           >
             <Printer className="w-4 h-4" />
@@ -676,9 +676,9 @@ export function InteractiveQuizCard({
           </button>
           {exportMenuOpen && (
             <div data-card-action="export" className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200/80 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95" dir={isAr ? 'rtl' : 'ltr'}>
-              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Eye className="h-4 w-4 text-violet-500" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
-              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تصدير PDF احترافي' : 'Export professional PDF'}</button>
-              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
+              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-colors"><Eye className="h-4 w-4 text-primary" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
+              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-colors"><Download className="h-4 w-4 text-primary" />{isAr ? 'تصدير PDF احترافي' : 'Export professional PDF'}</button>
+              <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-colors"><Printer className="h-4 w-4 text-primary" />{isAr ? 'طباعة' : 'Print'}</button>
             </div>
           )}
           <button
@@ -686,7 +686,7 @@ export function InteractiveQuizCard({
               e.stopPropagation();
               onStartQuiz(quiz.id);
             }}
-            className="uipro-btn-tactile group/play flex grow shrink-0 whitespace-nowrap items-center justify-center gap-2 px-5 h-10 rounded-xl bg-gradient-to-r from-primary to-violet-600 hover:from-primary-hover hover:to-violet-500 text-white font-black text-xs shadow-md shadow-primary/25 hover:shadow-primary/45 cursor-pointer relative overflow-hidden"
+            className="uipro-btn-tactile group/play flex grow shrink-0 whitespace-nowrap items-center justify-center gap-2 px-5 h-10 rounded-xl bg-gradient-to-r from-primary to-primary-hover text-white font-black text-xs shadow-md shadow-primary/25 hover:shadow-primary/45 cursor-pointer relative overflow-hidden"
           >
             <span>{t?.startPlayBtn || (isAr ? 'ابدأ التحدي' : 'Start Play')}</span>
             <Play className={`w-3.5 h-3.5 fill-white ${isAr ? '' : 'rotate-180'} group-hover/play:scale-115 transition-transform`} />

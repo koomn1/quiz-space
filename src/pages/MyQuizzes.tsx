@@ -97,15 +97,15 @@ export function MyQuizzes({
       </div>
 
       {pendingCount > 0 && (
-        <div className="rounded-2xl border border-amber-300/80 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm animate-fade-in" dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-950/20 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs animate-fade-in" dir={isAr ? 'rtl' : 'ltr'}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 text-xl font-bold">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 text-xl font-bold border border-amber-500/20">
               ✍️
             </div>
             <div>
               <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <span>{isAr ? 'يوجد إجابات مقالية بانتظار تصحيحك ومراجعتك' : 'Pending essay answers need your grading'}</span>
-                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-black text-white">
+                <span className="rounded-full bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 text-[11px] font-black text-amber-700 dark:text-amber-300">
                   {pendingCount}
                 </span>
               </h3>
@@ -119,7 +119,7 @@ export function MyQuizzes({
           <button
             type="button"
             onClick={() => setEssayModalOpen(true)}
-            className="uipro-btn-tactile inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-xs font-black text-white shadow-md hover:from-amber-600 hover:to-orange-600 cursor-pointer active:scale-95 transition-all"
+            className="uipro-btn-tactile inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2.5 text-xs font-black shadow-sm cursor-pointer active:scale-95 transition-all"
           >
             <span>✍️</span>
             <span>{isAr ? 'مراجعة وتصحيح الإجابات الآن' : 'Review & Grade Essays Now'}</span>
