@@ -516,7 +516,10 @@ async function extractPdfVision(
     }));
     for (const result of results) {
       providers.add(result.model);
-      questions.push(...normalizeQuestions(result.quiz, parseAllowedQuestionTypes(job.custom_instruction)));
+      questions.push(...normalizeQuestions(result.quiz, parseAllowedQuestionTypes(job.custom_instruction)).map(question => ({
+        ...question,
+        coverageId: question.coverageId || `source-page-group-${start + 1}`,
+      })));
       processed += 1;
       await onProgress(processed, chunks.length, questions.length);
     }
@@ -620,7 +623,7 @@ async function generateQuestionsFromText(
     : sourceChunks.map(() => null);
   const messages = [{
     role: 'system',
-    content: 'أنت كوزمو، مساعد تعليمي يفهم النصوص الطويلة أولاً ثم ينفذ المطلوب بدقة. اقرأ الجزء المرسل، استخرج المفاهيم المهمة، وأنشئ أسئلة واضحة من محتواه فقط. لا تقل إن الملف لا يحتوي أسئلة لأن المطلوب هو توليد أسئلة من الشرح. أعد النتيجة بصيغة JSON المطلوبة فقط دون مقدمة أو Markdown.',
+    content: 'أنت محرك استخراج وبناء اختبارات مصدرية. نفّذ خط العمل على هذا الجزء بالترتيب: اقرأ المحتوى كاملًا، التقط التعريفات والنقاط والعلاقات والجداول والمعادلات، ثم ابنِ أسئلة من المعلومات الموجودة فقط. لا تعتمد على كلام المستخدم خارج المصدر ولا على اسم الملف، ولا تقل إن الملف لا يحتوي أسئلة لأن المطلوب تحويل الشرح إلى اختبار. أعد JSON فقط دون مقدمة أو Markdown، مع رقم السؤال ثم نصه ثم الاختيارات ثم الإجابة الصحيحة ثم الشرح.',
   }];
   let lastError: unknown;
   const allowedTypes = parseAllowedQuestionTypes(job.custom_instruction);
@@ -670,11 +673,16 @@ async function generateQuestionsFromText(
         providers.add(result.response.model);
         if (!isGenericQuizTitle(result.quiz?.title)) title = String(result.quiz.title).trim();
         if (typeof result.quiz?.description === 'string' && result.quiz.description.trim()) description = result.quiz.description.trim();
+        const sourceSectionId = `source-section-${sourceChunks.indexOf(batch[0] || '', 0) + 1}`;
         for (const question of result.questions) {
-          const key = normalizeAnswerText(question.text || '');
+          const sourceGroundedQuestion = {
+            ...question,
+            coverageId: question.coverageId || sourceSectionId,
+          };
+          const key = normalizeAnswerText(sourceGroundedQuestion.text || '');
           if (key && !seen.has(key)) {
             seen.add(key);
-            allQuestions.push(question);
+            allQuestions.push(sourceGroundedQuestion);
           }
         }
       }
@@ -1204,7 +1212,7 @@ export async function processExtractionJob(
     const source = await downloadSourceFile(env, authHeader, job.file_storage_path);
     await updateClaimedJob(env, authHeader, job.id, token, {
       progress_percentage: 5,
-      progress_message: 'تم فتح الملف، جارٍ قراءة المحتوى.',
+      progress_message: `تم فتح ${job.source_file_name || 'المصدر'}، جارٍ فحص النوع واللغة والأدوات المناسبة للقراءة.`,
     });
     const scannedPageCount = await getScannedPdfPageCount(source, job);
     if (scannedPageCount) {
@@ -1219,11 +1227,17 @@ export async function processExtractionJob(
         processed_chunks: visionChunks.filter(chunk => chunk.status === 'complete').length,
         total_chunks: visionChunks.length,
         progress_percentage: 5,
-        progress_message: `تم تجهيز ${visionChunks.length} أجزاء (${plan.pageCountPerChunk} صفحات للجزء، توازي ${plan.concurrency}). تبدأ المعالجة الآن.`,
+        progress_message: `تم اكتشاف PDF مصور؛ جرى تجهيز ${visionChunks.length} أجزاء لتحليل الصفحات والصور والرسوم (${plan.pageCountPerChunk} صفحات للجزء).`,
       });
       if (pendingChunkIds.length) await enqueueVisionChunks(job.id, pendingChunkIds);
       return;
     }
+    await updateClaimedJob(env, authHeader, job.id, token, {
+      progress_percentage: 8,
+      progress_message: job.extraction_mode === 'generate'
+        ? 'تم فحص المصدر؛ جارٍ قراءة النص والجداول والرسوم ثم بناء أسئلة من كل جزء.'
+        : 'تم فحص المصدر؛ جارٍ قراءة النص والأسئلة والجداول كما وردت في الملف.',
+    });
     const result = await extractJobQuiz(source, job, env, async (processed, total, questionCount) => {
       chunks = total;
       const percentage = Math.max(8, Math.min(95, Math.round(5 + (processed / Math.max(total, 1)) * 90)));
@@ -1231,7 +1245,9 @@ export async function processExtractionJob(
         processed_chunks: processed,
         total_chunks: total,
         progress_percentage: percentage,
-        progress_message: `معالجة الجزء ${processed}/${total} واستخراج ${questionCount} سؤالاً.`,
+        progress_message: job.extraction_mode === 'generate'
+          ? `قراءة وتحليل الجزء ${processed}/${total} من المصدر ثم بناء ${questionCount} سؤالاً موثقاً منه.`
+          : `قراءة الجزء ${processed}/${total} واستخراج ${questionCount} سؤالاً كما ورد في المصدر.`,
       });
     });
     provider = result.provider;
@@ -1242,7 +1258,9 @@ export async function processExtractionJob(
       progress_percentage: 100,
       processed_chunks: result.chunks,
       total_chunks: result.chunks,
-      progress_message: `اكتمل الاستخراج: ${result.questions.length} سؤالاً جاهزاً للمراجعة.`,
+      progress_message: job.extraction_mode === 'generate'
+        ? `اكتمل تحليل المصدر وبناء ${result.questions.length} سؤالاً مرتبة بالإجابة والشرح.`
+        : `اكتمل استخراج ${result.questions.length} سؤالاً جاهزاً للمراجعة.`,
       questions_json: result.questions,
       quiz_title: result.title,
       quiz_description: result.description,

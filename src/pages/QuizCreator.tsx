@@ -561,7 +561,7 @@ export default function QuizCreator({
   const [manualSolveOnlyNotice, setManualSolveOnlyNotice] = React.useState<string | null>(null);
   const [isManuallyConfirmingAnswers, setIsManuallyConfirmingAnswers] = React.useState(false);
   const [ocrProgress, setOcrProgress] = React.useState<{
-    stage: 'analyzing' | 'extracting' | 'solving' | 'compiling' | 'saving';
+    stage: 'analyzing' | 'extracting' | 'generating' | 'solving' | 'compiling' | 'saving';
     current: number;
     total: number;
     percentage?: number;
@@ -647,7 +647,7 @@ export default function QuizCreator({
   React.useEffect(() => {
     if (generationProgress && activeMode === 'ocr' && !postExtractionSolvePending) {
       setOcrProgress({
-        stage: generationProgress.stage === 'scanning' ? 'analyzing' : generationProgress.stage === 'saving' ? 'compiling' : generationProgress.stage === 'solving' ? 'solving' : 'extracting',
+        stage: generationProgress.stage === 'scanning' ? 'analyzing' : generationProgress.stage === 'saving' ? 'compiling' : generationProgress.stage === 'solving' ? 'solving' : generationProgress.stage === 'generating' ? 'generating' : generationProgress.stage === 'analyzing' ? 'analyzing' : 'extracting',
         current: generationProgress.current,
         total: generationProgress.total,
         percentage: generationProgress.percentage,
@@ -3099,11 +3099,13 @@ A computer is a digital electronic machine...
                 )}
                 {ocrProgress && (
                   <>
-                    <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/70 p-1.5 text-[10px] font-black" dir="rtl">
+                    <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/70 p-1.5 text-[10px] font-black sm:grid-cols-5" dir="rtl">
                       {[
-                        { stage: 'extracting', label: isAr ? '١. استخراج' : '1. Extract' },
-                        { stage: 'solving', label: isAr ? '٢. حل الاختبار بعد الاستخراج' : '2. Solve after extraction' },
-                        { stage: 'saving', label: isAr ? '٣. حفظ بعد التحقق' : '3. Save verified quiz' },
+                        { stage: 'analyzing', label: isAr ? '١. فحص المصدر' : '1. Inspect source' },
+                        { stage: 'extracting', label: isAr ? '٢. قراءة المحتوى' : '2. Read content' },
+                        { stage: 'generating', label: isAr ? '٣. بناء الأسئلة' : '3. Build questions' },
+                        { stage: 'solving', label: isAr ? '٤. مراجعة الإجابات' : '4. Review answers' },
+                        { stage: 'saving', label: isAr ? '٥. تجهيز الاختبار' : '5. Prepare quiz' },
                       ].map((item) => (
                         <span
                           key={item.stage}
@@ -3130,8 +3132,9 @@ A computer is a digital electronic machine...
                     <div className="flex justify-between items-center text-xs flex-row-reverse text-right">
                       <span className="font-extrabold text-amber-600 dark:text-amber-400">
                         {ocrProgress.stage === 'analyzing' && (isAr ? '🔍 تجهيز وقراءة الملف...' : '🔍 Preparing and reading the file...')}
-                        {ocrProgress.stage === 'extracting' && (isAr ? '🔮 استخراج الأسئلة من أجزاء الملف...' : '🔮 Extracting questions from file parts...')}
-                        {ocrProgress.stage === 'solving' && (isAr ? '✅ حل الاختبار بعد الاستخراج والتحقق من الإجابات...' : '✅ Solving and verifying the extracted quiz...')}
+                        {ocrProgress.stage === 'extracting' && (isAr ? '📖 قراءة النص والأسئلة من المصدر...' : '📖 Reading source text and questions...')}
+                        {ocrProgress.stage === 'generating' && (isAr ? '🧠 بناء أسئلة من كل نقطة في المصدر...' : '🧠 Building questions from the source...')}
+                        {ocrProgress.stage === 'solving' && (isAr ? '✅ مراجعة الإجابات مقابل المصدر...' : '✅ Reviewing answers against the source...')}
                         {ocrProgress.stage === 'saving' && (isAr ? '💾 حفظ الاختبار بعد التحقق...' : '💾 Saving the verified quiz...')}
                         {ocrProgress.stage === 'compiling' && (isAr ? '📊 تجميع الاختبار النهائي...' : '📊 Compiling the final quiz...')}
                       </span>

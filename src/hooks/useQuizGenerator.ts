@@ -11,7 +11,7 @@ export interface ProgressState {
   current: number;
   total: number;
   percentage?: number;
-  stage: 'scanning' | 'generating' | 'solving' | 'saving' | 'complete';
+  stage: 'scanning' | 'extracting' | 'analyzing' | 'generating' | 'solving' | 'saving' | 'complete';
   message: string;
 }
 
@@ -184,8 +184,8 @@ export function useQuizGenerator() {
         setProgress({
           current: 0,
           total: 1,
-          stage: 'generating',
-          message: existingJobId ? 'تم العثور على مهمة سابقة، جارٍ استئناف متابعة الاستخراج...' : 'تم رفع الملف بشكل خاص، وجارٍ بدء مهمة الاستخراج...',
+          stage: 'scanning',
+          message: existingJobId ? 'تم العثور على مهمة سابقة، جارٍ استئناف فحص المصدر...' : 'تم رفع الملف بشكل خاص، جارٍ فحص نوع المصدر وتجهيز أدوات القراءة...',
         });
 
         let job;
@@ -222,13 +222,19 @@ export function useQuizGenerator() {
             ? Math.min(100, Math.max(0, job.progressPercentage))
             : Math.round((job.processedChunks / totalChunks) * 100);
           const eta = formatExtractionEta(job.createdAt, job.processedChunks, job.totalChunks);
+          const progressMessage = String(job.progressMessage || '');
+          const progressStage: ProgressState['stage'] = /بناء|توليد|صياغة|generate|question/i.test(progressMessage)
+            ? 'generating'
+            : /تحليل|صورة|جدول|رسم|لغة|فحص|فتح|قراءة/i.test(progressMessage)
+              ? 'analyzing'
+              : 'extracting';
           setProgress({
             current: Math.min(job.processedChunks, totalChunks),
             total: totalChunks,
             percentage: reportedPercentage,
-            stage: 'generating',
+            stage: progressStage,
             message: [
-              job.progressMessage || `جارٍ استخراج محتوى «${fileUploadName || sourceFile?.name || 'المستند'}» (${reportedPercentage}%).`,
+              progressMessage || `جارٍ قراءة المصدر «${fileUploadName || sourceFile?.name || 'المستند'}» (${reportedPercentage}%).`,
               eta,
             ].filter(Boolean).join(' '),
           });
