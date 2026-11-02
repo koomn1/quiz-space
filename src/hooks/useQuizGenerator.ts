@@ -306,8 +306,16 @@ export function useQuizGenerator() {
         }
       }
 
+      // A file job must remain source-grounded. Never fill a short extraction
+      // from the user's topic or from the first 3,000 characters: that silently
+      // drops the book/document reference and produces unrelated questions.
+      // The creator page will retry the same uploaded source in generation mode.
+      if (type === 'file_direct' && !automaticCount && generationQuestionCount > 0 && accumulatedQuestions.length < generationQuestionCount) {
+        throw new Error(`لم يُخرج المستخرج العدد المطلوب من الملف (${accumulatedQuestions.length}/${generationQuestionCount}). سيتم إعادة بناء الأسئلة من محتوى الملف نفسه دون استخدام نص المستخدم وحده.`);
+      }
+
       // STRICT ENFORCEMENT OF REQUIRED QUESTION COUNT (إجبار العدد المطلوب)
-      if (!automaticCount && generationQuestionCount > 0 && accumulatedQuestions.length < generationQuestionCount) {
+      if (type !== 'file_direct' && !automaticCount && generationQuestionCount > 0 && accumulatedQuestions.length < generationQuestionCount) {
         const missingCount = generationQuestionCount - accumulatedQuestions.length;
         setProgress({
           current: accumulatedQuestions.length,

@@ -1189,9 +1189,28 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       current: 0,
       total: draftQuestions.length,
       percentage: 0,
-        message: `مرحلة حل الاختبار بعد الاستخراج: يراجع كوزمو إجابات «${sourceName || effectiveTitle}» من الملف قبل السماح بالحفظ...`,
+      message: `تم استخراج «${sourceName || effectiveTitle}». جارٍ فحص الإجابات الموجودة في المصدر قبل الحفظ...`,
     });
     try {
+      // Literal extraction must not trigger a second, unrelated AI solve call.
+      // If the document has no explicit answer key, preserve the extracted
+      // questions and let the creator solve them manually instead of leaving
+      // the card stuck at 100% while another provider tries to guess answers.
+      const unresolvedObjectiveCount = draftQuestions.filter(question =>
+        question.type !== 'essay' && (question.correctIndex < 0 || question.correctIndex >= question.options.length)
+      ).length;
+      if (unresolvedObjectiveCount > 0) {
+        const notice = isAr
+          ? `تم استخراج ${draftQuestions.length} سؤالًا من الملف، لكن ${unresolvedObjectiveCount} سؤالًا لا يملك إجابة موثقة داخل المصدر. تم إيقاف التدقيق الآلي وحفظ الأسئلة أمامك للحل اليدوي دون تخمين.`
+          : `${draftQuestions.length} questions were extracted, but ${unresolvedObjectiveCount} objective questions have no verified answer in the source. Automatic guessing was skipped; the questions are ready for manual solving.`;
+        setManualSolveOnlyNotice(notice);
+        setPostExtractionSolvePending(false);
+        setIsProcessingOcr(false);
+        setOcrProgress(null);
+        setActiveMode('manual');
+        return;
+      }
+
       let sourceText = '';
       if (uploadedFile && fileType === 'pdf') {
         try {
@@ -1705,17 +1724,10 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
             persist: false,
           });
         } else {
-          const cleanDocTitle = uploadedFile ? uploadedFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ') : 'المستند';
-          fallbackResult = await runFallbackGeneration({
-            type: 'topic',
-            topic: `اختبار شاملاً من شرح مستند (${cleanDocTitle})`,
-            customInstruction: fallbackInstruction || 'Generate questions only from the source document, preserve its language, and do not invent information.',
-            totalQuestions: pdfCount,
-            userId,
-            creatorName,
-            category: 'عام',
-            persist: false,
-          });
+          // Never turn a filename into a fake topic. If the source could not
+          // be read locally, the worker/vision path must be retried with the
+          // original file instead of generating unrelated questions.
+          throw new Error('لم يتم تجهيز نص مصدر قابل للقراءة من الملف. أعد المحاولة مع الملف نفسه، ولن يتم إنشاء أسئلة من اسم الملف فقط.');
         }
 
         if (fallbackResult?.quiz?.questions?.length > 0) {
