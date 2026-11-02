@@ -252,6 +252,34 @@ export function sourceLanguageInstruction(text = ''): string {
   return 'Detect the dominant language of the source and write the entire quiz in that same language. Do not translate it into another language.';
 }
 
+/**
+ * A question bank must not be treated like ordinary lecture notes.  The
+ * uploaded source can contain hundreds of numbered MCQs followed by a
+ * separately numbered essay section, so the automatic Generate path needs to
+ * preserve the source question count instead of using a small content-density
+ * heuristic. Literal extraction does not call this helper and remains
+ * unchanged.
+ */
+export function detectQuestionBank(sourceText = ''): { isQuestionBank: boolean; numberedQuestions: number } {
+  const text = String(sourceText || '');
+  const numberedLines = [...text.matchAll(/^\s*(\d{1,3})\s{2,}/gm)]
+    .map(match => Number(match[1]))
+    .filter(number => Number.isInteger(number) && number > 0);
+  const shortAnswerLines = [...text.matchAll(/^\s*(\d{1,3})[-.)]\s+/gm)]
+    .map(match => Number(match[1]))
+    .filter(number => Number.isInteger(number) && number > 0);
+  const highestNumber = Math.max(0, ...numberedLines, ...shortAnswerLines);
+  const numberedQuestionSignals = new Set([...numberedLines, ...shortAnswerLines]).size;
+  const isQuestionBank = numberedQuestionSignals >= 20 || highestNumber >= 50;
+  // MCQ banks commonly restart numbering in a later essay/short-answer
+  // section. The highest MCQ number plus the separately numbered short-answer
+  // lines therefore gives a better automatic target than a Set of numbers
+  // (which would collapse both sections into the same 1..16 range).
+  const mcqCount = Math.max(0, ...numberedLines);
+  const estimatedQuestionCount = Math.max(mcqCount + shortAnswerLines.length, numberedQuestionSignals);
+  return { isQuestionBank, numberedQuestions: isQuestionBank ? estimatedQuestionCount : 0 };
+}
+
 type AllowedQuestionType = 'mcq' | 'tf' | 'essay';
 
 export function parseAllowedQuestionTypes(customInstruction?: string | null): AllowedQuestionType[] {
@@ -301,9 +329,12 @@ ${customInstruction?.trim() ? `Additional instructions: ${customInstruction.trim
 }
 
 function generatePrompt(amount: number | null | undefined, customInstruction?: string | null, sourceText = ''): string {
-  const scopeInstruction = Number.isInteger(amount) && Number(amount) > 0
-    ? `استخرج أو أنشئ ${amount} سؤالاً بدقة متناهية من محتوى هذا الجزء من الملف.`
-    : 'افحص هذا الجزء من المستند بدقة وتعمق شديد؛ استخرج كل مفهوم أو تعريف أو معلومة أو فكرة رئيسية أو فرعية تستحق التقييم والاختبار. حدد تلقائياً عدد الأسئلة المناسب لكثافة المحتوى العلمي والمعرفي في هذا الجزء (بما يضمن التغطية الشاملة دون إهمال أي جزئية، ودون حشو سطحي أو تكرار). ركز على صياغة أسئلة احترافية تقيس الفهم والتحليل والتطبيق.';
+  const isQuestionBank = detectQuestionBank(sourceText).isQuestionBank;
+  const scopeInstruction = isQuestionBank
+    ? `هذا الجزء من بنك أسئلة مرقّم. استخرج كل سؤال مرقّم يظهر في هذا الجزء، مع خياراته وإجابته الموجودة في المصدر. لا تكتفِ بعدد تقريبي ولا تلخّص الأسئلة ولا تنشئ أسئلة جديدة بدل الأسئلة الموجودة. إذا انقطع السؤال بين جزأين فاستخرج الجزء الموجود هنا كاملاً واترك الدمج للمعالج.`
+    : Number.isInteger(amount) && Number(amount) > 0
+      ? `استخرج أو أنشئ ${amount} سؤالاً بدقة متناهية من محتوى هذا الجزء من الملف.`
+      : 'افحص هذا الجزء من المستند بدقة وتعمق شديد؛ استخرج كل مفهوم أو تعريف أو معلومة أو فكرة رئيسية أو فرعية تستحق التقييم والاختبار. حدد تلقائياً عدد الأسئلة المناسب لكثافة المحتوى العلمي والمعرفي في هذا الجزء (بما يضمن التغطية الشاملة دون إهمال أي جزئية، ودون حشو سطحي أو تكرار). ركز على صياغة أسئلة احترافية تقيس الفهم والتحليل والتطبيق.';
   return `${scopeInstruction} ${sourceLanguageInstruction(sourceText)} ${allowedQuestionTypesInstruction(customInstruction)} حافظ على معلومات المستند ولا تخمّن أي معلومة غير موجودة. عند إنشاء سؤال اختيار من متعدد أو صح/خطأ، يجب أن يكون correctIndex مطابقًا لخيار موجود وأن تكون correctAnswer نص ذلك الخيار، ثم راجع كل إجابة مقابل محتوى الملف قبل الإرجاع. لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية؛ إذا لم توجد إجابة موثوقة مباشرة من المحتوى، لا تغيّر النوع إلى نوع غير مسموح، بل أنشئ السؤال بأحد الأنواع المسموحة فقط. أعد JSON فقط بالشكل: {"title":"","description":"","questions":[{"number":1,"text":"","type":"mcq","options":[],"correctIndex":0,"correctAnswer":"","explanation":""}]}.${customInstruction?.trim() ? ` تعليمات إضافية: ${customInstruction.trim().slice(0, 2000)}` : ''}`;
 }
 
@@ -583,19 +614,25 @@ async function generateQuestionsFromText(
   env: ExtractionJobEnv,
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
-  // Automatic generation now gets a bounded, content-derived target instead of
-  // leaving the provider free to stop at its habitual 30-question default.
-  // The source is still split into small sections, so this does not create one
-  // oversized model response. Explicit counts remain exact upper bounds.
-  const automaticCount = Math.min(500, Math.max(3, Math.ceil(text.length / 1400)));
+  const questionBank = detectQuestionBank(text);
+  // A numbered question bank has a source-defined target. Do not replace its
+  // 300+ questions with the old text-density heuristic (which produced only a
+  // few dozen questions for the Animal Breeding bank). Other Generate inputs
+  // retain the previous content-derived behaviour.
+  const automaticCount = questionBank.isQuestionBank
+    ? Math.min(600, Math.max(1, questionBank.numberedQuestions))
+    : Math.min(500, Math.max(3, Math.ceil(text.length / 1400)));
   const requestedCount = job.requested_question_count || automaticCount;
   // Large explicit requests must also cover the whole source. Sending 100/200
   // questions in one prompt commonly reaches the model output limit and makes
   // the whole job fail, so split the source and assign a proportional target
   // to every section.
   const sourceChunks: string[] = [];
-  const automaticChunkSize = 16_000;
-  const automaticOverlap = 1_500;
+  // Keep bank sections small enough for a complete JSON response. The overlap
+  // protects questions whose options/answer appear at a section boundary;
+  // the merge fingerprint below removes the repeated copy.
+  const automaticChunkSize = questionBank.isQuestionBank ? 9_000 : 16_000;
+  const automaticOverlap = questionBank.isQuestionBank ? 800 : 1_500;
   if (text.length <= automaticChunkSize) {
     sourceChunks.push(text);
   } else {
@@ -623,7 +660,9 @@ async function generateQuestionsFromText(
     : sourceChunks.map(() => null);
   const messages = [{
     role: 'system',
-    content: 'أنت محرك استخراج وبناء اختبارات مصدرية. نفّذ خط العمل على هذا الجزء بالترتيب: اقرأ المحتوى كاملًا، التقط التعريفات والنقاط والعلاقات والجداول والمعادلات، ثم ابنِ أسئلة من المعلومات الموجودة فقط. لا تعتمد على كلام المستخدم خارج المصدر ولا على اسم الملف، ولا تقل إن الملف لا يحتوي أسئلة لأن المطلوب تحويل الشرح إلى اختبار. أعد JSON فقط دون مقدمة أو Markdown، مع رقم السؤال ثم نصه ثم الاختيارات ثم الإجابة الصحيحة ثم الشرح.',
+    content: questionBank.isQuestionBank
+      ? 'أنت محرك قراءة بنك أسئلة مصدرية. هذا الملف يحتوي أسئلة مرقمة موجودة بالفعل. اقرأ الجزء كاملًا واستخرج كل سؤال مرقم ظاهر فيه، مع نصه واختياراته والإجابة المحددة في المصدر. لا تنشئ أسئلة بديلة ولا تختصر ولا تتوقف بعد عدد صغير. إذا وجدت صفًا أو جدولًا يحتوي رقم السؤال والاختيارات والإجابة، حوّله إلى سؤال واحد. أعد JSON فقط دون مقدمة أو Markdown.'
+      : 'أنت محرك استخراج وبناء اختبارات مصدرية. نفّذ خط العمل على هذا الجزء بالترتيب: اقرأ المحتوى كاملًا، التقط التعريفات والنقاط والعلاقات والجداول والمعادلات، ثم ابنِ أسئلة من المعلومات الموجودة فقط. لا تعتمد على كلام المستخدم خارج المصدر ولا على اسم الملف، ولا تقل إن الملف لا يحتوي أسئلة لأن المطلوب تحويل الشرح إلى اختبار. أعد JSON فقط دون مقدمة أو Markdown، مع رقم السؤال ثم نصه ثم الاختيارات ثم الإجابة الصحيحة ثم الشرح.',
   }];
   let lastError: unknown;
   const allowedTypes = parseAllowedQuestionTypes(job.custom_instruction);
@@ -642,7 +681,7 @@ async function generateQuestionsFromText(
       const chunkTarget = chunkTargets[chunkIndex] || null;
       const chunkMessages = [
         messages[0],
-        { role: 'user', content: `${generatePrompt(chunkTarget, job.custom_instruction, sourceChunk)}\n\nمحتوى الملف المصدر — الجزء الحالي (استخرج كل النقاط القابلة للسؤال من هذا الجزء):\n${sourceChunk}` },
+        { role: 'user', content: `${generatePrompt(chunkTarget, job.custom_instruction, sourceChunk)}\n\nمحتوى الملف المصدر — الجزء الحالي ${questionBank.isQuestionBank ? '(استخرج كل الأسئلة المرقمة الموجودة هنا، ولا تترك أي سؤال)' : '(استخرج كل النقاط القابلة للسؤال من هذا الجزء)'}:\n${sourceChunk}` },
       ];
       let chunkError: unknown;
       try {
