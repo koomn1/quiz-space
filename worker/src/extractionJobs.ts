@@ -1,6 +1,6 @@
 import mammoth from 'mammoth';
 import { PDFDocument } from 'pdf-lib';
-import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
+import { extractPdfTextContent, extractQuestionsFromText, extractTableQuestionsFromPdf } from './documentExtraction';
 import { generateWithProviderChain } from './providerChain';
 import JSZip from 'jszip';
 
@@ -709,6 +709,21 @@ export async function extractJobQuiz(
     text = await extractPdfTextContent(source);
     if (text.trim().length > 40) {
       if (isLiteral) {
+        try {
+          const tableQuestions = await extractTableQuestionsFromPdf(source);
+          if (tableQuestions.length >= 10) {
+            await onProgress(1, 1, tableQuestions.length);
+            return {
+              title: deriveQuizTitle(job.source_file_name, text),
+              description: `أسئلة مستخرجة حرفياً من جداول ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+              questions: applyRequestedQuestionCount(tableQuestions, job.extraction_mode, job.requested_question_count),
+              chunks: 1,
+              provider: 'pdf-coordinate-table-parser',
+            };
+          }
+        } catch (error) {
+          console.warn('PDF table parser unavailable; falling back to text extraction.', error);
+        }
         const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
           await onProgress(progress.processed, progress.total, progress.questionsExtracted);
         });

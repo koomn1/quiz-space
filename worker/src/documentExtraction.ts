@@ -1,4 +1,5 @@
 import { extractText as extractPdfText } from 'unpdf';
+import { getDocument } from 'unpdf/pdfjs';
 import { generateWithProviderChain } from './providerChain';
 
 export interface DocumentExtractionEnv {
@@ -184,6 +185,136 @@ function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mc
 }
 
 const MODEL_TIMEOUT_MS = 35_000;
+
+type PdfLayoutItem = { text: string; x: number; y: number; width: number };
+type PdfLayoutLine = { y: number; items: PdfLayoutItem[] };
+
+type PdfTextItem = { str: string; transform: number[]; width?: number };
+
+function isPdfTextItem(value: unknown): value is PdfTextItem {
+  return Boolean(value && typeof value === 'object' && 'str' in value && 'transform' in value);
+}
+
+function groupPdfTextLines(items: unknown[]): PdfLayoutLine[] {
+  const lines: PdfLayoutLine[] = [];
+  for (const value of items) {
+    if (!isPdfTextItem(value) || !value.str.trim()) continue;
+    const x = Number(value.transform[4]);
+    const y = Number(value.transform[5]);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    const existing = lines.find(line => Math.abs(line.y - y) <= 2);
+    const item = { text: value.str.trim(), x, y, width: Number(value.width) || 0 };
+    if (existing) existing.items.push(item);
+    else lines.push({ y, items: [item] });
+  }
+  return lines
+    .map(line => ({ ...line, items: line.items.sort((a, b) => a.x - b.x) }))
+    .sort((a, b) => b.y - a.y);
+}
+
+function joinLayoutCell(items: PdfLayoutItem[]): string {
+  return items.map(item => item.text).join(' ').replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Rebuilds table rows from PDF text coordinates. A plain text extractor loses
+ * the relationship between question, A/B/C/D and Correct when cells wrap.
+ * This path keeps that relationship and is intentionally limited to tables
+ * that expose the standard Question/A/B/C/D/Correct header.
+ */
+export async function extractTableQuestionsFromPdf(data: Uint8Array): Promise<any[]> {
+  const pdf = await getDocument({ data, useWorkerFetch: false }).promise;
+  const questions: any[] = [];
+  let columnBoundaries: number[] | null = null;
+  let pendingQuestionLines: string[] = [];
+  let current: { number: number; numberY: number; cells: PdfLayoutItem[][]; sourceLines: string[] } | null = null;
+  const flush = () => {
+    if (!current || !current.cells[0].length) return;
+    const cells = current.cells.map(joinLayoutCell);
+    const options = cells.slice(1, 5).filter(Boolean);
+    const answer = cells[5].match(/[A-D]/i)?.[0]?.toUpperCase() || '';
+    const correctIndex = answer ? answer.charCodeAt(0) - 65 : -1;
+    if (!cells[0] || options.length < 2 || correctIndex < 0 || correctIndex >= options.length) return;
+    questions.push({
+      number: current.number,
+      text: cells[0],
+      type: 'mcq',
+      options,
+      correctIndex,
+      correctAnswer: options[correctIndex] || '',
+      explanation: '',
+      extractionMethod: 'pdf-table',
+      sourceText: current.sourceLines.join('\n'),
+      reviewRequired: false,
+    });
+  };
+
+  for (let pageIndex = 1; pageIndex <= pdf.numPages; pageIndex += 1) {
+    const page = await pdf.getPage(pageIndex);
+    const content = await page.getTextContent();
+    const lines = groupPdfTextLines(content.items);
+    for (const line of lines) {
+      const header = line.items.map(item => item.text.toLowerCase());
+      const correctHeaderIndex = header.indexOf('correct');
+      const optionHeaderIndex = header.indexOf('a');
+      if (correctHeaderIndex >= 0 && optionHeaderIndex >= 0) {
+        flush();
+        current = null;
+        pendingQuestionLines = [];
+        const questionHeader = line.items.find(item => item.text.toLowerCase() === 'question');
+        const optionHeaders = line.items.filter(item => ['a', 'b', 'c', 'd', 'correct'].includes(item.text.toLowerCase()));
+        if (questionHeader && optionHeaders.length >= 3) {
+          // Word centers cell text, so the first glyph can begin slightly
+          // before the header label. Keep a small left tolerance per column.
+          columnBoundaries = optionHeaders.map((item, index) => item.x - (index < 4 ? 22 : 8));
+        }
+        continue;
+      }
+      if (!columnBoundaries) continue;
+      const first = line.items[0];
+      const numberMatch = first?.text.match(/^(\d{1,4})$/);
+      if (numberMatch && first.x < columnBoundaries[0]) {
+        flush();
+        current = { number: Number(numberMatch[1]), numberY: line.y, cells: [[], [], [], [], [], []], sourceLines: [] };
+        if (pendingQuestionLines.length) {
+          current.cells[0].push(...pendingQuestionLines.map(text => ({ text, x: columnBoundaries![0], y: line.y, width: 0 })));
+          current.sourceLines.push(...pendingQuestionLines);
+          pendingQuestionLines = [];
+        }
+      }
+      if (!current) {
+        const orphanQuestion = line.items.filter(item => item.x < columnBoundaries![0]);
+        if (orphanQuestion.length) pendingQuestionLines.push(joinLayoutCell(orphanQuestion));
+        continue;
+      }
+      const nonEmptyItems = line.items.filter(item => item.text.trim());
+      const questionOnly = nonEmptyItems.length > 0 && nonEmptyItems.every(item => item.x < columnBoundaries![0]);
+      // Word often places the first question line a few points above the
+      // baseline containing its number and choices. Hold that line for the
+      // next numbered row instead of appending it to the previous question.
+      if (questionOnly && line.y > current.numberY + 2) {
+        pendingQuestionLines.push(joinLayoutCell(nonEmptyItems));
+        continue;
+      }
+      const cellItems: PdfLayoutItem[][] = [[], [], [], [], [], []];
+      for (const item of line.items) {
+        if (item.text === first?.text && numberMatch && item === first) continue;
+        let cell = 0;
+        if (item.x >= columnBoundaries[4]) cell = 5;
+        else if (item.x >= columnBoundaries[3]) cell = 4;
+        else if (item.x >= columnBoundaries[2]) cell = 3;
+        else if (item.x >= columnBoundaries[1]) cell = 2;
+        else if (item.x >= columnBoundaries[0]) cell = 1;
+        cellItems[cell].push(item);
+      }
+      const lineValues = cellItems.map(joinLayoutCell);
+      if (lineValues.some(Boolean)) current.sourceLines.push(lineValues.filter(Boolean).join(' | '));
+      cellItems.forEach((items, index) => current?.cells[index].push(...items));
+    }
+  }
+  flush();
+  return questions.sort((a, b) => a.number - b.number);
+}
 
 /**
  * Last-resort parser for conventional exam layouts. It is intentionally strict:
