@@ -264,15 +264,42 @@ export async function extractTableQuestionsFromPdf(data: Uint8Array): Promise<an
         const questionHeader = line.items.find(item => item.text.toLowerCase() === 'question');
         const optionHeaders = line.items.filter(item => ['a', 'b', 'c', 'd', 'correct'].includes(item.text.toLowerCase()));
         if (questionHeader && optionHeaders.length >= 3) {
-          // Word centers cell text, so the first glyph can begin slightly
-          // before the header label. Keep a small left tolerance per column.
-          columnBoundaries = optionHeaders.map((item, index) => item.x - (index < 4 ? 22 : 8));
+          // Header labels are often centered while cell text is left-aligned.
+          // Use midpoints between headers for the inner boundaries and a
+          // generous first-cell boundary so wrapped question text remains in
+          // column 0. The last boundary is intentionally wide enough to
+          // accept a Correct cell whose text is centered farther right.
+          const starts = optionHeaders.map(item => item.x).sort((a, b) => a - b);
+          columnBoundaries = [
+            Math.max(questionHeader.x + 8, starts[0] - 24),
+            ...starts.slice(0, -1).map((x, index) => (x + starts[index + 1]) / 2),
+            starts.at(-1)! - 8,
+          ];
         }
         continue;
       }
-      if (!columnBoundaries) continue;
       const first = line.items[0];
       const numberMatch = first?.text.match(/^(\d{1,4})$/);
+      // Some exports omit the header on continuation pages. Infer the five
+      // table columns from a numbered row containing an answer marker, so the
+      // direct path still covers the complete bank instead of only page one.
+      if (!columnBoundaries && numberMatch) {
+        const answerItem = line.items.find(item => item.x > first.x + 70 && /^[A-D]$/i.test(item.text));
+        const rightItems = line.items.filter(item => item.x > first.x + 45);
+        if (answerItem && rightItems.length >= 3) {
+          const starts = rightItems.filter(item => !/^[A-D]$/i.test(item.text)).map(item => item.x).sort((a, b) => a - b);
+          const answerX = answerItem.x;
+          if (starts.length >= 2) {
+            const optionStarts = [...new Set(starts)].slice(0, 4);
+            columnBoundaries = [
+              optionStarts[0] - 24,
+              ...optionStarts.slice(0, -1).map((x, index) => (x + optionStarts[index + 1]) / 2),
+              answerX - 8,
+            ];
+          }
+        }
+      }
+      if (!columnBoundaries) continue;
       if (numberMatch && first.x < columnBoundaries[0]) {
         flush();
         current = { number: Number(numberMatch[1]), numberY: line.y, cells: [[], [], [], [], [], []], sourceLines: [] };

@@ -262,7 +262,9 @@ export function sourceLanguageInstruction(text = ''): string {
  */
 export function detectQuestionBank(sourceText = ''): { isQuestionBank: boolean; numberedQuestions: number } {
   const text = String(sourceText || '');
-  const numberedLines = [...text.matchAll(/^\s*(\d{1,3})\s{2,}/gm)]
+  // PDF text extraction may collapse the original indentation to one space;
+  // require visible content after the number so page counters are ignored.
+  const numberedLines = [...text.matchAll(/^\s*(\d{1,3})\s+(?=\S)/gm)]
     .map(match => Number(match[1]))
     .filter(number => Number.isInteger(number) && number > 0);
   const shortAnswerLines = [...text.matchAll(/^\s*(\d{1,3})[-.)]\s+/gm)]
@@ -278,6 +280,19 @@ export function detectQuestionBank(sourceText = ''): { isQuestionBank: boolean; 
   const mcqCount = Math.max(0, ...numberedLines);
   const estimatedQuestionCount = Math.max(mcqCount + shortAnswerLines.length, numberedQuestionSignals);
   return { isQuestionBank, numberedQuestions: isQuestionBank ? estimatedQuestionCount : 0 };
+}
+
+/**
+ * Fast, text-only routing decision. Coordinate parsing is high-fidelity but
+ * more expensive than ordinary text extraction, so only invoke it for a
+ * source that looks like a structured question bank/table.
+ */
+export function shouldAttemptStructuredTableExtraction(sourceText = ''): boolean {
+  const text = String(sourceText || '');
+  const questionBank = detectQuestionBank(text).isQuestionBank;
+  const tableHeader = /\bquestion\b[\s\S]{0,160}\b(?:correct|answer)\b/i.test(text)
+    && /\b(?:a|b|c|d)\b/i.test(text);
+  return questionBank && tableHeader;
 }
 
 type AllowedQuestionType = 'mcq' | 'tf' | 'essay';
@@ -755,22 +770,40 @@ export async function extractJobQuiz(
     }
     text = await extractPdfTextContent(source);
     if (text.trim().length > 40) {
-      if (isLiteral) {
-        try {
-          const tableQuestions = await extractTableQuestionsFromPdf(source);
-          if (tableQuestions.length >= 10) {
-            await onProgress(1, 1, tableQuestions.length);
+      // Structured Question Banks already contain the question, choices and
+      // answer key. Extract them losslessly before either Literal or Generate;
+      // sending them through an LLM can truncate a large bank at its output
+      // limit and is unnecessary.
+      try {
+        if (!shouldAttemptStructuredTableExtraction(text)) {
+          if (isLiteral) {
+            const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
+              await onProgress(progress.processed, progress.total, progress.questionsExtracted);
+            });
             return {
-              title: deriveQuizTitle(job.source_file_name, text),
-              description: `أسئلة مستخرجة حرفياً من جداول ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-              questions: applyRequestedQuestionCount(tableQuestions, job.extraction_mode, job.requested_question_count),
-              chunks: 1,
-              provider: 'pdf-coordinate-table-parser',
+              ...result,
+              questions: applyRequestedQuestionCount(result.questions, job.extraction_mode, job.requested_question_count),
+              title: isGenericQuizTitle(result.title) ? deriveQuizTitle(job.source_file_name, text) : result.title.trim(),
+              description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
             };
           }
-        } catch (error) {
-          console.warn('PDF table parser unavailable; falling back to text extraction.', error);
+          return generateQuestionsFromText(text, job, env, onProgress);
         }
+        const tableQuestions = await extractTableQuestionsFromPdf(source);
+        if (tableQuestions.length >= 10) {
+          await onProgress(1, 1, tableQuestions.length);
+          return {
+            title: deriveQuizTitle(job.source_file_name, text),
+            description: `أسئلة مستخرجة مباشرة من بنك الأسئلة ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
+            questions: applyRequestedQuestionCount(tableQuestions, job.extraction_mode, job.requested_question_count),
+            chunks: 1,
+            provider: 'pdf-coordinate-table-parser',
+          };
+        }
+      } catch (error) {
+        console.warn('PDF table parser unavailable; continuing with the configured extraction mode.', error);
+      }
+      if (isLiteral) {
         const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
           await onProgress(progress.processed, progress.total, progress.questionsExtracted);
         });
