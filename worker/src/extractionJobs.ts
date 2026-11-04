@@ -605,6 +605,10 @@ async function samplePdfText(source: Uint8Array, pageCount: number): Promise<str
 async function getScannedPdfPageCount(source: Uint8Array, job: ExtractionJobRow): Promise<number | null> {
   if (job.file_mime_type !== 'application/pdf') return null;
   const pageCount = (await PDFDocument.load(source)).getPageCount();
+  // Small text-based PDFs do not need the expensive PDF-lib copy/save/sample
+  // pass. Running it for every upload could leave a job stuck after the 5%
+  // "opened file" update before the real text/table extractor starts.
+  if (pageCount < LARGE_PDF_PAGE_THRESHOLD) return null;
   const sampledText = await samplePdfText(source, pageCount);
   return shouldUseVisionForScannedPdf(pageCount, sampledText) ? pageCount : null;
 }

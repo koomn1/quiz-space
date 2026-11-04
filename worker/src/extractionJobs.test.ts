@@ -73,6 +73,11 @@ describe('dynamic vision chunk planning', () => {
     expect(routeSource).toContain("requestedQuestionCount: extractionMode === 'generate'");
   });
 
+  it('skips the sampled scanned-PDF probe for small PDFs before text/table extraction', () => {
+    expect(extractionSource).toContain('if (pageCount < LARGE_PDF_PAGE_THRESHOLD) return null;');
+    expect(extractionSource).toContain('const sampledText = await samplePdfText(source, pageCount);');
+  });
+
   it('keeps answer accuracy strict instead of silently defaulting to option zero', () => {
     expect(extractionSource).toContain('If the source has no answer key, use null and do not guess.');
     expect(extractionSource).toContain('لا تستخدم correctIndex=-1 أو إجابة فارغة للأسئلة الموضوعية');
