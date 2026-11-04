@@ -133,7 +133,7 @@ export default function AppShell(props: AppShellProps) {
           <div className={`absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none ${isCosmoTab ? 'hidden' : ''}`} />
 
           {/* Padding applied here to clear the fixed header for all banners and main content */}
-          <div className={`${isCosmoTab ? 'h-[calc(100dvh-3.5rem)] pt-14 sm:h-[calc(100dvh-4rem)] sm:pt-16 overflow-hidden flex-1 min-h-0' : (showAppHeader ? 'pt-16 sm:pt-20 md:pt-24' : 'pt-0')} flex flex-col w-full relative z-10`}>
+          <div className={`app-shell-content ${isCosmoTab ? 'app-shell-content--chat h-[calc(100dvh-3.5rem)] pt-14 sm:h-[calc(100dvh-4rem)] sm:pt-16 overflow-hidden flex-1 min-h-0' : (showAppHeader ? 'pt-16 sm:pt-20 md:pt-24' : 'pt-0')} flex flex-col w-full relative z-10`}>
 
             {/* Interactive Web Push API Opt-in Header Banner */}
             {showPushBanner && (
