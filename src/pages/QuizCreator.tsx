@@ -74,14 +74,23 @@ if (typeof window !== 'undefined') {
 
 // Extracts text page-by-page from an uploaded PDF
 const extractTextFromPdf = async (file: File): Promise<string[]> => {
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
   const pageTexts: string[] = [];
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items.map((item: any) => item.str).join(' ');
-    pageTexts.push(pageText);
+  try {
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      try {
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+        pageTexts.push(pageText);
+      } finally {
+        page.cleanup();
+      }
+    }
+  } finally {
+    pdf.cleanup();
+    await pdf.destroy();
   }
   return pageTexts;
 };
@@ -106,49 +115,42 @@ const extractHybridPagesFromPdf = async (
   file: File, 
   onPageProgress: (pageIndex: number, totalPages: number, pageType: 'text' | 'image') => void
 ): Promise<HybridPagePart[]> => {
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
   const pages: HybridPagePart[] = [];
-  
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items.map((item: any) => item.str).join(' ').trim();
-    
-    // If page contains less than 150 characters, it is most likely a scanned page or image
-    if (pageText.length > 150) {
-      onPageProgress(i, pdf.numPages, 'text');
-      pages.push({
-        pageNumber: i,
-        type: 'text',
-        text: pageText
-      });
-    } else {
-      onPageProgress(i, pdf.numPages, 'image');
-      
-      // Render page to canvas to get image data for OCR
-      const viewport = page.getViewport({ scale: 1.5 });
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      if (!context) {
-        throw new Error('فشل إنشاء سياق رسم ثنائي الأبعاد لقراءة الصور.');
+  try {
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      try {
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(' ').trim();
+        // If page contains less than 150 characters, it is most likely a scanned page or image
+        if (pageText.length > 150) {
+          onPageProgress(i, pdf.numPages, 'text');
+          pages.push({ pageNumber: i, type: 'text', text: pageText });
+        } else {
+          onPageProgress(i, pdf.numPages, 'image');
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement('canvas');
+          try {
+            const context = canvas.getContext('2d');
+            if (!context) throw new Error('فشل إنشاء سياق رسم ثنائي الأبعاد لقراءة الصور.');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            await page.render({ canvasContext: context, viewport }).promise;
+            pages.push({ pageNumber: i, type: 'image', imageBase64: canvas.toDataURL('image/jpeg', 0.85) });
+          } finally {
+            canvas.width = 0;
+            canvas.height = 0;
+          }
+        }
+      } finally {
+        page.cleanup();
       }
-      
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      
-      await page.render({
-        canvasContext: context,
-        viewport: viewport
-      }).promise;
-      
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.85);
-      pages.push({
-        pageNumber: i,
-        type: 'image',
-        imageBase64
-      });
     }
+  } finally {
+    pdf.cleanup();
+    await pdf.destroy();
   }
   return pages;
 };

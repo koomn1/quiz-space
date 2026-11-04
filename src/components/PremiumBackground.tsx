@@ -208,7 +208,9 @@ export function PremiumBackground({
     // --- ANIMATION LOOP ---
     const draw = () => {
       if (!isTabActive) {
-        requestRef.current = requestAnimationFrame(draw);
+        // Stop completely while the document is hidden. The visibility
+        // state change reruns this effect and starts a fresh loop on return.
+        requestRef.current = null;
         return;
       }
 
@@ -775,6 +777,7 @@ export function PremiumBackground({
       resizeObserver.disconnect();
       if (requestRef.current) {
         cancelAnimationFrame(requestRef.current);
+        requestRef.current = null;
       }
     };
   }, [mode, speed, brightness, glow, density, waveHeight, theme, blur, isTabActive]);
