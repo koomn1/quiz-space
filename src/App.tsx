@@ -359,6 +359,16 @@ export default function App() {
   const [sharingQuiz, setSharingQuiz] = React.useState<{ id: string; title: string; description?: string } | null>(null);
 
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  // Keep the sidebar mounted briefly while it plays its exit animation.
+  const [isSidebarMounted, setIsSidebarMounted] = React.useState(false);
+  React.useEffect(() => {
+    if (isSidebarOpen) {
+      setIsSidebarMounted(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setIsSidebarMounted(false), 240);
+    return () => window.clearTimeout(timer);
+  }, [isSidebarOpen]);
   const sidebarMenuButtonRef = React.useRef<HTMLButtonElement>(null);
   const sidebarPanelRef = React.useRef<HTMLDivElement>(null);
   const sidebarWasOpenRef = React.useRef(false);
@@ -991,14 +1001,14 @@ export default function App() {
       />
 
       
-        {isSidebarOpen && !isQuizLocked && (
+        {isSidebarMounted && !isQuizLocked && (
           <OverlayPortal>
             {/* Backdrop */}
             <div 
               
               
               
-              className="fixed inset-0 z-[9998] cursor-pointer bg-black/35"
+              className={`quizspace-sidebar-backdrop fixed inset-0 z-[9998] cursor-pointer bg-black/35 ${isSidebarOpen ? 'is-open' : 'is-closing'}`}
               onClick={() => setIsSidebarOpen(false)} 
             />
 
@@ -1010,8 +1020,12 @@ export default function App() {
               aria-modal="true"
               aria-label={lang === 'ar' ? 'القائمة الرئيسية' : 'Primary navigation'}
               tabIndex={-1}
-              className={`liquid-sidebar fixed inset-y-0 ${lang === 'ar' ? 'right-0' : 'left-0'} z-[9999] w-64 h-[100dvh] flex flex-col overflow-hidden transform-gpu shadow-2xl`}
-              style={{ backfaceVisibility: 'hidden', isolation: 'isolate' }}
+              className={`liquid-sidebar quizspace-sidebar-panel fixed inset-y-0 ${lang === 'ar' ? 'right-0' : 'left-0'} z-[9999] w-64 h-[100dvh] flex flex-col overflow-hidden transform-gpu shadow-2xl ${isSidebarOpen ? 'is-open' : 'is-closing'}`}
+              style={{
+                backfaceVisibility: 'hidden',
+                isolation: 'isolate',
+                ['--sidebar-start-x' as string]: lang === 'ar' ? '100%' : '-100%',
+              }}
             >
               <Sidebar 
                 currentTab={activeTab} 

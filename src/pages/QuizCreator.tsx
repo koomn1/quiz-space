@@ -2428,7 +2428,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           </button>
 
           {isModeMenuOpen && (
-            <div role="listbox" className="uipro-glass-surface absolute inset-x-0 top-[calc(100%+0.5rem)] overflow-hidden rounded-2xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 p-2 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl">
+            <div role="listbox" className="quizspace-popover-enter uipro-glass-surface absolute inset-x-0 top-[calc(100%+0.5rem)] overflow-hidden rounded-2xl border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 p-2 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl">
               {([
                 { id: 'manual', label: 'كتابة يدوية', hint: 'أضف الأسئلة والاختيارات بنفسك', icon: Plus },
                 { id: 'ocr', label: 'صورة أو PDF', hint: 'استخرج الأسئلة من ملف أو صورة', icon: Camera },

@@ -178,7 +178,7 @@ export function LiquidGlassSelect<T extends string | number = string | number>({
       {/* Liquid Glass Popover */}
       {isOpen && (
         <div
-          className={`absolute left-0 right-0 mt-2 z-50 overflow-hidden rounded-2xl border
+          className={`quizspace-popover-enter absolute left-0 right-0 mt-2 z-50 overflow-hidden rounded-2xl border
             backdrop-blur-2xl bg-white/95 dark:bg-slate-950/95
             border-white/80 dark:border-white/10
             shadow-2xl shadow-primary/10 dark:shadow-black/60
