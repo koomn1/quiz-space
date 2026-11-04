@@ -24,9 +24,24 @@ const EDUCATIONAL_TIPS = {
   ]
 };
 
+function getSplashSource(): string | null {
+  if (typeof window === 'undefined') return null;
+  const connection = (navigator as Navigator & {
+    connection?: { saveData?: boolean; effectiveType?: string };
+  }).connection;
+  const constrained = Boolean(connection?.saveData || /2g|slow-2g/i.test(connection?.effectiveType || ''));
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (constrained || reducedMotion) return null;
+  const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isMobile = isAppleMobile || window.matchMedia?.('(max-width: 767px)').matches;
+  return `${import.meta.env.BASE_URL}videos/${isMobile ? 'splash-mobile' : 'splash-desktop'}.mp4`;
+}
+
 export default function SplashScreen({ onComplete, lang, userName, isGuest = false }: SplashScreenProps) {
   const [progress, setProgress] = useState(0);
-  const [isBuffering, setIsBuffering] = useState(true);
+  const [splashSource] = useState(getSplashSource);
+  const [isBuffering, setIsBuffering] = useState(Boolean(splashSource));
   const [showSkip, setShowSkip] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -54,7 +69,7 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
     const skipTimer = setTimeout(() => setShowSkip(true), 2000);
 
     if (!videoEl) {
-      const t = setTimeout(finish, 2000);
+      const t = setTimeout(finish, 1400);
       return () => {
         clearTimeout(t);
         clearTimeout(skipTimer);
@@ -82,7 +97,7 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
         setIsBuffering(false);
         finish();
       }
-    }, 8000);
+    }, splashSource ? 8000 : 1400);
 
     if (videoEl.readyState >= 3) {
       setIsBuffering(false);
@@ -100,7 +115,7 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
       videoEl.removeEventListener('timeupdate', handleTimeUpdate);
       videoEl.removeEventListener('ended', handleEnded);
     };
-  }, [finish, lang]);
+  }, [finish, lang, splashSource]);
 
   const isAr = lang === 'ar';
 
@@ -140,19 +155,19 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
       )}
 
       {/* Video Content */}
-      <video
-        ref={videoRef}
-        autoPlay
-        muted
-        playsInline
-        preload="auto"
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ opacity: isBuffering ? 0 : 1, transition: 'opacity 0.8s ease' }}
-      >
-        <source src={`${import.meta.env.BASE_URL}videos/splash-mobile.mp4`} media="(max-width: 767px)" type="video/mp4" />
-        <source src={`${import.meta.env.BASE_URL}videos/splash-desktop.mp4`} media="(min-width: 768px)" type="video/mp4" />
-        <source src={`${import.meta.env.BASE_URL}videos/splash-intro.mp4`} type="video/mp4" />
-      </video>
+      {splashSource && (
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          preload="metadata"
+          poster={`${import.meta.env.BASE_URL}brand/quizspace-logo-512.webp`}
+          src={splashSource}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ opacity: isBuffering ? 0 : 1, transition: 'opacity 0.8s ease' }}
+        />
+      )}
 
       {/* Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#05060f] z-10 pointer-events-none" />

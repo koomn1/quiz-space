@@ -7,7 +7,7 @@ type QuizDetectedHandler = (quizId: string) => void;
 
 export function useQuizCatalog() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-  const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
+  const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(false);
 
   const fetchQuizzesList = useCallback(async () => {
     setIsLoadingQuizzes(true);
@@ -24,9 +24,11 @@ export function useQuizCatalog() {
   return { quizzes, isLoadingQuizzes, fetchQuizzesList };
 }
 
-export function useAppBootstrap({ onQuizDetected, fetchQuizzesList }: {
+export function useAppBootstrap({ onQuizDetected, fetchQuizzesList, activeTab, activeQuizId }: {
   onQuizDetected: QuizDetectedHandler;
   fetchQuizzesList: () => Promise<void>;
+  activeTab: string;
+  activeQuizId: string | null;
 }) {
   useEffect(() => {
     initAppOrigin();
@@ -45,6 +47,10 @@ export function useAppBootstrap({ onQuizDetected, fetchQuizzesList }: {
     }
 
     if (quizId) onQuizDetected(quizId);
-    void fetchQuizzesList();
-  }, [fetchQuizzesList, onQuizDetected]);
+  }, [onQuizDetected]);
+
+  useEffect(() => {
+    const catalogRoutes = new Set(['landing', 'explore', 'categories', 'my-quizzes', 'analytics', 'classrooms', 'bookmarks', 'achievements', 'leaderboard']);
+    if (activeQuizId || catalogRoutes.has(activeTab)) void fetchQuizzesList();
+  }, [activeTab, activeQuizId, fetchQuizzesList]);
 }

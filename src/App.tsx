@@ -47,13 +47,8 @@ import { useAdminPaymentAlerts } from './hooks/useAdminPaymentAlerts';
 import { AdminPaymentNotificationToast } from './components/AdminPaymentNotificationToast';
 
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useGSAP } from '@gsap/react';
 import AppRoutes from './app/AppRoutes';
 import AppShell from './app/AppShell';
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 function normalizeUserPhoto(value: unknown): string | null {
   const raw = String(value || '').trim();
@@ -375,49 +370,11 @@ export default function App() {
   const [showPostRegisterModal, setShowPostRegisterModal] = React.useState(false);
   const [navKey, setNavKey] = React.useState(0);
 
-  useGSAP(() => {
-    // Wait a brief moment to allow Framer Motion to switch tabs
-    const timeout = setTimeout(() => {
-      const tabWrapper = document.querySelector('.gsap-tab-wrapper');
-      if (!tabWrapper) return;
-      
-      // Get the currently active tab content (usually the last child if during AnimatePresence exit)
-      const activeContent = tabWrapper.children[tabWrapper.children.length - 1];
-      if (!activeContent) return;
-      
-      const sections = gsap.utils.toArray(activeContent.children);
-      
-      sections.forEach((section: any, idx: number) => {
-        // Skip elements that shouldn't be animated (e.g. Hero Section is often index 0)
-        if (idx === 0) return;
-        
-        // Create ScrollTrigger animation for each section
-        gsap.fromTo(section, 
-          { opacity: 0, y: 40 },
-          {
-            opacity: 1, 
-            y: 0, 
-            duration: 0.8,
-            ease: 'power3.out',
-            scrollTrigger: {
-              trigger: section,
-              start: 'top 85%',
-              toggleActions: 'play none none none'
-            }
-          }
-        );
-      });
-      ScrollTrigger.refresh();
-    }, 150);
-    
-    return () => clearTimeout(timeout);
-  }, { scope: mainContainerRef, dependencies: [activeTab] });
-
   const { quizzes, isLoadingQuizzes, fetchQuizzesList } = useQuizCatalog();
   const handleQuizDetected = React.useCallback((quizId: string) => {
     authRedirectQuizIdRef.current = quizId;
   }, []);
-  useAppBootstrap({ onQuizDetected: handleQuizDetected, fetchQuizzesList });
+  useAppBootstrap({ onQuizDetected: handleQuizDetected, fetchQuizzesList, activeTab, activeQuizId });
 
   const {
     unreadMessagesCount,
@@ -812,7 +769,7 @@ export default function App() {
     }
   };
 
-  const isBootstrapLoading = authContext.loading || !isStatsLoaded || isLoadingQuizzes;
+  const isBootstrapLoading = authContext.loading || !isStatsLoaded;
   const bootstrapMessage = authContext.loading
     ? (lang === 'ar' ? 'جارٍ التحقق من جلسة الدخول...' : 'Checking your session...')
     : !isStatsLoaded

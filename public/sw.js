@@ -1,6 +1,6 @@
 // Bump this whenever the deployed app shell changes so installed PWAs discard
 // stale cached assets instead of continuing to render an older release.
-const CACHE_VERSION = 'v7';
+const CACHE_VERSION = 'v8';
 const APP_CACHE = `quiz-space-app-${CACHE_VERSION}`;
 const VIDEO_CACHE = `quiz-space-videos-${CACHE_VERSION}`;
 const PROFILE_ASSET_CACHE = `quiz-space-profile-assets-${CACHE_VERSION}`;
@@ -13,11 +13,6 @@ const APP_SHELL = [
   appAsset('/manifest.webmanifest'),
   appAsset('/brand/quizspace-icon-192.webp'),
   appAsset('/brand/quizspace-logo-512.webp'),
-];
-const VIDEOS_TO_PRECACHE = [
-  appAsset('/videos/splash-intro.mp4'),
-  appAsset('/videos/splash-desktop.mp4'),
-  appAsset('/videos/splash-mobile.mp4'),
 ];
 const PROFILE_ASSETS_TO_PRECACHE = [
   'clean-assets-replacement/boy-robotics-transparent.webp',
@@ -66,9 +61,6 @@ async function cacheProfileAssets() {
 self.addEventListener('install', (event) => {
   event.waitUntil(Promise.all([
     caches.open(APP_CACHE).then((cache) => cache.addAll(APP_SHELL).catch(() => {/* keep install non-fatal */})),
-    caches.open(VIDEO_CACHE).then((cache) =>
-      cache.addAll(VIDEOS_TO_PRECACHE).catch(() => {/* non-fatal */})
-    ),
     cacheProfileAssets(),
   ]));
 });

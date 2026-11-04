@@ -4,27 +4,9 @@ import { AVATAR_PRESETS } from '../constants/profileAssets';
 import { getUserProfileStats, deleteQuiz } from '../lib/db';
 import { getUserRoleAndPlan } from '../types';
 import { playNotificationSound } from '../lib/sound';
-import LandingPage from '../pages/LandingPage';
-import GuestLandingPage from '../pages/GuestLandingPage';
-import NotFound from '../pages/NotFound';
-import QuizResolver from '../components/QuizResolver';
-import MessageInbox from '../components/MessageInbox';
-import NotificationCenter from '../components/NotificationCenter';
-import AdminGuard from '../components/AdminGuard';
 import CosmicLoader from '../components/CosmicLoader';
 import PageSkeleton from '../components/PageSkeleton';
-import { MyQuizzes } from '../pages/MyQuizzes';
-import { ExploreSection, CategoriesSection, CommunitySection, BookmarksSection, AchievementsSection, SettingsSection, LeaderboardSection } from '../components/ExtraFeatures';
-import { AnalyticsDashboard } from '../pages/AnalyticsDashboard';
-import { BillingSection } from '../components/BillingSection';
-import InstitutionWorkspace from '../components/InstitutionWorkspace';
-import UserProfile from '../pages/UserProfile';
-import AdminDashboard from '../pages/AdminDashboard';
-import Support from '../pages/Support';
-import Classrooms from '../components/Classrooms';
-import MotivationHubPage, { type MotivationSection } from '../pages/MotivationHubPage';
-import AIChat from '../pages/AIChat';
-import QuizCreator from '../pages/QuizCreator';
+import type { MotivationSection } from '../pages/MotivationHubPage';
 
 function lazyWithRetry<T extends React.ComponentType<any>>(loader: () => Promise<{ default: T }>, routeKey: string) {
   return React.lazy(async () => {
@@ -67,6 +49,12 @@ class LazyRouteErrorBoundary extends React.Component<React.PropsWithChildren<{ l
 }
 
 const LazyQuizCreator = lazyWithRetry(() => import('../pages/QuizCreator'), 'quiz-creator');
+const LazyLandingPage = lazyWithRetry(() => import('../pages/LandingPage'), 'landing');
+const LazyGuestLandingPage = lazyWithRetry(() => import('../pages/GuestLandingPage'), 'guest-landing');
+const LazyNotFound = lazyWithRetry(() => import('../pages/NotFound'), 'not-found');
+const LazyQuizResolver = lazyWithRetry(() => import('../components/QuizResolver'), 'quiz-resolver');
+const LazyNotificationCenter = lazyWithRetry(() => import('../components/NotificationCenter'), 'notifications');
+const LazyAdminGuard = lazyWithRetry(() => import('../components/AdminGuard'), 'admin-guard');
 const LazyUserProfile = lazyWithRetry(() => import('../pages/UserProfile'), 'user-profile');
 const LazySupport = lazyWithRetry(() => import('../pages/Support'), 'support');
 const LazyMyQuizzes = lazyWithRetry(() => import('../pages/MyQuizzes').then(module => ({ default: module.MyQuizzes })), 'my-quizzes');
@@ -153,7 +141,7 @@ export default function AppRoutes(props: AppRoutesProps) {
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (
-          <QuizResolver
+          <LazyQuizResolver
             
             quizId={activeQuizId}
             userId={userId}
@@ -176,7 +164,7 @@ export default function AppRoutes(props: AppRoutesProps) {
               <LazyRouteErrorBoundary lang={lang}>
                 <React.Suspense fallback={<PageSkeleton lang={lang} />}>
               {activeTab === 'not-found' && (
-                <NotFound lang={lang} onGoHome={() => handleSetTab('landing')} />
+                <LazyNotFound lang={lang} onGoHome={() => handleSetTab('landing')} />
               )}
               {motivationTabs.includes(activeTab) && (isGuestMotivationRoute ? (
                 <section className="mx-auto flex min-h-[54vh] max-w-xl flex-col items-center justify-center px-6 text-center" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -198,7 +186,7 @@ export default function AppRoutes(props: AppRoutesProps) {
               ))}
               {activeTab === 'landing' && (
                 authIsAuthenticated && userId && !userId.startsWith('user-guest') ? (
-                  <LandingPage
+                  <LazyLandingPage
                   quizzes={quizzes}
                   isLoading={isLoadingQuizzes}
                   currentUserEmail={userEmail}
@@ -244,7 +232,7 @@ export default function AppRoutes(props: AppRoutesProps) {
                   }}
                 />
                 ) : (
-                  <GuestLandingPage
+                  <LazyGuestLandingPage
                     lang={lang}
                     onLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
                     onExplore={() => handleSetTab('explore', true)}
@@ -304,7 +292,7 @@ export default function AppRoutes(props: AppRoutesProps) {
               )}
 
               {activeTab === 'notifications' && (
-                <NotificationCenter lang={lang} userId={userId} />
+                <LazyNotificationCenter lang={lang} userId={userId} />
               )}
 
               {activeTab === 'create' && (
@@ -520,7 +508,7 @@ export default function AppRoutes(props: AppRoutesProps) {
               )}
 
               {activeTab === 'admin' && (
-                <AdminGuard userId={userId}>
+                <LazyAdminGuard userId={userId}>
                   <React.Suspense fallback={
                     <div className="flex items-center justify-center min-h-[400px]">
                       <CosmicLoader />
@@ -539,7 +527,7 @@ export default function AppRoutes(props: AppRoutesProps) {
                       currentUserEmail={userEmail}
                     />
                   </React.Suspense>
-                </AdminGuard>
+                </LazyAdminGuard>
               )}
                 </React.Suspense>
               </LazyRouteErrorBoundary>

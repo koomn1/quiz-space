@@ -9,9 +9,9 @@ const headerSource = readFileSync(new URL('./components/Header.tsx', import.meta
 
 describe('guest landing and authenticated home contract', () => {
   it('renders the standalone guest landing only for unauthenticated visitors', () => {
-    expect(appAndRoutesSource).toContain("import GuestLandingPage from '../pages/GuestLandingPage'");
+    expect(appAndRoutesSource).toContain("const LazyGuestLandingPage = lazyWithRetry(() => import('../pages/GuestLandingPage'), 'guest-landing')");
     expect(appAndRoutesSource).toContain("authIsAuthenticated && userId && !userId.startsWith('user-guest') ? (");
-    expect(appAndRoutesSource).toContain('<GuestLandingPage');
+    expect(appAndRoutesSource).toContain('<LazyGuestLandingPage');
   });
 
   it('uses the official brand plus real in-product home and quiz-creation screenshots', () => {
