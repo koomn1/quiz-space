@@ -791,11 +791,13 @@ export async function extractJobQuiz(
         }
         const tableQuestions = await extractTableQuestionsFromPdf(source);
         if (tableQuestions.length >= 10) {
-          await onProgress(1, 1, tableQuestions.length);
+          const allowedTypes = parseAllowedQuestionTypes(job.custom_instruction);
+          const filteredTableQuestions = tableQuestions.filter(question => allowedTypes.includes(question.type));
+          await onProgress(1, 1, filteredTableQuestions.length);
           return {
             title: deriveQuizTitle(job.source_file_name, text),
             description: `أسئلة مستخرجة مباشرة من بنك الأسئلة ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-            questions: applyRequestedQuestionCount(tableQuestions, job.extraction_mode, job.requested_question_count),
+            questions: applyRequestedQuestionCount(filteredTableQuestions, job.extraction_mode, job.requested_question_count),
             chunks: 1,
             provider: 'pdf-coordinate-table-parser',
           };

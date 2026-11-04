@@ -10,9 +10,11 @@ describe('Animal breeding fixture', () => {
     const tableQuestions = await extractTableQuestionsFromPdf(new Uint8Array(bytes));
     expect(text.length).toBeGreaterThan(1000);
     expect(isReliableLiteralExtraction(text, questions)).toBe(true);
-    expect(tableQuestions.length).toBeGreaterThan(250);
+    expect(tableQuestions.length).toBeGreaterThanOrEqual(319);
     expect(tableQuestions.map(question => question.number)).toEqual(expect.arrayContaining([1, 2]));
     expect(Math.max(...tableQuestions.map(question => question.number || 0))).toBeGreaterThanOrEqual(300);
     expect(tableQuestions.every(question => question.options.length >= 2 && question.correctIndex >= 0)).toBe(true);
+    expect(tableQuestions.filter(question => question.type === 'mcq')).toHaveLength(304);
+    expect(tableQuestions.filter(question => question.type === 'tf')).toHaveLength(15);
   }, 60_000);
 });

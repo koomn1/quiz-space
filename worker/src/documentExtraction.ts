@@ -227,18 +227,20 @@ export async function extractTableQuestionsFromPdf(data: Uint8Array): Promise<an
   const questions: any[] = [];
   let columnBoundaries: number[] | null = null;
   let pendingQuestionLines: string[] = [];
+  let pendingPreNumberRows: PdfLayoutItem[][] = [];
   let current: { number: number; numberY: number; cells: PdfLayoutItem[][]; sourceLines: string[] } | null = null;
   const flush = () => {
     if (!current || !current.cells[0].length) return;
     const cells = current.cells.map(joinLayoutCell);
     const options = cells.slice(1, 5).filter(Boolean);
-    const answer = cells[5].match(/[A-D]/i)?.[0]?.toUpperCase() || '';
+    const answer = cells[5].match(/[A-H]/i)?.[0]?.toUpperCase() || '';
     const correctIndex = answer ? answer.charCodeAt(0) - 65 : -1;
     if (!cells[0] || options.length < 2 || correctIndex < 0 || correctIndex >= options.length) return;
+    const isTrueFalse = options.length === 2 && options.every(option => /^(?:true|false|صح|خطأ)$/i.test(option));
     questions.push({
       number: current.number,
       text: cells[0],
-      type: 'mcq',
+      type: isTrueFalse ? 'tf' : 'mcq',
       options,
       correctIndex,
       correctAnswer: options[correctIndex] || '',
@@ -271,7 +273,11 @@ export async function extractTableQuestionsFromPdf(data: Uint8Array): Promise<an
           // accept a Correct cell whose text is centered farther right.
           const starts = optionHeaders.map(item => item.x).sort((a, b) => a - b);
           columnBoundaries = [
-            Math.max(questionHeader.x + 8, starts[0] - 24),
+            // Option labels are centered, while option text can begin well
+            // to the left of the label (especially short answers). Leave a
+            // wider gutter so the first option is not mistaken for question
+            // text when the table is rebuilt from coordinates.
+            Math.max(questionHeader.x + 8, starts[0] - 45),
             ...starts.slice(0, -1).map((x, index) => (x + starts[index + 1]) / 2),
             starts.at(-1)! - 8,
           ];
@@ -308,6 +314,21 @@ export async function extractTableQuestionsFromPdf(data: Uint8Array): Promise<an
           current.sourceLines.push(...pendingQuestionLines);
           pendingQuestionLines = [];
         }
+        if (pendingPreNumberRows.length) {
+          for (const row of pendingPreNumberRows) {
+            current.sourceLines.push(joinLayoutCell(row));
+            for (const item of row) {
+              let cell = 0;
+              if (item.x >= columnBoundaries[4]) cell = 5;
+              else if (item.x >= columnBoundaries[3]) cell = 4;
+              else if (item.x >= columnBoundaries[2]) cell = 3;
+              else if (item.x >= columnBoundaries[1]) cell = 2;
+              else if (item.x >= columnBoundaries[0]) cell = 1;
+              current.cells[cell].push(item);
+            }
+          }
+          pendingPreNumberRows = [];
+        }
       }
       if (!current) {
         const orphanQuestion = line.items.filter(item => item.x < columnBoundaries![0]);
@@ -316,11 +337,21 @@ export async function extractTableQuestionsFromPdf(data: Uint8Array): Promise<an
       }
       const nonEmptyItems = line.items.filter(item => item.text.trim());
       const questionOnly = nonEmptyItems.length > 0 && nonEmptyItems.every(item => item.x < columnBoundaries![0]);
-      // Word often places the first question line a few points above the
-      // baseline containing its number and choices. Hold that line for the
-      // next numbered row instead of appending it to the previous question.
-      if (questionOnly && line.y > current.numberY + 2) {
+      // PDF exports are not consistent: a question's text may be placed
+      // before its number row, after it, or on both sides when it wraps.
+      // Keep isolated question-column lines that are clearly closer to the
+      // next row pending, then attach them when that number arrives. Small
+      // negative offsets are still part of the current wrapped question.
+      if (questionOnly && (line.y > current.numberY + 2 || line.y < current.numberY - 16)) {
         pendingQuestionLines.push(joinLayoutCell(nonEmptyItems));
+        continue;
+      }
+      // In several PDF exports the next row's choices are emitted before its
+      // number. Defer those option-column items instead of attaching them to
+      // the previous question; they are assigned by x-coordinate when the
+      // next number starts.
+      if (line.y < current.numberY - 14) {
+        pendingPreNumberRows.push(nonEmptyItems);
         continue;
       }
       const cellItems: PdfLayoutItem[][] = [[], [], [], [], [], []];
