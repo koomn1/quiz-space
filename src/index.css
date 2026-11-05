@@ -2242,6 +2242,97 @@ html[dir="rtl"] .quizspace-sidebar-panel,
 .guest-landing article { border-color: var(--app-border) !important; background: var(--app-surface) !important; color: var(--app-text); }
 .guest-landing article > div:first-child { background: var(--app-surface-tint) !important; }
 
+/* Mobile visual pass: compact the first viewport without changing desktop layout. */
+@media (max-width: 768px) {
+  .liquid-header__bar {
+    height: 3.75rem !important;
+    min-height: 3.75rem !important;
+    background: color-mix(in srgb, var(--app-page-bg) 84%, transparent) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--theme-secondary) 18%, var(--app-border)) !important;
+    box-shadow: 0 4px 18px color-mix(in srgb, var(--app-page-bg) 24%, transparent) !important;
+  }
+  .liquid-header__brand > button:first-child,
+  .liquid-header__actions > button,
+  .liquid-header__actions .liquid-header__theme-toggle {
+    width: 2.45rem !important;
+    height: 2.45rem !important;
+    min-width: 2.45rem !important;
+    border-radius: 0.8rem !important;
+  }
+  .liquid-header__brand img {
+    max-width: 6.4rem !important;
+    max-height: 2.15rem;
+  }
+
+  .light-hero {
+    min-height: 0 !important;
+    padding: 3.25rem 0.75rem 3.5rem !important;
+  }
+  .light-hero > .relative.z-20 {
+    padding-inline: 0.75rem !important;
+  }
+  .light-hero > .relative.z-20 > div:first-child {
+    padding: 0.5rem 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  .light-hero__title {
+    max-width: 96vw;
+    font-size: clamp(2.55rem, 10vw, 3.65rem) !important;
+    line-height: 1.16 !important;
+    letter-spacing: -0.035em;
+  }
+  .light-hero .mt-6 {
+    margin-top: 0.8rem !important;
+    min-height: 3.25rem !important;
+  }
+  .light-hero__muted,
+  .light-hero__accent {
+    font-size: clamp(1.55rem, 6.6vw, 2.3rem) !important;
+  }
+  .light-hero .mt-12 {
+    width: 100%;
+    margin-top: 2rem !important;
+    gap: 0.8rem !important;
+  }
+  .light-hero__primary,
+  .light-hero__secondary {
+    width: min(100%, 22rem);
+    min-height: 3.4rem !important;
+    padding: 0.8rem 1.25rem !important;
+    font-size: 1.05rem !important;
+    border-radius: 1.15rem !important;
+  }
+  .light-hero__orb {
+    opacity: 0.6;
+    filter: blur(72px) !important;
+  }
+  .light-hero__icon {
+    opacity: 0.55;
+    transform: scale(0.72);
+  }
+
+  .gsap-stats-container {
+    margin-top: -1rem !important;
+    padding-inline: 0.75rem;
+    gap: 0.7rem !important;
+  }
+  .gsap-stat-card {
+    min-height: 7.5rem;
+    padding: 1rem 0.6rem !important;
+    border-radius: 1.45rem !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .gsap-stat-card > span:first-of-type {
+    font-size: clamp(2rem, 9vw, 3rem) !important;
+    margin-bottom: 0.25rem !important;
+  }
+  .gsap-stat-card > span:last-child {
+    font-size: 0.62rem !important;
+    letter-spacing: 0.04em !important;
+  }
+}
+
 /* iOS 27 final surface pass: one visual language, with blur limited to chrome. */
 :root {
   --ios27-app-surface: var(--app-surface);
