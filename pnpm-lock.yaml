@@ -53,6 +53,9 @@ importers:
       canvas-confetti:
         specifier: ^1.9.4
         version: 1.9.4
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       core-js:
         specifier: ^3.50.0
         version: 3.50.0

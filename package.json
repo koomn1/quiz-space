@@ -55,7 +55,8 @@
     "tailwindcss": "^4.1.14",
     "thinking-orbs": "^0.3.1",
     "three": "^0.184.0",
-    "unpdf": "^1.8.1"
+    "unpdf": "^1.8.1",
+    "clsx": "^2.1.1"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.0",
