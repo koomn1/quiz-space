@@ -23,31 +23,6 @@ export default function IOS27FloatingTabBar({
   const isAr = lang === 'ar';
   const [isMoreSheetOpen, setIsMoreSheetOpen] = React.useState(false);
 
-  const navItems = [
-    {
-      id: 'landing',
-      label: isAr ? 'الرئيسية' : 'Home',
-      icon: Home,
-    },
-    {
-      id: 'aichat',
-      label: isAr ? 'كوزمو AI' : 'Cosmo AI',
-      icon: Sparkles,
-      highlight: true,
-    },
-    {
-      id: 'create',
-      label: isAr ? 'ابتكار' : 'Create',
-      icon: Plus,
-      isAction: true,
-    },
-    {
-      id: 'my-quizzes',
-      label: isAr ? 'مكتبتي' : 'Library',
-      icon: BookOpen,
-    },
-  ];
-
   const secondaryTools = [
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms', desc: isAr ? 'الواجبات والتحديات الطلابية' : 'Student assignments & live tests', icon: GraduationCap, color: 'text-blue-500 bg-blue-500/10' },
     { id: 'motivation', label: isAr ? 'مركز التحفيز' : 'Motivation Hub', desc: isAr ? 'الرتب والنقاط والمواسم' : 'XP, streaks, ranks & store', icon: Flame, color: 'text-amber-500 bg-amber-500/10' },
@@ -74,51 +49,72 @@ export default function IOS27FloatingTabBar({
         style={{ bottom: 'max(1rem, env(safe-area-inset-bottom, 16px))' }}
         dir={isAr ? 'rtl' : 'ltr'}
       >
-        <div className="liquid-glass-large px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-full flex items-center gap-1 sm:gap-2 shadow-2xl border border-white/30 dark:border-white/10 backdrop-blur-2xl">
-          {navItems.map((item) => {
-            const isActive = currentTab === item.id;
-            const Icon = item.icon;
+        <div className="liquid-glass-large px-3 py-2 rounded-full flex items-center justify-between gap-1 sm:gap-2 shadow-2xl border border-white/20 dark:border-white/10 backdrop-blur-2xl bg-white/70 dark:bg-slate-950/80">
+          
+          {/* 1. Home Tab */}
+          <button
+            type="button"
+            onClick={() => setTab('landing')}
+            className={`flex-1 min-w-[52px] sm:min-w-[64px] min-h-[46px] rounded-full flex flex-col items-center justify-center gap-1 text-xs transition-all duration-200 cursor-pointer ${
+              currentTab === 'landing'
+                ? 'text-sky-500 dark:text-sky-400 bg-sky-500/15 font-bold shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Home className={`w-4 h-4 ${currentTab === 'landing' ? 'scale-110' : ''} transition-transform`} />
+            <span className="text-[10px] leading-none">{isAr ? 'الرئيسية' : 'Home'}</span>
+          </button>
 
-            if (item.isAction) {
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setTab(item.id)}
-                  className="mx-1 px-3.5 sm:px-4 min-h-[44px] rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-violet-500/30 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden xs:inline">{item.label}</span>
-                </button>
-              );
-            }
+          {/* 2. Cosmo AI Tab */}
+          <button
+            type="button"
+            onClick={() => setTab('aichat')}
+            className={`flex-1 min-w-[52px] sm:min-w-[64px] min-h-[46px] rounded-full flex flex-col items-center justify-center gap-1 text-xs transition-all duration-200 cursor-pointer ${
+              currentTab === 'aichat'
+                ? 'text-cyan-500 dark:text-cyan-300 bg-cyan-500/15 font-bold shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Sparkles className={`w-4 h-4 text-cyan-400 ${currentTab === 'aichat' ? 'scale-110 animate-spin' : ''} transition-transform`} />
+            <span className="text-[10px] leading-none">{isAr ? 'كوزمو AI' : 'Cosmo'}</span>
+          </button>
 
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setTab(item.id)}
-                className={`relative px-2.5 sm:px-3.5 min-h-[44px] rounded-full flex flex-col xs:flex-row items-center justify-center gap-1 sm:gap-1.5 text-xs font-semibold transition-all duration-200 select-none cursor-pointer ${
-                  isActive
-                    ? 'text-violet-600 dark:text-violet-400 bg-violet-500/15 font-bold shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'scale-110' : ''} transition-transform`} />
-                <span className="text-[10px] sm:text-xs">{item.label}</span>
-              </button>
-            );
-          })}
+          {/* 3. CENTER ACTION: Iconic Floating Plus Button (FAB) — Never squished! */}
+          <div className="px-1 shrink-0 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => setTab('create')}
+              className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center -translate-y-2 bg-gradient-to-tr from-sky-500 via-indigo-600 to-violet-600 hover:from-sky-400 hover:to-violet-500 text-white shadow-lg shadow-sky-500/30 ring-3 ring-white/30 dark:ring-slate-900/60 active:scale-90 transition-all duration-200 cursor-pointer"
+              title={isAr ? 'إنشاء اختبار جديد' : 'Create Quiz'}
+              aria-label={isAr ? 'إنشاء اختبار جديد' : 'Create Quiz'}
+            >
+              <Plus className="w-6 h-6 text-white stroke-[2.8]" />
+            </button>
+          </div>
 
-          {/* More Sheet Trigger */}
+          {/* 4. Library / My Quizzes Tab */}
+          <button
+            type="button"
+            onClick={() => setTab('my-quizzes')}
+            className={`flex-1 min-w-[52px] sm:min-w-[64px] min-h-[46px] rounded-full flex flex-col items-center justify-center gap-1 text-xs transition-all duration-200 cursor-pointer ${
+              currentTab === 'my-quizzes'
+                ? 'text-indigo-500 dark:text-indigo-400 bg-indigo-500/15 font-bold shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <BookOpen className={`w-4 h-4 ${currentTab === 'my-quizzes' ? 'scale-110' : ''} transition-transform`} />
+            <span className="text-[10px] leading-none">{isAr ? 'مكتبتي' : 'Library'}</span>
+          </button>
+
+          {/* 5. More Sheet Trigger */}
           <button
             type="button"
             onClick={() => setIsMoreSheetOpen(true)}
-            className="px-2.5 sm:px-3.5 min-h-[44px] rounded-full flex flex-col xs:flex-row items-center justify-center gap-1 sm:gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-all select-none cursor-pointer"
+            className="flex-1 min-w-[52px] sm:min-w-[64px] min-h-[46px] rounded-full flex flex-col items-center justify-center gap-1 text-xs transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
             title={isAr ? 'المزيد من الأدوات' : 'More Tools'}
           >
             <LayoutGrid className="w-4 h-4" />
-            <span className="text-[10px] sm:text-xs">{isAr ? 'المزيد' : 'More'}</span>
+            <span className="text-[10px] leading-none">{isAr ? 'المزيد' : 'More'}</span>
           </button>
         </div>
       </nav>
@@ -142,7 +138,7 @@ export default function IOS27FloatingTabBar({
             <button
               type="button"
               onClick={() => setIsMoreSheetOpen(false)}
-              className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -159,16 +155,16 @@ export default function IOS27FloatingTabBar({
                     setTab(tool.id);
                     setIsMoreSheetOpen(false);
                   }}
-                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200/60 dark:border-slate-800 flex items-center gap-3.5 text-right transition-all hover:scale-101 active:scale-99 cursor-pointer group"
+                  className="flex items-center gap-3.5 p-3 rounded-2xl bg-black/[0.02] dark:bg-white/[0.04] hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-right cursor-pointer border border-black/5 dark:border-white/5"
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tool.color} group-hover:scale-105 transition-transform`}>
+                  <div className={`p-2.5 rounded-xl ${tool.color} shrink-0`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="font-display font-bold text-xs text-slate-900 dark:text-white truncate">
+                  <div className="min-w-0">
+                    <p className="font-display font-bold text-sm text-slate-900 dark:text-white truncate">
                       {tool.label}
-                    </h4>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                       {tool.desc}
                     </p>
                   </div>

@@ -17,11 +17,17 @@ import {
   Flame,
   Clock,
   HelpCircle,
-  ArrowUpRight,
   Zap,
+  Users,
+  Star,
+  CheckCircle2,
+  X,
+  Compass,
+  Cpu,
+  Code2,
+  Atom,
+  History,
 } from 'lucide-react';
-import { Button } from '../ios27/components/Button';
-import { SegmentedControl } from '../ios27/components/SegmentedControl';
 
 interface DeleteQuizConfirmDialogProps {
   isAr: boolean;
@@ -161,18 +167,16 @@ export default function LandingPage({
   const [aiPromptInput, setAiPromptInput] = React.useState('');
   const [quizToDelete, setQuizToDelete] = React.useState<string | null>(null);
 
-  const categoryKeys = React.useMemo(() => ['all', 'ai', 'science', 'code', 'history'], []);
-  const categoryLabels = React.useMemo(
+  const categories = React.useMemo(
     () => [
-      isAr ? 'الكل' : 'All',
-      isAr ? 'ذكاء اصطناعي' : 'AI & Tech',
-      isAr ? 'علوم وفيزياء' : 'Science',
-      isAr ? 'برمجة وتطوير' : 'Coding',
-      isAr ? 'تاريخ وثقافة' : 'History',
+      { id: 'all', label: isAr ? 'الكل' : 'All', icon: Compass, color: 'text-slate-400' },
+      { id: 'ai', label: isAr ? 'ذكاء اصطناعي' : 'AI & Tech', icon: Cpu, color: 'text-cyan-400' },
+      { id: 'science', label: isAr ? 'علوم وفيزياء' : 'Science', icon: Atom, color: 'text-emerald-400' },
+      { id: 'code', label: isAr ? 'برمجة وتطوير' : 'Coding', icon: Code2, color: 'text-sky-400' },
+      { id: 'history', label: isAr ? 'تاريخ وثقافة' : 'History', icon: History, color: 'text-amber-400' },
     ],
     [isAr]
   );
-  const [selectedCategoryIndex, setSelectedCategoryIndex] = React.useState(0);
 
   const quickPrompts = isAr
     ? ['فيزياء الكم والكون', 'تاريخ مصر القديمة', 'أساسيات بايثون', 'الذكاء الاصطناعي التوليدي']
@@ -190,13 +194,13 @@ export default function LandingPage({
 
       let matchesCat = true;
       if (activeCategory === 'ai') {
-        matchesCat = title.includes('ai') || title.includes('ذكاء') || desc.includes('ذكاء');
+        matchesCat = title.includes('ai') || title.includes('ذكاء') || desc.includes('ذكاء') || title.includes('تقني');
       } else if (activeCategory === 'science') {
-        matchesCat = title.includes('فيزياء') || title.includes('علوم') || title.includes('science') || desc.includes('علوم');
+        matchesCat = title.includes('فيزياء') || title.includes('علوم') || title.includes('science') || desc.includes('علوم') || title.includes('طبي');
       } else if (activeCategory === 'code') {
-        matchesCat = title.includes('برمج') || title.includes('code') || title.includes('python') || title.includes('web');
+        matchesCat = title.includes('برمج') || title.includes('code') || title.includes('python') || title.includes('web') || title.includes('react');
       } else if (activeCategory === 'history') {
-        matchesCat = title.includes('تاريخ') || title.includes('history') || title.includes('حضار');
+        matchesCat = title.includes('تاريخ') || title.includes('history') || title.includes('حضار') || title.includes('ثقاف');
       }
 
       return matchesSearch && matchesCat;
@@ -222,7 +226,7 @@ export default function LandingPage({
   };
 
   return (
-    <div className="w-full min-h-dvh pb-28 lg:pb-16 select-none" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="w-full min-h-dvh pb-32 select-none" dir={isAr ? 'rtl' : 'ltr'}>
       {quizToDelete && (
         <DeleteQuizConfirmDialog
           isAr={isAr}
@@ -231,45 +235,45 @@ export default function LandingPage({
         />
       )}
 
-      {/* Hero Atmosphere — Containerless & Directly on the Canvas ("على الأرض") */}
-      <section className="relative px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-12 max-w-6xl mx-auto text-center">
-        {/* Subtle Ambient Glow Aura */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[300px] bg-gradient-to-tr from-violet-600/15 via-indigo-500/10 to-cyan-400/15 rounded-full blur-[100px] pointer-events-none -z-10" />
+      {/* Hero Atmosphere — Modern, Balanced & Elevated Canvas */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-6 sm:pt-12 pb-10 max-w-5xl mx-auto text-center">
+        {/* Balanced Ambient Glow Aura (Cyan + Amber + Indigo, NOT oversaturated purple) */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[600px] h-[280px] bg-gradient-to-tr from-cyan-500/10 via-sky-600/10 to-amber-400/10 rounded-full blur-[110px] pointer-events-none -z-10" />
 
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 dark:bg-violet-400/15 text-violet-600 dark:text-violet-300 text-xs font-black tracking-wide mb-5">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/10 text-sky-500 dark:text-sky-300 border border-sky-500/20 text-xs font-black tracking-wide mb-5 shadow-xs">
           <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-          <span>{isAr ? 'فضاء الاختبارات الذكية • إصدار الجيل القادم' : 'QuizSpace Intelligent Universe • Next-Gen'}</span>
+          <span>{isAr ? 'فضاء الاختبارات التفاعلية • الجيل الجديد' : 'Interactive Assessment Universe • Next-Gen'}</span>
         </div>
 
-        {/* Large Canvas Headline */}
-        <h1 className="font-display font-black text-4xl sm:text-6xl lg:text-7xl tracking-tight text-slate-900 dark:text-white leading-[1.12]">
+        {/* Large Canvas Headline with Iridescent Multi-Color Gradient */}
+        <h1 className="font-display font-black text-4xl sm:text-6xl lg:text-7xl tracking-tight text-slate-900 dark:text-white leading-[1.14]">
           {isAr ? (
             <>
-              اصنع <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400">•</span> اختبر{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400">•</span> تنافس
+              اصنع <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-amber-300">•</span> اختبر{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-amber-300">•</span> وتصدّر
             </>
           ) : (
             <>
-              Create <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400">•</span> Test{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400">•</span> Excel
+              Create <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-amber-300">•</span> Test{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-400 to-amber-300">•</span> Excel
             </>
           )}
         </h1>
 
-        <p className="mt-4 text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-medium">
+        <p className="mt-4 text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-medium">
           {isAr
             ? 'حوّل أي مادة أو فكرة إلى اختبار ذكي فوري بالذكاء الاصطناعي دون تعقيد أو حواجز.'
             : 'Transform lectures, files, and ideas into instant interactive quizzes seamlessly.'}
         </p>
 
-        {/* Ethereal AI Prompt Input — Floating directly on the Canvas */}
-        <div className="mt-9 max-w-2xl mx-auto">
+        {/* AI Prompt Input Bar — High-Contrast Clean Frosted Capsule */}
+        <div className="mt-8 max-w-2xl mx-auto">
           <form
             onSubmit={handleInstantGenerate}
-            className="group relative flex flex-col sm:flex-row items-center gap-2 p-1.5 sm:p-2 rounded-2xl sm:rounded-full bg-white/60 dark:bg-slate-900/60 shadow-lg shadow-violet-500/5 ring-1 ring-slate-200/80 dark:ring-white/10 hover:ring-violet-500/40 transition-all duration-300 backdrop-blur-md"
+            className="group relative flex flex-col sm:flex-row items-center gap-2 p-1.5 sm:p-2 rounded-2xl sm:rounded-full bg-white/80 dark:bg-slate-900/80 shadow-xl shadow-black/5 ring-1 ring-black/10 dark:ring-white/15 focus-within:ring-2 focus-within:ring-sky-500/50 transition-all duration-300 backdrop-blur-xl"
           >
             <div className="flex items-center gap-3 px-4 py-2 flex-1 w-full text-right">
-              <Sparkles className="w-5 h-5 text-violet-500 shrink-0 animate-pulse" />
+              <Sparkles className="w-5 h-5 text-sky-500 shrink-0 animate-pulse" />
               <input
                 type="text"
                 value={aiPromptInput}
@@ -281,27 +285,36 @@ export default function LandingPage({
                 }
                 className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold"
               />
+              {aiPromptInput && (
+                <button
+                  type="button"
+                  onClick={() => setAiPromptInput('')}
+                  className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
             <button
               type="submit"
-              className="w-full sm:w-auto min-h-[44px] px-6 rounded-xl sm:rounded-full bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-black text-xs sm:text-sm shadow-md shadow-violet-500/25 flex items-center justify-center gap-2 shrink-0 transition-transform duration-200 active:scale-95 cursor-pointer"
+              className="w-full sm:w-auto min-h-[44px] px-6 rounded-xl sm:rounded-full bg-gradient-to-r from-sky-500 via-indigo-600 to-violet-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs sm:text-sm shadow-md shadow-sky-500/20 flex items-center justify-center gap-2 shrink-0 transition-transform duration-200 active:scale-95 cursor-pointer"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>{isAr ? 'توليد فوري ⚡' : 'Generate ⚡'}</span>
+              <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+              <span>{isAr ? 'توليد فوري' : 'Generate'}</span>
             </button>
           </form>
 
-          {/* Quick Constellation Pills */}
+          {/* Quick Trending Topics Pills */}
           <div className="flex items-center justify-center gap-2 flex-wrap mt-3.5">
             <span className="text-[11px] text-slate-400 font-bold">
-              {isAr ? 'مواضيع شائعة:' : 'Trending:'}
+              {isAr ? 'مواضيع مقترحة:' : 'Popular:'}
             </span>
             {quickPrompts.map((prompt) => (
               <button
                 key={prompt}
                 type="button"
                 onClick={() => setAiPromptInput(prompt)}
-                className="text-[11px] font-semibold px-3 py-1 rounded-full text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-300 bg-black/5 dark:bg-white/5 hover:bg-violet-500/10 transition-colors cursor-pointer"
+                className="text-[11px] font-semibold px-3 py-1 rounded-full text-slate-700 dark:text-slate-300 hover:text-sky-500 dark:hover:text-sky-400 bg-black/5 dark:bg-white/5 hover:bg-sky-500/10 transition-colors cursor-pointer border border-black/5 dark:border-white/5"
               >
                 {prompt}
               </button>
@@ -310,15 +323,15 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* Featured Spotlight — Borderless Magazine Spread ("على الأرض") */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-        <div className="relative py-6 sm:py-8 border-y border-slate-200/60 dark:border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      {/* Featured Spotlight — Warm Amber Daily Challenge (Rewarding & Energetic) */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+        <div className="relative p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-amber-500/[0.08] via-orange-500/[0.05] to-transparent border border-amber-500/20 dark:border-amber-400/15 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
           <div className="space-y-2 max-w-2xl text-right">
-            <div className="inline-flex items-center gap-1.5 text-amber-500 dark:text-amber-400 text-xs font-black tracking-wide">
-              <Flame className="w-4 h-4" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-black tracking-wide border border-amber-500/20">
+              <Flame className="w-3.5 h-3.5 text-amber-500 animate-bounce" />
               <span>{isAr ? 'تحدي اليوم الحصري 🏆' : 'Daily Spotlight Challenge 🏆'}</span>
             </div>
-            <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 dark:text-white">
+            <h2 className="font-display font-black text-xl sm:text-2xl text-slate-900 dark:text-white">
               {isAr ? 'اختبر معلوماتك العامة والذكاء الاصطناعي' : 'Test Your AI & General Knowledge'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
@@ -326,17 +339,17 @@ export default function LandingPage({
                 ? 'اختبار سريع ومتجدد يومياً لتطوير مهاراتك ورفع رتبتك في لوحة المتصدرين مع مكافأة +150 XP.'
                 : 'A rapid daily test to build your streak, raise your rank on the leaderboard and earn +150 XP.'}
             </p>
-            <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-1 font-bold">
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-violet-500" />
+            <div className="flex items-center gap-3 sm:gap-4 text-xs text-slate-500 dark:text-slate-400 pt-1 font-bold flex-wrap">
+              <span className="flex items-center gap-1.5 text-sky-600 dark:text-sky-400">
+                <Clock className="w-3.5 h-3.5" />
                 <span>5 {isAr ? 'دقائق' : 'mins'}</span>
               </span>
-              <span className="flex items-center gap-1.5">
-                <HelpCircle className="w-3.5 h-3.5 text-cyan-500" />
+              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <HelpCircle className="w-3.5 h-3.5" />
                 <span>10 {isAr ? 'أسئلة' : 'questions'}</span>
               </span>
-              <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                <Flame className="w-3.5 h-3.5" />
+              <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-black">
+                <Star className="w-3.5 h-3.5 fill-current" />
                 <span>+150 XP</span>
               </span>
             </div>
@@ -351,57 +364,82 @@ export default function LandingPage({
                 onCreateQuizTab();
               }
             }}
-            className="w-full md:w-auto min-h-[48px] px-8 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-violet-500/25 shrink-0 flex items-center justify-center gap-2 transition-transform duration-200 active:scale-95 cursor-pointer"
+            className="w-full md:w-auto min-h-[46px] px-7 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-black text-xs sm:text-sm shadow-lg shadow-amber-500/25 shrink-0 flex items-center justify-center gap-2 transition-transform duration-200 active:scale-95 cursor-pointer"
           >
             <Play className="w-4 h-4 fill-white" />
-            <span>{isAr ? 'بدء التحدي الآن' : 'Start Challenge Now'}</span>
+            <span>{isAr ? 'خُض التحدي الآن' : 'Start Challenge Now'}</span>
           </button>
         </div>
       </section>
 
-      {/* Filter and Live Search Controls */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="w-full md:w-auto overflow-x-auto pb-1 max-w-full">
-            <SegmentedControl
-              segments={categoryLabels}
-              selected={selectedCategoryIndex}
-              onChange={(idx) => {
-                setSelectedCategoryIndex(idx);
-                setActiveCategory(categoryKeys[idx] || 'all');
-              }}
-            />
-          </div>
+      {/* Filter and Live Search Controls — Fully Responsive with zero collisions */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 space-y-4">
+        {/* 1. Full-Width Clean Search Bar */}
+        <div className="relative w-full">
+          <Search className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={isAr ? 'ابحث باسم الاختبار، الموضوع، أو اسم المعلم...' : 'Search quizzes by title, topic, or creator...'}
+            className="w-full pr-11 pl-10 py-3 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500/40 backdrop-blur-md transition-all shadow-xs"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
-          <div className="w-full md:w-72">
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={isAr ? 'بحث سريع في الاختبارات...' : 'Search quizzes...'}
-                className="w-full pr-10 pl-4 py-2 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
-              />
-            </div>
-          </div>
+        {/* 2. Fluid Horizontal Category Chips (Never Collide) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none flex-nowrap">
+          {categories.map((cat) => {
+            const isActive = activeCategory === cat.id;
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm scale-102'
+                    : 'bg-white/40 dark:bg-slate-900/40 text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-white/10'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isActive ? '' : cat.color}`} />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
-      {/* Quizzes Stream — Floating directly on the Canvas with zero boxed containers ("على الأرض") */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Quizzes Stream — Breathable, High-Contrast Glass Cards with Solvers Prominently Shown */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="py-4 space-y-3 animate-pulse">
-                <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-800" />
-                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4" />
-                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-md w-1/2" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="p-5 rounded-3xl bg-slate-100 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 space-y-4 animate-pulse">
+                <div className="flex justify-between items-center">
+                  <div className="w-16 h-5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  <div className="w-12 h-4 rounded-md bg-slate-200 dark:bg-slate-800" />
+                </div>
+                <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4" />
+                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-md w-full" />
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-between">
+                  <div className="w-24 h-6 rounded-md bg-slate-200 dark:bg-slate-800" />
+                  <div className="w-16 h-8 rounded-full bg-slate-200 dark:bg-slate-800" />
+                </div>
               </div>
             ))}
           </div>
         ) : filteredQuizzes.length === 0 ? (
-          <div className="text-center py-20 px-4">
+          <div className="text-center py-20 px-4 rounded-3xl bg-white/30 dark:bg-slate-900/30 border border-slate-200 dark:border-white/5">
             <BookOpen className="w-12 h-12 text-slate-400/60 mx-auto mb-3" />
             <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white">
               {isAr ? 'لا توجد اختبارات في هذا القسم' : 'No quizzes found here'}
@@ -414,36 +452,52 @@ export default function LandingPage({
             <button
               type="button"
               onClick={() => onCreateQuizTab()}
-              className="mt-5 min-h-[44px] px-6 rounded-full bg-violet-600 text-white font-bold text-xs shadow-md shadow-violet-500/20 cursor-pointer"
+              className="mt-5 min-h-[44px] px-6 rounded-full bg-sky-500 text-white font-bold text-xs shadow-md shadow-sky-500/20 cursor-pointer hover:bg-sky-400 transition-colors"
             >
               {isAr ? 'إنشاء اختبار الآن' : 'Create Quiz Now'}
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {filteredQuizzes.map((quiz) => {
               const questionsCount = quiz.questions?.length || 10;
               const isOwner = currentUserId && quiz.creatorId === currentUserId;
+              const plays = quiz.totalPlays || 0;
+              const rating = quiz.avgRating ? quiz.avgRating.toFixed(1) : '5.0';
+              const estMinutes = Math.max(3, Math.round(questionsCount * 0.7));
 
               return (
                 <div
                   key={quiz.id}
-                  className="group relative flex flex-col justify-between py-2 transition-all duration-300 text-right"
+                  className="group relative flex flex-col justify-between p-5 rounded-3xl bg-white/[0.6] dark:bg-slate-900/40 hover:bg-white/[0.9] dark:hover:bg-slate-900/70 border border-slate-200/80 dark:border-white/10 hover:border-sky-500/40 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 text-right backdrop-blur-md"
                 >
-                  {/* Subtle Canvas Hover Aura */}
-                  <div className="absolute -inset-3 rounded-2xl bg-violet-500/0 group-hover:bg-violet-500/[0.04] dark:group-hover:bg-violet-400/[0.04] transition-colors duration-300 pointer-events-none -z-10" />
-
                   <div>
-                    {/* Top Row: Count & Actions */}
-                    <div className="flex items-center justify-between gap-2 mb-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-violet-500 group-hover:scale-125 transition-transform" />
-                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                          {questionsCount} {isAr ? 'أسئلة' : 'Q’s'}
+                    {/* Top Status Strip: Solvers count, Questions count & Owner Actions */}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      {/* Solvers & Questions Pills */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* Solvers Counter — Clearly highlighting who solved it! */}
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black border border-emerald-500/20">
+                          <Users className="w-3 h-3" />
+                          <span>
+                            {plays > 0
+                              ? (isAr ? `${plays.toLocaleString()} حلاً` : `${plays} solved`)
+                              : (isAr ? 'جديد ⚡' : 'New ⚡')}
+                          </span>
+                        </span>
+
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+                          <span>{questionsCount} {isAr ? 'سؤالاً' : 'Q’s'}</span>
+                        </span>
+
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                          <Star className="w-2.5 h-2.5 fill-current" />
+                          <span>{rating}</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                      {/* Action Menu (Share, Edit, Delete) */}
+                      <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
                         {isOwner && onEditQuiz && (
                           <button
                             type="button"
@@ -487,19 +541,26 @@ export default function LandingPage({
                     {/* Quiz Title */}
                     <h3
                       onClick={() => onStartQuiz(quiz.id)}
-                      className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors cursor-pointer"
+                      className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors cursor-pointer"
                     >
                       {quiz.title}
                     </h3>
 
                     {/* Quiz Description */}
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                      {quiz.description || (isAr ? 'اختبار تفاعلي شيق لاختبار معلوماتك.' : 'Interactive comprehension quiz.')}
+                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium">
+                      {quiz.description || (isAr ? 'اختبار تفاعلي شيق لقياس مستواك المعرفي.' : 'Interactive comprehension quiz.')}
                     </p>
+
+                    {/* Duration badge */}
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-3">
+                      <Clock className="w-3 h-3 text-sky-400" />
+                      <span>{isAr ? `الزمن المقدر: ~${estMinutes} دقائق` : `Est. time: ~${estMinutes} mins`}</span>
+                    </div>
                   </div>
 
-                  {/* Card Floor Footer */}
-                  <div className="pt-3 mt-3 border-t border-slate-200/50 dark:border-white/5 flex items-center justify-between gap-3">
+                  {/* Card Bottom: Creator Identity & Prominent Start Button */}
+                  <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-3">
+                    {/* Creator Identity with Verified Look */}
                     <button
                       type="button"
                       onClick={() => {
@@ -507,18 +568,29 @@ export default function LandingPage({
                           onViewProfile(quiz.creatorId);
                         }
                       }}
-                      className="text-[11px] text-slate-400 hover:text-violet-500 font-semibold truncate max-w-[120px] transition-colors cursor-pointer"
+                      className="flex items-center gap-2 group/creator text-right max-w-[150px] truncate cursor-pointer"
                     >
-                      {quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs">
+                        {quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 group-hover/creator:text-sky-400 truncate leading-none">
+                          {quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
+                        </p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
+                          {isAr ? 'صانع الاختبار' : 'Quiz Creator'}
+                        </p>
+                      </div>
                     </button>
 
+                    {/* Prominent Start Button */}
                     <button
                       type="button"
                       onClick={() => onStartQuiz(quiz.id)}
-                      className="min-h-[36px] px-4 rounded-full bg-violet-600/10 hover:bg-violet-600 text-violet-600 hover:text-white dark:text-violet-400 dark:hover:text-white font-black text-xs flex items-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer shadow-xs"
+                      className="min-h-[38px] px-4 rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs flex items-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer shadow-md shadow-sky-500/20"
                     >
                       <Play className="w-3 h-3 fill-current" />
-                      <span>{isAr ? 'بدء' : 'Start'}</span>
+                      <span>{isAr ? 'ابدأ الحل' : 'Start'}</span>
                     </button>
                   </div>
                 </div>

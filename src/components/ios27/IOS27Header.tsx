@@ -137,7 +137,7 @@ export default function IOS27Header({
                     onClick={() => setTab(item.id)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
                       isActive
-                        ? 'bg-white dark:bg-slate-800 text-violet-600 dark:text-violet-400 shadow-sm'
+                        ? 'bg-white dark:bg-slate-800 text-sky-500 dark:text-sky-400 shadow-sm'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                     }`}
                   >
@@ -154,7 +154,7 @@ export default function IOS27Header({
                   onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 flex items-center gap-1 cursor-pointer ${
                     toolsItems.some((t) => t.id === currentTab)
-                      ? 'bg-white dark:bg-slate-800 text-violet-600 dark:text-violet-400 shadow-sm'
+                      ? 'bg-white dark:bg-slate-800 text-sky-500 dark:text-sky-400 shadow-sm'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
@@ -177,9 +177,9 @@ export default function IOS27Header({
                             setTab(tool.id);
                             setIsToolsMenuOpen(false);
                           }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-violet-500/15 hover:text-violet-600 dark:hover:text-violet-400 transition-colors cursor-pointer"
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-sky-500/10 hover:text-sky-500 dark:hover:text-sky-400 transition-colors cursor-pointer"
                         >
-                          <Icon className="w-4 h-4 text-violet-500 shrink-0" />
+                          <Icon className="w-4 h-4 text-sky-500 shrink-0" />
                           <span>{tool.label}</span>
                         </button>
                       );
@@ -197,7 +197,7 @@ export default function IOS27Header({
             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer hover:bg-black/10 dark:hover:bg-white/10"
             title={isAr ? 'بحث سريع' : 'Quick Search'}
           >
-            <Command className="w-3.5 h-3.5 text-violet-500" />
+            <Command className="w-3.5 h-3.5 text-sky-500" />
             <span className="hidden xl:inline">{isAr ? 'ابحث أو اسأل كوزمو...' : 'Search or ask Cosmo...'}</span>
             <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono font-bold text-slate-400 dark:text-slate-500">
               ⌘K
@@ -233,16 +233,16 @@ export default function IOS27Header({
                 <button
                   type="button"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-1.5 sm:gap-2 p-1 sm:pr-3 sm:pl-1 rounded-full bg-violet-500/10 dark:bg-violet-400/15 border border-violet-500/20 text-slate-900 dark:text-white text-xs font-bold transition-all hover:scale-102 active:scale-98 cursor-pointer"
+                  className="flex items-center gap-1.5 sm:gap-2 p-1 sm:pr-3 sm:pl-1 rounded-full bg-sky-500/10 dark:bg-sky-400/15 border border-sky-500/20 text-slate-900 dark:text-white text-xs font-bold transition-all hover:scale-102 active:scale-98 cursor-pointer"
                 >
                   {photoURL ? (
                     <img
                       src={photoURL}
                       alt={userName}
-                      className="w-6 h-6 rounded-full object-cover border border-violet-400/30"
+                      className="w-6 h-6 rounded-full object-cover border border-sky-400/30"
                     />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10px] font-black">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white flex items-center justify-center text-[10px] font-black">
                       {userName ? userName.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
                     </div>
                   )}
@@ -262,9 +262,9 @@ export default function IOS27Header({
                         setTab('profile');
                         setIsUserMenuOpen(false);
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 hover:bg-violet-500/15 hover:text-violet-600 dark:hover:text-violet-400 transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 hover:bg-sky-500/10 hover:text-sky-500 dark:hover:text-sky-400 transition-colors cursor-pointer"
                     >
-                      <User className="w-4 h-4 text-violet-500" />
+                      <User className="w-4 h-4 text-sky-500" />
                       <span>{isAr ? 'الملف الشخصي' : 'User Profile'}</span>
                     </button>
                     <button
@@ -288,7 +288,7 @@ export default function IOS27Header({
                 onClick={onLogin}
                 className="!text-[11px] sm:!text-xs !py-1.5 !px-3 sm:!px-4 font-bold !rounded-full shadow-sm"
               >
-                <LogIn className="w-3.5 h-3.5 text-violet-500" />
+                <LogIn className="w-3.5 h-3.5 text-sky-500" />
                 <span>{isAr ? 'تسجيل الدخول' : 'Sign In'}</span>
               </Button>
             )}

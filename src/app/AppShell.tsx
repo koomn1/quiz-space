@@ -112,7 +112,7 @@ export default function AppShell(props: AppShellProps) {
             {/* Dark mode background elements */}
             <div className="absolute inset-0 hidden dark:block opacity-100">
               {/* Glowing Orbs */}
-              <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-violet-600/10 blur-[120px] mix-blend-screen" />
+              <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-sky-600/10 blur-[120px] mix-blend-screen" />
               <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-cyan-400/5 blur-[120px] mix-blend-screen" />
               <div className="absolute top-[30%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-cyan-500/10 blur-[120px] mix-blend-screen" />
             </div>
