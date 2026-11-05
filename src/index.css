@@ -2063,8 +2063,8 @@ html.dark textarea:focus {
 /* Final theme pass: shared surfaces and the landing hero use the active preset. */
 .light-hero {
   background: linear-gradient(135deg, color-mix(in srgb, var(--app-surface-strong) 84%, var(--theme-primary) 16%), color-mix(in srgb, var(--app-surface-tint) 82%, var(--theme-gradient-to) 18%));
-  border: 1px solid var(--app-border);
-  box-shadow: 0 14px 40px color-mix(in srgb, var(--theme-primary) 12%, transparent);
+  border: 0;
+  box-shadow: none;
   color: var(--app-text);
 }
 .light-hero__grid { background-image: linear-gradient(to right, color-mix(in srgb, var(--theme-primary) 13%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--theme-primary) 13%, transparent) 1px, transparent 1px); }
@@ -2175,7 +2175,26 @@ html[dir="rtl"] .quizspace-sidebar-panel,
 .liquid-header__theme-toggle { background: var(--app-surface-raised) !important; border-color: var(--app-border) !important; color: var(--app-text) !important; }
 
 @media (max-width: 768px) {
-  .light-hero { border-radius: 1.75rem; }
+  /* The app is edge-to-edge on phones; do not frame the page inside a card. */
+  .light-hero {
+    border-radius: 0 !important;
+    width: 100vw;
+    margin-inline: 0;
+  }
+
+  .liquid-header {
+    padding-inline: 0 !important;
+  }
+
+  .liquid-header__bar {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    border-inline: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    clip-path: none;
+  }
 }
 
 .guest-landing__hero {

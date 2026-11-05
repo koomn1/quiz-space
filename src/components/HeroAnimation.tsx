@@ -85,7 +85,7 @@ export function HeroAnimation({ t, isAr, onCreateQuizTab, cosmoAITopics }: HeroA
   }, { scope: containerRef, dependencies: [isAr, topicsToUse.join('|')] });
 
   return (
-    <div ref={containerRef} className="light-hero relative w-full py-16 sm:py-20 md:py-28 overflow-hidden flex flex-col items-center justify-center rounded-[32px] sm:rounded-[40px] transition-all duration-300">
+    <div ref={containerRef} className="light-hero relative w-full py-16 sm:py-20 md:py-28 overflow-hidden flex flex-col items-center justify-center transition-colors duration-300">
       
       {/* Dynamic Background Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
