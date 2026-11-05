@@ -44,8 +44,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Some presets require dark mode. Do not first paint the preset with the
+    // old light tokens and then immediately paint it again in dark mode.
+    // That double invalidation is especially expensive when glass surfaces
+    // and backdrop filters are present on mobile devices.
     if (selected.id === 'deep-night' && !darkMode) {
       setDarkMode(true);
+      return;
     }
 
     // Theme changes update many utility classes at once. Temporarily disable

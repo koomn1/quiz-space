@@ -524,6 +524,25 @@ html.theme-switching *::after {
   animation: none !important;
 }
 
+/* A theme update changes the tokens used by many glass surfaces at once.
+   Temporarily removing the expensive blur avoids a GPU-wide repaint/freeze;
+   the normal glass effect returns after the short atomic update. */
+html.theme-switching [class*="backdrop-blur"],
+html.theme-switching .liquid-header__bar,
+html.theme-switching .liquid-sidebar,
+html.theme-switching .liquid-container,
+html.theme-switching .liquid-glass,
+html.theme-switching .glass-panel,
+html.theme-switching .glass-card,
+html.theme-switching .uipro-clay-card,
+html.theme-switching .uipro-glass-panel,
+html.theme-switching .uipro-glass-surface,
+html.theme-switching .uipro-glass-plan,
+html.theme-switching .liquid-bottom-nav__inner {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

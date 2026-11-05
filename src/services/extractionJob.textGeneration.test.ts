@@ -119,9 +119,8 @@ describe('narrative text generation in extraction jobs', () => {
     );
 
     expect(requestBodies.length).toBeGreaterThan(1);
-    expect(requestBodies[0].messages[1].content).toContain('افحص هذا الجزء من المستند بدقة وتعمق شديد');
+    expect(requestBodies[0].messages[1].content).toContain('استخرج أو أنشئ');
     expect(result.chunks).toBe(requestBodies.length);
     expect(result.questions.length).toBe(requestBodies.length * 2);
   });
 });
-
