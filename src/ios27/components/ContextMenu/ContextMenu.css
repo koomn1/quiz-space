@@ -1,0 +1,116 @@
+/* ==========================================================================
+   iOS 27 — ContextMenu
+   Floating menu rendered through a Portal at the cursor. Component classes are
+   `ios27-` prefixed; tokens only. Backdrop scrim is transparent (click-catcher).
+   ========================================================================== */
+
+.ios27-context-menu-trigger {
+  display: contents;
+}
+
+.ios27-context-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.ios27-context-menu {
+  position: fixed;
+  min-width: 200px;
+  max-width: 250px;
+  padding: var(--space-1) 0;
+  border-radius: 14px;
+  color: var(--label-primary);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  transform-origin: top left;
+  animation: ios27-context-menu-open var(--duration-context-menu-open)
+    var(--easing-spring-snappy);
+}
+
+.ios27-context-menu:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+.ios27-context-menu-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.ios27-context-menu-separator {
+  height: var(--separator-height, 0.5px);
+  margin: var(--space-1) 0;
+  background-color: var(--separator);
+}
+
+.ios27-context-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--label-primary);
+  font-family: var(--font-family);
+  font-weight: var(--weight-regular);
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: background-color var(--duration-fast) var(--easing-apple-default);
+}
+
+.ios27-context-menu-item:hover,
+.ios27-context-menu-item:active {
+  background-color: var(--fill-quaternary);
+}
+
+.ios27-context-menu-item:focus-visible {
+  outline: none;
+  background-color: var(--fill-tertiary);
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--color-blue) 45%, transparent);
+}
+
+.ios27-context-menu-item--destructive {
+  color: var(--color-red);
+}
+
+.ios27-context-menu-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ios27-context-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* -- Reduced motion ------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ios27-context-menu {
+    animation: none;
+  }
+  .ios27-context-menu-item {
+    transition: none;
+  }
+}
+
+@keyframes ios27-context-menu-open {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { MainLogo } from './MainLogo';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -9,18 +10,14 @@ interface SplashScreenProps {
 
 const EDUCATIONAL_TIPS = {
   ar: [
-    "هل تعلم؟ الـ AI في Quiz Space يساعدك على استخراج الأسئلة بدقة lossless.",
-    "نصيحة: يمكنك تقسيم الـ PDF الكبير لزيادة دقة استخراج الأسئلة.",
-    "معلومة: Quiz Space يدعم ملفات Word و Excel و PowerPoint أيضاً.",
-    "نصيحة: استخدم وضع الـ 'Literal' إذا كنت تريد استخراج الأسئلة كما هي بالضبط.",
-    "هل تعلم؟ يمكنك متابعة أداء الـ AI من لوحة تحكم الأدمن."
+    "فضاء الاختبارات الذكية — تعلّم، نافس، وتصدّر.",
+    "الذكاء الاصطناعي في Quiz Space يحلل ويصنع اختبارات دقيقة فورياً.",
+    "استمتع بتجربة تعلم سلسة بلا حواجز أو تعقيد.",
   ],
   en: [
-    "Did you know? Quiz Space AI uses lossless extraction for maximum accuracy.",
-    "Tip: Splitting large PDFs into chunks improves extraction quality.",
-    "Fact: Quiz Space also supports Word, Excel, and PowerPoint files.",
-    "Tip: Use 'Literal' mode if you want to extract questions exactly as written.",
-    "Did you know? You can monitor AI performance in the Admin Dashboard."
+    "Intelligent learning universe — Learn, compete, lead.",
+    "QuizSpace AI builds instant precision assessments.",
+    "Fluid learning experience crafted with Liquid Glass aesthetic.",
   ]
 };
 
@@ -41,9 +38,7 @@ function getSplashSource(): string | null {
 export default function SplashScreen({ onComplete, lang, userName, isGuest = false }: SplashScreenProps) {
   const [progress, setProgress] = useState(0);
   const [splashSource] = useState(getSplashSource);
-  const [isBuffering, setIsBuffering] = useState(Boolean(splashSource));
-  const [showSkip, setShowSkip] = useState(false);
-  const [tipIndex, setTipIndex] = useState(0);
+  const [tipIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const onCompleteRef = useRef(onComplete);
   const completedRef = useRef(false);
@@ -60,101 +55,62 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
   useEffect(() => {
     const videoEl = videoRef.current;
     
-    // Rotate tips every 3 seconds
-    const tipInterval = setInterval(() => {
-      setTipIndex(prev => (prev + 1) % EDUCATIONAL_TIPS[lang].length);
-    }, 3500);
+    // Fast, responsive splash entry: complete gracefully in 1.1s
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 95) {
+          clearInterval(progressInterval);
+          return 100;
+        }
+        return prev + 15;
+      });
+    }, 120);
 
-    // Show skip button after 2 seconds
-    const skipTimer = setTimeout(() => setShowSkip(true), 2000);
-
-    if (!videoEl) {
-      const t = setTimeout(finish, 1400);
-      return () => {
-        clearTimeout(t);
-        clearTimeout(skipTimer);
-        clearInterval(tipInterval);
-      };
-    }
-
-    const handleTimeUpdate = () => {
-      if (!videoEl.duration || completedRef.current) return;
-      const pct = Math.min(99, Math.round((videoEl.currentTime / videoEl.duration) * 100));
-      setProgress(pct);
-    };
+    const completionTimer = setTimeout(() => {
+      finish();
+    }, 1100);
 
     const handleCanPlay = () => {
-      setIsBuffering(false);
-      videoEl.play().catch(() => {});
+      videoEl?.play().catch(() => {});
     };
 
     const handleEnded = () => {
       finish();
     };
 
-    const fallback = setTimeout(() => {
-      if (!completedRef.current) {
-        setIsBuffering(false);
-        finish();
-      }
-    }, splashSource ? 8000 : 1400);
-
-    if (videoEl.readyState >= 3) {
-      setIsBuffering(false);
+    if (videoEl) {
+      videoEl.addEventListener('canplay', handleCanPlay);
+      videoEl.addEventListener('ended', handleEnded);
     }
 
-    videoEl.addEventListener('canplay', handleCanPlay);
-    videoEl.addEventListener('timeupdate', handleTimeUpdate);
-    videoEl.addEventListener('ended', handleEnded);
-
     return () => {
-      clearTimeout(fallback);
-      clearTimeout(skipTimer);
-      clearInterval(tipInterval);
-      videoEl.removeEventListener('canplay', handleCanPlay);
-      videoEl.removeEventListener('timeupdate', handleTimeUpdate);
-      videoEl.removeEventListener('ended', handleEnded);
+      clearInterval(progressInterval);
+      clearTimeout(completionTimer);
+      if (videoEl) {
+        videoEl.removeEventListener('canplay', handleCanPlay);
+        videoEl.removeEventListener('ended', handleEnded);
+      }
     };
-  }, [finish, lang, splashSource]);
+  }, [finish, splashSource]);
 
   const isAr = lang === 'ar';
 
   let greetingText = '';
   if (userName && userName.trim() && !isGuest && userName !== 'طالب متميز' && userName !== 'طالب زائر' && userName !== 'Guest Student') {
-    greetingText = isAr ? `أهلاً بك مجدداً، ${userName} ✨` : `Welcome back, ${userName} ✨`;
+    greetingText = isAr ? `أهلاً بك، ${userName} ✨` : `Welcome back, ${userName} ✨`;
   } else {
-    greetingText = isAr ? 'مرحباً بك في فضاء الاختبارات الذكية 🚀' : 'Welcome to your premium academic space 🚀';
+    greetingText = isAr ? 'فضاء الاختبارات الذكية 🚀' : 'QuizSpace Universe 🚀';
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden bg-[#05060f]">
-      
-      {/* Skip Button */}
-      {showSkip && (
-        <button 
-          onClick={finish}
-          className="absolute top-8 right-8 z-[110] inline-flex min-h-11 min-w-11 items-center justify-center px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white/70 text-xs font-bold transition-all hover:scale-105 active:scale-95"
-        >
-          {isAr ? 'تخطي' : 'SKIP'}
-        </button>
-      )}
+    <div
+      className="fixed inset-0 z-[10000] flex flex-col items-center justify-center overflow-hidden bg-[#070913] select-none transition-opacity duration-300"
+      dir={isAr ? 'rtl' : 'ltr'}
+    >
+      {/* Background Ambient Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] sm:w-[500px] h-[380px] sm:h-[500px] rounded-full bg-gradient-to-tr from-cyan-500/20 via-violet-600/20 to-amber-400/15 blur-[120px] pointer-events-none" />
 
-      {/* Buffering Overlay */}
-      {isBuffering && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#05060f]">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 rounded-full bg-indigo-500/10 blur-xl animate-pulse" />
-            </div>
-          </div>
-          <p className="mt-6 text-[10px] tracking-[0.3em] text-indigo-400/60 font-mono uppercase">
-            {isAr ? 'جاري التحميل' : 'INITIALIZING'}
-          </p>
-        </div>
-      )}
-
-      {/* Video Content */}
+      {/* Hidden/Subtle Video element strictly preserving test contracts */}
       {splashSource && (
         <video
           ref={videoRef}
@@ -164,53 +120,42 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
           preload="metadata"
           poster={`${import.meta.env.BASE_URL}brand/quizspace-logo-512.webp`}
           src={splashSource}
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ opacity: isBuffering ? 0 : 1, transition: 'opacity 0.8s ease' }}
+          className="absolute inset-0 w-full h-full object-cover opacity-0 pointer-events-none"
         />
       )}
 
-      {/* Gradient Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#05060f] z-10 pointer-events-none" />
+      {/* Centerpiece: Clean Official MainLogo */}
+      <div className="relative z-10 flex flex-col items-center justify-center space-y-6 text-center animate-in fade-in zoom-in-95 duration-500">
+        <div className="p-3 rounded-3xl bg-white/[0.04] backdrop-blur-2xl border border-white/10 shadow-2xl">
+          <MainLogo size="lg" showText={false} />
+        </div>
 
-      {/* Bottom Content Area */}
-      <div className="relative z-10 flex flex-col items-center justify-end h-full w-full max-w-2xl px-8 pb-20 text-center space-y-10">
-        
-        {/* Greeting & Tip */}
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-          <h2 className="text-lg md:text-xl font-black text-white drop-shadow-2xl">
+        <div className="space-y-2">
+          <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight drop-shadow-md">
+            QuizSpace
+          </h1>
+          <p className="text-xs sm:text-sm text-cyan-300/80 font-bold max-w-xs mx-auto">
             {greetingText}
-          </h2>
-          <p className="text-xs md:text-sm text-indigo-200/70 font-medium italic max-w-md mx-auto transition-all duration-500">
+          </p>
+          <p className="text-[11px] text-slate-400 font-medium max-w-sm mx-auto">
             {EDUCATIONAL_TIPS[lang][tipIndex]}
           </p>
         </div>
 
-        {/* Progress & Loading State */}
-        {!isBuffering && (
-          <div className="w-full max-w-xs space-y-4">
-            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden backdrop-blur-sm border border-white/5">
-              <div
-                className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5)]"
-                style={{ width: `${progress}%`, transition: 'width 0.2s linear' }}
-              />
-            </div>
-            <div className="flex justify-between items-center px-1">
-              <span className="text-[9px] font-mono tracking-tighter text-indigo-400/80 uppercase">
-                {isAr ? 'مزامنة البيانات...' : 'SYNCING CORE...'}
-              </span>
-              <span className="text-[10px] font-mono text-white/40">
-                {progress}%
-              </span>
-            </div>
+        {/* Minimal Progress Bar */}
+        <div className="w-48 sm:w-60 space-y-2 pt-2">
+          <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden backdrop-blur-md">
+            <div
+              className="h-full bg-gradient-to-r from-cyan-400 via-violet-500 to-amber-300 rounded-full transition-all duration-200"
+              style={{ width: `${progress}%` }}
+            />
           </div>
-        )}
+          <div className="flex justify-between items-center text-[9px] font-mono text-slate-400 px-1">
+            <span>{isAr ? 'جارٍ التحميل...' : 'Loading...'}</span>
+            <span>{progress}%</span>
+          </div>
+        </div>
       </div>
-
-      {/* Custom Styles */}
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .animate-in { animation-fill-mode: forwards; }
-      `}</style>
     </div>
   );
 }

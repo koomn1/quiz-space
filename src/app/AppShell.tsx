@@ -1,5 +1,6 @@
 import React from 'react';
-import Header from '../components/Header';
+import IOS27Header from '../components/ios27/IOS27Header';
+import IOS27FloatingTabBar from '../components/ios27/IOS27FloatingTabBar';
 import ProcessingCenterBanner from '../components/ProcessingCenterBanner';
 import CommandPalette from '../components/CommandPalette';
 import { PremiumCursor } from '../components/PremiumCursor';
@@ -55,23 +56,12 @@ export default function AppShell(props: AppShellProps) {
   return (
     <>
       {showAppHeader && (
-        <Header
+        <IOS27Header
           currentTab={activeTab}
           setTab={handleSetTab}
-          toggleSidebar={() => {
-            if (!isQuizLocked) {
-              setIsSidebarOpen((open) => !open);
-            }
-          }}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
-          colorTheme={colorTheme}
-          setColorTheme={setColorTheme}
           userName={userName}
-          setUserName={(name) => {
-            setUserName(name);
-            localStorage.setItem('quiz_userName', name);
-          }}
           userId={userId}
           photoURL={userPhoto || undefined}
           onLogin={() => {
@@ -82,9 +72,7 @@ export default function AppShell(props: AppShellProps) {
           lang={lang}
           setLang={setLang}
           isPremium={isUserPremium}
-          isSidebarOpen={isSidebarOpen}
-          isQuizLocked={isQuizLocked}
-          menuButtonRef={sidebarMenuButtonRef}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         />
       )}
       <ProcessingCenterBanner
@@ -231,6 +219,16 @@ export default function AppShell(props: AppShellProps) {
           </footer>
         </div>
       </div>
+
+      {showAppHeader && !isQuizLocked && Boolean(authIsAuthenticated && userId && !userId.startsWith('user-guest')) && (
+        <IOS27FloatingTabBar
+          currentTab={activeTab}
+          setTab={handleSetTab}
+          lang={lang}
+          isAdmin={Boolean(authIsAuthenticated && userId && !userId.startsWith('user-guest'))}
+          isAuthenticated={Boolean(authIsAuthenticated && userId && !userId.startsWith('user-guest'))}
+        />
+      )}
     </>
   );
 }

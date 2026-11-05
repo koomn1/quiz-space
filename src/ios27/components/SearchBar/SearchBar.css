@@ -1,0 +1,111 @@
+/* ==========================================================================
+   iOS 27 — SearchBar
+   Requires foundation CSS (tokens.css). Component classes are `ios27-`
+   prefixed to avoid collisions in consumer apps.
+   ========================================================================== */
+
+.ios27-searchbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-family);
+}
+
+.ios27-searchbar-field {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: 10px;
+  background-color: var(--fill-secondary);
+  transition: background-color var(--duration-fast) var(--easing-apple-default);
+}
+
+.ios27-searchbar-icon {
+  pointer-events: none;
+}
+
+.ios27-searchbar-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2) 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: var(--label-primary);
+  font-family: var(--font-family);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.ios27-searchbar-input::placeholder {
+  color: var(--label-tertiary);
+}
+
+.ios27-searchbar-input:focus {
+  outline: none;
+}
+
+.ios27-searchbar-input:focus-visible {
+  outline: none;
+}
+
+/* Focus ring on the whole field for visibility. */
+.ios27-searchbar-field:focus-within {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+/* Hide the native search clear/decoration so styling stays consistent. */
+.ios27-searchbar-input::-webkit-search-decoration,
+.ios27-searchbar-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* -- Cancel button -------------------------------------------------------- */
+
+.ios27-searchbar-cancel {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-blue);
+  font-family: var(--font-family);
+  white-space: nowrap;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  animation: ios27-searchbar-cancel-in var(--duration-fast) var(--easing-apple-default);
+}
+
+.ios27-searchbar-cancel:focus-visible {
+  outline: none;
+  border-radius: 6px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+.ios27-searchbar-cancel:active {
+  opacity: 0.7;
+}
+
+@keyframes ios27-searchbar-cancel-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--space-3));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios27-searchbar-field,
+  .ios27-searchbar-cancel {
+    transition: none;
+    animation: none;
+  }
+}

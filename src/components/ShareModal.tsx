@@ -264,7 +264,7 @@ export default function ShareModal({
                 
                 href={platform.url}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl text-xs font-semibold ${platform.color} transition-all duration-200 shadow-xs hover:scale-[1.02]`}
               >
                 <div className="flex-shrink-0">{platform.icon}</div>

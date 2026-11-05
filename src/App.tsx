@@ -1001,7 +1001,7 @@ export default function App() {
       />
 
       
-        {isSidebarMounted && !isQuizLocked && (
+        {false && isSidebarMounted && !isQuizLocked && (
           <OverlayPortal>
             {/* Backdrop */}
             <div 

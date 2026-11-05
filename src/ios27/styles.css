@@ -1,0 +1,25 @@
+/* ==========================================================================
+   iOS 27 React — Aggregated stylesheet (package entry).
+   Import once in your app root:  import '@ios27_design_system/react/styles.css'
+
+   Order: foundation (tokens/typography/materials/animations) first, then
+   component CSS in alphabetical order.
+   ========================================================================== */
+
+@import './styles/foundation.css';
+
+/* --- Components --- */
+@import './components/Alert/Alert.css';
+@import './components/Button/Button.css';
+@import './components/ContextMenu/ContextMenu.css';
+@import './components/ListRow/ListRow.css';
+@import './components/ListSection/ListSection.css';
+@import './components/Page/Page.css';
+@import './components/SearchBar/SearchBar.css';
+@import './components/SegmentedControl/SegmentedControl.css';
+@import './components/Sheet/Sheet.css';
+@import './components/Slider/Slider.css';
+@import './components/TabBar/TabBar.css';
+@import './components/TextField/TextField.css';
+@import './components/Toggle/Toggle.css';
+@import './components/Toolbar/Toolbar.css';

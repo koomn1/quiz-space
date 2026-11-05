@@ -6,27 +6,22 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Quiz } from '../types';
-import { BookOpen, Star, Play, Share2, Search, ArrowLeft, ArrowUpRight, RefreshCw, FileText, CheckCircle, Sparkles, Trash2, Cpu, Trophy, Layers, Flame, Lightbulb, Check, HelpCircle, MessageCircle, BrainCircuit, Rocket, Tag, LayoutGrid, List, Users, X } from 'lucide-react';
-import { translations } from '../lib/i18n';
-import { MainLogo } from '../components/MainLogo';
-import ThreeDIcon from '../components/ThreeDIcon';
-import { playChimeSound } from '../lib/chime';
-import ParallaxTiltCard from '../components/ParallaxTiltCard';
-import { getApiUrl } from '../lib/origin';
-import { UserBadge } from '../components/UserBadge';
-import { getPublicProfiles, getSiteStats } from '../lib/db';
-import DailyQuizCard from '../components/DailyQuizCard';
-import { QuizCatalogSkeleton } from '../components/PageSkeleton';
-
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-import { Hero3DScene } from '../components/Hero3DScene';
-import { InteractiveQuizCard } from '../components/InteractiveQuizCard';
-import { HeroAnimation } from '../components/HeroAnimation';
+import {
+  Sparkles,
+  Search,
+  Play,
+  Share2,
+  Trash2,
+  Edit3,
+  BookOpen,
+  Flame,
+  Clock,
+  HelpCircle,
+  ArrowUpRight,
+  Zap,
+} from 'lucide-react';
+import { Button } from '../ios27/components/Button';
+import { SegmentedControl } from '../ios27/components/SegmentedControl';
 
 interface DeleteQuizConfirmDialogProps {
   isAr: boolean;
@@ -62,7 +57,7 @@ function DeleteQuizConfirmDialog({ isAr, onCancel, onConfirm }: DeleteQuizConfir
       }}
     >
       <div
-        className="uipro-glass-surface my-auto max-h-[min(640px,90dvh)] w-full max-w-sm overflow-y-auto rounded-3xl border border-white/40 dark:border-white/10 p-6 text-right shadow-2xl backdrop-blur-2xl sm:w-96 animate-in zoom-in-95 duration-200"
+        className="liquid-glass-large my-auto max-h-[min(640px,90dvh)] w-full max-w-sm overflow-y-auto rounded-3xl border border-white/40 dark:border-white/10 p-6 text-right shadow-2xl backdrop-blur-2xl sm:w-96 animate-in zoom-in-95 duration-200"
         dir={isAr ? 'rtl' : 'ltr'}
         role="dialog"
         aria-modal="true"
@@ -70,7 +65,7 @@ function DeleteQuizConfirmDialog({ isAr, onCancel, onConfirm }: DeleteQuizConfir
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-center gap-3 justify-start flex-row bg-red-50 dark:bg-red-950/25 p-3.5 rounded-2xl border border-red-100 dark:border-red-950/40">
-          <div className="p-2 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-450 rounded-xl flex-shrink-0">
+          <div className="p-2 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-450 rounded-xl shrink-0">
             <Trash2 className="w-5 h-5" />
           </div>
           <div className="text-right">
@@ -93,7 +88,7 @@ function DeleteQuizConfirmDialog({ isAr, onCancel, onConfirm }: DeleteQuizConfir
           <button
             type="button"
             onClick={onCancel}
-            className="min-h-11 rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 transition-all hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 border border-slate-200/50 dark:border-slate-600/30"
+            className="min-h-11 rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 transition-all hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 border border-slate-200/50 dark:border-slate-600/30 cursor-pointer"
           >
             {isAr ? 'إلغاء' : 'Cancel'}
           </button>
@@ -101,7 +96,7 @@ function DeleteQuizConfirmDialog({ isAr, onCancel, onConfirm }: DeleteQuizConfir
             ref={confirmButtonRef}
             type="button"
             onClick={onConfirm}
-            className="min-h-11 rounded-xl bg-red-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-red-600/15 transition-all hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-650 flex items-center gap-1.5"
+            className="min-h-11 rounded-xl bg-red-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-red-600/15 transition-all hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-650 flex items-center gap-1.5 cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>{isAr ? 'تأكيد الحذف' : 'Delete Quiz'}</span>
@@ -113,7 +108,7 @@ function DeleteQuizConfirmDialog({ isAr, onCancel, onConfirm }: DeleteQuizConfir
   );
 }
 
-interface LandingPageProps {
+export interface LandingPageProps {
   quizzes: Quiz[];
   isLoading: boolean;
   currentUserEmail?: string | null;
@@ -121,7 +116,7 @@ interface LandingPageProps {
   isAdmin?: boolean;
   onRefresh: () => void;
   onStartQuiz: (quizId: string) => void;
-  onCreateQuizTab: () => void;
+  onCreateQuizTab: (topic?: string) => void;
   onShareQuiz: (quizId: string, quizTitle: string, quizDescription?: string) => void;
   onEditQuiz?: (quiz: Quiz) => void;
   onViewProfile?: (creatorId: string) => void;
@@ -132,44 +127,14 @@ interface LandingPageProps {
   isPremium?: boolean;
   viewMode?: 'grid' | 'list';
   onToggleViewMode?: () => void;
-  dailyQuiz?: { userId?: string | null; planName?: string; isPremium?: boolean; onStartQuiz: (quizId: string) => void; onLoginClick?: () => void };
+  dailyQuiz?: {
+    userId?: string | null;
+    planName?: string;
+    isPremium?: boolean;
+    onStartQuiz: (quizId: string) => void;
+    onLoginClick?: () => void;
+  };
 }
-
-const SPARK_TOPICS_EN = [
-  "Black Holes & The Universe",
-  "History of AI",
-  "World War II",
-  "The Deep Ocean & Bioluminescence",
-  "Ancient Egyptian Civilization",
-  "Quantum Mechanics",
-  "Discovery of Penicillin",
-  "Future of Renewable Energy",
-  "Journey to Mars",
-  "Dinosaurs & Extinction",
-  "DNA Structure",
-  "Greek Mythology",
-  "The Roman Empire",
-  "Psychology of Dreams"
-];
-
-const SPARK_TOPICS_AR = [
-  "الثقوب السوداء ونشأة الكون",
-  "تاريخ الذكاء الاصطناعي",
-  "الحرب العالمية الثانية",
-  "أعماق المحيطات والمخلوقات المضيئة",
-  "الحضارة المصرية القديمة",
-  "ميكانيكا الكم",
-  "اكتشاف البنسلين",
-  "مستقبل الطاقة المتجددة",
-  "الرحلة إلى المريخ",
-  "الديناصورات وعصر الانقراض",
-  "تركيبة الحمض النووي (DNA)",
-  "الأساطير الإغريقية",
-  "الامبراطورية الرومانية",
-  "سيكولوجية الأحلام"
-];
-
-import ContactFooter from '../components/ContactFooter';
 
 export default function LandingPage({
   quizzes,
@@ -188,452 +153,380 @@ export default function LandingPage({
   onLoginClick,
   planName = 'free',
   isPremium = false,
-  viewMode = 'grid',
-  onToggleViewMode,
-  dailyQuiz
+  dailyQuiz,
 }: LandingPageProps) {
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [quizToDelete, setQuizToDelete] = React.useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
-  const [ownershipFilter, setOwnershipFilter] = React.useState<'all' | 'my-quizzes'>('all');
-
   const isAr = lang === 'ar';
-  
-  // Cosmo AI topics feature
-  const currentCosmoAITopics = isAr ? SPARK_TOPICS_AR : SPARK_TOPICS_EN;
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [activeCategory, setActiveCategory] = React.useState('all');
+  const [aiPromptInput, setAiPromptInput] = React.useState('');
+  const [quizToDelete, setQuizToDelete] = React.useState<string | null>(null);
 
-  const [profilesMap, setProfilesMap] = React.useState<Record<string, any>>({});
-  const [siteStats, setSiteStats] = React.useState<any>(null);
-
-  React.useEffect(() => {
-    let active = true;
-    
-    // Fetch site stats
-    getSiteStats().then(s => {
-      if (active && s) setSiteStats(s);
-    }).catch(() => {});
-
-    // Fetch profiles map to show correct badges
-    const loadProfiles = async () => {
-      try {
-        const pList = await getPublicProfiles();
-        const map: Record<string, any> = {};
-        pList.forEach(p => {
-          if (p.uid) map[p.uid] = p;
-        });
-        if (active) setProfilesMap(map);
-      } catch (err) {
-        console.error('Failed to load profiles map', err);
-      }
-    };
-
-    loadProfiles();
-
-    return () => {
-      active = false;
-    };
-  }, [planName]);
-
-  const t = translations[lang];
-  const isGuest = !currentUserId || currentUserId.startsWith('user-');
-
-  const tags = isAr 
-    ? ['الذكاء الاصطناعي', 'البرمجة', 'الفيزياء', 'التاريخ', 'الفضاء', 'الطب', 'العلوم', 'تطوير الويب'] 
-    : ['AI', 'Programming', 'Physics', 'History', 'Space', 'Medicine', 'Science', 'Web Dev'];
-
-  const filteredQuizzes = quizzes.filter(
-    (q) => {
-      // Handle ownership filter
-      if (ownershipFilter === 'my-quizzes') {
-        if (!currentUserId || q.creatorId !== currentUserId) return false;
-      } else {
-        const isPublic = !q.distributionRouting || q.distributionRouting === 'public';
-        if (!isPublic) return false;
-      }
-
-      // Handle search query
-      const matchesSearch = (q.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            (q.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            (q.creatorName || '').toLowerCase().includes(searchQuery.toLowerCase());
-      
-      // Handle tag/category filter
-      const matchesCategory = !selectedCategory || 
-                              (q.title || '').toLowerCase().includes(selectedCategory.toLowerCase()) || 
-                              (q.description || '').toLowerCase().includes(selectedCategory.toLowerCase());
-
-      return matchesSearch && matchesCategory;
-    }
+  const categoryKeys = React.useMemo(() => ['all', 'ai', 'science', 'code', 'history'], []);
+  const categoryLabels = React.useMemo(
+    () => [
+      isAr ? 'الكل' : 'All',
+      isAr ? 'ذكاء اصطناعي' : 'AI & Tech',
+      isAr ? 'علوم وفيزياء' : 'Science',
+      isAr ? 'برمجة وتطوير' : 'Coding',
+      isAr ? 'تاريخ وثقافة' : 'History',
+    ],
+    [isAr]
   );
+  const [selectedCategoryIndex, setSelectedCategoryIndex] = React.useState(0);
 
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const quickPrompts = isAr
+    ? ['فيزياء الكم والكون', 'تاريخ مصر القديمة', 'أساسيات بايثون', 'الذكاء الاصطناعي التوليدي']
+    : ['Quantum Physics', 'Ancient Egypt', 'Python Basics', 'Generative AI'];
 
-  useGSAP(() => {
-    if (containerRef.current?.querySelector('.gsap-hero-title-1')) {
-      const tl = gsap.timeline();
-      tl.fromTo('.gsap-hero-title-1', { opacity: 0, y: 50, rotateX: -20 }, { opacity: 1, y: 0, rotateX: 0, duration: 1, ease: 'power4.out' })
-        .fromTo('.gsap-hero-title-2', { opacity: 0, y: 50, rotateX: -20 }, { opacity: 1, y: 0, rotateX: 0, duration: 1, ease: 'power4.out' }, '-=0.8')
-        .fromTo('.gsap-hero-desc', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.6')
-        .fromTo('.gsap-hero-btns', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.5)' }, '-=0.4');
-    }
+  // Filter quizzes cleanly
+  const filteredQuizzes = React.useMemo(() => {
+    return quizzes.filter((q) => {
+      const title = (q.title || '').toLowerCase();
+      const desc = (q.description || '').toLowerCase();
+      const creator = (q.creatorName || '').toLowerCase();
+      const query = searchQuery.toLowerCase().trim();
 
-    if (containerRef.current?.querySelector('.gsap-stat-card')) {
-      gsap.fromTo('.gsap-stat-card', 
-        { opacity: 0, y: 40, scale: 0.9 },
-        { 
-          opacity: 1, 
-          y: 0, 
-          scale: 1, 
-          duration: 0.6, 
-          stagger: 0.1, 
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: '.gsap-stats-container',
-            start: 'top 85%',
-          }
-        }
-      );
-    }
+      const matchesSearch = !query || title.includes(query) || desc.includes(query) || creator.includes(query);
 
-    gsap.utils.toArray('.gsap-fade-section').forEach((section: any) => {
-      gsap.fromTo(section,
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: section,
-            start: 'top 85%',
-          }
-        }
-      );
+      let matchesCat = true;
+      if (activeCategory === 'ai') {
+        matchesCat = title.includes('ai') || title.includes('ذكاء') || desc.includes('ذكاء');
+      } else if (activeCategory === 'science') {
+        matchesCat = title.includes('فيزياء') || title.includes('علوم') || title.includes('science') || desc.includes('علوم');
+      } else if (activeCategory === 'code') {
+        matchesCat = title.includes('برمج') || title.includes('code') || title.includes('python') || title.includes('web');
+      } else if (activeCategory === 'history') {
+        matchesCat = title.includes('تاريخ') || title.includes('history') || title.includes('حضار');
+      }
+
+      return matchesSearch && matchesCat;
     });
+  }, [quizzes, searchQuery, activeCategory]);
 
-  }, { scope: containerRef });
+  const handleInstantGenerate = (e: React.FormEvent) => {
+    e.preventDefault();
+    const topic = aiPromptInput.trim();
+    if (topic) {
+      localStorage.setItem('quiz_prefill_topic', topic);
+      onCreateQuizTab(topic);
+    } else {
+      onCreateQuizTab();
+    }
+  };
 
+  const handleDeleteConfirm = () => {
+    if (quizToDelete) {
+      if (onDeleteQuiz) onDeleteQuiz(quizToDelete);
+      setQuizToDelete(null);
+    }
+  };
 
   return (
-    <div ref={containerRef} className="space-y-12 pb-16" dir={isAr ? 'rtl' : 'ltr'}>
-      
-      <HeroAnimation t={t} isAr={isAr} onCreateQuizTab={onCreateQuizTab} cosmoAITopics={currentCosmoAITopics} />
-
-      <div className="gsap-stats-container grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 relative z-10">
-        <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10 blur-[100px] -z-10 rounded-full"></div>
-        {[
-          { label: t.activeQuizzes, val: `${quizzes.length}`, color: 'from-emerald-400 to-cyan-400', bg: 'bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_30px_-10px_rgba(16,185,129,0.3)]' },
-          { label: t.totalPlays, val: `${quizzes.reduce((acc, q) => acc + (q.totalPlays || 0), 0)}`, color: 'from-indigo-400 to-violet-500', bg: 'bg-indigo-500/10 border-indigo-500/20 shadow-[0_0_30px_-10px_rgba(99,102,241,0.3)]' },
-          { label: t.aiEngines, val: 'Cosmo AI', color: 'from-purple-400 to-pink-500', bg: 'bg-purple-500/10 border-purple-500/20 shadow-[0_0_30px_-10px_rgba(168,85,247,0.3)]' },
-          { label: t.avgRating, val: '4.9', color: 'from-amber-400 to-orange-500', bg: 'bg-amber-500/10 border-amber-500/20 shadow-[0_0_30px_-10px_rgba(245,158,11,0.3)]' }
-        ].map((stat, i) => (
-          <div key={i} className={`gsap-stat-card ${stat.bg} backdrop-blur-xl border p-6 sm:p-8 rounded-[32px] flex flex-col items-center justify-center text-center transition-all duration-500 select-none group hover:-translate-y-2 hover:scale-[1.02] relative overflow-hidden`}>
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay"></div>
-            <span className={`text-4xl sm:text-5xl font-black font-display tracking-tighter bg-gradient-to-br ${stat.color} bg-clip-text text-transparent block mb-2 group-hover:scale-110 transition-transform duration-500 drop-shadow-sm`}>{stat.val}</span>
-            <span className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 font-bold uppercase tracking-[0.2em]">{stat.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Live site stats */}
-      {siteStats && (
-        <div className="gsap-fade-section mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {siteStats.totalQuizzes > 0 && (
-            <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-violet-500/10 p-4 text-center backdrop-blur-sm">
-              <p className="text-2xl font-black text-purple-500">{siteStats.totalQuizzes.toLocaleString()}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-1">{isAr ? 'اختبار متاح' : 'Quizzes'}</p>
-            </div>
-          )}
-          {siteStats.totalCompletions > 0 && (
-            <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 p-4 text-center backdrop-blur-sm">
-              <p className="text-2xl font-black text-cyan-500">{siteStats.totalCompletions.toLocaleString()}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-1">{isAr ? 'حل اختبارات' : 'Solved'}</p>
-            </div>
-          )}
-          {siteStats.totalUsers > 0 && (
-            <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-green-500/10 p-4 text-center backdrop-blur-sm">
-              <p className="text-2xl font-black text-emerald-500">{siteStats.totalUsers.toLocaleString()}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-1">{isAr ? 'مستخدم نشط' : 'Users'}</p>
-            </div>
-          )}
-          {siteStats.todayQuizzes > 0 && (
-            <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-4 text-center backdrop-blur-sm">
-              <p className="text-2xl font-black text-amber-500">{siteStats.todayQuizzes.toLocaleString()}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-1 flex items-center justify-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                <span>{isAr ? 'كويز جديد اليوم' : 'New Today'}</span>
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Featured quiz of the week */}
-      {siteStats?.featuredQuiz && quizzes.length > 0 && (
-        <div className="gsap-fade-section mt-8">
-          <div className="uipro-clay-card relative rounded-3xl border-2 border-amber-400/50 bg-gradient-to-r from-amber-400/15 via-yellow-400/10 to-orange-400/15 p-6 backdrop-blur-md shadow-xl overflow-hidden">
-            <div className="absolute -top-1 right-6 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-3.5 py-1 text-[11px] font-black text-amber-950 shadow-lg shadow-amber-400/30">
-              <Trophy className="w-3.5 h-3.5" />
-              <span>{isAr ? 'كويز الأسبوع المميّز' : 'Featured Quiz of the Week'}</span>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mt-2">
-              <div className="flex-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                <h4 className="text-xl font-black text-slate-900 dark:text-white font-display tracking-tight leading-snug">{siteStats.featuredQuiz.title}</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium leading-relaxed">{siteStats.featuredQuiz.description || ''}</p>
-                <div className="flex items-center gap-3 mt-3 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                  <span className="uipro-pill-badge bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 flex items-center gap-1 px-2.5 py-0.5">
-                    <Users className="w-3.5 h-3.5 text-primary" />
-                    {siteStats.featuredQuiz.takersCount} {isAr ? 'حلّوه' : 'solvers'}
-                  </span>
-                  <span className="uipro-pill-badge bg-amber-400/20 text-amber-700 dark:text-amber-300 border-amber-400/30 flex items-center gap-1 px-2.5 py-0.5">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                    {siteStats.featuredQuiz.avgRating?.toFixed(1) || '—'}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => onStartQuiz(siteStats.featuredQuiz.id)}
-                className="uipro-btn-tactile min-h-12 shrink-0 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 px-6 py-3 text-xs font-black text-slate-950 shadow-xl shadow-amber-500/25 transition-all cursor-pointer self-start sm:self-auto flex items-center gap-1.5"
-              >
-                <span>{isAr ? 'ابدأ الاختبار الآن' : 'Start Quiz'}</span>
-                <ArrowUpRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Student action cockpit: one clear next step plus fast routes */}
-      <div className="gsap-fade-section mt-10 rounded-[2.5rem] uipro-clay-card border border-violet-200/80 dark:border-violet-900/50 p-6 sm:p-7 relative overflow-hidden">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 text-white shadow-xl shadow-violet-500/25">
-              <Rocket className="h-7 w-7" />
-            </div>
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-widest text-violet-600 dark:text-violet-400">{isAr ? 'خطوتك التالية' : 'Your next step'}</p>
-              <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white font-display">{isGuest ? (isAr ? 'ابدأ رحلتك التعليمية' : 'Start your learning journey') : (isAr ? 'اختر تحديًا وابدأ الآن' : 'Pick a challenge and start now')}</h3>
-              <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-500 dark:text-slate-400">{isAr ? 'لا تترك لوحة التحكم تعرض أرقامًا فقط؛ اختر إجراءً واحدًا وأنجزه الآن.' : 'Turn the dashboard into an action: choose one focused task and complete it now.'}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 lg:min-w-[32rem]">
-            {dailyQuiz && !isGuest && (
-              <button 
-                type="button" 
-                onClick={() => document.getElementById('daily-quiz-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} 
-                className="uipro-btn-tactile flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-xs font-black text-white shadow-lg shadow-violet-500/25"
-              >
-                <BrainCircuit className="h-4 w-4" />
-                {isAr ? 'سؤال اليوم' : 'Daily question'}
-              </button>
-            )}
-            <button 
-              type="button" 
-              onClick={() => document.getElementById('quizzes-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} 
-              className="uipro-btn-tactile flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-cyan-300/80 dark:border-cyan-800 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-black text-cyan-700 dark:text-cyan-300 shadow-sm hover:border-cyan-400"
-            >
-              <Search className="h-4 w-4" />
-              {isAr ? 'استكشف اختبارًا' : 'Explore quizzes'}
-            </button>
-            <button 
-              type="button" 
-              onClick={isGuest ? onLoginClick : onCreateQuizTab} 
-              className="uipro-btn-tactile flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-violet-300/80 dark:border-violet-800 bg-white dark:bg-slate-900 px-4 py-3 text-xs font-black text-violet-700 dark:text-violet-300 shadow-sm hover:border-violet-400"
-            >
-              <Sparkles className="h-4 w-4" />
-              {isGuest ? (isAr ? 'سجّل للمتابعة' : 'Sign in to continue') : (isAr ? 'أنشئ اختبارًا' : 'Create a quiz')}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Daily challenge stays visible directly above the first quiz. */}
-      {dailyQuiz && (
-        <div id="daily-quiz-card" className="gsap-fade-section mt-10">
-          <DailyQuizCard
-            lang={lang}
-            userId={dailyQuiz.userId}
-            planName={dailyQuiz.planName}
-            isPremium={dailyQuiz.isPremium}
-            onStartQuiz={dailyQuiz.onStartQuiz}
-            onLoginClick={dailyQuiz.onLoginClick}
-          />
-        </div>
-      )}
-
-      {/* Main Interactive Quizzes Showcase list */}
-      <div id="quizzes-catalog" className="space-y-6 mt-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-            <h3 className="font-display text-2xl sm:text-3xl font-black bg-gradient-to-r from-primary via-violet-500 to-cyan-500 bg-clip-text text-transparent inline-block">
-              {t.catalogTitle}
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-bold">
-              {t.catalogSubTitle}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {onToggleViewMode && (
-              <button 
-                onClick={onToggleViewMode}
-                className="uipro-btn-tactile flex h-11 w-11 items-center justify-center text-xs text-slate-500 hover:text-primary dark:text-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-xs"
-                title={viewMode === 'grid' ? (isAr ? 'عرض القائمة' : 'Switch to List View') : (isAr ? 'عرض الشبكة' : 'Switch to Grid View')}
-              >
-                {viewMode === 'grid' ? <List className="w-4.5 h-4.5" /> : <LayoutGrid className="w-4.5 h-4.5" />}
-              </button>
-            )}
-
-            <button 
-              onClick={onRefresh}
-              className="uipro-btn-tactile flex min-h-11 items-center justify-center gap-2 text-xs text-primary bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-black transition-all cursor-pointer shadow-xs"
-              disabled={isLoading}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>{t.refreshBtn}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Search controls row */}
-        <div className="space-y-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none text-slate-400">
-              <Search className="w-5 h-5" />
-            </div>
-            <input
-              type="text"
-              placeholder={t.searchPlaceholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl ps-12 pe-10 py-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 outline-none text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:bg-white/95 dark:focus:bg-slate-900/90 transition-all shadow-xs hover:border-slate-300 dark:hover:border-slate-600"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 end-0 pe-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            {/* Ownership Filter */}
-            <div className="flex bg-slate-100/80 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-2xl border border-slate-200/80 dark:border-slate-800/70 shadow-2xs">
-              <button
-                onClick={() => setOwnershipFilter('all')}
-                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  ownershipFilter === 'all' 
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' 
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                }`}
-              >
-                {isAr ? 'الكل (عام)' : 'All (Public)'}
-              </button>
-              <button
-                onClick={() => setOwnershipFilter('my-quizzes')}
-                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  ownershipFilter === 'my-quizzes' 
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' 
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                }`}
-              >
-                {isAr ? 'اختباراتي' : 'My Quizzes'}
-              </button>
-            </div>
-
-            {/* Category Filter Pills */}
-            <div className="flex flex-wrap gap-2">
-              <button 
-                onClick={() => setSelectedCategory(null)}
-                className={`uipro-pill-badge text-xs font-black transition-all cursor-pointer border ${
-                  !selectedCategory 
-                    ? 'bg-primary border-primary text-white shadow-md shadow-primary/25 scale-[1.02]' 
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                {isAr ? '🌐 الكل' : 'All'}
-              </button>
-              {tags.map(tag => (
-                <button 
-                  key={tag}
-                  onClick={() => setSelectedCategory(tag)}
-                  className={`uipro-pill-badge text-xs font-black transition-all cursor-pointer border ${
-                    selectedCategory === tag 
-                      ? 'bg-primary border-primary text-white shadow-md shadow-primary/25 scale-[1.02]' 
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  #{tag}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Quizzes List rendering */}
-        {isLoading ? (
-          <QuizCatalogSkeleton lang={lang} />
-        ) : filteredQuizzes.length === 0 ? (
-          <div className="uipro-glass-surface rounded-[32px] border border-white/60 dark:border-white/10 p-8 sm:p-12 text-center max-w-xl mx-auto space-y-6 flex flex-col items-center justify-center glow-card shadow-xl backdrop-blur-2xl">
-            <div className="animate-pulse">
-              <ThreeDIcon name="science" className="w-28 h-28 mx-auto drop-shadow-[0_20px_20px_rgba(124,58,237,0.3)] filter brightness-110" />
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-display font-black text-2xl text-slate-800 dark:text-slate-100">{t.noQuizzesFound}</h4>
-              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                {t.noQuizzesSub}
-              </p>
-            </div>
-            <button
-              onClick={onCreateQuizTab}
-              className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-primary to-primary-hover text-white font-black text-sm transition-all hover:scale-105 hover:shadow-lg shadow-primary/20 cursor-pointer"
-            >
-              {t.createFirstQuiz}
-            </button>
-          </div>
-        ) : (
-          <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 [perspective:1400px]" : "flex flex-col gap-4 max-w-4xl mx-auto"}>
-            {filteredQuizzes.map((quiz, idx) => {
-              const creatorProfile = profilesMap[quiz.creatorId || ''];
-              const creatorTier = creatorProfile?.is_premium ? 'premium' : (quiz.creatorId === 'sys-1' || quiz.creatorName?.includes('أدمن') ? 'enterprise' : 'free');
-              return (
-                <InteractiveQuizCard
-                  key={quiz.id}
-                  quiz={quiz}
-                  idx={idx}
-                  isAr={isAr}
-                  t={t}
-                  currentUserEmail={currentUserEmail}
-                  currentUserId={currentUserId}
-                  isAdmin={isAdmin}
-                  onStartQuiz={onStartQuiz}
-                  onShareQuiz={onShareQuiz}
-                  onEditQuiz={onEditQuiz}
-                  onViewProfile={onViewProfile}
-                  creatorTier={creatorTier}
-                  onDeleteClick={setQuizToDelete}
-                  view={viewMode}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
-
+    <div className="w-full min-h-dvh pb-28 lg:pb-16 select-none" dir={isAr ? 'rtl' : 'ltr'}>
       {quizToDelete && (
         <DeleteQuizConfirmDialog
           isAr={isAr}
           onCancel={() => setQuizToDelete(null)}
-          onConfirm={() => {
-            if (onDeleteQuiz) onDeleteQuiz(quizToDelete);
-            setQuizToDelete(null);
-          }}
+          onConfirm={handleDeleteConfirm}
         />
       )}
 
-      <ContactFooter lang={lang} />
+      {/* Hero Atmosphere — Containerless & Directly on the Canvas ("على الأرض") */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-12 max-w-6xl mx-auto text-center">
+        {/* Subtle Ambient Glow Aura */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[300px] bg-gradient-to-tr from-violet-600/15 via-indigo-500/10 to-cyan-400/15 rounded-full blur-[100px] pointer-events-none -z-10" />
+
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 dark:bg-violet-400/15 text-violet-600 dark:text-violet-300 text-xs font-black tracking-wide mb-5">
+          <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+          <span>{isAr ? 'فضاء الاختبارات الذكية • إصدار الجيل القادم' : 'QuizSpace Intelligent Universe • Next-Gen'}</span>
+        </div>
+
+        {/* Large Canvas Headline */}
+        <h1 className="font-display font-black text-4xl sm:text-6xl lg:text-7xl tracking-tight text-slate-900 dark:text-white leading-[1.12]">
+          {isAr ? (
+            <>
+              اصنع <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400">•</span> اختبر{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400">•</span> تنافس
+            </>
+          ) : (
+            <>
+              Create <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400">•</span> Test{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400">•</span> Excel
+            </>
+          )}
+        </h1>
+
+        <p className="mt-4 text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-medium">
+          {isAr
+            ? 'حوّل أي مادة أو فكرة إلى اختبار ذكي فوري بالذكاء الاصطناعي دون تعقيد أو حواجز.'
+            : 'Transform lectures, files, and ideas into instant interactive quizzes seamlessly.'}
+        </p>
+
+        {/* Ethereal AI Prompt Input — Floating directly on the Canvas */}
+        <div className="mt-9 max-w-2xl mx-auto">
+          <form
+            onSubmit={handleInstantGenerate}
+            className="group relative flex flex-col sm:flex-row items-center gap-2 p-1.5 sm:p-2 rounded-2xl sm:rounded-full bg-white/60 dark:bg-slate-900/60 shadow-lg shadow-violet-500/5 ring-1 ring-slate-200/80 dark:ring-white/10 hover:ring-violet-500/40 transition-all duration-300 backdrop-blur-md"
+          >
+            <div className="flex items-center gap-3 px-4 py-2 flex-1 w-full text-right">
+              <Sparkles className="w-5 h-5 text-violet-500 shrink-0 animate-pulse" />
+              <input
+                type="text"
+                value={aiPromptInput}
+                onChange={(e) => setAiPromptInput(e.target.value)}
+                placeholder={
+                  isAr
+                    ? 'اكتب أي موضوع تريده وسيبنيه الذكاء الاصطناعي لك مباشرة...'
+                    : 'Type any study topic and AI builds your quiz...'
+                }
+                className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full sm:w-auto min-h-[44px] px-6 rounded-xl sm:rounded-full bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-black text-xs sm:text-sm shadow-md shadow-violet-500/25 flex items-center justify-center gap-2 shrink-0 transition-transform duration-200 active:scale-95 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>{isAr ? 'توليد فوري ⚡' : 'Generate ⚡'}</span>
+            </button>
+          </form>
+
+          {/* Quick Constellation Pills */}
+          <div className="flex items-center justify-center gap-2 flex-wrap mt-3.5">
+            <span className="text-[11px] text-slate-400 font-bold">
+              {isAr ? 'مواضيع شائعة:' : 'Trending:'}
+            </span>
+            {quickPrompts.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => setAiPromptInput(prompt)}
+                className="text-[11px] font-semibold px-3 py-1 rounded-full text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-300 bg-black/5 dark:bg-white/5 hover:bg-violet-500/10 transition-colors cursor-pointer"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Spotlight — Borderless Magazine Spread ("على الأرض") */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+        <div className="relative py-6 sm:py-8 border-y border-slate-200/60 dark:border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl text-right">
+            <div className="inline-flex items-center gap-1.5 text-amber-500 dark:text-amber-400 text-xs font-black tracking-wide">
+              <Flame className="w-4 h-4" />
+              <span>{isAr ? 'تحدي اليوم الحصري 🏆' : 'Daily Spotlight Challenge 🏆'}</span>
+            </div>
+            <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 dark:text-white">
+              {isAr ? 'اختبر معلوماتك العامة والذكاء الاصطناعي' : 'Test Your AI & General Knowledge'}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+              {isAr
+                ? 'اختبار سريع ومتجدد يومياً لتطوير مهاراتك ورفع رتبتك في لوحة المتصدرين مع مكافأة +150 XP.'
+                : 'A rapid daily test to build your streak, raise your rank on the leaderboard and earn +150 XP.'}
+            </p>
+            <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-1 font-bold">
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-violet-500" />
+                <span>5 {isAr ? 'دقائق' : 'mins'}</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-cyan-500" />
+                <span>10 {isAr ? 'أسئلة' : 'questions'}</span>
+              </span>
+              <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                <Flame className="w-3.5 h-3.5" />
+                <span>+150 XP</span>
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (quizzes.length > 0) {
+                onStartQuiz(quizzes[0].id);
+              } else {
+                onCreateQuizTab();
+              }
+            }}
+            className="w-full md:w-auto min-h-[48px] px-8 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-violet-500/25 shrink-0 flex items-center justify-center gap-2 transition-transform duration-200 active:scale-95 cursor-pointer"
+          >
+            <Play className="w-4 h-4 fill-white" />
+            <span>{isAr ? 'بدء التحدي الآن' : 'Start Challenge Now'}</span>
+          </button>
+        </div>
+      </section>
+
+      {/* Filter and Live Search Controls */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="w-full md:w-auto overflow-x-auto pb-1 max-w-full">
+            <SegmentedControl
+              segments={categoryLabels}
+              selected={selectedCategoryIndex}
+              onChange={(idx) => {
+                setSelectedCategoryIndex(idx);
+                setActiveCategory(categoryKeys[idx] || 'all');
+              }}
+            />
+          </div>
+
+          <div className="w-full md:w-72">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={isAr ? 'بحث سريع في الاختبارات...' : 'Search quizzes...'}
+                className="w-full pr-10 pl-4 py-2 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quizzes Stream — Floating directly on the Canvas with zero boxed containers ("على الأرض") */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="py-4 space-y-3 animate-pulse">
+                <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-800" />
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4" />
+                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded-md w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : filteredQuizzes.length === 0 ? (
+          <div className="text-center py-20 px-4">
+            <BookOpen className="w-12 h-12 text-slate-400/60 mx-auto mb-3" />
+            <h3 className="font-display font-bold text-lg text-slate-900 dark:text-white">
+              {isAr ? 'لا توجد اختبارات في هذا القسم' : 'No quizzes found here'}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+              {isAr
+                ? 'جرّب كتابة موضوع في شريط التوليد بالأعلى وسيقوم الذكاء الاصطناعي بإنشاء اختبار فوري لك!'
+                : 'Type any topic in the generator above to create an instant quiz!'}
+            </p>
+            <button
+              type="button"
+              onClick={() => onCreateQuizTab()}
+              className="mt-5 min-h-[44px] px-6 rounded-full bg-violet-600 text-white font-bold text-xs shadow-md shadow-violet-500/20 cursor-pointer"
+            >
+              {isAr ? 'إنشاء اختبار الآن' : 'Create Quiz Now'}
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+            {filteredQuizzes.map((quiz) => {
+              const questionsCount = quiz.questions?.length || 10;
+              const isOwner = currentUserId && quiz.creatorId === currentUserId;
+
+              return (
+                <div
+                  key={quiz.id}
+                  className="group relative flex flex-col justify-between py-2 transition-all duration-300 text-right"
+                >
+                  {/* Subtle Canvas Hover Aura */}
+                  <div className="absolute -inset-3 rounded-2xl bg-violet-500/0 group-hover:bg-violet-500/[0.04] dark:group-hover:bg-violet-400/[0.04] transition-colors duration-300 pointer-events-none -z-10" />
+
+                  <div>
+                    {/* Top Row: Count & Actions */}
+                    <div className="flex items-center justify-between gap-2 mb-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-violet-500 group-hover:scale-125 transition-transform" />
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                          {questionsCount} {isAr ? 'أسئلة' : 'Q’s'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                        {isOwner && onEditQuiz && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditQuiz(quiz);
+                            }}
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                            title={isAr ? 'تعديل الاختبار' : 'Edit Quiz'}
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {(isOwner || isAdmin) && onDeleteQuiz && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setQuizToDelete(quiz.id);
+                            }}
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                            title={isAr ? 'حذف الاختبار' : 'Delete Quiz'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onShareQuiz(quiz.id, quiz.title, quiz.description);
+                          }}
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                          title={isAr ? 'مشاركة الاختبار' : 'Share Quiz'}
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Quiz Title */}
+                    <h3
+                      onClick={() => onStartQuiz(quiz.id)}
+                      className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors cursor-pointer"
+                    >
+                      {quiz.title}
+                    </h3>
+
+                    {/* Quiz Description */}
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      {quiz.description || (isAr ? 'اختبار تفاعلي شيق لاختبار معلوماتك.' : 'Interactive comprehension quiz.')}
+                    </p>
+                  </div>
+
+                  {/* Card Floor Footer */}
+                  <div className="pt-3 mt-3 border-t border-slate-200/50 dark:border-white/5 flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (quiz.creatorId && onViewProfile) {
+                          onViewProfile(quiz.creatorId);
+                        }
+                      }}
+                      className="text-[11px] text-slate-400 hover:text-violet-500 font-semibold truncate max-w-[120px] transition-colors cursor-pointer"
+                    >
+                      {quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onStartQuiz(quiz.id)}
+                      className="min-h-[36px] px-4 rounded-full bg-violet-600/10 hover:bg-violet-600 text-violet-600 hover:text-white dark:text-violet-400 dark:hover:text-white font-black text-xs flex items-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer shadow-xs"
+                    >
+                      <Play className="w-3 h-3 fill-current" />
+                      <span>{isAr ? 'بدء' : 'Start'}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

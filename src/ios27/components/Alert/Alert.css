@@ -1,0 +1,152 @@
+/* ==========================================================================
+   iOS 27 — Alert
+   Modal alertdialog rendered through a Portal. Component classes are `ios27-`
+   prefixed; tokens only. Dark mode is automatic via the token layer; the
+   backdrop scrim adapts via [data-theme] / prefers-color-scheme.
+   ========================================================================== */
+
+.ios27-alert-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background-color: rgba(0, 0, 0, 0.2);
+  animation: ios27-alert-fade var(--duration-alert-present)
+    var(--easing-apple-default);
+}
+
+[data-theme='dark'] .ios27-alert-backdrop {
+  background-color: rgba(0, 0, 0, 0.48);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .ios27-alert-backdrop {
+    background-color: rgba(0, 0, 0, 0.48);
+  }
+}
+
+.ios27-alert {
+  width: 270px;
+  max-width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  color: var(--label-primary);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: ios27-alert-pop var(--duration-alert-present)
+    var(--easing-spring-snappy);
+}
+
+.ios27-alert:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+.ios27-alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  text-align: center;
+}
+
+.ios27-alert-title {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.ios27-alert-message {
+  margin: 0;
+}
+
+/* -- Actions -------------------------------------------------------------- */
+
+.ios27-alert-actions {
+  display: flex;
+  border-top: var(--separator-height, 0.5px) solid var(--separator);
+}
+
+.ios27-alert-actions--stacked {
+  flex-direction: column;
+}
+
+.ios27-alert-action {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--color-blue);
+  font-family: var(--font-family);
+  font-weight: var(--weight-regular);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: background-color var(--duration-fast) var(--easing-apple-default);
+}
+
+/* Separators between side-by-side actions. */
+.ios27-alert-actions:not(.ios27-alert-actions--stacked)
+  .ios27-alert-action
+  + .ios27-alert-action {
+  border-left: var(--separator-height, 0.5px) solid var(--separator);
+}
+
+/* Separators between stacked actions. */
+.ios27-alert-actions--stacked .ios27-alert-action + .ios27-alert-action {
+  border-top: var(--separator-height, 0.5px) solid var(--separator);
+}
+
+.ios27-alert-action:hover:not(:disabled),
+.ios27-alert-action:active:not(:disabled) {
+  background-color: var(--fill-quaternary);
+}
+
+.ios27-alert-action:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 4px
+    color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+.ios27-alert-action--cancel {
+  font-weight: var(--weight-semibold);
+}
+
+.ios27-alert-action--destructive {
+  color: var(--color-red);
+}
+
+/* -- Reduced motion ------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ios27-alert-backdrop,
+  .ios27-alert {
+    animation: none;
+  }
+  .ios27-alert-action {
+    transition: none;
+  }
+}
+
+@keyframes ios27-alert-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ios27-alert-pop {
+  from {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

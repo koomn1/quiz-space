@@ -1431,7 +1431,7 @@ export default function AdminSubscriptions({
                               <a
                                 href={pay.receiptUrl}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                                 className="inline-flex min-h-11 items-center rounded-xl bg-blue-500/10 px-3 text-xs font-bold text-blue-500 underline"
                               >
                                 {isAr ? "عرض الإيصال / التفاصيل" : "View Receipt / Details"}
@@ -1859,7 +1859,7 @@ export default function AdminSubscriptions({
                           <a
                             href={inspectingPayment.receiptUrl}
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-black text-xs hover:opacity-95"
                           >
                             <span>{isAr ? "فتح الإيصال في نافذة جديدة" : "Open Receipt in New Tab"}</span>

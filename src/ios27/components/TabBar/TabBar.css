@@ -1,0 +1,64 @@
+/* ==========================================================================
+   iOS 27 — TabBar (floating bottom tab bar)
+   Requires foundation CSS (tokens.css, materials.css). Component classes are
+   `ios27-` prefixed to avoid collisions in consumer apps.
+   ========================================================================== */
+
+.ios27-tabbar {
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: 999px;
+}
+
+.ios27-tabbar-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 56px;
+  min-height: var(--tabbar-height);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: 999px;
+  background-color: transparent;
+  color: var(--label-secondary);
+  font-family: var(--font-family);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    color var(--duration-fast) var(--easing-apple-default),
+    background-color var(--duration-fast) var(--easing-apple-default),
+    transform var(--duration-fast) var(--easing-apple-default);
+}
+
+.ios27-tabbar-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+.ios27-tabbar-item:active {
+  transform: scale(0.94);
+}
+
+.ios27-tabbar-item.is-active {
+  color: var(--color-blue);
+}
+
+.ios27-tabbar-label {
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios27-tabbar-item {
+    transition: none;
+  }
+  .ios27-tabbar-item:active {
+    transform: none;
+  }
+}

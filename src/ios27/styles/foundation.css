@@ -1,0 +1,14 @@
+/* ==========================================================================
+   iOS 27 React — Foundation CSS
+   Design tokens + typography utilities + materials (Liquid Glass).
+   Self-contained, mirroring the established per-framework CSS pattern
+   (see packages/svelte, packages/svelte-inertia).
+   ========================================================================== */
+
+@import './tokens.css';
+@import './typography.css';
+@import './materials.css';
+@import './animations.css';
+
+/* iOS 27 layer (generated — see scripts/sync-glass-layer.mjs) */
+@import './ios27.css';

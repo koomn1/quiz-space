@@ -1,0 +1,125 @@
+/* ==========================================================================
+   iOS 27 — Slider (native range input)
+   Requires foundation CSS (tokens.css). Component classes are `ios27-`
+   prefixed to avoid collisions in consumer apps.
+   ========================================================================== */
+
+.ios27-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.ios27-slider-leading,
+.ios27-slider-trailing {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  color: var(--label-secondary);
+}
+
+.ios27-slider.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* -- Track ---------------------------------------------------------------- */
+
+.ios27-slider-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px; /* hit area; the visible track is drawn by the pseudo-elements */
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.ios27-slider-input:disabled {
+  cursor: not-allowed;
+}
+
+/* WebKit / Blink track */
+.ios27-slider-input::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background-color: var(--fill-secondary);
+}
+
+/* Firefox track */
+.ios27-slider-input::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background-color: var(--fill-secondary);
+}
+
+/* Firefox filled portion */
+.ios27-slider-input::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background-color: var(--color-blue);
+}
+
+/* -- Thumb ---------------------------------------------------------------- */
+
+.ios27-slider-input::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  margin-top: -12px; /* center 28px thumb on 4px track */
+  border-radius: 50%;
+  border: 0.5px solid color-mix(in srgb, var(--black) 8%, transparent);
+  background-color: var(--white);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16);
+  transition: transform var(--duration-fast) var(--easing-apple-default);
+}
+
+.ios27-slider-input::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 0.5px solid color-mix(in srgb, var(--black) 8%, transparent);
+  background-color: var(--white);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16);
+  transition: transform var(--duration-fast) var(--easing-apple-default);
+}
+
+.ios27-slider-input:active:not(:disabled)::-webkit-slider-thumb {
+  transform: scale(1.06);
+}
+
+.ios27-slider-input:active:not(:disabled)::-moz-range-thumb {
+  transform: scale(1.06);
+}
+
+/* -- Focus ---------------------------------------------------------------- */
+
+.ios27-slider-input:focus-visible {
+  outline: none;
+}
+
+.ios27-slider-input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+.ios27-slider-input:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios27-slider-input::-webkit-slider-thumb {
+    transition: none;
+  }
+  .ios27-slider-input::-moz-range-thumb {
+    transition: none;
+  }
+  .ios27-slider-input:active:not(:disabled)::-webkit-slider-thumb {
+    transform: none;
+  }
+  .ios27-slider-input:active:not(:disabled)::-moz-range-thumb {
+    transform: none;
+  }
+}

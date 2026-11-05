@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "./ios27/styles.css";
 @import "@ios27_design_system/tokens/css/materials";
 @import "@ios27_design_system/tokens/css/animations";
 @import "@ios27_design_system/tokens/css/spacing";

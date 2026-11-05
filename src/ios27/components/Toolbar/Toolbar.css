@@ -1,0 +1,55 @@
+/* ==========================================================================
+   iOS 27 — Toolbar (top navigation bar)
+   Requires foundation CSS (tokens.css, materials.css). Component classes are
+   `ios27-` prefixed to avoid collisions in consumer apps.
+   ========================================================================== */
+
+.ios27-toolbar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: var(--glass-large-radius);
+  transition: padding var(--duration-fast) var(--easing-apple-default);
+}
+
+.ios27-toolbar-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--toolbar-height);
+  padding: 0 var(--space-4);
+}
+
+.ios27-toolbar-leading,
+.ios27-toolbar-trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.ios27-toolbar-trailing {
+  justify-content: flex-end;
+}
+
+.ios27-toolbar-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: center;
+  color: var(--label-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ios27-toolbar-large-title {
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  color: var(--label-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios27-toolbar {
+    transition: none;
+  }
+}

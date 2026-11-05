@@ -1,0 +1,63 @@
+/* ==========================================================================
+   iOS 27 — Segmented Control
+   Requires foundation CSS (tokens.css). Component classes are `ios27-`
+   prefixed to avoid collisions in consumer apps.
+   ========================================================================== */
+
+.ios27-segmented {
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--space-1);
+  padding: 2px;
+  border-radius: 10px;
+  background-color: var(--fill-tertiary);
+}
+
+.ios27-segmented-item {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--label-primary);
+  font-family: var(--font-family);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    background-color var(--duration-fast) var(--easing-apple-default),
+    color var(--duration-fast) var(--easing-apple-default),
+    transform var(--duration-fast) var(--easing-apple-default);
+}
+
+.ios27-segmented-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+.ios27-segmented-item:active {
+  transform: scale(0.97);
+}
+
+.ios27-segmented-item.is-active {
+  background-color: var(--bg-primary);
+  font-weight: var(--weight-semibold);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--black) 12%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios27-segmented-item {
+    transition: none;
+  }
+  .ios27-segmented-item:active {
+    transform: none;
+  }
+}

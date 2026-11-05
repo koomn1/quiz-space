@@ -1,0 +1,27 @@
+/* ==========================================================================
+   iOS 27 — ListSection
+   Requires foundation CSS (tokens.css). Component classes are `ios27-`
+   prefixed to avoid collisions in consumer apps.
+   ========================================================================== */
+
+.ios27-list-section {
+  display: block;
+  margin-bottom: var(--space-6);
+}
+
+.ios27-list-section-header {
+  padding: var(--space-2) var(--content-inset) var(--space-1);
+  text-transform: uppercase;
+}
+
+.ios27-list-section-footer {
+  padding: var(--space-1) var(--content-inset) var(--space-2);
+}
+
+/* Grouped, rounded, clipped container so child rows clip to the radius and
+   the last row's separator is hidden by overflow. */
+.ios27-list-section-content {
+  background-color: var(--bg-grouped-secondary);
+  border-radius: 10px;
+  overflow: hidden;
+}

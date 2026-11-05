@@ -47,6 +47,10 @@ export default defineConfig(({ command }) => ({
       allowedHosts: ['.monkeycode-ai.live', '.manus.computer'],
       headers: {
         'Cache-Control': 'public, max-age=604800, immutable',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'SAMEORIGIN',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
       },
       proxy: {
         '/api': {

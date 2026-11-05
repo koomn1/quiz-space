@@ -1,0 +1,27 @@
+/* ==========================================================================
+   iOS 27 — Page
+   Requires foundation CSS (tokens.css). Component classes are `ios27-`
+   prefixed to avoid collisions in consumer apps.
+   ========================================================================== */
+
+.ios27-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--bg-grouped-primary);
+  color: var(--label-primary);
+}
+
+.ios27-page-toolbar {
+  flex-shrink: 0;
+}
+
+.ios27-page-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ios27-page-tabbar {
+  flex-shrink: 0;
+}

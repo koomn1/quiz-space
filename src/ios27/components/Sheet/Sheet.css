@@ -1,0 +1,146 @@
+/* ==========================================================================
+   iOS 27 — Sheet
+   Bottom sheet rendered through a Portal with drag-to-dismiss and detents.
+   Component classes are `ios27-` prefixed; tokens only. Backdrop scrim adapts
+   to dark mode via [data-theme] / prefers-color-scheme.
+   ========================================================================== */
+
+.ios27-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.2);
+  animation: ios27-sheet-fade var(--duration-sheet-present)
+    var(--easing-apple-default);
+}
+
+[data-theme='dark'] .ios27-sheet-backdrop {
+  background-color: rgba(0, 0, 0, 0.48);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .ios27-sheet-backdrop {
+    background-color: rgba(0, 0, 0, 0.48);
+  }
+}
+
+.ios27-sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 640px;
+  color: var(--label-primary);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.18);
+  /* touch-action:none is scoped to .ios27-sheet-handle so the body can still scroll. */
+  will-change: transform;
+  transition: transform var(--duration-sheet-dismiss) var(--easing-apple-default);
+  animation: ios27-sheet-slide var(--duration-sheet-present)
+    var(--easing-spring-gentle);
+}
+
+/* While actively dragging, follow the pointer 1:1 (no easing lag). */
+.ios27-sheet.is-dragging {
+  transition: none;
+}
+
+.ios27-sheet:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+/* -- Detents -------------------------------------------------------------- */
+
+.ios27-sheet--medium {
+  height: 50vh;
+}
+
+.ios27-sheet--large {
+  height: 85vh;
+}
+
+.ios27-sheet--full {
+  height: 100vh;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* -- Handle (drag region: grabber + header) ------------------------------- */
+
+.ios27-sheet-handle {
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.ios27-sheet-handle:active {
+  cursor: grabbing;
+}
+
+.ios27-sheet-grabber {
+  width: 36px;
+  height: 5px;
+  margin: var(--space-2) auto var(--space-1);
+  border-radius: 2.5px;
+  background-color: var(--fill-primary);
+}
+
+.ios27-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--toolbar-height, 44px);
+  padding: var(--space-2) var(--space-4);
+  text-align: center;
+}
+
+.ios27-sheet-title {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+/* -- Content -------------------------------------------------------------- */
+
+.ios27-sheet-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* -- Reduced motion ------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .ios27-sheet-backdrop,
+  .ios27-sheet {
+    animation: none;
+  }
+  .ios27-sheet {
+    transition: none;
+  }
+}
+
+@keyframes ios27-sheet-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ios27-sheet-slide {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

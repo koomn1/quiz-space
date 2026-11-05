@@ -1,0 +1,78 @@
+/* ==========================================================================
+   iOS 27 — ListRow
+   Requires foundation CSS (tokens.css). Component classes are `ios27-`
+   prefixed to avoid collisions in consumer apps.
+   ========================================================================== */
+
+.ios27-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--list-row-height);
+  padding: var(--space-2) var(--content-inset);
+  background-color: var(--bg-grouped-secondary);
+  color: var(--label-primary);
+  position: relative;
+}
+
+/* Hairline separator inset to align with the content (after the leading slot). */
+.ios27-list-row.has-separator::after {
+  content: '';
+  position: absolute;
+  left: var(--content-inset);
+  right: 0;
+  bottom: 0;
+  height: var(--separator-height);
+  background-color: var(--separator-opaque);
+}
+
+.ios27-list-row--interactive {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background-color var(--duration-fast) var(--easing-apple-default);
+}
+
+.ios27-list-row--interactive:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-blue) 35%, transparent);
+}
+
+.ios27-list-row--interactive:active {
+  background-color: var(--fill-primary);
+}
+
+/* -- Slots ---------------------------------------------------------------- */
+
+.ios27-list-row-leading {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--label-primary);
+}
+
+.ios27-list-row-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ios27-list-row-trailing {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ios27-list-row-disclosure {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: var(--text-title3);
+  line-height: 1;
+  margin-left: calc(-1 * var(--space-1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios27-list-row--interactive {
+    transition: none;
+  }
+}
