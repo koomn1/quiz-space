@@ -27,6 +27,7 @@
     "@capacitor/core": "8.5.0",
     "@capawesome/capacitor-google-sign-in": "0.1.3",
     "@gsap/react": "^2.1.2",
+    "@ios27_design_system/tokens": "^1.0.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@supabase/supabase-js": "^2.110.6",

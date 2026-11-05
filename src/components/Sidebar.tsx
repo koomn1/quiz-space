@@ -240,7 +240,7 @@ export default function Sidebar({
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-full min-h-11 flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${
+                className={`sidebar-nav-item w-full min-h-11 flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${isActive ? 'is-active' : ''} ${
                   isActive 
                     ? 'text-[var(--app-text)] font-extrabold'
                     : 'hover:text-primary text-[var(--app-text-muted)] font-bold'
@@ -270,7 +270,7 @@ export default function Sidebar({
                   setTab(item.id);
                 }
               }}
-              className={`w-full min-h-11 flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${
+              className={`sidebar-nav-item w-full min-h-11 flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${isActive ? 'is-active' : ''} ${
                 isActive
                   ? 'text-[var(--app-text)] font-extrabold'
                   : 'hover:text-primary text-[var(--app-text-muted)] font-bold'

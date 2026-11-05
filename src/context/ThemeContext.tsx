@@ -58,6 +58,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // entire page for several seconds or flash a white intermediate frame.
     root.classList.add('theme-switching');
     root.classList.toggle('dark', darkMode);
+    root.dataset.theme = darkMode ? 'dark' : 'light';
     root.dataset.colorTheme = selected.id;
 
     const modeTokens = darkMode ? selected.dark : selected.light;
