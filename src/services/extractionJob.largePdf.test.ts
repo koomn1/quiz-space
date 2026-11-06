@@ -44,4 +44,21 @@ describe('large scanned PDF routing', () => {
     expect(shouldAttemptStructuredTableExtraction('Question | A | B | Correct\n1 | Alpha | Beta | A\n2 | Gamma | Delta | B')).toBe(true);
     expect(shouldAttemptStructuredTableExtraction('عنوان الدرس\nهذا شرح طويل عادي بدون أعمدة أو جدول.')).toBe(false);
   });
+
+  it('keeps a numbered question bank with inline answers on the lossless text path', () => {
+    expect(shouldAttemptStructuredTableExtraction([
+      '1- What is the name of the process?',
+      'a- Caponization',
+      'b- Intersexuality',
+      'c- Neutering',
+      'd- Spaying',
+      'Answer: a- Caponization',
+      '2- What does the term Cockerel mean?',
+      'a- An adult male chicken',
+      'b- A castrated male chicken',
+      'c- A young female chicken',
+      'd- A young male chicken',
+      'Answer: d- A young male chicken',
+    ].join('\n'))).toBe(false);
+  });
 });

@@ -275,21 +275,31 @@ export function detectQuestionBank(sourceText = ''): { isQuestionBank: boolean; 
 }
 
 /**
- * Fast routing decision for layout-sensitive tables. Any clear tabular
- * signal sends the complete PDF to the xKiro vision path; text extraction is
- * still used for ordinary narrative documents without a table signal.
+ * Fast routing decision for layout-sensitive tables. Only a real header/row
+ * structure sends the complete PDF to the xKiro vision path; ordinary numbered
+ * MCQ banks that merely contain the words Question and Answer stay on the
+ * lossless text parser.
  */
 export function shouldAttemptStructuredTableExtraction(sourceText = ''): boolean {
   const text = String(sourceText || '');
-  const questionBank = detectQuestionBank(text).isQuestionBank;
-  const tableHeader = /\bquestion\b[\s\S]{0,160}\b(?:correct|answer)\b/i.test(text)
-    && /\b(?:a|b|c|d)\b/i.test(text);
+  const tableHeader = text.split(/\r?\n/).some(line => {
+    const cells = line.trim().split(/\s{2,}|\|\t?/).map(cell => cell.trim()).filter(Boolean);
+    const normalized = cells.join(' ').toLowerCase();
+    const hasQuestion = /\bquestion\b/.test(normalized);
+    const hasAnswer = /\b(?:correct|answer)\b/.test(normalized);
+    const optionHeaders = ['a', 'b', 'c', 'd'].filter(label => cells.some(cell => cell.toLowerCase() === label)).length;
+    return hasQuestion && hasAnswer && optionHeaders >= 2;
+  });
   const delimitedRows = text.split(/\r?\n/).filter(line => {
     const trimmed = line.trim();
     return (trimmed.split('|').length >= 3 || trimmed.split(/\t+/).length >= 3) && trimmed.length >= 12;
   }).length >= 2;
-  const repeatedColumns = text.split(/\r?\n/).filter(line => /\S\s{4,}\S\s{4,}\S/.test(line)).length >= 3;
-  return tableHeader || delimitedRows || (questionBank && repeatedColumns);
+  const repeatedColumns = text.split(/\r?\n/).filter(line => {
+    const trimmed = line.trim();
+    const cells = trimmed.split(/\s{3,}/).filter(Boolean);
+    return /^\d{1,4}\s/.test(trimmed) && cells.length >= 4;
+  }).length >= 2;
+  return tableHeader || delimitedRows || repeatedColumns;
 }
 
 type AllowedQuestionType = 'mcq' | 'tf' | 'essay';
