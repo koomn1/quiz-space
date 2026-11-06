@@ -45,4 +45,33 @@ describe('literal document question extraction', () => {
     expect(result.questions).toHaveLength(2);
     expect(result.questions[0].text).toBe(result.questions[1].text);
   });
+
+  it('skips numbered MCQ section headings and resolves answer keys with dash labels', async () => {
+    const source = [
+      '1. GENERAL MANAGEMENT (MCQ)',
+      '1- What is the red planet?',
+      'a- Earth',
+      'b- Mars',
+      'c- Venus',
+      'd- Jupiter',
+      'Answer: b- Mars',
+      'الشرح: نص توضيحي لا ينتمي إلى الاختيار الأخير.',
+      '2. HORSE MANAGEMENT (MCQ)',
+      '1- Which animal is a foal?',
+      'a- Young horse',
+      'b- Adult cow',
+      'Answer: a- Young horse',
+    ].join('\n');
+
+    const questions = parseLiteralQuestions(source);
+    expect(questions).toHaveLength(2);
+    expect(questions.map(question => question.text)).toEqual(['What is the red planet?', 'Which animal is a foal?']);
+    expect(questions.map(question => question.correctIndex)).toEqual([1, 0]);
+    expect(questions[0].options).toEqual(['Earth', 'Mars', 'Venus', 'Jupiter']);
+
+    const result = await extractQuestionsFromText(source, {} as any);
+    expect(result.questions).toHaveLength(2);
+    expect(result.provider).toBe('local-format-parser');
+    expect(result.questions.every(question => question.correctIndex >= 0)).toBe(true);
+  });
 });

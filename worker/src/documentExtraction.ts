@@ -381,6 +381,13 @@ const LITERAL_QUESTION_PATTERN = /^(?:(?:question|q|سؤال)\s*)?([0-9٠-٩]{1,
 const QUESTION_START_PATTERN = /^(?:(?:question|q|سؤال)\s*)?[0-9٠-٩]{1,4}(?:[.)\-:]|\s)\s*\S.*$/gim;
 const toAsciiDigits = (value: string) => value.replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
 
+function isNumberedSectionHeading(line: string): boolean {
+  const value = line.trim();
+  return /^[0-9٠-٩]{1,3}[.)\-:]\s+/.test(value)
+    && /\b(?:MCQ|SECTION|UNIT|CHAPTER)\b/i.test(value)
+    && !/[?؟]/.test(value);
+}
+
 export function parseLiteralQuestions(text: string): any[] {
   const questions: any[] = [];
   let current: any | null = null;
@@ -394,6 +401,10 @@ export function parseLiteralQuestions(text: string): any[] {
   const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 
   for (const line of lines) {
+    if (isNumberedSectionHeading(line)) {
+      flush();
+      continue;
+    }
     const questionMatch = line.match(LITERAL_QUESTION_PATTERN);
     if (questionMatch) {
       flush();
@@ -411,6 +422,10 @@ export function parseLiteralQuestions(text: string): any[] {
       continue;
     }
     if (!current) continue;
+    // Explanatory prose often follows the answer key in a source PDF. Once the
+    // answer is read, keep it out of the final option while waiting for the
+    // next numbered question.
+    if (current.answerSeen) continue;
 
     const labelledOption = line.match(/^([A-H]|[أبجدهوزح])\s*(?:[).:،\-–—])\s*(.+)$/iu);
     const bulletOption = line.match(/^[-*•▪◦–—]\s+(.+)$/u);
@@ -425,9 +440,10 @@ export function parseLiteralQuestions(text: string): any[] {
     const answerMatch = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?)\s*[:\-]\s*(.+)$/iu);
     if (answerMatch) {
       const answer = answerMatch[1].trim();
+      current.answerSeen = true;
       current.correctAnswer = answer;
       current.sourceText = `${current.sourceText}\n${line}`;
-      const letter = answer.match(/^([A-Hأبجدهوزح])(?:[).:]|\s|$)/iu);
+      const letter = answer.match(/^([A-Hأبجدهوزح])(?:[).:\-–—]|\s|$)/iu);
       if (letter && current.options.length > 0) {
         const label = letter[1].toLocaleUpperCase();
         const arabicLabels: Record<string, number> = { 'أ': 0, 'ب': 1, 'ج': 2, 'د': 3, 'ه': 4, 'و': 5, 'ز': 6, 'ح': 7 };
@@ -451,7 +467,7 @@ export function parseLiteralQuestions(text: string): any[] {
       continue;
     }
 
-    if (/^(?:section|chapter|page|explanation|تعليل|شرح|ملاحظة)\b/i.test(line)) continue;
+    if (/^(?:(?:section|chapter|page|explanation)\b|(?:الشرح|التعليل|شرح|تعليل|ملاحظة)\s*[:：])/i.test(line)) continue;
     current.sourceText = `${current.sourceText}\n${line}`;
     if (current.options.length > 0) {
       const lastOption = current.options.length - 1;
@@ -494,7 +510,9 @@ function parseFsmQuestionsForLegacyOutput(text: string, allowedTypes: AllowedQue
 }
 
 export function isReliableLiteralExtraction(text: string, questions: any[]): boolean {
-  const questionMarkers = text.split(/\r?\n/).map(line => line.trim()).filter(line => LITERAL_QUESTION_PATTERN.test(line)).length;
+  const questionMarkers = text.split(/\r?\n/).map(line => line.trim()).filter(line =>
+    !isNumberedSectionHeading(line) && LITERAL_QUESTION_PATTERN.test(line),
+  ).length;
   return questionMarkers > 0
     && questionMarkers === questions.length
     && questions.every(question => Boolean(question?.text?.trim())

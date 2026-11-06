@@ -15,6 +15,7 @@ import { fetchWithAuth } from '../lib/authFetch';
 import { useQuizGenerator } from '../hooks/useQuizGenerator';
 import { askAI, askAIStream, getRememberedExtractionJobId, clearRememberedExtractionJobId, type AiChatAttachment } from '../services/aiWorkerClient';
 import DrivePicker from '../components/DrivePicker';
+import ExtractionStageTimeline from '../components/ExtractionStageTimeline';
 import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
 import QuestionMedia from '../components/QuestionMedia';
 import OverlayPortal from '../components/OverlayPortal';
@@ -2362,6 +2363,13 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     }}
                   />
                 </div>
+                {isProcessingOcr && ocrProgress && (
+                  <ExtractionStageTimeline
+                    currentStage={ocrProgress.stage}
+                    language={isAr ? 'ar' : 'en'}
+                    mode={extractionMode}
+                  />
+                )}
                 <div className="text-[10px] font-mono tracking-widest text-slate-400 dark:text-slate-500 uppercase">
                   {isAr ? 'التقدم محفوظ تلقائياً؛ يمكنك مغادرة الصفحة والعودة لاحقاً من مركز المعالجة' : 'Progress is saved automatically; you can leave and return later from the Processing Center'}
                 </div>
@@ -3101,26 +3109,11 @@ A computer is a digital electronic machine...
                 )}
                 {ocrProgress && (
                   <>
-                    <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/70 p-1.5 text-[10px] font-black sm:grid-cols-5" dir="rtl">
-                      {[
-                        { stage: 'analyzing', label: isAr ? '١. فحص المصدر' : '1. Inspect source' },
-                        { stage: 'extracting', label: isAr ? '٢. قراءة المحتوى' : '2. Read content' },
-                        { stage: 'generating', label: isAr ? '٣. بناء الأسئلة' : '3. Build questions' },
-                        { stage: 'solving', label: isAr ? '٤. مراجعة الإجابات' : '4. Review answers' },
-                        { stage: 'saving', label: isAr ? '٥. تجهيز الاختبار' : '5. Prepare quiz' },
-                      ].map((item) => (
-                        <span
-                          key={item.stage}
-                          className={`rounded-xl px-2 py-2 text-center leading-tight transition-colors ${
-                            ocrProgress.stage === item.stage
-                              ? 'bg-white text-violet-700 shadow-sm dark:bg-slate-800 dark:text-violet-300'
-                              : 'text-slate-400 dark:text-slate-500'
-                          }`}
-                        >
-                          {item.label}
-                        </span>
-                      ))}
-                    </div>
+                    <ExtractionStageTimeline
+                      currentStage={ocrProgress.stage}
+                      language={isAr ? 'ar' : 'en'}
+                      mode={extractionMode}
+                    />
                     {postExtractionSolvePending && ocrProgress.stage === 'solving' && (
                       <div className="rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2 text-right text-[11px] font-extrabold text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/20 dark:text-violet-300" dir="rtl">
                         هذه مرحلة مستقلة بعد الاستخراج: لا يتم حفظ أي إجابة قبل مطابقتها مع الاختيارات ومحتوى الملف.
