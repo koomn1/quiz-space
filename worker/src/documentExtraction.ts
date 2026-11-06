@@ -1,6 +1,7 @@
 import { extractText as extractPdfText } from 'unpdf';
 import { getDocument } from 'unpdf/pdfjs';
 import { generateWithProviderChain } from './providerChain';
+import { FsmQuestionParser } from './fsmQuestionParser';
 
 export interface DocumentExtractionEnv {
   INCEPTION_API_KEY?: string;
@@ -466,6 +467,35 @@ export function parseLiteralQuestions(text: string): any[] {
   return questions;
 }
 
+/**
+ * Secondary deterministic parser. The legacy parser remains first so existing
+ * output stays byte-compatible; this path only takes over when the legacy
+ * parser cannot prove that it captured the complete question structure.
+ */
+function parseFsmQuestionsForLegacyOutput(text: string, allowedTypes: AllowedQuestionType[]): any[] {
+  const parsed = FsmQuestionParser.parseLines(
+    text.split(/\r?\n/).map(line => ({ text: line, pageNumber: 1 })),
+  );
+  return parsed.questions
+    .filter(question => allowedTypes.includes(question.questionType === 'true_false' ? 'tf' : question.questionType === 'essay' ? 'essay' : 'mcq'))
+    .map((question, index) => {
+      const correctIndex = question.options.findIndex(option => option.isCorrect);
+      const type = question.questionType === 'true_false' ? 'tf' : question.questionType === 'essay' ? 'essay' : 'mcq';
+      return {
+        number: Number(question.rawNumber) || index + 1,
+        text: question.stem,
+        sourceText: question.rawSpan,
+        extractionMethod: 'direct',
+        type,
+        options: type === 'essay' ? [] : question.options.map(option => option.text),
+        correctIndex: correctIndex >= 0 ? correctIndex : -1,
+        correctAnswer: question.correctAnswer || '',
+        explanation: question.explanation || '',
+        reviewRequired: type !== 'essay' && correctIndex < 0,
+      };
+    });
+}
+
 export function isReliableLiteralExtraction(text: string, questions: any[]): boolean {
   const questionMarkers = text.split(/\r?\n/).map(line => line.trim()).filter(line => LITERAL_QUESTION_PATTERN.test(line)).length;
   return questionMarkers > 0
@@ -521,6 +551,19 @@ export async function extractQuestionsFromText(
       rawResponses: [],
       chunks: 1,
       provider: 'local-format-parser',
+    };
+  }
+
+  const fsmFallback = normalizeQuestions(parseFsmQuestionsForLegacyOutput(normalizedText, allowedTypes), allowedTypes, { preserveDuplicates: true });
+  if (isReliableLiteralExtraction(normalizedText, fsmFallback)) {
+    if (onProgress) await onProgress({ processed: 1, total: 1, questionsExtracted: fsmFallback.length });
+    return {
+      title: 'Extracted Quiz',
+      description: 'Questions extracted from the uploaded document.',
+      questions: fsmFallback.map((question, index) => ({ ...question, number: question.number || index + 1 })),
+      rawResponses: [],
+      chunks: 1,
+      provider: 'local-fsm-parser',
     };
   }
 
