@@ -16,9 +16,11 @@ describe('Cosmo generation recovery contract', () => {
     expect(providerChainSource).toContain("[callInception, 'inception', INCEPTION_MODEL], [callGroq, 'groq', GROQ_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]");
   });
 
-  it('uses Gemini first and OpenAI as the multimodal fallback', () => {
+  it('uses Xkiro page vision first, then Gemini and OpenAI as fallbacks', () => {
     expect(providerChainSource).toContain("export const GEMINI_MODEL = 'gemini-3.8-flash'");
-    expect(providerChainSource).toContain("[callGemini, 'gemini', GEMINI_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]");
+    expect(providerChainSource).toContain("export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free'");
+    expect(providerChainSource).toContain("[callXkiro, 'xkiro', XKIRO_VISION_MODEL], [callGemini, 'gemini', GEMINI_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]");
+    expect(providerChainSource).toContain('api.xkiro.com/v1/chat/completions');
     expect(providerChainSource).toContain('inlineData: { mimeType: match[1], data: match[2] }');
   });
 

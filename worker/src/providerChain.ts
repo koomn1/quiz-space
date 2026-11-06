@@ -13,6 +13,7 @@ export const INCEPTION_MODEL = 'mercury-3';
 export const GROQ_MODEL = 'openai/gpt-oss-20b';
 export const GEMINI_MODEL = 'gemini-3.8-flash';
 export const OPENAI_MODEL = 'gpt-5-mini';
+export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free';
 
 type ProviderCall = (env: Env, messages: ProviderMessage[], options: ProviderOptions) => Promise<string>;
 
@@ -20,6 +21,7 @@ const INCEPTION_URL = 'https://api.inceptionlabs.ai/v1/chat/completions';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+const XKIRO_URL = 'https://api.xkiro.com/v1/chat/completions';
 
 function timeoutFor(ms: number) {
   const controller = new AbortController();
@@ -132,10 +134,24 @@ async function callOpenAI(env: Env, messages: ProviderMessage[], options: Provid
   }, 'openai', OPENAI_MODEL, options.timeoutMs || 60_000);
 }
 
+async function callXkiro(env: Env, messages: ProviderMessage[], options: ProviderOptions) {
+  if (!env.XKIRO_API_KEY || !isMultimodal(messages)) throw new Error('Xkiro is unavailable for this request');
+  return requestJson(XKIRO_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.XKIRO_API_KEY}` },
+    body: JSON.stringify({
+      model: XKIRO_VISION_MODEL,
+      messages,
+      max_tokens: options.max_tokens || 12_000,
+      ...(options.temperature != null ? { temperature: options.temperature } : {}),
+    }),
+  }, 'xkiro', XKIRO_VISION_MODEL, options.timeoutMs || 90_000);
+}
+
 export async function generateWithProviderChain(env: Env, messages: ProviderMessage[], options: ProviderOptions = {}): Promise<{ text: string; provider: string; model: string }> {
   const multimodal = isMultimodal(messages);
   const attempts: Array<[ProviderCall, string, string]> = multimodal
-    ? [[callGemini, 'gemini', GEMINI_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]]
+    ? [[callXkiro, 'xkiro', XKIRO_VISION_MODEL], [callGemini, 'gemini', GEMINI_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]]
     : [[callInception, 'inception', INCEPTION_MODEL], [callGroq, 'groq', GROQ_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]];
   let lastError: unknown;
   for (const [call, provider, model] of attempts) {

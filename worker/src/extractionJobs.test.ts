@@ -37,9 +37,20 @@ describe('dynamic vision chunk planning', () => {
     expect(plan.estimatedChunkCount).toBe(27);
   });
 
+  it('switches to one page per vision request when Xkiro page review is enabled', () => {
+    const plan = selectVisionChunkPlan(7, 7 * 220 * 1024, true);
+    expect(plan.pageCountPerChunk).toBe(1);
+    expect(plan.concurrency).toBe(2);
+    expect(plan.estimatedChunkCount).toBe(7);
+    expect(buildVisionChunkRanges(3, plan.pageCountPerChunk)).toEqual([
+      { chunkIndex: 0, pageStart: 1, pageEnd: 1 },
+      { chunkIndex: 1, pageStart: 2, pageEnd: 2 },
+      { chunkIndex: 2, pageStart: 3, pageEnd: 3 },
+    ]);
+  });
+
   it('rejects invalid ranges instead of creating malformed queue chunks', () => {
     expect(buildVisionChunkRanges(0)).toEqual([]);
-    expect(buildVisionChunkRanges(10, 2)).toEqual([]);
     expect(buildVisionChunkRanges(10, 6)).toEqual([]);
   });
 

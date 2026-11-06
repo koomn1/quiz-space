@@ -13,9 +13,9 @@ describe('Cosmo chat provider wiring', () => {
     expect(workerSource).toContain('const result = await generateWithProviderChain(env, messages)');
   });
 
-  it('routes multimodal messages through Gemini first, then OpenAI', () => {
+  it('routes multimodal messages through Xkiro first, then Gemini and OpenAI', () => {
     expect(providerSource).toContain('const multimodal = isMultimodal(messages)');
-    expect(providerSource).toMatch(/\?\s*\[\[callGemini, 'gemini', GEMINI_MODEL\], \[callOpenAI, 'openai', OPENAI_MODEL\]\]/);
+    expect(providerSource).toMatch(/\?\s*\[\[callXkiro, 'xkiro', XKIRO_VISION_MODEL\], \[callGemini, 'gemini', GEMINI_MODEL\], \[callOpenAI, 'openai', OPENAI_MODEL\]\]/);
     expect(providerSource).toContain('inlineData');
   });
 

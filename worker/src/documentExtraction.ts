@@ -6,6 +6,7 @@ import { FsmQuestionParser } from './fsmQuestionParser';
 export interface DocumentExtractionEnv {
   INCEPTION_API_KEY?: string;
   GEMINI_API_KEY?: string;
+  XKIRO_API_KEY?: string;
   OPENAI_API_KEY?: string;
   GROQ_API_KEY?: string;
   OPENROUTER_API_KEY?: string;

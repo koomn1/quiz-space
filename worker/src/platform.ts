@@ -7,6 +7,8 @@ export interface Env {
   INCEPTION_API_KEY?: string;
   /** Multimodal provider for images and PDFs. */
   GEMINI_API_KEY?: string;
+  /** Optional multimodal page/image reviewer. */
+  XKIRO_API_KEY?: string;
   /** Final text/multimodal fallback. */
   OPENAI_API_KEY?: string;
   /** Legacy OpenRouter fallback used by the existing Cosmo service. */

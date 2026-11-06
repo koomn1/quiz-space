@@ -7,6 +7,7 @@ import JSZip from 'jszip';
 export interface ExtractionJobEnv {
   INCEPTION_API_KEY?: string;
   GEMINI_API_KEY?: string;
+  XKIRO_API_KEY?: string;
   OPENAI_API_KEY?: string;
   GROQ_API_KEY?: string;
   SUPABASE_URL: string;
@@ -76,6 +77,7 @@ const LARGE_PDF_PAGE_THRESHOLD = 20;
 const PDF_TEXT_SAMPLE_PAGES = 3;
 export const VISION_CHUNK_PAGE_COUNT = 4;
 export const MIN_VISION_CHUNK_PAGE_COUNT = 3;
+export const SINGLE_PAGE_VISION_CHUNK_PAGE_COUNT = 1;
 export const MAX_VISION_CHUNK_DELIVERY_ATTEMPTS = 3;
 
 export function visionChunkRetryDelaySeconds(deliveryAttempts: number): number {
@@ -528,7 +530,7 @@ async function extractPdfVision(
   onProgress: (processed: number, total: number, questionCount: number) => Promise<void>,
 ): Promise<{ title: string; description: string; questions: any[]; provider: string; chunks: number }> {
   const pdf = await PDFDocument.load(source);
-  const plan = selectVisionChunkPlan(pdf.getPageCount(), source.byteLength);
+  const plan = selectVisionChunkPlan(pdf.getPageCount(), source.byteLength, Boolean(env.XKIRO_API_KEY));
   const chunkSize = plan.pageCountPerChunk;
   const chunks: string[] = [];
   for (let start = 0; start < pdf.getPageCount(); start += chunkSize) {
@@ -988,10 +990,11 @@ async function fetchJobChunks(env: ExtractionJobEnv, authHeader: string, jobId: 
   return response.json() as Promise<ExtractionJobChunkRow[]>;
 }
 
-export function selectVisionChunkPlan(pageCount: number, sourceBytes = 0): VisionChunkPlan {
+export function selectVisionChunkPlan(pageCount: number, sourceBytes = 0, pageByPage = false): VisionChunkPlan {
   if (!Number.isInteger(pageCount) || pageCount < 1) {
-    return { pageCountPerChunk: VISION_CHUNK_PAGE_COUNT, concurrency: 3, estimatedChunkCount: 0, reason: 'standard' };
+    return { pageCountPerChunk: pageByPage ? SINGLE_PAGE_VISION_CHUNK_PAGE_COUNT : VISION_CHUNK_PAGE_COUNT, concurrency: pageByPage ? 2 : 3, estimatedChunkCount: 0, reason: 'standard' };
   }
+  if (pageByPage) return { pageCountPerChunk: SINGLE_PAGE_VISION_CHUNK_PAGE_COUNT, concurrency: 2, estimatedChunkCount: pageCount, reason: 'standard' };
 
   const averagePageBytes = sourceBytes > 0 ? sourceBytes / pageCount : 0;
   const rasterHeavy = averagePageBytes >= 800 * 1024;
@@ -1009,7 +1012,7 @@ export function selectVisionChunkPlan(pageCount: number, sourceBytes = 0): Visio
 }
 
 export function buildVisionChunkRanges(pageCount: number, pageCountPerChunk = VISION_CHUNK_PAGE_COUNT): Array<{ chunkIndex: number; pageStart: number; pageEnd: number }> {
-  if (!Number.isInteger(pageCount) || pageCount < 1 || !Number.isInteger(pageCountPerChunk) || pageCountPerChunk < MIN_VISION_CHUNK_PAGE_COUNT || pageCountPerChunk > VISION_CHUNK_PAGE_COUNT) return [];
+  if (!Number.isInteger(pageCount) || pageCount < 1 || !Number.isInteger(pageCountPerChunk) || pageCountPerChunk < SINGLE_PAGE_VISION_CHUNK_PAGE_COUNT || pageCountPerChunk > VISION_CHUNK_PAGE_COUNT) return [];
   return Array.from({ length: Math.ceil(pageCount / pageCountPerChunk) }, (_, chunkIndex) => ({
     chunkIndex,
     pageStart: chunkIndex * pageCountPerChunk + 1,
@@ -1296,7 +1299,7 @@ export async function processExtractionJob(
     if (scannedPageCount) {
       await restartExpiredVisionChunks(env, authHeader, job.id);
       const existingChunks = await fetchJobChunks(env, authHeader, job.id);
-      const plan = selectVisionChunkPlan(scannedPageCount, source.byteLength);
+      const plan = selectVisionChunkPlan(scannedPageCount, source.byteLength, Boolean(env.XKIRO_API_KEY));
       const visionChunks = existingChunks.length
         ? existingChunks
         : await createVisionChunks(env, authHeader, job.id, scannedPageCount, plan.pageCountPerChunk);
