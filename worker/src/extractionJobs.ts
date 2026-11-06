@@ -776,11 +776,17 @@ export async function extractJobQuiz(
       // sending them through an LLM can truncate a large bank at its output
       // limit and is unnecessary.
       try {
-        if (!shouldAttemptStructuredTableExtraction(text)) {
-          if (isLiteral) {
-            const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
-              await onProgress(progress.processed, progress.total, progress.questionsExtracted);
-            });
+        const hasStructuredTableSignal = shouldAttemptStructuredTableExtraction(text);
+
+        // Literal extraction must remain lossless and deterministic for text-based
+        // question banks. A layout signal alone is not enough reason to send a
+        // readable PDF through the slower vision provider; that path previously
+        // left this 20-page MCQ bank stuck at the initial 8% stage.
+        if (isLiteral) {
+          const result = await extractQuestionsFromText(text, env, job.custom_instruction || undefined, async progress => {
+            await onProgress(progress.processed, progress.total, progress.questionsExtracted);
+          });
+          if (result.questions.length > 0 || !hasStructuredTableSignal) {
             return {
               ...result,
               questions: applyRequestedQuestionCount(result.questions, job.extraction_mode, job.requested_question_count),
@@ -788,8 +794,9 @@ export async function extractJobQuiz(
               description: result.description?.trim() || `أسئلة مستخرجة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
             };
           }
-          return generateQuestionsFromText(text, job, env, onProgress);
         }
+
+        if (!hasStructuredTableSignal) return generateQuestionsFromText(text, job, env, onProgress);
         // Tables are layout-dependent. Do not trust coordinate/text parsing as
         // the source of truth because merged cells, RTL columns, and scanned
         // cells can silently reorder questions and answers. Send the complete
