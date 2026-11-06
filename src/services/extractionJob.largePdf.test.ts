@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildVisionChunkRanges, shouldUseVisionForLargeScannedPdf, shouldUseVisionForScannedPdf, VISION_CHUNK_PAGE_COUNT } from '../../worker/src/extractionJobs';
+import { buildVisionChunkRanges, shouldAttemptStructuredTableExtraction, shouldUseVisionForLargeScannedPdf, shouldUseVisionForScannedPdf, VISION_CHUNK_PAGE_COUNT } from '../../worker/src/extractionJobs';
 
 describe('large scanned PDF routing', () => {
   it('routes a large PDF with no sampled text to the chunked vision path', () => {
@@ -38,5 +38,10 @@ describe('large scanned PDF routing', () => {
       { chunkIndex: 8, pageStart: 33, pageEnd: 36 },
       { chunkIndex: 9, pageStart: 37, pageEnd: 37 },
     ]);
+  });
+
+  it('routes tabular PDF text to visual inspection instead of coordinate parsing', () => {
+    expect(shouldAttemptStructuredTableExtraction('Question | A | B | Correct\n1 | Alpha | Beta | A\n2 | Gamma | Delta | B')).toBe(true);
+    expect(shouldAttemptStructuredTableExtraction('عنوان الدرس\nهذا شرح طويل عادي بدون أعمدة أو جدول.')).toBe(false);
   });
 });

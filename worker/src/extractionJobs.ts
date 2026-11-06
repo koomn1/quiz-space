@@ -1,6 +1,6 @@
 import mammoth from 'mammoth';
 import { PDFDocument } from 'pdf-lib';
-import { extractPdfTextContent, extractQuestionsFromText, extractTableQuestionsFromPdf } from './documentExtraction';
+import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
 import { generateWithProviderChain } from './providerChain';
 import JSZip from 'jszip';
 
@@ -275,16 +275,21 @@ export function detectQuestionBank(sourceText = ''): { isQuestionBank: boolean; 
 }
 
 /**
- * Fast, text-only routing decision. Coordinate parsing is high-fidelity but
- * more expensive than ordinary text extraction, so only invoke it for a
- * source that looks like a structured question bank/table.
+ * Fast routing decision for layout-sensitive tables. Any clear tabular
+ * signal sends the complete PDF to the xKiro vision path; text extraction is
+ * still used for ordinary narrative documents without a table signal.
  */
 export function shouldAttemptStructuredTableExtraction(sourceText = ''): boolean {
   const text = String(sourceText || '');
   const questionBank = detectQuestionBank(text).isQuestionBank;
   const tableHeader = /\bquestion\b[\s\S]{0,160}\b(?:correct|answer)\b/i.test(text)
     && /\b(?:a|b|c|d)\b/i.test(text);
-  return questionBank && tableHeader;
+  const delimitedRows = text.split(/\r?\n/).filter(line => {
+    const trimmed = line.trim();
+    return (trimmed.split('|').length >= 3 || trimmed.split(/\t+/).length >= 3) && trimmed.length >= 12;
+  }).length >= 2;
+  const repeatedColumns = text.split(/\r?\n/).filter(line => /\S\s{4,}\S\s{4,}\S/.test(line)).length >= 3;
+  return tableHeader || delimitedRows || (questionBank && repeatedColumns);
 }
 
 type AllowedQuestionType = 'mcq' | 'tf' | 'essay';
@@ -785,19 +790,11 @@ export async function extractJobQuiz(
           }
           return generateQuestionsFromText(text, job, env, onProgress);
         }
-        const tableQuestions = await extractTableQuestionsFromPdf(source);
-        if (tableQuestions.length >= 10) {
-          const allowedTypes = parseAllowedQuestionTypes(job.custom_instruction);
-          const filteredTableQuestions = tableQuestions.filter(question => allowedTypes.includes(question.type));
-          await onProgress(1, 1, filteredTableQuestions.length);
-          return {
-            title: deriveQuizTitle(job.source_file_name, text),
-            description: `أسئلة مستخرجة مباشرة من بنك الأسئلة ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`,
-            questions: applyRequestedQuestionCount(filteredTableQuestions, job.extraction_mode, job.requested_question_count),
-            chunks: 1,
-            provider: 'pdf-coordinate-table-parser',
-          };
-        }
+        // Tables are layout-dependent. Do not trust coordinate/text parsing as
+        // the source of truth because merged cells, RTL columns, and scanned
+        // cells can silently reorder questions and answers. Send the complete
+        // PDF through the xKiro vision path so the table is read visually.
+        return extractPdfVision(source, job, env, onProgress);
       } catch (error) {
         console.warn('PDF table parser unavailable; continuing with the configured extraction mode.', error);
       }

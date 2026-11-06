@@ -11,6 +11,7 @@ export type ProviderOptions = {
 
 export const INCEPTION_MODEL = 'mercury-3';
 export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free';
+export const THINKING_REASONING_EFFORT = 'high' as const;
 
  type ProviderCall = (env: Env, messages: ProviderMessage[], options: ProviderOptions) => Promise<string>;
 
@@ -64,7 +65,7 @@ async function callInception(env: Env, messages: ProviderMessage[], options: Pro
     body: JSON.stringify({
       model: INCEPTION_MODEL,
       messages,
-      reasoning_effort: 'low',
+      reasoning_effort: THINKING_REASONING_EFFORT,
       max_completion_tokens: options.max_tokens || 12_000,
       temperature: options.temperature ?? 0.7,
       ...(options.response_format ? { response_format: options.response_format } : {}),
@@ -80,6 +81,8 @@ async function callXkiro(env: Env, messages: ProviderMessage[], options: Provide
     body: JSON.stringify({
       model: XKIRO_VISION_MODEL,
       messages,
+      reasoning_effort: THINKING_REASONING_EFFORT,
+      include_reasoning: true,
       max_tokens: options.max_tokens || 12_000,
       ...(options.temperature != null ? { temperature: options.temperature } : {}),
       ...(options.response_format ? { response_format: options.response_format } : {}),
