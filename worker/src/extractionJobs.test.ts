@@ -123,7 +123,7 @@ describe('dynamic vision chunk planning', () => {
     expect(indexSource).toContain('validateResponse: (text, _provider, model) =>');
     expect(indexSource).toContain('validateAnswerReviewResponse(text, expectedAnswerCount, model');
     expect(providerChainSource).toContain('options.validateResponse?.(text, provider, model)');
-    expect(providerChainSource).toContain("[callInception, 'inception', INCEPTION_MODEL], [callGroq, 'groq', GROQ_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]");
+    expect(providerChainSource).toContain("[callInception, 'inception', INCEPTION_MODEL]");
   });
 
   it('applies the source title fallback after literal text extraction returns', () => {

@@ -1,6 +1,7 @@
 import { PDFDocument } from 'pdf-lib';
 import { extractPdfTextContent, extractQuestionsFromText } from './documentExtraction';
 import { selectVisionChunkPlan } from './extractionJobs';
+import { generateWithProviderChain } from './providerChain';
 
 async function logAiPerformance(env: Env, authHeader: string, data: {
   user_id: string,
@@ -30,58 +31,17 @@ async function logAiPerformance(env: Env, authHeader: string, data: {
 }
 
 export interface Env {
-  OPENROUTER_API_KEY: string;
+  INCEPTION_API_KEY?: string;
+  XKIRO_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   ALLOWED_ORIGIN: string;
 }
 
-const OPENROUTER_VISION_FALLBACKS = [
-  'nvidia/nemotron-3.5-super-vl:free',
-  'google/gemma-4-31b-it:free',
-  'google/gemma-4-26b-a4b-it:free',
-  'thinkingmachines/inkling-small:free',
-  'dots-studio/dots-3-note-preview:free',
-  'openrouter/free',
-];
-const VISION_MODEL_TIMEOUT_MS = 45_000;
-
+const VISION_MODEL_TIMEOUT_MS = 90_000;
 function extractJson(text: string): unknown {
   const cleaned = text.replace(/^```json\s*|^```|```$/gim, '').trim();
   return JSON.parse(cleaned);
-}
-
-async function callOpenRouterWithFallback(env: Env, messages: any[], models: string[]): Promise<string> {
-  let lastError: any = null;
-  for (const model of models) {
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const controller = new AbortController();
-      timeout = setTimeout(() => controller.abort(), VISION_MODEL_TIMEOUT_MS);
-      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://quizspace.app',
-          'X-Title': 'QuizSpace',
-        },
-        body: JSON.stringify({ model, messages }),
-      });
-      if (!r.ok) throw new Error(await r.text());
-      const d: any = await r.json();
-      clearTimeout(timeout);
-      const content = d.choices?.[0]?.message?.content;
-      if (typeof content !== 'string' || !content.trim()) throw new Error(`OpenRouter ${model} returned an empty response`);
-      return content;
-    } catch (err) {
-      if (timeout) clearTimeout(timeout);
-      lastError = err;
-      console.warn(`OpenRouter model ${model} failed, trying next:`, err);
-    }
-  }
-  throw lastError || new Error('All OpenRouter models failed');
 }
 
 export async function handleStreamingExtraction(
@@ -210,19 +170,16 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
           const batchResults = await Promise.all(batch.map(async (chunkBase64, offset) => {
             const chunkIndex = start + offset;
             try {
-              const text = await callOpenRouterWithFallback(
-                env,
-                [
-                  {
-                    role: 'user',
-                    content: [
-                      { type: 'text', text: losslessPrompt },
-                      { type: 'file', file: { filename: `chunk_${chunkIndex}.pdf`, file_data: `data:application/pdf;base64,${chunkBase64}` } },
-                    ],
-                  },
-                ],
-                OPENROUTER_VISION_FALLBACKS
-              );
+              const response = await generateWithProviderChain(env as any, [
+                {
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: losslessPrompt },
+                    { type: 'file', file: { filename: `chunk_${chunkIndex}.pdf`, file_data: `data:application/pdf;base64,${chunkBase64}` } },
+                  ],
+                },
+              ], { timeoutMs: VISION_MODEL_TIMEOUT_MS });
+              const text = response.text;
               return { result: extractJson(text) as any, chunkIndex };
             } catch (error) {
               console.error(`Chunk ${chunkIndex} failed:`, error);
@@ -262,7 +219,7 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
         await logAiPerformance(env, authHeader, {
           user_id: userId,
           operation: 'extraction_streaming',
-          provider: 'openrouter',
+          provider: 'xkiro',
           chunk_count: chunks.length,
           total_pages: pageCount,
           status: 'success',
@@ -276,7 +233,7 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
         await logAiPerformance(env, authHeader, {
           user_id: userId,
           operation: 'extraction_streaming',
-          provider: 'openrouter',
+          provider: 'xkiro',
           status: 'error',
           latency_ms: Date.now() - startTime,
           error_message: String(error)

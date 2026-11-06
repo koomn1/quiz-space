@@ -7,16 +7,16 @@ const providerSource = readFileSync(resolve(process.cwd(), 'worker/src/providerC
 const clientSource = readFileSync(resolve(process.cwd(), 'src/services/aiWorkerClient.ts'), 'utf8');
 
 describe('Cosmo chat provider wiring', () => {
-  it('tries Mercury 3 first for text, followed by Groq and OpenAI', () => {
+  it('uses Mercury 3 for text', () => {
     expect(providerSource).toContain("export const INCEPTION_MODEL = 'mercury-3'");
-    expect(providerSource).toMatch(/:\s*\[\[callInception, 'inception', INCEPTION_MODEL\], \[callGroq, 'groq', GROQ_MODEL\], \[callOpenAI, 'openai', OPENAI_MODEL\]\]/);
+    expect(providerSource).toContain("[[callInception, 'inception', INCEPTION_MODEL]]");
     expect(workerSource).toContain('const result = await generateWithProviderChain(env, messages)');
   });
 
-  it('routes multimodal messages through Xkiro first, then Gemini and OpenAI', () => {
+  it('routes multimodal messages through Xkiro', () => {
     expect(providerSource).toContain('const multimodal = isMultimodal(messages)');
-    expect(providerSource).toMatch(/\?\s*\[\[callXkiro, 'xkiro', XKIRO_VISION_MODEL\], \[callGemini, 'gemini', GEMINI_MODEL\], \[callOpenAI, 'openai', OPENAI_MODEL\]\]/);
-    expect(providerSource).toContain('inlineData');
+    expect(providerSource).toContain("[[callXkiro, 'xkiro', XKIRO_VISION_MODEL]]");
+    expect(providerSource).toContain('isMultimodal(messages)');
   });
 
   it('uses the Worker chat routes from the client', () => {

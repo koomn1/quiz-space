@@ -3,14 +3,14 @@ import { getApiUrl } from '../lib/origin';
 import { GeneratedQuiz } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
-export type AiProvider = 'groq' | 'openrouter' | 'inception';
+export type AiProvider = 'inception' | 'xkiro';
 
 interface WorkerError {
   error?: string;
 }
 
 // A 40-question JSON response may legitimately need more than a minute when
-// OpenRouter rotates through fallback models. Keep the client alive long
+// The Worker uses the configured two-provider routing. Keep the client alive long
 // enough for the Worker to finish instead of surfacing a false cancellation.
 const AI_REQUEST_TIMEOUT_MS = 150_000;
 const AI_STREAM_TIMEOUT_MS = 60_000;
@@ -42,7 +42,7 @@ async function workerRequest<T>(path: string, body: unknown, timeoutMs = AI_REQU
       throw err;
     }
     
-    // لا تستخدم OpenRouter من المتصفح إطلاقًا
+    // لا تستخدم أي مزود AI من المتصفح إطلاقًا
     throw new Error(
       "Unable to reach the AI Worker. Please check VITE_AI_WORKER_URL, Cloudflare deployment, or CORS configuration."
     );
@@ -312,7 +312,7 @@ function isTransientAiError(error: unknown): boolean {
 
 const sleep = (ms: number) => new Promise<void>(resolve => window.setTimeout(resolve, ms));
 
-// OpenRouter owns model fallback inside the Worker. The client never loops
+// The Worker owns the two-provider routing. The client never loops
 // through direct providers, so telemetry and user-facing errors stay consistent.
 export async function generateQuizFromFileWithFallback(
   fileBase64: string,
@@ -322,7 +322,7 @@ export async function generateQuizFromFileWithFallback(
   extractionMode?: 'literal' | 'generate',
 ): Promise<GeneratedQuiz> {
   const request = {
-    provider: 'openrouter',
+    provider: 'inception',
     fileBase64,
     mimeType,
     amount,
@@ -511,7 +511,7 @@ export async function askAIStream(
   return { text: fullText };
 }
 
-// Backward-compatible alias. It is intentionally routed to OpenRouter.
+// Backward-compatible alias. It is intentionally routed through the Worker.
 export async function askGroq(
   prompt: string,
   options: { model?: string; systemInstruction?: string; history?: AiChatMessage[] } = {},

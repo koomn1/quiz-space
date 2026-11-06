@@ -6,10 +6,7 @@ import JSZip from 'jszip';
 
 export interface ExtractionJobEnv {
   INCEPTION_API_KEY?: string;
-  GEMINI_API_KEY?: string;
   XKIRO_API_KEY?: string;
-  OPENAI_API_KEY?: string;
-  GROQ_API_KEY?: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
 }
@@ -147,15 +144,8 @@ export async function extractExcelText(source: Uint8Array): Promise<string> {
   return sheets.join('\n\n');
 }
 
-const AI_TEXT_FALLBACKS = [
-  'mercury-3',
-  'openai/gpt-oss-20b',
-  'gpt-5-mini',
-];
-const AI_VISION_FALLBACKS = [
-  'gemini-3.8-flash',
-  'gpt-5-mini',
-];
+const AI_TEXT_FALLBACKS = ['mercury-3'];
+const AI_VISION_FALLBACKS = ['qwen/qwen3.8-omni-flash:free'];
 
 export function sourceFileBaseName(sourceFileName: string | null | undefined): string {
   const baseName = String(sourceFileName || '').split(/[\\/]/).pop() || '';
@@ -1177,7 +1167,7 @@ async function reconcileVisionParentJob(
       processing_token: null,
       processing_lease_expires_at: null,
     });
-    await logExtractionPerformance(env, authHeader, parent, 'openrouter', 'error', Date.now() - startedAt, total);
+    await logExtractionPerformance(env, authHeader, parent, 'xkiro', 'error', Date.now() - startedAt, total);
     return;
   }
 
@@ -1208,11 +1198,11 @@ async function reconcileVisionParentJob(
       processing_token: null,
       processing_lease_expires_at: null,
     });
-    await logExtractionPerformance(env, authHeader, parent, 'openrouter', 'error', Date.now() - startedAt, total);
+    await logExtractionPerformance(env, authHeader, parent, 'xkiro', 'error', Date.now() - startedAt, total);
     return;
   }
 
-  const providers = [...new Set(completed.map(chunk => chunk.provider).filter(Boolean))].join(', ') || 'openrouter';
+  const providers = [...new Set(completed.map(chunk => chunk.provider).filter(Boolean))].join(', ') || 'xkiro';
   await updateClaimedJob(env, authHeader, parent.id, parentToken, {
     status: 'complete',
     progress_percentage: 100,

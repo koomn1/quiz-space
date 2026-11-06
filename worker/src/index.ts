@@ -22,18 +22,16 @@ import { handleCosmoRoutes } from './cosmoRoutes';
 import { handleExtractionRoutes } from './extractionRoutes';
 import { finishTask, retryDelaySeconds } from './taskLedger';
 import { extractAttachmentText, formatSourceForModel } from './attachmentPipeline';
-import { generateWithProviderChain, INCEPTION_MODEL, GROQ_MODEL, GEMINI_MODEL, OPENAI_MODEL } from './providerChain';
+import { generateWithProviderChain, INCEPTION_MODEL, XKIRO_VISION_MODEL } from './providerChain';
 export type { Env, ExtractionQueueMessage, WorkerExecutionContext } from './platform';
 
 type Provider = 'inception';
 
 const INCEPTION_TEXT_MODEL = INCEPTION_MODEL;
-const GEMINI_VISION_MODEL = GEMINI_MODEL;
-const OPENAI_FALLBACK_MODEL = OPENAI_MODEL;
-const GROQ_TEXT_MODEL = GROQ_MODEL;
+const XKIRO_VISION_MODEL_ID = XKIRO_VISION_MODEL;
 const ANSWER_REVIEW_MODEL_TIMEOUT_MS = 30_000;
-const AI_TEXT_FALLBACKS = [INCEPTION_TEXT_MODEL, GROQ_TEXT_MODEL, OPENAI_MODEL];
-const AI_VISION_FALLBACKS = [GEMINI_VISION_MODEL, OPENAI_FALLBACK_MODEL];
+const AI_TEXT_FALLBACKS = [INCEPTION_TEXT_MODEL];
+const AI_VISION_FALLBACKS = [XKIRO_VISION_MODEL_ID];
 const AI_ANSWER_REVIEW_FALLBACKS = AI_TEXT_FALLBACKS;
 const AI_ANSWER_REVIEW_VISION_FALLBACKS = AI_VISION_FALLBACKS;
 const AI_STREAM_TEXT_MODELS = AI_TEXT_FALLBACKS;
@@ -401,7 +399,6 @@ export async function callAiWithParallelAnswerReviewFallback(
 
 // Backward-compatible name used by the existing answer-review tests and
 // callers while the provider chain is being migrated.
-export const callOpenRouterWithParallelAnswerReviewFallback = callAiWithParallelAnswerReviewFallback;
 
 async function extractPowerPointText(data: Uint8Array): Promise<string> {
   const archive = await JSZip.loadAsync(data);
@@ -428,7 +425,7 @@ async function extractPowerPointText(data: Uint8Array): Promise<string> {
 async function gradeEssayWithFallback(env: Env, question: string, modelAnswer: string, studentAnswer: string): Promise<any> {
   const prompt = `قيّم إجابة الطالب بسرعة وبصرامة من ناحية صحة المعنى فقط. لا تكافئ الإجابة الفارغة أو التي تناقض النموذج. اعتبرها صحيحة فقط إذا تضمنت الفكرة الأساسية للنموذج بوضوح، وإلا فهي خاطئة. أعد JSON فقط بهذا الشكل: {"correct":true,"confidence":0.0,"reason":"سبب قصير"}. السؤال: ${question.slice(0, 5000)}\nالإجابة النموذجية: ${modelAnswer.slice(0, 4000)}\nإجابة الطالب: ${studentAnswer.slice(0, 4000)}`;
   const result = extractJson(await callAiWithFallback(env, [{ role: 'user', content: prompt }], AI_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 10_000 })) as any;
-  return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '', provider: 'inception/groq/gemini/openai' };
+  return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '', provider: 'inception' };
 }
 
 async function providerText(
@@ -967,7 +964,7 @@ ${extraInstruction}`;
     }
 
     if (path === '/api/ai/groq') {
-      // Backward-compatible alias for older web clients. It uses Groq first
+      // Backward-compatible route alias for older web clients. It always uses Inception
       // and falls back to AI provider through the shared text route.
       if (typeof body.prompt !== 'string' || body.prompt.length > 20_000) return json({ error: 'Invalid request' }, 400, headers);
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];
@@ -995,12 +992,7 @@ ${extraInstruction}`;
         ? body.expectedAnswerCount
         : undefined;
       if (isAnswerReviewRequest && expectedAnswerCount === undefined) return json({ error: 'Invalid answer-review contract' }, 400, headers);
-      const allowedModels = [
-        INCEPTION_TEXT_MODEL,
-        GEMINI_VISION_MODEL,
-        GROQ_TEXT_MODEL,
-        OPENAI_FALLBACK_MODEL,
-      ];
+      const allowedModels = [INCEPTION_TEXT_MODEL, XKIRO_VISION_MODEL_ID];
       const model = allowedModels.includes(body.model) ? body.model : INCEPTION_TEXT_MODEL;
       const history = Array.isArray(body.history) ? body.history.slice(-5).filter((message: any) => (message?.role === 'user' || message?.role === 'model') && typeof message.text === 'string').map((message: any) => ({ role: message.role === 'model' ? 'assistant' : 'user', content: message.text.slice(0, 10_000) })) : [];
       const messages: any[] = [];

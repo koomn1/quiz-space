@@ -10,17 +10,11 @@ export type ProviderOptions = {
 };
 
 export const INCEPTION_MODEL = 'mercury-3';
-export const GROQ_MODEL = 'openai/gpt-oss-20b';
-export const GEMINI_MODEL = 'gemini-3.8-flash';
-export const OPENAI_MODEL = 'gpt-5-mini';
 export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free';
 
-type ProviderCall = (env: Env, messages: ProviderMessage[], options: ProviderOptions) => Promise<string>;
+ type ProviderCall = (env: Env, messages: ProviderMessage[], options: ProviderOptions) => Promise<string>;
 
 const INCEPTION_URL = 'https://api.inceptionlabs.ai/v1/chat/completions';
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const XKIRO_URL = 'https://api.xkiro.com/v1/chat/completions';
 
 function timeoutFor(ms: number) {
@@ -43,46 +37,10 @@ function contentText(value: unknown): string {
   return '';
 }
 
-function toGeminiPart(value: unknown): any[] {
-  if (typeof value === 'string') return [{ text: value }];
-  if (!Array.isArray(value)) return [{ text: contentText(value) }];
-  const parts: any[] = [];
-  for (const item of value) {
-    if (!item || typeof item !== 'object') continue;
-    const record = item as Record<string, any>;
-    if (record.type === 'text' && typeof record.text === 'string') parts.push({ text: record.text });
-    if (record.type === 'image_url' && typeof record.image_url?.url === 'string') {
-      const match = record.image_url.url.match(/^data:([^;]+);base64,(.+)$/s);
-      if (match) parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
-    }
-    if (record.type === 'file' && typeof record.file?.file_data === 'string') {
-      const match = record.file.file_data.match(/^data:([^;]+);base64,(.+)$/s);
-      if (match) parts.push({ inlineData: { mimeType: match?.[1] || 'application/octet-stream', data: match?.[2] || record.file.file_data } });
-    }
-  }
-  return parts.length ? parts : [{ text: contentText(value) }];
-}
-
-function toGeminiRequest(messages: ProviderMessage[], options: ProviderOptions) {
-  const system = messages.find(message => message.role === 'system');
-  const contents = messages.filter(message => message.role !== 'system').map(message => ({
-    role: message.role === 'assistant' ? 'model' : 'user',
-    parts: toGeminiPart(message.content),
-  }));
-  return {
-    ...(system ? { systemInstruction: { parts: [{ text: contentText(system.content) }] } } : {}),
-    contents,
-    generationConfig: {
-      maxOutputTokens: options.max_tokens || 12_000,
-      ...(options.response_format?.type === 'json_object' ? { responseMimeType: 'application/json' } : {}),
-    },
-  };
-}
-
 function extractText(payload: any): string {
   const choice = payload?.choices?.[0];
   if (choice) return contentText(choice.message?.content ?? choice.text);
-  return (payload?.candidates?.[0]?.content?.parts || []).map((part: any) => part?.text || '').join('').trim();
+  return '';
 }
 
 async function requestJson(url: string, init: RequestInit, provider: string, model: string, timeoutMs: number): Promise<string> {
@@ -103,39 +61,19 @@ async function callInception(env: Env, messages: ProviderMessage[], options: Pro
   return requestJson(INCEPTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.INCEPTION_API_KEY}` },
-    body: JSON.stringify({ model: INCEPTION_MODEL, messages, reasoning_effort: 'low', max_completion_tokens: options.max_tokens || 12_000, temperature: 0.7 }),
+    body: JSON.stringify({
+      model: INCEPTION_MODEL,
+      messages,
+      reasoning_effort: 'low',
+      max_completion_tokens: options.max_tokens || 12_000,
+      temperature: options.temperature ?? 0.7,
+      ...(options.response_format ? { response_format: options.response_format } : {}),
+    }),
   }, 'inception', INCEPTION_MODEL, options.timeoutMs || 45_000);
 }
 
-async function callGroq(env: Env, messages: ProviderMessage[], options: ProviderOptions) {
-  if (!env.GROQ_API_KEY || isMultimodal(messages)) throw new Error('Groq is unavailable for this request');
-  return requestJson(GROQ_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.GROQ_API_KEY}` },
-    body: JSON.stringify({ model: GROQ_MODEL, messages, max_tokens: options.max_tokens, temperature: options.temperature ?? 0.2 }),
-  }, 'groq', GROQ_MODEL, options.timeoutMs || 45_000);
-}
-
-async function callGemini(env: Env, messages: ProviderMessage[], options: ProviderOptions) {
-  if (!env.GEMINI_API_KEY) throw new Error('Gemini is not configured');
-  return requestJson(`${GEMINI_URL}/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(toGeminiRequest(messages, options)),
-  }, 'gemini', GEMINI_MODEL, options.timeoutMs || 60_000);
-}
-
-async function callOpenAI(env: Env, messages: ProviderMessage[], options: ProviderOptions) {
-  if (!env.OPENAI_API_KEY) throw new Error('OpenAI is not configured');
-  return requestJson(OPENAI_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.OPENAI_API_KEY}` },
-    body: JSON.stringify({ model: OPENAI_MODEL, messages, max_completion_tokens: options.max_tokens, ...(options.temperature != null ? { temperature: options.temperature } : {}) }),
-  }, 'openai', OPENAI_MODEL, options.timeoutMs || 60_000);
-}
-
 async function callXkiro(env: Env, messages: ProviderMessage[], options: ProviderOptions) {
-  if (!env.XKIRO_API_KEY || !isMultimodal(messages)) throw new Error('Xkiro is unavailable for this request');
+  if (!env.XKIRO_API_KEY || !isMultimodal(messages)) throw new Error('xKiro is unavailable for this request');
   return requestJson(XKIRO_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.XKIRO_API_KEY}` },
@@ -144,6 +82,7 @@ async function callXkiro(env: Env, messages: ProviderMessage[], options: Provide
       messages,
       max_tokens: options.max_tokens || 12_000,
       ...(options.temperature != null ? { temperature: options.temperature } : {}),
+      ...(options.response_format ? { response_format: options.response_format } : {}),
     }),
   }, 'xkiro', XKIRO_VISION_MODEL, options.timeoutMs || 90_000);
 }
@@ -151,8 +90,8 @@ async function callXkiro(env: Env, messages: ProviderMessage[], options: Provide
 export async function generateWithProviderChain(env: Env, messages: ProviderMessage[], options: ProviderOptions = {}): Promise<{ text: string; provider: string; model: string }> {
   const multimodal = isMultimodal(messages);
   const attempts: Array<[ProviderCall, string, string]> = multimodal
-    ? [[callXkiro, 'xkiro', XKIRO_VISION_MODEL], [callGemini, 'gemini', GEMINI_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]]
-    : [[callInception, 'inception', INCEPTION_MODEL], [callGroq, 'groq', GROQ_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]];
+    ? [[callXkiro, 'xkiro', XKIRO_VISION_MODEL]]
+    : [[callInception, 'inception', INCEPTION_MODEL]];
   let lastError: unknown;
   for (const [call, provider, model] of attempts) {
     try {
@@ -161,8 +100,8 @@ export async function generateWithProviderChain(env: Env, messages: ProviderMess
       return { text, provider, model };
     } catch (error) {
       lastError = error;
-      console.warn(`${provider} failed; trying next provider`, error);
+      console.warn(`${provider} failed`, error);
     }
   }
-  throw lastError instanceof Error ? lastError : new Error('All AI providers failed');
+  throw lastError instanceof Error ? lastError : new Error('Configured AI provider failed');
 }

@@ -207,7 +207,7 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
   const publicQuizzes = quizzes.filter(q => !q.distributionRouting || q.distributionRouting === 'public');
 
   const categories = [
-    { id: 'ai', titleAr: 'الذكاء الاصطناعي', titleEn: 'AI & Data Science', iconName: 'support', color: 'from-purple-500 to-indigo-600', keywords: ['ai', 'intelligence', 'artificial', 'openrouter', 'gpt', 'ذكاء'] },
+    { id: 'ai', titleAr: 'الذكاء الاصطناعي', titleEn: 'AI & Data Science', iconName: 'support', color: 'from-purple-500 to-indigo-600', keywords: ['ai', 'intelligence', 'artificial', 'gpt', 'ذكاء'] },
     { id: 'web', titleAr: 'تطوير الويب وبرمجة المواقع', titleEn: 'Web Development', iconName: 'explore', color: 'from-blue-500 to-cyan-500', keywords: ['web', 'html', 'css', 'javascript', 'ويب', 'برمجة'] },
     { id: 'physics', titleAr: 'الفيزياء وعالم الفلك', titleEn: 'Physics & Astronomy', iconName: 'fire', color: 'from-rose-500 to-amber-500', keywords: ['physics', 'space', 'astrophysics', 'فيزياء', 'فلك', 'أكاديمي'] },
     { id: 'history', titleAr: 'التاريخ والثقافة العامة', titleEn: 'History & Culture', iconName: 'leaderboard', color: 'from-amber-500 to-orange-600', keywords: ['history', 'dates', 'culture', 'تاريخ', 'ثقافة'] },

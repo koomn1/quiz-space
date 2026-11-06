@@ -5,11 +5,7 @@ import { FsmQuestionParser } from './fsmQuestionParser';
 
 export interface DocumentExtractionEnv {
   INCEPTION_API_KEY?: string;
-  GEMINI_API_KEY?: string;
   XKIRO_API_KEY?: string;
-  OPENAI_API_KEY?: string;
-  GROQ_API_KEY?: string;
-  OPENROUTER_API_KEY?: string;
 }
 
 export interface DocumentExtractionResult {
@@ -27,7 +23,7 @@ export interface DocumentExtractionProgress {
   questionsExtracted: number;
 }
 
-const DOCUMENT_EXTRACTION_MODELS = ['mercury-3', 'openai/gpt-oss-20b', 'gemini-3.8-flash', 'gpt-5-mini'];
+const DOCUMENT_EXTRACTION_MODELS = ['mercury-3'];
 
 // Keep each provider request bounded: one huge 100–200 question prompt is slow,
 // exceeds output limits easily, and makes the whole extraction fail atomically.

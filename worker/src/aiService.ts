@@ -1,14 +1,7 @@
 import type { Env } from './platform';
+import { generateWithProviderChain, INCEPTION_MODEL, XKIRO_VISION_MODEL, type ProviderMessage } from './providerChain';
 
-export const COSMO_MODELS = [
-  'nvidia/nemotron-3.5-lightning:free',
-  'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
-  'xingchen-agi/xing4.0-29b-a4b:free',
-  'recursive/flint-v1.0:free',
-  'openrouter/free',
-];
-export const GROQ_TEXT_MODEL = 'openai/gpt-oss-20b';
+export const COSMO_MODELS = [INCEPTION_MODEL, XKIRO_VISION_MODEL];
 
 export class AiServiceError extends Error {
   constructor(message: string, readonly retryable = true) {
@@ -17,53 +10,19 @@ export class AiServiceError extends Error {
   }
 }
 
-function timeoutSignal(timeoutMs: number): { signal: AbortSignal; dispose: () => void } {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  return { signal: controller.signal, dispose: () => clearTimeout(timer) };
-}
-
-export async function generateText(env: Env, messages: Array<{ role: string; content: unknown }>, options: { models?: string[]; timeoutMs?: number } = {}): Promise<{ text: string; model: string }> {
-  const models = options.models?.length ? options.models : COSMO_MODELS;
-  const groqFirst = Boolean(env.GROQ_API_KEY) && !messages.some(message => Array.isArray(message.content));
-  const candidates = groqFirst ? [GROQ_TEXT_MODEL, ...models] : models;
-  let lastError = 'No AI model accepted the request.';
-  for (const model of candidates) {
-    const timeout = timeoutSignal(options.timeoutMs || 30_000);
-    try {
-      const isGroq = model === GROQ_TEXT_MODEL && Boolean(env.GROQ_API_KEY);
-      const response = await fetch(isGroq ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        signal: timeout.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${isGroq ? env.GROQ_API_KEY : env.OPENROUTER_API_KEY}`,
-          ...(isGroq ? {} : { 'HTTP-Referer': 'https://quizspace.app', 'X-Title': 'QuizSpace' }),
-        },
-        body: JSON.stringify({ model, messages, temperature: 0.2 }),
-      });
-      if (!response.ok) {
-        lastError = `AI provider returned ${response.status}`;
-        continue;
-      }
-      const payload = await response.json() as { choices?: Array<{ message?: { content?: unknown } }> };
-      const raw = payload.choices?.[0]?.message?.content;
-      const text = typeof raw === 'string' ? raw.trim() : Array.isArray(raw) ? raw.map(String).join('').trim() : '';
-      if (!text) {
-        lastError = 'AI provider returned an empty response.';
-        continue;
-      }
-      return { text, model };
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : String(error);
-    } finally {
-      timeout.dispose();
-    }
+export async function generateText(
+  env: Env,
+  messages: ProviderMessage[],
+  options: { models?: string[]; timeoutMs?: number } = {},
+): Promise<{ text: string; model: string }> {
+  const result = await generateWithProviderChain(env, messages, { timeoutMs: options.timeoutMs });
+  if (options.models?.length && !options.models.includes(result.model)) {
+    throw new AiServiceError(`Configured model ${result.model} is not allowed for this request.`);
   }
-  throw new AiServiceError(lastError);
+  return { text: result.text, model: `${result.provider}/${result.model}` };
 }
 
-export function buildCosmoMessages(input: { message: string; history?: Array<{ role?: string; content?: string }>; system?: string }): Array<{ role: string; content: string }> {
+export function buildCosmoMessages(input: { message: string; history?: Array<{ role?: string; content?: string }>; system?: string }): ProviderMessage[] {
   const history = (input.history || []).slice(-12).flatMap(item => {
     const role = item.role === 'assistant' ? 'assistant' : item.role === 'user' ? 'user' : null;
     const content = typeof item.content === 'string' ? item.content.trim().slice(0, 4_000) : '';

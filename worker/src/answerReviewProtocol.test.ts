@@ -1,15 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  callOpenRouterWithParallelAnswerReviewFallback,
+  callAiWithParallelAnswerReviewFallback,
   validateAnswerReviewResponse,
   type Env,
 } from './index';
 
 const env = {
   INCEPTION_API_KEY: 'test-key',
-  OPENROUTER_API_KEY: 'test-key',
-  OPENAI_API_KEY: 'test-key',
-  GROQ_API_KEY: 'test-key',
   DEEPSEEK_API_KEY: 'test-key',
   SUPABASE_URL: 'https://placeholder.supabase.co',
   SUPABASE_ANON_KEY: 'test-key',
@@ -53,31 +50,28 @@ describe('answer review protocol', () => {
     expect(validateAnswerReviewResponse(response, 1, 'test-model')).toContain('\"answers\"');
   });
 
-  it('falls through to the next provider when the primary answer-review response is malformed', async () => {
+  it('rejects a malformed answer-review response from the only text provider', async () => {
     const models: string[] = [];
     vi.stubGlobal('fetch', vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const payload = JSON.parse(String(init?.body || '{}')) as { model?: string };
       models.push(String(payload.model));
-      return payload.model === 'mercury-3'
-        ? providerResponse('{"answers":[]}')
-        : providerResponse(validResponse());
+      return providerResponse('{"answers":[]}');
     }));
 
-    const result = await callOpenRouterWithParallelAnswerReviewFallback(
+    await expect(callAiWithParallelAnswerReviewFallback(
       env,
       [{ role: 'user', content: 'review' }],
-      ['mercury-3', 'openai/gpt-oss-20b'],
+      ['mercury-3'],
       { expectedAnswerCount: 1, timeoutMs: 500, response_format: { type: 'json_object' }, allowPartial: true },
-    );
+    )).rejects.toThrow();
 
-    expect(result.model).toBe('openai/gpt-oss-20b');
-    expect(models).toEqual(['mercury-3', 'openai/gpt-oss-20b']);
+    expect(models).toEqual(['mercury-3']);
   });
 
   it('rejects when every provider response is incomplete', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => providerResponse('{"answers":[]}')));
 
-    await expect(callOpenRouterWithParallelAnswerReviewFallback(
+    await expect(callAiWithParallelAnswerReviewFallback(
       env,
       [{ role: 'user', content: 'review' }],
       ['model-a', 'model-b', 'model-c'],

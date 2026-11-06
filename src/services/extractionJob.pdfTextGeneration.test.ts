@@ -56,7 +56,7 @@ describe('text PDF generation in extraction jobs', () => {
     expect(result.questions).toHaveLength(1);
   });
 
-  it('retries the next text model when a provider returns unusable JSON', async () => {
+  it('fails clearly when the only text provider returns unusable JSON', async () => {
     let callCount = 0;
     globalThis.fetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       callCount += 1;
@@ -83,15 +83,13 @@ describe('text PDF generation in extraction jobs', () => {
       requested_question_count: 3,
     } as ExtractionJobRow;
 
-    const result = await extractJobQuiz(
+    await expect(extractJobQuiz(
       new Uint8Array(await pdf.save()),
       job,
-      { INCEPTION_API_KEY: 'test-inception-key', GROQ_API_KEY: 'test-groq-key', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'anon' },
+      { INCEPTION_API_KEY: 'test-inception-key', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'anon' },
       vi.fn(),
-    );
+    )).rejects.toThrow('AI returned invalid JSON');
 
-    expect(callCount).toBe(2);
-    expect(result.provider).toBe('groq/openai/gpt-oss-20b');
-    expect(result.questions).toHaveLength(1);
+    expect(callCount).toBe(1);
   });
 });

@@ -9,19 +9,15 @@ const providerChainSource = readFileSync(resolve(process.cwd(), 'worker/src/prov
 const routeSources = [workerSource, authSource, cosmoRoutesSource].join('\n');
 
 describe('Cosmo generation recovery contract', () => {
-  it('uses Mercury 3, Groq, and OpenAI as the text provider chain', () => {
+  it('uses Mercury 3 as the only text provider', () => {
     expect(providerChainSource).toContain("export const INCEPTION_MODEL = 'mercury-3'");
-    expect(providerChainSource).toContain("export const GROQ_MODEL = 'openai/gpt-oss-20b'");
-    expect(providerChainSource).toContain("export const OPENAI_MODEL = 'gpt-5-mini'");
-    expect(providerChainSource).toContain("[callInception, 'inception', INCEPTION_MODEL], [callGroq, 'groq', GROQ_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]");
+            expect(providerChainSource).toContain("[callInception, 'inception', INCEPTION_MODEL]");
   });
 
-  it('uses Xkiro page vision first, then Gemini and OpenAI as fallbacks', () => {
-    expect(providerChainSource).toContain("export const GEMINI_MODEL = 'gemini-3.8-flash'");
-    expect(providerChainSource).toContain("export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free'");
-    expect(providerChainSource).toContain("[callXkiro, 'xkiro', XKIRO_VISION_MODEL], [callGemini, 'gemini', GEMINI_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]");
+  it('uses Xkiro as the only vision provider', () => {
+        expect(providerChainSource).toContain("export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free'");
+    expect(providerChainSource).toContain("[callXkiro, 'xkiro', XKIRO_VISION_MODEL]");
     expect(providerChainSource).toContain('api.xkiro.com/v1/chat/completions');
-    expect(providerChainSource).toContain('inlineData: { mimeType: match[1], data: match[2] }');
   });
 
   it('batches Cosmo quiz generation within provider output limits', () => {
@@ -44,16 +40,13 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('validateResponse: (text, _provider, model) =>');
     expect(workerSource).toContain('validateAnswerReviewResponse(text, expectedAnswerCount, model');
     expect(workerSource).toContain('export async function callAiWithParallelAnswerReviewFallback(');
-    expect(workerSource).toContain('callOpenRouterWithParallelAnswerReviewFallback = callAiWithParallelAnswerReviewFallback');
     expect(providerChainSource).toContain('options.validateResponse?.(text, provider, model)');
     expect(workerSource).toContain('Answer-review contract recovery activated');
   });
 
   it('limits the provider chain to configured supported endpoints', () => {
     expect(providerChainSource).toContain('api.inceptionlabs.ai/v1/chat/completions');
-    expect(providerChainSource).toContain('api.groq.com/openai/v1/chat/completions');
-    expect(providerChainSource).toContain('generativelanguage.googleapis.com/v1beta/models');
-    expect(providerChainSource).toContain('api.openai.com/v1/chat/completions');
+    expect(providerChainSource).toContain('api.xkiro.com/v1/chat/completions');
     expect(providerChainSource).not.toContain('openrouter.ai');
     expect(providerChainSource).not.toContain('api.deepseek.com');
     expect(workerSource).not.toContain("provider: 'deepseek'");

@@ -6,25 +6,19 @@ const workerSource = readFileSync(resolve(process.cwd(), 'worker/src/index.ts'),
 const providerSource = readFileSync(resolve(process.cwd(), 'worker/src/providerChain.ts'), 'utf8');
 
 describe('AI provider chain contract', () => {
-  it('uses Inception, Groq, Gemini, then OpenAI', () => {
+  it('uses Inception Mercury 3 as the only text provider', () => {
     expect(providerSource).toContain("export const INCEPTION_MODEL = 'mercury-3'");
-    expect(providerSource).toContain("export const GROQ_MODEL = 'openai/gpt-oss-20b'");
-    expect(providerSource).toContain("export const GEMINI_MODEL = 'gemini-3.8-flash'");
-    expect(providerSource).toContain("export const OPENAI_MODEL = 'gpt-5-mini'");
-    expect(providerSource).toContain('callInception');
-    expect(providerSource).toContain('callGroq');
-    expect(providerSource).toContain('callGemini');
-    expect(providerSource).toContain('callOpenAI');
-    expect(providerSource).toContain("? [[callInception, 'inception', INCEPTION_MODEL], [callGroq, 'groq', GROQ_MODEL], [callOpenAI, 'openai', OPENAI_MODEL]]");
-    expect(providerSource).not.toContain('open' + 'router');
-    expect(workerSource).not.toContain('open' + 'router');
+    expect(providerSource).toContain("[[callInception, 'inception', INCEPTION_MODEL]]");
+    expect(providerSource).not.toMatch(/callGroq|callGemini|callOpenAI|openrouter\.ai/);
+    expect(workerSource).toContain('const AI_TEXT_FALLBACKS = [INCEPTION_TEXT_MODEL]');
   });
 
-  it('uses Gemini for multimodal input and does not send it to text-only providers', () => {
-    expect(providerSource).toContain('const multimodal = isMultimodal(messages)');
-    expect(providerSource).toContain('const attempts = multimodal');
-    expect(providerSource).toContain('callGemini');
-    expect(providerSource).toContain('inlineData');
+  it('uses xKiro as the only multimodal provider', () => {
+    expect(providerSource).toContain("export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free'");
+    expect(providerSource).toContain("[[callXkiro, 'xkiro', XKIRO_VISION_MODEL]]");
+    expect(providerSource).toContain('api.xkiro.com/v1/chat/completions');
+    expect(providerSource).not.toMatch(/callGemini|callOpenAI|openrouter\.ai/);
+    expect(workerSource).toContain('const AI_VISION_FALLBACKS = [XKIRO_VISION_MODEL_ID]');
   });
 
   it('keeps the public chat routes independent from provider names', () => {

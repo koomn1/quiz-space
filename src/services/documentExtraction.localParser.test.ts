@@ -35,7 +35,7 @@ Answer: B
 
 2. True or false: The sun is a star.
 Answer: True`,
-      { OPENROUTER_API_KEY: 'not-used-for-local-parser' },
+      { INCEPTION_API_KEY: 'not-used-for-local-parser' },
       undefined,
       update => { progress.push(update); },
     );
@@ -100,7 +100,7 @@ Answer: B
 A. 5
 B. 6
 Answer: B`,
-      { OPENROUTER_API_KEY: 'not-used-for-direct-extraction' },
+      { INCEPTION_API_KEY: 'not-used-for-direct-extraction' },
     );
     expect(result.provider).toBe('local-format-parser');
     expect(result.questions).toHaveLength(2);

@@ -3,7 +3,7 @@
 This worker keeps provider keys off GitHub Pages. It accepts only authenticated Supabase users.
 
 1. Run `pnpm install` from the repository root (the repository uses pnpm lockfiles).
-2. Set `GROQ_API_KEY`, `OPENROUTER_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `ALLOWED_ORIGIN` (for example, `https://quiz-space-app.pages.dev`) as Wrangler secrets. Groq's `openai/gpt-oss-20b` is the fast, low-cost primary text model; OpenRouter remains the fallback and handles multimodal document requests.
+2. Set `INCEPTION_API_KEY`, `XKIRO_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `ALLOWED_ORIGIN` (for example, `https://quiz-space-app.pages.dev`) as Wrangler secrets. Inception Mercury 3 handles text generation, while xKiro uses `qwen/qwen3.8-omni-flash:free` for images and scanned PDF pages.
 3. Run `npm run deploy` and copy the Worker URL into the GitHub repository secret `VITE_AI_WORKER_URL`.
 
 Do not create `VITE_*_API_KEY` secrets. Vite embeds every `VITE_*` value into the public browser bundle.

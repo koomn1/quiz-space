@@ -45,7 +45,7 @@ async function generateQuestionBatches(options: {
   let nextIndex = 0;
 
   // Two concurrent requests cut the wall-clock time for 100–200 questions
-  // without flooding OpenRouter or creating an unbounded browser queue.
+  // without creating an unbounded browser queue.
   const worker = async () => {
     while (nextIndex < batchCount) {
       const index = nextIndex++;

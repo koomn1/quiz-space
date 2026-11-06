@@ -11,7 +11,7 @@ interface StreamingTextProps {
 }
 
 /**
- * Reveals `text` progressively, character by character, like Claude/Gemini's
+ * Reveals `text` progressively, character by character, like a modern AI assistant's
  * live-typing effect — instead of the full reply appearing all at once. The
  * backend returns the whole message in one response (no token streaming),
  * so this simulates the effect client-side at a natural reading pace.

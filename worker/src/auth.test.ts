@@ -3,8 +3,6 @@ import { getUserId, SupabaseConfigurationError } from './auth';
 import type { Env } from './platform';
 
 const env = {
-  GROQ_API_KEY: 'test-groq-key',
-  OPENROUTER_API_KEY: 'test-openrouter-key',
   SUPABASE_URL: 'https://placeholder.supabase.co',
   SUPABASE_ANON_KEY: 'test-anon-key',
   ALLOWED_ORIGIN: 'https://quiz-space-app.pages.dev',

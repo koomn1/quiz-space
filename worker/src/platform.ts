@@ -1,18 +1,10 @@
 import type { ExtractionJobRow } from './extractionJobs';
 
 export interface Env {
-  /** Second text-generation provider after Inception. */
-  GROQ_API_KEY?: string;
   /** Primary text-generation provider. */
   INCEPTION_API_KEY?: string;
-  /** Multimodal provider for images and PDFs. */
-  GEMINI_API_KEY?: string;
   /** Optional multimodal page/image reviewer. */
   XKIRO_API_KEY?: string;
-  /** Final text/multimodal fallback. */
-  OPENAI_API_KEY?: string;
-  /** Legacy OpenRouter fallback used by the existing Cosmo service. */
-  OPENROUTER_API_KEY: string;
   /** Server-only web search key; never expose this to the React bundle. */
   TAVILY_API_KEY?: string;
   SUPABASE_URL: string;
