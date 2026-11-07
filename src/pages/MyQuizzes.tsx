@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Quiz } from '../types';
-import { BookOpen, Clock, Edit3, Play, RefreshCw, Share2, Star, Trash2, Users } from 'lucide-react';
+import { Quiz, QuizCompletion } from '../types';
+import { BookOpen, Clock, Download, Edit3, Play, Printer, RefreshCw, Share2, Star, Trash2, Users, X } from 'lucide-react';
 import { EssayReviewModal } from '../components/EssayReviewModal';
-import { getPendingEssayReviews } from '../lib/db';
+import { getCompletionsByQuizId, getPendingEssayReviews, getQuizTakersUnique } from '../lib/db';
+import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
 
 interface MyQuizzesProps {
   quizzes: Quiz[];
@@ -34,6 +35,9 @@ export function MyQuizzes({
   const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [essayModalOpen, setEssayModalOpen] = useState(false);
+  const [attemptsQuiz, setAttemptsQuiz] = useState<Quiz | null>(null);
+  const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
+  const [attemptsLoading, setAttemptsLoading] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   const checkPendingReviews = async () => {
@@ -48,6 +52,73 @@ export function MyQuizzes({
   useEffect(() => {
     checkPendingReviews();
   }, [userId, quizzes]);
+
+  const exportQuizPdf = async (quiz: Quiz) => {
+    try {
+      const branding = {
+        institutionName: quiz.creatorName || '',
+        pdfTitle: quiz.title,
+        pdfDescription: quiz.description || '',
+        studentName: '',
+        examDate: new Date().toLocaleDateString(isAr ? 'ar-EG' : 'en-US'),
+        score: null,
+        essayAnswerHeight: 120,
+      };
+      const bytes = await createQuizPdfBytes(quiz, branding);
+      downloadQuizPdfBytes(bytes, getQuizPdfFileName(quiz, branding));
+    } catch (error) {
+      console.error('Quiz PDF export failed:', error);
+      window.alert(isAr ? 'تعذر إنشاء ملف PDF حالياً. حاول مرة أخرى.' : 'Could not create the PDF right now. Please try again.');
+    }
+  };
+
+  const printQuiz = (quiz: Quiz) => {
+    const printWindow = window.open('about:blank', '_blank');
+    if (!printWindow) return;
+    const escapeHtml = (value: unknown) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+    const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+    const questionsHtml = questions.map((question, index) => {
+      const options = Array.isArray(question.options) && question.options.length
+        ? `<ol>${question.options.map((option) => `<li>${escapeHtml(option)}</li>`).join('')}</ol>`
+        : '<div class="answer-space"></div>';
+      return `<article><h3>${index + 1}. ${escapeHtml(question.text)}</h3>${options}</article>`;
+    }).join('');
+    printWindow.document.write(`<!doctype html><html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"><title>${escapeHtml(quiz.title)}</title><style>body{font-family:Arial,Tahoma,sans-serif;max-width:900px;margin:0 auto;padding:28px;color:#111827;line-height:1.7}h1{color:#312e81;border-bottom:3px solid #4f46e5;padding-bottom:12px}article{break-inside:avoid;border:1px solid #cbd5e1;border-radius:10px;padding:12px 16px;margin:0 0 14px}h3{margin:0 0 8px;font-size:16px}ol{margin:0;padding-inline-start:24px}.answer-space{height:100px;border:1px dashed #94a3b8;border-radius:8px}@media print{body{padding:0}article{break-inside:avoid}}</style></head><body><h1>${escapeHtml(quiz.title)}</h1><p>${escapeHtml(quiz.description || '')}</p>${questionsHtml}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    window.setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 400);
+  };
+
+  const openAttempts = async (quiz: Quiz) => {
+    setAttemptsQuiz(quiz);
+    setAttempts([]);
+    setAttemptsLoading(true);
+    try {
+      const uniqueTakers = await getQuizTakersUnique(quiz.id);
+      if (uniqueTakers?.length) {
+        setAttempts(uniqueTakers);
+      } else {
+        setAttempts(await getCompletionsByQuizId(quiz.id));
+      }
+    } catch (error) {
+      console.warn('Failed to load quiz solvers:', error);
+      try {
+        setAttempts(await getCompletionsByQuizId(quiz.id));
+      } catch (_) {
+        setAttempts([]);
+      }
+    } finally {
+      setAttemptsLoading(false);
+    }
+  };
 
   useGSAP(() => {
     if (myQuizzes.length > 0 && containerRef.current) {
@@ -190,7 +261,24 @@ export function MyQuizzes({
                   </div>
                 </div>
 
-                <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-3">
+                <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
+                    <button type="button" onClick={() => exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[11px] font-black text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200" title={isAr ? 'تصدير الاختبار كملف PDF' : 'Export quiz as PDF'}>
+                      <Download className="h-3.5 w-3.5" />
+                      <span>{isAr ? 'PDF' : 'PDF'}</span>
+                    </button>
+                    <button type="button" onClick={() => printQuiz(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-black text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" title={isAr ? 'طباعة الاختبار' : 'Print quiz'}>
+                      <Printer className="h-3.5 w-3.5" />
+                      <span>{isAr ? 'طباعة' : 'Print'}</span>
+                    </button>
+                    <button type="button" onClick={() => openAttempts(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-[11px] font-black text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلوا الاختبار' : 'View who solved the quiz'}>
+                      <Users className="h-3.5 w-3.5" />
+                      <span>{isAr ? 'من حلّه' : 'Solvers'}</span>
+                      <span className="rounded-full bg-cyan-200/70 px-1.5 py-0.5 text-[10px] dark:bg-cyan-900/70">{plays}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-right max-w-[150px] truncate">
                     <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs">
                       {quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q'}
@@ -209,6 +297,7 @@ export function MyQuizzes({
                     <Play className="w-3 h-3 fill-current" />
                     <span>{isAr ? 'ابدأ الحل' : 'Start'}</span>
                   </button>
+                  </div>
                 </div>
               </div>
             );
@@ -232,6 +321,39 @@ export function MyQuizzes({
               <button type="button" onClick={() => { const id = quizToDelete; setQuizToDelete(null); onDeleteQuiz(id); }} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700">
                 {isAr ? 'حذف نهائياً' : 'Delete permanently'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {attemptsQuiz && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="my-quiz-solvers-title" onClick={() => setAttemptsQuiz(null)}>
+          <div className="w-full max-w-lg max-h-[85vh] overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-2xl dark:border-cyan-900 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-5 dark:border-slate-800">
+              <div>
+                <h3 id="my-quiz-solvers-title" className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-white"><Users className="h-5 w-5 text-cyan-500" />{isAr ? 'من حلّوا الاختبار' : 'Quiz solvers'}</h3>
+                <p className="mt-1 max-w-xs truncate text-xs font-bold text-slate-500 dark:text-slate-400">{attemptsQuiz.title}</p>
+              </div>
+              <button type="button" onClick={() => setAttemptsQuiz(null)} className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={isAr ? 'إغلاق' : 'Close'}><X className="h-5 w-5" /></button>
+            </div>
+            <div className="max-h-[65vh] overflow-y-auto p-5">
+              {attemptsLoading ? (
+                <p className="py-10 text-center text-sm font-bold text-slate-500">{isAr ? 'جاري تحميل النتائج...' : 'Loading results...'}</p>
+              ) : attempts.length === 0 ? (
+                <p className="py-10 text-center text-sm font-bold text-slate-500">{isAr ? 'لم يحل أحد هذا الاختبار بعد.' : 'No completed attempts yet.'}</p>
+              ) : (
+                <div className="space-y-2">
+                  {attempts.map((attempt, index) => (
+                    <div key={attempt.id || `${attempt.takerId || 'solver'}-${index}`} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black text-slate-900 dark:text-white">{attempt.takerName || (isAr ? 'طالب' : 'Student')}</p>
+                        <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p>
+                      </div>
+                      <span className="shrink-0 rounded-xl bg-cyan-100 px-2.5 py-1 text-xs font-black text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-200">{attempt.score} / {attempt.totalQuestions}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
