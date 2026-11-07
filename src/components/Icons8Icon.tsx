@@ -55,7 +55,7 @@ export function Icons8Icon({ name, size = 24, className = '', alt = '', ...props
   return (
     <img
       {...props}
-      src={`https://img.icons8.com/?id=${iconId}&format=png&size=${size}`}
+      src={`${import.meta.env.BASE_URL}icons8/${iconId}.png`}
       width={size}
       height={size}
       alt={alt}
