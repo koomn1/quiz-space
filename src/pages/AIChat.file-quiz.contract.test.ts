@@ -23,4 +23,17 @@ describe('Cosmo file quiz flow contract', () => {
     expect(source).toContain('اختبرني|اختبار|كويز|امتحان|create|make|generate|quiz|test');
     expect(source).toContain('export function parseQuizRequest');
   });
+
+  it('routes authenticated attached files through chunked generation for complete source coverage', () => {
+    expect(source).toContain("attachmentForGeneration.kind === 'file' && userId && !userId.startsWith('user-guest')");
+    expect(source).toContain('extractionMode: \'generate\'');
+    expect(source).toContain('requestedQuestionCount: pendingQuiz.amount');
+    expect(source).not.toContain("attachmentForGeneration.data.length > 5_000_000");
+  });
+
+  it('uses Arabic internal instructions while explicitly keeping generated quiz content in the source language', () => {
+    expect(source).toContain('اكتب العنوان والوصف والأسئلة والخيارات والإجابات والشروح باللغة الغالبة في الملف نفسه');
+    expect(source).toContain('[COSMO_OUTPUT_LANGUAGE: en]');
+    expect(source).toContain('سبب صحة الإجابة');
+  });
 });

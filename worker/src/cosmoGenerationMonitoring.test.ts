@@ -78,4 +78,17 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain('body.options.length > 20');
     expect(workerSource).toContain('body.correctAnswer.length > 2_000');
   });
+
+  it('explains answers in the language of the question instead of forcing Arabic', () => {
+    expect(workerSource).toContain('const languageSample = [body.questionText, ...body.options, body.correctAnswer].join');
+    expect(workerSource).toContain('Write the explanation in English.');
+    expect(workerSource).toContain('اكتب الشرح بلغة السؤال والخيارات');
+    expect(workerSource).toContain('موضع الخطأ في أقرب مشتت');
+  });
+
+  it('honors explicit source-language selection when Arabic prompt instructions are present', () => {
+    expect(workerSource).toContain('topic.match(/\\[COSMO_OUTPUT_LANGUAGE:\\s*(ar|en)\\]/i)');
+    expect(workerSource).toContain("explicitLanguage === 'en'");
+    expect(workerSource).toContain("explicitLanguage === 'ar'");
+  });
 });

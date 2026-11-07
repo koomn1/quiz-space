@@ -15,7 +15,7 @@ import { fetchWithAuth } from '../lib/authFetch';
 import { useQuizGenerator } from '../hooks/useQuizGenerator';
 import { askAI, askAIStream, getRememberedExtractionJobId, clearRememberedExtractionJobId, type AiChatAttachment } from '../services/aiWorkerClient';
 import DrivePicker from '../components/DrivePicker';
-import ExtractionStageTimeline from '../components/ExtractionStageTimeline';
+import ExtractionTerminalLog from '../components/ExtractionTerminalLog';
 import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
 import QuestionMedia from '../components/QuestionMedia';
 import OverlayPortal from '../components/OverlayPortal';
@@ -2364,10 +2364,14 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                   />
                 </div>
                 {isProcessingOcr && ocrProgress && (
-                  <ExtractionStageTimeline
+                  <ExtractionTerminalLog
                     currentStage={ocrProgress.stage}
                     language={isAr ? 'ar' : 'en'}
                     mode={extractionMode}
+                    message={ocrProgress.message}
+                    current={ocrProgress.current}
+                    total={ocrProgress.total}
+                    percentage={ocrProgress.percentage}
                   />
                 )}
                 <div className="text-[10px] font-mono tracking-widest text-slate-400 dark:text-slate-500 uppercase">
@@ -3109,10 +3113,14 @@ A computer is a digital electronic machine...
                 )}
                 {ocrProgress && (
                   <>
-                    <ExtractionStageTimeline
+                    <ExtractionTerminalLog
                       currentStage={ocrProgress.stage}
                       language={isAr ? 'ar' : 'en'}
                       mode={extractionMode}
+                      message={ocrProgress.message}
+                      current={ocrProgress.current}
+                      total={ocrProgress.total}
+                      percentage={ocrProgress.percentage}
                     />
                     {postExtractionSolvePending && ocrProgress.stage === 'solving' && (
                       <div className="rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2 text-right text-[11px] font-extrabold text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/20 dark:text-violet-300" dir="rtl">

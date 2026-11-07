@@ -25,11 +25,13 @@ export function formatExtractionEta(createdAt: string, processedChunks: number, 
   return `الوقت المتبقي التقريبي: نحو ${Math.ceil(remainingSeconds / 60)} دقيقة.`;
 }
 
-// Zero is the UI sentinel for automatic count; the Worker still needs a
-// positive safety amount while allowing the model to choose the useful count.
-export function normalizeGenerationQuestionCount(totalQuestions: number): number {
+// Zero is the UI sentinel for automatic count. Derive a working target from
+// source size instead of silently forcing every automatic quiz to 40 items.
+export function normalizeGenerationQuestionCount(totalQuestions: number, sourceLength = 0): number {
   const requested = Number(totalQuestions);
-  return Number.isInteger(requested) && requested > 0 ? Math.min(requested, 500) : 40;
+  if (Number.isInteger(requested) && requested > 0) return Math.min(requested, 500);
+  const estimatedFromSource = Math.ceil(Math.max(0, Number(sourceLength) || 0) / 400);
+  return Math.min(500, Math.max(10, estimatedFromSource));
 }
 
 async function generateQuestionBatches(options: {
@@ -113,9 +115,10 @@ export function useQuizGenerator() {
       } = params;
 
       const automaticCount = totalQuestions <= 0 && type !== 'file_direct';
+      const sourceLength = type === 'pasted_text' ? (text || '').length : type === 'topic' ? (topic || '').length : 0;
       const generationQuestionCount = type === 'file_direct'
         ? totalQuestions
-        : normalizeGenerationQuestionCount(totalQuestions);
+        : normalizeGenerationQuestionCount(totalQuestions, sourceLength);
 
       setProgress({
         current: 0,
