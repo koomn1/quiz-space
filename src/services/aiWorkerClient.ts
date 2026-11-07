@@ -259,7 +259,20 @@ export interface EssayGradeResult {
 }
 
 export async function gradeEssayWithAI(question: string, modelAnswer: string, studentAnswer: string): Promise<EssayGradeResult> {
-  return workerRequest<EssayGradeResult>('/api/ai/grade-essay', { question, modelAnswer, studentAnswer }, 15_000);
+  const retryDelays = [1_000, 2_500];
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retryDelays.length; attempt += 1) {
+    try {
+      return await workerRequest<EssayGradeResult>('/api/ai/grade-essay', { question, modelAnswer, studentAnswer }, 35_000);
+    } catch (error) {
+      lastError = error;
+      const status = Number((error as { status?: number } | null)?.status || 0);
+      const retryable = status === 0 || [408, 429, 502, 503, 504].includes(status);
+      if (!retryable || attempt === retryDelays.length) throw error;
+      await new Promise<void>(resolve => globalThis.setTimeout(resolve, retryDelays[attempt]));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('Essay grading could not be completed.');
 }
 
 export async function explainWithAI(

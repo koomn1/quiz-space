@@ -23,6 +23,7 @@ import { handleExtractionRoutes } from './extractionRoutes';
 import { finishTask, retryDelaySeconds } from './taskLedger';
 import { extractAttachmentText, formatSourceForModel } from './attachmentPipeline';
 import { generateWithProviderChain, INCEPTION_MODEL, XKIRO_VISION_MODEL } from './providerChain';
+import { buildEssayGradingPrompt } from './essayGrading';
 export type { Env, ExtractionQueueMessage, WorkerExecutionContext } from './platform';
 
 type Provider = 'inception';
@@ -424,8 +425,8 @@ async function extractPowerPointText(data: Uint8Array): Promise<string> {
 }
 
 async function gradeEssayWithFallback(env: Env, question: string, modelAnswer: string, studentAnswer: string): Promise<any> {
-  const prompt = `قيّم إجابة الطالب بسرعة وبصرامة من ناحية صحة المعنى فقط. لا تكافئ الإجابة الفارغة أو التي تناقض النموذج. اعتبرها صحيحة فقط إذا تضمنت الفكرة الأساسية للنموذج بوضوح، وإلا فهي خاطئة. أعد JSON فقط بهذا الشكل: {"correct":true,"confidence":0.0,"reason":"سبب قصير"}. السؤال: ${question.slice(0, 5000)}\nالإجابة النموذجية: ${modelAnswer.slice(0, 4000)}\nإجابة الطالب: ${studentAnswer.slice(0, 4000)}`;
-  const result = extractJson(await callAiWithFallback(env, [{ role: 'user', content: prompt }], AI_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 10_000 })) as any;
+  const prompt = buildEssayGradingPrompt(question, modelAnswer, studentAnswer);
+  const result = extractJson(await callAiWithFallback(env, [{ role: 'user', content: prompt }], AI_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 25_000 })) as any;
   return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '', provider: 'inception' };
 }
 
@@ -774,7 +775,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
       if (typeof body.question !== 'string' || body.question.length < 1 || body.question.length > 8_000 || typeof body.modelAnswer !== 'string' || body.modelAnswer.length > 5_000 || typeof body.studentAnswer !== 'string' || body.studentAnswer.length > 8_000) {
         return json({ error: 'Invalid essay grading request' }, 400, headers);
       }
-      if (!body.studentAnswer.trim() || !body.modelAnswer.trim()) return json({ correct: false, confidence: 1, reason: 'Missing answer content', provider: 'deterministic' }, 200, headers);
+      if (!body.studentAnswer.trim()) return json({ correct: false, confidence: 1, reason: 'Empty student answer', provider: 'deterministic' }, 200, headers);
       const result = await gradeEssayWithFallback(env, body.question, body.modelAnswer, body.studentAnswer);
       return json(result, 200, headers);
     }

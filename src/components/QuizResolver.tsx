@@ -19,6 +19,7 @@ import confetti from 'canvas-confetti';
 import { playNotificationSound } from '../lib/sound';
 import QuizDetailedReport from './QuizDetailedReport';
 import QuizCountdownTimer from './QuizCountdownTimer';
+import EssayGradingStatus from './EssayGradingStatus';
 import { playChimeSound } from '../lib/chime';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
 import { getInstitutionExportBrandForQuiz } from '../lib/institutions';
@@ -131,6 +132,7 @@ export default function QuizResolver({
   const [essayAssessed, setEssayAssessed] = React.useState<boolean | null>(null);
   const [essayAssessments, setEssayAssessments] = React.useState<Record<number, boolean>>({});
   const [essayGrading, setEssayGrading] = React.useState<Record<number, boolean>>({});
+  const [essayGradingErrors, setEssayGradingErrors] = React.useState<Record<number, string>>({});
   const [score, setScore] = React.useState(0);
   const [isQuizCompleted, setIsQuizCompleted] = React.useState(false);
   const [hasShaken, setHasShaken] = React.useState(false);
@@ -233,12 +235,21 @@ export default function QuizResolver({
       }
       return;
     }
+    setEssayGradingErrors(prev => ({ ...prev, [questionIndex]: '' }));
+    setEssayAssessments(prev => {
+      const next = { ...prev };
+      delete next[questionIndex];
+      return next;
+    });
+    setEssayAssessed(null);
     setEssayGrading(prev => ({ ...prev, [questionIndex]: true }));
+    let gradingSucceeded = false;
     try {
       const result = await gradeEssayWithAI(question.text, question.correctAnswer || '', answer);
       const correct = result.correct === true;
       setEssayAssessments(prev => ({ ...prev, [questionIndex]: correct }));
       setEssayAssessed(correct);
+      gradingSucceeded = true;
       if (correct) {
         setScore(prev => prev + 1);
         confetti({ particleCount: 60, spread: 50 });
@@ -246,11 +257,16 @@ export default function QuizResolver({
       }
     } catch (error) {
       console.error('Essay grading failed:', error);
-      setEssayAssessments(prev => ({ ...prev, [questionIndex]: false }));
-      setEssayAssessed(false);
+      const status = Number((error as { status?: number } | null)?.status || 0);
+      const message = status === 401
+        ? (isAr ? 'يلزم تسجيل الدخول لتصحيح الإجابة المقالية بالذكاء الاصطناعي.' : 'Sign in to grade this essay with AI.')
+        : status === 429
+          ? (isAr ? 'خدمة التصحيح الآلي غير متاحة مؤقتًا. لم تُحتسب إجابتك خطأ.' : 'Automatic grading is temporarily unavailable. Your answer was not marked wrong.')
+          : (isAr ? 'تعذر إكمال التصحيح الآلي. لم تُحتسب إجابتك خطأ.' : 'Automatic grading could not finish. Your answer was not marked wrong.');
+      setEssayGradingErrors(prev => ({ ...prev, [questionIndex]: message }));
     } finally {
       setEssayGrading(prev => ({ ...prev, [questionIndex]: false }));
-      if (quiz && questionIndex + 1 === quiz.questions.length) {
+      if (gradingSucceeded && quiz && questionIndex + 1 === quiz.questions.length) {
         setIsQuizCompleted(true);
       }
     }
@@ -1586,7 +1602,7 @@ export default function QuizResolver({
                       {quiz?.essayGradingMode === 'ai' ? (
                         <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-150 dark:border-emerald-900 space-y-1.5">
                           <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded">الجواب النموذجي المرصود بالذكاء الاصطناعي:</span>
-                          <p className="text-xs text-slate-800 dark:text-slate-205 whitespace-pre-wrap leading-relaxed font-semibold">{currentQuestion.correctAnswer || 'لم يتم تحديد إجابة تفصيلية.'}</p>
+                          <p className="text-xs text-slate-800 dark:text-slate-205 whitespace-pre-wrap leading-relaxed font-semibold">{currentQuestion.correctAnswer || 'لم يرفق منشئ الاختبار إجابة نموذجية؛ سيقيّم كوزمو إجابتك اعتمادًا على نص السؤال.'}</p>
                         </div>
                       ) : (
                         <div className="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 space-y-1.5">
@@ -1603,19 +1619,12 @@ export default function QuizResolver({
                     </div>
 
                     {quiz?.essayGradingMode === 'ai' && (
-                      essayGrading[currentIdx] ? (
-                        <div className="p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-dashed border-primary/20 text-center text-xs font-bold text-primary animate-pulse">جارٍ تصحيح الإجابة المقالية بالذكاء الاصطناعي...</div>
-                      ) : essayAssessed === null ? (
-                        <div className="p-4 rounded-2xl bg-primary/5 dark:bg-primary/10 border border-dashed border-primary/20 text-center text-xs font-bold text-primary animate-pulse">جاري التحقق من صحة الإجابة تلقائياً...</div>
-                      ) : (
-                        <div className="p-3.5 rounded-xl border border-dotted border-slate-300/60 text-center text-xs font-semibold bg-slate-50 dark:bg-slate-900/40">
-                          {essayAssessed ? (
-                            <span className="text-emerald-600 dark:text-emerald-400">🎉 رائع! قمت باحتساب الإجابة صحيحة (+1 نقطة في محصلتك).</span>
-                          ) : (
-                            <span className="text-slate-500 dark:text-slate-400">تم رصد السؤال كإجابة تحتاج لمزيد من المراجعة والتحصيل الفردي.</span>
-                          )}
-                        </div>
-                      )
+                      <EssayGradingStatus
+                        isArabic={isAr}
+                        isLoading={essayGrading[currentIdx]}
+                        isAssessed={essayAssessed}
+                        error={essayGradingErrors[currentIdx]}
+                      />
                     )}
                   </div>
                 )}
