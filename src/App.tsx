@@ -49,6 +49,7 @@ import { AdminPaymentNotificationToast } from './components/AdminPaymentNotifica
 import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import AppRoutes from './app/AppRoutes';
 import AppShell from './app/AppShell';
+import SEO from './components/SEO';
 
 function normalizeUserPhoto(value: unknown): string | null {
   const raw = String(value || '').trim();
@@ -796,6 +797,7 @@ export default function App() {
   return (
         <>
           <ToastHost />
+          <SEO activeTab={activeTab} lang={lang} />
           {splashActive ? (
         <SplashScreen
           lang={lang}

@@ -1,7 +1,7 @@
 {
-  "name": "Quiz Space | كويز سبيس",
+  "name": "Quiz Space | منصة الاختبارات الذكية",
   "short_name": "Quiz Space",
-  "description": "منصة Quiz Space للتعلم وصناعة الاختبارات والمراجعة الذكية.",
+  "description": "منصة Quiz Space لإنشاء الاختبارات من النصوص والملفات، التعلم التفاعلي، ومتابعة التقدم.",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./#/dashboard/landing",
