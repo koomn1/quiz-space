@@ -336,8 +336,17 @@ jobs:
       - name: Build Unsigned iOS Archive
         run: |
           set -euo pipefail
+          if [ -f ios/App/App.xcworkspace/contents.xcworkspacedata ]; then
+            project_flag=(-workspace ios/App/App.xcworkspace)
+          elif [ -f ios/App/App.xcodeproj/project.pbxproj ]; then
+            project_flag=(-project ios/App/App.xcodeproj)
+          else
+            echo "Capacitor iOS project was not generated" >&2
+            find ios -maxdepth 3 -print >&2 || true
+            exit 1
+          fi
           xcodebuild \
-            -workspace ios/App/App.xcworkspace \
+            "${project_flag[@]}" \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
