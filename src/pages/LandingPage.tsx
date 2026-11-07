@@ -6,6 +6,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { Quiz } from '../types';
+import { InteractiveQuizCard } from '../components/InteractiveQuizCard';
 import {
   Sparkles,
   Search,
@@ -458,144 +459,24 @@ export default function LandingPage({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            {filteredQuizzes.map((quiz) => {
-              const questionsCount = quiz.questions?.length || 10;
-              const isOwner = currentUserId && quiz.creatorId === currentUserId;
-              const plays = quiz.totalPlays || 0;
-              const rating = quiz.avgRating ? quiz.avgRating.toFixed(1) : '5.0';
-              const estMinutes = Math.max(3, Math.round(questionsCount * 0.7));
-
-              return (
-                <div
-                  key={quiz.id}
-                  className="group relative flex flex-col justify-between p-5 rounded-3xl bg-white/[0.6] dark:bg-slate-900/40 hover:bg-white/[0.9] dark:hover:bg-slate-900/70 border border-slate-200/80 dark:border-white/10 hover:border-sky-500/40 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 text-right backdrop-blur-md"
-                >
-                  <div>
-                    {/* Top Status Strip: Solvers count, Questions count & Owner Actions */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      {/* Solvers & Questions Pills */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* Solvers Counter — Clearly highlighting who solved it! */}
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black border border-emerald-500/20">
-                          <Users className="w-3 h-3" />
-                          <span>
-                            {plays > 0
-                              ? (isAr ? `${plays.toLocaleString()} حلاً` : `${plays} solved`)
-                              : (isAr ? 'جديد ⚡' : 'New ⚡')}
-                          </span>
-                        </span>
-
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
-                          <span>{questionsCount} {isAr ? 'سؤالاً' : 'Q’s'}</span>
-                        </span>
-
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
-                          <Star className="w-2.5 h-2.5 fill-current" />
-                          <span>{rating}</span>
-                        </span>
-                      </div>
-
-                      {/* Action Menu (Share, Edit, Delete) */}
-                      <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                        {isOwner && onEditQuiz && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEditQuiz(quiz);
-                            }}
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                            title={isAr ? 'تعديل الاختبار' : 'Edit Quiz'}
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        {(isOwner || isAdmin) && onDeleteQuiz && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setQuizToDelete(quiz.id);
-                            }}
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
-                            title={isAr ? 'حذف الاختبار' : 'Delete Quiz'}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onShareQuiz(quiz.id, quiz.title, quiz.description);
-                          }}
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                          title={isAr ? 'مشاركة الاختبار' : 'Share Quiz'}
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Quiz Title */}
-                    <h3
-                      onClick={() => onStartQuiz(quiz.id)}
-                      className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors cursor-pointer"
-                    >
-                      {quiz.title}
-                    </h3>
-
-                    {/* Quiz Description */}
-                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium">
-                      {quiz.description || (isAr ? 'اختبار تفاعلي شيق لقياس مستواك المعرفي.' : 'Interactive comprehension quiz.')}
-                    </p>
-
-                    {/* Duration badge */}
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-3">
-                      <Clock className="w-3 h-3 text-sky-400" />
-                      <span>{isAr ? `الزمن المقدر: ~${estMinutes} دقائق` : `Est. time: ~${estMinutes} mins`}</span>
-                    </div>
-                  </div>
-
-                  {/* Card Bottom: Creator Identity & Prominent Start Button */}
-                  <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-3">
-                    {/* Creator Identity with Verified Look */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (quiz.creatorId && onViewProfile) {
-                          onViewProfile(quiz.creatorId);
-                        }
-                      }}
-                      className="flex items-center gap-2 group/creator text-right max-w-[150px] truncate cursor-pointer"
-                    >
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs">
-                        {quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q'}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 group-hover/creator:text-sky-400 truncate leading-none">
-                          {quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
-                        </p>
-                        <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
-                          {isAr ? 'صانع الاختبار' : 'Quiz Creator'}
-                        </p>
-                      </div>
-                    </button>
-
-                    {/* Prominent Start Button */}
-                    <button
-                      type="button"
-                      onClick={() => onStartQuiz(quiz.id)}
-                      className="min-h-[38px] px-4 rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs flex items-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer shadow-md shadow-sky-500/20"
-                    >
-                      <Play className="w-3 h-3 fill-current" />
-                      <span>{isAr ? 'ابدأ الحل' : 'Start'}</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 [perspective:1400px]">
+            {filteredQuizzes.map((quiz, idx) => (
+              <InteractiveQuizCard
+                key={quiz.id}
+                quiz={quiz}
+                idx={idx}
+                isAr={isAr}
+                currentUserEmail={currentUserEmail}
+                currentUserId={currentUserId}
+                isAdmin={isAdmin}
+                onStartQuiz={onStartQuiz}
+                onShareQuiz={onShareQuiz}
+                onEditQuiz={onEditQuiz}
+                onViewProfile={onViewProfile}
+                onDeleteClick={onDeleteQuiz ? (id) => setQuizToDelete(id) : undefined}
+                view="grid"
+              />
+            ))}
           </div>
         )}
       </section>
