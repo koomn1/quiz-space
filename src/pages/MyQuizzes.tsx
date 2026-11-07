@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Quiz } from '../types';
-import { translations } from '../lib/i18n';
-import { BookOpen, RefreshCw } from 'lucide-react';
-import { InteractiveQuizCard } from '../components/InteractiveQuizCard';
+import { BookOpen, Clock, Edit3, Play, RefreshCw, Share2, Star, Trash2, Users } from 'lucide-react';
 import { EssayReviewModal } from '../components/EssayReviewModal';
 import { getPendingEssayReviews } from '../lib/db';
 
@@ -25,17 +23,14 @@ export function MyQuizzes({
   quizzes,
   userId,
   lang,
-  isAdmin = false,
   onStartQuiz,
   onEditQuiz,
   onDeleteQuiz,
   onShareQuiz,
-  fetchQuizzesList,
-  userEmail
+  fetchQuizzesList
 }: MyQuizzesProps) {
   const isAr = lang === 'ar';
   const myQuizzes = quizzes.filter(q => q.creatorId === userId);
-  const t = translations[lang];
   const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [essayModalOpen, setEssayModalOpen] = useState(false);
@@ -142,29 +137,82 @@ export function MyQuizzes({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 [perspective:1400px]">
-          
-            {myQuizzes.map((quiz, idx) => (
-              <div key={quiz.id} className="my-quiz-card-wrapper">
-                <InteractiveQuizCard
-                  quiz={quiz}
-                  idx={idx}
-                  isAr={isAr}
-                  t={t}
-                  currentUserEmail={userEmail}
-                  currentUserId={userId}
-                  isAdmin={isAdmin}
-                  onStartQuiz={onStartQuiz}
-                  onShareQuiz={onShareQuiz}
-                  onEditQuiz={onEditQuiz}
-                  onDeleteClick={(id) => {
-                    setQuizToDelete(id);
-                  }}
-                  view="grid"
-                />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {myQuizzes.map((quiz) => {
+            const questionsCount = quiz.questions?.length || 10;
+            const plays = quiz.totalPlays || 0;
+            const rating = quiz.avgRating ? quiz.avgRating.toFixed(1) : '5.0';
+            const estMinutes = Math.max(3, Math.round(questionsCount * 0.7));
+
+            return (
+              <div
+                key={quiz.id}
+                className="my-quiz-card-wrapper group relative flex flex-col justify-between p-5 rounded-3xl bg-white/[0.6] dark:bg-slate-900/40 hover:bg-white/[0.9] dark:hover:bg-slate-900/70 border border-slate-200/80 dark:border-white/10 hover:border-sky-500/40 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 text-right backdrop-blur-md"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black border border-emerald-500/20">
+                        <Users className="w-3 h-3" />
+                        <span>{plays > 0 ? (isAr ? `${plays.toLocaleString()} حلاً` : `${plays} solved`) : (isAr ? 'جديد ⚡' : 'New ⚡')}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+                        <span>{questionsCount} {isAr ? 'سؤالاً' : 'Q’s'}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                        <Star className="w-2.5 h-2.5 fill-current" />
+                        <span>{rating}</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                      <button type="button" onClick={() => onEditQuiz(quiz)} className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" title={isAr ? 'تعديل الاختبار' : 'Edit Quiz'}>
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button type="button" onClick={() => setQuizToDelete(quiz.id)} className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer" title={isAr ? 'حذف الاختبار' : 'Delete Quiz'}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button type="button" onClick={() => onShareQuiz(quiz.id, quiz.title, quiz.description)} className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" title={isAr ? 'مشاركة الاختبار' : 'Share Quiz'}>
+                        <Share2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 onClick={() => onStartQuiz(quiz.id)} className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors cursor-pointer">
+                    {quiz.title}
+                  </h3>
+                  <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium">
+                    {quiz.description || (isAr ? 'اختبار تفاعلي شيق لقياس مستواك المعرفي.' : 'Interactive comprehension quiz.')}
+                  </p>
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-3">
+                    <Clock className="w-3 h-3 text-sky-400" />
+                    <span>{isAr ? `الزمن المقدر: ~${estMinutes} دقائق` : `Est. time: ~${estMinutes} mins`}</span>
+                  </div>
+                </div>
+
+                <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-right max-w-[150px] truncate">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs">
+                      {quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate leading-none">
+                        {quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
+                      </p>
+                      <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
+                        {isAr ? 'صانع الاختبار' : 'Quiz Creator'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button type="button" onClick={() => onStartQuiz(quiz.id)} className="min-h-[38px] px-4 rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black text-xs flex items-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer shadow-md shadow-sky-500/20">
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>{isAr ? 'ابدأ الحل' : 'Start'}</span>
+                  </button>
+                </div>
               </div>
-            ))}
-          
+            );
+          })}
         </div>
       )}
 
