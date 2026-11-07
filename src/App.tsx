@@ -165,6 +165,9 @@ export default function App() {
     if (pathParts[0] === 'profile' && pathParts[1]) {
       return 'profile';
     }
+    if (pathParts[0] === 'legal' && pathParts[1]) {
+      return `legal-${pathParts[1]}`;
+    }
     if (pathParts[0] === 'quiz' || pathParts[0] === 'dashboard') {
       return 'landing';
     }
@@ -186,6 +189,9 @@ export default function App() {
       }
       if (parts[0] === 'profile' && parts[1]) {
         return 'profile';
+      }
+      if (parts[0] === 'legal' && parts[1]) {
+        return `legal-${parts[1]}`;
       }
       if (parts[0] === 'join' && parts[1]) {
         return 'classrooms';
@@ -601,7 +607,8 @@ export default function App() {
     // Strict Guest Auth Guard: Guests can ONLY view landing, explore, or support. Any other direct link or tab forces AuthModal.
     const isGuest = (!userId || userId.startsWith('user-guest') || userId === '') && !authContext.isAuthenticated;
     const allowedGuestTabs = ['landing', 'explore', 'support'];
-    if (!bypassAuth && isGuest && !allowedGuestTabs.includes(tab)) {
+    const isLegalTab = tab.startsWith('legal-');
+    if (!bypassAuth && isGuest && !allowedGuestTabs.includes(tab) && !isLegalTab) {
       setLoginRedirectTab('landing');
       setAuthModalMode('login');
       setIsAuthModalOpen(true);

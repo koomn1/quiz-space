@@ -216,6 +216,14 @@ export default function AppShell(props: AppShellProps) {
               surface stays edge-to-edge under the fixed header */}
           <footer className={`theme-surface w-full border-t py-6 text-center text-xs theme-muted font-medium print:hidden transition-colors ${isCosmoTab ? 'hidden' : ''}`}>
             <p>{lang === 'ar' ? 'جميع الحقوق محفوظة لموقع Quiz Space © 2026 - بواسطة يوسف بدوي' : 'All rights reserved © 2026 Quiz Space - Built by Youssef Badawy'}</p>
+            <nav className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4" aria-label={lang === 'ar' ? 'روابط قانونية' : 'Legal links'}>
+              <a href="#/legal/terms" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'الشروط' : 'Terms'}</a>
+              <a href="#/legal/privacy" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'الخصوصية' : 'Privacy'}</a>
+              <a href="#/legal/cookies" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'ملفات الارتباط' : 'Cookies'}</a>
+              <a href="#/legal/acceptable-use" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'الاستخدام المقبول' : 'Acceptable use'}</a>
+              <a href="#/legal/contact" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'التواصل' : 'Contact'}</a>
+              <a href="https://jo-badawy.lovable.app/" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'البورتفوليو' : 'Portfolio'}</a>
+            </nav>
           </footer>
         </div>
       </div>

@@ -52,6 +52,7 @@ const LazyQuizCreator = lazyWithRetry(() => import('../pages/QuizCreator'), 'qui
 const LazyLandingPage = lazyWithRetry(() => import('../pages/LandingPage'), 'landing');
 const LazyGuestLandingPage = lazyWithRetry(() => import('../pages/GuestLandingPage'), 'guest-landing');
 const LazyNotFound = lazyWithRetry(() => import('../pages/NotFound'), 'not-found');
+const LazyLegalPage = lazyWithRetry(() => import('../pages/LegalPage'), 'legal-page');
 const LazyQuizResolver = lazyWithRetry(() => import('../components/QuizResolver'), 'quiz-resolver');
 const LazyNotificationCenter = lazyWithRetry(() => import('../components/NotificationCenter'), 'notifications');
 const LazyAdminGuard = lazyWithRetry(() => import('../components/AdminGuard'), 'admin-guard');
@@ -165,6 +166,12 @@ export default function AppRoutes(props: AppRoutesProps) {
                 <React.Suspense fallback={<PageSkeleton lang={lang} />}>
               {activeTab === 'not-found' && (
                 <LazyNotFound lang={lang} onGoHome={() => handleSetTab('landing')} />
+              )}
+              {activeTab.startsWith('legal-') && (
+                <LazyLegalPage
+                  page={activeTab.replace(/^legal-/, '') as 'terms' | 'privacy' | 'cookies' | 'acceptable-use' | 'contact' | 'portfolio'}
+                  lang={lang}
+                />
               )}
               {motivationTabs.includes(activeTab) && (isGuestMotivationRoute ? (
                 <section className="mx-auto flex min-h-[54vh] max-w-xl flex-col items-center justify-center px-6 text-center" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
