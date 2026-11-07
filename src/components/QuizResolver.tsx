@@ -188,6 +188,36 @@ export default function QuizResolver({
   const [aiFlashcardLoading, setAiFlashcardLoading] = React.useState<Record<string, boolean>>({});
   const [isQuestionsOverviewOpen, setIsQuestionsOverviewOpen] = React.useState(false);
 
+  // Keep the overview sheet centered while allowing only the sheet itself to scroll.
+  // Without locking the document, mobile browsers scroll the quiz page behind it
+  // when the question-list button is pressed, making the centered sheet appear to jump.
+  React.useEffect(() => {
+    if (!isQuestionsOverviewOpen) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyOverscrollBehavior = document.body.style.overscrollBehavior;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousHtmlOverscrollBehavior = document.documentElement.style.overscrollBehavior;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.overscrollBehavior = 'none';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsQuestionsOverviewOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.overscrollBehavior = previousBodyOverscrollBehavior;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.documentElement.style.overscrollBehavior = previousHtmlOverscrollBehavior;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isQuestionsOverviewOpen]);
+
   const handleFetchAiFlashcardExplanation = async (qId: string, q: Question) => {
     if (!hasCosmoAccess) {
       setAiFlashcardExplanations(prev => ({
@@ -2395,15 +2425,15 @@ export default function QuizResolver({
       {/* Questions Overview Modal / Sheet */}
       {isQuestionsOverviewOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-50 flex min-h-[100dvh] items-center justify-center overflow-hidden overscroll-contain bg-slate-950/60 p-4 backdrop-blur-sm animate-fade-in"
           onClick={() => setIsQuestionsOverviewOpen(false)}
         >
           <div
-            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4"
+            className="flex max-h-[calc(100dvh-2rem)] min-h-0 w-full max-w-md flex-col overflow-y-auto overscroll-contain rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:p-6"
             onClick={(e) => e.stopPropagation()}
             dir={isAr ? 'rtl' : 'ltr'}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="mb-4 flex shrink-0 items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <LayoutGrid className="w-5 h-5 text-primary" />
                 <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100">
@@ -2420,7 +2450,7 @@ export default function QuizResolver({
             </div>
 
             {/* Questions Grid */}
-            <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 max-h-64 overflow-y-auto p-1">
+            <div className="grid shrink-0 grid-cols-5 gap-2 overflow-y-auto p-1 sm:grid-cols-6 sm:max-h-64">
               {quiz.questions.map((_, i) => {
                 const isAnswered = i in userAnswers || (essayAnswers[i] && essayAnswers[i].trim().length > 0);
                 const isCurrent = i === currentIdx;
@@ -2464,7 +2494,7 @@ export default function QuizResolver({
             </div>
 
             {/* Legend & Summary */}
-            <div className="flex items-center justify-around pt-3 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800">
+            <div className="mt-4 flex shrink-0 items-center justify-around border-t border-slate-100 pt-3 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-primary" />
                 <span>{isAr ? 'السؤال الحالي' : 'Current'}</span>
