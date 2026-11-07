@@ -20,7 +20,7 @@ const BACKGROUNDS: BackgroundItem[] = [
     category: 'waves',
     descriptionEn: 'Flowing neon purple wave mesh with glowing particles and smooth depth.',
     descriptionAr: 'شبكة أمواج نيون بنفسجية متدفقة مع جزيئات مضيئة وعمق سلس.',
-    emoji: '🌌',
+    emoji: '',
   },
   {
     id: 'aurora',
@@ -29,7 +29,7 @@ const BACKGROUNDS: BackgroundItem[] = [
     category: 'aurora',
     descriptionEn: 'Animated northern lights with soft colorful ribbons and slow elegant movement.',
     descriptionAr: 'شفق قطبي متحرك بأشرطة ملونة ناعمة وحركة أنيقة هادئة.',
-    emoji: '🟢',
+    emoji: '',
   },
   {
     id: 'neon-orbit',
@@ -38,7 +38,7 @@ const BACKGROUNDS: BackgroundItem[] = [
     category: 'neon',
     descriptionEn: 'Minimal futuristic circles with rotating glowing rings and soft pulsing.',
     descriptionAr: 'حلقات نيون مستقبلية دوارة تمنح شعوراً بالجاذبية والعمق الهادئ.',
-    emoji: '🪐',
+    emoji: '',
   },
   {
     id: 'ocean-flow',
@@ -47,7 +47,7 @@ const BACKGROUNDS: BackgroundItem[] = [
     category: 'waves',
     descriptionEn: 'Modern liquid blue motion with gradient waves and glowing reflections.',
     descriptionAr: 'حركة سائلة زرقاء حديثة للأمواج المتدرجة مع انعكاسات متوهجة.',
-    emoji: '🌊',
+    emoji: '',
   },
   {
     id: 'solar-flare',
@@ -56,7 +56,7 @@ const BACKGROUNDS: BackgroundItem[] = [
     category: 'gradient',
     descriptionEn: 'Orange premium energy ribbons with fire-like gradients and slow-flowing particles.',
     descriptionAr: 'أشرطة طاقة برتقالية فاخرة بتموجات نارية وجزيئات دافئة بطيئة.',
-    emoji: '🔥',
+    emoji: '',
   },
   {
     id: 'galaxy',
@@ -74,7 +74,7 @@ const BACKGROUNDS: BackgroundItem[] = [
     category: 'gradient',
     descriptionEn: 'Dynamic glass refraction and reflections with pastel floating highlights.',
     descriptionAr: 'تأثير زجاجي سائل متطور مستوحى من نظام آبل مع انكسارات الضوء.',
-    emoji: '💎',
+    emoji: '',
   },
   {
     id: 'mesh-gradient',
@@ -83,7 +83,7 @@ const BACKGROUNDS: BackgroundItem[] = [
     category: 'gradient',
     descriptionEn: 'Dynamic premium morphing gradient blobs with ultra-smooth organic transitions.',
     descriptionAr: 'تدرجات لونية هلامية متغيرة ومتحركة بأسلوب فني ذكي وعصري.',
-    emoji: '🎨',
+    emoji: '',
   },
   {
     id: 'abstract-lines',
@@ -92,7 +92,7 @@ const BACKGROUNDS: BackgroundItem[] = [
     category: 'neon',
     descriptionEn: 'Minimalist curved neon paths undulating gracefully in 3D dark space.',
     descriptionAr: 'مسارات نيون منحنية بلمسة تجريدية راقية تتحرك بأناقة في الفراغ.',
-    emoji: '〽️',
+    emoji: '〽',
   },
   {
     id: 'particles',
@@ -101,7 +101,7 @@ const BACKGROUNDS: BackgroundItem[] = [
     category: 'particles',
     descriptionEn: 'Interactive particle network connecting nodes dynamically near your cursor.',
     descriptionAr: 'شبكة جسيمات تفاعلية تترابط بخطوط رفيعة وتستجيب لحركة مؤشر الماوس.',
-    emoji: '🕸️',
+    emoji: '',
   }
 ];
 
@@ -183,7 +183,7 @@ export function BackgroundGallery({
   // Filter items
   const filteredBgs = BACKGROUNDS.filter(bg => {
     const matchesCategory = selectedCategory === 'all' || bg.category === selectedCategory;
-    const matchesSearch = 
+    const matchesSearch =
       bg.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
       bg.nameAr.includes(searchQuery);
     return matchesCategory && matchesSearch;
@@ -210,7 +210,7 @@ export function BackgroundGallery({
     setWaveHeight(1.0);
     setTheme('default');
     setBlur(5);
-    
+
     // Immediately apply reset settings to active background
     onSelectBg(currentBg, {
       speed: 1.0,
@@ -235,7 +235,7 @@ export function BackgroundGallery({
 
   return (
     <div className="w-full space-y-8 bg-slate-950/40 p-6 rounded-3xl border border-slate-900 shadow-2xl relative overflow-hidden">
-      
+
       {/* Decorative Blur Header */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-24 bg-primary/10 blur-3xl pointer-events-none rounded-full" />
 
@@ -246,8 +246,8 @@ export function BackgroundGallery({
           <Sparkles className="w-6 h-6 text-violet-400 animate-pulse" />
         </h2>
         <p className="text-xs md:text-sm text-slate-400 max-w-lg mx-auto font-medium">
-          {isAr 
-            ? 'اختر خلفيتك المفضلة وحوّل حسابك الشخصي والمنصة إلى لوحة رقمية تفاعلية مذهلة.' 
+          {isAr
+            ? 'اختر خلفيتك المفضلة وحوّل حسابك الشخصي والمنصة إلى لوحة رقمية تفاعلية مذهلة.'
             : 'Choose your favorite animated background. It will be applied instantly.'}
         </p>
       </div>
@@ -258,7 +258,7 @@ export function BackgroundGallery({
         <div className="flex flex-wrap gap-2 justify-center">
           {categories.map((cat) => (
             <button
-              
+
               onClick={() => setSelectedCategory(cat.id)}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
                 selectedCategory === cat.id
@@ -291,7 +291,7 @@ export function BackgroundGallery({
           const isFav = favorites.includes(bg.id);
           return (
             <div
-              
+
               onClick={() => handleApply(bg.id)}
               className={`group relative h-64 rounded-3xl overflow-hidden border cursor-pointer transition-all duration-300 hover:scale-[1.02] flex flex-col justify-end p-5 ${
                 isActive
@@ -300,9 +300,9 @@ export function BackgroundGallery({
               }`}
             >
               {/* Premium Background Component Live Preview Card */}
-              <PremiumBackground 
-                mode={bg.id} 
-                settings={isActive ? currentSettingsObj : { speed: 0.6, brightness: 90 }} 
+              <PremiumBackground
+                mode={bg.id}
+                settings={isActive ? currentSettingsObj : { speed: 0.6, brightness: 90 }}
                 className="absolute inset-0 z-0 scale-105 group-hover:scale-110 transition-transform duration-700"
               />
 
@@ -314,8 +314,8 @@ export function BackgroundGallery({
                 <button
                   onClick={(e) => toggleFavorite(bg.id, e)}
                   className={`p-2 rounded-full backdrop-blur-md transition-all ${
-                    isFav 
-                      ? 'bg-rose-500/20 text-rose-500 border border-rose-500/40 scale-110' 
+                    isFav
+                      ? 'bg-rose-500/20 text-rose-500 border border-rose-500/40 scale-110'
                       : 'bg-black/40 text-slate-400 hover:text-white border border-white/10'
                   }`}
                 >
@@ -373,7 +373,7 @@ export function BackgroundGallery({
               <Sliders className="w-4 h-4 text-violet-400" />
               {isAr ? 'محرك تخصيص الرسوم المتحركة واللمعان' : 'Animation & Glow Physics Customizer'}
             </h3>
-            <button 
+            <button
               onClick={() => setShowCustomizer(false)}
               className="p-1 rounded-full hover:bg-slate-900 text-slate-500 hover:text-white transition-all"
             >
@@ -382,7 +382,7 @@ export function BackgroundGallery({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
+
             {/* Speed Range Slider */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-bold text-slate-400">
@@ -520,7 +520,7 @@ export function BackgroundGallery({
                   { id: 'neon', label: isAr ? 'نيون مشع' : 'Cyber Neon', colors: ['#ec4899', '#a855f7', '#06b6d4'] }
                 ].map((th) => (
                   <button
-                    
+
                     onClick={() => {
                       setTheme(th.id as any);
                       onSelectBg(currentBg, { ...currentSettingsObj, theme: th.id as any });

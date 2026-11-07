@@ -161,8 +161,8 @@ export function MyQuizzes({
             {isAr ? 'إدارة وتحرير وحذف كافة الاختبارات العلمية التي قمت بتأليفها.' : 'Manage, edit, and inspect all quizzes authored by your account.'}
           </p>
         </div>
-        
-        <button 
+
+        <button
           onClick={fetchQuizzesList}
           className="uipro-btn-tactile flex items-center justify-center gap-2 text-xs text-primary bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-black transition-all cursor-pointer shadow-xs self-end sm:self-auto"
         >
@@ -175,7 +175,7 @@ export function MyQuizzes({
         <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-950/20 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-xs animate-fade-in" dir={isAr ? 'rtl' : 'ltr'}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 text-xl font-bold border border-amber-500/20">
-              ✍️
+
             </div>
             <div>
               <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -196,7 +196,7 @@ export function MyQuizzes({
             onClick={() => setEssayModalOpen(true)}
             className="uipro-btn-tactile inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2.5 text-xs font-black shadow-sm cursor-pointer active:scale-95 transition-all"
           >
-            <span>✍️</span>
+            <span></span>
             <span>{isAr ? 'مراجعة وتصحيح الإجابات الآن' : 'Review & Grade Essays Now'}</span>
           </button>
         </div>
@@ -234,7 +234,7 @@ export function MyQuizzes({
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black border border-emerald-500/20">
                         <Users className="w-3 h-3" />
-                        <span>{plays > 0 ? (isAr ? `${plays.toLocaleString()} حلاً` : `${plays} solved`) : (isAr ? 'جديد ⚡' : 'New ⚡')}</span>
+                        <span>{plays > 0 ? (isAr ? `${plays.toLocaleString()} حلاً` : `${plays} solved`) : (isAr ? 'جديد ' : 'New ')}</span>
                       </span>
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
                         <span>{questionsCount} {isAr ? 'سؤالاً' : 'Q’s'}</span>

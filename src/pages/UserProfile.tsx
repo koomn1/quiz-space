@@ -210,7 +210,7 @@ export default function UserProfile({
     try {
       const [inventory, items] = await Promise.all([getRewardInventory(profileId), getRewardStoreItems()]);
       const ownedIds = new Set((inventory || []).map((row: any) => row.item_id));
-      
+
       // Update owned frames list for the edit modal (only if it's our profile)
       if (isOwnProfile) {
         const frames = uniqueProfileFrames([
@@ -226,9 +226,9 @@ export default function UserProfile({
       // The database is the source of truth. localStorage is only used for the
       // explicit legacy/no-frame state while older profiles migrate to the RPC.
       const selectedId = dbActiveId || (hasExplicitLocalSelection ? localFrameSelection : null);
-      
+
       let selected = (items || []).find((item: any) => item.id === selectedId);
-      
+
       // A blank local selection means the user explicitly chose no frame; do not
       // silently reselect the first owned frame after a page refresh.
       const isExplicitlyNoFrame = hasExplicitLocalSelection && !localFrameSelection && !dbActiveId;
@@ -241,7 +241,7 @@ export default function UserProfile({
       if (selected && !ownedIds.has(selected.id) && !isFreeFrame(selected.id)) {
         selected = null;
       }
-      
+
       if (selected) {
         setActiveFrameClass(selected.css_class || '');
         setActiveFrameUrl(resolveFrameAsset(selected));
@@ -378,10 +378,10 @@ export default function UserProfile({
     try {
       const { data: followersData } = await supabase.from('follows').select('*').eq('following_id', profileId);
       const { data: followingData } = await supabase.from('follows').select('*').eq('follower_id', profileId);
-      
+
       setFollowersCount(followersData?.length || 0);
       setFollowingCount(followingData?.length || 0);
-      
+
       if (currentUserId) {
         setIsFollowing(followersData?.some(f => f.follower_id === currentUserId) || false);
       }
@@ -694,7 +694,7 @@ export default function UserProfile({
     if (editCustomId.trim()) {
       const cleanCustomId = editCustomId.trim().toLowerCase().replace(/^@/, "");
       if (!/^[a-zA-Z0-9_]+$/.test(cleanCustomId)) {
-        showToast('error', 
+        showToast('error',
           isAr
             ? "عذراً، يجب أن يحتوي المعرّف المخصص على أحرف وأرقام إنجليزية وشرطة سفلية (_) فقط."
             : "Custom ID must contain only alphanumeric characters and underscores (_).",
@@ -707,7 +707,7 @@ export default function UserProfile({
         const { data: existingRows } = await supabase.rpc('find_public_profile_by_custom_id', { p_custom_id: cleanCustomId });
         const existingUser = Array.isArray(existingRows) ? existingRows[0] : existingRows;
         if (existingUser && existingUser.uid !== profileId) {
-          showToast('info', 
+          showToast('info',
             isAr
               ? "معرّف الحساب المخصص مأخوذ بالفعل من قِبل مستخدم آخر!"
               : "This Custom ID is already taken by another user!",
@@ -838,7 +838,7 @@ export default function UserProfile({
             } as any)
           : null,
       );
-      showToast('success', 
+      showToast('success',
         badgeSaveFailed
           ? (isAr ? "تم حفظ بيانات ملفك الشخصي، لكن الشارة/لون الاسم لم يُحفظا (شوف الرسالة الحمراء)." : "Profile saved, but the badge/name color failed to save (see the error above).")
           : (isAr
@@ -857,7 +857,7 @@ export default function UserProfile({
         setIsSaving(false);
         return;
       }
-      showToast('error', 
+      showToast('error',
         isAr
           ? `حدث خطأ أثناء حفظ التعديلات: ${errorMessage}`
           : `Error saving profile modifications: ${errorMessage}`,
@@ -870,7 +870,7 @@ export default function UserProfile({
   const handleRedeemPromo = async () => {
     const code = promoCodeInput.trim().toUpperCase();
     if (!code) {
-      showToast('info', 
+      showToast('info',
         isAr
           ? "يرجى كتابة كود الخصم أولاً."
           : "Please enter a promocode first.",
@@ -898,7 +898,7 @@ export default function UserProfile({
               const expDate = new Date(expiryDate);
               const now = new Date();
               if (expDate < now) {
-                showToast('error', 
+                showToast('error',
                   isAr
                     ? "عذراً، كود الخصم هذا منتهي الصلاحية."
                     : "Sorry, this promocode has expired.",
@@ -914,7 +914,7 @@ export default function UserProfile({
               usedCount !== undefined &&
               usedCount >= maxUses
             ) {
-              showToast('error', 
+              showToast('error',
                 isAr
                   ? "عذراً، استنفد هذا الكود الحد الأقصى للاستخدام."
                   : "Sorry, this coupon has reached its maximum uses.",
@@ -929,7 +929,7 @@ export default function UserProfile({
       }
 
       if (!couponValid) {
-        showToast('error', 
+        showToast('error',
           isAr
             ? "عذراً، كود الخصم هذا غير صالح أو انتهت صلاحيته."
             : "Invalid or expired discount code.",
@@ -942,7 +942,7 @@ export default function UserProfile({
       if (discountPercent === 100) {
         const requestId =
           "req-auto-" + Math.random().toString(36).substring(2, 11);
-        
+
         const renewalDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
         let userErr: any = null;
         try {
@@ -993,10 +993,10 @@ export default function UserProfile({
         // entitlement update into a misleading activation error.
         if (!userErr) {
           if (reqErr) console.warn('Premium request audit insert failed after successful coupon redemption:', reqErr);
-          showToast('success', 
+          showToast('success',
             isAr
-              ? `تهانينا! 🎉 تم تطبيق الخصم بنسبة 100% وتفعيل باقة Diamond لحسابك مباشرة دون الحاجة لمراجعة المشرف!`
-              : `Congratulations! 🎉 100% discount applied. Diamond is active directly without admin review!`,
+              ? `تهانينا!  تم تطبيق الخصم بنسبة 100% وتفعيل باقة Diamond لحسابك مباشرة دون الحاجة لمراجعة المشرف!`
+              : `Congratulations!  100% discount applied. Diamond is active directly without admin review!`,
           );
           // Notify parent of updated status immediately
           onPremiumStatusChange(true, "Diamond");
@@ -1007,7 +1007,7 @@ export default function UserProfile({
         } else {
           const errorMessage = userErr instanceof Error ? userErr.message : String(userErr || 'unknown redemption error');
           console.error('Automatic coupon activation failed:', userErr);
-          showToast('error', 
+          showToast('error',
             isAr
               ? `عذراً، تعذر تفعيل الباقة تلقائياً. ${errorMessage}`
               : `Automatic upgrade failed. ${errorMessage}`,
@@ -1015,7 +1015,7 @@ export default function UserProfile({
         }
       } else {
         // Less than 100%, notify how they can use it on billing tab
-        showToast('info', 
+        showToast('info',
           isAr
             ? `كود الخصم المكتوب صالح ويوفر لك خصم %${discountPercent}. يرجى استخدامه عند الترقية والدفع من تبويب "باقات الاشتراك" لتطبيق الخفض على السعر.`
             : `This code is valid and provides a ${discountPercent}% discount! Please apply it in the "Subscription Plans" tab upon checkout.`,
@@ -1023,7 +1023,7 @@ export default function UserProfile({
       }
     } catch (err) {
       console.error(err);
-      showToast('error', 
+      showToast('error',
         isAr ? "حدث خطأ أثناء فحص الكود." : "Error validating discount code.",
       );
     } finally {
@@ -1084,14 +1084,14 @@ export default function UserProfile({
   // Gamification & Badges
   const level = Math.max(1, Math.floor(completionsCount / 2) + 1);
   let spaceBadgeName = isAr ? "رائد فضاء مبتدئ" : "Space Cadet";
-  let spaceBadgeIcon = "🚀";
+  let spaceBadgeIcon = "";
 
   if (completionsCount >= 50) {
     spaceBadgeName = isAr ? "عبقري الثقب الأسود" : "Black Hole Genius";
-    spaceBadgeIcon = "🌌";
+    spaceBadgeIcon = "";
   } else if (completionsCount >= 20) {
     spaceBadgeName = isAr ? "كابتن المجرة" : "Galaxy Captain";
-    spaceBadgeIcon = "🛸";
+    spaceBadgeIcon = "";
   } else if (completionsCount >= 5) {
     spaceBadgeName = isAr ? "ملاح النجوم" : "Star Navigator";
     spaceBadgeIcon = "⭐";
@@ -1119,7 +1119,7 @@ export default function UserProfile({
       unlocked: completionsCount >= 1,
       progress: completionsCount >= 1 ? "1 / 1" : "0 / 1",
       percentage: completionsCount >= 1 ? 100 : 0,
-      icon: "🎓",
+      icon: "",
       accentColor: "border-blue-500 text-blue-500 bg-blue-500/10",
     },
     {
@@ -1131,7 +1131,7 @@ export default function UserProfile({
       unlocked: totalKnowledgePoints >= 500,
       progress: `${Math.min(totalKnowledgePoints, 500)} / 500`,
       percentage: Math.min(Math.round((totalKnowledgePoints / 500) * 100), 100),
-      icon: "⚡",
+      icon: "",
       accentColor: "border-amber-500 text-amber-500 bg-amber-500/10",
     },
     {
@@ -1143,7 +1143,7 @@ export default function UserProfile({
       unlocked: completionsCount >= 5,
       progress: `${Math.min(completionsCount, 5)} / 5`,
       percentage: Math.min(Math.round((completionsCount / 5) * 100), 100),
-      icon: "🔥",
+      icon: "",
       accentColor: "border-orange-500 text-orange-500 bg-orange-500/10",
     },
     {
@@ -1167,7 +1167,7 @@ export default function UserProfile({
       unlocked: quizzesCreatedCount >= 1,
       progress: quizzesCreatedCount >= 1 ? "1 / 1" : "0 / 1",
       percentage: quizzesCreatedCount >= 1 ? 100 : 0,
-      icon: "👑",
+      icon: "",
       accentColor: "border-purple-500 text-purple-500 bg-purple-500/10",
     },
     {
@@ -1182,7 +1182,7 @@ export default function UserProfile({
         Math.round((totalKnowledgePoints / 2000) * 100),
         100,
       ),
-      icon: "🏆",
+      icon: "",
       accentColor: "border-rose-500 text-rose-500 bg-rose-500/10",
     },
   ];
@@ -1213,16 +1213,16 @@ export default function UserProfile({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20">
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
-              <div 
-                className={`w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center transition-all duration-500 ${!activeFrameClass ? 'border-4 border-white dark:border-slate-900 shadow-xl' : 'z-10'}`} 
+              <div
+                className={`w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center transition-all duration-500 ${!activeFrameClass ? 'border-4 border-white dark:border-slate-900 shadow-xl' : 'z-10'}`}
                 style={activeFrameClass ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
               >
                 {activeFrameUrl && (
-                  <img 
-                    src={activeFrameUrl} 
-                    alt="" 
+                  <img
+                    src={activeFrameUrl}
+                    alt=""
                     onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                    className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.08] md:scale-[1.1] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`} 
+                    className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.08] md:scale-[1.1] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`}
                     style={activeFrameClass ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
                   />
                 )}
@@ -1289,15 +1289,15 @@ export default function UserProfile({
                         <div className="flex items-center justify-between text-xs font-black mb-1.5">
                           <span className={`flex items-center gap-1.5 ${isUrgent ? 'text-red-400' : 'text-indigo-300'}`}>
                             <Sparkles className={`w-3.5 h-3.5 ${isUrgent ? 'text-red-500 animate-bounce' : 'text-amber-400 animate-pulse'}`} />
-                            <span>{isAr ? (isUrgent ? `⚠️ تنبيه: ينتهي العرض قريباً (${totalDays} يوم)` : `فترة تجريبية نشطة (${totalDays} يوم)`) : `Active Trial (${totalDays} Days)`}</span>
+                            <span>{isAr ? (isUrgent ? ` تنبيه: ينتهي العرض قريباً (${totalDays} يوم)` : `فترة تجريبية نشطة (${totalDays} يوم)`) : `Active Trial (${totalDays} Days)`}</span>
                           </span>
                           <span className={`${isUrgent ? 'text-red-400 bg-red-500/10 border-red-500/40 animate-pulse' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'} border px-2 py-0.5 rounded-full text-[10px]`}>
                             {isAr ? `متبقي ${diffDays} يوم فقط` : `${diffDays} days left`}
                           </span>
                         </div>
                         <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700/60">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-500 ${isUrgent ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 animate-pulse' : 'bg-gradient-to-r from-indigo-500 via-primary to-emerald-400'}`} 
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${isUrgent ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 animate-pulse' : 'bg-gradient-to-r from-indigo-500 via-primary to-emerald-400'}`}
                             style={{ width: `${percent}%` }}
                           />
                         </div>
@@ -1361,7 +1361,7 @@ export default function UserProfile({
                         profileData?.customId ||
                         `user_${profileId.substring(0, 8)}`;
                       navigator.clipboard.writeText(username);
-                      showToast('success', 
+                      showToast('success',
                         isAr
                           ? "تم نسخ اسم المستخدم بنجاح!"
                           : "Username copied successfully!",
@@ -1471,7 +1471,7 @@ export default function UserProfile({
                   const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
                   const url = `${window.location.origin}${base}/#/profile/${profileId}`;
                   navigator.clipboard.writeText(url);
-                  showToast('success', 
+                  showToast('success',
                     isAr
                       ? "تم نسخ رابط ملفك الشخصي بنجاح!"
                       : "Profile Link copied!",
@@ -1626,7 +1626,7 @@ export default function UserProfile({
                             const file = e.target.files?.[0];
                             if (file) {
                               if (file.size > 2 * 1024 * 1024) {
-                                showToast('error', 
+                                showToast('error',
                                   isAr
                                     ? "عذراً، الحد الأقصى لحجم الصورة هو 2 ميغابايت."
                                     : "Sorry, the maximum file size is 2MB.",
@@ -1798,7 +1798,7 @@ export default function UserProfile({
                       >
                         <span className="text-[10px] font-black text-slate-400">{isAr ? 'بدون' : 'None'}</span>
                       </button>
-                      
+
                       {filteredOwnedFrames.map((frame) => (
                         <button
                           key={frame.id}
@@ -1909,7 +1909,7 @@ export default function UserProfile({
                 </label>
                 {!isPremium ? (
                   <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-600 dark:text-amber-300 font-bold">
-                    {isAr ? "🔒 متاح للمشتركين فقط." : "🔒 Premium subscribers only."}
+                    {isAr ? " متاح للمشتركين فقط." : " Premium subscribers only."}
                   </div>
                 ) : (
                   <div className="space-y-3">

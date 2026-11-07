@@ -90,7 +90,7 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
             </div>
             <div>
               <h2 className="text-xl font-black text-white font-display">
-                {lang === 'ar' ? 'أهلاً بك! إكمال بيانات الحساب ✨' : 'Welcome! Complete Your Profile ✨'}
+                {lang === 'ar' ? 'أهلاً بك! إكمال بيانات الحساب ' : 'Welcome! Complete Your Profile '}
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
                 {lang === 'ar' ? 'خصص حسابك للبدء في التمتع بتجربة إعداد واجتياز الاختبارات' : 'Personalize your profile to start creating & taking quizzes'}
@@ -141,7 +141,7 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
                       : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800'
                   }`}
                 >
-                  👨‍🎓 {lang === 'ar' ? 'ذكر' : 'Male'}
+                   {lang === 'ar' ? 'ذكر' : 'Male'}
                 </button>
                 <button
                   type="button"
@@ -152,7 +152,7 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
                       : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800'
                   }`}
                 >
-                  👩‍🎓 {lang === 'ar' ? 'أنثى' : 'Female'}
+                   {lang === 'ar' ? 'أنثى' : 'Female'}
                 </button>
               </div>
             </div>

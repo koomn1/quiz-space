@@ -34,7 +34,7 @@ export default function EssayGradingStatus({
   return (
     <div className="p-3.5 rounded-xl border border-dotted border-slate-300/60 text-center text-xs font-semibold bg-slate-50 dark:bg-slate-900/40">
       {isAssessed
-        ? <span className="text-emerald-600 dark:text-emerald-400">{isArabic ? '🎉 رائع! قُيّمت الإجابة على أنها صحيحة.' : 'Great! Your answer was graded correct.'}</span>
+        ? <span className="text-emerald-600 dark:text-emerald-400">{isArabic ? ' رائع! قُيّمت الإجابة على أنها صحيحة.' : 'Great! Your answer was graded correct.'}</span>
         : <span className="text-slate-500 dark:text-slate-400">{isArabic ? 'تم رصد السؤال كإجابة تحتاج لمزيد من المراجعة والتحصيل الفردي.' : 'This answer needs further review.'}</span>}
     </div>
   );

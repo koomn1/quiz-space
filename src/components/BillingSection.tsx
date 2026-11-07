@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { 
-  CreditCard, 
-  ShieldCheck, 
-  Zap, 
-  CheckCircle2, 
-  Crown, 
-  Gem, 
-  Check, 
-  Upload, 
-  Trash2, 
-  Smartphone, 
-  Sparkles, 
-  FileCheck, 
-  Calendar, 
+import {
+  CreditCard,
+  ShieldCheck,
+  Zap,
+  CheckCircle2,
+  Crown,
+  Gem,
+  Check,
+  Upload,
+  Trash2,
+  Smartphone,
+  Sparkles,
+  FileCheck,
+  Calendar,
   AlertCircle,
   HelpCircle,
   Clock,
@@ -29,14 +29,14 @@ import {
   Info,
   ChevronDown
 } from 'lucide-react';
-import { 
-  createPremiumRequest, 
-  getPremiumRequests, 
-  getCouponByCode, 
-  redeemCouponForUser, 
-  getTrialOffers, 
-  getMyMembershipStatus, 
-  MyMembershipStatus 
+import {
+  createPremiumRequest,
+  getPremiumRequests,
+  getCouponByCode,
+  redeemCouponForUser,
+  getTrialOffers,
+  getMyMembershipStatus,
+  MyMembershipStatus
 } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 
@@ -51,7 +51,7 @@ interface BillingSectionProps {
 export function BillingSection({ userId, userEmail, lang, isPremium, userName = 'المستخدم الكوزميك' }: BillingSectionProps) {
   const isAr = lang === 'ar';
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // Available Plans (4-tier structured ecosystem)
   const plans = [
     {
@@ -64,7 +64,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       accentColor: 'slate',
       badge: isAr ? 'البداية الذكية' : 'Starter',
       badgeColor: 'bg-slate-700 text-slate-200 border-slate-600',
-      description: isAr 
+      description: isAr
         ? 'مثالية لاستكشاف المنصة والمشاركة في الاختبارات العامة.'
         : 'Perfect for exploring and participating in public community quizzes.',
       features: isAr ? [
@@ -89,7 +89,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       accentColor: 'indigo',
       badge: isAr ? 'طالب متميز' : 'Student Pro',
       badgeColor: 'bg-indigo-600/20 text-indigo-300 border-indigo-500/40',
-      description: isAr 
+      description: isAr
         ? 'للطلاب المتميزين الباحثين عن إجابات تفصيلية ومساعد ذكي لا محدود.'
         : 'For ambitious students needing AI assistance and detailed solutions.',
       features: isAr ? [
@@ -114,7 +114,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       accentColor: 'amber',
       badge: isAr ? 'الأكثر طلباً' : 'Most Popular',
       badgeColor: 'bg-amber-500 text-slate-950 font-black border-amber-400 shadow-md shadow-amber-500/20',
-      description: isAr 
+      description: isAr
         ? 'الحل الأمثل للمعلمين والمعلمات لإدارة الفصول وإصدار الشهادات.'
         : 'The complete toolkit for teachers to manage classes and certify students.',
       features: isAr ? [
@@ -141,7 +141,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       accentColor: 'cyan',
       badge: isAr ? 'مدارس ومؤسسات' : 'Schools & VIP',
       badgeColor: 'bg-gradient-to-r from-cyan-500 to-indigo-500 text-white border-cyan-400 shadow-md shadow-cyan-500/20',
-      description: isAr 
+      description: isAr
         ? 'للمدارس والمراكز التعليمية مع تقارير Excel المباشرة ودعم فني خاص.'
         : 'For schools and academies needing multi-seat access and Excel analytics.',
       features: isAr ? [
@@ -172,8 +172,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         address: 'jobadawy@instapay',
         link: 'https://ipn.eg/S/jobadawy/instapay/2D5ZTT',
         mobile: '01037560348',
-        instructions: isAr 
-          ? 'حوّل المبلغ إلى عنوان الدفع الآتي أو اضغط زر الدفع المباشر، ثم ارفع لقطة الشاشة بالأسفل.' 
+        instructions: isAr
+          ? 'حوّل المبلغ إلى عنوان الدفع الآتي أو اضغط زر الدفع المباشر، ثم ارفع لقطة الشاشة بالأسفل.'
           : 'Send payment via InstaPay IPN address or direct link, then attach the receipt screenshot below.'
       }
     },
@@ -186,7 +186,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       details: {
         mobile: '01037560348',
         link: 'http://vf.eg/vfcash?id=mt&qrId=wamRjE',
-        instructions: isAr 
+        instructions: isAr
           ? 'اضغط زر الدفع المباشر أو حوّل المبلغ المطلوب إلى رقم فودافون كاش (01037560348)، ثم أرفق لقطة شاشة التحويل الناجح.'
           : 'Open the direct payment link or transfer to Vodafone Cash wallet (01037560348), then upload the successful payment screenshot.'
       }
@@ -420,7 +420,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             if (applicablePlans) {
               const allowed = applicablePlans.split(',').map((plan: string) => plan.trim().toLowerCase());
               if (!allowed.includes(selectedPlan.toLowerCase())) {
-                alert(isAr 
+                alert(isAr
                   ? `تنبيه: كود الخصم المطبق "${code}" لا يسري على باقة "${selectedPlan}". تم إلغاء تفعيل الخصم.`
                   : `Notice: applied coupon "${code}" is not applicable on the selected plan "${selectedPlan}". Discount reset.`
                 );
@@ -496,8 +496,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
         setPromoDiscount(discountPercent);
         setAppliedCouponId(coupon.id || null);
-        alert(isAr 
-          ? `تم تطبيق كود الخصم بنسبة ${discountPercent}% بنجاح!` 
+        alert(isAr
+          ? `تم تطبيق كود الخصم بنسبة ${discountPercent}% بنجاح!`
           : `Promo code discount of ${discountPercent}% applied successfully!`
         );
       } else {
@@ -571,7 +571,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
     try {
       setIsSubmitting(true);
-      
+
       const targetPlanObj = plans.find(p => p.id === selectedPlan);
       const basePrice = targetPlanObj ? targetPlanObj.priceNum : 300;
       const discountedPrice = basePrice * (1 - promoDiscount / 100);
@@ -615,14 +615,14 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       }
 
       if (promoDiscount === 100) {
-        alert(isAr 
-          ? 'تهانينا! كود الخصم فعّل لك باقة النخبة فوراً مجاناً! 🎉' 
-          : 'Congratulations! Your coupon immediately activated your Premium status! 🎉'
+        alert(isAr
+          ? 'تهانينا! كود الخصم فعّل لك باقة النخبة فوراً مجاناً! '
+          : 'Congratulations! Your coupon immediately activated your Premium status! '
         );
         window.location.reload();
       } else {
-        alert(isAr 
-          ? 'تم إرسال طلب التفعيل وإيصال الدفع بنجاح! سيقوم فريق الإدارة بمراجعة الإيصال وتفعيل باقتك سريعاً.' 
+        alert(isAr
+          ? 'تم إرسال طلب التفعيل وإيصال الدفع بنجاح! سيقوم فريق الإدارة بمراجعة الإيصال وتفعيل باقتك سريعاً.'
           : 'Receipt submitted successfully! Admin will verify and activate your account shortly.'
         );
       }
@@ -632,7 +632,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       setPromoCode('');
       setPromoDiscount(0);
       setAppliedCouponId(null);
-      
+
       await fetchMyRequests();
       await reloadMembership();
     } catch (err) {
@@ -656,12 +656,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
   const selectedPaymentMethodDetails = paymentMethods.find((method) => method.id === selectedMethod);
 
   return (
-    <div 
-      ref={containerRef} 
-      className="max-w-7xl mx-auto space-y-8 text-right pb-16 px-3 sm:px-6" 
+    <div
+      ref={containerRef}
+      className="max-w-7xl mx-auto space-y-8 text-right pb-16 px-3 sm:px-6"
       style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
     >
-      
+
       {/* 1. HERO HEADER */}
       <div className="gsap-hero flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-2">
         <div>
@@ -673,12 +673,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             {isAr ? 'باقات الاشتراك والترقية' : 'Subscription Plans & Upgrades'}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
-            {isAr 
-              ? 'اختر الباقة المناسبة لاحتياجاتك، وانطلق في الفضاء التعليمي بالذكاء الاصطناعي مع لوحات متقدمة للمعلمين وتوليد غير محدود.' 
+            {isAr
+              ? 'اختر الباقة المناسبة لاحتياجاتك، وانطلق في الفضاء التعليمي بالذكاء الاصطناعي مع لوحات متقدمة للمعلمين وتوليد غير محدود.'
               : 'Choose the best plan for your needs and unlock unlimited AI quiz generation, class leaderboards, and PDF exports.'}
           </p>
         </div>
-        
+
         {/* Quick jump actions on top */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
@@ -701,8 +701,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       </div>
 
       {/* 2. DEDICATED "حالة الاشتراك" (SUBSCRIPTION STATUS) CARD */}
-      <section 
-        className="gsap-status-card rounded-3xl border border-indigo-500/25 bg-gradient-to-br from-slate-950 via-[#0c0926] to-slate-900 p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden" 
+      <section
+        className="gsap-status-card rounded-3xl border border-indigo-500/25 bg-gradient-to-br from-slate-950 via-[#0c0926] to-slate-900 p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden"
         aria-labelledby="subscription-status-heading"
       >
         {/* Cosmic Ambient Glow Behind */}
@@ -748,7 +748,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 {currentIsPremium ? (
                   <>
                     <Crown className="w-4 h-4 text-amber-400" />
-                    <span>{isAr ? `${currentPlanLabel} (مفعّلة وموثقة ✓)` : `${currentPlanLabel} (Active)`}</span>
+                    <span>{isAr ? `${currentPlanLabel} (مفعّلة وموثقة )` : `${currentPlanLabel} (Active)`}</span>
                   </>
                 ) : (
                   <>
@@ -795,7 +795,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
           </div>
         ) : (
           <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-            
+
             {/* Box 1: Plan Tier */}
             <div className="uipro-glass-surface rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 flex flex-col justify-between">
               <div>
@@ -820,12 +820,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 </span>
                 <p className="mt-1 text-base sm:text-lg font-black text-slate-900 dark:text-white">
                   {membership?.isLifetime || membership?.isFounder
-                    ? (isAr ? 'مدى الحياة (VIP) 🚀' : 'Lifetime Access 🚀')
+                    ? (isAr ? 'مدى الحياة (VIP) ' : 'Lifetime Access ')
                     : formattedRenewalDate || (isAr ? 'غير محدد' : 'Active / Rolling')}
                 </p>
               </div>
               <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300 font-bold">
-                {currentIsPremium 
+                {currentIsPremium
                   ? (isAr ? 'تجديد شهري عند الدفع' : 'Renews via receipt confirmation')
                   : (isAr ? 'حساب دائم بدون انتهاء' : 'Permanent free access')}
               </p>
@@ -838,13 +838,13 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                   {isAr ? 'الذكاء الاصطناعي وكوزمو' : 'AI Capabilities'}
                 </span>
                 <p className="mt-1 text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-300">
-                  {currentIsPremium 
+                  {currentIsPremium
                     ? (isAr ? 'توليد لا محدود ومساعد فوري' : 'Unlimited AI Generation')
                     : (isAr ? '3 اختبارات بالـ AI أسبوعياً' : '3 AI Quizzes / Week')}
                 </p>
               </div>
               <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300 font-bold">
-                {currentIsPremium 
+                {currentIsPremium
                   ? (isAr ? 'تصدير PDF مفصل وتقارير' : 'Detailed PDF solutions')
                   : (isAr ? 'تصدير PDF عادي' : 'Standard exports')}
               </p>
@@ -857,7 +857,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                   {isAr ? 'الترقية والتجديد' : 'Plan Upgrade'}
                 </span>
                 <p className="mt-1 text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-relaxed">
-                  {currentIsPremium 
+                  {currentIsPremium
                     ? (isAr ? 'ترقية لمستوى أعلى أو تمديد' : 'Upgrade tier or extend')
                     : (isAr ? 'اختر باقة وفعل حسابك الآن' : 'Choose a plan to upgrade')}
                 </p>
@@ -941,8 +941,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                             status: 'pending',
                             createdAt: new Date().toISOString()
                           });
-                          alert(isAr 
-                            ? `تم إرسال طلب العرض التجريبي (${days} يوماً) بنجاح! سيتم مراجعته وتفعيله قريباً.` 
+                          alert(isAr
+                            ? `تم إرسال طلب العرض التجريبي (${days} يوماً) بنجاح! سيتم مراجعته وتفعيله قريباً.`
                             : `Trial request (${days} days) submitted successfully!`
                           );
                           await fetchMyRequests();
@@ -973,14 +973,14 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
           <span>{isAr ? 'لديك كود خصم للباقات؟ (اختياري)' : 'Have a Promo / Discount Code?'}</span>
         </label>
         <div className="flex gap-2">
-          <input 
+          <input
             type="text"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
             placeholder={isAr ? 'أدخل كود الخصم (مثال: QUIZ50)' : 'Enter promo code (e.g. QUIZ50)'}
             className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 outline-none uppercase font-mono tracking-widest placeholder-slate-400 focus:border-primary"
           />
-          <button 
+          <button
             type="button"
             onClick={handleApplyPromo}
             disabled={isApplyingPromo}
@@ -996,7 +996,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         </div>
         {promoDiscount > 0 && (
           <p className="text-[11px] text-emerald-500 font-black mt-2.5 bg-emerald-500/10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/20">
-            <span>🎉</span>
+            <span></span>
             <span>{isAr ? `كود خصم فعال! تم تطبيق خصم ${promoDiscount}% على الباقات.` : `Discount of ${promoDiscount}% applied!`}</span>
           </p>
         )}
@@ -1023,7 +1023,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
               : p.id === 'free';
 
             return (
-              <div 
+              <div
                 key={p.id}
                 onClick={() => setSelectedPlan(p.id)}
                 data-selected={isSelected}
@@ -1086,7 +1086,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-850">
-                  <button 
+                  <button
                     type="button"
                     className={`w-full py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
                       isSelected
@@ -1094,8 +1094,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                         : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200'
                     }`}
                   >
-                    {isSelected 
-                      ? (isAr ? 'تم تحديد الباقة بنجاح ✓' : 'Plan Selected ✓') 
+                    {isSelected
+                      ? (isAr ? 'تم تحديد الباقة بنجاح ' : 'Plan Selected ')
                       : (isAr ? 'تحديد هذه الباقة' : 'Select Plan')}
                   </button>
                 </div>
@@ -1107,7 +1107,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
       {/* 6. PAYMENT INSTRUCTIONS & SUBMISSION FORM */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-4">
-        
+
         {/* Payment Methods Info Box (5 cols) */}
         <div className="uipro-glass-surface gsap-action-card lg:col-span-5 border border-slate-200/80 dark:border-slate-800 p-6 rounded-3xl space-y-5 shadow-sm">
           <div>
@@ -1119,8 +1119,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
               {isAr ? 'طرق تحويل ثمن الاشتراك' : 'Payment Methods'}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-              {isAr 
-                ? 'حوّل قيمة الباقة عبر إنستاباي أو فودافون كاش، ثم ارفع لقطة الشاشة في النموذج المجاور.' 
+              {isAr
+                ? 'حوّل قيمة الباقة عبر إنستاباي أو فودافون كاش، ثم ارفع لقطة الشاشة في النموذج المجاور.'
                 : 'Send the exact plan amount via InstaPay or Vodafone Cash, then upload the confirmation receipt.'}
             </p>
           </div>
@@ -1129,12 +1129,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             {paymentMethods.map((m) => {
               const activeMethod = selectedMethod === m.id;
               return (
-                <div 
+                <div
                   key={m.id}
                   onClick={() => setSelectedMethod(m.id)}
                   className={`uipro-glass-surface border p-4 rounded-2xl transition-all cursor-pointer ${
-                    activeMethod 
-                      ? 'border-primary bg-primary/5 dark:bg-primary/10 shadow-sm' 
+                    activeMethod
+                      ? 'border-primary bg-primary/5 dark:bg-primary/10 shadow-sm'
                       : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
@@ -1243,8 +1243,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
               <span>{isAr ? 'سرعة التفعيل والدعم:' : 'Fast Activation Guarantee:'}</span>
             </p>
             <p className="text-[11px] leading-relaxed">
-              {isAr 
-                ? 'يتم فحص وتفعيل الإيصالات عادة خلال 5 إلى 15 دقيقة فقط من الإرسال.' 
+              {isAr
+                ? 'يتم فحص وتفعيل الإيصالات عادة خلال 5 إلى 15 دقيقة فقط من الإرسال.'
                 : 'Receipts are reviewed and accounts upgraded within 5 to 15 minutes.'}
             </p>
           </div>
@@ -1261,20 +1261,20 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
               {isAr ? 'تأكيد عملية الدفع وإرسال الإيصال' : 'Submit Payment Receipt'}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {isAr 
-                ? 'املأ بيانات المشترك وأرفق صورة التحويل الناجح للمراجعة والتفعيل الفوري.' 
+              {isAr
+                ? 'املأ بيانات المشترك وأرفق صورة التحويل الناجح للمراجعة والتفعيل الفوري.'
                 : 'Fill out subscriber details and attach the payment proof screenshot.'}
             </p>
           </div>
 
           <form onSubmit={handleSubmitPaidRequest} className="mt-5 space-y-4">
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isAr ? 'اسم المشترك بالكامل:' : 'Full Name:'}
                 </label>
-                <input 
+                <input
                   type="text"
                   required
                   value={subscriberName}
@@ -1288,7 +1288,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   {isAr ? 'البريد الإلكتروني للحساب:' : 'Account Email:'}
                 </label>
-                <input 
+                <input
                   type="email"
                   required
                   value={subscriberEmail}
@@ -1351,20 +1351,20 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 {isAr ? 'صورة إيصال التحويل (لقطة الشاشة):' : 'Transaction Proof Screenshot / Receipt:'}
               </label>
-              
-              <div 
+
+              <div
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center hover:border-primary transition-all relative group bg-slate-50/50 dark:bg-slate-950/40"
               >
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   accept="image/*"
                   onChange={handleFileChange}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   disabled={promoDiscount === 100}
                 />
-                
+
                 {isProcessingFile ? (
                   /* Translucent shimmering skeleton during compression (NO animate-spin circle) */
                   <div className="space-y-2 pointer-events-none p-4">
@@ -1375,14 +1375,14 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                   </div>
                 ) : screenshotBase64 ? (
                   <div className="relative space-y-3 z-10">
-                    <img 
-                      src={screenshotBase64} 
-                      alt="Receipt preview" 
+                    <img
+                      src={screenshotBase64}
+                      alt="Receipt preview"
                       className="w-28 h-28 object-cover rounded-xl mx-auto border border-white dark:border-slate-700 shadow-lg"
                     />
                     <div>
                       <p className="text-xs font-black text-slate-800 dark:text-slate-200 truncate max-w-xs mx-auto">{screenshotName}</p>
-                      <button 
+                      <button
                         type="button"
                         onClick={() => { setScreenshotBase64(''); setScreenshotName(''); }}
                         className="mt-2 text-rose-500 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition-colors"
@@ -1407,12 +1407,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             </div>
 
             {/* Submission button with translucent pulse when submitting (NO animate-spin circle) */}
-            <button 
+            <button
               type="submit"
               disabled={isSubmitting}
               className={`w-full py-3.5 rounded-xl font-black text-xs tracking-wide shadow-lg cursor-pointer transition-all hover:scale-[1.01] flex items-center justify-center gap-2 ${
-                isSubmitting 
-                  ? 'bg-slate-400/60 text-white backdrop-blur-md animate-pulse cursor-not-allowed' 
+                isSubmitting
+                  ? 'bg-slate-400/60 text-white backdrop-blur-md animate-pulse cursor-not-allowed'
                   : 'bg-primary text-white shadow-primary/25 hover:bg-primary-hover active:scale-95'
               }`}
             >
@@ -1447,8 +1447,8 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
               {isAr ? 'راقب حالة تفعيل اشتراكاتك فوراً وسجل قرارات الإدارة.' : 'Live status of your payment activation requests.'}
             </p>
           </div>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={fetchMyRequests}
             disabled={loadingRequests}
             className="px-3.5 py-2 rounded-xl text-xs font-black bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 transition-all cursor-pointer flex items-center gap-1.5"
@@ -1483,7 +1483,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
           </div>
         ) : userRequests.length === 0 ? (
           <div className="py-12 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-bold text-xs bg-slate-50/50 dark:bg-slate-950/30">
-            <p className="text-2xl mb-1">☄️</p>
+            <p className="text-2xl mb-1"></p>
             <p className="text-sm font-black text-slate-700 dark:text-slate-300">
               {isAr ? 'لا توجد طلبات تفعيل سابقة لحسابك حالياً.' : 'No previous activation requests found.'}
             </p>
@@ -1494,22 +1494,22 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         ) : (
           <div className="space-y-3.5">
             {userRequests.map((req, index) => {
-              const statusColor = 
-                req.status === 'approved' 
+              const statusColor =
+                req.status === 'approved'
                   ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
                   : req.status === 'rejected'
                     ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300 dark:border-rose-900'
                     : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-800';
 
-              const statusLabel = 
-                req.status === 'approved' 
-                  ? (isAr ? 'تم القبول والتفعيل ✓' : 'Approved & Active ✓')
+              const statusLabel =
+                req.status === 'approved'
+                  ? (isAr ? 'تم القبول والتفعيل ' : 'Approved & Active ')
                   : req.status === 'rejected'
-                    ? (isAr ? 'تم الرفض ✕' : 'Rejected ✕')
+                    ? (isAr ? 'تم الرفض ' : 'Rejected ')
                     : (isAr ? 'قيد المراجعة الفنية...' : 'Pending Review...');
 
               return (
-                <div 
+                <div
                   key={req.id || index}
                   className="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/70 flex flex-col gap-3.5 transition-all hover:border-slate-300 dark:hover:border-slate-700"
                 >
@@ -1601,11 +1601,11 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
       {/* 8. RECEIPT PREVIEW MODAL */}
       {previewScreenshotUrl && (
-        <div 
+        <div
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setPreviewScreenshotUrl(null)}
         >
-          <div 
+          <div
             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 max-w-lg w-full space-y-4 shadow-2xl relative"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1614,7 +1614,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 <FileCheck className="w-4 h-4 text-primary" />
                 <span>{isAr ? 'معاينة إيصال التحويل المرفق' : 'Uploaded Receipt Preview'}</span>
               </h4>
-              <button 
+              <button
                 type="button"
                 onClick={() => setPreviewScreenshotUrl(null)}
                 className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
@@ -1622,11 +1622,11 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 max-h-[70vh] flex items-center justify-center bg-slate-950">
-              <img 
-                src={previewScreenshotUrl} 
-                alt="Receipt screenshot" 
+              <img
+                src={previewScreenshotUrl}
+                alt="Receipt screenshot"
                 className="max-h-[68vh] w-auto object-contain mx-auto"
               />
             </div>

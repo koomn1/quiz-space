@@ -243,7 +243,7 @@ export function InteractiveQuizCard({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 px-6 py-4.5 dark:border-slate-800/80 bg-gradient-to-r from-violet-500/5 via-primary/5 to-cyan-500/5">
           <div>
             <h3 id={`attempts-title-${quiz.id}`} className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
-              <span>🏆</span>
+              <span></span>
               <span>{isAr ? 'الأعضاء الذين حلوا الاختبار' : 'Members who solved this quiz'}</span>
             </h3>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 font-bold truncate max-w-xs">{quiz.title}</p>
@@ -256,7 +256,7 @@ export function InteractiveQuizCard({
                 className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/10 px-3 py-2 text-[11px] font-black text-amber-600 transition-all hover:bg-amber-500/20 dark:text-amber-400 cursor-pointer border border-amber-500/20"
                 title={isAr ? 'مراجعة وتصحيح المقالي' : 'Grade Essays'}
               >
-                <span>✍️</span>
+                <span></span>
                 <span>{isAr ? 'تصحيح المقالي' : 'Grade Essays'}</span>
               </button>
             )}
@@ -273,13 +273,13 @@ export function InteractiveQuizCard({
             </div>
           ) : attempts.length === 0 ? (
             <div className="py-16 text-center text-xs font-bold text-slate-400">
-              <span className="text-3xl block mb-2">🎯</span>
+              <span className="text-3xl block mb-2"></span>
               <span>{isAr ? 'لا توجد محاولات مسجلة بعد — كُن أول من يحل هذا الاختبار!' : 'No recorded attempts yet — be the first to solve it!'}</span>
             </div>
           ) : (
             <div className="space-y-2">
               {attempts.map((attempt, aIdx) => {
-                const medal = aIdx === 0 ? '🥇' : aIdx === 1 ? '🥈' : aIdx === 2 ? '🥉' : `#${aIdx + 1}`;
+                const medal = aIdx === 0 ? '' : aIdx === 1 ? '' : aIdx === 2 ? '' : `#${aIdx + 1}`;
                 const pct = attempt.totalQuestions > 0 ? Math.round((attempt.score / attempt.totalQuestions) * 100) : 100;
                 const isPendingEssay = attempt.hasPendingEssay || attempt.reviewStatus === 'pending_creator_review';
                 return (
@@ -287,7 +287,7 @@ export function InteractiveQuizCard({
                     <div className="flex items-center gap-3">
                       <span className="w-7 text-center font-black text-xs text-slate-400 select-none">{medal}</span>
                       <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20 text-primary dark:text-primary-light flex items-center justify-center font-black text-xs border border-primary/20">
-                        {attempt.takerName ? attempt.takerName.slice(0, 1) : '👤'}
+                        {attempt.takerName ? attempt.takerName.slice(0, 1) : ''}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -312,7 +312,7 @@ export function InteractiveQuizCard({
                           className="inline-flex items-center gap-1 rounded-xl bg-amber-500/10 px-2.5 py-1 text-xs font-black text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer"
                           title={isAr ? 'مراجعة وتصحيح المقالي' : 'Review & Grade'}
                         >
-                          <span>✍️</span>
+                          <span></span>
                           <span>{isAr ? 'تصحيح' : 'Grade'}</span>
                         </button>
                       )}
@@ -372,7 +372,7 @@ export function InteractiveQuizCard({
           <button type="button" onClick={() => setPreviewOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-white/70 dark:hover:bg-slate-800" aria-label={isAr ? 'إغلاق المعاينة' : 'Close preview'}><X className="h-5 w-5" /></button>
         </div>
         <div className="max-h-[calc(min(760px,92vh)-80px)] overflow-y-auto p-5">
-          <div className="mb-5 grid grid-cols-3 gap-2 text-center"><div className="rounded-2xl bg-violet-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'الأسئلة' : 'Questions'}</p><p className="mt-1 text-lg font-black text-violet-600">{quiz.questions.length}</p></div><div className="rounded-2xl bg-amber-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'التقييم' : 'Rating'}</p><p className="mt-1 text-lg font-black text-amber-600">{quiz.ratingsCount ? `${quiz.avgRating} ★` : '—'}</p></div><div className="rounded-2xl bg-emerald-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'المحاولات' : 'Plays'}</p><p className="mt-1 text-lg font-black text-emerald-600">{quiz.totalPlays || 0}</p></div></div>
+          <div className="mb-5 grid grid-cols-3 gap-2 text-center"><div className="rounded-2xl bg-violet-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'الأسئلة' : 'Questions'}</p><p className="mt-1 text-lg font-black text-violet-600">{quiz.questions.length}</p></div><div className="rounded-2xl bg-amber-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'التقييم' : 'Rating'}</p><p className="mt-1 text-lg font-black text-amber-600">{quiz.ratingsCount ? `${quiz.avgRating} ` : '—'}</p></div><div className="rounded-2xl bg-emerald-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'المحاولات' : 'Plays'}</p><p className="mt-1 text-lg font-black text-emerald-600">{quiz.totalPlays || 0}</p></div></div>
           {quiz.description && <p className="mb-5 rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-600 dark:bg-slate-900 dark:text-slate-300">{quiz.description}</p>}
           <div className="space-y-3">{quiz.questions.slice(0, 3).map((question, index) => <div key={question.id || index} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800"><div className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-600 text-xs font-black text-white">{index + 1}</span><div className="min-w-0 flex-1"><p className="font-bold leading-7 text-slate-800 dark:text-slate-100">{question.text}</p>{Array.isArray(question.options) && question.options.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2">{question.options.slice(0, 4).map((option, optionIndex) => <span key={`${option}-${optionIndex}`} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-300"><span className="font-black text-violet-500">{String.fromCharCode(65 + optionIndex)}</span>{option}</span>)}</div>}{question.type === 'essay' && <span className="mt-3 inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-1 text-[10px] font-black text-amber-600"><CheckCircle2 className="h-3 w-3" />{isAr ? 'سؤال مقالي' : 'Essay question'}</span>}</div></div></div>)}</div>
           {quiz.questions.length > 3 && <p className="mt-4 text-center text-xs font-bold text-slate-500">{isAr ? `تظهر أول 3 أسئلة فقط في المعاينة — إجمالي ${quiz.questions.length} سؤالاً.` : `Showing the first 3 questions — ${quiz.questions.length} questions total.`}</p>}
@@ -530,11 +530,11 @@ export function InteractiveQuizCard({
     >
       {/* Soft Specular Light Highlight on Hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-cyan-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none -z-10 rounded-[28px]"></div>
-      
+
       {/* Inner Card Content Wrapper */}
       <div className="h-full w-full p-6 sm:p-7 flex flex-col justify-between z-10 relative">
         <div className="space-y-4" style={{ transform: 'translateZ(20px)', transformStyle: 'preserve-3d' }}>
-        
+
         {/* Header: Badges & Rating */}
         <div className="flex items-center justify-between gap-3 flex-row-reverse" dir="ltr">
           <div className="flex items-center gap-1.5 flex-row-reverse flex-wrap">
@@ -549,7 +549,7 @@ export function InteractiveQuizCard({
               </span>
             )}
           </div>
-          
+
           {/* Rating Block */}
           {quiz.ratingsCount > 0 ? (
             <div className="uipro-pill-badge text-amber-500 bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/20">
@@ -602,7 +602,7 @@ export function InteractiveQuizCard({
                 className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-2 text-xs font-black text-amber-700 dark:text-amber-300 shadow-xs transition-all active:scale-95 cursor-pointer"
                 title={isAr ? 'تصحيح الإجابات المقالية' : 'Grade essay answers'}
               >
-                <span>✍️</span>
+                <span></span>
                 <span>{isAr ? 'تصحيح المقالي' : 'Grade Essays'}</span>
               </button>
             )}
@@ -612,7 +612,7 @@ export function InteractiveQuizCard({
       </div>
 
       {/* Clean, spacious action footer */}
-      <div 
+      <div
         className="relative border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-5 flex flex-wrap items-center justify-between gap-x-2 gap-y-3 w-full"
         style={{ transform: 'translateZ(15px)' }}
       >

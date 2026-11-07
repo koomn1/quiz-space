@@ -51,8 +51,8 @@ export default function QuizDetailedReport({
       if (q.type === 'essay') {
         correctAnswer = q.correctAnswer || '';
       } else {
-        correctAnswer = q.type === 'mcq' 
-          ? q.options[q.correctIndex] 
+        correctAnswer = q.type === 'mcq'
+          ? q.options[q.correctIndex]
           : (q.correctIndex === 0 ? (isAr ? 'صح' : 'True') : (isAr ? 'خطأ' : 'False'));
       }
 
@@ -93,8 +93,8 @@ export default function QuizDetailedReport({
   });
 
   return (
-    <div 
-      id="quiz-detailed-interactive-report" 
+    <div
+      id="quiz-detailed-interactive-report"
       className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm space-y-6 text-right"
       style={{ direction: isAr ? 'rtl' : 'ltr' }}
     >
@@ -108,8 +108,8 @@ export default function QuizDetailedReport({
             </h3>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {isAr 
-              ? 'تصفح جميع الأسئلة مع توضيح الإجابات المسجلة والتحليلات العلمية المصاحبة.' 
+            {isAr
+              ? 'تصفح جميع الأسئلة مع توضيح الإجابات المسجلة والتحليلات العلمية المصاحبة.'
               : 'Browse all questions with recorded answers and educational explanations.'}
           </p>
         </div>
@@ -153,12 +153,12 @@ export default function QuizDetailedReport({
 
       {/* Questions list Accordion / cards stack */}
       <div className="space-y-6">
-        
+
           {filteredQuestions.length === 0 ? (
             <div
-              
-              
-              
+
+
+
               className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm font-semibold border border-dashed border-slate-200 dark:border-slate-700/60 rounded-2xl"
             >
               {isAr ? 'لا توجد أسئلة تطابق الفلتر المحدد.' : 'No questions matching selected filters.'}
@@ -171,11 +171,11 @@ export default function QuizDetailedReport({
 
               return (
                 <div
-                  
-                  
-                  
-                  
-                  
+
+
+
+
+
                   className={`p-5 rounded-2xl border transition-all duration-300 ${
                     answeredCorrectly
                       ? 'border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/[0.01]'
@@ -275,7 +275,7 @@ export default function QuizDetailedReport({
 
                         return (
                           <div
-                            
+
                             className={`flex items-center justify-between p-3 border rounded-xl text-xs leading-relaxed ${styleClass}`}
                           >
                             <span>{option}</span>
@@ -305,7 +305,7 @@ export default function QuizDetailedReport({
 
                         return (
                           <div
-                            
+
                             className={`flex items-center justify-between p-3 border rounded-xl text-xs leading-relaxed ${styleClass}`}
                           >
                             <span>{label}</span>
@@ -323,7 +323,7 @@ export default function QuizDetailedReport({
                         <Sparkles className="w-3.5 h-3.5 text-primary" />
                         <span>{isAr ? 'الشرح والتحليل المعرفي:' : 'Educational Insight & Explanation:'}</span>
                       </div>
-                      
+
                       {/* AI Explain Mechanism */}
                       <button
                         onClick={() => handleFetchAiExplanation(qId, q, originalIdx)}
@@ -338,18 +338,18 @@ export default function QuizDetailedReport({
                       >
                         <Sparkles className="w-3 h-3 text-purple-600 dark:text-purple-400 shrink-0" />
                         <span>
-                          {aiLoading[qId] 
-                            ? (isAr ? 'جاري استدعاء كوزمو...' : 'Summoning AI AI...') 
-                            : aiExplanations[qId] 
-                            ? (isAr ? 'تم استحضار الشرح الذكي ✔' : 'AI Explanation Ready ✔') 
-                            : (isAr ? 'اسأل كوزمو لشرح أعمق بالذكاء الاصطناعي 🧠' : 'Ask AI AI for Deep Explanation 🧠')}
+                          {aiLoading[qId]
+                            ? (isAr ? 'جاري استدعاء كوزمو...' : 'Summoning AI AI...')
+                            : aiExplanations[qId]
+                            ? (isAr ? 'تم استحضار الشرح الذكي ' : 'AI Explanation Ready ')
+                            : (isAr ? 'اسأل كوزمو لشرح أعمق بالذكاء الاصطناعي ' : 'Ask AI AI for Deep Explanation ')}
                         </span>
                       </button>
                     </div>
 
                     <p className="text-slate-650 dark:text-slate-300 leading-relaxed font-semibold">
-                      {q.explanation || (isAr 
-                        ? 'تم إعداد هذا السؤال لقياس الاستجابة والذاكرة بشكل مباشر وفعال.' 
+                      {q.explanation || (isAr
+                        ? 'تم إعداد هذا السؤال لقياس الاستجابة والذاكرة بشكل مباشر وفعال.'
                         : 'This question was formatted to gauge explicit memory and cognitive response recall directly.')}
                     </p>
 
@@ -364,13 +364,13 @@ export default function QuizDetailedReport({
 
                     {/* AI custom generated lesson explanation block */}
                     {aiExplanations[qId] && (
-                      <div 
-                        
-                        
+                      <div
+
+
                         className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1.5"
                       >
                         <div className="text-[10px] uppercase font-black text-purple-600 dark:text-purple-400 tracking-wider">
-                          {isAr ? '💡 شرح المعلم الذكي (كوزمو):' : '💡 Lesson by AI Tutor (AI):'}
+                          {isAr ? ' شرح المعلم الذكي (كوزمو):' : ' Lesson by AI Tutor (AI):'}
                         </div>
                         <p className="text-slate-705 dark:text-purple-100 text-xs leading-relaxed whitespace-pre-line bg-purple-500/[0.025] dark:bg-purple-950/15 p-3 rounded-xl border border-purple-500/10 font-medium">
                           {aiExplanations[qId]}
@@ -420,7 +420,7 @@ export default function QuizDetailedReport({
               );
             })
           )}
-        
+
       </div>
     </div>
   );

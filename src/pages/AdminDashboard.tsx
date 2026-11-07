@@ -50,7 +50,7 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQuiz, onDeleteQuiz, currentUserId, currentUserEmail }: AdminDashboardProps) {
   const isAr = lang === 'ar';
   const containerRef = React.useRef<HTMLDivElement>(null);
-  
+
   const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards' | 'motivation_usage'>(() => {
     if (typeof window !== 'undefined' && (window.location.hash.includes('subscriptions') || window.location.hash.includes('payments'))) {
       return 'subscriptions';
@@ -71,7 +71,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
       { opacity: 0, y: -20 },
       { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power3.out" }
     );
-    
+
     gsap.fromTo(
       ".admin-nav-item",
       { opacity: 0, x: -10 },
@@ -453,7 +453,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
 
         {/* Main Content Area */}
         <div className="flex-1 min-w-0 min-h-[500px] rounded-[32px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/55 sm:p-8">
-          
+
             <div className="admin-content-panel">
               {activeAdminTab === 'overview' && (
                 <div className="space-y-6">
@@ -501,7 +501,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-3xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary-hover/5 to-transparent text-slate-900 dark:text-slate-100 shadow-sm animate-fade-in">
                       <div className="flex items-center gap-3.5">
                         <div className="w-11 h-11 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shrink-0 border border-primary/25 text-xl font-bold">
-                          ✍️
+
                         </div>
                         <div className="text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                           <div className="flex items-center gap-2">
@@ -603,11 +603,11 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                      </h3>
                      <div className="relative">
                         <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 right-3 text-slate-400" />
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           value={userSearchQuery}
                           onChange={(e) => setUserSearchQuery(e.target.value)}
-                          placeholder={isAr ? 'بحث عن مستخدم...' : 'Search a user...'} 
+                          placeholder={isAr ? 'بحث عن مستخدم...' : 'Search a user...'}
                           className="pl-4 pr-10 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                      </div>
@@ -632,7 +632,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                           .slice(0, userSearchQuery.trim() ? 100 : 50)
                           .map((u: any, idx) => (
                            <tr key={u.uid || u.id || idx} className="border-b border-slate-200/50 dark:border-slate-700/50">
-                             <td 
+                             <td
                                title={isAr ? "عرض الملف الشخصي" : "View profile"}
                                onClick={() => onViewProfile?.(u.uid || u.id)}
                                className="px-6 py-4 font-bold text-slate-800 dark:text-white flex items-center justify-start gap-2 cursor-pointer hover:text-primary transition-colors"
@@ -674,7 +674,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                         }}
                         className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary-hover px-3.5 py-2 text-xs font-black text-white shadow-sm transition-all cursor-pointer"
                      >
-                        <span>✍️</span>
+                        <span></span>
                         <span>{isAr ? 'مراجعة وتصحيح المقالي' : 'Grade Essays'}</span>
                         {pendingEssayCount > 0 && (
                           <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black">
@@ -704,7 +704,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                                      title={isAr ? 'تصحيح الإجابات المقالية لهذا الاختبار' : 'Grade essay answers for this quiz'}
                                      className="min-h-11 min-w-11 text-amber-500 hover:bg-amber-500/10 rounded-lg flex items-center justify-center cursor-pointer"
                                    >
-                                     <span className="text-sm">✍️</span>
+                                     <span className="text-sm"></span>
                                    </button>
                                  )}
                                  <button type="button" onClick={() => onEditQuiz?.(quiz)} disabled={!onEditQuiz} title={isAr ? 'تعديل الاختبار' : 'Edit quiz'} className="min-h-11 min-w-11 text-blue-500 hover:bg-blue-500/10 rounded-lg disabled:opacity-40"><Edit2 className="mx-auto w-4 h-4" /></button>
@@ -737,9 +737,9 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                       <div className="flex-1 space-y-4">
                          <div>
                             <label className="text-xs font-bold text-slate-500 block mb-1">{isAr ? 'نوع التنبيه' : 'Notification Type'}</label>
-                            <select 
-                              value={promoType} 
-                              onChange={e => setPromoType(e.target.value)} 
+                            <select
+                              value={promoType}
+                              onChange={e => setPromoType(e.target.value)}
                               className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary text-slate-800 dark:text-white"
                             >
                               <option value="Promo Code">{isAr ? 'كود خصم (ترويجي)' : 'Promo Code'}</option>
@@ -749,39 +749,39 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                          </div>
                          <div>
                             <label className="text-xs font-bold text-slate-500 block mb-1">{isAr ? 'الكود أو العرض' : 'Code / Offer Name'}</label>
-                            <input 
-                              type="text" 
-                              value={promoCode} 
-                              onChange={e => setPromoCode(e.target.value)} 
-                              placeholder="e.g. FREE50" 
-                              className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary text-slate-800 dark:text-white" 
+                            <input
+                              type="text"
+                              value={promoCode}
+                              onChange={e => setPromoCode(e.target.value)}
+                              placeholder="e.g. FREE50"
+                              className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary text-slate-800 dark:text-white"
                             />
                          </div>
                          {promoType === 'Promo Code' && (
                            <div>
                               <label className="text-xs font-bold text-slate-500 block mb-1">{isAr ? 'نسبة الخصم (%)' : 'Discount Percentage (%)'}</label>
-                              <input 
-                                type="number" 
+                              <input
+                                type="number"
                                 min="1"
                                 max="100"
-                                value={promoDiscountPercent} 
-                                onChange={e => setPromoDiscountPercent(Number(e.target.value))} 
-                                placeholder="50" 
-                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary text-slate-800 dark:text-white" 
+                                value={promoDiscountPercent}
+                                onChange={e => setPromoDiscountPercent(Number(e.target.value))}
+                                placeholder="50"
+                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary text-slate-800 dark:text-white"
                               />
                            </div>
                          )}
                           <div>
                              <label className="text-xs font-bold text-slate-500 block mb-1">{isAr ? 'نص الرسالة' : 'Message Body'}</label>
-                             <textarea 
-                               rows={3} 
-                               value={promoMessage} 
-                               onChange={e => setPromoMessage(e.target.value)} 
-                               placeholder={isAr ? 'اكتب رسالة العرض أو كود هنا للاعضاء...' : 'Write your offer or code here...'} 
+                             <textarea
+                               rows={3}
+                               value={promoMessage}
+                               onChange={e => setPromoMessage(e.target.value)}
+                               placeholder={isAr ? 'اكتب رسالة العرض أو كود هنا للاعضاء...' : 'Write your offer or code here...'}
                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary resize-none text-slate-800 dark:text-white"
                              ></textarea>
                           </div>
-                          <button 
+                          <button
                             disabled={isSendingPromo || !promoMessage || !promoCode}
                             onClick={async () => {
                               setIsSendingPromo(true);
@@ -834,7 +834,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                               } finally {
                                 setIsSendingPromo(false);
                               }
-                            }} 
+                            }}
                             className="w-full py-3 bg-gradient-to-r from-primary to-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer"
                           >
                             {isSendingPromo ? (isAr ? 'جاري الإرسال...' : 'Sending...') : (isAr ? 'إرسال التنبيه الآن' : 'Send Notification Now')}
@@ -859,7 +859,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                                       {isAr ? `خصم %${coupon.discountPercent} على الاشتراكات` : `${coupon.discountPercent}% off on subscriptions`}
                                     </div>
                                   </div>
-                                  <button 
+                                  <button
                                     onClick={async () => {
                                       if (confirm(isAr ? `هل أنت متأكد من حذف الكود ${coupon.code}؟` : `Are you sure you want to delete coupon ${coupon.code}?`)) {
                                         try {
@@ -895,7 +895,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                         <span>{isAr ? 'الرقابة العامة والتحكم الفائق (وضع التخفي)' : 'Global Override & Stealth Mode'}</span>
                       </h3>
                       <p className="text-xs text-slate-500 mt-1">
-                        {isAr 
+                        {isAr
                           ? 'صلاحيات المسؤول الفائق (Super Admin): استعراض ودخول كافة الفصول الدراسية وتشفير E2EE دون ترك أي سجل أو إرسال إشعارات.'
                           : 'Super Admin master authorization: browse and intercept all classrooms and decrypt E2EE logs without leaving any footprints.'}
                       </p>
@@ -977,13 +977,13 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
 	                          className="w-full flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white transition-all hover:border-amber-300"
 	                        >
 	                          <span className="truncate">
-	                            {grantUserId 
+	                            {grantUserId
 	                              ? allUsers.find(u => (u.userId || u.uid) === grantUserId)?.name || 'Unknown User'
 	                              : (isAr ? 'اختر مستخدماً' : 'Select a user')}
 	                          </span>
 	                          <Search className={`h-4 w-4 transition-transform ${isUserListOpen ? 'rotate-180' : ''}`} />
 	                        </button>
-	                        
+
 	                        {isUserListOpen && (
 	                          <div className="absolute top-full left-0 right-0 z-[100] mt-2 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900 animate-in fade-in slide-in-from-top-2 duration-200">
 	                            <div className="sticky top-0 mb-2 bg-white dark:bg-slate-900 pb-2 border-b border-slate-100 dark:border-slate-800">
@@ -1024,7 +1024,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
 	                      </div>
 
 	                      <select value={grantCurrency} onChange={(event) => setGrantCurrency(event.target.value as any)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
-                        <option value="points">{isAr ? 'نقاط ✦' : 'Points ✦'}</option>
+                        <option value="points">{isAr ? 'نقاط ' : 'Points '}</option>
                         <option value="coins">{isAr ? 'عملات ◈' : 'Coins ◈'}</option>
                       </select>
                       <input type="number" min={1} max={1000000} value={grantPoints} onChange={(event) => setGrantPoints(Number(event.target.value))} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder={isAr ? 'الكمية' : 'Amount'} />
@@ -1040,9 +1040,9 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                         .filter(u => rewardBalances[u.userId || u.uid])
                         .sort((a, b) => (rewardBalances[b.userId || b.uid]?.points || 0) - (rewardBalances[a.userId || a.uid]?.points || 0))
                         .slice(0, 60)
-                        .map((user) => { 
-                          const id = user.userId || user.uid; 
-                          const balance = rewardBalances[id] || {}; 
+                        .map((user) => {
+                          const id = user.userId || user.uid;
+                          const balance = rewardBalances[id] || {};
                           return (
                             <div key={id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/50">
                               <div className="flex items-center justify-between gap-2">
@@ -1050,11 +1050,11 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                                 <span className="text-[10px] font-bold text-slate-400">Lv. {balance.level || 1}</span>
                               </div>
                               <div className="mt-3 flex items-center gap-4 text-xs font-black">
-                                <span className="text-amber-600 dark:text-amber-300">✦ {Number(balance.points || 0).toLocaleString()}</span>
+                                <span className="text-amber-600 dark:text-amber-300"> {Number(balance.points || 0).toLocaleString()}</span>
                                 <span className="text-sky-600 dark:text-sky-300">◈ {Number(balance.coins || 0).toLocaleString()}</span>
                               </div>
                             </div>
-                          ); 
+                          );
                         })
                       }
                     </div>
@@ -1073,7 +1073,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                     <h3 className="font-bold text-lg text-slate-800 dark:text-white">
                       {isAr ? 'مراقبة أداء محرك الذكاء الاصطناعي' : 'AI Engine Performance Monitoring'}
                     </h3>
-                    <button 
+                    <button
                       onClick={() => void loadAiMonitoringLogs()}
                       disabled={isLoadingLogs}
                       className="text-xs font-bold text-primary hover:underline disabled:cursor-wait disabled:opacity-60"
@@ -1180,30 +1180,30 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                  </div>
               )}
             </div>
-          
+
         </div>
       </div>
 
       {/* GHOST MODE INTERACTION OVERLAY MODAL */}
-      
+
         {activeAdminClassroom && (
           <OverlayPortal>
           <div
-            
-            
-            
+
+
+
             className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto overscroll-contain"
           >
             <div
-              
-              
-              
+
+
+
               className="my-auto w-full max-w-4xl bg-[#090514] border border-purple-500/20 rounded-[32px] p-6 md:p-8 shadow-2xl relative max-h-[90dvh] overflow-y-auto space-y-6"
             >
               <div className="flex justify-between items-center pb-4 border-b border-slate-800/60">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-500/10 text-purple-400 rounded-xl flex items-center justify-center font-bold">
-                    👻
+
                   </div>
                   <div className="text-right sm:text-left" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <h3 className="text-base font-black text-white flex items-center gap-2">
@@ -1213,7 +1213,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                       </span>
                     </h3>
                     <p className="text-[10px] text-slate-400 mt-1">
-                      {isAr 
+                      {isAr
                         ? `بوابة الشبح الفائقة | المعلم: ${activeAdminClassroom.creatorName} | الكود: ${activeAdminClassroom.code}`
                         : `Admin Ghost Portal | Teacher: ${activeAdminClassroom.creatorName} | Code: ${activeAdminClassroom.code}`}
                     </p>
@@ -1223,7 +1223,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                   onClick={() => setActiveAdminClassroom(null)}
                   className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
                 >
-                  ✕
+
                 </button>
               </div>
 
@@ -1244,7 +1244,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                           <div className="text-right sm:text-left" style={{ textAlign: isAr ? 'right' : 'left' }}>
                             <span className="font-bold text-slate-900 dark:text-white block">{s.studentName}</span>
                             <span className="text-[8px] text-slate-500 dark:text-slate-400">
-                              {s.role === 'co-moderator' ? '⭐️ Co-Moderator' : 'Student'}
+                              {s.role === 'co-moderator' ? '⭐ Co-Moderator' : 'Student'}
                             </span>
                           </div>
                         </div>
@@ -1313,7 +1313,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
                                 senderId: currentUserId || 'admin-stealth',
-                                senderName: isAr ? 'المشرف العام (تخفي) 👻' : 'Super Admin (Stealth) 👻',
+                                senderName: isAr ? 'المشرف العام (تخفي) ' : 'Super Admin (Stealth) ',
                                 senderPhoto: null,
                                 encryptedText: cipher,
                               }),
@@ -1350,7 +1350,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
           void refreshPendingEssays();
         }}
       />
-      
+
     </div>
   );
 }

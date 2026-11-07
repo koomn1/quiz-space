@@ -83,10 +83,10 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       const quiz = {
         ...source,
         id: quizId,
-        title: `⚡ ${isAr ? 'التحدي اليومي' : 'Daily Challenge'} — ${source.title}`,
+        title: ` ${isAr ? 'التحدي اليومي' : 'Daily Challenge'} — ${source.title}`,
         questions: source.questions.map((q: any, i: number) => ({ ...q, id: `${quizId}-q${i + 1}` })),
         creatorId: 'quizspace-daily-bank',
-        creatorName: isAr ? 'QuizSpace ⚡ (بنك ثابت)' : 'QuizSpace ⚡ (Fixed Bank)',
+        creatorName: isAr ? 'QuizSpace  (بنك ثابت)' : 'QuizSpace  (Fixed Bank)',
         category: isAr ? 'يومي — بنك ثابت' : 'Daily — Fixed Bank',
         createdAt: new Date().toISOString(),
         totalPlays: 0,

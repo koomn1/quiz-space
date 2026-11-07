@@ -28,20 +28,20 @@ export default function ShareModal({
   const [isChallengeMode, setIsChallengeMode] = React.useState(false);
 
   const isAr = lang === 'ar';
-  
+
   const textDict = {
     modalTitle: isAr ? 'مشاركة الاختبار التفاعلي' : 'Share Interactive Quiz',
     modalSub: isAr ? 'انشر العلم واختبر شبكتك حول العالم' : 'Spread knowledge and challenge your network worldwide',
     quizNameLabel: isAr ? 'اسم الاختبار:' : 'Quiz Title:',
-    challengeLabel: isAr ? 'وضعية التحدي التنافسي (Challenge Mode) 🏆' : 'Competitive Challenge Mode 🏆',
-    challengeSub: isAr 
-      ? 'يقيس وقت الحل بالملي ثانية وينشر الترتيب مباشرة على لوحة المتصدرين للأصدقاء.' 
+    challengeLabel: isAr ? 'وضعية التحدي التنافسي (Challenge Mode) ' : 'Competitive Challenge Mode ',
+    challengeSub: isAr
+      ? 'يقيس وقت الحل بالملي ثانية وينشر الترتيب مباشرة على لوحة المتصدرين للأصدقاء.'
       : 'Measures completion time in milliseconds and posts results on the friends leaderboard live.',
     uniqueUrlLabel: isAr ? 'الرابط الفريد المباشر:' : 'Unique Direct Link:',
     shareSocialLabel: isAr ? 'انشر مباشرة عبر منصات التواصل:' : 'Publish directly on social channels:',
     copiedLabel: isAr ? 'تمّ النسخ' : 'Copied!',
     copyLabel: isAr ? 'نسخ الرابط' : 'Copy Link',
-    disclaimer: isAr 
+    disclaimer: isAr
       ? 'مستندات الرابط والحلول تُحفظ ديناميكياً وتدعم ميزة المزامنة المباشرة للتصحيح.'
       : 'Quiz data and scores are saved dynamically supporting real-time grade updates and synchronization.',
     twitter: isAr ? 'إكس / تويتر' : 'X / Twitter',
@@ -55,12 +55,12 @@ export default function ShareModal({
   const shareUrl = getPublicQuizShareUrl(quizId, quizTitle, isChallengeMode);
 
   const shareText = isChallengeMode
-    ? (isAr 
-        ? `🏆 أتحداك في حل هذا الاختبار! دخلت الآن في "وضع التحدي" على اختبار "${quizTitle}". اضغط الرابط وتحدَ رفاقك لتصدر الترتيب! ⏱️`
-        : `🏆 Challenge alert! I invite you to beat my score in "${quizTitle}" (Challenge Mode). Click the link and show your skills! ⏱️`)
+    ? (isAr
+        ? ` أتحداك في حل هذا الاختبار! دخلت الآن في "وضع التحدي" على اختبار "${quizTitle}". اضغط الرابط وتحدَ رفاقك لتصدر الترتيب! ⏱`
+        : ` Challenge alert! I invite you to beat my score in "${quizTitle}" (Challenge Mode). Click the link and show your skills! ⏱`)
     : (isAr
-        ? `هل يمكنك حل هذا الاختبار؟ 🤔 لقد تم إنشاء اختبار تفاعلي ذكي بعنوان "${quizTitle}" عبر منصة Quiz Space. اختبر معلوماتك الآن!`
-        : `Can you solve this quiz? 🤔 "${quizTitle}" has been generated on Quiz Space. Test your knowledge right away!`);
+        ? `هل يمكنك حل هذا الاختبار؟  لقد تم إنشاء اختبار تفاعلي ذكي بعنوان "${quizTitle}" عبر منصة Quiz Space. اختبر معلوماتك الآن!`
+        : `Can you solve this quiz?  "${quizTitle}" has been generated on Quiz Space. Test your knowledge right away!`);
 
   const copyToClipboard = () => {
     try {
@@ -148,9 +148,9 @@ export default function ShareModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain p-4 bg-slate-900/60 dark:bg-black/85 backdrop-blur-xs">
       {/* Modal Card */}
       <div
-        
-        
-        
+
+
+
         className="uipro-glass-surface my-auto max-h-[min(720px,90dvh)] w-full max-w-lg overflow-y-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-white/60 dark:border-white/10 text-right"
         dir={isAr ? 'rtl' : 'ltr'}
       >
@@ -169,7 +169,7 @@ export default function ShareModal({
               </p>
             </div>
           </div>
-          
+
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer"
@@ -210,10 +210,10 @@ export default function ShareModal({
               {textDict.challengeSub}
             </p>
           </div>
-          
-          <LiquidGlassSwitch 
-            checked={isChallengeMode} 
-            onChange={(checked) => setIsChallengeMode(checked)} 
+
+          <LiquidGlassSwitch
+            checked={isChallengeMode}
+            onChange={(checked) => setIsChallengeMode(checked)}
             size="sm"
           />
         </div>
@@ -230,7 +230,7 @@ export default function ShareModal({
               className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-2xl outline-none text-xs font-mono text-primary dark:text-primary-light select-all text-left"
               dir="ltr"
             />
-            
+
             <button
               onClick={copyToClipboard}
               className={`flex items-center justify-center gap-1.5 px-5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer flex-shrink-0 ${
@@ -257,11 +257,11 @@ export default function ShareModal({
         {/* Social Platforms Row */}
         <div className={`space-y-3 ${isAr ? 'text-right' : 'text-left'}`}>
           <label className="text-xs font-bold text-slate-500 dark:text-slate-400">{textDict.shareSocialLabel}</label>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {platforms.map((platform) => (
               <a
-                
+
                 href={platform.url}
                 target="_blank"
                 rel="noopener noreferrer"

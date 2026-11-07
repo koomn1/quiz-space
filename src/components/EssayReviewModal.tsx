@@ -96,7 +96,7 @@ export function EssayReviewModal({
         feedback.trim()
       );
       if (success) {
-        setActionSuccess(isAr ? 'تم اعتماد وتحديث نتيجة الطالب بنجاح! ✨' : 'Grading submitted successfully! ✨');
+        setActionSuccess(isAr ? 'تم اعتماد وتحديث نتيجة الطالب بنجاح! ' : 'Grading submitted successfully! ');
         // Remove from local list
         setReviews((prev) => prev.filter((r) => r.completionId !== activeReview.completionId));
         onGraded?.();
@@ -136,7 +136,7 @@ export function EssayReviewModal({
         <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 px-6 py-4.5 dark:border-slate-800/80 bg-gradient-to-r from-primary/10 via-primary/5 to-amber-500/10 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
-              ✍️
+
             </div>
             <div>
               <h3 className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -171,7 +171,7 @@ export function EssayReviewModal({
           ) : reviews.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 px-4 text-center">
               <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-3xl">
-                🎉
+
               </div>
               <div>
                 <h4 className="font-bold text-base text-slate-800 dark:text-slate-100">
@@ -233,7 +233,7 @@ export function EssayReviewModal({
                   <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
                     <div>
                       <h4 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>👤</span>
+                        <span></span>
                         <span>{activeReview.takerName}</span>
                         {activeReview.isGuest && (
                           <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-full font-normal">
@@ -302,7 +302,7 @@ export function EssayReviewModal({
                             {q.correctAnswer && (
                               <details className="text-xs">
                                 <summary className="cursor-pointer font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
-                                  {isAr ? '👁️ عرض الإجابة النموذجية الاسترشادية' : '👁️ View Model Answer'}
+                                  {isAr ? ' عرض الإجابة النموذجية الاسترشادية' : ' View Model Answer'}
                                 </summary>
                                 <div className="mt-2 p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-900 dark:text-emerald-200 leading-relaxed font-semibold">
                                   {q.correctAnswer}
@@ -391,7 +391,7 @@ export function EssayReviewModal({
                         ) : (
                           <>
                             <CheckCircle2 className="w-4 h-4" />
-                            <span>{isAr ? 'اعتماد الدرجة وإرسال النتيجة للطالب ✨' : 'Finalize Grade & Notify Student ✨'}</span>
+                            <span>{isAr ? 'اعتماد الدرجة وإرسال النتيجة للطالب ' : 'Finalize Grade & Notify Student '}</span>
                           </>
                         )}
                       </button>

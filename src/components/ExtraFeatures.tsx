@@ -7,23 +7,23 @@ import { NeumorphismToggle } from './NeumorphismToggle';
 import { LiquidGlassSwitch } from './LiquidGlassSwitch';
 import Security from '../pages/settings/Security';
 import Notifications from '../pages/settings/Notifications';
-import { 
-  Compass, Layers, Users, Bookmark, Trophy, Award, Sparkles, Search, MessageSquare, 
+import {
+  Compass, Layers, Users, Bookmark, Trophy, Award, Sparkles, Search, MessageSquare,
   Send, ThumbsUp, Trash2, PlusCircle, CheckCircle, Flame, Clock, Heart, Shield, Settings, Pencil,
   Volume2, VolumeX, Eye, BookOpen, Star, HelpCircle, User, Zap, Info, X
 } from 'lucide-react';
 import { Quiz, QuizCompletion } from '../types';
 import { translations } from '../lib/i18n';
 import { THEME_PRESETS } from '../lib/themePresets';
-import { 
-  getCommunityPosts, 
-  createCommunityPost, 
-  likeCommunityPost, 
+import {
+  getCommunityPosts,
+  createCommunityPost,
+  likeCommunityPost,
   deleteCommunityPost,
   togglePostReaction,
   getReactionsForPosts,
   ReactionType,
-  getNotifications, 
+  getNotifications,
   getRecentCompletions,
   getUserProfileStats,
   saveUserProfile,
@@ -85,17 +85,17 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const isAr = lang === 'ar';
 
-  const tags = isAr 
-    ? ['الذكاء الاصطناعي', 'تطوير الويب', 'الفيزياء', 'التاريخ', 'برمجة'] 
+  const tags = isAr
+    ? ['الذكاء الاصطناعي', 'تطوير الويب', 'الفيزياء', 'التاريخ', 'برمجة']
     : ['AI', 'Web Dev', 'Physics', 'History', 'Programming'];
 
   const filtered = quizzes.filter(q => {
     const isPublic = !q.distributionRouting || q.distributionRouting === 'public';
     if (!isPublic) return false;
-    const matchesSearch = q.title.toLowerCase().includes(search.toLowerCase()) || 
+    const matchesSearch = q.title.toLowerCase().includes(search.toLowerCase()) ||
                           (q.description || '').toLowerCase().includes(search.toLowerCase());
-    const matchesTag = !selectedTag || 
-                       q.title.toLowerCase().includes(selectedTag.toLowerCase()) || 
+    const matchesTag = !selectedTag ||
+                       q.title.toLowerCase().includes(selectedTag.toLowerCase()) ||
                        (q.description || '').toLowerCase().includes(selectedTag.toLowerCase());
     return matchesSearch && matchesTag;
   });
@@ -114,10 +114,10 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
             {isAr ? 'تصفح وقارن واكتشف اختبارات عامة منتقاة بعناية لزيادة خبرتك المعرفية وتحدي أصدقائك.' : 'Browse, play & share public challenges curated by educators worldwide.'}
           </p>
         </div>
-        
+
         <div className="relative w-full md:w-88">
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder={isAr ? 'ابحث باسم الاختبار أو مجاله...' : 'Search quizzes by title or topic...'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -134,23 +134,23 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
 
       {/* Suggested Tags Pills */}
       <div className="flex flex-wrap items-center gap-2">
-        <button 
+        <button
           onClick={() => setSelectedTag(null)}
           className={`uipro-pill-badge py-2 px-4 text-xs font-black transition-all cursor-pointer ${
-            !selectedTag 
-              ? 'bg-primary text-white shadow-md shadow-primary/25 scale-103' 
+            !selectedTag
+              ? 'bg-primary text-white shadow-md shadow-primary/25 scale-103'
               : 'bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-primary/40 hover:text-primary'
           }`}
         >
           {isAr ? 'جميع الاختبارات' : 'All Quizzes'}
         </button>
         {tags.map(tag => (
-          <button 
+          <button
             key={tag}
             onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
             className={`uipro-pill-badge py-2 px-4 text-xs font-black transition-all cursor-pointer ${
-              selectedTag === tag 
-                ? 'bg-primary text-white shadow-md shadow-primary/25 scale-103' 
+              selectedTag === tag
+                ? 'bg-primary text-white shadow-md shadow-primary/25 scale-103'
                 : 'bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-primary/40 hover:text-primary'
             }`}
           >
@@ -253,12 +253,12 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
           const isSelected = selectedCat === cat.id;
 
           return (
-            <ParallaxTiltCard key={cat.id} 
+            <ParallaxTiltCard key={cat.id}
               idx={idx}
               onClick={() => { playChimeSound('click'); setSelectedCat(isSelected ? null : cat.id); }}
               className={`uipro-clay-card relative overflow-hidden p-5 rounded-[26px] cursor-pointer border transition-all ${
-                isSelected 
-                  ? 'bg-gradient-to-br from-primary/15 via-violet-500/10 to-indigo-600/10 border-primary shadow-xl ring-2 ring-primary/40' 
+                isSelected
+                  ? 'bg-gradient-to-br from-primary/15 via-violet-500/10 to-indigo-600/10 border-primary shadow-xl ring-2 ring-primary/40'
                   : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-primary/40'
               }`}
             >
@@ -284,7 +284,7 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
       <div className="space-y-6 pt-2">
         <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-4">
           <h3 className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
-            <span>💎</span>
+            <span></span>
             <span>{isAr ? 'الاختبارات المتوفرة:' : 'Quizzes in this track:'}</span>
             {activeCategoryObj && (
               <span className="uipro-pill-badge bg-primary/15 text-primary dark:text-primary-light border border-primary/25">
@@ -403,13 +403,13 @@ function CommunityPostCard({
   }, [post.id, userId, userName, isAr]);
 
   return (
-    <div 
+    <div
       className="uipro-clay-card p-6 rounded-[28px] space-y-4 text-right relative overflow-hidden"
     >
       <div className="flex items-center justify-between text-right" dir={isAr ? 'rtl' : 'ltr'}>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-indigo-600 flex items-center justify-center text-xs font-bold text-white uppercase sm:text-xs">
-            {post.authorName ? post.authorName.substring(0, 1) : '👤'}
+            {post.authorName ? post.authorName.substring(0, 1) : ''}
           </div>
           <div>
             <div className="flex items-center gap-1.5 flex-row-reverse justify-end">
@@ -477,7 +477,7 @@ function CommunityPostCard({
         <ReactionButton post={post} isAr={isAr} onReact={(reaction, e) => handleReact(post.id, reaction, e)} />
 
         {isAdmin && (
-          <button 
+          <button
             onClick={() => onOpenInsights && onOpenInsights(post)}
             className="flex items-center gap-1.5 text-[10.5px] font-medium py-1 px-3.5 rounded-lg border bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary-hover hover:border-primary/20 cursor-pointer"
             title={isAr ? 'عرض المشاهدات' : 'View counts'}
@@ -497,12 +497,12 @@ function CommunityPostCard({
 // toggles the user's current reaction (or defaults to 'like').
 // ----------------------------------------------------
 const REACTION_META: Record<ReactionType, { emoji: string; labelAr: string; labelEn: string; activeClasses: string }> = {
-  like:  { emoji: '👍', labelAr: 'إعجاب',       labelEn: 'Like',  activeClasses: 'bg-blue-50 dark:bg-blue-500/15 border-blue-200 dark:border-blue-500/30 text-blue-500 dark:text-blue-400' },
-  love:  { emoji: '❤️', labelAr: 'حب',          labelEn: 'Love',  activeClasses: 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30 text-rose-500 dark:text-rose-400' },
-  laugh: { emoji: '😂', labelAr: 'ضحك',         labelEn: 'Haha',  activeClasses: 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30 text-amber-500 dark:text-amber-400' },
-  wow:   { emoji: '😮', labelAr: 'إعجاب شديد',   labelEn: 'Wow',   activeClasses: 'bg-purple-50 dark:bg-purple-500/15 border-purple-200 dark:border-purple-500/30 text-purple-500 dark:text-purple-400' },
-  sad:   { emoji: '😢', labelAr: 'حزن',          labelEn: 'Sad',   activeClasses: 'bg-sky-50 dark:bg-sky-500/15 border-sky-200 dark:border-sky-500/30 text-sky-500 dark:text-sky-400' },
-  fire:  { emoji: '🔥', labelAr: 'نار',          labelEn: 'Fire',  activeClasses: 'bg-orange-50 dark:bg-orange-500/15 border-orange-200 dark:border-orange-500/30 text-orange-500 dark:text-orange-400' },
+  like:  { emoji: '', labelAr: 'إعجاب',       labelEn: 'Like',  activeClasses: 'bg-blue-50 dark:bg-blue-500/15 border-blue-200 dark:border-blue-500/30 text-blue-500 dark:text-blue-400' },
+  love:  { emoji: '', labelAr: 'حب',          labelEn: 'Love',  activeClasses: 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30 text-rose-500 dark:text-rose-400' },
+  laugh: { emoji: '', labelAr: 'ضحك',         labelEn: 'Haha',  activeClasses: 'bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30 text-amber-500 dark:text-amber-400' },
+  wow:   { emoji: '', labelAr: 'إعجاب شديد',   labelEn: 'Wow',   activeClasses: 'bg-purple-50 dark:bg-purple-500/15 border-purple-200 dark:border-purple-500/30 text-purple-500 dark:text-purple-400' },
+  sad:   { emoji: '', labelAr: 'حزن',          labelEn: 'Sad',   activeClasses: 'bg-sky-50 dark:bg-sky-500/15 border-sky-200 dark:border-sky-500/30 text-sky-500 dark:text-sky-400' },
+  fire:  { emoji: '', labelAr: 'نار',          labelEn: 'Fire',  activeClasses: 'bg-orange-50 dark:bg-orange-500/15 border-orange-200 dark:border-orange-500/30 text-orange-500 dark:text-orange-400' },
 };
 const REACTION_ORDER: ReactionType[] = ['like', 'love', 'laugh', 'wow', 'sad', 'fire'];
 
@@ -579,7 +579,7 @@ function ReactionButton({ post, isAr, onReact }: {
           }`}
           title={isAr ? 'إضافة إعجاب' : 'Add like'}
         >
-          <span className="text-sm leading-none">{buttonMeta?.emoji || '👍'}</span>
+          <span className="text-sm leading-none">{buttonMeta?.emoji || ''}</span>
           <span>{isAr ? 'تفاعل' : 'React'}</span>
           <span className="min-w-4 text-center">{total}</span>
         </button>
@@ -818,7 +818,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
     <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">{isAr ? '💬 مجتمع الفضاء الأكاديمي' : 'Academic Community Hub'}</h2>
+          <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">{isAr ? ' مجتمع الفضاء الأكاديمي' : 'Academic Community Hub'}</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{isAr ? 'تواصل وتفاعل مع المعلمين والطلاب وتعرف على المتفوقين وحلول الاختبارات لحظياً.' : 'Connect & interact with students and educators, view recent quiz solvers and high scores live.'}</p>
         </div>
 
@@ -846,7 +846,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
             }`}
           >
             <Trophy className="w-4 h-4 text-amber-300" />
-            <span>{isAr ? 'سجل المتفوقين والحلول 🏆' : 'Live Solvers 🏆'}</span>
+            <span>{isAr ? 'سجل المتفوقين والحلول ' : 'Live Solvers '}</span>
           </button>
         </div>
       </div>
@@ -880,7 +880,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
               }}
               className="uipro-pill-badge text-xs font-bold text-amber-600 dark:text-amber-400 border border-amber-500/30 bg-amber-500/10 cursor-pointer shrink-0"
             >
-              {isAr ? 'تحديث 🔄' : 'Refresh 🔄'}
+              {isAr ? 'تحديث ' : 'Refresh '}
             </button>
           </div>
 
@@ -919,7 +919,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                           ? 'bg-amber-700 text-white'
                           : 'bg-slate-150 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                       }`}>
-                        {index < 3 ? '👑' : `#${index + 1}`}
+                        {index < 3 ? '' : `#${index + 1}`}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -928,7 +928,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                           </p>
                           {isPerfect && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-300 font-black">
-                              {isAr ? 'علامة كاملة 🌟' : 'Perfect 🌟'}
+                              {isAr ? 'علامة كاملة ' : 'Perfect '}
                             </span>
                           )}
                         </div>
@@ -956,7 +956,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                           href={`#/quiz/${solver.quizId}`}
                           className="text-[11px] font-bold text-primary hover:underline"
                         >
-                          {isAr ? 'خوض الاختبار ⚡' : 'Try Quiz ⚡'}
+                          {isAr ? 'خوض الاختبار ' : 'Try Quiz '}
                         </a>
                       )}
                     </div>
@@ -971,7 +971,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
           {/* Publish Feed Form */}
           {userId && (
             <div className="uipro-clay-card p-5 space-y-4 rounded-3xl relative overflow-hidden">
-              <textarea 
+              <textarea
                 rows={3}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
@@ -981,15 +981,15 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
               />
               <div className="flex items-center justify-between">
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
-                  <span>💡</span>
+                  <span></span>
                   <span>{isAr ? 'منشورك سيظهر لجميع أعضاء مجتمع الفضاء الأكاديمي.' : 'Your post will be visible to all academic community members.'}</span>
                 </p>
-                <button 
+                <button
                   onClick={handlePublish}
                   disabled={!inputText.trim() || isPublishing}
                   className="uipro-btn-tactile px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-black shadow-lg shadow-primary/20 flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <span>{isAr ? 'نشر الآن 🚀' : 'Post Now 🚀'}</span>
+                  <span>{isAr ? 'نشر الآن ' : 'Post Now '}</span>
                   <Send className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -1008,9 +1008,9 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                     {isAr ? 'لا توجد منشورات حتى الآن' : 'No posts yet'}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-                    {isAr 
-                      ? 'المجتمع فارغ حالياً من المنشورات الاصطناعية! شارك أفكارك، تجاربك، أو استفساراتك لتكون أول من يكتب هنا 💬✨' 
-                      : 'The community has no artificial posts! Be the first to share your thoughts, questions, or quiz scores live 💬✨'}
+                    {isAr
+                      ? 'المجتمع فارغ حالياً من المنشورات الاصطناعية! شارك أفكارك، تجاربك، أو استفساراتك لتكون أول من يكتب هنا '
+                      : 'The community has no artificial posts! Be the first to share your thoughts, questions, or quiz scores live '}
                   </p>
                 </div>
               </div>
@@ -1076,13 +1076,13 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
       )}
 
       {/* Viewer Insights Modal */}
-      
+
         {isInsightsOpen && selectedPostForInsights && (
           <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4">
             <div
-              
-              
-              
+
+
+
               className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl"
             >
               {/* Modal Header */}
@@ -1090,7 +1090,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                 <div className="flex items-center gap-2">
                   <Eye className="w-5 h-5 text-[#b175ff] animate-pulse" />
                   <h3 className="font-display font-black text-sm text-slate-800 dark:text-white">
-                    {isAr ? 'تفاصيل وإحصائيات المشاهدات 👁️' : 'Detailed Message Viewers 👁️'}
+                    {isAr ? 'تفاصيل وإحصائيات المشاهدات ' : 'Detailed Message Viewers '}
                   </h3>
                 </div>
                 <button
@@ -1117,13 +1117,13 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                       const timeStr = new Date(viewer.createdAt).toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' });
                       const dateStr = new Date(viewer.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
                       return (
-                        <div 
+                        <div
                            key={viewer.userId || idx}
                           className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800/60"
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-violet-500 to-indigo-600 flex items-center justify-center text-xs font-black text-white border-2 border-[#b175ff]/30 shadow-xs">
-                              {viewer.userName ? viewer.userName.substring(0, 1) : '👤'}
+                              {viewer.userName ? viewer.userName.substring(0, 1) : ''}
                             </div>
                             <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
                               {viewer.userName}
@@ -1151,7 +1151,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
             </div>
           </div>
         )}
-      
+
     </div>
   );
 }
@@ -1194,7 +1194,7 @@ export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile, us
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white flex items-center gap-2">
-            <span>🔖</span>
+            <span></span>
             <span>{isAr ? 'مسابقاتك المفضلة والمحفوظة' : 'My Pinned Bookmarks'}</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -1229,7 +1229,7 @@ export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile, us
               {isAr ? 'قائمتك المفضلة خالية تماماً' : 'No Bookmarked Quizzes'}
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
-              {isAr 
+              {isAr
                 ? 'اضغط على زر الإشارة المرجعية أو النجمة ببطاقة أي اختبار في صفحة الاستكشاف أو الرئيسية لحفظه هنا والرجوع إليه لاحقاً.'
                 : 'Click the star or bookmark icon on any quiz card across explore or catalogue to pin it here for quick access anytime.'}
             </p>
@@ -1256,53 +1256,53 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
   const achievementsList = [
     {
       id: 'ac1',
-      titleAr: 'أول الغيث 💧',
-      titleEn: 'First Cosmo AI 💧',
+      titleAr: 'أول الغيث ',
+      titleEn: 'First Cosmo AI ',
       descAr: 'قم بإنهاء وحل مسابقة واحدة بالكامل لتسجيل علامتك بقاعدة البيانات.',
       descEn: 'Solve and fully submit your first interactive exam score globally.',
       unlocked: totalSolved >= 1,
       rewardText: '50 XP',
-      icon: '🎯'
+      icon: ''
     },
     {
       id: 'ac2',
-      titleAr: 'الدرجة الكاملة 🏆',
-      titleEn: 'Master of Truth 🏆',
+      titleAr: 'الدرجة الكاملة ',
+      titleEn: 'Master of Truth ',
       descAr: 'سجل درجة كاملة بنسبة ١٠٠٪ في أي اختبار تفاعلي متاح بالكتالوج.',
       descEn: 'Score a perfect 100% correct answer strike on any active quiz.',
       unlocked: maxScore >= 100,
       rewardText: '150 XP',
-      icon: '👑'
+      icon: ''
     },
     {
       id: 'ac3',
-      titleAr: 'المهندس الـصانع 🛠️',
-      titleEn: 'Grand Architect 🛠️',
+      titleAr: 'المهندس الـصانع ',
+      titleEn: 'Grand Architect ',
       descAr: 'قم بتصميم وإنتاج أول اختبار تفاعلي مخصص يدوياً أو بالذكاء الاصطناعي.',
       descEn: 'Create & publish at least one public high-fidelity quiz.',
       unlocked: totalCreations >= 1,
       rewardText: '100 XP',
-      icon: '🧠'
+      icon: ''
     },
     {
       id: 'ac4',
-      titleAr: 'كاسر حواجز الوقت ⚡',
-      titleEn: 'Superluminal Solver ⚡',
+      titleAr: 'كاسر حواجز الوقت ',
+      titleEn: 'Superluminal Solver ',
       descAr: 'حل أي اختبار وحافظ على هدوء الشفق في وقت قياسي جداً للسرعة.',
       descEn: 'Complete any selected exam within the optimal speed records.',
       unlocked: totalSolved >= 3,
       rewardText: '80 XP',
-      icon: '⚡'
+      icon: ''
     },
     {
       id: 'ac5',
-      titleAr: 'التاج الذهبي المعتمد 👑',
-      titleEn: 'Imperial Crown Member 👑',
+      titleAr: 'التاج الذهبي المعتمد ',
+      titleEn: 'Imperial Crown Member ',
       descAr: 'ترقية وتفعيل حسابك للباقة الذهبية للوصول لإنشاء غير محدود للطلاب.',
       descEn: 'Unlock full-spectrum educator superpowers by activating your VIP token.',
       unlocked: hasPrem,
       rewardText: '250 XP',
-      icon: '👑'
+      icon: ''
     }
   ];
 
@@ -1322,9 +1322,9 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0, scale: 0.96 },
-    show: { 
-      y: 0, 
-      opacity: 1, 
+    show: {
+      y: 0,
+      opacity: 1,
       scale: 1,
       transition: { type: "spring", stiffness: 120, damping: 15 }
     }
@@ -1340,7 +1340,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2">
-            <span>🏆</span>
+            <span></span>
             <span>{isAr ? 'شارات التوثيق المستحقة' : 'My Accomplishments & Trophies'}</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
@@ -1361,7 +1361,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
       {/* Interactive Suggestion Ticker */}
       <div className="uipro-glass-panel bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent border border-indigo-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5">
-          <span className="text-lg animate-bounce">⚡</span>
+          <span className="text-lg animate-bounce"></span>
           <span className="text-slate-700 dark:text-slate-300 font-extrabold leading-relaxed">
             {isAr ? 'تم دمج حركات غامرة مستقلة! اضغط على أي بطاقة شارة بالأسفل لتجربة لوحة الاحتفال ثلاثية الأبعاد.' : 'Immersive motion integrated! Click any badge below to launch details and celebratory playback.'}
           </span>
@@ -1397,12 +1397,12 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
       {/* Achievements Cards list with Stagger Revealing */}
       <div className="space-y-4">
         {achievementsList.map(item => (
-          <div 
+          <div
             key={item.id}
             onClick={() => triggerCelebration(item)}
             className={`uipro-clay-card p-5 rounded-3xl border text-right transition-all flex flex-col md:flex-row items-center justify-between gap-4 cursor-pointer relative overflow-hidden group ${
-              item.unlocked 
-                ? 'bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 dark:from-indigo-950/30 dark:via-slate-900 dark:to-purple-950/20 border-indigo-200 dark:border-indigo-500/30 shadow-md' 
+              item.unlocked
+                ? 'bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/30 dark:from-indigo-950/30 dark:via-slate-900 dark:to-purple-950/20 border-indigo-200 dark:border-indigo-500/30 shadow-md'
                 : 'bg-slate-100/60 dark:bg-[#11131c]/40 border-slate-200 dark:border-slate-900/80 grayscale opacity-60'
             }`}
             dir={isAr ? 'rtl' : 'ltr'}
@@ -1419,11 +1419,11 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
                   <span>{isAr ? item.titleAr : item.titleEn}</span>
                   {item.unlocked ? (
                     <span className="text-[10px] uipro-gold-shimmer bg-indigo-500 text-white font-bold px-2.5 py-0.5 rounded-full select-none shadow-xs">
-                      🎉 {isAr ? 'تم الفتح' : 'Unlocked'}
+                       {isAr ? 'تم الفتح' : 'Unlocked'}
                     </span>
                   ) : (
                     <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold px-2.5 py-0.5 rounded-full select-none">
-                      🔒 {isAr ? 'مقفل' : 'Locked'}
+                       {isAr ? 'مقفل' : 'Locked'}
                     </span>
                   )}
                 </h4>
@@ -1439,7 +1439,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
                   ? 'uipro-gold-shimmer bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/30'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
               }`}>
-                ★ {item.rewardText}
+                 {item.rewardText}
               </span>
             </div>
           </div>
@@ -1461,7 +1461,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
             <div className="absolute top-12 left-1/2 -translate-x-1/2 w-48 h-48 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-full opacity-20 blur-3xl" />
 
             <div className="space-y-6 relative z-10">
-              <div 
+              <div
                 className="w-32 h-32 mx-auto bg-gradient-to-tr from-amber-400 via-yellow-500 to-amber-300 rounded-full flex items-center justify-center text-6xl shadow-2xl shadow-amber-500/30 border-4 border-yellow-200 ring-8 ring-amber-500/20 animate-bounce"
               >
                 <span className="drop-shadow-md select-none">{celebrationMedal.icon}</span>
@@ -1469,7 +1469,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
 
               <div className="space-y-1.5">
                 <span className="inline-block px-3 py-1 bg-amber-500/20 border border-amber-400/40 rounded-full text-[10px] text-amber-600 dark:text-amber-300 font-extrabold uppercase tracking-widest">
-                  🏆 {isAr ? 'تم فتح شارة توثيق جديدة!' : 'New Badge Unlocked!'}
+                   {isAr ? 'تم فتح شارة توثيق جديدة!' : 'New Badge Unlocked!'}
                 </span>
                 <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white tracking-tight leading-snug">
                   {isAr ? celebrationMedal.titleAr : celebrationMedal.titleEn}
@@ -1492,7 +1492,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
                   }}
                   className="uipro-btn-tactile w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 text-slate-950 font-black text-xs cursor-pointer shadow-xl shadow-amber-500/25 leading-none focus:outline-none"
                 >
-                  {isAr ? 'أغلق وتابع تجميع المعرفة 🚀' : 'Collect & Continue Journey 🚀'}
+                  {isAr ? 'أغلق وتابع تجميع المعرفة ' : 'Collect & Continue Journey '}
                 </button>
               </div>
             </div>
@@ -1533,7 +1533,7 @@ export function SettingsSection({
 }) {
   const isAr = lang === 'ar';
   const { themePreference, setThemePreference } = useTheme();
-  
+
   // Tab control state (1: البيانات الأساسية, 2: إدارة الأمان, 3: تخصيص الواجهة, 4: الإشعارات)
   const [activeTab, setActiveTab] = useState<1 | 2 | 3 | 4>(1);
 
@@ -1569,7 +1569,7 @@ export function SettingsSection({
   useGSAP(() => {
     gsap.fromTo(containerRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" });
   }, { scope: containerRef });
-  
+
   useGSAP(() => {
     gsap.fromTo(".settings-tab-content", { opacity: 0, scale: 0.98, y: 15 }, { opacity: 1, scale: 1, y: 0, duration: 0.4, stagger: 0.05, ease: "back.out(1.2)", clearProps: "all" });
   }, { scope: containerRef, dependencies: [activeTab] });
@@ -1630,8 +1630,8 @@ export function SettingsSection({
       if (err.message?.includes('popup_closed') || err.message?.includes('access_denied')) {
         alert(
           isAr
-            ? '💡 يبدو أن نافذة تسجيل الدخول قد أُغلقت أو تم حظرها من قِبل المتصفح. نظرًا لأنك في وضع المعاينة (iframe)، يرجى فتح التطبيق في علامة تبويب جديدة بالضغط على زر "فتح في علامة تبويب جديدة" أعلى اليمين والمحاولة من هناك لتجنب قيود الأمان.'
-            : '💡 The sign-in popup was closed or blocked. Because you are inside the development preview iframe, please open the app in a new tab using the top-right button, then authorize Google Drive from there.'
+            ? ' يبدو أن نافذة تسجيل الدخول قد أُغلقت أو تم حظرها من قِبل المتصفح. نظرًا لأنك في وضع المعاينة (iframe)، يرجى فتح التطبيق في علامة تبويب جديدة بالضغط على زر "فتح في علامة تبويب جديدة" أعلى اليمين والمحاولة من هناك لتجنب قيود الأمان.'
+            : ' The sign-in popup was closed or blocked. Because you are inside the development preview iframe, please open the app in a new tab using the top-right button, then authorize Google Drive from there.'
         );
       } else {
         alert(isAr ? 'فشلت عملية الربط مع Google Drive.' : 'Failed to authorize Google Drive.');
@@ -1735,15 +1735,15 @@ export function SettingsSection({
   };
 
   const tabsConfig = [
-    { id: 1 as const, label: isAr ? 'البيانات الأساسية' : 'Basic Details', icon: '📝' },
-    { id: 2 as const, label: isAr ? 'إدارة الأمان' : 'Security', icon: '🔒' },
-    { id: 3 as const, label: isAr ? 'تخصيص الواجهة' : 'Interface', icon: '🎨' },
-    { id: 4 as const, label: isAr ? 'الإشعارات' : 'Notifications', icon: '🔔' }
+    { id: 1 as const, label: isAr ? 'البيانات الأساسية' : 'Basic Details', icon: '' },
+    { id: 2 as const, label: isAr ? 'إدارة الأمان' : 'Security', icon: '' },
+    { id: 3 as const, label: isAr ? 'تخصيص الواجهة' : 'Interface', icon: '' },
+    { id: 4 as const, label: isAr ? 'الإشعارات' : 'Notifications', icon: '' }
   ];
 
   return (
     <div ref={containerRef} className="max-w-5xl mx-auto flex flex-col gap-6 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-      
+
       {/* Dynamic Tab Selector header with Layout Animation */}
       <div className="flex flex-wrap items-center justify-center p-1.5 bg-slate-900/60 dark:bg-[#130b2b]/40 backdrop-blur-md rounded-2xl border border-slate-200/10 gap-1 select-none">
         {tabsConfig.map((tab) => {
@@ -1758,9 +1758,9 @@ export function SettingsSection({
             >
               {isActive && (
                 <div
-                  
+
                   className="absolute inset-0 bg-primary rounded-xl -z-10 shadow-lg shadow-primary/25"
-                  
+
                 />
               )}
               <span className="text-sm">{tab.icon}</span>
@@ -1772,18 +1772,18 @@ export function SettingsSection({
 
       {/* Main viewport with transition effect */}
       <div className="bg-white/95 dark:bg-[#0e0a1f]/80 backdrop-blur-2xl border border-slate-200 dark:border-[#3d1d6d]/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden min-h-[450px]">
-        
+
         {/* TAB 1: البيانات الأساسية */}
         {activeTab === 1 && (
           <div
-            
-            
-            
+
+
+
             className="space-y-6"
           >
             <div>
               <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span className="text-xl">📝</span>
+                <span className="text-xl"></span>
                 <span>{isAr ? 'البيانات الأساسية للملف الشخصي' : 'Basic Profile Information'}</span>
               </h3>
               <p className="text-xs text-slate-400 mt-1">
@@ -1796,8 +1796,8 @@ export function SettingsSection({
                 <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'الاسم الكامل:' : 'Full Name / Display Name:'}
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all"
@@ -1810,8 +1810,8 @@ export function SettingsSection({
                 <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'اسم المستخدم (معرّف فريد):' : 'Username / Unique ID:'}
                 </label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all"
@@ -1824,8 +1824,8 @@ export function SettingsSection({
                 <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'رقم الهاتف المتنقل:' : 'Phone Number:'}
                 </label>
-                <input 
-                  type="tel" 
+                <input
+                  type="tel"
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all font-mono"
@@ -1838,8 +1838,8 @@ export function SettingsSection({
                 <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'البريد الإلكتروني (غير قابل للتعديل):' : 'Email Address (Read-only):'}
                 </label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={currentUserEmail || ''}
                   disabled
                   className="w-full bg-slate-100 dark:bg-slate-950/40 opacity-60 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed"
@@ -1851,7 +1851,7 @@ export function SettingsSection({
                 <label className="text-xs font-black text-slate-600 dark:text-slate-300 block">
                   {isAr ? 'نبذة تعريفية (Bio):' : 'Biography:'}
                 </label>
-                <textarea 
+                <textarea
                   value={bioInput}
                   onChange={(e) => setBioInput(e.target.value)}
                   rows={3}
@@ -1871,18 +1871,18 @@ export function SettingsSection({
 
             {saveBasicFeedback && saveBasicFeedback !== 'success' && (
               <div className="flex items-center gap-2 text-red-400 text-xs font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20">
-                <span className="shrink-0">⚠️</span>
+                <span className="shrink-0"></span>
                 <span>{saveBasicFeedback}</span>
               </div>
             )}
 
             <div className="flex justify-end pt-4">
-              <button 
+              <button
                 onClick={handleSaveBasicDetails}
                 disabled={isSavingBasic}
                 className="px-8 py-3 bg-gradient-to-r from-violet-600 to-primary hover:from-violet-700 hover:to-primary/90 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-lg shadow-primary/20 hover:-translate-y-0.5"
               >
-                {isSavingBasic ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ التعديلات الأساسية ✨' : 'Save Profile Details ✨')}
+                {isSavingBasic ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ التعديلات الأساسية ' : 'Save Profile Details ')}
               </button>
             </div>
           </div>
@@ -1891,13 +1891,13 @@ export function SettingsSection({
         {/* TAB 2: إدارة الأمان */}
         {activeTab === 2 && (
           <div
-            
-            
+
+
             className="space-y-6"
           >
             <div>
               <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span className="text-xl">🔒</span>
+                <span className="text-xl"></span>
                 <span>{isAr ? 'إدارة الأمان والجلسات' : 'Security Settings & Active Sessions'}</span>
               </h3>
               <p className="text-xs text-slate-400 mt-1">
@@ -1915,15 +1915,15 @@ export function SettingsSection({
         {/* TAB 3: تخصيص الواجهة */}
         {activeTab === 3 && (
           <div
-            
-            
+
+
             className="space-y-8"
           >
             {/* Theme & Prefs block */}
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <span className="text-xl">🎨</span>
+                  <span className="text-xl"></span>
                   <span>{isAr ? 'تخصيص المظهر وتفضيلات النظام' : 'Visual Customization & System Preferences'}</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
@@ -1942,8 +1942,8 @@ export function SettingsSection({
                       key={t.id}
                       onClick={() => { if(isPremium) { playChimeSound('click'); setColorTheme(t.id); } }}
                       className={`relative flex flex-col gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                        colorTheme === t.id 
-                          ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(155,81,224,0.3)] ring-2 ring-primary/30' 
+                        colorTheme === t.id
+                          ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(155,81,224,0.3)] ring-2 ring-primary/30'
                           : 'bg-white/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
@@ -1988,10 +1988,10 @@ export function SettingsSection({
                     <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'تشغيل المؤثرات والتعزيزات الصوتية الجذابة' : 'Enjoy interactive UI chime sounds'}</p>
                   </div>
                   <div className="shrink-0">
-                    <LiquidGlassSwitch 
-                      checked={!soundMuted} 
-                      onChange={handleMuteToggle} 
-                      size="sm" 
+                    <LiquidGlassSwitch
+                      checked={!soundMuted}
+                      onChange={handleMuteToggle}
+                      size="sm"
                     />
                   </div>
                 </div>
@@ -2011,7 +2011,7 @@ export function SettingsSection({
 
               {!isPremium ? (
                 <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300 font-bold">
-                  {isAr ? '🔒 اشترك في إحدى الباقات المدفوعة عشان تقدر تفعّل شارة التوثيق واسم ملون.' : '🔒 Subscribe to a paid plan to unlock a verified badge and colored name.'}
+                  {isAr ? ' اشترك في إحدى الباقات المدفوعة عشان تقدر تفعّل شارة التوثيق واسم ملون.' : ' Subscribe to a paid plan to unlock a verified badge and colored name.'}
                 </div>
               ) : (
                 <>
@@ -2096,16 +2096,16 @@ export function SettingsSection({
                 </div>
 
                 {!gdriveAccount ? (
-                  <button 
-                    onClick={handleConnectDrive} 
+                  <button
+                    onClick={handleConnectDrive}
                     disabled={isDriveLoading}
                     className="px-4 py-2 rounded-lg text-white font-bold text-[11px] bg-blue-600 hover:bg-blue-700 w-full sm:w-auto shadow"
                   >
                     {isDriveLoading ? (isAr ? 'جاري الاتصال...' : 'Connecting...') : (isAr ? 'ربط الحساب' : 'Link Google Account')}
                   </button>
                 ) : (
-                  <button 
-                    onClick={handleDisconnectDrive} 
+                  <button
+                    onClick={handleDisconnectDrive}
                     className="px-4 py-2 rounded-lg text-slate-300 bg-slate-900 border border-slate-800 font-bold text-[11px] hover:bg-slate-800 w-full sm:w-auto"
                   >
                     {isAr ? 'إلغاء الربط' : 'Unlink Account'}
@@ -2121,7 +2121,7 @@ export function SettingsSection({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span className="text-xl">🔔</span>
+                <span className="text-xl"></span>
                 <span>{isAr ? 'تفضيلات الإشعارات' : 'Notification Preferences'}</span>
               </h3>
               <p className="text-xs text-slate-400 mt-1">
@@ -2187,7 +2187,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
       bgColor: 'bg-gradient-to-b from-amber-400/20 via-yellow-400/10 to-amber-500/5',
       borderColor: 'border-amber-400 dark:border-amber-400/80',
       textColor: 'text-amber-500 dark:text-amber-400',
-      badge: '👑',
+      badge: '',
       badgeBg: 'bg-amber-400 text-amber-950',
       height: 'h-48 sm:h-56',
       shimmer: 'uipro-gold-shimmer'
@@ -2196,7 +2196,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
       bgColor: 'bg-gradient-to-b from-slate-200/40 via-slate-100/20 to-slate-200/5 dark:from-slate-700/20 dark:to-transparent',
       borderColor: 'border-slate-300 dark:border-slate-600',
       textColor: 'text-slate-500 dark:text-slate-300',
-      badge: '🥈',
+      badge: '',
       badgeBg: 'bg-slate-300 text-slate-800 dark:bg-slate-600 dark:text-white',
       height: 'h-40 sm:h-46',
       shimmer: 'uipro-silver-shimmer'
@@ -2205,7 +2205,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
       bgColor: 'bg-gradient-to-b from-orange-400/20 via-orange-300/10 to-orange-500/5',
       borderColor: 'border-orange-400/60 dark:border-orange-500/50',
       textColor: 'text-orange-500 dark:text-orange-400',
-      badge: '🥉',
+      badge: '',
       badgeBg: 'bg-orange-400 text-orange-950',
       height: 'h-36 sm:h-40',
       shimmer: 'uipro-bronze-shimmer'
@@ -2216,7 +2216,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
     <div className="space-y-8 animate-fade-in" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div>
         <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2.5">
-          <span className="p-2 rounded-2xl bg-amber-500/10 text-amber-500">🏆</span>
+          <span className="p-2 rounded-2xl bg-amber-500/10 text-amber-500"></span>
           <span>{isAr ? 'لوحة الشرف ومنصة التتويج' : 'Laureate Podium & Leaderboard'}</span>
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
@@ -2249,7 +2249,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                     <div className="flex flex-col items-center text-center space-y-2.5 w-full">
                       <div className="relative">
                         <div className={`w-16 h-16 rounded-full bg-slate-900 border-2 ${winner.rank === 1 ? 'border-yellow-400 ring-4 ring-yellow-400/20' : winner.rank === 2 ? 'border-slate-300' : 'border-orange-400'} flex items-center justify-center text-white font-extrabold text-base shadow-lg`}>
-                          {winner.userName ? winner.userName.substring(0, 1) : '👤'}
+                          {winner.userName ? winner.userName.substring(0, 1) : ''}
                         </div>
                         <span className={`absolute -bottom-1 -right-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-md ${style.badgeBg}`}>
                           #{winner.rank}
@@ -2289,7 +2289,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
               {listItems.map((item, idx) => {
                 const displayRank = idx + 4;
                 return (
-                  <div 
+                  <div
                     key={idx}
                     className="p-5 flex items-center justify-between gap-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                     dir={isAr ? 'rtl' : 'ltr'}
@@ -2299,7 +2299,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                         #{displayRank}
                       </span>
                       <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/15 to-violet-500/15 border border-primary/20 flex items-center justify-center text-xs text-primary dark:text-primary-light font-extrabold shadow-xs">
-                        {item.userName ? item.userName.substring(0,1) : '👤'}
+                        {item.userName ? item.userName.substring(0,1) : ''}
                       </div>
                       <div className="space-y-0.5 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                         <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
@@ -2322,7 +2322,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
 
               {boardItems.length === 0 && (
                 <div className="p-16 text-center text-xs text-slate-400 select-none space-y-2">
-                  <span className="text-3xl block">🏆</span>
+                  <span className="text-3xl block"></span>
                   <span>{isAr ? 'لا توجد نتائج مسجلة في لوحة الشرف اليوم بعد.' : 'No entries on the podium today yet.'}</span>
                 </div>
               )}

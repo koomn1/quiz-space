@@ -71,7 +71,7 @@ export function useNotificationsRealtime({
         if (data.sender_name && data.sender_name === userName) return;
         if (!pushNotificationsEnabled) return;
         pushNotificationsManager.trigger({
-          title: data.title || (lang === 'ar' ? 'تنبيه جديد 🪐' : 'New Buzz 🪐'),
+          title: data.title || (lang === 'ar' ? 'تنبيه جديد ' : 'New Buzz '),
           body: data.body || '',
           icon: 'bell',
         });

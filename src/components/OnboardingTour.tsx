@@ -29,14 +29,14 @@ export default function OnboardingTour({
   const steps: Step[] = React.useMemo(() => [
     {
       id: 'welcome',
-      title: '! ✨',
+      title: '! ',
       content: 'دعنا نأخذك في جولة تعليمية سريعة ومبسطة للتعرف على المنصة وكيفية استغلال الذكاء الاصطناعي في قياس مستواك وتوليد الأسئلة فوراً!',
       selector: 'body', // Center of screen
       icon: <img src={`${import.meta.env.BASE_URL || '/'}brand/quizspace-logo-512.webp`} alt="QuizSpace" className="w-6 h-6 object-contain" />
     },
     {
       id: 'create-tab',
-      title: 'أزرار صنع وإنشاء الاختبارات 🛠️',
+      title: 'أزرار صنع وإنشاء الاختبارات ',
       content: 'اضغط على زر "صنع اختبار" في شريط التنقل أو البوابة الرئيسية للدخول إلى صفحة المولد الذكي وصياغة أسئلتك المخصصة.',
       selector: '#nav-btn-create',
       tabTarget: 'landing',
@@ -44,7 +44,7 @@ export default function OnboardingTour({
     },
     {
       id: 'ai-ocr',
-      title: 'مسح واستخراج الأسئلة من الصور بالذكاء الاصطناعي 📸',
+      title: 'مسح واستخراج الأسئلة من الصور بالذكاء الاصطناعي ',
       content: 'هل لديك صورة لكتاب، دفتر، أو حتى ورقة امتحان جاهزة؟ تبويب "التحميل والمسح الذكي" ومحرك الذكاء الاصطناعي يقومان بنسخ الأسئلة حرفياً ونمذجتها كـ اختبار تفاعلي فوري ببضع ثوانٍ وبأعلى دقة تصحيح!',
       selector: '#tab-btn-ocr',
       tabTarget: 'create',
@@ -52,7 +52,7 @@ export default function OnboardingTour({
     },
     {
       id: 'done',
-      title: 'أنت جاهز تماماً للبدء! 🚀',
+      title: 'أنت جاهز تماماً للبدء! ',
       content: 'الآن، تصفح الكتالوج، قم بحل الاختبارات لمعرفة تفاصيل مستواك، أو امسح أوراقك ومذكراتك لتبدأ رحلتك التفاعلية معنا. نتمنى لك دراسة ممتعة!',
       selector: 'body',
       icon: <HelpCircle className="w-6 h-6 text-emerald-500" />
@@ -125,44 +125,44 @@ export default function OnboardingTour({
     <OverlayPortal>
     <div className="fixed inset-0 z-[100] overflow-hidden select-none pointer-events-auto">
       {/* Semi-transparent backdrop with click-through masking */}
-      <div 
+      <div
         className="absolute inset-0 bg-slate-900/40 dark:bg-black/70 backdrop-blur-[1px] transition-all duration-300"
         onClick={finishTour}
       />
 
       {/* Dynamic DOM pulsing spotlight glow wrapper */}
-      
+
         {highlightRect && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="absolute z-[101] rounded-2xl border-2 border-primary shadow-[0_0_0_9999px_rgba(15,23,42,0.65)] dark:shadow-[0_0_0_9999px_rgba(2,6,23,0.85)] pointer-events-none"
           >
             {/* Soft internal indicator ripple animation */}
             <span className="absolute inset-0 rounded-2xl border-2 border-primary animate-ping opacity-60 pointer-events-none" />
           </div>
         )}
-      
+
 
       {/* Floating Card UI */}
       <div className="absolute inset-0 flex items-center justify-center p-4 z-[102] pointer-events-none">
         <div
-          
-          
-          
+
+
+
           className="w-full max-w-md bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl border border-slate-100 dark:border-slate-700 pointer-events-auto text-right space-y-5"
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-3 flex-row-reverse">
-            <button 
+            <button
               onClick={finishTour}
               className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-800 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
-            
+
             <div className="flex items-center gap-2 flex-row-reverse">
               <div className="w-10 h-10 bg-primary/10 dark:bg-primary-dark/25 rounded-xl flex items-center justify-center">
                 {currentStep.icon}
@@ -188,11 +188,11 @@ export default function OnboardingTour({
             {/* Completion indicators */}
             <div className="flex items-center gap-1">
               {steps.map((_, idx) => (
-                <span 
-                  
+                <span
+
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    idx === currentStepIndex 
-                      ? 'w-5 bg-primary' 
+                    idx === currentStepIndex
+                      ? 'w-5 bg-primary'
                       : 'w-1.5 bg-slate-200 dark:bg-slate-700'
                   }`}
                 />
@@ -210,7 +210,7 @@ export default function OnboardingTour({
                   <span>السابق</span>
                 </button>
               )}
-              
+
               <button
                 onClick={handleNext}
                 className="flex items-center gap-1 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-hover shadow-md shadow-primary/20 transition hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"

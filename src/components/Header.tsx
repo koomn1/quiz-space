@@ -110,11 +110,11 @@ export default function Header({
   };
 
   const themes = [
-    { id: 'indigo', name: t.themeIndigo, emoji: '🌌', color: 'from-indigo-500 to-purple-600' },
-    { id: 'emerald', name: t.themeEmerald, emoji: '🌿', color: 'from-teal-500 to-emerald-600' },
-    { id: 'sunset', name: t.themeSunset, emoji: '🌅', color: 'from-rose-500 to-orange-500' },
-    { id: 'sky', name: t.themeSky, emoji: '💙', color: 'from-sky-500 to-cyan-500' },
-    { id: 'honey', name: t.themeHoney, emoji: '🍯', color: 'from-amber-500 to-yellow-500' }
+    { id: 'indigo', name: t.themeIndigo, emoji: '', color: 'from-indigo-500 to-purple-600' },
+    { id: 'emerald', name: t.themeEmerald, emoji: '', color: 'from-teal-500 to-emerald-600' },
+    { id: 'sunset', name: t.themeSunset, emoji: '', color: 'from-rose-500 to-orange-500' },
+    { id: 'sky', name: t.themeSky, emoji: '', color: 'from-sky-500 to-cyan-500' },
+    { id: 'honey', name: t.themeHoney, emoji: '', color: 'from-amber-500 to-yellow-500' }
   ];
 
   const saveName = () => {
@@ -238,7 +238,7 @@ export default function Header({
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-mono font-bold tracking-wider text-amber-500 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-2xl animate-pulse">
-              <span>⚠️ SECURE EVALUATION ENVIRONMENT</span>
+              <span> SECURE EVALUATION ENVIRONMENT</span>
             </div>
           )}
 

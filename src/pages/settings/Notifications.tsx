@@ -145,7 +145,7 @@ export default function Notifications({ lang }: NotificationsProps) {
 
   return (
     <div className="space-y-8 animate-fade-in text-right" style={{ textAlign: isAr ? 'right' : 'left' }} dir={isAr ? 'rtl' : 'ltr'}>
-      
+
       {/* Header section */}
       <div>
         <div className="flex items-center gap-3 mb-6">
@@ -165,7 +165,7 @@ export default function Notifications({ lang }: NotificationsProps) {
 
       {/* Main Container */}
       <div className="space-y-6 max-w-2xl bg-slate-50/50 dark:bg-slate-900/40 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
-        
+
         {/* Toggle Grid */}
         <div className="space-y-6 divide-y divide-slate-100 dark:divide-slate-800">
           {notificationOptions.map((opt, idx) => {
@@ -188,9 +188,9 @@ export default function Notifications({ lang }: NotificationsProps) {
 
                 {/* Custom premium purple neon toggle switch */}
                 <div className="flex items-center">
-                  <LiquidGlassSwitch 
-                    checked={opt.state} 
-                    onChange={(checked) => opt.setter(checked)} 
+                  <LiquidGlassSwitch
+                    checked={opt.state}
+                    onChange={(checked) => opt.setter(checked)}
                     size="sm"
                   />
                 </div>
@@ -209,7 +209,7 @@ export default function Notifications({ lang }: NotificationsProps) {
                 </div>
                 <div className="space-y-1">
                   <h4 className="text-sm font-black text-slate-800 dark:text-white leading-tight">
-                    🏆 {isAr ? 'فعل إشعارات لوحة المتصدرين الحية!' : 'Enable Live Leaderboard Notifications!'}
+                     {isAr ? 'فعل إشعارات لوحة المتصدرين الحية!' : 'Enable Live Leaderboard Notifications!'}
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
                     {isAr ? 'احصل على إشعار فوري من المتصفح عندما يقوم طالب آخر بكسر رقمك القياسي واحتلال الصدارة!' : 'Get an instant browser notification when another student breaks your record and takes the lead!'}
@@ -223,7 +223,7 @@ export default function Notifications({ lang }: NotificationsProps) {
                 className="w-full sm:w-auto shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-xs font-black shadow-lg shadow-amber-500/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isActivatingPush ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <BellRing className="w-3.5 h-3.5" />}
-                {pushEnabled ? (isAr ? 'الإشعارات مفعّلة ✅' : 'Notifications Enabled ✅') : (isAr ? 'تفعيل الإشعارات' : 'Enable Notifications')}
+                {pushEnabled ? (isAr ? 'الإشعارات مفعّلة ' : 'Notifications Enabled ') : (isAr ? 'تفعيل الإشعارات' : 'Enable Notifications')}
               </button>
             </div>
             {pushMessage === 'success' && (
@@ -252,9 +252,9 @@ export default function Notifications({ lang }: NotificationsProps) {
           </div>
 
           <div className="flex items-center">
-            <LiquidGlassSwitch 
-              checked={pushEnabled} 
-              onChange={(checked) => setPushEnabled(checked)} 
+            <LiquidGlassSwitch
+              checked={pushEnabled}
+              onChange={(checked) => setPushEnabled(checked)}
               size="sm"
             />
           </div>

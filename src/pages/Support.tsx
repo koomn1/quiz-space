@@ -136,7 +136,7 @@ export default function Support({ lang }: SupportProps) {
         {/* Footer Text */}
         <div className="support-footer text-center border-t border-slate-200 dark:border-slate-800 pt-10">
           <p className="text-slate-500 dark:text-slate-400 text-sm font-bold tracking-wide">
-            {isAr ? '© 2026 QuizSpace - صنع بكل حب لدعم رحلتك التعليمية في العالم العربي ❤️' : '© 2026 QuizSpace - Made with love to support your learning journey ❤️'}
+            {isAr ? '© 2026 QuizSpace - صنع بكل حب لدعم رحلتك التعليمية في العالم العربي ' : '© 2026 QuizSpace - Made with love to support your learning journey '}
           </p>
         </div>
       </div>

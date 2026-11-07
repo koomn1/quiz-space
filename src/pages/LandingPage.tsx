@@ -329,7 +329,7 @@ export default function LandingPage({
           <div className="space-y-2 max-w-2xl text-right">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-black tracking-wide border border-amber-500/20">
               <Flame className="w-3.5 h-3.5 text-amber-500 animate-bounce" />
-              <span>{isAr ? 'تحدي اليوم الحصري 🏆' : 'Daily Spotlight Challenge 🏆'}</span>
+              <span>{isAr ? 'تحدي اليوم الحصري ' : 'Daily Spotlight Challenge '}</span>
             </div>
             <h2 className="font-display font-black text-xl sm:text-2xl text-slate-900 dark:text-white">
               {isAr ? 'اختبر معلوماتك العامة والذكاء الاصطناعي' : 'Test Your AI & General Knowledge'}
@@ -482,7 +482,7 @@ export default function LandingPage({
                           <span>
                             {plays > 0
                               ? (isAr ? `${plays.toLocaleString()} حلاً` : `${plays} solved`)
-                              : (isAr ? 'جديد ⚡' : 'New ⚡')}
+                              : (isAr ? 'جديد ' : 'New ')}
                           </span>
                         </span>
 

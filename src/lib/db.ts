@@ -356,7 +356,7 @@ function mapQuizRow(row: any): Quiz {
 export const SAMPLE_QUIZZES: Quiz[] = [
   {
     id: 'quiz-ai-intro',
-    title: 'اختبار تاريخ الذكاء الاصطناعي والابتكار 🤖',
+    title: 'اختبار تاريخ الذكاء الاصطناعي والابتكار ',
     description: 'اختبار رائع وممتع لتقييم معرفتك بنشأة الذكاء الاصطناعي وتطوره عبر التاريخ الحديث.',
     creatorId: 'admin-quizspace',
     creatorName: 'فريق QuizSpace',
@@ -395,7 +395,7 @@ export const SAMPLE_QUIZZES: Quiz[] = [
   },
   {
     id: 'quiz-web-tech',
-    title: 'تحدي البرمجة وتقنيات الويب الحديثة 💻',
+    title: 'تحدي البرمجة وتقنيات الويب الحديثة ',
     description: 'اختبار شامل حول أحدث تقنيات React, TypeScript و HTML5 للبرمجيات.',
     creatorId: 'admin-quizspace',
     creatorName: 'أكاديمية المطورين',
@@ -533,7 +533,7 @@ export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPla
   }
   if (quiz.classroomId) {
     void sendPushEvent({
-      title: '🧠 كويز جديد في فصلك',
+      title: ' كويز جديد في فصلك',
       body: `${creatorName} نشر كويزاً جديداً: ${quiz.title}`.slice(0, 180),
       url: `https://quiz-space-app.pages.dev/#/classrooms`,
       category: 'quiz',
@@ -1664,7 +1664,7 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
 
 export async function getPremiumRequests(userId?: string, options: { adminQueue?: boolean; adminLedger?: boolean; allAdmin?: boolean } = {}): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
-  
+
   let targetUid = userId;
   if (!targetUid || targetUid.startsWith('user-guest')) {
     try {
@@ -3791,9 +3791,9 @@ export async function getRewardStoreOrders() {
 }
 
 export async function adminGrantRewardPoints(userId: string, amount: number, note = '', currency = 'points') {
-  const { data, error } = await supabase.rpc('admin_grant_reward_points', { 
-    p_user_id: userId, 
-    p_amount: amount, 
+  const { data, error } = await supabase.rpc('admin_grant_reward_points', {
+    p_user_id: userId,
+    p_amount: amount,
     p_reason: note,
     p_currency: currency
   });

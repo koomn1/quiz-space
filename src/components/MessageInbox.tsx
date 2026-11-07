@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
+import {
   getPublicProfiles,
   createDirectMessageNotification,
-  getDirectMessages, 
-  sendDirectMessage, 
+  getDirectMessages,
+  sendDirectMessage,
   markMessagesAsRead,
   deleteDirectMessage,
   COSMO_ADMIN_UID
@@ -67,9 +67,9 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
       try {
         const profiles = await getPublicProfiles();
         const usersList: Member[] = [];
-        
+
         profiles.forEach((p) => {
-          if (p.uid && p.uid !== userId && p.uid !== COSMO_ADMIN_UID && p.badge_symbol !== '🤖') {
+          if (p.uid && p.uid !== userId && p.uid !== COSMO_ADMIN_UID && p.badge_symbol !== '') {
             usersList.push({
               uid: p.uid,
               name: p.name || (isAr ? 'عضو أكاديمي' : 'Scholar'),
@@ -89,7 +89,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
             uid: COSMO_ADMIN_UID,
             name: 'المساعد كوزمو',
             bio: 'المساعد الذكي لكافة استفساراتك',
-            badgeSymbol: '✔',
+            badgeSymbol: '',
             badgeColor: 'text-sky-400',
             isPremium: true
           });
@@ -174,8 +174,8 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
     } else {
       const q = searchQuery.toLowerCase().trim();
       setFilteredMembers(
-        sorted.filter(m => 
-          m.name.toLowerCase().includes(q) || 
+        sorted.filter(m =>
+          m.name.toLowerCase().includes(q) ||
           (m.email && m.email.toLowerCase().includes(q))
         )
       );
@@ -194,7 +194,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
     const loadConversation = async () => {
       try {
         const rawMsgs = await getDirectMessages(userId);
-        const filtered = rawMsgs.filter(m => 
+        const filtered = rawMsgs.filter(m =>
           (m.senderId === userId && m.receiverId === selectedRecipient.uid) ||
           (m.senderId === selectedRecipient.uid && m.receiverId === userId)
         );
@@ -283,7 +283,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
     <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div>
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-          <span>📩</span>
+          <span></span>
           <span>{isAr ? 'صندوق الرسائل والمحادثات المباشرة' : 'Direct Messages & Inbox'}</span>
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -292,12 +292,12 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-0 bg-white dark:bg-[#080c14] border border-slate-200 dark:border-slate-800/60 rounded-3xl overflow-hidden h-[calc(100dvh-140px)] min-h-[550px] shadow-2xl">
-        
+
         {/* Chat Sidebar / User Search (4 Cols) */}
         <div className="md:col-span-4 border-b md:border-b-0 md:border-l border-slate-200 dark:border-slate-800/60 p-5 space-y-4 flex flex-col bg-slate-50 dark:bg-[#0b0f19] h-full overflow-hidden">
           <div className="relative">
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isAr ? 'ابحث عن زميل أو معلم...' : 'Search members...'}
@@ -327,30 +327,30 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                   key={member.uid}
                   onClick={() => setSelectedRecipient(member)}
                   className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all cursor-pointer border ${
-                    selectedRecipient?.uid === member.uid 
+                    selectedRecipient?.uid === member.uid
                       ? 'bg-primary/10 border-primary/30 text-slate-900 dark:text-white font-bold'
                       : 'hover:bg-slate-100 dark:hover:bg-slate-800/30 bg-transparent border-transparent text-slate-700 dark:text-slate-300'
                   }`}
                   style={{ direction: isAr ? 'rtl' : 'ltr' }}
                 >
                   <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center overflow-hidden shrink-0 text-slate-700 dark:text-slate-200">
-                    <img 
-                      src={member.avatar_url || FALLBACK_AVATAR} 
-                      alt={member.name} 
-                      className="w-full h-full object-cover" 
+                    <img
+                      src={member.avatar_url || FALLBACK_AVATAR}
+                      alt={member.name}
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="flex-1 text-right overflow-hidden">
                     <div className="flex items-center gap-1.5 flex-row-reverse justify-end">
                       <span className="truncate text-xs font-semibold">{member.name}</span>
-                      <UserBadge 
+                      <UserBadge
                         tier={
-                          member.uid === COSMO_ADMIN_UID || member.badgeSymbol === '🤖' ? 'enterprise' :
-                          member.badgeSymbol === '✔' ? 'pro' :
+                          member.uid === COSMO_ADMIN_UID || member.badgeSymbol === '' ? 'enterprise' :
+                          member.badgeSymbol === '' ? 'pro' :
                           member.isPremium ? 'premium' : 'free'
-                        } 
-                        size="sm" 
-                        showTooltip={false} 
+                        }
+                        size="sm"
+                        showTooltip={false}
                       />
                     </div>
                     <p className={`text-[9px] truncate mt-0.5 ${selectedRecipient?.uid === member.uid ? 'text-indigo-700 dark:text-indigo-200' : 'text-slate-500'} leading-snug`}>
@@ -379,23 +379,23 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
               <header className="shrink-0 p-4 border-b border-slate-200 dark:border-slate-800/60 bg-white/70 dark:bg-slate-950/40 backdrop-blur-md flex items-center justify-between z-10" dir={isAr ? 'rtl' : 'ltr'}>
                 <div className="flex items-center gap-3 text-right">
                   <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center overflow-hidden text-white">
-                    <img 
-                      src={selectedRecipient.avatar_url || FALLBACK_AVATAR} 
-                      alt={selectedRecipient.name} 
-                      className="w-full h-full object-cover" 
+                    <img
+                      src={selectedRecipient.avatar_url || FALLBACK_AVATAR}
+                      alt={selectedRecipient.name}
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
                       <h3 className="text-xs font-bold text-slate-900 dark:text-white">{selectedRecipient.name}</h3>
-                      <UserBadge 
+                      <UserBadge
                         tier={
-                          selectedRecipient.uid === COSMO_ADMIN_UID || selectedRecipient.badgeSymbol === '🤖' ? 'enterprise' :
-                          selectedRecipient.badgeSymbol === '✔' ? 'pro' :
+                          selectedRecipient.uid === COSMO_ADMIN_UID || selectedRecipient.badgeSymbol === '' ? 'enterprise' :
+                          selectedRecipient.badgeSymbol === '' ? 'pro' :
                           selectedRecipient.isPremium ? 'premium' : 'free'
-                        } 
-                        size="sm" 
-                        showTooltip={false} 
+                        }
+                        size="sm"
+                        showTooltip={false}
                       />
                     </div>
                     <p className="text-[9.5px] text-slate-400 mt-0.5">{selectedRecipient.bio || (isAr ? 'متصل ومستعد للمناقشة' : 'Available to chat')}</p>
@@ -429,17 +429,17 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                   messages.map((msg) => {
                     const isOwn = msg.senderId === userId;
                     return (
-                      <div 
+                      <div
                         key={msg.id}
                         className={`flex gap-3 sm:gap-4 w-full ${isOwn ? 'justify-end' : 'justify-start'}`}
                       >
                         {!isOwn && (
                           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 shadow-xs text-xs font-bold uppercase overflow-hidden">
                             {selectedRecipient.avatar_url ? (
-                              <img 
-                                src={selectedRecipient.avatar_url} 
-                                alt={selectedRecipient.name} 
-                                className="w-full h-full object-cover" 
+                              <img
+                                src={selectedRecipient.avatar_url}
+                                alt={selectedRecipient.name}
+                                className="w-full h-full object-cover"
                               />
                             ) : (
                               <span className="uppercase">{selectedRecipient.name.substring(0, 1)}</span>
@@ -449,7 +449,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
 
                         <div className={`flex flex-col gap-1 ${isOwn ? 'max-w-[75%]' : 'flex-1'}`}>
                           {isOwn ? (
-                            <div 
+                            <div
                               className="bg-indigo-600 dark:bg-indigo-900 text-white px-4 py-2.5 rounded-2xl text-[14px] sm:text-[15px] leading-[1.7]"
                               style={{ textAlign: isAr ? 'right' : 'left' }}
                             >
@@ -484,13 +484,13 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                         {isOwn && (
                           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 bg-indigo-100 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900/50 shadow-xs text-xs overflow-hidden">
                             {userPhoto ? (
-                              <img 
-                                src={userPhoto} 
-                                alt={userName} 
-                                className="w-full h-full object-cover" 
+                              <img
+                                src={userPhoto}
+                                alt={userName}
+                                className="w-full h-full object-cover"
                               />
                             ) : (
-                              <span className="font-bold text-indigo-700 dark:text-indigo-200">{userName ? userName.substring(0, 1) : '👤'}</span>
+                              <span className="font-bold text-indigo-700 dark:text-indigo-200">{userName ? userName.substring(0, 1) : ''}</span>
                             )}
                           </div>
                         )}
@@ -502,7 +502,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
               </div>
 
               {/* Composer */}
-              <form 
+              <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSendMessage();

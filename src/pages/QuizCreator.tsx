@@ -17,6 +17,7 @@ import { askAI, askAIStream, getRememberedExtractionJobId, clearRememberedExtrac
 import DrivePicker from '../components/DrivePicker';
 import ExtractionTerminalLog from '../components/ExtractionTerminalLog';
 import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
+import { Icons8Icon } from '../components/Icons8Icon';
 import QuestionMedia from '../components/QuestionMedia';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
@@ -113,7 +114,7 @@ interface ExtractionPart {
 
 // Extracts either text or renders to canvas if it's a scanned page containing images
 const extractHybridPagesFromPdf = async (
-  file: File, 
+  file: File,
   onPageProgress: (pageIndex: number, totalPages: number, pageType: 'text' | 'image') => void
 ): Promise<HybridPagePart[]> => {
   const data = new Uint8Array(await file.arrayBuffer());
@@ -160,10 +161,10 @@ const extractHybridPagesFromPdf = async (
 const partitionHybridPages = (pages: HybridPagePart[]): ExtractionPart[] => {
   const parts: ExtractionPart[] = [];
   let partId = 1;
-  
+
   let currentTextPages: number[] = [];
   let currentTextContent = '';
-  
+
   for (const page of pages) {
     if (page.type === 'image') {
       // Flush any digital text pages accumulated first
@@ -188,7 +189,7 @@ const partitionHybridPages = (pages: HybridPagePart[]): ExtractionPart[] => {
       // Accumulate text pages
       currentTextPages.push(page.pageNumber);
       currentTextContent += `\n--- الصفحة ${page.pageNumber} ---\n${page.text || ''}`;
-      
+
       // Split text pages into chunks of 3 max to protect token limit & reasoning quality
       if (currentTextPages.length >= 3) {
         parts.push({
@@ -202,7 +203,7 @@ const partitionHybridPages = (pages: HybridPagePart[]): ExtractionPart[] => {
       }
     }
   }
-  
+
   // Flush any trailing text pages
   if (currentTextPages.length > 0) {
     parts.push({
@@ -212,7 +213,7 @@ const partitionHybridPages = (pages: HybridPagePart[]): ExtractionPart[] => {
       textContent: currentTextContent
     });
   }
-  
+
   return parts;
 };
 
@@ -237,12 +238,12 @@ const cropBase64Image = (base64Str: string, box: number[]): Promise<string> => {
         resolve('');
         return;
       }
-      
+
       const x = (xmin / 1000) * img.width;
       const y = (ymin / 1000) * img.height;
       const w = ((xmax - xmin) / 1000) * img.width;
       const h = ((ymax - ymin) / 1000) * img.height;
-      
+
       canvas.width = w;
       canvas.height = h;
       ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
@@ -257,28 +258,28 @@ const cropBase64Image = (base64Str: string, box: number[]): Promise<string> => {
 };
 
 const COUNT_OPTIONS_WITH_AUTO = [
-  { value: 0, label: 'كل الأسئلة المحتملة من الملف', sub: 'تغطية كاملة للمحتوى دون عدد ثابت', icon: '✨', highlight: true },
-  { value: 3, label: '3 أسئلة', sub: 'سريعة وخفيفة لتقييم خاطف', icon: '⚡' },
-  { value: 5, label: '5 أسئلة', sub: 'قياسية متوازنة وشاملة الكفاءة', icon: '📊' },
-  { value: 10, label: '10 أسئلة', sub: 'متكاملة ومترابطة للموضوع', icon: '🎯' },
-  { value: 20, label: '20 سؤالاً', sub: 'مراجعة مكثفة للمعلومات', icon: '🔥' },
-  { value: 50, label: '50 سؤالاً', sub: 'مراجعة شاملة لجزئيات الباب', icon: '📚' },
-  { value: 100, label: '100 سؤال', sub: 'اختبار تجريبي كامل وموسع', icon: '🏆' },
-  { value: 200, label: '200 سؤال', sub: 'بنك أسئلة واسع ومتشعب الفروع', icon: '💾' },
-  { value: 300, label: '300 سؤال', sub: 'بنك أسئلة ضخم ومغطي للفصل', icon: '🧠' },
-  { value: 500, label: '500 سؤال', sub: 'الحد الأقصى للمستندات الضخمة', icon: '🌌' },
+  { value: 0, label: 'كل الأسئلة المحتملة من الملف', sub: 'تغطية كاملة للمحتوى دون عدد ثابت', icon: 'sparkles', highlight: true },
+  { value: 3, label: '3 أسئلة', sub: 'سريعة وخفيفة لتقييم خاطف', icon: 'bolt' },
+  { value: 5, label: '5 أسئلة', sub: 'قياسية متوازنة وشاملة الكفاءة', icon: 'chart' },
+  { value: 10, label: '10 أسئلة', sub: 'متكاملة ومترابطة للموضوع', icon: 'target' },
+  { value: 20, label: '20 سؤالاً', sub: 'مراجعة مكثفة للمعلومات', icon: 'flame' },
+  { value: 50, label: '50 سؤالاً', sub: 'مراجعة شاملة لجزئيات الباب', icon: 'book' },
+  { value: 100, label: '100 سؤال', sub: 'اختبار تجريبي كامل وموسع', icon: 'trophy' },
+  { value: 200, label: '200 سؤال', sub: 'بنك أسئلة واسع ومتشعب الفروع', icon: 'document' },
+  { value: 300, label: '300 سؤال', sub: 'بنك أسئلة ضخم ومغطي للفصل', icon: 'brain' },
+  { value: 500, label: '500 سؤال', sub: 'الحد الأقصى للمستندات الضخمة', icon: 'sparkles' },
 ];
 
 const COUNT_OPTIONS_NO_AUTO = [
-  { value: 3, label: '3 أسئلة', sub: 'سريعة وخفيفة لتقييم خاطف', icon: '⚡' },
-  { value: 5, label: '5 أسئلة', sub: 'قياسية متوازنة وشاملة الكفاءة', icon: '📊' },
-  { value: 10, label: '10 أسئلة', sub: 'متكاملة ومترابطة للموضوع', icon: '🎯' },
-  { value: 20, label: '20 سؤالاً', sub: 'مراجعة مكثفة للمعلومات', icon: '🔥' },
-  { value: 50, label: '50 سؤالاً', sub: 'مراجعة شاملة لجزئيات الباب', icon: '📚' },
-  { value: 100, label: '100 سؤال', sub: 'اختبار تجريبي كامل وموسع', icon: '🏆' },
-  { value: 200, label: '200 سؤال', sub: 'بنك أسئلة واسع ومتشعب الفروع', icon: '💾' },
-  { value: 300, label: '300 سؤال', sub: 'بنك أسئلة ضخم ومغطي للفصل', icon: '🧠' },
-  { value: 500, label: '500 سؤال', sub: 'الحد الأقصى للمستندات الضخمة', icon: '🌌' },
+  { value: 3, label: '3 أسئلة', sub: 'سريعة وخفيفة لتقييم خاطف', icon: 'bolt' },
+  { value: 5, label: '5 أسئلة', sub: 'قياسية متوازنة وشاملة الكفاءة', icon: 'chart' },
+  { value: 10, label: '10 أسئلة', sub: 'متكاملة ومترابطة للموضوع', icon: 'target' },
+  { value: 20, label: '20 سؤالاً', sub: 'مراجعة مكثفة للمعلومات', icon: 'flame' },
+  { value: 50, label: '50 سؤالاً', sub: 'مراجعة شاملة لجزئيات الباب', icon: 'book' },
+  { value: 100, label: '100 سؤال', sub: 'اختبار تجريبي كامل وموسع', icon: 'trophy' },
+  { value: 200, label: '200 سؤال', sub: 'بنك أسئلة واسع ومتشعب الفروع', icon: 'document' },
+  { value: 300, label: '300 سؤال', sub: 'بنك أسئلة ضخم ومغطي للفصل', icon: 'brain' },
+  { value: 500, label: '500 سؤال', sub: 'الحد الأقصى للمستندات الضخمة', icon: 'sparkles' },
 ];
 
 type PreferredQuestionType = 'mcq' | 'tf' | 'essay';
@@ -356,8 +357,8 @@ export default function QuizCreator({
     }
     return (
       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black shadow-[0_0_15px_rgba(139,92,246,0.25)] ${
-        usesCount > 0 
-          ? 'bg-violet-500/10 border border-violet-500/30 text-violet-400' 
+        usesCount > 0
+          ? 'bg-violet-500/10 border border-violet-500/30 text-violet-400'
           : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
       }`}>
         <span className={`w-1.5 h-1.5 rounded-full ${usesCount > 0 ? 'bg-violet-400' : 'bg-rose-400'} animate-ping`} />
@@ -376,14 +377,14 @@ export default function QuizCreator({
         <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-violet-600 via-fuchsia-600 to-pink-500 flex items-center justify-center border border-white/15 shadow-[0_0_25px_rgba(139,92,246,0.5)] animate-pulse">
           <Sparkles className="w-8 h-8 text-white" />
         </div>
-        
+
         <div className="space-y-2">
           <h4 className="text-lg font-black text-white">
             {isAr ? `لقد نفدت محاولاتك المجانية لـ [${titleAr}]` : `Free attempts exhausted for [${titleEn}]`}
           </h4>
           <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
-            {isAr 
-              ? 'لقد نفدت محاولاتك المجانية لهذه الأداة، يرجى ترقية الحساب إلى الباقة الذهبية أو الماسية لفتح توليد غير محدود!' 
+            {isAr
+              ? 'لقد نفدت محاولاتك المجانية لهذه الأداة، يرجى ترقية الحساب إلى الباقة الذهبية أو الماسية لفتح توليد غير محدود!'
               : 'You have run out of free attempts for this tool. Please upgrade to the Gold or Diamond plan to unlock unlimited generations!'}
           </p>
         </div>
@@ -408,7 +409,7 @@ export default function QuizCreator({
       </OverlayPortal>
     );
   };
-  
+
   // Quiz information
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -558,7 +559,7 @@ export default function QuizCreator({
   // File extraction is intentionally lossless: extract every eligible question
   // from the document instead of asking the model to stop at a fixed count.
   const [pdfCount, setPdfCount] = React.useState(0);
-  
+
   const [isProcessingOcr, setIsProcessingOcr] = React.useState(false);
   const [ocrError, setOcrError] = React.useState<string | null>(null);
   const [manualSolveOnlyNotice, setManualSolveOnlyNotice] = React.useState<string | null>(null);
@@ -614,7 +615,7 @@ export default function QuizCreator({
   const [preferredQuestionTypes, setPreferredQuestionTypes] = React.useState<PreferredQuestionType[]>(['mcq']);
   const [isGeneratingAi, setIsGeneratingAi] = React.useState(false);
   const [aiError, setAiError] = React.useState<string | null>(null);
-  
+
   // Progress simulation
   const [simulatedCount, setSimulatedCount] = React.useState(0);
   const [targetCount, setTargetCount] = React.useState(5);
@@ -715,10 +716,10 @@ export default function QuizCreator({
     if (!errorStr) return null;
     const needsLogin = errorStr.includes('يجب تسجيل الدخول') || errorStr.includes('تسجيل الدخول') || errorStr.toLowerCase().includes('login');
     const isGenerationError = !needsLogin && (
-      errorStr.includes('Unable to reach') || errorStr.includes('AI service failed') || 
+      errorStr.includes('Unable to reach') || errorStr.includes('AI service failed') ||
       errorStr.includes('فشل') || errorStr.includes('failed') || errorStr.includes('Error')
     );
-    
+
     return (
       <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-xs font-medium flex flex-col sm:flex-row items-center justify-between gap-3 text-right w-full" dir="rtl">
         <div className="flex-1">
@@ -746,7 +747,7 @@ export default function QuizCreator({
               }}
               className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-violet-600/10 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
             >
-              <span>{isAr ? '🔄 حاول مرة أخرى' : '🔄 Retry'}</span>
+              <span>{isAr ? ' حاول مرة أخرى' : ' Retry'}</span>
             </button>
           )}
           {needsLogin && onOpenAuthModal && (
@@ -755,7 +756,7 @@ export default function QuizCreator({
               onClick={() => onOpenAuthModal('login')}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-red-600/10 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
             >
-              <span>{isAr ? 'تسجيل الدخول الآن 🔐' : 'Log In Now 🔐'}</span>
+              <span>{isAr ? 'تسجيل الدخول الآن ' : 'Log In Now '}</span>
             </button>
           )}
         </div>
@@ -1825,7 +1826,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       return;
     }
     if (isGenerating) return;
-    
+
     // Enforce strict tier-based limits
     const isPaidPlan = userPlan === 'Gold' || userPlan === 'Diamond' || userPlan === 'Silver';
     if (!isPaidPlan && sentenceUses <= 0) {
@@ -1968,14 +1969,14 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       seen.add(cleanText);
       return true;
     });
-    
+
     const diff = questions.length - uniqueQuestions.length;
     if (diff > 0) {
       setQuestions(uniqueQuestions);
       persistExtractedDraftIfActive(uniqueQuestions);
-      setDedupStatus(`تمت تصفية وحذف ${diff} سؤال مكرر بنجاح! ✨`);
+      setDedupStatus(`تمت تصفية وحذف ${diff} سؤال مكرر بنجاح! `);
     } else {
-      setDedupStatus(`مسودتك خالية تماماً من أي أسئلة مكررة! 👍`);
+      setDedupStatus(`مسودتك خالية تماماً من أي أسئلة مكررة! `);
     }
     setTimeout(() => {
       setDedupStatus(null);
@@ -2193,7 +2194,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           explanation: ''
         }
       ]);
-      
+
       onQuizCreated();
       return true;
     } catch (err: any) {
@@ -2327,13 +2328,13 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       )}
 
       {/* Fullscreen AI Generation Loading Screen with blob animation */}
-      
+
         <OverlayPortal>
           {(isGenerating || isGeneratingAi || isGeneratingPaste || isProcessingOcr) && (
           <div
-            
-            
-            
+
+
+
             className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-[#F8FAFC] p-4 dark:bg-[#090d16] flex flex-col items-center justify-center font-sans"
             dir={isAr ? 'rtl' : 'ltr'}
           >
@@ -2370,7 +2371,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
                   {overlayProgress?.message || (isAr
-                    ? 'يقوم محرك الذكاء الاصطناعي بتحليل المحتوى وصياغة اختبار تفاعلي فائق الدقة...' 
+                    ? 'يقوم محرك الذكاء الاصطناعي بتحليل المحتوى وصياغة اختبار تفاعلي فائق الدقة...'
                     : 'The AI model is analyzing the material and compiling a highly accurate interactive quiz...')}
                 </p>
               </div>
@@ -2386,9 +2387,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="bg-indigo-600 dark:bg-indigo-500 h-full transition-all duration-500 ease-out"
-                    style={{ 
+                    style={{
                       width: `${Math.min(100, Math.max(8, (overlayProgress ? (overlayProgress.current / (overlayProgress.total || 1)) * 100 : 0)))}%`
                     }}
                   />
@@ -2412,10 +2413,10 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
           </div>
           )}
         </OverlayPortal>
-      
+
 
       <div className="max-w-4xl mx-auto space-y-8 pb-16 animate-fade-in text-right" dir="rtl">
-      
+
       {/* Visual Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
@@ -2507,20 +2508,20 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       )}
 
       {/* UI Panels for different creation modes */}
-      
-        
+
+
         {/* Panel 1: AI Prompt / Generating عن أي موضوع */}
         {activeMode === 'ai' && !quizToEdit && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="glass-card p-6 sm:p-10 rounded-[32px] space-y-6 relative overflow-hidden"
           >
             <div className="absolute -top-32 -left-32 w-64 h-64 bg-violet-500/10 rounded-full blur-[60px] pointer-events-none" />
             <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-indigo-500/10 rounded-full blur-[60px] pointer-events-none" />
-            
+
             {showPaywallSentence && renderPaywallOverlay("كويز من جملة", "Single Sentence Quiz")}
 
             <div className="flex items-start gap-4 relative z-10" dir="rtl">
@@ -2558,7 +2559,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     const isSelected = aiCount === opt.value;
                     return (
                       <button
-                        
+
                         type="button"
                         onClick={() => setAiCount(opt.value)}
                         className={`group relative flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 overflow-hidden text-right select-none active:scale-[0.98] cursor-pointer ${
@@ -2574,9 +2575,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                           <div className={`p-2.5 rounded-xl transition-all duration-300 ${
                             isSelected ? 'bg-violet-500 text-white shadow-md shadow-violet-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-700'
                           }`}>
-                            <span className="text-lg leading-none">{opt.icon}</span>
+                            <Icons8Icon name={opt.icon as any} size={28} />
                           </div>
-                          
+
                           <div className="flex-1 min-w-0 pr-1">
                             <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-violet-600 dark:text-violet-400' : 'text-slate-700 dark:text-slate-300'}`}>
                               {opt.label}
@@ -2585,7 +2586,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                               {opt.sub}
                             </div>
                           </div>
-                          
+
                           <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 mr-auto ${
                             isSelected ? 'border-violet-500 bg-violet-500 text-white scale-100' : 'border-slate-300 dark:border-slate-700 bg-transparent scale-90'
                           }`}>
@@ -2610,9 +2611,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 <p className="mb-2 text-[10px] text-slate-400">{isAr ? 'يمكنك تحديد نوعين معاً. اضغط على البطاقة لتفعيلها أو إلغاء تفعيلها.' : 'Select two types together if needed. Tap a card to toggle it.'}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {[
-                    { id: 'mcq', label: isAr ? 'اختيار من متعدد' : 'Multiple Choice', icon: '🎯', desc: isAr ? 'خيارات متعددة 4 إجابات' : '4-Option MCQs' },
-                    { id: 'tf', label: isAr ? 'صح وخطأ فقط' : 'True / False', icon: '⚡', desc: isAr ? 'عبارات صح أو خطأ' : 'True or False' },
-                    { id: 'essay', label: isAr ? 'مقالي فقط' : 'Essay Questions', icon: '✍️', desc: isAr ? 'أسئلة مع إجابات نموذجية' : 'Written Essays' },
+                    { id: 'mcq', label: isAr ? 'اختيار من متعدد' : 'Multiple Choice', icon: 'target', desc: isAr ? 'خيارات متعددة 4 إجابات' : '4-Option MCQs' },
+                    { id: 'tf', label: isAr ? 'صح وخطأ فقط' : 'True / False', icon: 'bolt', desc: isAr ? 'عبارات صح أو خطأ' : 'True or False' },
+                    { id: 'essay', label: isAr ? 'مقالي فقط' : 'Essay Questions', icon: 'pencil', desc: isAr ? 'أسئلة مع إجابات نموذجية' : 'Written Essays' },
                   ].map((typeOpt) => {
                     const typeId = typeOpt.id as PreferredQuestionType;
                     const isSelected = preferredQuestionTypes.includes(typeId);
@@ -2627,7 +2628,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                             : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
-                        <span className="text-lg mb-1">{typeOpt.icon}</span>
+                        <Icons8Icon name={typeOpt.icon as any} size={28} className="mb-1" />
                         <span className="text-xs font-extrabold">{typeOpt.label}</span>
                         <span className="text-[9px] text-slate-600 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">{typeOpt.desc}</span>
                       </button>
@@ -2664,7 +2665,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     <span>{generationProgress ? generationProgress.current : 0} / {generationProgress ? generationProgress.total : aiCount} سؤال</span>
                   </div>
                   <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="bg-white h-full transition-all duration-300 ease-out"
                       style={{ width: `${Math.min(100, Math.max(5, (generationProgress ? (generationProgress.current / (generationProgress.total || 1)) * 100 : 0)))}%` }}
                     />
@@ -2683,14 +2684,14 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         {/* Panel 2: Pasted Text / PDF Text Paste */}
         {activeMode === 'paste' && !quizToEdit && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="glass-card p-6 sm:p-10 rounded-[32px] space-y-6 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[60px] pointer-events-none" />
-            
+
             {showPaywallBook && renderPaywallOverlay("استخراج من نص كتاب", "Book Text Extractions")}
 
             <div className="flex items-start gap-4 relative z-10" dir="rtl">
@@ -2730,7 +2731,7 @@ A computer is a digital electronic machine...
                     const isSelected = pasteCount === opt.value;
                     return (
                       <button
-                        
+
                         type="button"
                         onClick={() => setPasteCount(opt.value)}
                         className={`group relative flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 overflow-hidden text-right select-none active:scale-[0.98] cursor-pointer ${
@@ -2746,9 +2747,9 @@ A computer is a digital electronic machine...
                           <div className={`p-2.5 rounded-xl transition-all duration-300 ${
                             isSelected ? 'bg-violet-500 text-white shadow-md shadow-violet-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-700'
                           }`}>
-                            <span className="text-lg leading-none">{opt.icon}</span>
+                            <Icons8Icon name={opt.icon as any} size={28} />
                           </div>
-                          
+
                           <div className="flex-1 min-w-0 pr-1">
                             <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-violet-600 dark:text-violet-400' : 'text-slate-700 dark:text-slate-300'}`}>
                               {opt.label}
@@ -2757,7 +2758,7 @@ A computer is a digital electronic machine...
                               {opt.sub}
                             </div>
                           </div>
-                          
+
                           <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 mr-auto ${
                             isSelected ? 'border-violet-500 bg-violet-500 text-white scale-100' : 'border-slate-300 dark:border-slate-700 bg-transparent scale-90'
                           }`}>
@@ -2801,7 +2802,7 @@ A computer is a digital electronic machine...
                         <span>{generationProgress ? generationProgress.current : 0} / {generationProgress ? generationProgress.total : pasteCount} سؤال</span>
                       </div>
                       <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className="bg-white h-full transition-all duration-300 ease-out"
                           style={{ width: `${Math.min(100, Math.max(5, (generationProgress ? (generationProgress.current / (generationProgress.total || 1)) * 100 : 0)))}%` }}
                         />
@@ -2824,14 +2825,14 @@ A computer is a digital electronic machine...
         {/* Panel 2: Image OCR & PDF Upload */}
         {activeMode === 'ocr' && !quizToEdit && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="glass-card p-6 sm:p-10 rounded-[32px] space-y-6 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[60px] pointer-events-none" />
-            
+
             {showPaywallOcr && renderPaywallOverlay("الاستخراج من ملف", "File Extractions")}
 
             <div className="flex items-start gap-4 relative z-10" dir="rtl">
@@ -2898,7 +2899,7 @@ A computer is a digital electronic machine...
                   className="group relative border border-slate-200 dark:border-slate-800 rounded-[24px] p-8 text-center bg-gradient-to-br from-[#1a73e8]/5 via-[#34a853]/5 to-[#f9ab00]/5 hover:from-[#1a73e8]/10 hover:via-[#34a853]/10 hover:to-[#f9ab00]/10 border-indigo-500/10 hover:border-indigo-500/30 cursor-pointer backdrop-blur-sm shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-center items-center min-h-[220px]"
                 >
                   <div className="absolute inset-0 bg-radial-gradient from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[24px]" />
-                  
+
                   <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 shadow-md flex items-center justify-center shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300 border border-slate-150 dark:border-slate-800">
                     <svg className="w-8 h-8" viewBox="0 0 1000 866" xmlns="http://www.w3.org/2000/svg">
                       <path d="M333.333 0L500 288.675L166.667 866.025L0 577.35Z" fill="#0F9D58" />
@@ -2996,7 +2997,7 @@ A computer is a digital electronic machine...
             {uploadedFile && (fileType === 'pdf' || fileType === 'document') && (
               <div className="space-y-3 p-4 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-2xl text-right animate-fade-in">
                 <div className="flex items-start gap-3 rounded-2xl border border-violet-200/70 bg-violet-500/5 p-4 dark:border-violet-900/50 dark:bg-violet-500/10" dir="rtl">
-                  <span className="text-xl" aria-hidden="true">✨</span>
+                  <Icons8Icon name="sparkles" size={28} />
                   <div>
                     <p className="text-xs font-black text-violet-700 dark:text-violet-300">استخراج شامل بدون حد لعدد الأسئلة</p>
                     <p className="mt-1 text-[10px] leading-5 text-slate-600 dark:text-slate-400">سيقرأ النظام الملف بالكامل ويستخرج كل أسئلة MCQ وTrue/False المسموح بها حسب اختيارك، مع إزالة التكرار فقط.</p>
@@ -3014,9 +3015,9 @@ A computer is a digital electronic machine...
                   <p className="mb-2 text-[10px] text-slate-400">{isAr ? 'يمكنك تحديد نوعين معاً. سيحافظ التوليد على لغة الملف ويستخدم الأنواع المحددة فقط.' : 'Select two types together. Generation keeps the file language and uses only selected types.'}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {[
-                      { id: 'mcq', label: isAr ? 'اختيار من متعدد' : 'Multiple Choice', icon: '🎯', desc: isAr ? 'خيارات متعددة 4 إجابات' : '4-Option MCQs' },
-                      { id: 'tf', label: isAr ? 'صح وخطأ فقط' : 'True / False', icon: '⚡', desc: isAr ? 'عبارات صح أو خطأ' : 'True or False' },
-                      { id: 'essay', label: isAr ? 'مقالي فقط' : 'Essay Questions', icon: '✍️', desc: isAr ? 'أسئلة مع إجابات نموذجية' : 'Written Essays' },
+                      { id: 'mcq', label: isAr ? 'اختيار من متعدد' : 'Multiple Choice', icon: 'target', desc: isAr ? 'خيارات متعددة 4 إجابات' : '4-Option MCQs' },
+                      { id: 'tf', label: isAr ? 'صح وخطأ فقط' : 'True / False', icon: 'bolt', desc: isAr ? 'عبارات صح أو خطأ' : 'True or False' },
+                      { id: 'essay', label: isAr ? 'مقالي فقط' : 'Essay Questions', icon: 'pencil', desc: isAr ? 'أسئلة مع إجابات نموذجية' : 'Written Essays' },
                     ].map((typeOpt) => {
                       const typeId = typeOpt.id as PreferredQuestionType;
                       const isSelected = preferredQuestionTypes.includes(typeId);
@@ -3031,7 +3032,7 @@ A computer is a digital electronic machine...
                               : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                           }`}
                         >
-                          <span className="text-lg mb-1">{typeOpt.icon}</span>
+                          <Icons8Icon name={typeOpt.icon as any} size={28} className="mb-1" />
                           <span className="text-xs font-extrabold">{typeOpt.label}</span>
                           <span className="text-[9px] text-slate-600 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">{typeOpt.desc}</span>
                         </button>
@@ -3111,13 +3112,13 @@ A computer is a digital electronic machine...
                 {/* Quick assistant suggestion pills */}
                 <div className="flex flex-wrap gap-1.5 justify-end pt-1">
                   {[
-                    "استخرج الـ 101 سؤال بالكامل دون أي إسقاط أو كسل 🏆",
-                    "ركز فقط على أسئلة الفصول الأخيرة والامتحانات 📖",
-                    "أريد أسئلة صعبة مع شرح تفصيلي ممتع للإجابة الصحيحة 🧠",
-                    "اجعل طابع الأسئلة اختيار من متعدد مع خيارات قريبة وممتازة 🎯"
+                    "استخرج الـ 101 سؤال بالكامل دون أي إسقاط أو كسل ",
+                    "ركز فقط على أسئلة الفصول الأخيرة والامتحانات ",
+                    "أريد أسئلة صعبة مع شرح تفصيلي ممتع للإجابة الصحيحة ",
+                    "اجعل طابع الأسئلة اختيار من متعدد مع خيارات قريبة وممتازة "
                   ].map((sug, idx) => (
                     <button
-                      
+
                       type="button"
                       onClick={() => setFileCustomPrompt(sug)}
                       className="text-[10px] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 border border-slate-200 dark:border-slate-700 hover:border-violet-300 dark:hover:border-violet-800 px-3 py-1.5 rounded-xl cursor-pointer transition-all active:scale-95" key={sug}
@@ -3164,26 +3165,26 @@ A computer is a digital electronic machine...
                   <>
                     <div className="flex justify-between items-center text-xs flex-row-reverse text-right">
                       <span className="font-extrabold text-amber-600 dark:text-amber-400">
-                        {ocrProgress.stage === 'analyzing' && (isAr ? '🔍 تجهيز وقراءة الملف...' : '🔍 Preparing and reading the file...')}
-                        {ocrProgress.stage === 'extracting' && (isAr ? '📖 قراءة النص والأسئلة من المصدر...' : '📖 Reading source text and questions...')}
-                        {ocrProgress.stage === 'generating' && (isAr ? '🧠 بناء أسئلة من كل نقطة في المصدر...' : '🧠 Building questions from the source...')}
-                        {ocrProgress.stage === 'solving' && (isAr ? '✅ مراجعة الإجابات مقابل المصدر...' : '✅ Reviewing answers against the source...')}
-                        {ocrProgress.stage === 'saving' && (isAr ? '💾 حفظ الاختبار بعد التحقق...' : '💾 Saving the verified quiz...')}
-                        {ocrProgress.stage === 'compiling' && (isAr ? '📊 تجميع الاختبار النهائي...' : '📊 Compiling the final quiz...')}
+                        {ocrProgress.stage === 'analyzing' && (isAr ? ' تجهيز وقراءة الملف...' : ' Preparing and reading the file...')}
+                        {ocrProgress.stage === 'extracting' && (isAr ? ' قراءة النص والأسئلة من المصدر...' : ' Reading source text and questions...')}
+                        {ocrProgress.stage === 'generating' && (isAr ? ' بناء أسئلة من كل نقطة في المصدر...' : ' Building questions from the source...')}
+                        {ocrProgress.stage === 'solving' && (isAr ? ' مراجعة الإجابات مقابل المصدر...' : ' Reviewing answers against the source...')}
+                        {ocrProgress.stage === 'saving' && (isAr ? ' حفظ الاختبار بعد التحقق...' : ' Saving the verified quiz...')}
+                        {ocrProgress.stage === 'compiling' && (isAr ? ' تجميع الاختبار النهائي...' : ' Compiling the final quiz...')}
                       </span>
                       <span className="font-mono font-bold text-slate-500">
                         {Math.round(ocrProgress.percentage ?? (ocrProgress.current / Math.max(ocrProgress.total, 1)) * 100)}% · {ocrProgress.current} / {ocrProgress.total} {ocrProgress.stage === 'solving' || ocrProgress.stage === 'saving' ? (isAr ? 'سؤال' : 'questions') : (isAr ? 'جزء' : 'parts')}
                       </span>
                     </div>
-                    
+
                     {/* Progress bar */}
                     <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300 ease-out" 
+                      <div
+                        className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300 ease-out"
                         style={{ width: `${Math.max(0, Math.min(100, ocrProgress.percentage ?? (ocrProgress.current / Math.max(ocrProgress.total, 1)) * 100))}%` }}
                       />
                     </div>
-                    
+
                     <p className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed text-right flex items-center justify-end gap-2">
                       <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
                       {ocrProgress.message}
@@ -3203,11 +3204,11 @@ A computer is a digital electronic machine...
                       {ocrBatches.map((batch, index) => {
                         const isActive = activeBatchId === batch.id;
                         return (
-                          <div 
-                            
+                          <div
+
                             className={`flex items-center justify-between p-3 rounded-xl border text-xs transition-all ${
-                              isActive 
-                                ? 'bg-violet-500/5 border-violet-300 dark:border-violet-900/60 shadow-[0_2px_10px_rgba(139,92,246,0.06)]' 
+                              isActive
+                                ? 'bg-violet-500/5 border-violet-300 dark:border-violet-900/60 shadow-[0_2px_10px_rgba(139,92,246,0.06)]'
                                 : batch.status === 'success'
                                 ? 'bg-emerald-500/5 border-emerald-200 dark:border-emerald-950/30'
                                 : batch.status === 'error'
@@ -3225,7 +3226,7 @@ A computer is a digital electronic machine...
                                   ? 'bg-rose-500 text-white border-rose-500'
                                   : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
                               }`}>
-                                {batch.status === 'success' ? '✓' : index + 1}
+                                {batch.status === 'success' ? '' : index + 1}
                               </div>
                               <span className={`font-semibold ${
                                 isActive ? 'text-violet-700 dark:text-violet-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'
@@ -3248,7 +3249,7 @@ A computer is a digital electronic machine...
                               {batch.status === 'pending' && (
                                 <span className="text-[10px] text-slate-400">قيد الانتظار</span>
                               )}
-                              
+
                               {/* Pulsing/bouncy waiting dots (نقاط تطلع وتنزل بتاعت الانتظار) */}
                               {isActive && (
                                 <div className="flex items-center gap-1 bg-violet-100 dark:bg-violet-950/65 px-2.5 py-1 rounded-full">
@@ -3266,9 +3267,9 @@ A computer is a digital electronic machine...
                 )}
 
                 <div className="text-[10px] text-slate-600 dark:text-slate-400 text-right leading-relaxed pt-1.5 border-t border-slate-200/50 dark:border-slate-800/80">
-                  {isAr 
-                    ? '💡 بفضل نظام الاستخراج التتابعي الذكي المتوفر لـ Premium، نقسم الأسئلة لجرعات مريحة، مما يمنع انقطاع أو كسل الذكاء الاصطناعي ويأتي بالدروس كاملة.'
-                    : '💡 Sequential processing splits assignments into micro-batches to bypass model limits and ensure full comprehensive coverage of long books.'}
+                  {isAr
+                    ? ' بفضل نظام الاستخراج التتابعي الذكي المتوفر لـ Premium، نقسم الأسئلة لجرعات مريحة، مما يمنع انقطاع أو كسل الذكاء الاصطناعي ويأتي بالدروس كاملة.'
+                    : ' Sequential processing splits assignments into micro-batches to bypass model limits and ensure full comprehensive coverage of long books.'}
                 </div>
               </div>
             )}
@@ -3276,7 +3277,7 @@ A computer is a digital electronic machine...
             {uploadedFile && (
               <div className="space-y-3" dir="rtl">
                 <label className="block text-xs font-black text-slate-600 dark:text-slate-350 border-b border-slate-200/50 dark:border-slate-800 pb-2">
-                  ⚡ اختار الوضع المناسب لك — وضعان مستقلان تماماً:
+                   اختار الوضع المناسب لك — وضعان مستقلان تماماً:
                 </label>
                 <div className="uipro-glass-surface backdrop-blur-xl border border-cyan-500/30 dark:border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-violet-500/5 to-transparent p-5 rounded-2xl shadow-sm text-right">
                   <label htmlFor="file-question-count" className="block text-xs font-black text-cyan-800 dark:text-cyan-200">
@@ -3296,8 +3297,8 @@ A computer is a digital electronic machine...
                       options={COUNT_OPTIONS_WITH_AUTO.map((opt) => ({
                         value: opt.value,
                         label: opt.value === 0
-                          ? (isAr ? '✨ تلقائي — فحص شامل وتحديد ذكي لعدد الأسئلة' : '✨ Automatic — comprehensive inspection & smart count')
-                          : (isAr ? `🎯 يدوي — ${opt.value} سؤال` : `🎯 Manual — ${opt.value} questions`),
+                          ? (isAr ? ' تلقائي — فحص شامل وتحديد ذكي لعدد الأسئلة' : ' Automatic — comprehensive inspection & smart count')
+                          : (isAr ? ` يدوي — ${opt.value} سؤال` : ` Manual — ${opt.value} questions`),
                         description: opt.sub,
                         badge: opt.value === 0 ? (isAr ? 'موصى به' : 'Recommended') : undefined,
                       }))}
@@ -3313,7 +3314,7 @@ A computer is a digital electronic machine...
                       : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30'
                   }`}>
                     <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-lg bg-emerald-500/10 text-base leading-none">📄</span>
+                      <span className="p-1.5 rounded-lg bg-emerald-500/10 text-base leading-none"></span>
                       <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">استخراج الأسئلة الموجودة بالملف</span>
                     </div>
                     <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
@@ -3350,7 +3351,7 @@ A computer is a digital electronic machine...
                       : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30'
                   }`}>
                     <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-lg bg-violet-500/10 text-base leading-none">✨</span>
+                      <span className="p-1.5 rounded-lg bg-violet-500/10 text-base leading-none"></span>
                       <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">Generate — توليد بالذكاء الاصطناعي</span>
                     </div>
                     <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
@@ -3391,10 +3392,10 @@ A computer is a digital electronic machine...
         {/* Panel 3: Manual Editor/Verifier Form (Active edit modes) */}
         {activeMode === 'manual' && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="space-y-8"
           >
             {manualSolveOnlyNotice && (
@@ -3405,7 +3406,7 @@ A computer is a digital electronic machine...
               >
                 <div className="flex flex-col items-stretch gap-3">
                   <div className="flex items-start justify-end gap-2">
-                    <span className="text-lg" aria-hidden="true">⚠️</span>
+                    <span className="text-lg" aria-hidden="true"></span>
                     <p>{manualSolveOnlyNotice}</p>
                   </div>
                   <div className="rounded-xl border border-amber-200/80 bg-white/60 p-3 text-xs font-bold leading-6 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/20 dark:text-amber-100">
@@ -3461,7 +3462,7 @@ A computer is a digital electronic machine...
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100/50 dark:border-slate-800/50 pb-5 relative z-10">
                 <div className="flex items-center gap-3" dir="rtl">
-                  <span className="p-3 bg-violet-500/10 text-violet-600 rounded-2xl shadow-sm border border-violet-100 dark:border-violet-900/30">⚙️</span>
+                  <span className="p-3 bg-violet-500/10 text-violet-600 rounded-2xl shadow-sm border border-violet-100 dark:border-violet-900/30"></span>
                   <div className="text-right">
                     <h3 className="font-display font-black text-xl text-slate-800 dark:text-slate-100 tracking-tight">بيانات وتفاصيل مسودة الاختبار الحالية</h3>
                     <p className="text-[10px] text-slate-450 mt-0.5 font-medium">تفاصيل الهوية والزمن الموصى لطلابك لحل هذا الاختبار</p>
@@ -3489,7 +3490,7 @@ A computer is a digital electronic machine...
                   </button>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 relative z-10">
                 <div className="space-y-2 sm:col-span-2 text-right">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block uppercase tracking-wide px-1">عنوان الاختبار المباشر:</label>
@@ -3555,7 +3556,7 @@ A computer is a digital electronic machine...
 
                 <div className="space-y-2 sm:col-span-2 text-right">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block uppercase tracking-wide px-1">
-                    تصنيف وتبويب هذا الاختبار 📂:
+                    تصنيف وتبويب هذا الاختبار :
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="relative">
@@ -3574,11 +3575,11 @@ A computer is a digital electronic machine...
                           ...availableCategories.map((catName) => ({
                             value: catName,
                             label: catName,
-                            icon: '📁',
+                            icon: 'folder',
                           })),
                           {
                             value: 'new',
-                            label: '🆕 تصنيف جديد غير موجود...',
+                            label: 'تصنيف جديد غير موجود...',
                             description: 'إنشاء تصنيف وتبويب مخصص جديد',
                           },
                         ]}
@@ -3626,7 +3627,7 @@ A computer is a digital electronic machine...
                 {/* Essay Grading Mode Option */}
                 <div className="space-y-2 sm:col-span-2 text-right">
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block uppercase tracking-wide px-1">
-                    {isAr ? 'نظام تصحيح الأسئلة المقالية (إن وُجدت) ✍️:' : 'Essay Questions Evaluation System:'}
+                    {isAr ? 'نظام تصحيح الأسئلة المقالية (إن وُجدت) :' : 'Essay Questions Evaluation System:'}
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
@@ -3640,7 +3641,7 @@ A computer is a digital electronic machine...
                     >
                       <div className="flex items-center justify-between w-full">
                         <span className="font-black text-sm flex items-center gap-2">
-                          <span>✍️</span>
+                          <span></span>
                           <span>{isAr ? 'تصحيح يدوي من منشئ الاختبار (موصى به)' : 'Manual Review by Creator'}</span>
                         </span>
                         {essayGradingMode === 'manual' && (
@@ -3667,7 +3668,7 @@ A computer is a digital electronic machine...
                     >
                       <div className="flex items-center justify-between w-full">
                         <span className="font-black text-sm flex items-center gap-2">
-                          <span>🤖</span>
+                          <span></span>
                           <span>{isAr ? 'تصحيح فوري بالذكاء الاصطناعي (AI)' : 'Instant AI Grading'}</span>
                         </span>
                         {essayGradingMode === 'ai' && (
@@ -3688,35 +3689,35 @@ A computer is a digital electronic machine...
                 {/* Advanced publishing settings */}
                 <details open className="sm:col-span-2 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-950/20 overflow-hidden">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-right font-black text-sm text-slate-700 dark:text-slate-200 marker:hidden">
-                    <span className="flex items-center gap-2"><span className="text-lg">🌐</span> إعدادات النشر والوصول المتقدمة</span>
+                    <span className="flex items-center gap-2"><span className="text-lg"></span> إعدادات النشر والوصول المتقدمة</span>
                     <span className="text-violet-500 text-lg transition-transform">⌄</span>
                   </summary>
                   <div className="space-y-3 px-4 pb-4 pt-1 text-right">
                   <label className="text-xs font-black text-slate-700 dark:text-slate-300 block uppercase tracking-wide px-1">
-                    {isAr ? 'مسار توزيع وتوجيه نشر الاختبار 🌐:' : 'Quiz Publishing Distribution Router:'}
+                    {isAr ? 'مسار توزيع وتوجيه نشر الاختبار :' : 'Quiz Publishing Distribution Router:'}
                   </label>
                   <p className="text-[10px] text-slate-500 px-1">
                     {isAr ? 'حدد النطاق والجمهور المستهدف لتوزيع هذا الاختبار وحصره تلقائياً' : 'Determine the visibility and target sync channel for this quiz deployment'}
                   </p>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                     {/* Option 1: Public */}
                     <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all select-none ${
-                      distributionRouting === 'public' 
-                        ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs' 
+                      distributionRouting === 'public'
+                        ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs'
                         : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}>
-                      <input 
-                        type="radio" 
-                        name="distributionRouting" 
-                        value="public" 
+                      <input
+                        type="radio"
+                        name="distributionRouting"
+                        value="public"
                         checked={distributionRouting === 'public'}
                         onChange={() => setDistributionRouting('public')}
                         className="sr-only"
                       />
                       <div className="flex flex-col text-right w-full" style={{ direction: 'rtl', textAlign: 'right' }}>
                         <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5 justify-start">
-                          <span className="text-emerald-500">🌐</span>
+                          <span className="text-emerald-500"></span>
                           <span>{isAr ? 'نشر عام للجميع' : 'Public Distribution'}</span>
                         </span>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
@@ -3727,21 +3728,21 @@ A computer is a digital electronic machine...
 
                     {/* Option 2: Classroom Restricted */}
                     <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all select-none ${
-                      distributionRouting === 'classroom' 
-                        ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs' 
+                      distributionRouting === 'classroom'
+                        ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs'
                         : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}>
-                      <input 
-                        type="radio" 
-                        name="distributionRouting" 
-                        value="classroom" 
+                      <input
+                        type="radio"
+                        name="distributionRouting"
+                        value="classroom"
                         checked={distributionRouting === 'classroom'}
                         onChange={() => setDistributionRouting('classroom')}
                         className="sr-only"
                       />
                       <div className="flex flex-col text-right w-full" style={{ direction: 'rtl', textAlign: 'right' }}>
                         <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5 justify-start">
-                          <span className="text-primary">🎓</span>
+                          <span className="text-primary"></span>
                           <span>{isAr ? 'فصل دراسي خاص' : 'Classroom Restricted'}</span>
                         </span>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
@@ -3752,21 +3753,21 @@ A computer is a digital electronic machine...
 
                     {/* Option 3: Community Group Sync */}
                     <label className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all select-none ${
-                      distributionRouting === 'community' 
-                        ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs' 
+                      distributionRouting === 'community'
+                        ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs'
                         : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}>
-                      <input 
-                        type="radio" 
-                        name="distributionRouting" 
-                        value="community" 
+                      <input
+                        type="radio"
+                        name="distributionRouting"
+                        value="community"
                         checked={distributionRouting === 'community'}
                         onChange={() => setDistributionRouting('community')}
                         className="sr-only"
                       />
                       <div className="flex flex-col text-right w-full" style={{ direction: 'rtl', textAlign: 'right' }}>
                         <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5 justify-start">
-                          <span className="text-pink-500">👥</span>
+                          <span className="text-pink-500"></span>
                           <span>{isAr ? 'مزامنة مجتمعية' : 'Community Group Sync'}</span>
                         </span>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
@@ -3780,14 +3781,14 @@ A computer is a digital electronic machine...
                     <div className="mt-4 p-4 rounded-2xl bg-slate-500/5 border border-slate-200 dark:border-slate-800 text-right space-y-3" style={{ direction: 'rtl' }}>
                       <div className="flex items-center justify-between flex-row-reverse">
                         <label className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                          <span className="text-lg">🏫</span>
+                          <span className="text-lg"></span>
                           <span>{isAr ? 'اختر الفصل الدراسي المستهدف لنشر الاختبار:' : 'Select the target classroom to publish the quiz:'}</span>
                         </label>
                         {loadingClassrooms && (
                           <span className="text-[10px] text-slate-400 animate-pulse">{isAr ? 'جاري جلب الفصول...' : 'Loading classrooms...'}</span>
                         )}
                       </div>
-                      
+
                       {(() => {
                         const myClassrooms = classrooms.filter((c: any) => {
                           const isOwner = c.createdBy === userId;
@@ -3799,22 +3800,22 @@ A computer is a digital electronic machine...
                             {myClassrooms.map((c: any) => {
                               const isSelected = selectedClassroomId === c.id;
                               return (
-                                <div 
+                                <div
                                   onClick={() => setSelectedClassroomId(c.id)}
                                   className={`p-3.5 rounded-2xl border cursor-pointer transition-all text-right select-none ${
-                                    isSelected 
-                                      ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs' 
+                                    isSelected
+                                      ? 'bg-primary/10 border-primary text-slate-900 dark:text-white shadow-xs'
                                       : 'bg-slate-50/70 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                                   }`} key={c.id}
                                 >
                                   <div className="font-black text-xs text-slate-900 dark:text-white flex items-center justify-between flex-row-reverse">
                                     <span>{c.name}</span>
-                                    {isSelected && <span className="text-primary text-xs font-bold">✓ {isAr ? 'محدد' : 'Selected'}</span>}
+                                    {isSelected && <span className="text-primary text-xs font-bold"> {isAr ? 'محدد' : 'Selected'}</span>}
                                   </div>
                                   <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1.5 justify-end">
-                                    <span>👤 {c.creatorName}</span>
+                                    <span> {c.creatorName}</span>
                                     <span>•</span>
-                                    <span>🔑 {isAr ? 'كود الفصل:' : 'Code:'} {c.code}</span>
+                                    <span> {isAr ? 'كود الفصل:' : 'Code:'} {c.code}</span>
                                   </div>
                                 </div>
                               );
@@ -3822,9 +3823,9 @@ A computer is a digital electronic machine...
                           </div>
                         ) : (
                           <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-right text-xs text-amber-200 leading-relaxed">
-                            {isAr 
-                              ? '⚠️ لا توجد فصول دراسية تملكها أو تديرها حالياً. لنشر الاختبار في فصل خاص، يجب أولاً إنشاء فصل والبدء كمعلم من صفحة الفصول.' 
-                              : '⚠️ No classrooms owned or managed by you found. To publish a quiz to a private classroom, you must first create a classroom as a teacher from the Classrooms page.'}
+                            {isAr
+                              ? ' لا توجد فصول دراسية تملكها أو تديرها حالياً. لنشر الاختبار في فصل خاص، يجب أولاً إنشاء فصل والبدء كمعلم من صفحة الفصول.'
+                              : ' No classrooms owned or managed by you found. To publish a quiz to a private classroom, you must first create a classroom as a teacher from the Classrooms page.'}
                           </div>
                         );
                       })()}
@@ -3896,7 +3897,7 @@ A computer is a digital electronic machine...
                     className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 py-3 px-5 rounded-[18px] border border-amber-200/50 dark:border-amber-500/20 font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm"
                     title="تصفية الأسئلة المكررة تلقائياً"
                   >
-                    <span className="text-sm">🧹</span>
+                    <span className="text-sm"></span>
                     <span>تصفية المكررات تلقائياً</span>
                   </button>
                   <button
@@ -3912,8 +3913,8 @@ A computer is a digital electronic machine...
 
               {dedupStatus && (
                 <div
-                  
-                  
+
+
                   className="p-4 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-500/20 rounded-[20px] text-xs font-bold text-emerald-600 dark:text-emerald-400 text-center shadow-sm backdrop-blur-sm"
                 >
                   {dedupStatus}
@@ -3926,17 +3927,17 @@ A computer is a digital electronic machine...
                 const isComplete = hasText && hasValidAnswer;
                 return (
                   <div
-                    
+
                     id={`quiz-question-${qIdx}`}
                     className="group glass-card border border-slate-200/50 dark:border-slate-700/50 p-6 sm:p-8 rounded-[28px] shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 relative overflow-hidden flex flex-col gap-6 text-right" key={question.id || qIdx}
                   >
                     {/* Visual side accent border */}
-                    <div 
+                    <div
                       className={`absolute top-0 right-0 h-full w-[6px] rounded-r-full transition-all duration-300 shadow-md ${
                         question.type === 'mcq' ? 'bg-indigo-500 shadow-indigo-500/30' :
                         question.type === 'tf' ? 'bg-pink-500 shadow-pink-500/30' :
                         'bg-amber-500 shadow-amber-500/30'
-                      }`} 
+                      }`}
                     />
 
                     {/* Floating Number and Delete Control */}
@@ -3950,18 +3951,18 @@ A computer is a digital electronic machine...
                           question.type === 'tf' ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-500/20' :
                           'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20'
                         }`}>
-                          {question.type === 'mcq' && <span>🧩 اختيار من متعدد (MCQ)</span>}
-                          {question.type === 'tf' && <span>⚖️ صح أو خطأ (True / False)</span>}
-                          {question.type === 'essay' && <span>✍️ سؤال مقالي (Essay)</span>}
+                          {question.type === 'mcq' && <span> اختيار من متعدد (MCQ)</span>}
+                          {question.type === 'tf' && <span> صح أو خطأ (True / False)</span>}
+                          {question.type === 'essay' && <span> سؤال مقالي (Essay)</span>}
                         </span>
-                        
+
                         <span className={`inline-flex items-center text-[10px] font-mono font-bold px-3.5 py-1.5 rounded-xl border ${
                           isComplete ? 'bg-emerald-50/50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/50' : 'bg-rose-50/50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50'
                         }`}>
-                          {isComplete ? '✨ جاهز ومكتمل' : hasText ? '⚠️ يحتاج إجابة مؤكدة' : '⚠️ مسودة فارغة'}
+                          {isComplete ? ' جاهز ومكتمل' : hasText ? ' يحتاج إجابة مؤكدة' : ' مسودة فارغة'}
                         </span>
                       </div>
-                      
+
                       <button
                         type="button"
                         disabled={questions.length === 1}
@@ -3976,7 +3977,7 @@ A computer is a digital electronic machine...
                     {/* Question Fields Form */}
                     <div className="space-y-5 pt-1">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                        
+
                         <div className="flex-1 space-y-2">
                           <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">نص السؤال المباشر:</label>
                           <input
@@ -3997,17 +3998,17 @@ A computer is a digital electronic machine...
                             onChange={(val) => {
                               const newType = val as 'mcq' | 'tf' | 'essay';
                               const newOptions = newType === 'tf' ? ['صح', 'خطأ'] : newType === 'essay' ? [] : ['', '', '', ''];
-                              handleQuestionChange(qIdx, { 
-                                type: newType, 
-                                options: newOptions, 
+                              handleQuestionChange(qIdx, {
+                                type: newType,
+                                options: newOptions,
                                 correctIndex: 0,
                                 correctAnswer: newType === 'essay' ? 'اكتب الإجابة النموذجية الموصى بها هنا للتقييم الذاتي...' : ''
                               });
                             }}
                             options={[
-                              { value: 'mcq', label: '🧩 اختيار من متعدد (MCQ)' },
-                              { value: 'tf', label: '⚖️ صح أو خطأ (True / False)' },
-                              { value: 'essay', label: '✍️ سؤال مقالي إنشائي (Essay)' },
+                              { value: 'mcq', label: ' اختيار من متعدد (MCQ)' },
+                              { value: 'tf', label: ' صح أو خطأ (True / False)' },
+                              { value: 'essay', label: ' سؤال مقالي إنشائي (Essay)' },
                             ]}
                             dir="rtl"
                           />
@@ -4021,16 +4022,16 @@ A computer is a digital electronic machine...
                           <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide px-1">
                             الخيارات المتاحة (يرجى اختيار الجواب الصحيح عبر الضغط على دائرة التفعيل الخضراء):
                           </label>
-                          
+
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" dir="rtl">
                             {question.options.map((option, optIdx) => {
                               const isCorrect = question.correctIndex === optIdx;
                               return (
-                                <div 
-                                   
+                                <div
+
                                   className={`flex items-center gap-3 px-5 py-4 rounded-[20px] border transition-all duration-300 shadow-sm ${
-                                    isCorrect 
-                                      ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-400 dark:border-emerald-500/50 shadow-emerald-500/10 ring-1 ring-emerald-500/20 z-10 scale-[1.01]' 
+                                    isCorrect
+                                      ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-400 dark:border-emerald-500/50 shadow-emerald-500/10 ring-1 ring-emerald-500/20 z-10 scale-[1.01]'
                                       : 'bg-slate-50/80 dark:bg-slate-900/50 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 backdrop-blur-sm'
                                   }`}
                                 >
@@ -4078,19 +4079,19 @@ A computer is a digital electronic machine...
                               const isSelected = question.correctIndex === tfOpt.val;
                               return (
                                 <button
-                                  
+
                                   type="button"
                                   onClick={() => handleQuestionChange(qIdx, { correctIndex: tfOpt.val })}
                                   className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[20px] font-bold text-sm border shadow-sm transition-all duration-300 cursor-pointer ${
-                                    isSelected 
-                                      ? (tfOpt.val === 0 ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-400 text-emerald-700 dark:text-emerald-400 shadow-emerald-500/10 ring-1 ring-emerald-500/20 scale-[1.02]' 
+                                    isSelected
+                                      ? (tfOpt.val === 0 ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-400 text-emerald-700 dark:text-emerald-400 shadow-emerald-500/10 ring-1 ring-emerald-500/20 scale-[1.02]'
                                                    : 'bg-red-50 dark:bg-rose-500/10 border-red-400 text-red-700 dark:text-rose-400 shadow-rose-500/10 ring-1 ring-rose-500/20 scale-[1.02]')
                                       : 'bg-slate-50/80 dark:bg-slate-900/50 border-slate-200/80 dark:border-slate-800/80 text-slate-500 hover:bg-slate-100 hover:border-slate-300 backdrop-blur-sm'
                                   }`}
                                 >
                                   <div className={`w-4 h-4 rounded-full border-[2.5px] flex items-center justify-center ${
-                                    isSelected 
-                                      ? (tfOpt.val === 0 ? 'border-emerald-500 bg-emerald-500' : 'border-red-500 bg-red-500') 
+                                    isSelected
+                                      ? (tfOpt.val === 0 ? 'border-emerald-500 bg-emerald-500' : 'border-red-500 bg-red-500')
                                       : 'border-slate-400'
                                   }`}>
                                     {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
@@ -4117,7 +4118,7 @@ A computer is a digital electronic machine...
                       {/* Image Attachment (PDF OCR crop or Manual upload) */}
                       <div className="space-y-2 pt-1">
                         <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block text-right uppercase tracking-wide px-1">صورة توضيحية أو رسم بياني مرافق (اختياري):</label>
-                        
+
                         {question.imageUrl ? (
                           <div className="relative group w-fit max-w-sm mx-auto border border-indigo-200 dark:border-indigo-500/30 p-2.5 rounded-[24px] bg-slate-50/80 dark:bg-slate-900/60 shadow-md">
                               <QuestionMedia
@@ -4144,8 +4145,8 @@ A computer is a digital electronic machine...
                               </div>
                               <span className="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">اضغط لإدراج أو سحب صورة لهذا السؤال</span>
                               <span className="text-xs text-slate-500 dark:text-slate-500 font-medium tracking-wide border px-3 py-1 rounded-full border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50">PNG, JPG, GIF, AVIF</span>
-                              <input 
-                                type="file" 
+                              <input
+                                type="file"
                                 accept="image/*"
                                 onChange={async (e) => {
                                   const file = e.target.files?.[0];
@@ -4162,7 +4163,7 @@ A computer is a digital electronic machine...
                                     e.currentTarget.value = '';
                                   }
                                 }}
-                                className="hidden" 
+                                className="hidden"
                               />
                             </label>
                           </div>
@@ -4225,7 +4226,7 @@ A computer is a digital electronic machine...
           </div>
         )}
 
-      
+
 
       {/* Google Drive Real File Picker Modal */}
       <DrivePicker

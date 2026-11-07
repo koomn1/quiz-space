@@ -364,7 +364,7 @@ export function useQuizGenerator() {
           const clonedText = baseQ.text
             ? (baseQ.text.includes('؟') ? baseQ.text.replace('؟', ` (تطبيق مكمل ${cloneNum})؟`) : `${baseQ.text} (${cloneNum})`)
             : `سؤال مكمل رقم ${cloneNum}`;
-          
+
           accumulatedQuestions.push({
             ...baseQ,
             id: `q-forced-${cloneNum}-${Date.now()}`,
@@ -461,7 +461,7 @@ export function useQuizGenerator() {
         current: accumulatedQuestions.length,
         total: generationQuestionCount,
         stage: 'complete',
-        message: 'تم توليد وحفظ الاختبار بنجاح! ✨',
+        message: 'تم توليد وحفظ الاختبار بنجاح! ',
       });
 
       if (fileUploadName) {

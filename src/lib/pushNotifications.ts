@@ -101,7 +101,7 @@ class PushNotificationManager {
   ) {
     const payload: PushNotificationPayload = {
       id: 'push-' + Math.random().toString(36).substring(2, 9),
-      title: '🏆 كسر الرقم القياسي! / Record Broken!',
+      title: ' كسر الرقم القياسي! / Record Broken!',
       body: body,
       quizId,
       quizName,

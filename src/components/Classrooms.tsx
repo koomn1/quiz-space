@@ -30,12 +30,12 @@ function generateClassroomCode(): string {
 
   return Array.from(values, value => alphabet[value % alphabet.length]).join('');
 }
-import { 
+import {
   GraduationCap, Plus, Users, Copy, Check,
   Award, Clock, Star, BookOpen, ShieldCheck,
   Sparkles, Lock,
   Bell, FileText, Download, FolderOpen,
-  MessageSquare, PlusCircle, Calendar, ClipboardList, Megaphone, 
+  MessageSquare, PlusCircle, Calendar, ClipboardList, Megaphone,
   CheckCircle, BarChart2, Settings, Play, Trash,
   ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle, Eye, Target, ClipboardCheck, CircleX
 } from 'lucide-react';
@@ -58,8 +58,8 @@ import {
   type TeacherQuizProgressRow,
 } from '../lib/db';
 import { canPersistAuthenticatedData } from '../lib/userAccess';
-import { 
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, 
+import {
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, Tooltip as ChartTooltip, Cell
 } from 'recharts';
 
@@ -183,9 +183,9 @@ function DecryptedClassMessage({ msg, classId, isAr, onStartQuiz }: { msg: any; 
 
   if (isQuiz) {
     return (
-      <div 
-        
-        
+      <div
+
+
         className="my-3 p-5 rounded-3xl bg-gradient-to-br from-indigo-950/90 via-purple-950/50 to-slate-950 border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)] space-y-3 max-w-sm"
       >
         <div className="flex items-center gap-3">
@@ -194,17 +194,17 @@ function DecryptedClassMessage({ msg, classId, isAr, onStartQuiz }: { msg: any; 
           </div>
           <div>
             <span className="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full font-bold uppercase block w-max mb-1">
-              {isAr ? '👾 كويز مباشر متفاعل' : '👾 Live Interactive Quiz'}
+              {isAr ? ' كويز مباشر متفاعل' : ' Live Interactive Quiz'}
             </span>
             <h5 className="font-bold text-white text-xs">{quizTitle}</h5>
           </div>
         </div>
         <p className="text-[10px] text-slate-300 leading-relaxed">
-          {isAr 
-            ? 'عين المعلم هذا الاختبار المباشر لفصلك الدراسي. اضغط للبدء واختبار معلوماتك فوراً!' 
+          {isAr
+            ? 'عين المعلم هذا الاختبار المباشر لفصلك الدراسي. اضغط للبدء واختبار معلوماتك فوراً!'
             : 'The teacher assigned this quiz to your classroom. Click the button below to start solving and test your knowledge.'}
         </p>
-        <button 
+        <button
           onClick={() => {
             playChimeSound('correct');
             if (onStartQuiz && quizId) {
@@ -215,7 +215,7 @@ function DecryptedClassMessage({ msg, classId, isAr, onStartQuiz }: { msg: any; 
           }}
           className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer text-center"
         >
-          {isAr ? 'صاروخ الحل 🚀 ابدأ الكويز' : 'Launch Quiz 🚀 Solve Now'}
+          {isAr ? 'صاروخ الحل  ابدأ الكويز' : 'Launch Quiz  Solve Now'}
         </button>
       </div>
     );
@@ -284,7 +284,7 @@ export default function Classrooms({
 
   // Expanded classroom workspace tabs
   const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'overview' | 'discussion' | 'quizzes' | 'assignments' | 'files' | 'members' | 'attendance' | 'announcements' | 'grades' | 'calendar' | 'analytics' | 'settings' | 'lessons' | 'challenges'>('overview');
-  
+
   // Custom Assignment Builder State
   const [isCreatingAssign, setIsCreatingAssign] = useState(false);
   const [newAssignTitle, setNewAssignTitle] = useState('');
@@ -466,11 +466,11 @@ export default function Classrooms({
               if (m.senderId === currentUserId) return;
               decryptMessage(m.encryptedText, activeClassroomView.id).then(decrypted => {
                 const isQuizMsg = decrypted.startsWith('[QUIZ_EMBED:');
-                let toastTitle = isAr ? 'رسالة جديدة 💬' : 'New Message 💬';
+                let toastTitle = isAr ? 'رسالة جديدة ' : 'New Message ';
                 let toastBody = `${m.senderName}: ${decrypted}`;
                 if (isQuizMsg) {
                   const quizTitle = decrypted.split(':')[2]?.replace(']', '') || '';
-                  toastTitle = isAr ? '👾 كويز جديد متوفر!' : '👾 New Quiz Available!';
+                  toastTitle = isAr ? ' كويز جديد متوفر!' : ' New Quiz Available!';
                   toastBody = isAr ? `قام المعلم بنشر كويز جديد: ${quizTitle}` : `The teacher published a new quiz: ${quizTitle}`;
                 }
                 triggerToast(toastTitle, toastBody, isQuizMsg ? 'quiz' : 'message');
@@ -632,7 +632,7 @@ export default function Classrooms({
         setClassCodeInput(code);
         window.history.pushState(null, '', window.location.pathname + window.location.search);
         triggerToast(
-          isAr ? '🔗 رمز دعوة تلقائي' : '🔗 Auto Invitation Detected',
+          isAr ? ' رمز دعوة تلقائي' : ' Auto Invitation Detected',
           isAr ? 'تم سحب رمز الفصل تلقائياً من الرابط للتسجيل.' : 'Class code retrieved from URL.',
           'info'
         );
@@ -651,7 +651,7 @@ export default function Classrooms({
         playChimeSound('correct');
         setActiveClassroomView(targetClass);
         triggerToast(
-          isAr ? '🕵️‍♂️ وضع الشبح نشط' : '🕵️‍♂️ Ghost Mode Active',
+          isAr ? ' وضع الشبح نشط' : ' Ghost Mode Active',
           isAr ? 'تم الدخول الفوري دون ترك أي أثر في قائمة الطلاب.' : 'Seamless ghost entry granted.',
           'info'
         );
@@ -780,7 +780,7 @@ export default function Classrooms({
       });
 
       if (error) throw new Error(error.message);
-      void sendPushEvent({ title: `💬 ${activeClassroomView.name}`, body: `${currentUserName}: ${text.slice(0, 140)}`, url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
+      void sendPushEvent({ title: ` ${activeClassroomView.name}`, body: `${currentUserName}: ${text.slice(0, 140)}`, url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
       setChatMessageText('');
       playChimeSound('click');
         } catch (err) {
@@ -836,7 +836,7 @@ export default function Classrooms({
         file_type: typeMapped
       }).select().single();
       if (error) throw new Error(error.message);
-      void sendPushEvent({ title: `📁 ملف جديد في ${activeClassroomView.name}`, body: `${currentUserName} أضاف الملف: ${file.name}`, url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
+      void sendPushEvent({ title: ` ملف جديد في ${activeClassroomView.name}`, body: `${currentUserName} أضاف الملف: ${file.name}`, url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
 
       const newFile: SharedFile = {
         id: data.id, classId: data.class_id, name: data.name, sharedByName: data.shared_by_name,
@@ -845,7 +845,7 @@ export default function Classrooms({
       setSharedFiles(prev => [newFile, ...prev]);
       playChimeSound('correct');
       triggerToast(
-        isAr ? '📁 تم رفع الملف بنجاح!' : '📁 File Shared Successfully!',
+        isAr ? ' تم رفع الملف بنجاح!' : ' File Shared Successfully!',
         file.name,
         'info'
       );
@@ -876,7 +876,7 @@ export default function Classrooms({
         creator_name: currentUserName
       }).select().single();
       if (error) throw new Error(error.message);
-      void sendPushEvent({ title: `📝 تكليف جديد في ${activeClassroomView.name}`, body: `${currentUserName}: ${newAssignTitle.slice(0, 140)}`, url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
+      void sendPushEvent({ title: ` تكليف جديد في ${activeClassroomView.name}`, body: `${currentUserName}: ${newAssignTitle.slice(0, 140)}`, url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
 
       const newAssign: Assignment = {
         id: data.id, classId: data.class_id, title: data.title, description: data.description,
@@ -890,7 +890,7 @@ export default function Classrooms({
       setNewAssignPoints(100);
       playChimeSound('correct');
       triggerToast(
-        isAr ? '📝 تم نشر تكليف دراسي!' : '📝 Assignment Published!',
+        isAr ? ' تم نشر تكليف دراسي!' : ' Assignment Published!',
         newAssign.title,
         'info'
       );
@@ -925,7 +925,7 @@ export default function Classrooms({
       setSubmitContentText('');
       playChimeSound('correct');
       triggerToast(
-        isAr ? '🚀 تم تسليم الواجب بنجاح!' : '🚀 Work Submitted Successfully!',
+        isAr ? ' تم تسليم الواجب بنجاح!' : ' Work Submitted Successfully!',
         isAr ? 'تم حفظ إجابتك وتسليمها للمراجعة والتقييم.' : 'Your solution has been submitted for grading.',
         'info'
       );
@@ -961,7 +961,7 @@ export default function Classrooms({
       setGradeFeedback('');
       playChimeSound('correct');
       triggerToast(
-        isAr ? '🌟 تم تقييم وتصحيح التكليف' : '🌟 Solutions Graded!',
+        isAr ? ' تم تقييم وتصحيح التكليف' : ' Solutions Graded!',
         isAr ? 'تم رصد الدرجة للارتجاع المدرسي والطلاب.' : 'The grades were logged successfully.',
         'info'
       );
@@ -988,10 +988,10 @@ export default function Classrooms({
         priority: annPriority,
         posted_by: currentUserId,
         posted_by_name: currentUserName,
-        reactions: { '🚀': 0, '❤️': 0, '👍': 0 }
+        reactions: { '': 0, '': 0, '': 0 }
       }).select().single();
       if (error) throw new Error(error.message);
-      void sendPushEvent({ title: `📢 إعلان جديد في ${activeClassroomView.name}`, body: annContent.slice(0, 160), url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
+      void sendPushEvent({ title: ` إعلان جديد في ${activeClassroomView.name}`, body: annContent.slice(0, 160), url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
 
       const newAnn: Announcement = {
         id: data.id, classId: data.class_id, content: data.content, priority: data.priority,
@@ -1003,7 +1003,7 @@ export default function Classrooms({
       setAnnPriority('general');
       playChimeSound('correct');
       triggerToast(
-        isAr ? '📢 تم نشر إعلان دراسي عام' : '📢 Broadcast Released!',
+        isAr ? ' تم نشر إعلان دراسي عام' : ' Broadcast Released!',
         isAr ? 'تم تعليق الإعلان في لوحة النشرات.' : 'Classboard update has been pinned.',
         'info'
       );
@@ -1035,14 +1035,14 @@ export default function Classrooms({
     if (!aiQuizTopic.trim() || !activeClassroomView) return;
     setIsAiGenerating(true);
     try {
-      // In a serverless architecture, we prompt the user to use the QuizCreator page 
+      // In a serverless architecture, we prompt the user to use the QuizCreator page
       // where the AI generation logic is already handled on the client side.
       setTimeout(() => {
         playChimeSound('correct');
         setIsAiQuizOpen(false);
         setAiQuizTopic('');
         triggerToast(
-          isAr ? '🤖 جاهز للإنشاء!' : '🤖 Ready to Generate!',
+          isAr ? ' جاهز للإنشاء!' : ' Ready to Generate!',
           isAr ? 'انتقل لصفحة "إنشاء اختبار" واكتب موضوعك هناك للتوليد بالذكاء الاصطناعي مباشرة.' : 'Go to the Quiz Creator page and enter your topic to generate via AI directly.',
           'quiz'
         );
@@ -1172,19 +1172,19 @@ export default function Classrooms({
           <span>{isAr ? 'ولوج الفصول الذكية' : 'Enter Smart Classroom'}</span>
         </h3>
         <p className="text-[11px] text-slate-400 leading-relaxed">
-          {isAr 
-            ? 'أدخل الكود لمزامنة مسارك التعليمي، المذاكرة، وحل الكويزات المباشرة.' 
+          {isAr
+            ? 'أدخل الكود لمزامنة مسارك التعليمي، المذاكرة، وحل الكويزات المباشرة.'
             : 'Enter classroom code to synchronize homeworks, calendar events, and live quiz channels.'}
         </p>
         <div className="flex gap-2">
-          <input 
+          <input
             type="text"
             value={classCodeInput}
             onChange={(e) => setClassCodeInput(e.target.value)}
             placeholder={isAr ? 'مثال: PHYS12' : 'e.g. PHYS12'}
             className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono uppercase focus:outline-none focus:border-purple-500"
           />
-          <button 
+          <button
             onClick={() => handleJoinByCode()}
             disabled={isJoining}
             className="bg-purple-600 hover:bg-purple-500 text-white rounded-xl px-4 text-xs font-black transition-all cursor-pointer flex items-center justify-center"
@@ -1205,14 +1205,14 @@ export default function Classrooms({
             {isAr ? 'صمم بيئة تفاعلية لإدارة التكليفات والحلول، والدردشة مع طلابك.' : 'Create a structured space to dispatch exercises, grades, and resources.'}
           </p>
           <div className="flex gap-2">
-            <input 
+            <input
               type="text"
               value={newClassName}
               onChange={(e) => setNewClassName(e.target.value)}
               placeholder={isAr ? 'اسم المادة أو الصف الدراسى' : 'Class/Subject Title'}
               className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
             />
-            <button 
+            <button
               onClick={handleCreateClassroom}
               className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-4 text-xs font-black transition-all cursor-pointer"
             >
@@ -1231,11 +1231,11 @@ export default function Classrooms({
         {/* Managed */}
         {myCreatedClasses.map(c => (
           <button
-            
+
             onClick={() => { playChimeSound('click'); setActiveClassroomView(c); setActiveWorkspaceTab('overview'); }}
             className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between text-xs cursor-pointer ${
-              activeClassroomView?.id === c.id 
-                ? 'bg-purple-950/20 border-purple-500/40 text-white shadow-md' 
+              activeClassroomView?.id === c.id
+                ? 'bg-purple-950/20 border-purple-500/40 text-white shadow-md'
                 : 'bg-slate-950/20 border-slate-800/40 hover:border-slate-800 text-slate-300'
             }`}
           >
@@ -1255,11 +1255,11 @@ export default function Classrooms({
         {/* Enrolled */}
         {enrolledClasses.map(c => (
           <button
-            
+
             onClick={() => { playChimeSound('click'); setActiveClassroomView(c); setActiveWorkspaceTab('overview'); }}
             className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between text-xs cursor-pointer ${
-              activeClassroomView?.id === c.id 
-                ? 'bg-purple-950/20 border-purple-500/40 text-white shadow-md' 
+              activeClassroomView?.id === c.id
+                ? 'bg-purple-950/20 border-purple-500/40 text-white shadow-md'
                 : 'bg-slate-950/20 border-slate-800/40 hover:border-slate-800 text-slate-300'
             }`}
           >
@@ -1288,16 +1288,16 @@ export default function Classrooms({
 
   return (
     <div className="flex flex-col w-full min-h-[calc(100vh-140px)] gap-6" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
-      
+
       {/* Toast Popup Pipeline */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm pointer-events-none">
-        
+
           {toasts.map(toast => (
-            <div 
-              
-              
-              
-              
+            <div
+
+
+
+
               className="pointer-events-auto p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl flex gap-3 items-start"
             >
               <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 shrink-0">
@@ -1309,7 +1309,7 @@ export default function Classrooms({
               </div>
             </div>
           ))}
-        
+
       </div>
 
       {/* Error / Success Notifications banner */}
@@ -1319,7 +1319,7 @@ export default function Classrooms({
             <AlertCircle className="w-4 h-4" />
             <span>{errorText}</span>
           </div>
-          <button onClick={() => setErrorText(null)} className="text-red-400 font-bold hover:text-white">✕</button>
+          <button onClick={() => setErrorText(null)} className="text-red-400 font-bold hover:text-white"></button>
         </div>
       )}
 
@@ -1329,14 +1329,14 @@ export default function Classrooms({
             <CheckCircle className="w-4 h-4" />
             <span>{successText}</span>
           </div>
-          <button onClick={() => setSuccessText(null)} className="text-emerald-400 font-bold hover:text-white">✕</button>
+          <button onClick={() => setSuccessText(null)} className="text-emerald-400 font-bold hover:text-white"></button>
         </div>
       )}
 
       {!activeClassroomView ? (
         <div className="flex flex-col md:flex-row gap-6 w-full flex-1">
           {renderSidebar()}
-          
+
           {/* Welcome Screen Empty State */}
           <div className="flex-1 bg-slate-900/20 border border-slate-800/40 rounded-3xl p-10 flex flex-col items-center justify-center text-center space-y-6">
             <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-600/20 to-indigo-600/20 flex items-center justify-center text-purple-400 border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
@@ -1344,21 +1344,21 @@ export default function Classrooms({
             </div>
             <div className="space-y-2 max-w-lg">
               <h2 className="text-2xl font-black text-white tracking-tight">
-                {isAr ? 'مرحبا بك في استوديو الفصول الذكية 🚀' : 'Welcome to Classroom Hub 🚀'}
+                {isAr ? 'مرحبا بك في استوديو الفصول الذكية ' : 'Welcome to Classroom Hub '}
               </h2>
               <p className="text-xs text-slate-400 leading-relaxed">
-                {isAr 
-                  ? 'منصتك الموحدة للأكاديميين السحابيين. تواصل، وحل الاختبارات، وشارك الملفات والمشاريع، وتابع مستواك ودرجاتك بتنظيم فائق ونظيف.' 
+                {isAr
+                  ? 'منصتك الموحدة للأكاديميين السحابيين. تواصل، وحل الاختبارات، وشارك الملفات والمشاريع، وتابع مستواك ودرجاتك بتنظيم فائق ونظيف.'
                   : 'Your cloud education cockpit. Collaborate on homeworks, track calendar milestones, and play interactive real-time quizzes under teacher guidance.'}
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-3">
               <div className="px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-2xl text-[11px] text-slate-300 font-bold flex items-center gap-2">
-                <span className="text-purple-400">⚡</span>
+                <span className="text-purple-400"></span>
                 <span>{isAr ? 'اتصالات مشفرة بالكامل E2EE' : 'End-to-End Cryptography'}</span>
               </div>
               <div className="px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-2xl text-[11px] text-slate-300 font-bold flex items-center gap-2">
-                <span className="text-emerald-400">📊</span>
+                <span className="text-emerald-400"></span>
                 <span>{isAr ? 'لوحات تحليلات ذكية ومقاييس حية' : 'Engagement Metrics & Live Scores'}</span>
               </div>
             </div>
@@ -1370,7 +1370,7 @@ export default function Classrooms({
 
           {/* Active Workspace */}
           <div className="flex-1 bg-slate-900/30 backdrop-blur-md rounded-3xl border border-slate-800 flex flex-col overflow-hidden relative">
-            
+
             {/* Workspace Header */}
             <div className="p-6 border-b border-slate-800 bg-slate-900/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
               <div>
@@ -1386,7 +1386,7 @@ export default function Classrooms({
               </div>
 
               <div className="flex gap-2 shrink-0">
-                <button 
+                <button
                   onClick={() => handleCopyInviteLink(activeClassroomView.code)}
                   className="px-3.5 py-2 rounded-xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800 text-xs text-slate-300 font-bold flex items-center gap-1.5 transition-all cursor-pointer"
                 >
@@ -1403,7 +1403,7 @@ export default function Classrooms({
                   )}
                 </button>
 
-                <button 
+                <button
                   onClick={() => setActiveClassroomView(null)}
                   className="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-black transition-all cursor-pointer"
                 >
@@ -1453,8 +1453,8 @@ export default function Classrooms({
                       setActiveWorkspaceTab(tab.id as any);
                     }}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
-                      isSelected 
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/15' 
+                      isSelected
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-600/15'
                         : 'text-slate-400 hover:text-white hover:bg-slate-900'
                     }`}
                   >
@@ -1467,18 +1467,18 @@ export default function Classrooms({
 
             {/* Scrollable Container for active Workspace view content */}
             <div className="flex-1 overflow-y-auto p-6 flex flex-col min-h-0">
-              
+
               {/* TAB 1: OVERVIEW */}
               {activeWorkspaceTab === 'overview' && (
                 <div className="space-y-6">
                   {/* Hero welcome banner */}
                   <div className="light-dark-card p-6 rounded-3xl bg-gradient-to-r from-purple-950/40 via-indigo-950/20 to-slate-950 border border-purple-500/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
-                      <h3 className="text-base font-black text-white">{isAr ? 'أهلاً بك في فضاء التعلم التفاعلي! 🪐' : 'Welcome to your Learning Space! 🪐'}</h3>
+                      <h3 className="text-base font-black text-white">{isAr ? 'أهلاً بك في فضاء التعلم التفاعلي! ' : 'Welcome to your Learning Space! '}</h3>
                       <p className="text-xs text-slate-400 max-w-xl">{isAr ? 'تتبع إنجازاتك الدراسية، وشارك في حل الكويزات المباشرة، وحل تكليفاتك المدرسية أولاً بأول لتكتسح النجوم والترتيب.' : 'Track academic goals, complete assignments, and participate in classroom activities.'}</p>
                     </div>
                     {isTeacher && activeClassroomView.createdBy === currentUserId && (
-                      <button 
+                      <button
                         onClick={() => setIsCreatingAnn(true)}
                         className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-md cursor-pointer shrink-0 transition-all active:scale-95 flex items-center gap-1.5"
                       >
@@ -1613,10 +1613,10 @@ export default function Classrooms({
                           <div  className="p-5 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-3">
                             <div className="flex items-center justify-between">
                               <span className={`text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                                ann.priority === 'urgent' 
-                                  ? 'bg-red-500/10 border-red-500/20 text-red-400 animate-pulse' 
-                                  : ann.priority === 'important' 
-                                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
+                                ann.priority === 'urgent'
+                                  ? 'bg-red-500/10 border-red-500/20 text-red-400 animate-pulse'
+                                  : ann.priority === 'important'
+                                    ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
                                     : 'bg-slate-500/10 border-slate-500/20 text-slate-400'
                               }`}>
                                 {isAr ? (ann.priority === 'urgent' ? 'عاجل جداً' : ann.priority === 'important' ? 'هام' : 'إعلان عام') : ann.priority}
@@ -1625,9 +1625,9 @@ export default function Classrooms({
                             </div>
                             <p className="text-xs text-slate-200 leading-relaxed">{ann.content}</p>
                             <div className="flex items-center gap-4 pt-2 border-t border-slate-800/60">
-                              {['🚀', '❤️', '👍', '🧠'].map(emoji => (
-                                <button 
-                                  
+                              {['', '', '', ''].map(emoji => (
+                                <button
+
                                   onClick={() => handleAddReaction(ann.id, emoji)}
                                   className="text-xs px-2.5 py-1 bg-slate-950/60 hover:bg-slate-950 border border-slate-800/40 hover:border-slate-700 rounded-lg flex items-center gap-1 cursor-pointer transition-all active:scale-95 text-slate-400"
                                 >
@@ -1662,8 +1662,8 @@ export default function Classrooms({
                               <div className="flex items-center justify-between text-[10px]">
                                 <span className="text-slate-400">{isAr ? 'تاريخ التسليم:' : 'Due:'} {assign.dueDate}</span>
                                 <span className={`px-2 py-0.5 rounded-full font-bold ${
-                                  isSubmitted 
-                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                  isSubmitted
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                                     : 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse'
                                 }`}>
                                   {isSubmitted ? (isAr ? 'تم تسليمك' : 'Submitted') : (isAr ? 'مستحق قريباً' : 'Pending')}
@@ -1700,8 +1700,8 @@ export default function Classrooms({
                     {activeClassroomMessages.map((msg) => {
                       const isOwn = msg.senderId === currentUserId;
                       return (
-                        <div 
-                           
+                        <div
+
                           className={`flex gap-3 max-w-[85%] ${isOwn ? 'self-end flex-row-reverse' : 'self-start'}`}
                         >
                           <div className="relative shrink-0 self-end mb-1">
@@ -1717,7 +1717,7 @@ export default function Classrooms({
 
                           <div className="space-y-1">
                             <span className="text-[10px] text-slate-500 block px-1">
-                              {msg.senderName} • {msg.senderId === activeClassroomView.createdBy ? (isAr ? '👑 المعلم' : '👑 Teacher') : (isAr ? 'طالب' : 'Student')}
+                              {msg.senderName} • {msg.senderId === activeClassroomView.createdBy ? (isAr ? ' المعلم' : ' Teacher') : (isAr ? 'طالب' : 'Student')}
                             </span>
                             <DecryptedClassMessage
                               msg={msg}
@@ -1742,7 +1742,7 @@ export default function Classrooms({
                   {/* Typing input composer */}
                   <div className="p-4 bg-slate-900/60 border-t border-slate-800">
                     <div className="flex gap-2">
-                      <input 
+                      <input
                         type="text"
                         value={chatMessageText}
                         onChange={(e) => setChatMessageText(e.target.value)}
@@ -1750,7 +1750,7 @@ export default function Classrooms({
                         placeholder={isAr ? 'اكتب رسالة مشفرة آمنة...' : 'Write an encrypted message...'}
                         className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-purple-500"
                       />
-                      <button 
+                      <button
                         onClick={handleSendChatMessage}
                         disabled={isSendingChat}
                         className="bg-purple-600 hover:bg-purple-500 text-white rounded-xl px-5 text-xs font-black cursor-pointer flex items-center justify-center transition-all active:scale-95"
@@ -1772,7 +1772,7 @@ export default function Classrooms({
                     </div>
 
                     {isTeacher && activeClassroomView.createdBy === currentUserId && (
-                      <button 
+                      <button
                         onClick={() => setIsAiQuizOpen(true)}
                         className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-md cursor-pointer transition-all flex items-center gap-1.5"
                       >
@@ -1894,7 +1894,7 @@ export default function Classrooms({
                               onClick={() => onStartQuiz && onStartQuiz(cq.id)}
                               className="w-full py-2.5 bg-slate-950 border border-slate-800 hover:border-purple-500/40 hover:text-white rounded-xl text-xs font-black text-slate-400 transition-all cursor-pointer"
                             >
-                              {isAr ? 'ابدأ الصاروخ 🚀' : 'Launch Rocket 🚀'}
+                              {isAr ? 'ابدأ الصاروخ ' : 'Launch Rocket '}
                             </button>
                           </div>
                         ))}
@@ -1915,7 +1915,7 @@ export default function Classrooms({
                     </div>
 
                     {isTeacher && activeClassroomView.createdBy === currentUserId && (
-                      <button 
+                      <button
                         onClick={() => setIsCreatingAssign(true)}
                         className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md cursor-pointer transition-all flex items-center gap-1.5"
                       >
@@ -1930,29 +1930,29 @@ export default function Classrooms({
                     <div className="p-6 rounded-3xl bg-slate-950 border border-slate-800 space-y-4">
                       <h5 className="font-bold text-white text-sm">{isAr ? 'إنشاء تكليف مادة دراسي جديد' : 'Publish New Assignment'}</h5>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input 
-                          type="text" 
-                          placeholder={isAr ? 'عنوان التكليف' : 'Assignment Title'} 
+                        <input
+                          type="text"
+                          placeholder={isAr ? 'عنوان التكليف' : 'Assignment Title'}
                           value={newAssignTitle}
                           onChange={(e) => setNewAssignTitle(e.target.value)}
                           className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                         />
-                        <input 
-                          type="date" 
+                        <input
+                          type="date"
                           value={newAssignDueDate}
                           onChange={(e) => setNewAssignDueDate(e.target.value)}
                           className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                         />
-                        <input 
-                          type="number" 
-                          placeholder={isAr ? 'الدرجة العظمى' : 'Max Points'} 
+                        <input
+                          type="number"
+                          placeholder={isAr ? 'الدرجة العظمى' : 'Max Points'}
                           value={newAssignPoints}
                           onChange={(e) => setNewAssignPoints(Number(e.target.value))}
                           className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
                         />
                       </div>
-                      <textarea 
-                        placeholder={isAr ? 'وصف التكليف والتعليمات التفصيلية للحل' : 'Detailed requirements and descriptions...'} 
+                      <textarea
+                        placeholder={isAr ? 'وصف التكليف والتعليمات التفصيلية للحل' : 'Detailed requirements and descriptions...'}
                         value={newAssignDesc}
                         onChange={(e) => setNewAssignDesc(e.target.value)}
                         className="w-full h-24 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
@@ -1980,12 +1980,12 @@ export default function Classrooms({
                               </span>
                             </div>
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-                              studentSub 
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                              studentSub
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                                 : 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse'
                             }`}>
-                              {studentSub 
-                                ? (studentSub.grade !== undefined ? `${isAr ? 'تم التصحيح: ' : 'Graded: '} ${studentSub.grade}/${assign.maxPoints}` : (isAr ? 'تم التسليم - بانتظار التقييم' : 'Submitted - Awaiting Grade')) 
+                              {studentSub
+                                ? (studentSub.grade !== undefined ? `${isAr ? 'تم التصحيح: ' : 'Graded: '} ${studentSub.grade}/${assign.maxPoints}` : (isAr ? 'تم التسليم - بانتظار التقييم' : 'Submitted - Awaiting Grade'))
                                 : (isAr ? 'مستحق الحل' : 'Awaiting Submission')}
                             </span>
                           </div>
@@ -1994,11 +1994,11 @@ export default function Classrooms({
 
                           {/* Student submit box */}
                           {!isTeacher && !studentSub && submittingAssignId !== assign.id && (
-                            <button 
+                            <button
                               onClick={() => { playChimeSound('click'); setSubmittingAssignId(assign.id); }}
                               className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-black rounded-xl transition-all cursor-pointer"
                             >
-                              {isAr ? 'تقديم الحل الآن 🚀' : 'Submit Solution Work 🚀'}
+                              {isAr ? 'تقديم الحل الآن ' : 'Submit Solution Work '}
                             </button>
                           )}
 
@@ -2006,8 +2006,8 @@ export default function Classrooms({
                           {!isTeacher && submittingAssignId === assign.id && (
                             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
                               <h6 className="text-xs font-bold text-white">{isAr ? 'محرر تقديم الواجب الدراسي' : 'Assignment Editor Workspace'}</h6>
-                              <textarea 
-                                placeholder={isAr ? 'اكتب تقريرك أو كود البرمجة أو حلولك الدراسية بالتفصيل هنا...' : 'Write your answers or link your files here...'} 
+                              <textarea
+                                placeholder={isAr ? 'اكتب تقريرك أو كود البرمجة أو حلولك الدراسية بالتفصيل هنا...' : 'Write your answers or link your files here...'}
                                 value={submitContentText}
                                 onChange={(e) => setSubmitContentText(e.target.value)}
                                 className="w-full h-32 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
@@ -2047,7 +2047,7 @@ export default function Classrooms({
                                       {sub.grade !== undefined ? (
                                         <span className="text-xs font-bold text-emerald-400 font-mono">{sub.grade} pts</span>
                                       ) : (
-                                        <button 
+                                        <button
                                           onClick={() => { playChimeSound('click'); setGradingSubmission(sub); setGradePoints(assign.maxPoints); }}
                                           className="px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-[10px] rounded-lg font-black"
                                         >
@@ -2074,17 +2074,17 @@ export default function Classrooms({
                         <div className="p-4 bg-slate-950 rounded-xl max-h-40 overflow-y-auto text-xs text-slate-300 border border-slate-800">{gradingSubmission.content}</div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-mono text-slate-500 block">{isAr ? 'الدرجة المرصودة' : 'Awarded Grade Points'}</label>
-                          <input 
-                            type="number" 
-                            value={gradePoints} 
+                          <input
+                            type="number"
+                            value={gradePoints}
                             onChange={(e) => setGradePoints(Number(e.target.value))}
                             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
                           />
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-mono text-slate-500 block">{isAr ? 'ملاحظات المعلم والارتجاع' : 'Pedagogical feedback'}</label>
-                          <textarea 
-                            value={gradeFeedback} 
+                          <textarea
+                            value={gradeFeedback}
                             onChange={(e) => setGradeFeedback(e.target.value)}
                             placeholder={isAr ? 'توجيهات ممتازة لتحفيز الطالب...' : 'Great job, improve formulation...'}
                             className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
@@ -2104,20 +2104,20 @@ export default function Classrooms({
               {activeWorkspaceTab === 'files' && (
                 <div className="space-y-6">
                   {/* Drag and Drop Zone */}
-                  <div 
+                  <div
                     onDragEnter={() => setDragActive(true)}
                     onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                     onDragLeave={() => setDragActive(false)}
                     onDrop={handleFileDrop}
                     onClick={() => fileInputRef.current?.click()}
                     className={`p-10 border-2 border-dashed rounded-3xl text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-2 relative overflow-hidden ${
-                      dragActive 
-                        ? 'border-purple-500 bg-purple-500/10' 
+                      dragActive
+                        ? 'border-purple-500 bg-purple-500/10'
                         : 'border-slate-800 bg-slate-900/20 hover:border-slate-700'
                     }`}
                   >
-                    <input 
-                      type="file" 
+                    <input
+                      type="file"
                       ref={fileInputRef}
                       onChange={handleFileSelect}
                       className="hidden"
@@ -2141,7 +2141,7 @@ export default function Classrooms({
                             <span className="text-[9px] text-slate-500 block truncate">{file.size} • {file.sharedByName}</span>
                           </div>
                         </div>
-                        <button 
+                        <button
                           onClick={() => triggerToast(isAr ? 'بدء تنزيل الملف' : 'Downloading Resource', file.name, 'info')}
                           className="p-2 bg-slate-950 border border-slate-800 hover:border-purple-500/40 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer shrink-0"
                         >
@@ -2361,7 +2361,7 @@ export default function Classrooms({
                     </div>
 
                     {isTeacher && activeClassroomView.createdBy === currentUserId && (
-                      <button 
+                      <button
                         onClick={() => setIsCreatingAnn(true)}
                         className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-md cursor-pointer transition-all flex items-center gap-1.5"
                       >
@@ -2378,11 +2378,11 @@ export default function Classrooms({
                       <div className="flex gap-4">
                         {['general', 'important', 'urgent'].map(priority => (
                           <button
-                            
+
                             onClick={() => setAnnPriority(priority as any)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase cursor-pointer ${
-                              annPriority === priority 
-                                ? 'bg-purple-600 text-white' 
+                              annPriority === priority
+                                ? 'bg-purple-600 text-white'
                                 : 'bg-slate-900 text-slate-400 border border-slate-800'
                             }`}
                           >
@@ -2390,7 +2390,7 @@ export default function Classrooms({
                           </button>
                         ))}
                       </div>
-                      <textarea 
+                      <textarea
                         value={annContent}
                         onChange={(e) => setAnnContent(e.target.value)}
                         placeholder={isAr ? 'اكتب نص التعميم أو التوجيهات بدقة هنا...' : 'Write broadcast notice details...'}
@@ -2415,9 +2415,9 @@ export default function Classrooms({
                         </div>
                         <p className="text-xs text-slate-200 leading-relaxed">{ann.content}</p>
                         <div className="flex gap-2 pt-2 border-t border-slate-800/60">
-                          {['🚀', '❤️', '👍'].map(emoji => (
-                            <button 
-                              
+                          {['', '', ''].map(emoji => (
+                            <button
+
                               onClick={() => handleAddReaction(ann.id, emoji)}
                               className="text-xs px-2.5 py-1 bg-slate-950 border border-slate-800 rounded-lg flex items-center gap-1.5 text-slate-400 cursor-pointer hover:border-slate-700"
                             >
@@ -2460,7 +2460,7 @@ export default function Classrooms({
                             </td>
                             <td className="p-4 text-center">
                               <span className="px-2 py-0.5 bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 rounded-full text-[10px] font-bold">
-                                {idx === 0 ? '🏆 Master' : idx === 1 ? '🌟 Scholar' : '☄️ Explorer'}
+                                {idx === 0 ? ' Master' : idx === 1 ? ' Scholar' : ' Explorer'}
                               </span>
                             </td>
                           </tr>
@@ -2495,11 +2495,11 @@ export default function Classrooms({
                         const day = i + 1;
                         const isEven = day % 7 === 2;
                         return (
-                          <div 
-                             
+                          <div
+
                             className={`p-3 rounded-xl border flex flex-col items-center justify-between h-14 ${
-                              isEven 
-                                ? 'bg-purple-500/10 border-purple-500/20 text-purple-300 shadow-sm shadow-purple-500/10' 
+                              isEven
+                                ? 'bg-purple-500/10 border-purple-500/20 text-purple-300 shadow-sm shadow-purple-500/10'
                                 : 'bg-slate-950/40 border-slate-800/40 text-slate-400'
                             }`}
                           >
@@ -2573,12 +2573,12 @@ export default function Classrooms({
 
                   {/* AI Feedback */}
                   <div className="p-5 rounded-2xl bg-purple-950/20 border border-purple-500/20 flex gap-4 items-start">
-                    <span className="text-xl">💡</span>
+                    <span className="text-xl"></span>
                     <div className="space-y-1">
                       <h5 className="text-xs font-bold text-white">{isAr ? 'ملاحظة كوزمو للذكاء الاصطناعي الأكاديمي' : 'AI AI Pedagogical Feedback'}</h5>
                       <p className="text-[11px] text-slate-300 leading-relaxed">
-                        {isAr 
-                          ? 'أداء الفصل ممتاز جداً ويسير في منحنى تصاعدي رائع! تم إنجاز بايثون01 بنسبة 91% في يوم واحد. نقترح تدريب الطلاب أكثر على التكرارات العودية (Recursions) في الجلسات القادمة.' 
+                        {isAr
+                          ? 'أداء الفصل ممتاز جداً ويسير في منحنى تصاعدي رائع! تم إنجاز بايثون01 بنسبة 91% في يوم واحد. نقترح تدريب الطلاب أكثر على التكرارات العودية (Recursions) في الجلسات القادمة.'
                           : 'Overall engagement remains highly progressive! 91% of student roster completed PYTH01. Consider reviewing recursions on the next session.'}
                       </p>
                     </div>
@@ -2596,15 +2596,15 @@ export default function Classrooms({
 
                   {/* Settings rows matching premium operating systems */}
                   <div className="bg-slate-900/40 border border-slate-800 rounded-2xl divide-y divide-slate-800 text-xs">
-                    
+
                     {/* Row 1 */}
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <span className="font-bold text-white block">{isAr ? 'السماح للطلاب بإرسال الرسائل' : 'Allow Student Messaging'}</span>
                         <span className="text-[10px] text-slate-500 block">{isAr ? 'تمكين شات ومناقشات الطلاب التفاعلية داخل الشات المشفر.' : 'Toggle student posting rights in the secure chat feed.'}</span>
                       </div>
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={activeClassroomView.allowStudentMessages !== false}
                         onChange={(e) => handleUpdatePermissions(e.target.checked, activeClassroomView.allowStudentMedia !== false)}
                         className="w-4 h-4 text-purple-600 rounded border-slate-800 bg-slate-950 focus:ring-purple-500"
@@ -2618,8 +2618,8 @@ export default function Classrooms({
                         <span className="font-bold text-white block">{isAr ? 'السماح برفع ومشاركة الوسائط والملفات' : 'Allow Student Media Attachments'}</span>
                         <span className="text-[10px] text-slate-500 block">{isAr ? 'السماح للطلاب بمشاركة مستندات PDF، الكود، والصور التعليمية.' : 'Let students upload homework resources, screenshots or documents.'}</span>
                       </div>
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={activeClassroomView.allowStudentMedia !== false}
                         onChange={(e) => handleUpdatePermissions(activeClassroomView.allowStudentMessages !== false, e.target.checked)}
                         className="w-4 h-4 text-purple-600 rounded border-slate-800 bg-slate-950 focus:ring-purple-500"
@@ -2634,7 +2634,7 @@ export default function Classrooms({
                           <span className="font-bold text-red-400 block">{isAr ? 'أرشفة وحذف الفصل الدراسي نهائياً' : 'Archive & Terminate Classroom'}</span>
                           <span className="text-[10px] text-slate-500 block">{isAr ? 'سيتم مسح جميع سجلات الدردشات المشفرة والملفات والتكليفات بلا رجعة.' : 'Irreversibly delete E2EE messages history, homeworks, and member links.'}</span>
                         </div>
-                        <button 
+                        <button
                           onClick={() => handleDeleteClassroom(activeClassroomView.id)}
                           className="px-3.5 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-black rounded-xl"
                         >
@@ -2705,7 +2705,7 @@ export default function Classrooms({
                             onChange={(e) => setIsLessonLive(e.target.checked)}
                             className="w-4 h-4 text-red-600 rounded border-slate-700"
                           />
-                          {isAr ? 'بث مباشر 🔴' : 'Live Stream 🔴'}
+                          {isAr ? 'بث مباشر ' : 'Live Stream '}
                         </label>
                       </div>
                       <div className="flex gap-2">
@@ -2797,7 +2797,7 @@ export default function Classrooms({
                             }}
                           >
                             <img
-                              src={extractYouTubeId(vid.videoUrl) 
+                              src={extractYouTubeId(vid.videoUrl)
                                 ? `https://img.youtube.com/vi/${extractYouTubeId(vid.videoUrl)}/mqdefault.jpg`
                                 : `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/images/happy_hour.webp`
                               }
@@ -2875,7 +2875,7 @@ export default function Classrooms({
               onClick={() => setWatchingVideo(null)}
               className="absolute -top-12 left-0 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold cursor-pointer transition-all z-10"
             >
-              {isAr ? '✕ إغلاق' : '✕ Close'}
+              {isAr ? ' إغلاق' : ' Close'}
             </button>
 
             {/* Protected Video Container */}
@@ -2901,9 +2901,9 @@ export default function Classrooms({
                   <div className="space-y-4">
                     <Play className="w-12 h-12 text-purple-500 mx-auto" />
                     <p className="text-xs font-bold">{isAr ? 'مشاهدة البث المباشر أو الفيديو الخارجي' : 'Watch Live Stream or External Video'}</p>
-                    <a 
-                      href={watchingVideo.videoUrl} 
-                      target="_blank" 
+                    <a
+                      href={watchingVideo.videoUrl}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl text-xs font-black transition-colors inline-block shadow-lg"
                     >
@@ -2917,7 +2917,7 @@ export default function Classrooms({
             {/* Video info */}
             <div className="mt-3 text-center">
               <h5 className="text-sm font-bold text-white">{watchingVideo.title}</h5>
-              <p className="text-[10px] text-slate-500 mt-1">{watchingVideo.isLive ? '🔴 بث مباشر' : `👁 ${watchingVideo.viewCount} مشاهدة`}</p>
+              <p className="text-[10px] text-slate-500 mt-1">{watchingVideo.isLive ? ' بث مباشر' : ` ${watchingVideo.viewCount} مشاهدة`}</p>
             </div>
           </div>
         </div>
@@ -2929,9 +2929,9 @@ export default function Classrooms({
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto space-y-4">
             <h5 className="font-bold text-white text-sm">{isAr ? 'توليد اختبار ذكي بالذكاء الاصطناعي كوزمو' : 'Generate Smart Quiz Draft via AI AI'}</h5>
             <p className="text-xs text-slate-400">{isAr ? 'اكتب الموضوع أو المفهوم التعليمي وسيقوم كوزمو بصياغة اختبار متكامل مع مفتاح الإجابات.' : 'Prompt AI AI to compile questions on your selected curriculum topic.'}</p>
-            <input 
-              type="text" 
-              placeholder={isAr ? 'مثال: المتجهات الميكانيكية، البرمجة كائنية التوجه' : 'e.g. Mechanical Vector Forces, Python Loops'} 
+            <input
+              type="text"
+              placeholder={isAr ? 'مثال: المتجهات الميكانيكية، البرمجة كائنية التوجه' : 'e.g. Mechanical Vector Forces, Python Loops'}
               value={aiQuizTopic}
               onChange={(e) => setAiQuizTopic(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"

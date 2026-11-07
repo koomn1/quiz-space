@@ -217,7 +217,7 @@ export default function AdminSubscriptions({
         renewalDate: p.renewal_date || p.renewalDate || undefined,
         membershipStatus: p.membership_status || (p.is_membership_expired ? 'expired' : ((p.is_premium || p.isPremium) ? 'active' : 'free')),
         isMembershipExpired: Boolean(p.is_membership_expired),
-        badgeSymbol: (p.is_premium || p.isPremium) ? "✔" : "",
+        badgeSymbol: (p.is_premium || p.isPremium) ? "" : "",
         createdQuizzes: [],
         completions: [],
       }));
@@ -398,16 +398,16 @@ export default function AdminSubscriptions({
     const details = sentences.slice(1).join(' ') || 'استفيدوا من العرض وابدأوا تجربتكم الآن.';
 
     return [
-      `🎁 عرض خاص من SpaceQuiz`,
+      ` عرض خاص من SpaceQuiz`,
       '',
       `استخدموا كود الخصم: ${code}`,
       `واحصلوا على خصم ${percent}% على خدماتنا.`,
       '',
-      `✨ ${lead}`,
-      details ? `📌 ${details}` : '',
+      ` ${lead}`,
+      details ? ` ${details}` : '',
       '',
       '⏳ العرض لفترة محدودة.',
-      '🚀 سارعوا بالاشتراك الآن واستفيدوا من الخصم!',
+      ' سارعوا بالاشتراك الآن واستفيدوا من الخصم!',
     ].filter(Boolean).join('\n');
   };
 
@@ -440,7 +440,7 @@ export default function AdminSubscriptions({
     setIsBroadcasting(true);
     try {
       const usersData = await getAllProfiles();
-      
+
       const messagesToInsert = usersData
         .filter(u => (u.uid || u.id) && (u.uid || u.id) !== 'anonymous')
         .map(u => ({
@@ -465,7 +465,7 @@ export default function AdminSubscriptions({
         aiPromoMsg,
         COSMO_ADMIN_UID,
         isAr ? 'المساعد كوزمو' : 'Cosmo Assistant',
-        '🤖',
+        '',
         '#8b5cf6'
       );
 
@@ -473,7 +473,7 @@ export default function AdminSubscriptions({
       try {
         const { data: pushResult, error: pushError } = await supabase.functions.invoke('send-promotion-push', {
           body: {
-            title: isAr ? '🎁 عرض جديد من SpaceQuiz' : '🎁 New SpaceQuiz offer',
+            title: isAr ? ' عرض جديد من SpaceQuiz' : ' New SpaceQuiz offer',
             body: aiPromoMsg.replace(/\n+/g, ' ').slice(0, 180),
             url: 'https://quiz-space-app.pages.dev/#/dashboard/landing',
             category: 'promotion',
@@ -636,12 +636,12 @@ export default function AdminSubscriptions({
       if (inspectingPayment?.id === payId) {
         setInspectingPayment((prev) => prev ? { ...prev, status: 'approved' as const, updatedAt: new Date().toISOString() } : null);
       }
-      showToast('success', isAr ? "تم قبول الدفعة وتفعيل الاشتراك بنجاح 🚀" : "Payment approved and subscription activated 🚀");
+      showToast('success', isAr ? "تم قبول الدفعة وتفعيل الاشتراك بنجاح " : "Payment approved and subscription activated ");
 
       try {
         const { createNotification } = await import("../lib/db");
         await createNotification(
-          isAr ? "ترقية للباقة المتقدمة 🚀" : "Premium Upgrade 🚀",
+          isAr ? "ترقية للباقة المتقدمة " : "Premium Upgrade ",
           isAr
             ? `انضم مستخدم جديد لباقة ${payInfo.planName}! نتمنى له رحلة ممتعة.`
             : `A user has just upgraded to ${payInfo.planName}! We wish them a great journey.`,
@@ -842,7 +842,7 @@ export default function AdminSubscriptions({
           onClick={() => setSubTab("coupons")}
           className={`min-h-11 rounded-xl px-3 py-2 text-center text-xs font-black transition-colors sm:px-4 sm:text-sm ${subTab === "coupons" ? "bg-primary text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"}`}
         >
-          {isAr ? "إدارة أكواد الخصم 🎫" : "Discount Coupons 🎫"}
+          {isAr ? "إدارة أكواد الخصم " : "Discount Coupons "}
         </button>
       </div>
 
@@ -864,7 +864,7 @@ export default function AdminSubscriptions({
                 <div className="flex items-center justify-between border-b border-indigo-500/20 pb-4">
                   <div className="flex items-center gap-3">
                     <span className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-black">
-                      📊
+
                     </span>
                     <div>
                       <h3 className="text-base font-black">
@@ -888,7 +888,7 @@ export default function AdminSubscriptions({
                 {expiringSoon.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-xs font-black text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <span>⚠️</span>
+                      <span></span>
                       <span>{isAr ? "حسابات تجريبية تقترب من انتهاء الصلاحية:" : "Trials expiring in 3 days or less:"}</span>
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -1126,7 +1126,7 @@ export default function AdminSubscriptions({
                   </option>
                   {mockPlans.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} {p.isLifetime ? "✨" : ""}
+                      {p.name} {p.isLifetime ? "" : ""}
                     </option>
                   ))}
                 </select>
@@ -2192,8 +2192,8 @@ export default function AdminSubscriptions({
                 {isAr ? "إدارة العروض التجريبية النشطة (7، 14، أو 30 يوماً)" : "Manage Active Trial Offers (7, 14, or 30 days)"}
               </p>
               <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">
-                {isAr 
-                  ? "عند تفعيل أحد العروض التجريبية أدناه، سيظهر للمستخدمين المسجلين حصراً في صفحة باقات الاشتراك لإرسال طلب تفعيل فوري يراجعه السوبر أدمن." 
+                {isAr
+                  ? "عند تفعيل أحد العروض التجريبية أدناه، سيظهر للمستخدمين المسجلين حصراً في صفحة باقات الاشتراك لإرسال طلب تفعيل فوري يراجعه السوبر أدمن."
                   : "When active, trial offers appear exclusively for registered members on the subscription plans page to request super-admin activation."}
               </p>
               <div className="flex flex-wrap gap-3">
@@ -2208,8 +2208,8 @@ export default function AdminSubscriptions({
                         onClick={() => void toggleTrialOffer(days)}
                         disabled={isBusy}
                         className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer disabled:cursor-wait disabled:opacity-60 ${
-                          isLive 
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                          isLive
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                             : 'bg-slate-800 text-slate-400 border border-slate-700'
                         }`}
                       >
@@ -2293,8 +2293,8 @@ export default function AdminSubscriptions({
                 ].map((p) => {
                   const isChecked = newApplicablePlans.includes(p.id);
                   return (
-                    <label 
-                      key={p.id} 
+                    <label
+                      key={p.id}
                       className={`flex items-center gap-2.5 cursor-pointer select-none text-xs font-extrabold px-3.5 py-2 bg-slate-900 border ${isChecked ? 'border-violet-500 bg-violet-950/20' : 'border-slate-800 hover:border-slate-700'} rounded-xl transition-all`}
                     >
                       <input
@@ -2342,8 +2342,8 @@ export default function AdminSubscriptions({
                       ? "جاري الصياغة..."
                       : "Generating..."
                     : isAr
-                      ? "صياغة رسالة ترويجية بالذكاء الاصطناعي 🤖"
-                      : "Draft Beautiful Call with AI 🤖"}
+                      ? "صياغة رسالة ترويجية بالذكاء الاصطناعي "
+                      : "Draft Beautiful Call with AI "}
                 </button>
               </div>
             </div>
@@ -2357,7 +2357,7 @@ export default function AdminSubscriptions({
                   <Megaphone className="w-5 h-5 animate-bounce" />
                   <h4 className="font-extrabold text-base">
                     {isAr
-                      ? "الرسالة الترويجية المقترحة من كوزمو 🤖"
+                      ? "الرسالة الترويجية المقترحة من كوزمو "
                       : "Proposed AI Advertisement Text"}
                   </h4>
                 </div>
@@ -2394,8 +2394,8 @@ export default function AdminSubscriptions({
                       ? "جاري البث والتعميم..."
                       : "Broadcasting..."
                     : isAr
-                      ? "نشر وتعميم كبث لرسائل الطلاب والمجتمع 🚀"
-                      : "Broadcast to All Messages & Community 🚀"}
+                      ? "نشر وتعميم كبث لرسائل الطلاب والمجتمع "
+                      : "Broadcast to All Messages & Community "}
                 </button>
               </div>
             </div>

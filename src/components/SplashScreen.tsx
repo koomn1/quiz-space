@@ -54,7 +54,7 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
 
   useEffect(() => {
     const videoEl = videoRef.current;
-    
+
     // Fast, responsive splash entry: complete gracefully in 1.1s
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
@@ -97,9 +97,9 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
 
   let greetingText = '';
   if (userName && userName.trim() && !isGuest && userName !== 'طالب متميز' && userName !== 'طالب زائر' && userName !== 'Guest Student') {
-    greetingText = isAr ? `أهلاً بك، ${userName} ✨` : `Welcome back, ${userName} ✨`;
+    greetingText = isAr ? `أهلاً بك، ${userName} ` : `Welcome back, ${userName} `;
   } else {
-    greetingText = isAr ? 'فضاء الاختبارات الذكية 🚀' : 'QuizSpace Universe 🚀';
+    greetingText = isAr ? 'فضاء الاختبارات الذكية ' : 'QuizSpace Universe ';
   }
 
   return (

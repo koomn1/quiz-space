@@ -109,7 +109,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
     setSpinAngle(0);
 
     if (result?.success) {
-      triggerToast(isAr ? '🎉 مبروك!' : '🎉 Congratulations!', (result as any).message, 'info');
+      triggerToast(isAr ? ' مبروك!' : ' Congratulations!', (result as any).message, 'info');
       loadStatus();
     } else {
       triggerToast(isAr ? '⏰ حاول غداً' : '⏰ Try Tomorrow', (result as any)?.message || '', 'info');
@@ -128,7 +128,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
 
     if (result?.success) {
       setBoxReward({ type: (result as any).reward_type, value: (result as any).reward_value });
-      triggerToast(isAr ? '🎁 صندوق الغموض!' : '🎁 Mystery Box!', (result as any).message, 'info');
+      triggerToast(isAr ? ' صندوق الغموض!' : ' Mystery Box!', (result as any).message, 'info');
       loadStatus();
     } else {
       triggerToast(isAr ? '⏰ ليس الآن' : '⏰ Not Yet', (result as any)?.message || '', 'info');
@@ -142,9 +142,9 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
     if (result) {
       setBrainResult({ is_correct: (result as any).is_correct, points: (result as any).points });
       if ((result as any).is_correct) {
-        triggerToast(isAr ? '🧠 صحيح!' : '🧠 Correct!', (result as any).message, 'info');
+        triggerToast(isAr ? ' صحيح!' : ' Correct!', (result as any).message, 'info');
       } else {
-        triggerToast(isAr ? '❌ خطأ' : '❌ Wrong', (result as any).message, 'info');
+        triggerToast(isAr ? ' خطأ' : ' Wrong', (result as any).message, 'info');
       }
       loadStatus();
     }
@@ -154,10 +154,10 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
   // 4. Streak Display
   const streakDays = status?.streak?.current || 0;
   const streakMilestones = [
-    { days: 3, label: isAr ? '3 أيام' : '3 Days', icon: '🔥' },
+    { days: 3, label: isAr ? '3 أيام' : '3 Days', icon: '' },
     { days: 7, label: isAr ? 'أسبوع' : '1 Week', icon: '⭐' },
-    { days: 14, label: isAr ? 'أسبوعان' : '2 Weeks', icon: '💎' },
-    { days: 30, label: isAr ? 'شهر' : '1 Month', icon: '👑' },
+    { days: 14, label: isAr ? 'أسبوعان' : '2 Weeks', icon: '' },
+    { days: 30, label: isAr ? 'شهر' : '1 Month', icon: '' },
   ];
 
   return (
@@ -165,7 +165,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-black text-white flex items-center gap-2">
-          <span className="text-2xl">🎮</span>
+          <span className="text-2xl"></span>
           {isAr ? 'مركز التحفيز' : 'Motivation Hub'}
         </h2>
         {status?.happy_hour?.is_happy_hour && (
@@ -207,7 +207,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
             disabled={isSpinning || status?.lucky_spin}
             className="px-4 py-1.5 rounded-xl text-xs font-black text-white cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500"
           >
-            {isSpinning ? (isAr ? '🌀 تدور...' : '🌀 Spinning...') : status?.lucky_spin ? (isAr ? '✅ تم اليوم' : '✅ Done Today') : (isAr ? '🎡 دوّر!' : '🎡 Spin!')}
+            {isSpinning ? (isAr ? ' تدور...' : ' Spinning...') : status?.lucky_spin ? (isAr ? ' تم اليوم' : ' Done Today') : (isAr ? ' دوّر!' : ' Spin!')}
           </button>
         </div>
 
@@ -222,7 +222,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           <img src={IMAGES.streak_fire} alt="Streak" className="w-20 h-20 rounded-xl object-cover mb-3" loading="lazy" />
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'سلسلة الأيام' : 'Daily Streak'}</h4>
           <div className="flex items-center gap-1 mb-2">
-            <span className="text-lg font-black text-orange-400">🔥 {streakDays}</span>
+            <span className="text-lg font-black text-orange-400"> {streakDays}</span>
             <span className="text-[10px] text-slate-500">{isAr ? 'يوم' : 'days'}</span>
           </div>
           <div className="flex gap-1 mb-2">
@@ -259,7 +259,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           <p className="text-[10px] text-slate-500 mb-2">{isAr ? 'كل 3 أيام — مفاجأة عشوائية' : 'Every 3 days — Random reward'}</p>
           {boxReward && (
             <p className="text-[10px] text-amber-400 font-bold mb-1">
-              {boxReward.type === 'vip_day' ? '👑 VIP 1 Day' : `${boxReward.value} ${boxReward.type}`}
+              {boxReward.type === 'vip_day' ? ' VIP 1 Day' : `${boxReward.value} ${boxReward.type}`}
             </p>
           )}
           <button
@@ -267,7 +267,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
             disabled={isOpeningBox || !status?.mystery_box}
             className="px-4 py-1.5 rounded-xl text-xs font-black text-white cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
           >
-            {isOpeningBox ? (isAr ? '📦 يُفتح...' : '📦 Opening...') : status?.mystery_box ? (isAr ? '🎁 افتح!' : '🎁 Open!') : (isAr ? '⏳ انتظر' : '⏳ Wait')}
+            {isOpeningBox ? (isAr ? ' يُفتح...' : ' Opening...') : status?.mystery_box ? (isAr ? ' افتح!' : ' Open!') : (isAr ? '⏳ انتظر' : '⏳ Wait')}
           </button>
         </div>
 
@@ -285,7 +285,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           {status?.brain_challenge?.attempts_today !== undefined && (
             <p className="text-[9px] text-slate-600 mb-1">
               {isAr ? `${Math.min(1, status.brain_challenge.attempts_today)}/1 محاولة` : `${Math.min(1, status.brain_challenge.attempts_today)}/1 attempt`}
-              {status.brain_challenge.correct > 0 && ` • ✅ ${status.brain_challenge.correct}`}
+              {status.brain_challenge.correct > 0 && ` •  ${status.brain_challenge.correct}`}
             </p>
           )}
           <div className="flex gap-1 w-full">
@@ -311,7 +311,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           </div>
           {brainResult && (
             <p className={`text-[9px] mt-1 font-bold ${brainResult.is_correct ? 'text-green-400' : 'text-red-400'}`}>
-              {brainResult.is_correct ? `✅ +${brainResult.points}` : (isAr ? '❌ اكتملت محاولة اليوم' : '❌ Today’s attempt is complete')}
+              {brainResult.is_correct ? ` +${brainResult.points}` : (isAr ? ' اكتملت محاولة اليوم' : ' Today’s attempt is complete')}
             </p>
           )}
         </div>
@@ -335,12 +335,12 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
               onClick={(event) => {
                 event.stopPropagation();
                 navigator.clipboard.writeText(siteShareUrl);
-                triggerToast(isAr ? '📋 تم النسخ!' : '📋 Copied!', isAr ? 'شارك الرابط مع صديق' : 'Share the link with a friend', 'info');
+                triggerToast(isAr ? ' تم النسخ!' : ' Copied!', isAr ? 'شارك الرابط مع صديق' : 'Share the link with a friend', 'info');
               }}
               disabled={(status?.referrals_used || 0) >= 5}
               className="rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 px-4 py-1.5 text-xs font-black text-white transition-all hover:from-teal-500 hover:to-cyan-500 disabled:opacity-40"
             >
-              {isAr ? '📋 انسخ رابط الدعوة' : '📋 Copy Invite Link'}
+              {isAr ? ' انسخ رابط الدعوة' : ' Copy Invite Link'}
             </button>
             <button
               type="button"
@@ -388,7 +388,7 @@ export default function MotivationHub({ userId, isAr, triggerToast }: Motivation
           <h4 className="text-xs font-black text-white mb-1">{isAr ? 'الساعة السعيدة' : 'Happy Hour'}</h4>
           <p className="text-[10px] text-slate-500 mb-1">{isAr ? '6-8 مساءً — نقاط مضاعفة 2x' : '6-8 PM — 2x Points'}</p>
           {status?.happy_hour?.is_happy_hour ? (
-            <span className="text-[10px] text-amber-400 font-black animate-pulse">🔥 {isAr ? 'نشطة الآن!' : 'ACTIVE NOW!'}</span>
+            <span className="text-[10px] text-amber-400 font-black animate-pulse"> {isAr ? 'نشطة الآن!' : 'ACTIVE NOW!'}</span>
           ) : (
             <span className="text-[9px] text-slate-600">{isAr ? 'تبدأ الساعة 6 مساءً' : 'Starts at 6 PM'}</span>
           )}

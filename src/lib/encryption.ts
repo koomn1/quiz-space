@@ -53,11 +53,11 @@ export async function encryptMessage(text: string, classId: string): Promise<str
 export async function decryptMessage(ciphertext: string, classId: string, _currentUserEmail?: string): Promise<string> {
   if (!ciphertext || !ciphertext.startsWith("E2EE::")) return ciphertext;
   const parts = ciphertext.split("::");
-  if (parts.length < 4) return "[🔒 Decryption Error - Invalid Format]";
+  if (parts.length < 4) return "[ Decryption Error - Invalid Format]";
 
   const iv = new Uint8Array(atob(parts[2]).split("").map(c => c.charCodeAt(0)));
   const data = new Uint8Array(atob(parts[3]).split("").map(c => c.charCodeAt(0)));
-  
+
   try {
     const c = getCrypto();
     const key = await deriveClassroomKey(classId);
@@ -69,6 +69,6 @@ export async function decryptMessage(ciphertext: string, classId: string, _curre
     const dec = new TextDecoder();
     return dec.decode(decrypted);
   } catch (e) {
-    return "[🔒 Decryption Error - Key Mismatch]";
+    return "[ Decryption Error - Key Mismatch]";
   }
 }

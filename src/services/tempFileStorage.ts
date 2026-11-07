@@ -1,7 +1,7 @@
 /**
  * Client-Side Temporary File Storage (IndexedDB Sandbox)
- * 
- * 🔒 PRIVACY GUARANTEE:
+ *
+ *  PRIVACY GUARANTEE:
  * Files are NEVER sent to or stored in any database.
  * Files are stored purely in the user's device temporary storage (IndexedDB)
  * and are automatically cleared or manually purged by the user.

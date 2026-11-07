@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
   Crown, Gem, Bot, Medal, Home, Compass, Sparkles, BookOpen, Gift,
   Users, CreditCard, Settings, LogOut, ShieldAlert, User, Check, GraduationCap, MessageCircle, Lock, Building2
 } from 'lucide-react';
@@ -30,12 +30,12 @@ interface SidebarProps {
   badgeColor?: BadgeColorKey;
 }
 
-export default function Sidebar({ 
-  currentTab, 
-  setTab, 
-  lang, 
-  onLogout, 
-  userName, 
+export default function Sidebar({
+  currentTab,
+  setTab,
+  lang,
+  onLogout,
+  userName,
   unreadMessagesCount = 0,
   isPremium = false,
   planName = '',
@@ -86,8 +86,8 @@ export default function Sidebar({
   ];
 
   if (isAdmin) {
-    menuItems.push({ 
-      id: 'admin', 
+    menuItems.push({
+      id: 'admin',
       label: isAr ? 'لوحة الإدارة' : 'Admin Panel',
       showBadge: pendingPaymentCount > 0 ? pendingPaymentCount : undefined
     });
@@ -97,7 +97,7 @@ export default function Sidebar({
   // Minimalist Line-Art Icon Mapper
   const getNavIcon = (id: string, isActive: boolean) => {
     const size = 18;
-    const colorClass = isActive 
+    const colorClass = isActive
       ? 'sidebar-nav-icon text-primary drop-shadow-[0_0_6px_var(--theme-primary)]'
       : 'sidebar-nav-icon text-[var(--app-text-muted)] group-hover:text-primary transition-colors duration-200';
 
@@ -139,26 +139,26 @@ export default function Sidebar({
     <aside aria-label={isAr ? 'التنقل الرئيسي' : 'Primary navigation'} className="liquid-sidebar w-full h-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-3xl border-none text-slate-700 dark:text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
       {/* Premium Custom SVG Logo */}
       <div className="flex items-center gap-2 justify-start select-none py-1 mb-1 shrink-0" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
-        <div 
-          
-          
+        <div
+
+
           className="relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0"
         >
           <svg className="w-full h-full overflow-visible" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* Background ambient glow */}
             <circle cx="18" cy="18" r="14" fill="rgba(155, 81, 224, 0.15)" className="blur-md" />
-            
+
             {/* Neon Galaxy Rings */}
             <ellipse cx="18" cy="18" rx="16" ry="5" transform="rotate(-20, 18, 18)" stroke="#9b51e0" strokeWidth="2" fill="none" className="opacity-80" />
             <ellipse cx="18" cy="18" rx="12" ry="3.5" transform="rotate(25, 18, 18)" stroke="#ec4899" strokeWidth="1.5" fill="none" className="opacity-70" />
-            
+
             {/* Magnifying Glass Frame (integrated with the galaxy core) */}
             <circle cx="18" cy="18" r="8" stroke="#ffffff" strokeWidth="2" fill="rgba(15, 23, 42, 0.4)" className="backdrop-blur-sm" />
-            
+
             {/* Magnifying Glass Handle */}
             <line x1="23.6" y1="23.6" x2="34" y2="34" stroke="#b175ff" strokeWidth="2.5" strokeLinecap="round" />
             <line x1="25.5" y1="25.5" x2="32" y2="32" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
- 
+
             {/* Neon pulsating galaxy center (glowing core) */}
             <circle cx="18" cy="18" r="4" fill="#d8b4fe" style={{ filter: 'drop-shadow(0 0 6px #a855f7)' }} />
           </svg>
@@ -172,7 +172,7 @@ export default function Sidebar({
           </span>
         </div>
       </div>
- 
+
       {/* User profile card with subtle border ring and hover glow */}
       <div className="mt-1 mb-1.5 shrink-0" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
         {isGuest ? (
@@ -183,11 +183,11 @@ export default function Sidebar({
             </div>
           </div>
         ) : (
-          <button 
-            onClick={() => setTab('profile')} 
+          <button
+            onClick={() => setTab('profile')}
             type="button"
             aria-label={isAr ? 'فتح الملف الشخصي' : 'Open profile'}
-            className="w-full p-2 sm:p-2.5 rounded-2xl bg-slate-100/70 hover:bg-slate-200/60 dark:bg-slate-900/50 dark:hover:bg-slate-800/60 border border-slate-200/80 dark:border-primary/20 hover:border-primary/50 transition-all duration-300 cursor-pointer text-right relative overflow-hidden group shadow-2xs hover:shadow-xs" 
+            className="w-full p-2 sm:p-2.5 rounded-2xl bg-slate-100/70 hover:bg-slate-200/60 dark:bg-slate-900/50 dark:hover:bg-slate-800/60 border border-slate-200/80 dark:border-primary/20 hover:border-primary/50 transition-all duration-300 cursor-pointer text-right relative overflow-hidden group shadow-2xs hover:shadow-xs"
             style={{ textAlign: isAr ? 'right' : 'left' }}
           >
             <div className="flex items-center gap-2.5 w-full">
@@ -205,7 +205,7 @@ export default function Sidebar({
                   />
                 </div>
               </div>
-              
+
               <div className="flex-1 min-w-0 flex flex-col justify-center">
                 <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white truncate w-full flex items-center gap-1.5">
                   <PremiumNameTag
@@ -226,13 +226,13 @@ export default function Sidebar({
           </button>
         )}
       </div>
- 
+
       {/* Navigation items with micro-animations & layoutId glassmorphism active pill */}
       <nav aria-label={isAr ? 'أقسام المنصة' : 'Platform sections'} className="flex-1 space-y-0.5 py-1 pr-0.5 overflow-y-auto scrollbar-none">
         {menuItems.map((item) => {
           const isActive = item.id === 'motivation' ? currentTab.startsWith('motivation') : currentTab === item.id;
           const isLocked = (item.isPremiumOnly && activePlanId === 'free') || (item.id === 'aichat' && !hasActiveMembership);
-          
+
           if (item.isLink) {
             return (
               <a
@@ -241,7 +241,7 @@ export default function Sidebar({
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`sidebar-nav-item w-full min-h-11 flex items-center justify-between px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer text-[11px] sm:text-xs relative group shrink-0 ${isActive ? 'is-active' : ''} ${
-                  isActive 
+                  isActive
                     ? 'text-[var(--app-text)] font-extrabold'
                     : 'hover:text-primary text-[var(--app-text-muted)] font-bold'
                 }`}
@@ -279,9 +279,9 @@ export default function Sidebar({
             >
               {isActive && (
                 <div
-                  
+
                   className="absolute inset-0 bg-primary/10 border border-primary/30 shadow-lg shadow-primary/10 rounded-xl -z-10"
-                  
+
                 />
               )}
               <div className="flex items-center gap-3 min-w-0 z-10">
@@ -309,8 +309,8 @@ export default function Sidebar({
       {/* Sidebar Footer options - Pinned at the bottom */}
       <div className="border-t border-slate-200/80 dark:border-primary/20 pt-2 mt-auto space-y-1 shrink-0">
         {!isGuest && (
-          <button 
-            onClick={onLogout} 
+          <button
+            onClick={onLogout}
             className="w-full flex items-center gap-3 px-3 py-1.5 text-xs font-bold rounded-xl hover:bg-red-500/10 text-rose-600 dark:text-rose-400 cursor-pointer group shrink-0 transition-colors"
             style={{ direction: isAr ? 'rtl' : 'ltr' }}
           >
@@ -318,7 +318,7 @@ export default function Sidebar({
             <span>{t.tabLogout || (isAr ? 'تسجيل الخروج' : 'Logout')}</span>
           </button>
         )}
-        
+
         {/* Dynamic Interactive Upgrade block based on user active subscription level */}
         {(() => {
           if (activePlanId === 'diamond') {
@@ -334,7 +334,7 @@ export default function Sidebar({
                     {isAr ? 'الباقة الماسية الفاخرة (القصوى)' : 'Diamond Elite VIP Member'}
                   </p>
                   <p className="text-[9px] text-slate-600 dark:text-slate-400 leading-normal font-bold hidden sm:block mt-0.5">
-                    {isAr ? 'نشكرك على ثقتك الغالية وشراكتك في نجاح Quiz Space! ❤️' : 'Thank you for your support and partnership! ❤️'}
+                    {isAr ? 'نشكرك على ثقتك الغالية وشراكتك في نجاح Quiz Space! ' : 'Thank you for your support and partnership! '}
                   </p>
                 </div>
               </div>
@@ -352,7 +352,7 @@ export default function Sidebar({
                     {isAr ? 'اصعد بصلاحياتك لتشمل تصدير excel للمدارس.' : 'Upgrade your tier to export class scores to Excel.'}
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setTab('billing')}
                   className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-[9px] font-black py-1 px-2 rounded-xl w-full hover:scale-102 transition-transform cursor-pointer shadow-md shadow-amber-500/10"
                 >
@@ -374,7 +374,7 @@ export default function Sidebar({
                     {isAr ? 'احصل على ميزات طباعة تقارير الإجابات PDF.' : 'Unlock downloading professional PDF analysis.'}
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setTab('billing')}
                   className="bg-primary hover:bg-primary-hover text-white text-[9px] font-black py-1 px-2 rounded-xl w-full hover:scale-102 transition-transform cursor-pointer shadow-md"
                 >
@@ -391,17 +391,17 @@ export default function Sidebar({
                 <Crown className="w-4 h-4 mx-auto text-primary animate-pulse" />
                 <div>
                   <p className="text-slate-900 dark:text-white font-black text-[10px] sm:text-xs">
-                    {isAr ? 'الترقية للميزات الكبرى ✨' : 'Unlock Educator Pro ✨'}
+                    {isAr ? 'الترقية للميزات الكبرى ' : 'Unlock Educator Pro '}
                   </p>
                   <p className="text-[9px] text-slate-600 dark:text-slate-400 leading-normal hidden sm:block mt-0.5">
                     {isAr ? 'توليد غير محدود بالذكاء الاصطناعي وبدون إعلانات.' : 'Uncaps AI creation features forever.'}
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setTab('billing')}
                   className="bg-primary hover:bg-primary-hover text-white text-[9px] font-black py-1.5 px-2 rounded-xl w-full hover:scale-102 transition-transform cursor-pointer shadow-md"
                 >
-                  {isAr ? 'ترقية وتفعيل الآن ✨' : 'Unlock Now ✨'}
+                  {isAr ? 'ترقية وتفعيل الآن ' : 'Unlock Now '}
                 </button>
               </div>
             );

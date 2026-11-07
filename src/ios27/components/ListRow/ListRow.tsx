@@ -36,7 +36,7 @@ export interface ListRowProps extends Omit<HTMLAttributes<HTMLDivElement>, 'chil
  * Without `onClick` it is a plain, non-interactive container.
  *
  * @example
- * <ListRow leading={<Icon>★</Icon>} trailing="On" disclosure onClick={open}>
+ * <ListRow leading={<Icon></Icon>} trailing="On" disclosure onClick={open}>
  *   Notifications
  * </ListRow>
  */

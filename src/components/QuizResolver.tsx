@@ -31,15 +31,15 @@ function replaceOklchColors(value: string): string {
   if (typeof value !== 'string' || !value.includes('oklch')) {
     return value;
   }
-  
+
   const oklchGlobalRegex = /oklch\(\s*([\d.]+)(\%?)(?:\s+|\s*,\s*)([\d.]+)(?:\s+|\s*,\s*)([\d.]+)(?:\s*[\/,\s]\s*([\d.]+)(\%?))?\s*\)/gi;
-  
+
   return value.replace(oklchGlobalRegex, (match, p1, p2, p3, p4, p5, p6) => {
     let L = parseFloat(p1);
     if (p2 === '%') L /= 100;
     const C = parseFloat(p3);
     const H = parseFloat(p4);
-    
+
     let alpha: number | undefined;
     if (p5) {
       alpha = parseFloat(p5);
@@ -203,8 +203,8 @@ export default function QuizResolver({
       if (q.type === 'essay') {
         correctAnswer = q.correctAnswer || '';
       } else {
-        correctAnswer = q.type === 'mcq' 
-          ? q.options[q.correctIndex] 
+        correctAnswer = q.type === 'mcq'
+          ? q.options[q.correctIndex]
           : (q.correctIndex === 0 ? (isAr ? 'صح' : 'True') : (isAr ? 'خطأ' : 'False'));
       }
 
@@ -493,7 +493,7 @@ export default function QuizResolver({
     async function loadQuiz() {
       setIsLoading(true);
       setError(null);
-      
+
       // Reset all states to standard defaults at the beginning of load to prevent state bleed-over across different users/quizzes
       if (isActive) {
         setCurrentIdx(0);
@@ -543,10 +543,10 @@ export default function QuizResolver({
         }
         if (isActive) {
           setQuiz(data);
-          
+
           let resolvedTimeLeft = data.timeLimit && data.timeLimit > 0 ? data.timeLimit : 0;
           let resolvedEssayAnswers = new Array(data.questions.length).fill('');
-          
+
           // Attempt to restore saved progress session representation from localStorage scoped to BOTH userId and quizId
           try {
             const savedKey = `quiz_session_${userId || 'anonymous'}_${quizId}`;
@@ -574,7 +574,7 @@ export default function QuizResolver({
           } catch (e) {
             console.warn('Failed to restore quiz session from localStorage:', e);
           }
-          
+
           setTimeLeft(resolvedTimeLeft);
           if (!localStorage.getItem(`quiz_session_${userId || 'anonymous'}_${quizId}`)) {
             setEssayAnswers(resolvedEssayAnswers);
@@ -781,7 +781,7 @@ export default function QuizResolver({
 
     try {
       const previousBestScore = await getBestScoreByQuizId(quizId);
-      
+
       // Prevent duplicate insert if already saved (e.g. from autoSave or handleFinalSubmitAndExit)
       if (savedCompletionId && !isDailyQuiz) {
         if (isGuest) {
@@ -818,7 +818,7 @@ export default function QuizResolver({
         window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
       }
       if (previousBestScore > 0 && score > previousBestScore) {
-        const body = lang === 'ar' 
+        const body = lang === 'ar'
           ? `تهانينا! الطالب «${takerName.trim()}» حطم الرقم القياسي السابق وسجل ${score} في اختبار «${quiz.title}»!`
           : `Congratulations! Player «${takerName.trim()}» just shattered the previous high score with ${score} points on the quiz «${quiz.title}»!`;
         pushNotificationsManager.dispatchRecordBroken(quizId, quiz.title, takerName.trim(), score, body);
@@ -886,7 +886,7 @@ export default function QuizResolver({
           console.warn('Review score update skipped; saved completion remains valid:', scoreErr);
         }
       }
-      
+
       // Save rating attempt to Supabase
       if (completionId && !isDailyQuiz) {
         if (selectedRating > 0) {
@@ -1038,8 +1038,8 @@ export default function QuizResolver({
       const authUser = userId || 'anonymous';
       const authorDisplayName = takerName.trim() || userName.trim() || (isAr ? 'طالب متميز' : 'Student');
       const text = isAr
-        ? `🎉 حققت ${score} من ${quiz.questions.length} في اختبار «${quiz.title}»! خوضوا التحدي وأخبروني بدرجاتكم 🏆✨`
-        : `🎉 Scored ${score}/${quiz.questions.length} on "${quiz.title}"! Challenge yourself and share your scores 🏆✨`;
+        ? ` حققت ${score} من ${quiz.questions.length} في اختبار «${quiz.title}»! خوضوا التحدي وأخبروني بدرجاتكم `
+        : ` Scored ${score}/${quiz.questions.length} on "${quiz.title}"! Challenge yourself and share your scores `;
       await createCommunityPost(text, authUser, authorDisplayName);
       setIsSharedToCommunity(true);
       try { playNotificationSound('success'); } catch (_) {}
@@ -1102,7 +1102,7 @@ export default function QuizResolver({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 pb-8 pb-28 sm:space-y-6 sm:pb-32 print:bg-white print:p-0">
-      
+
       {/* Sleek top progress bar tracking percentage of completed questions */}
       {!isQuizCompleted && (
         <div className="w-full bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden shadow-inner print:hidden relative">
@@ -1153,7 +1153,7 @@ export default function QuizResolver({
                 }`}
               >
                 <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span>{isAr ? 'حل ⚡' : 'Quiz ⚡'}</span>
+                <span>{isAr ? 'حل ' : 'Quiz '}</span>
               </button>
               <button
                 onClick={() => {
@@ -1168,7 +1168,7 @@ export default function QuizResolver({
                 }`}
               >
                 <BadgeCheck className="w-3.5 h-3.5 text-amber-500" />
-                <span>{isAr ? 'كروت 🎴' : 'Cards 🎴'}</span>
+                <span>{isAr ? 'كروت ' : 'Cards '}</span>
               </button>
             </div>
 
@@ -1219,19 +1219,19 @@ export default function QuizResolver({
               <div className="bg-[#0e0a1f]/80 backdrop-blur-2xl border border-[#3d1d6d]/40 rounded-3xl p-8 max-w-lg mx-auto text-center space-y-6 shadow-[0_0_40px_rgba(139,92,246,0.25)] animate-fade-in my-8 relative overflow-hidden">
                 <div className="absolute -top-12 -left-12 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                
+
                 <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-tr from-violet-600 to-fuchsia-600 flex items-center justify-center border border-white/10 shadow-[0_0_20px_rgba(139,92,246,0.4)] animate-bounce">
                   <Lock className="w-8 h-8 text-white" />
                 </div>
 
                 <div className="space-y-2">
                   <h3 className="text-lg font-black text-white flex items-center justify-center gap-2">
-                    <span>{isAr ? 'ميزة بطاقات الاستذكار 🎴' : 'Study Flashcards Feature 🎴'}</span>
+                    <span>{isAr ? 'ميزة بطاقات الاستذكار ' : 'Study Flashcards Feature '}</span>
                     <span className="text-[10px] bg-gradient-to-r from-amber-400 to-pink-500 text-slate-950 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">PREMIUM</span>
                   </h3>
                   <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
-                    {isAr 
-                      ? 'تمتع بأسلوب المذاكرة الفائقة وتدبر النظريات العلمية عبر بطاقات الاستذكار التفاعلية ثلاثية الأبعاد المدعومة بالذكاء الاصطناعي. تتوفر هذه الميزة حصرياً للمشتركين في الباقات المميزة.' 
+                    {isAr
+                      ? 'تمتع بأسلوب المذاكرة الفائقة وتدبر النظريات العلمية عبر بطاقات الاستذكار التفاعلية ثلاثية الأبعاد المدعومة بالذكاء الاصطناعي. تتوفر هذه الميزة حصرياً للمشتركين في الباقات المميزة.'
                       : 'Supercharge your preparation and master complex scientific paradigms with AI-powered interactive 3D study flashcards, exclusive to premium plan subscribers.'}
                   </p>
                 </div>
@@ -1245,7 +1245,7 @@ export default function QuizResolver({
                   <div className="h-4 bg-slate-800/80 rounded w-3/4 animate-pulse" />
                   <div className="h-3 bg-slate-800/80 rounded w-1/2 animate-pulse" />
                   <div className="h-10 bg-purple-500/20 rounded-xl flex items-center justify-center border border-purple-500/10 mt-4">
-                    <span className="text-[10px] text-purple-400 font-extrabold">{isAr ? 'كشف الإجابة والتحليل الدقيق 👁️' : 'Reveal Solution & Analytics 👁️'}</span>
+                    <span className="text-[10px] text-purple-400 font-extrabold">{isAr ? 'كشف الإجابة والتحليل الدقيق ' : 'Reveal Solution & Analytics '}</span>
                   </div>
                 </div>
 
@@ -1260,13 +1260,13 @@ export default function QuizResolver({
                     className="w-full py-3.5 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-500 text-white font-black text-xs rounded-xl hover:brightness-110 shadow-lg shadow-violet-500/35 transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/10"
                   >
                     <Sparkles className="w-4 h-4 text-amber-300" />
-                    <span>{isAr ? 'رقّ حسابك للباقة الذهبية أو الماسية لفتح الميزة 👑' : 'Upgrade to Gold / Diamond Plan Now 👑'}</span>
+                    <span>{isAr ? 'رقّ حسابك للباقة الذهبية أو الماسية لفتح الميزة ' : 'Upgrade to Gold / Diamond Plan Now '}</span>
                   </button>
                   <button
                     onClick={onGoHome}
                     className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-800"
                   >
-                    <span>{isAr ? 'العودة للاختبارات الأخرى 🔙' : 'Return to Other Quizzes 🔙'}</span>
+                    <span>{isAr ? 'العودة للاختبارات الأخرى ' : 'Return to Other Quizzes '}</span>
                   </button>
                 </div>
               </div>
@@ -1277,7 +1277,7 @@ export default function QuizResolver({
                 <div className="space-y-1 text-center sm:text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                   <h4 className="text-xs font-black text-slate-805 dark:text-white flex items-center justify-center sm:justify-start gap-1.5 leading-normal">
                     <BadgeCheck className="w-4 h-4 text-amber-500 animate-pulse" />
-                    <span>{isAr ? 'كروت الاستذكار التفاعلية ثلاثية الأبعاد 🎴' : 'Interactive 3D Study Flashcards'}</span>
+                    <span>{isAr ? 'كروت الاستذكار التفاعلية ثلاثية الأبعاد ' : 'Interactive 3D Study Flashcards'}</span>
                   </h4>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold leading-normal">
                     {isAr ? 'انقر على كارت السؤال لقلبه ومعاينة الإجابة والتحليل وتدبر نظريته العلمية.' : 'Click any question card to flip and analyze the detailed scientific key solution.'}
@@ -1289,7 +1289,7 @@ export default function QuizResolver({
               </div>
 
               {/* The Outer Perspective Card Box */}
-              <div 
+              <div
                 className="w-full max-w-lg mx-auto h-[350px] [perspective:1000px] cursor-pointer"
                 onClick={() => {
                   setIsFlipped(!isFlipped);
@@ -1311,10 +1311,10 @@ export default function QuizResolver({
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-wider text-primary dark:text-primary-light bg-primary/10 px-3 py-1 rounded-full">
                         {quiz.questions[currentFlashcardIdx].type === 'mcq'
-                          ? (isAr ? '❓ اختيار من متعدد' : '❓ Multiple Choice')
+                          ? (isAr ? ' اختيار من متعدد' : ' Multiple Choice')
                           : quiz.questions[currentFlashcardIdx].type === 'tf'
                           ? (isAr ? '⭐ صح / خطأ' : '⭐ True / False')
-                          : (isAr ? '✏️ سؤال مقالي' : '✏️ Essay Question')}
+                          : (isAr ? ' سؤال مقالي' : ' Essay Question')}
                       </span>
                       <span className="text-xs font-mono font-bold text-slate-400"># {currentFlashcardIdx + 1}</span>
                     </div>
@@ -1339,7 +1339,7 @@ export default function QuizResolver({
                     <div className="flex flex-col items-center gap-1 text-[11px] text-slate-400 font-bold border-t border-dashed border-slate-150 dark:border-slate-800 pt-4">
                       <span className="flex items-center gap-1 text-purple-500 animate-pulse">
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '4s' }} />
-                        <span>{isAr ? 'انقر لقلب الكارت وكشف السر الأكاديمي 🔄' : 'Click to flip and reveal the academic secret 🔄'}</span>
+                        <span>{isAr ? 'انقر لقلب الكارت وكشف السر الأكاديمي ' : 'Click to flip and reveal the academic secret '}</span>
                       </span>
                     </div>
                   </div>
@@ -1349,7 +1349,7 @@ export default function QuizResolver({
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full">
-                          {isAr ? '✔ الإجابة النموذجية المرصودة' : '✔ Correct Model Answer'}
+                          {isAr ? ' الإجابة النموذجية المرصودة' : ' Correct Model Answer'}
                         </span>
                         <span className="text-xs font-mono font-bold text-slate-400"># {currentFlashcardIdx + 1}</span>
                       </div>
@@ -1372,17 +1372,17 @@ export default function QuizResolver({
 
                       {/* Academic explanation insights with AI integration option */}
                       <div className="space-y-1 text-right max-h-32 overflow-y-auto px-1" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                        <span className="text-[10px] font-black text-slate-400 block">{isAr ? '🔦 التفسير والشرح الأكاديمي:' : '💡 Explanatory Concept Notes:'}</span>
+                        <span className="text-[10px] font-black text-slate-400 block">{isAr ? ' التفسير والشرح الأكاديمي:' : ' Explanatory Concept Notes:'}</span>
                         <p className="text-xs text-slate-650 dark:text-slate-300 leading-relaxed font-semibold">
-                          {quiz.questions[currentFlashcardIdx].explanation || (isAr 
-                            ? 'تم رصد الفكرة لقياس الاسترجاع والاستدلال المهاري للحدث.' 
+                          {quiz.questions[currentFlashcardIdx].explanation || (isAr
+                            ? 'تم رصد الفكرة لقياس الاسترجاع والاستدلال المهاري للحدث.'
                             : 'Formulated to gauge explicit memory and cognitive reasoning recall.')}
                         </p>
 
                         {/* Custom lesson explanation block generated live on-demand */}
                         {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id] && (
                           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
-                            <span className="text-[9px] uppercase font-black text-primary dark:text-primary-light block">{isAr ? '⚡ شرح كوزمو المعلم الرقمي:' : '⚡ Lesson by AI Tutor AI:'}</span>
+                            <span className="text-[9px] uppercase font-black text-primary dark:text-primary-light block">{isAr ? ' شرح كوزمو المعلم الرقمي:' : ' Lesson by AI Tutor AI:'}</span>
                             <p className="text-[11px] text-slate-900 dark:text-slate-100 leading-relaxed bg-primary/5 dark:bg-primary/10 p-2.5 rounded-xl border border-primary/20 whitespace-pre-line font-medium text-right">
                               {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id]}
                             </p>
@@ -1413,8 +1413,8 @@ export default function QuizResolver({
                           {aiFlashcardLoading[quiz.questions[currentFlashcardIdx].id]
                             ? (isAr ? 'استحضار كوزمو...' : 'Summoning AI...')
                             : aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id]
-                            ? (isAr ? 'جاهز كلياً ✔' : 'Lesson Ready ✔')
-                            : (isAr ? 'شرح ذكي مفصل بالـ AI 🧠' : 'Detailed AI Lesson 🧠')}
+                            ? (isAr ? 'جاهز كلياً ' : 'Lesson Ready ')
+                            : (isAr ? 'شرح ذكي مفصل بالـ AI ' : 'Detailed AI Lesson ')}
                         </span>
                       </button>
 
@@ -1453,8 +1453,8 @@ export default function QuizResolver({
                         playChimeSound('click');
                       }}
                       className={`h-2 rounded-full transition-all ${
-                        i === currentFlashcardIdx 
-                          ? 'w-5 bg-primary' 
+                        i === currentFlashcardIdx
+                          ? 'w-5 bg-primary'
                           : 'w-2 bg-slate-205 dark:bg-slate-800 hover:bg-slate-300'
                       }`}
                       title={`${isAr ? 'كارت' : 'Card'} ${i + 1}`}
@@ -1507,9 +1507,9 @@ export default function QuizResolver({
               className={`theme-surface relative p-4 sm:p-7 md:p-8 rounded-[2rem] backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] space-y-5 sm:space-y-10 transition-all duration-500 overflow-hidden ${
                 hasShaken ? 'shake-question' : ''
               } ${
-                isAnswersFrozen 
-                  ? (selectedIdx === currentQuestion.correctIndex 
-                      ? 'border border-emerald-500/30 dark:border-emerald-500/20 shadow-[0_8px_40px_rgb(16,185,129,0.08)]' 
+                isAnswersFrozen
+                  ? (selectedIdx === currentQuestion.correctIndex
+                      ? 'border border-emerald-500/30 dark:border-emerald-500/20 shadow-[0_8px_40px_rgb(16,185,129,0.08)]'
                       : 'border border-rose-500/30 dark:border-rose-500/20 shadow-[0_8px_40px_rgb(244,63,113,0.08)]')
                   : 'border border-[var(--app-border)] hover:shadow-[0_20px_60px_rgb(0,0,0,0.08)] hover:-translate-y-1'
               }`}
@@ -1588,7 +1588,7 @@ export default function QuizResolver({
                       <span>
                         {quiz?.essayGradingMode === 'ai'
                           ? (isAr ? 'تأكيد الإجابة وقراءة الجواب النموذجي' : 'Confirm & Read Model Answer')
-                          : (isAr ? 'تأكيد وحفظ الإجابة المقالية ✍️' : 'Confirm & Save Written Answer ✍️')}
+                          : (isAr ? 'تأكيد وحفظ الإجابة المقالية ' : 'Confirm & Save Written Answer ')}
                       </span>
                     </button>
                   </div>
@@ -1637,7 +1637,7 @@ export default function QuizResolver({
                   const showFeedback = isAnswersFrozen;
 
                   let optClass = 'border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/50 backdrop-blur-md border hover:border-primary/40 dark:hover:border-primary/40 text-slate-700 dark:text-slate-200 hover:bg-white/90 dark:hover:bg-slate-800/60 shadow-2xs hover:shadow-sm';
-                  
+
                   if (showFeedback) {
                     if (isCorrect) {
                       optClass = 'border-emerald-500 bg-emerald-50/70 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-500/70 dark:text-emerald-300 border-2 backdrop-blur-md shadow-md shadow-emerald-500/10';
@@ -1679,12 +1679,12 @@ export default function QuizResolver({
             )}
 
             {/* Interactive Answer explanation segment */}
-            
+
               {isAnswersFrozen && (
                 <div
-                  
-                  
-                  
+
+
+
                   className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5 text-right sm:pt-6 sm:space-y-3"
                 >
                   <div className="flex items-center gap-2 justify-start text-xs font-semibold tracking-wide text-slate-400 dark:text-slate-500 uppercase">
@@ -1730,14 +1730,14 @@ export default function QuizResolver({
                       <Sparkles className={`h-3.5 w-3.5 ${aiFlashcardLoading[currentQuestion.id] ? 'animate-pulse' : ''}`} />
                       {aiFlashcardLoading[currentQuestion.id]
                         ? (isAr ? 'كوزمو بيفكر...' : 'AI is thinking...')
-                        : (isAr ? '💡 اشرحلي أكتر مع كوزمو' : '💡 Explain more with AI')}
+                        : (isAr ? ' اشرحلي أكتر مع كوزمو' : ' Explain more with AI')}
                     </button>
                   )}
                 </div>
               )}
-            
+
           </div>
-        
+
 
           {/* Action button bar — Fixed to bottom for instant accessibility on mobile and desktop */}
           <div
@@ -1781,10 +1781,10 @@ export default function QuizResolver({
       ) : (
         /* Completed Results Screen Panel */
         <div className="space-y-8 animate-fade-in print:bg-white print:p-0">
-          
+
           {/* Circular Graph and scores info card */}
           <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 p-8 sm:p-12 rounded-3xl shadow-sm text-center space-y-6 print:border-none print:shadow-none">
-            
+
             <div className="space-y-2">
               <BadgeCheck className="w-12 h-12 text-primary mx-auto animate-bounce" />
               <h3 className="font-display font-extrabold text-2xl text-slate-800 dark:text-slate-100">تهانينا! لقد أكملت الاختبار بنجاح</h3>
@@ -1833,11 +1833,11 @@ export default function QuizResolver({
                 {/* User score assessment feedback banner */}
                 <div className="max-w-md mx-auto text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   {score === quiz.questions.length ? (
-                    <span className="p-2 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 font-bold block">علامة كاملة وممتازة! أنت خبير ومتقن لهذا الموضوع بالكامل. 🏆</span>
+                    <span className="p-2 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 font-bold block">علامة كاملة وممتازة! أنت خبير ومتقن لهذا الموضوع بالكامل. </span>
                   ) : score >= quiz.questions.length / 2 ? (
-                    <span className="p-2 py-1.5 rounded-xl bg-primary-light dark:bg-primary/20 text-primary font-bold block">نتيجة مميزة جداً! استمر في التعلم والدراسة لتسجيل الدرجة النهائية. 👍</span>
+                    <span className="p-2 py-1.5 rounded-xl bg-primary-light dark:bg-primary/20 text-primary font-bold block">نتيجة مميزة جداً! استمر في التعلم والدراسة لتسجيل الدرجة النهائية. </span>
                   ) : (
-                    <span className="p-2 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 font-bold block">جيد، حاول مراجعة الإجابات الخاطئة وإعادة المحاولة لتحسين نتيجتك وتدريب مهاراتك. 📚</span>
+                    <span className="p-2 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 font-bold block">جيد، حاول مراجعة الإجابات الخاطئة وإعادة المحاولة لتحسين نتيجتك وتدريب مهاراتك. </span>
                   )}
                 </div>
               </div>
@@ -1954,16 +1954,16 @@ export default function QuizResolver({
             {/* Ambient Background Glows */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
-            
+
             <div className="space-y-2">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary">
                 <Star className="w-6 h-6 fill-primary text-primary" />
               </div>
               <h4 className="font-display font-black text-lg text-[var(--app-text)] tracking-tight">
-                {isAr ? 'شاركنا رأيك في الاختبار (اختياري) ✨' : 'Share your quiz feedback (optional) ✨'}
+                {isAr ? 'شاركنا رأيك في الاختبار (اختياري) ' : 'Share your quiz feedback (optional) '}
               </h4>
               <p className="text-xs theme-muted max-w-md mx-auto leading-relaxed">
-                {isAr 
+                {isAr
                   ? 'تم حفظ الدرجة تلقائياً عند الإجابة عن آخر سؤال. يمكنك إضافة تقييم أو التسليم والإنهاء مباشرة.'
                   : 'Your score was saved automatically after the last answer. Add feedback or submit and finish directly.'}
               </p>
@@ -1975,7 +1975,7 @@ export default function QuizResolver({
                 const isSelected = star <= selectedRating;
                 return (
                   <button
-                    
+
                     onClick={() => {
                       playChimeSound('click');
                       setSaveError(null);
@@ -1985,8 +1985,8 @@ export default function QuizResolver({
                   >
                     <Star
                       className={`w-9 h-9 sm:w-11 sm:h-11 transition-all duration-300 ${
-                        isSelected 
-                          ? 'text-amber-400 fill-amber-400 filter drop-shadow-[0_0_12px_rgba(245,158,11,0.85)]' 
+                        isSelected
+                          ? 'text-amber-400 fill-amber-400 filter drop-shadow-[0_0_12px_rgba(245,158,11,0.85)]'
                           : 'text-slate-650 hover:text-[#b175ff]'
                       }`}
                     />
@@ -2043,7 +2043,7 @@ export default function QuizResolver({
                 {isSharedToCommunity ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>{isAr ? 'تم النشر في مجتمع الطلاب بنجاح! 🌐' : 'Posted to Community! 🌐'}</span>
+                    <span>{isAr ? 'تم النشر في مجتمع الطلاب بنجاح! ' : 'Posted to Community! '}</span>
                   </>
                 ) : isSharingCommunity ? (
                   <>
@@ -2053,7 +2053,7 @@ export default function QuizResolver({
                 ) : (
                   <>
                     <Share2 className="w-4 h-4 text-amber-400" />
-                    <span>{isAr ? 'مشاركة نتيجتي في المجتمع للتحدي 🚀' : 'Share Score to Community 🚀'}</span>
+                    <span>{isAr ? 'مشاركة نتيجتي في المجتمع للتحدي ' : 'Share Score to Community '}</span>
                   </>
                 )}
               </button>
@@ -2091,7 +2091,7 @@ export default function QuizResolver({
                 ) : (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{isAr ? 'تسليم وإنهاء ✨' : 'Submit & Finish ✨'}</span>
+                    <span>{isAr ? 'تسليم وإنهاء ' : 'Submit & Finish '}</span>
                   </>
                 )}
               </button>
@@ -2138,7 +2138,7 @@ export default function QuizResolver({
               {quiz.questions.map((q, idx) => (
                 <div  className="space-y-2 border-b border-slate-200 pb-4">
                   <h4 className="text-sm font-bold">س {idx + 1}: {q.text}</h4>
-                  
+
                   {q.type === 'mcq' ? (
                     <div className="grid grid-cols-2 gap-2 pl-6 pt-1 text-xs">
                       {q.options.map((opt, oIdx) => (
@@ -2172,15 +2172,15 @@ export default function QuizResolver({
           </div>
 
           {/* Hidden high-fidelity template for PDF generation */}
-          <div 
-            id="quiz-pdf-export-content" 
+          <div
+            id="quiz-pdf-export-content"
             className="text-right p-12 bg-white text-slate-805 font-sans"
-            style={{ 
-              position: 'absolute', 
-              top: '-9999px', 
-              left: '-9999px', 
-              width: '794px', 
-              direction: 'rtl' 
+            style={{
+              position: 'absolute',
+              top: '-9999px',
+              left: '-9999px',
+              width: '794px',
+              direction: 'rtl'
             }}
           >
             {/* Decorative Header Banner */}
@@ -2231,7 +2231,7 @@ export default function QuizResolver({
                 <div>
                   <span className="text-slate-400 block text-[10px] font-bold">تقدير التقييم الورقي:</span>
                   <span className={`font-bold ${score === quiz.questions.length ? 'text-emerald-600' : score >= quiz.questions.length / 2 ? 'text-primary' : 'text-red-500'}`}>
-                    {score === quiz.questions.length ? 'ممتاز مع مرتبة الشرف 🏆' : score >= quiz.questions.length / 2 ? 'جيد جداً / مجتاز 👍' : 'غير كافٍ / يحتاج إعادة 📚'}
+                    {score === quiz.questions.length ? 'ممتاز مع مرتبة الشرف ' : score >= quiz.questions.length / 2 ? 'جيد جداً / مجتاز ' : 'غير كافٍ / يحتاج إعادة '}
                   </span>
                 </div>
               </div>
@@ -2244,7 +2244,7 @@ export default function QuizResolver({
                 const userAnswerIdx = userAnswers[qIdx];
                 const isEssayCorrect = essayAssessments[qIdx] === true;
                 const isCorrect = q.type === 'essay' ? isEssayCorrect : userAnswerIdx === q.correctIndex;
-                
+
                 return (
                   <div  className="border border-slate-200 rounded-2xl p-5 space-y-4 shadow-2xs break-inside-avoid text-right" dir="rtl">
                     <div className="flex items-start justify-between gap-3 border-b border-light-200 pb-2">
@@ -2252,11 +2252,11 @@ export default function QuizResolver({
                         س {qIdx + 1}: {q.text}
                       </h4>
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold shrink-0 ${
-                        isCorrect 
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-105' 
+                        isCorrect
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-105'
                           : 'bg-red-50 text-red-700 border border-red-105'
                       }`}>
-                        {isCorrect ? 'إجابة صحيحة ✓' : 'إجابة غير صحيحة ✗'}
+                        {isCorrect ? 'إجابة صحيحة ' : 'إجابة غير صحيحة '}
                       </span>
                     </div>
 
@@ -2282,10 +2282,10 @@ export default function QuizResolver({
                           let indicator = "○";
                           if (isThisCorrect) {
                             itemStyle = "border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold";
-                            indicator = "✓";
+                            indicator = "";
                           } else if (isUserSelected) {
                             itemStyle = "border-red-300 bg-red-50 text-red-800 font-semibold";
-                            indicator = "✗";
+                            indicator = "";
                           }
 
                           return (
@@ -2308,10 +2308,10 @@ export default function QuizResolver({
                           let indicator = "○";
                           if (isThisCorrect) {
                             itemStyle = "border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold";
-                            indicator = "✓";
+                            indicator = "";
                           } else if (isUserSelected) {
                             itemStyle = "border-red-300 bg-red-50 text-red-800 font-semibold";
-                            indicator = "✗";
+                            indicator = "";
                           }
 
                           return (
@@ -2394,11 +2394,11 @@ export default function QuizResolver({
 
       {/* Questions Overview Modal / Sheet */}
       {isQuestionsOverviewOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
           onClick={() => setIsQuestionsOverviewOpen(false)}
         >
-          <div 
+          <div
             className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4"
             onClick={(e) => e.stopPropagation()}
             dir={isAr ? 'rtl' : 'ltr'}
@@ -2430,7 +2430,7 @@ export default function QuizResolver({
                 if (isCurrent) {
                   badgeClass = 'border-primary bg-primary text-white font-black shadow-sm ring-2 ring-primary/30';
                 } else if (isAnswered) {
-                  badgeClass = isCorrect 
+                  badgeClass = isCorrect
                     ? 'border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 font-bold'
                     : 'border-rose-500/40 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 font-bold';
                 }
@@ -2455,7 +2455,7 @@ export default function QuizResolver({
                     <span>{i + 1}</span>
                     {isAnswered && !isCurrent && (
                       <span className="text-[10px] leading-none mt-0.5">
-                        {isCorrect ? '✓' : '✗'}
+                        {isCorrect ? '' : ''}
                       </span>
                     )}
                   </button>

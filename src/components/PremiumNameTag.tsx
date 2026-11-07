@@ -26,7 +26,7 @@ export const NAME_COLOR_PRESETS: Record<NameColorKey, { labelAr: string; labelEn
     style: {},
   },
   gold: {
-    labelAr: 'ذهبي ✨',
+    labelAr: 'ذهبي ',
     labelEn: 'Gold',
     style: {
       backgroundImage: 'linear-gradient(90deg, #f6c231 0%, #fde68a 30%, #f59e0b 55%, #fde68a 75%, #f6c231 100%)',
@@ -40,7 +40,7 @@ export const NAME_COLOR_PRESETS: Record<NameColorKey, { labelAr: string; labelEn
     animClass: 'name-color-gold-anim',
   },
   neon_green: {
-    labelAr: 'نيون أخضر 💚',
+    labelAr: 'نيون أخضر ',
     labelEn: 'Neon Green',
     style: {
       color: '#39ff14',
@@ -49,7 +49,7 @@ export const NAME_COLOR_PRESETS: Record<NameColorKey, { labelAr: string; labelEn
     },
   },
   neon_pink: {
-    labelAr: 'نيون وردي 💗',
+    labelAr: 'نيون وردي ',
     labelEn: 'Neon Pink',
     style: {
       color: '#ff3fa4',
@@ -58,7 +58,7 @@ export const NAME_COLOR_PRESETS: Record<NameColorKey, { labelAr: string; labelEn
     },
   },
   neon_blue: {
-    labelAr: 'نيون أزرق 💙',
+    labelAr: 'نيون أزرق ',
     labelEn: 'Neon Blue',
     style: {
       color: '#38bdf8',
@@ -67,7 +67,7 @@ export const NAME_COLOR_PRESETS: Record<NameColorKey, { labelAr: string; labelEn
     },
   },
   silver: {
-    labelAr: 'فضي 🩶',
+    labelAr: 'فضي ',
     labelEn: 'Silver',
     style: {
       backgroundImage: 'linear-gradient(90deg, #e2e8f0 0%, #94a3b8 30%, #cbd5e1 55%, #94a3b8 75%, #e2e8f0 100%)',
@@ -80,7 +80,7 @@ export const NAME_COLOR_PRESETS: Record<NameColorKey, { labelAr: string; labelEn
     animClass: 'name-color-silver-anim',
   },
   diamond: {
-    labelAr: 'ماسي 💎',
+    labelAr: 'ماسي ',
     labelEn: 'Diamond',
     style: {
       backgroundImage: 'linear-gradient(90deg, #a5f3fc 0%, #c4b5fd 25%, #f0abfc 50%, #818cf8 75%, #a5f3fc 100%)',
@@ -93,7 +93,7 @@ export const NAME_COLOR_PRESETS: Record<NameColorKey, { labelAr: string; labelEn
     animClass: 'name-color-diamond-anim',
   },
   fire: {
-    labelAr: 'ناري 🔥',
+    labelAr: 'ناري ',
     labelEn: 'Fire',
     style: {
       backgroundImage: 'linear-gradient(90deg, #ef4444 0%, #f97316 30%, #fbbf24 55%, #f97316 75%, #ef4444 100%)',
@@ -106,7 +106,7 @@ export const NAME_COLOR_PRESETS: Record<NameColorKey, { labelAr: string; labelEn
     animClass: 'name-color-fire-anim',
   },
   aurora: {
-    labelAr: 'أورورا 🌌',
+    labelAr: 'أورورا ',
     labelEn: 'Aurora',
     style: {
       backgroundImage: 'linear-gradient(90deg, #34d399 0%, #818cf8 25%, #f472b6 50%, #34d399 75%, #818cf8 100%)',
@@ -154,14 +154,14 @@ export function availableBadgeColors(plan: 'Free' | 'Silver' | 'Gold' | 'Diamond
 
 const BADGE_LABELS: Record<BadgeTier, { labelAr: string; labelEn: string }> = {
   none:       { labelAr: 'بدون شارة',          labelEn: 'No badge' },
-  verified:   { labelAr: '✔ شارة التوثيق',      labelEn: 'Verified Check' },
-  pro:        { labelAr: '✓ تيك أزرق (Pro)',    labelEn: 'Blue Check (Pro)' },
-  premium:    { labelAr: '✓ تيك بنفسجي',        labelEn: 'Purple Check (Premium)' },
+  verified:   { labelAr: ' شارة التوثيق',      labelEn: 'Verified Check' },
+  pro:        { labelAr: ' تيك أزرق (Pro)',    labelEn: 'Blue Check (Pro)' },
+  premium:    { labelAr: ' تيك بنفسجي',        labelEn: 'Purple Check (Premium)' },
   team:       { labelAr: '◆ شارة الفريق',       labelEn: 'Team Diamond' },
-  enterprise: { labelAr: '♛ التاج الذهبي',      labelEn: 'Enterprise Crown' },
+  enterprise: { labelAr: ' التاج الذهبي',      labelEn: 'Enterprise Crown' },
   lifetime:   { labelAr: '∞ مدى الحياة',        labelEn: 'Lifetime' },
-  founder:    { labelAr: '★ شارة المؤسس',       labelEn: "Founder's Star" },
-  royal:      { labelAr: '👑 التاج الملكي',      labelEn: 'Royal Crown' },
+  founder:    { labelAr: ' شارة المؤسس',       labelEn: "Founder's Star" },
+  royal:      { labelAr: ' التاج الملكي',      labelEn: 'Royal Crown' },
 };
 export { BADGE_LABELS };
 

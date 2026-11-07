@@ -143,7 +143,7 @@ export default function AppRoutes(props: AppRoutesProps) {
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (
           <LazyQuizResolver
-            
+
             quizId={activeQuizId}
             userId={userId}
             userName={userName}
@@ -156,7 +156,7 @@ export default function AppRoutes(props: AppRoutesProps) {
             isPremium={isUserPremium}
           />
         ) : (
-          
+
             <div
               key={`${activeTab}-${activeQuizId || 'screen'}-${navKey}`}
               className={`${isCosmoTab || isNotFoundTab ? 'h-full min-h-0' : (usesSharedFrame ? '' : 'min-h-[100dvh]')} page-transition-enter will-change-transform transform-gpu gsap-tab-wrapper`}
@@ -306,7 +306,7 @@ export default function AppRoutes(props: AppRoutesProps) {
                 isGuestCreateRoute ? (
                   <section className="min-h-[60vh] flex items-center justify-center py-12" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                     <div className="w-full max-w-xl rounded-[28px] border border-slate-200/70 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-8 sm:p-10 text-center shadow-xl backdrop-blur-xl">
-                      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 text-3xl">🔐</div>
+                      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 text-3xl"></div>
                       <h2 className="text-xl font-black text-slate-900 dark:text-white">
                         {lang === 'ar' ? 'سجّل الدخول لإنشاء اختبار' : 'Sign in to create a quiz'}
                       </h2>
@@ -396,20 +396,20 @@ export default function AppRoutes(props: AppRoutesProps) {
               )}
 
               {activeTab === 'explore' && (
-                <LazyExploreSection 
-                  quizzes={quizzes} 
-                  onStartQuiz={handleStartQuiz} 
-                  lang={lang} 
+                <LazyExploreSection
+                  quizzes={quizzes}
+                  onStartQuiz={handleStartQuiz}
+                  lang={lang}
                   onViewProfile={(creatorId) => { handleSetTab('profile', false, creatorId); }}
                 />
               )}
 
               {activeTab === 'aichat' && hasActiveMembership && (
-                <LazyAIChat 
-                  lang={lang} 
-                  darkMode={darkMode} 
-                  isPremium={isUserPremium} 
-                  planName={userPlanName} 
+                <LazyAIChat
+                  lang={lang}
+                  darkMode={darkMode}
+                  isPremium={isUserPremium}
+                  planName={userPlanName}
                   userId={userId}
                   userName={userName}
                   currentPage={activeTab}
@@ -427,7 +427,7 @@ export default function AppRoutes(props: AppRoutesProps) {
               {activeTab === 'aichat' && !hasActiveMembership && (
                 <section className="flex min-h-[65vh] w-full items-center justify-center px-4 py-16 sm:px-6">
                   <div className="w-full max-w-xl rounded-3xl border border-violet-200/70 bg-white/90 p-8 text-center shadow-xl shadow-violet-500/10 backdrop-blur-xl dark:border-violet-500/20 dark:bg-slate-950/90 sm:p-12">
-                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-3xl shadow-lg shadow-violet-500/25">✦</div>
+                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-3xl shadow-lg shadow-violet-500/25"></div>
                     <h2 className="text-2xl font-black text-slate-900 dark:text-white">{lang === 'ar' ? 'كوزمو متاح للأعضاء فقط' : 'Cosmo is for members only'}</h2>
                     <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-slate-600 dark:text-slate-300">{lang === 'ar' ? 'فعّل أي عضوية للوصول إلى المحادثة الذكية وأدوات كوزمو.' : 'Activate any membership to unlock Cosmo AI chat and its tools.'}</p>
                     <button type="button" onClick={() => handleSetTab('billing')} className="mt-7 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-500 px-6 py-3 text-sm font-black text-white shadow-lg shadow-violet-500/20 transition hover:-translate-y-0.5">{lang === 'ar' ? 'عرض الباقات وتفعيل العضوية' : 'View plans and activate membership'}</button>
@@ -436,10 +436,10 @@ export default function AppRoutes(props: AppRoutesProps) {
               )}
 
               {activeTab === 'categories' && (
-                <LazyCategoriesSection 
-                  quizzes={quizzes} 
-                  onStartQuiz={handleStartQuiz} 
-                  lang={lang} 
+                <LazyCategoriesSection
+                  quizzes={quizzes}
+                  onStartQuiz={handleStartQuiz}
+                  lang={lang}
                   onViewProfile={(creatorId) => { handleSetTab('profile', false, creatorId); }}
                 />
               )}
@@ -449,11 +449,11 @@ export default function AppRoutes(props: AppRoutesProps) {
               )}
 
               {activeTab === 'classrooms' && (
-                <LazyClassrooms 
-                  lang={lang} 
-                  currentUserId={userId} 
-                  currentUserName={userName} 
-                  currentUserPhoto={userPhoto} 
+                <LazyClassrooms
+                  lang={lang}
+                  currentUserId={userId}
+                  currentUserName={userName}
+                  currentUserPhoto={userPhoto}
                   userPlan={getUserRoleAndPlan(userStats).plan}
                   currentUserEmail={userEmail}
                   onStartQuiz={handleStartQuiz}
@@ -472,10 +472,10 @@ export default function AppRoutes(props: AppRoutesProps) {
               )}
 
               {activeTab === 'bookmarks' && (
-                <LazyBookmarksSection 
-                  quizzes={quizzes} 
-                  onStartQuiz={handleStartQuiz} 
-                  lang={lang} 
+                <LazyBookmarksSection
+                  quizzes={quizzes}
+                  onStartQuiz={handleStartQuiz}
+                  lang={lang}
                   onViewProfile={(creatorId) => { handleSetTab('profile', false, creatorId); }}
                   userId={userId}
                 />
@@ -490,18 +490,18 @@ export default function AppRoutes(props: AppRoutesProps) {
               )}
 
               {activeTab === 'settings' && (
-                <LazySettingsSection 
-                  lang={lang} 
-                  userName={userName} 
+                <LazySettingsSection
+                  lang={lang}
+                  userName={userName}
                   onUpdateName={(name) => {
                     setUserName(name);
                     localStorage.setItem('quiz_userName', name);
                   }}
-                  colorTheme={colorTheme} 
-                  setColorTheme={setColorTheme} 
-                  darkMode={darkMode} 
-                  setDarkMode={setDarkMode} 
-                  isPremium={isUserPremium} 
+                  colorTheme={colorTheme}
+                  setColorTheme={setColorTheme}
+                  darkMode={darkMode}
+                  setDarkMode={setDarkMode}
+                  isPremium={isUserPremium}
                   currentUserId={userId}
                   currentUserEmail={userEmail}
                   userPlanName={getUserRoleAndPlan(userStats).plan}
@@ -521,9 +521,9 @@ export default function AppRoutes(props: AppRoutesProps) {
                       <CosmicLoader />
                     </div>
                   }>
-                    <LazyAdminDashboard 
-                      quizzes={quizzes} 
-                      lang={lang} 
+                    <LazyAdminDashboard
+                      quizzes={quizzes}
+                      lang={lang}
                       onViewProfile={(creatorId) => { handleSetTab('profile', false, creatorId); }}
                       onEditQuiz={(quiz) => { setQuizToEdit(quiz); handleSetTab('create'); }}
                       onDeleteQuiz={async (quizId) => {
@@ -539,7 +539,7 @@ export default function AppRoutes(props: AppRoutesProps) {
                 </React.Suspense>
               </LazyRouteErrorBoundary>
             </div>
-          
+
         )}
 
     </main>

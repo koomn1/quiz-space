@@ -99,11 +99,11 @@ export default function AppShell(props: AppShellProps) {
           <div className={`theme-animated-bg fixed inset-0 pointer-events-none z-0 overflow-hidden select-none ${isCosmoTab ? 'hidden' : ''}`}>
             {/* Light mode background elements */}
             <div className="absolute inset-0 dark:hidden opacity-30">
-              <div 
+              <div
                 className="absolute -top-40 -left-40 w-[600px] h-[500px] bg-gradient-to-tr from-primary/15 via-emerald-500/5 to-purple-600/10 rounded-full filter blur-[120px] transition-all duration-[20s]"
                 style={{ animation: 'pulse 12s infinite ease-in-out alternate' }}
               />
-              <div 
+              <div
                 className="absolute -bottom-40 -right-40 w-[700px] h-[600px] bg-gradient-to-br from-indigo-500/10 via-teal-400/10 to-rose-500/5 rounded-full filter blur-[140px] transition-all duration-[25s]"
                 style={{ animation: 'pulse 15s infinite ease-in-out alternate-reverse' }}
               />
@@ -135,9 +135,9 @@ export default function AppShell(props: AppShellProps) {
                       <Bell className="w-4 h-4 text-primary animate-bounce" />
                     </div>
                     <div>
-                      <h4 className="font-black text-slate-900 dark:text-slate-100">{lang === 'ar' ? '🏆 فعل إشعارات لوحة المتصدرين الحية!' : '🏆 Enable Live Leaderboard Alerts!'}</h4>
+                      <h4 className="font-black text-slate-900 dark:text-slate-100">{lang === 'ar' ? ' فعل إشعارات لوحة المتصدرين الحية!' : ' Enable Live Leaderboard Alerts!'}</h4>
                       <p className="text-[10.5px] text-slate-500 dark:text-slate-400 font-semibold leading-normal mt-0.5">
-                        {lang === 'ar' 
+                        {lang === 'ar'
                           ? 'احصل على إشعار فوري من المتصفح عندما يقوم طالب آخر بكسر رقمك القياسي واحتلال الصدارة!'
                           : 'Get real-time browser notifications instantly if another player beats your high score on any quiz.'}
                       </p>
@@ -155,7 +155,7 @@ export default function AppShell(props: AppShellProps) {
                       }}
                       className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-[11px] font-black cursor-pointer shadow-sm shadow-primary/20 transition-all hover:scale-103"
                     >
-                      {lang === 'ar' ? 'تفعيل الإشعارات الآن 🔔' : 'Enable Notifications 🔔'}
+                      {lang === 'ar' ? 'تفعيل الإشعارات الآن ' : 'Enable Notifications '}
                     </button>
                     <button
                       onClick={() => {
@@ -186,24 +186,24 @@ export default function AppShell(props: AppShellProps) {
                 </div>
                 <div className="space-y-1 text-right flex-1" style={{ textAlign: lang === 'ar' ? 'right' : 'left' }}>
                   <h5 className="font-display font-black text-xs text-amber-800 dark:text-amber-300 flex items-center gap-1">
-                    <span>{lang === 'ar' ? '🏆 كسر الرقم القياسي للتو!' : '🏆 Leaderboard Record Broken!'}</span>
+                    <span>{lang === 'ar' ? ' كسر الرقم القياسي للتو!' : ' Leaderboard Record Broken!'}</span>
                   </h5>
                   <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">
                     {activePush.body}
                   </p>
                   <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/80 dark:border-slate-700/80 mt-1.5">
-                    <span>{lang === 'ar' ? 'اضغط لتحدي البطل من جديد ⚡' : 'Click to reclaim your throne ⚡'}</span>
+                    <span>{lang === 'ar' ? 'اضغط لتحدي البطل من جديد ' : 'Click to reclaim your throne '}</span>
                     <span className="font-mono">Web Push API</span>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setActivePush(null);
                   }}
                   className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white text-xs"
                 >
-                  ✕
+
                 </button>
               </div>
             )}

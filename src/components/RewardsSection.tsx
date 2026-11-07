@@ -139,7 +139,7 @@ export default function RewardsSection({ userId, lang }: RewardsSectionProps) {
         try {
           const result = await claimDailyChallenge(challenge.id);
           if (result.claimed) {
-            setActionMessage(isAr ? `🎉 تمت إضافة مكافأة «${challenge.nameAr}» تلقائياً: +${result.points || 0} نقطة` : `🎉 Auto-claimed "${challenge.name}": +${result.points || 0} points`);
+            setActionMessage(isAr ? ` تمت إضافة مكافأة «${challenge.nameAr}» تلقائياً: +${result.points || 0} نقطة` : ` Auto-claimed "${challenge.name}": +${result.points || 0} points`);
             await loadSummary();
             break; // Claim one at a time
           }

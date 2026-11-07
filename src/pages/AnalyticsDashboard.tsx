@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Quiz, QuizCompletion } from '../types';
-import { 
+import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie
 } from 'recharts';
-import { 
+import {
   Activity, TrendingUp, Users, Award, BookOpen, Clock, BarChart3, CheckCircle2, Star, Calendar, RefreshCw, ChevronRight, Play, GraduationCap, Flame, Sparkles, Target, ShieldCheck
 } from 'lucide-react';
 
@@ -28,8 +28,8 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   const totalQuizzesSolved = mySolvingCompletions.length;
-  
-  const avgSolvingPercentage = totalQuizzesSolved > 0 
+
+  const avgSolvingPercentage = totalQuizzesSolved > 0
     ? Math.round(
         (mySolvingCompletions.reduce((acc, c) => acc + (c.totalQuestions > 0 ? (c.score / c.totalQuestions) : 0), 0) / totalQuizzesSolved) * 100
       )
@@ -75,7 +75,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
   const totalPlays = globalPlaysOnMyQuizzes.length;
   const totalRatingsCount = myCreatedQuizzes.reduce((acc, q) => acc + (q.ratingsCount || 0), 0);
-  
+
   const creatorAvgRating = myCreatedQuizzes.filter(q => q.ratingsCount > 0).length > 0
     ? (myCreatedQuizzes.reduce((acc, q) => acc + (q.avgRating || 0), 0) / myCreatedQuizzes.filter(q => q.ratingsCount > 0).length).toFixed(1)
     : '5.0';
@@ -138,7 +138,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8" dir={isAr ? 'rtl' : 'ltr'}>
-      
+
       {/* Title block */}
       <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/65 sm:p-6">
         <div className="pointer-events-none absolute -top-16 left-8 h-36 w-36 rounded-full bg-indigo-500/10 blur-3xl" />
@@ -171,7 +171,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
             <GraduationCap className="w-4 h-4" />
             <span>{isAr ? 'مسيرتي التعليمية' : 'Personal Study'}</span>
           </button>
-          
+
           <button
             onClick={() => setActiveTab('creating')}
             aria-pressed={activeTab === 'creating'}
@@ -188,13 +188,13 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
         </div>
       </div>
 
-      
+
         {activeTab === 'solving' ? (
           <div
-            
-            
-            
-            
+
+
+
+
             className="space-y-8"
           >
             {/* SOLVING METRICS GRIDS */}
@@ -266,7 +266,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
+
                 {/* Score progress over time Line Chart */}
                 <div className="uipro-glass-surface lg:col-span-8 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
@@ -279,7 +279,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.1)" />
                         <XAxis dataKey="date" tickLine={false} style={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} />
                         <YAxis tickLine={false} domain={[0, 100]} style={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }} />
-                        <Tooltip 
+                        <Tooltip
                           content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                               const item = payload[0].payload;
@@ -294,11 +294,11 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                             return null;
                           }}
                         />
-                        <Line 
-                          type="monotone" 
-                          dataKey="percentage" 
-                          stroke="#6366f1" 
-                          strokeWidth={4} 
+                        <Line
+                          type="monotone"
+                          dataKey="percentage"
+                          stroke="#6366f1"
+                          strokeWidth={4}
                           dot={{ r: 5, strokeWidth: 2, fill: '#fff' }}
                           activeDot={{ r: 8 }}
                         />
@@ -337,10 +337,10 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
             {totalQuizzesSolved > 0 && (
               <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'سجل المحاولات والأداء التفصيلي 📖' : 'Study Attempt History 📖'}</h3>
+                  <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'سجل المحاولات والأداء التفصيلي ' : 'Study Attempt History '}</h3>
                   <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{totalQuizzesSolved} {isAr ? 'محاولات' : 'Attempts'}</span>
                 </div>
-                
+
                 <div className="overflow-x-auto">
                   <table className="w-full text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <thead>
@@ -378,7 +378,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                                 {completion.rating ? (
                                   <div className="flex items-center text-amber-500 font-bold gap-0.5">
                                     <Star className="w-3 h-3 fill-amber-500" />
-                                    <span className="text-[10px]">{completion.rating} ★</span>
+                                    <span className="text-[10px]">{completion.rating} </span>
                                   </div>
                                 ) : (
                                   <span className="text-[10px] text-slate-400">-</span>
@@ -412,10 +412,10 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
           </div>
         ) : (
           <div
-            
-            
-            
-            
+
+
+
+
             className="space-y-8"
           >
             {/* CREATED QUIZZES METRICS GRIDS */}
@@ -435,7 +435,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 },
                 {
                   label: isAr ? 'متوسط تقييم اختباراتي' : 'Average Rating',
-                  val: `${creatorAvgRating} ★`,
+                  val: `${creatorAvgRating} `,
                   icon: <Star className="w-5 h-5 text-amber-500" />,
                   bg: 'bg-amber-500/5 border-amber-500/10'
                 },
@@ -472,7 +472,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
+
                 {/* Creator Quiz Performance Plays (Bar) */}
                 <div className="uipro-glass-surface lg:col-span-7 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
@@ -481,8 +481,8 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                   </h3>
                   <div className="h-[280px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        data={myCreatedQuizzes.map(q => ({ name: q.title, plays: q.totalPlays || 0 }))} 
+                      <BarChart
+                        data={myCreatedQuizzes.map(q => ({ name: q.title, plays: q.totalPlays || 0 }))}
                         margin={{ left: -20, right: 5, top: 10, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.1)" />
@@ -564,7 +564,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
             {myCreatedQuizzes.length > 0 && (
               <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'تحليلات الاختبارات المؤلّفة 🏫' : 'Authoring Performance Index 🏫'}</h3>
+                  <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'تحليلات الاختبارات المؤلّفة ' : 'Authoring Performance Index '}</h3>
                   <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{myCreatedQuizzes.length} {isAr ? 'اختبار' : 'Quizzes'}</span>
                 </div>
 
@@ -591,7 +591,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                           <td className="px-6 py-4.5">
                             <div className="flex items-center text-amber-500 font-bold gap-0.5">
                               <Star className="w-3 h-3 fill-amber-500" />
-                              <span className="font-mono text-[10.5px]">{q.avgRating || '5.0'} ★ ({q.ratingsCount || 0})</span>
+                              <span className="font-mono text-[10.5px]">{q.avgRating || '5.0'}  ({q.ratingsCount || 0})</span>
                             </div>
                           </td>
                           <td className="px-6 py-4.5">
@@ -613,7 +613,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
             )}
           </div>
         )}
-      
+
 
     </div>
   );

@@ -20,15 +20,15 @@ export default function PopupBlockedModal({
     <OverlayPortal>
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain p-4 bg-slate-900/70 dark:bg-[#05060b]/95 backdrop-blur-md">
       <div
-        
-        
-        
+
+
+
         className="w-full max-w-md bg-white dark:bg-[#111827] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border border-rose-100 dark:border-rose-950/80 text-right relative overflow-hidden"
         dir={isAr ? 'rtl' : 'ltr'}
         style={{ textAlign: isAr ? 'right' : 'left' }}
       >
         <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl pointer-events-none" />
-        
+
         <div className={`flex ${isAr ? 'justify-start' : 'justify-end'}`}>
           <button
             onClick={onClose}
@@ -43,13 +43,13 @@ export default function PopupBlockedModal({
             <AlertTriangle className="w-7 h-7" />
           </div>
           <h3 className="font-display font-black text-xl text-slate-900 dark:text-slate-100 leading-tight">
-            {isAr 
-              ? 'تم حظر نافذة تسجيل الدخول من متصفحك! ⚠️' 
-              : 'Sign-in Pop-up Blocked! ⚠️'}
+            {isAr
+              ? 'تم حظر نافذة تسجيل الدخول من متصفحك! '
+              : 'Sign-in Pop-up Blocked! '}
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
-            {isAr 
-              ? 'يقوم المتصفح بحظر النوافذ المنبثقة تلقائياً لوجود التطبيق حالياً داخل إطار (iframe) آمن.' 
+            {isAr
+              ? 'يقوم المتصفح بحظر النوافذ المنبثقة تلقائياً لوجود التطبيق حالياً داخل إطار (iframe) آمن.'
               : 'Your browser is blocking pop-ups because the application is running inside a secure preview iframe.'}
           </p>
         </div>
@@ -59,8 +59,8 @@ export default function PopupBlockedModal({
             {isAr ? 'الحل الفعّال والسريع:' : 'Quick & Easy Solution:'}
           </p>
           <p className="leading-relaxed font-semibold">
-            {isAr 
-              ? 'افتح التطبيق في علامة تبويب كاملة ومستقلة لتسجيل الدخول بأمان وتجنب عوائق الحظر المطبقة من المتصفح.' 
+            {isAr
+              ? 'افتح التطبيق في علامة تبويب كاملة ومستقلة لتسجيل الدخول بأمان وتجنب عوائق الحظر المطبقة من المتصفح.'
               : 'Open the application in a separate full tab to sign in securely and bypass iframe constraints.'}
           </p>
         </div>
@@ -81,7 +81,7 @@ export default function PopupBlockedModal({
             onClick={onClose}
             className="w-full py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-330 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-all cursor-pointer"
           >
-            {isAr ? 'إغلاق ومتابعة كزائر 👤' : 'Close & Continue as Guest 👤'}
+            {isAr ? 'إغلاق ومتابعة كزائر ' : 'Close & Continue as Guest '}
           </button>
         </div>
       </div>

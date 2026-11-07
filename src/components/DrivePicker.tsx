@@ -13,7 +13,7 @@ interface DrivePickerProps {
 
 export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: DrivePickerProps) {
   const isAr = lang === 'ar';
-  
+
   const [accessToken, setAccessToken] = useState<string | null>(() => {
     try {
       return sessionStorage.getItem('gdrive_access_token');
@@ -71,8 +71,8 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
       if (err.message?.includes('popup_closed') || err.message?.includes('access_denied')) {
         setError(
           isAr
-            ? '💡 يبدو أن نافذة تسجيل الدخول قد أُغلقت أو تم حظرها من قِبل المتصفح. نظرًا لأنك في وضع المعاينة (iframe)، يرجى فتح التطبيق في علامة تبويب جديدة بالضغط على زر "فتح في علامة تبويب جديدة" أعلى اليمين والمحاولة من هناك لتجنب قيود الأمان.'
-            : '💡 The sign-in popup was closed or blocked. Because you are inside the development preview iframe, please open the app in a new tab using the top-right button, then authorize Google Drive from there.'
+            ? ' يبدو أن نافذة تسجيل الدخول قد أُغلقت أو تم حظرها من قِبل المتصفح. نظرًا لأنك في وضع المعاينة (iframe)، يرجى فتح التطبيق في علامة تبويب جديدة بالضغط على زر "فتح في علامة تبويب جديدة" أعلى اليمين والمحاولة من هناك لتجنب قيود الأمان.'
+            : ' The sign-in popup was closed or blocked. Because you are inside the development preview iframe, please open the app in a new tab using the top-right button, then authorize Google Drive from there.'
         );
       } else {
         setError(isAr ? 'فشلت عملية المصادقة مع Google Drive.' : 'Google Drive authorization failed.');
@@ -93,7 +93,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
       if (searchDriveQuery.trim()) {
         q += ` and name contains '${searchDriveQuery.replace(/'/g, "\\'")}'`;
       }
-      
+
       const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&pageSize=15&fields=files(id,name,mimeType,size,modifiedTime)`;
       const res = await fetch(url, {
         headers: {
@@ -138,7 +138,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
     try {
       let downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
       let finalMimeType = mimeType;
-      
+
       // If it's a native Google Doc, we export it as PDF
       if (mimeType === 'application/vnd.google-apps.document') {
         downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=application/pdf`;
@@ -191,19 +191,19 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
         <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto overscroll-contain p-4">
           {/* Backdrop */}
           <div
-            
-            
-            
+
+
+
             className="fixed inset-0 bg-[#06030c]/85 backdrop-blur-md"
             onClick={() => { if (!isDownloading) onClose(); }}
           />
 
           {/* Modal Body */}
           <div
-            
-            
-            
-            
+
+
+
+
             className="uipro-glass-surface bg-[#0c071e]/90 backdrop-blur-2xl border border-violet-400/25 rounded-[28px] shadow-[0_0_50px_rgba(155,81,224,0.2)] w-full max-w-lg p-6 relative overflow-hidden text-start font-sans text-white"
             dir={isAr ? 'rtl' : 'ltr'}
           >
@@ -226,7 +226,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                     {isAr ? 'مستندات Google Drive السحابية' : 'Google Drive Cloud Documents'}
                   </h4>
                   <p className="text-[10px] text-slate-400">
-                    {accessToken 
+                    {accessToken
                       ? (isAr ? 'متصل ومؤمن بالكامل بالبروتوكول السحابي' : 'Fully connected via secure cloud protocol')
                       : (isAr ? 'الوصول آمن عبر OAuth 2.0' : 'Authorized securely via OAuth 2.0')}
                   </p>
@@ -311,8 +311,8 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
 
                 {window.self !== window.top && (
                   <p className="text-[10px] text-amber-400/80 max-w-xs mx-auto leading-relaxed border border-amber-500/15 bg-amber-500/5 p-2.5 rounded-xl text-center">
-                    ⚠️ {isAr 
-                      ? 'تنبيه المعاينة: يرجى فتح التطبيق في نافذة مستقلة (زر "فتح في علامة تبويب جديدة" أعلى اليمين) لتتمكن من ربط Google Drive بنجاح، حيث يحظر المتصفح النوافذ المنبثقة داخل الإطارات.' 
+                     {isAr
+                      ? 'تنبيه المعاينة: يرجى فتح التطبيق في نافذة مستقلة (زر "فتح في علامة تبويب جديدة" أعلى اليمين) لتتمكن من ربط Google Drive بنجاح، حيث يحظر المتصفح النوافذ المنبثقة داخل الإطارات.'
                       : 'Developer Preview Note: Please open the app in a new tab using the top-right button to connect Google Drive successfully, as browsers block popups inside iframes.'}
                   </p>
                 )}
@@ -354,7 +354,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                   ) : (
                     files.map((f) => (
                       <div
-                        
+
                         onClick={() => handleImportFile(f.id, f.name, f.mimeType)}
                         className="flex items-center justify-between p-3.5 rounded-2xl border border-white/5 bg-white/[0.03] backdrop-blur-sm hover:bg-primary/10 hover:border-primary/30 transition-all cursor-pointer group shadow-xs"
                       >
@@ -369,7 +369,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="text-xs font-black text-slate-500 group-hover:text-primary transition-colors ps-2 flex items-center gap-1 shrink-0">
                           <span>{isAr ? 'استيراد' : 'Import'}</span>
                           <ArrowRight className="w-3.5 h-3.5 transition-transform rtl:rotate-180 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
@@ -381,7 +381,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
 
                 <div className="flex items-center justify-between text-[10px] text-slate-500 pt-2 border-t border-slate-850">
                   <span>Quiz Space Enterprise v1.5</span>
-                  <button 
+                  <button
                     onClick={() => {
                       setAccessToken(null);
                       try { sessionStorage.removeItem('gdrive_access_token'); } catch (_) {}

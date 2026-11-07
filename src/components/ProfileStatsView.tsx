@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-  BadgeCheck, Layers, Clipboard, CheckCircle, Calendar, Play, BookOpen, 
-  Star, RefreshCw, UserCheck, ShieldAlert, Sparkles, UploadCloud, 
-  Check, X, Shield, Lock, CreditCard, ThumbsUp, ThumbsDown, Share2, 
+import {
+  BadgeCheck, Layers, Clipboard, CheckCircle, Calendar, Play, BookOpen,
+  Star, RefreshCw, UserCheck, ShieldAlert, Sparkles, UploadCloud,
+  Check, X, Shield, Lock, CreditCard, ThumbsUp, ThumbsDown, Share2,
   MapPin, Mail, Languages, Crown, Globe, Twitter, Instagram, Link as LinkIcon, Trophy,
   Flame, Clock, User, Pencil, Save, Copy
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
-  CartesianGrid, Tooltip 
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
+  CartesianGrid, Tooltip
 } from 'recharts';
 import { Quiz, QuizCompletion, UserStats } from '../types';
 import { getLearningStreakStatus, isTrialSubscription, saveUserProfile, updateBadgeAndNameColor } from '../lib/db';
@@ -47,8 +47,8 @@ interface ProfileStatsViewProps {
 
 export function TelegramBadge({ className = "w-5 h-5", colorClass = "text-sky-400" }: { className?: string; colorClass?: string }) {
   return (
-    <svg 
-      className={`${className} ${colorClass} fill-current shrink-0 select-none inline-block align-middle`} 
+    <svg
+      className={`${className} ${colorClass} fill-current shrink-0 select-none inline-block align-middle`}
       viewBox="0 0 24 24"
       style={{ filter: "drop-shadow(0 1.5px 3px rgba(56, 189, 248, 0.45))" }}
     >
@@ -59,30 +59,30 @@ export function TelegramBadge({ className = "w-5 h-5", colorClass = "text-sky-40
 
 const getBadgesForPlan = (planId: string | undefined, isPremium: boolean): { icon: string; nameAr: string; nameEn: string; color: string }[] => {
   const freeBadges = [
-    { icon: '✔', nameAr: 'توثيق شارة تليجرام', nameEn: 'Telegram Star Badge', color: 'text-sky-400 bg-sky-500/10' },
-    { icon: '🛡️', nameAr: 'درع العلم البرونزي', nameEn: 'Savant Shield', color: 'bg-zinc-700 shadow-zinc-700/20' }
+    { icon: '', nameAr: 'توثيق شارة تليجرام', nameEn: 'Telegram Star Badge', color: 'text-sky-400 bg-sky-500/10' },
+    { icon: '', nameAr: 'درع العلم البرونزي', nameEn: 'Savant Shield', color: 'bg-zinc-700 shadow-zinc-700/20' }
   ];
 
   const silverBadges = [
-    { icon: '✔', nameAr: 'علامة تحقق فضية تليجرام', nameEn: 'Silver Checked Star', color: 'text-sky-400 bg-sky-500/10' },
-    { icon: '🛡️', nameAr: 'درع الفضاء الفضي', nameEn: 'Silver Cosmic Shield', color: 'bg-indigo-600 shadow-indigo-600/20' },
+    { icon: '', nameAr: 'علامة تحقق فضية تليجرام', nameEn: 'Silver Checked Star', color: 'text-sky-400 bg-sky-500/10' },
+    { icon: '', nameAr: 'درع الفضاء الفضي', nameEn: 'Silver Cosmic Shield', color: 'bg-indigo-600 shadow-indigo-600/20' },
     { icon: '⭐', nameAr: 'نجمة الطالب الفضي', nameEn: 'Student Star', color: 'bg-cyan-500 shadow-cyan-500/20' },
     ...freeBadges
   ];
 
   const goldBadges = [
-    { icon: '👑', nameAr: 'تاج الفضاء الذهبي', nameEn: 'AI Crown', color: 'bg-amber-500 shadow-amber-500/20' },
-    { icon: '🏅', nameAr: 'ميدالية التفوق الذهبية', nameEn: 'Excellence Medal', color: 'bg-yellow-500 shadow-yellow-500/20' },
-    { icon: '🔥', nameAr: 'لهيب المعرفة المشتعل', nameEn: 'Fierce Scholar', color: 'bg-orange-500 shadow-orange-500/20' },
-    { icon: '🌟', nameAr: 'النجم الساطع الذهبي', nameEn: 'Radiant Stella', color: 'bg-amber-600 shadow-amber-600/20' },
+    { icon: '', nameAr: 'تاج الفضاء الذهبي', nameEn: 'AI Crown', color: 'bg-amber-500 shadow-amber-500/20' },
+    { icon: '', nameAr: 'ميدالية التفوق الذهبية', nameEn: 'Excellence Medal', color: 'bg-yellow-500 shadow-yellow-500/20' },
+    { icon: '', nameAr: 'لهيب المعرفة المشتعل', nameEn: 'Fierce Scholar', color: 'bg-orange-500 shadow-orange-500/20' },
+    { icon: '', nameAr: 'النجم الساطع الذهبي', nameEn: 'Radiant Stella', color: 'bg-amber-600 shadow-amber-600/20' },
     ...silverBadges
   ];
 
   const diamondBadges = [
-    { icon: '💎', nameAr: 'الماس الكوني الثمين', nameEn: 'Cosmic Diamond', color: 'bg-pink-500 shadow-pink-500/20' },
-    { icon: '🪐', nameAr: 'حكيم الكواكب والمدارات', nameEn: 'Planet Master', color: 'bg-violet-600 shadow-violet-600/20' },
-    { icon: '✨', nameAr: 'شرارة السديم المضيئة', nameEn: 'Nebula Sparkle', color: 'bg-emerald-500 shadow-emerald-500/20' },
-    { icon: '⚡', nameAr: 'صاعقة البرق الفضائية', nameEn: 'Superbolt', color: 'bg-purple-600 shadow-purple-600/20' },
+    { icon: '', nameAr: 'الماس الكوني الثمين', nameEn: 'Cosmic Diamond', color: 'bg-pink-500 shadow-pink-500/20' },
+    { icon: '', nameAr: 'حكيم الكواكب والمدارات', nameEn: 'Planet Master', color: 'bg-violet-600 shadow-violet-600/20' },
+    { icon: '', nameAr: 'شرارة السديم المضيئة', nameEn: 'Nebula Sparkle', color: 'bg-emerald-500 shadow-emerald-500/20' },
+    { icon: '', nameAr: 'صاعقة البرق الفضائية', nameEn: 'Superbolt', color: 'bg-purple-600 shadow-purple-600/20' },
     ...goldBadges
   ];
 
@@ -103,10 +103,10 @@ export interface BackgroundOption {
   id: string;
   nameAr: string;
   nameEn: string;
-  classes: string; 
-  glowingSphere1: string; 
-  glowingSphere2: string; 
-  iconBg: string; 
+  classes: string;
+  glowingSphere1: string;
+  glowingSphere2: string;
+  iconBg: string;
 }
 
 export const backgroundOptions: BackgroundOption[] = [
@@ -338,7 +338,7 @@ export default function ProfileStatsView({
     setInfoCustomId(profileData?.customId || '');
     setCustomIdError('');
     setInfoBio(profileData?.bio || '');
-    
+
     // Keep profile text separate from the serialized customization payload so
     // saving this lightweight editor never erases the selected cover, social
     // links, animation settings, or custom cover URL.
@@ -350,7 +350,7 @@ export default function ProfileStatsView({
         ? savedLocation.slice(backgroundMarker + 5).split('||')[0] || 'cosmic'
         : 'cosmic',
     );
-    
+
     setInfoEmail(profileData?.email || '');
     // Load the REAL badge selection (badge_tier/name_color/badge_color columns) —
     // these are what UserBadge actually renders on the profile header.
@@ -437,9 +437,9 @@ export default function ProfileStatsView({
 
   // Compute 100% Genuine stats dynamically
   const quizzesTaken = completions.length;
-  
+
   // Calculate average accuracy dynamically
-  const overallAccuracy = completions.length > 0 
+  const overallAccuracy = completions.length > 0
     ? Math.round((completions.reduce((acc, c) => acc + (c.totalQuestions > 0 ? (c.score / c.totalQuestions) : 0), 0) / completions.length) * 100)
     : 0;
 
@@ -450,13 +450,13 @@ export default function ProfileStatsView({
     : completions.reduce((acc, c) => acc + (c.score * 10 + 10), 0);
 
   const currentStreak = isOwnProfile ? learningStreak : 0;
-  
+
   // Level is derived from persisted XP: every 100 XP advances one level.
   const calculatedLevel = 1 + Math.floor(totalPoints / 100);
 
   // Generate dynamic space rank
-  const currentRank = completions.length > 0 
-    ? `#${Math.max(1, 10000 - (completions.length * 180 + creations.length * 320))}` 
+  const currentRank = completions.length > 0
+    ? `#${Math.max(1, 10000 - (completions.length * 180 + creations.length * 320))}`
     : "#9,999";
 
   const username = profileData?.customId || (profileData?.userId ? `user_${profileData.userId.substring(0, 8)}` : "academic_user");
@@ -474,20 +474,20 @@ export default function ProfileStatsView({
   // Generate real activities dynamically
   const getDynamicActivities = () => {
     const activities: { id: string; title: string; score: string; time: string; points: string }[] = [];
-    
+
     // Sort completions by date descending
     const sortedCompletions = [...completions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    
+
     sortedCompletions.slice(0, 4).forEach((comp, idx) => {
       const completionPercentage = comp.totalQuestions > 0 ? Math.round((comp.score / comp.totalQuestions) * 100) : 0;
       const pointsEarned = comp.score * 10 + 10;
-      
+
       const date = new Date(comp.createdAt);
       const diffMs = Date.now() - date.getTime();
       const diffMins = Math.floor(diffMs / 60000);
       const diffHours = Math.floor(diffMs / 3600000);
       const diffDays = Math.floor(diffMs / 86400000);
-      
+
       let relativeTime = '';
       if (isAr) {
         if (diffMins < 60) {
@@ -509,8 +509,8 @@ export default function ProfileStatsView({
 
       activities.push({
         id: comp.id || `comp-${idx}`,
-        title: isAr 
-          ? `أنهى اختبار «${comp.quizTitle}»` 
+        title: isAr
+          ? `أنهى اختبار «${comp.quizTitle}»`
           : `Completed "${comp.quizTitle}"`,
         score: `${completionPercentage}%`,
         time: relativeTime,
@@ -525,11 +525,11 @@ export default function ProfileStatsView({
         const diffMs = Date.now() - date.getTime();
         const diffDays = Math.floor(diffMs / 86400000);
         let relativeTime = isAr ? `قبل ${Math.max(1, diffDays)} يوم` : `${Math.max(1, diffDays)}d ago`;
-        
+
         activities.push({
           id: cr.id || `cr-${idx}`,
-          title: isAr 
-            ? `أنشأ اللغز «${cr.title}» في المنصة` 
+          title: isAr
+            ? `أنشأ اللغز «${cr.title}» في المنصة`
             : `Created quiz "${cr.title}"`,
           score: isAr ? 'منشئ' : 'Creator',
           time: relativeTime,
@@ -558,31 +558,31 @@ export default function ProfileStatsView({
 
   return (
     <div className="space-y-8 animate-fade-in text-right" dir={isAr ? "rtl" : "ltr"}>
-      
+
       {/* 1. Header identity Cosmic Space banner with custom user-selected background */}
       <div className={`relative overflow-hidden rounded-3xl text-white shadow-[0_24px_60px_rgba(0,0,0,0.85)] p-6 md:p-8 border transition-all duration-500 ${customBg.classes}`}>
-        
+
         {/* Animated orbits and stars for cosmological atmosphere */}
         <div className={`absolute top-0 right-0 w-80 h-80 rounded-full filter blur-3xl pointer-events-none transition-all duration-500 ${customBg.glowingSphere1}`} />
         <div className={`absolute -bottom-10 -left-10 w-64 h-64 rounded-full filter blur-2xl pointer-events-none transition-all duration-500 ${customBg.glowingSphere2}`} />
-        
+
         {/* Glowing Planet in background */}
         <div className="absolute top-8 right-16 w-14 h-14 rounded-full bg-gradient-to-tr from-purple-800 to-indigo-950 opacity-20 blur-[1px]" />
         <div className="absolute top-[52px] right-[40px] w-24 h-4 rounded-full border border-purple-500/10 rotate-12 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="flex flex-col md:flex-row items-center gap-6 w-full lg:w-auto">
-            
+
             {/* Round Avatar Container with dynamic glowing border and Level Badge */}
             <div className="relative flex-shrink-0">
-              <div 
+              <div
                 onClick={handleAvatarClick}
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-800 overflow-hidden bg-gradient-to-tr from-slate-900 via-[#1e1b4b] to-black shadow-lg relative cursor-pointer group/avatar transition-all duration-300 hover:scale-105 flex items-center justify-center"
               >
                 {profileData?.photoURL ? (
-                  <img 
-                    src={profileData.photoURL} 
-                    alt={profileData?.name} 
+                  <img
+                    src={profileData.photoURL}
+                    alt={profileData?.name}
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
@@ -591,13 +591,13 @@ export default function ProfileStatsView({
                     {(profileData?.name || "A").trim().charAt(0).toUpperCase()}
                   </span>
                 )}
-                
+
                 {isUploadingPhoto && (
                   <div className="absolute inset-0 bg-black/75 flex items-center justify-center">
                     <RefreshCw className="w-5 h-5 animate-spin text-purple-400" />
                   </div>
                 )}
-                
+
                 {isOwnProfile && (
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex flex-col items-center justify-center">
                     <UploadCloud className="w-5 h-5 text-white" />
@@ -605,7 +605,7 @@ export default function ProfileStatsView({
                   </div>
                 )}
               </div>
-              
+
               {/* Thick Polygon Badge computed dynamically from real XP */}
               <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r ${customBg.iconBg} text-white border border-slate-850 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 transition-all duration-500`}>
                 <span>LVL</span>
@@ -661,7 +661,7 @@ export default function ProfileStatsView({
                       <div className="flex items-center justify-between text-xs font-black mb-2">
                         <span className={`flex items-center gap-1.5 ${isUrgent ? 'text-red-400' : 'text-indigo-300'}`}>
                           <Sparkles className={`w-3.5 h-3.5 ${isUrgent ? 'text-red-500 animate-bounce' : 'text-amber-400 animate-pulse'}`} />
-                          <span>{isAr ? (isUrgent ? `⚠️ تنبيه: ينتهي العرض قريباً (${totalDays} يوم)` : `فترة تجريبية نشطة (${totalDays} يوم)`) : `Active Trial (${totalDays} Days)`}</span>
+                          <span>{isAr ? (isUrgent ? ` تنبيه: ينتهي العرض قريباً (${totalDays} يوم)` : `فترة تجريبية نشطة (${totalDays} يوم)`) : `Active Trial (${totalDays} Days)`}</span>
                         </span>
                         <span className={`${isUrgent ? 'text-red-400 bg-red-500/10 border-red-500/40 animate-pulse' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'} border px-2.5 py-0.5 rounded-full text-[11px]`}>
                           {isAr ? `متبقي ${diffDays} يوم فقط` : `${diffDays} days remaining`}
@@ -705,7 +705,7 @@ export default function ProfileStatsView({
               <div className="flex flex-col sm:flex-row sm:items-center justify-center md:justify-start gap-3">
                 <h3 className="font-display font-black text-2xl sm:text-3xl tracking-tight flex items-center gap-2 flex-wrap">
                   <span>{profileData?.name || (isAr ? "طالب متميز" : "Star Student")}</span>
-                  
+
                   <ProfileQuickBadgeRail
                     isAr={isAr}
                     streak={currentStreak}
@@ -715,7 +715,7 @@ export default function ProfileStatsView({
                     isPremium={isUserPremium}
                   />
                 </h3>
-                
+
                 {isOwnProfile && (
                   <button
                     onClick={handleOpenEditInfo}
@@ -730,9 +730,9 @@ export default function ProfileStatsView({
               {/* Username tag */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-center md:justify-start gap-2.5">
                 <p className="text-xs font-mono text-slate-400 font-medium">@{username}</p>
-                
+
                 {/* Copyable Account ID to send to teacher */}
-                <div 
+                <div
                   onClick={() => handleCopyIdPopup(profileData?.userId || '')}
                   className="inline-flex items-center gap-1 bg-slate-900/80 border border-slate-800/80 hover:bg-slate-850 hover:border-slate-700 hover:text-white transition-all text-[10px] font-bold text-slate-350 px-2 py-0.5 rounded-lg cursor-pointer pb-1 w-fit mx-auto md:mx-0"
                   title={isAr ? "معرّف التفعيل السريع - اضغط للنسخ والإرسال للمعلم" : "Activation ID - Click to Copy"}
@@ -745,8 +745,8 @@ export default function ProfileStatsView({
 
               {/* Dynamic Bio describing user */}
               <p className="text-xs text-slate-400 max-w-sm font-semibold leading-relaxed">
-                {profileData?.bio || (isAr 
-                  ? 'محبي وعاشق للاختبارات وتحصيل المعرفة المستمر. استكشاف فضاء العلم والأسئلة اختباراً تلو الآخر.' 
+                {profileData?.bio || (isAr
+                  ? 'محبي وعاشق للاختبارات وتحصيل المعرفة المستمر. استكشاف فضاء العلم والأسئلة اختباراً تلو الآخر.'
                   : 'Quiz lover & knowledge seeker. Exploring space of knowledge one quiz at a time.')}
               </p>
 
@@ -756,7 +756,7 @@ export default function ProfileStatsView({
                   <MapPin className="w-3.5 h-3.5 text-purple-400" />
                   <span>{actualLocationDisplay || (isAr ? 'القاهرة، مصر' : 'Cairo, Egypt')}</span>
                 </span>
-                
+
                 {profileData?.email && (
                   <span className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-850 px-2 py-0.5 rounded-lg">
                     <Mail className="w-3.5 h-3.5 text-purple-400" />
@@ -767,7 +767,7 @@ export default function ProfileStatsView({
                 <span className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-850 px-2 py-0.5 rounded-lg">
                   <Calendar className="w-3.5 h-3.5 text-purple-400" />
                   <span>
-                    {profileData?.joinedDate 
+                    {profileData?.joinedDate
                       ? `${isAr ? 'انضم في ' : 'Joined '}${new Date(profileData.joinedDate).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'long' })}`
                       : (isAr ? 'انضم يونيو 2026' : 'Joined Jun 2026')}
                   </span>
@@ -804,7 +804,7 @@ export default function ProfileStatsView({
 
       {/* 2. Highlight Stats Metrics Row of 5 Beautiful Pitch-Black Solid Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
-        
+
         {/* Card 1: Quizzes Taken */}
         <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-850 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-purple-500/40 transition-colors shadow-lg">
           <div className="p-2 bg-purple-500/10 rounded-xl text-purple-400 mb-1">
@@ -880,11 +880,11 @@ export default function ProfileStatsView({
           { id: 'activity', label: isAr ? 'سجل النشاط' : 'Activity' }
         ].map(tab => (
           <button
-            
+
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === tab.id 
-                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/15' 
+              activeTab === tab.id
+                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/15'
                 : 'text-slate-500 hover:text-slate-850 dark:text-slate-400 dark:hover:text-slate-200 bg-white/5 border border-transparent hover:bg-white/10 dark:hover:bg-slate-850'
             }`}
           >
@@ -894,20 +894,20 @@ export default function ProfileStatsView({
       </div>
 
       {/* 4. Multi-view Content displays */}
-      
-        
+
+
         {/* OVERVIEW TAB: Spectacular Two-Column Layout from Screenshot */}
         {activeTab === 'overview' && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="grid grid-cols-1 lg:grid-cols-12 gap-6"
           >
             {/* Left Column (Span 5): About Me & Badges Grid */}
             <div className="lg:col-span-5 space-y-6">
-              
+
               {/* About Me Card */}
               <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
                 <div className="flex items-center gap-2 border-b border-slate-150 dark:border-slate-850 pb-3 justify-end text-right">
@@ -915,7 +915,7 @@ export default function ProfileStatsView({
                   <UserCheck className="w-4 h-4 text-purple-400" />
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed text-right">
-                  {profileData?.bio || (isAr 
+                  {profileData?.bio || (isAr
                     ? 'أنا شغوف جداً بالتعلم الذاتي وتحدي نفسي بالاختبارات المتنوعة. أجد متعتي الكبرى في استكشاف العلوم، التاريخ، والتقنيات الحديثة.'
                     : "I'm passionate about learning new things and challenging myself with quizzes. Science, History and Technology are my favorite categories.")}
                 </p>
@@ -933,7 +933,7 @@ export default function ProfileStatsView({
                   </div>
                   <div className="flex items-center justify-between text-right">
                     <span className="text-slate-300 font-mono">
-                      {profileData?.joinedDate 
+                      {profileData?.joinedDate
                         ? new Date(profileData.joinedDate).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })
                         : (isAr ? 'يونيو 2026' : 'June 2026')}
                     </span>
@@ -988,7 +988,7 @@ export default function ProfileStatsView({
 
             {/* Right Column (Span 7): Recent Activity & Top Categories Progress Area */}
             <div className="lg:col-span-7 space-y-6">
-              
+
               {/* Recent Activity Timeline Block */}
               <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
                 <div className="flex items-center justify-between border-b border-slate-150 dark:border-slate-850 pb-3 flex-row-reverse text-right">
@@ -1028,7 +1028,7 @@ export default function ProfileStatsView({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                  
+
                   {/* Left component: Categories bars */}
                   <div className="space-y-3.5 order-2 md:order-1 text-right">
                     {[
@@ -1089,7 +1089,7 @@ export default function ProfileStatsView({
             <div className="lg:col-span-12">
               <div className="relative bg-gradient-to-r from-purple-50/50 via-white to-slate-50/50 dark:from-purple-950/20 dark:via-[#050507] dark:to-slate-900/60 p-6 rounded-2xl border border-slate-200 dark:border-[#231b46] flex flex-col sm:flex-row items-center justify-between gap-4 overflow-hidden shadow-md dark:shadow-xl">
                 <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
-                
+
                 <div className="flex items-start gap-3 flex-row-reverse text-right">
                   <span className="text-4xl text-purple-500/40 font-serif leading-none select-none">“</span>
                   <div className="space-y-1 text-right flex-1">
@@ -1117,10 +1117,10 @@ export default function ProfileStatsView({
         {/* QUIZZES TAB: Created Quizzes */}
         {activeTab === 'quizzes' && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="space-y-4 text-right"
           >
             {creations.length === 0 ? (
@@ -1133,7 +1133,7 @@ export default function ProfileStatsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {creations.map((quiz) => (
                   <div
-                     
+
                      className="p-5 rounded-2xl bg-white dark:bg-[#0f1225]/50 border border-slate-150 dark:border-[#1f2648]/65 space-y-3 relative overflow-hidden flex flex-col justify-between shadow-xs hover:border-primary/55 transition-colors"
                   >
                     <div className="space-y-1.5">
@@ -1183,10 +1183,10 @@ export default function ProfileStatsView({
         {/* ACHIEVEMENTS TAB */}
         {activeTab === 'achievements' && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="space-y-4 text-right"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1197,7 +1197,7 @@ export default function ProfileStatsView({
                 <div className="space-y-1 flex-1 text-right">
                   <h5 className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'رائد الفضاء الصاعد' : 'Rising Space Cadet'}</h5>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'أنهيت بنجاح ما يزيد عن 10 اختبارات بمستويات دقة فوق الـ 90%.' : 'Passed 10 or more quizzes with a score of 90% or higher.'}</p>
-                  <span className="inline-block text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ✔' : 'Verified Achievement ✔'}</span>
+                  <span className="inline-block text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ' : 'Verified Achievement '}</span>
                 </div>
               </div>
 
@@ -1208,7 +1208,7 @@ export default function ProfileStatsView({
                 <div className="space-y-1 flex-1 text-right">
                   <h5 className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'الأستاذ البارز' : 'Knowledge Maestro'}</h5>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'قمت بصناعة ونشر 5 اختبارات متميزة حصدت تفاعلاً يزيد عن 100 محاولة.' : 'Created 5 quizzes with above 100 plays cumulative.'}</p>
-                  <span className="inline-block text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ✔' : 'Verified Achievement ✔'}</span>
+                  <span className="inline-block text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ' : 'Verified Achievement '}</span>
                 </div>
               </div>
             </div>
@@ -1218,10 +1218,10 @@ export default function ProfileStatsView({
         {/* BOOKMARKS TAB */}
         {activeTab === 'bookmarks' && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="space-y-4 text-right"
           >
             {(!profileData?.ratedQuestions || profileData.ratedQuestions.length === 0) ? (
@@ -1236,7 +1236,7 @@ export default function ProfileStatsView({
                   const isLike = rating.ratingValue === 'like';
                   return (
                     <div
-                      
+
                       className="p-4 rounded-xl bg-white dark:bg-[#0f1225]/40 border border-slate-150 dark:border-[#1f2648]/80 space-y-2 text-right hover:shadow-2xs transition-shadow"
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -1244,15 +1244,15 @@ export default function ProfileStatsView({
                           {rating.questionText}
                         </p>
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                          isLike 
-                            ? 'bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25' 
+                          isLike
+                            ? 'bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25'
                             : 'bg-red-500/5 text-red-600 dark:text-red-400 border border-red-500/25'
                         }`}>
                           <ThumbsUp className="w-3 h-3 fill-current" />
                           <span>{isLike ? (isAr ? 'أعجبني' : 'Liked') : (isAr ? 'لم يعجبني' : 'Disliked')}</span>
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1.5 border-t border-slate-105 dark:border-slate-800">
                         <span>{isAr ? 'من اختبار:' : 'From Quiz:'} <strong>{rating.quizTitle}</strong></span>
                         <span className="font-mono">{new Date(rating.createdAt).toLocaleDateString('ar-EG', { day: 'numeric', month: 'numeric' })}</span>
@@ -1268,10 +1268,10 @@ export default function ProfileStatsView({
         {/* ACTIVITY TAB: completions list */}
         {activeTab === 'activity' && (
           <div
-            
-            
-            
-            
+
+
+
+
             className="space-y-4 text-right"
           >
             {completions.length === 0 ? (
@@ -1286,7 +1286,7 @@ export default function ProfileStatsView({
                   const percent = Math.round((comp.score / comp.totalQuestions) * 100);
                   return (
                     <div
-                      
+
                       className="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-[#0f1225]/40 border border-slate-150 dark:border-[#1f2648]/80 shadow-2xs hover:shadow-xs transition-shadow"
                     >
                       <div className="space-y-1 text-right">
@@ -1313,22 +1313,22 @@ export default function ProfileStatsView({
           </div>
         )}
 
-      
+
 
       {/* 5. Custom edit details and verification marks Modal */}
-      
+
         {isEditingInfo && (
           <OverlayPortal>
           <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain p-4 bg-black/80 backdrop-blur-md">
-            <div 
-              
-              
-              
-              
+            <div
+
+
+
+
               className="my-auto w-full max-w-lg max-h-[90dvh] bg-[#070709] border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-y-auto overflow-x-hidden text-right"
               dir={isAr ? "rtl" : "ltr"}
             >
-              <button 
+              <button
                 onClick={() => setIsEditingInfo(false)}
                 className="absolute top-4 left-4 p-2 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-850 cursor-pointer transition-colors"
                 aria-label="Close"
@@ -1347,11 +1347,11 @@ export default function ProfileStatsView({
               </div>
 
               <form onSubmit={handleSaveInfoSubmit} className="space-y-4">
-                
+
                 {/* 1. Name Input */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-300 block">{isAr ? 'الاسم المعروض' : 'Display Name'}</label>
-                  <input 
+                  <input
                     type="text"
                     required
                     maxLength={35}
@@ -1398,7 +1398,7 @@ export default function ProfileStatsView({
                 {/* 2. Email Input */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-300 block">{isAr ? 'البريد الإلكتروني' : 'Email Address'}</label>
-                  <input 
+                  <input
                     type="email"
                     required
                     value={infoEmail}
@@ -1411,7 +1411,7 @@ export default function ProfileStatsView({
                 {/* 3. Location Input */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-300 block">{isAr ? 'المكان / البلد' : 'Location / Country'}</label>
-                  <input 
+                  <input
                     type="text"
                     maxLength={40}
                     value={infoLocation}
@@ -1424,7 +1424,7 @@ export default function ProfileStatsView({
                 {/* 4. Bio Input */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-300 block">{isAr ? 'السيرة الذاتية (Bio)' : 'Bio / Motto'}</label>
-                  <textarea 
+                  <textarea
                     rows={3}
                     maxLength={150}
                     value={infoBio}
@@ -1535,16 +1535,16 @@ export default function ProfileStatsView({
                     {isAr ? 'تصميم خلفية الغلاف الكوني (16 نموذج مميز)' : 'Cosmic Shield Wallpaper (16 Themes)'}
                   </label>
                   <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
-                    {isAr 
-                      ? 'اختر المظهر والخلفية المفضلة لجعل حسابك الشخصي فريداً من نوعه:' 
+                    {isAr
+                      ? 'اختر المظهر والخلفية المفضلة لجعل حسابك الشخصي فريداً من نوعه:'
                       : 'Choose your desired space theme/color wallpaper style to make your profile stand out:'}
                   </p>
-                  
+
                   <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-y-auto p-1 border border-slate-850 rounded-xl bg-slate-950/60 text-right">
                     {backgroundOptions.map((bg) => (
                       <button
                         type="button"
-                        
+
                         onClick={() => setInfoSelectedBgCode(bg.id)}
                         className={`p-1.5 rounded-lg border text-center transition-all flex flex-col justify-between items-center relative overflow-hidden group ${
                           infoSelectedBgCode === bg.id
