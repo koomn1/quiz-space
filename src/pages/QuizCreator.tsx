@@ -813,6 +813,36 @@ export default function QuizCreator({
     });
   };
 
+  // Keep question illustrations small enough for mobile Safari and drafts.
+  // Storing the original camera image as a multi-megabyte data URL can leave
+  // the preview looking stuck and makes the later storage upload unnecessarily
+  // expensive.
+  const prepareQuestionImage = async (file: File): Promise<string> => {
+    if (!file.type.startsWith('image/')) throw new Error('unsupported-image');
+    const sourceUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = () => reject(new Error('invalid-image'));
+        element.src = sourceUrl;
+      });
+      const width = image.naturalWidth || image.width;
+      const height = image.naturalHeight || image.height;
+      const scale = Math.min(1, 1600 / Math.max(width, height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('canvas-unavailable');
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const webp = canvas.toDataURL('image/webp', 0.82);
+      return webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', 0.82);
+    } finally {
+      URL.revokeObjectURL(sourceUrl);
+    }
+  };
+
   const handleGuideFile = async () => {
     if (!uploadedFile || isGuidingFile) return;
     if (userPlan === 'Free') {
@@ -4121,16 +4151,15 @@ A computer is a digital electronic machine...
                                   const file = e.target.files?.[0];
                                   if (file) {
                                     try {
-                                      const base64 = await new Promise<string>((resolve, reject) => {
-                                        const reader = new FileReader();
-                                        reader.onload = () => resolve(reader.result as string);
-                                        reader.onerror = reject;
-                                        reader.readAsDataURL(file);
-                                      });
-                                      handleQuestionChange(qIdx, { imageUrl: base64 });
+                                      const compressedImage = await prepareQuestionImage(file);
+                                      handleQuestionChange(qIdx, { imageUrl: compressedImage });
                                     } catch (err) {
                                       console.error('Failed to convert image:', err);
+                                      setSaveError(isAr ? 'تعذر تجهيز الصورة. اختر صورة JPG أو PNG أصغر ثم حاول مرة أخرى.' : 'Could not prepare the image. Choose a smaller JPG or PNG and try again.');
                                     }
+                                    // Permit choosing the same file again after
+                                    // a failed attempt or after replacing it.
+                                    e.currentTarget.value = '';
                                   }
                                 }}
                                 className="hidden" 
