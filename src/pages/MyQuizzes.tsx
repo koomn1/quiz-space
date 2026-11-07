@@ -53,6 +53,15 @@ export function MyQuizzes({
     checkPendingReviews();
   }, [userId, quizzes]);
 
+  useEffect(() => {
+    if (!attemptsQuiz) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [attemptsQuiz]);
+
   const exportQuizPdf = async (quiz: Quiz) => {
     try {
       const branding = {
@@ -327,8 +336,8 @@ export function MyQuizzes({
       )}
 
       {attemptsQuiz && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="my-quiz-solvers-title" onClick={() => setAttemptsQuiz(null)}>
-          <div className="w-full max-w-lg max-h-[85vh] overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-2xl dark:border-cyan-900 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-950/70 px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:px-4 sm:pt-8" role="dialog" aria-modal="true" aria-labelledby="my-quiz-solvers-title" onClick={() => setAttemptsQuiz(null)}>
+          <div className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-2xl dark:border-cyan-900 dark:bg-slate-900 sm:max-h-[calc(100dvh-4rem)]" dir={isAr ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-5 dark:border-slate-800">
               <div>
                 <h3 id="my-quiz-solvers-title" className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-white"><Users className="h-5 w-5 text-cyan-500" />{isAr ? 'من حلّوا الاختبار' : 'Quiz solvers'}</h3>
