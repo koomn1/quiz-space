@@ -236,7 +236,7 @@ jobs:
       - name: Run Public Profile Asset E2E
         env:
           PLAYWRIGHT_BASE_URL: https://quiz-space-app.pages.dev/
-        run: pnpm e2e -- --grep "published profile asset delivery"
+        run: pnpm exec playwright test --grep "published profile asset delivery"
 
   deploy-worker:
     name: Deploy AI Worker
