@@ -4,12 +4,13 @@
  */
 
 import React from 'react';
-import { Sparkles, Sun, Moon, Award, User, Layers, BookOpen, LogIn, LogOut, Globe, Menu, Coins } from 'lucide-react';
+import { LogIn, LogOut } from 'lucide-react';
 import { translations } from '../lib/i18n';
 import { MainLogo } from './MainLogo';
 import { AnimatedGlobeIcon } from './AnimatedGlobeIcon';
 import { AnimatedMenuIcon } from './AnimatedMenuIcon';
 import { AnimatedThemeIcon } from './AnimatedThemeIcon';
+import { SugaryIcon } from './SugaryIcon';
 import { UserBadge } from './UserBadge';
 import { NotificationDropdown } from './NotificationDropdown';
 import { getRewardsSummary } from '../lib/db';
@@ -164,14 +165,14 @@ export default function Header({
 	              {!isGuest && (
 	                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 rounded-2xl border border-amber-200/60 bg-amber-50/40 px-2 py-1.5 dark:border-amber-900/30 dark:bg-amber-950/10 sm:px-3 sm:py-2 flex-shrink min-w-0" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
 		                  <div className="flex items-center gap-1 text-[10px] font-black text-amber-600 dark:text-amber-400 sm:text-xs whitespace-nowrap">
-		                  <Award className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                            <SugaryIcon name="trophy" size={18} className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
 		                    <span className="tabular-nums">{formatLargeNumber(rewardPoints)}</span>
 		                  </div>
 		                  {rewardCoins > 0 && (
 		                    <>
 		                      <span className="h-3 w-px bg-amber-200/80 dark:bg-amber-800/80" />
 		                      <div className="flex items-center gap-1 text-[10px] font-black text-sky-600 dark:text-sky-400 sm:text-xs whitespace-nowrap">
-		                        <Coins className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                                <SugaryIcon name="coins" size={18} className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
 		                        <span className="tabular-nums">{formatLargeNumber(rewardCoins)}</span>
 		                      </div>
 		                    </>
@@ -189,7 +190,7 @@ export default function Header({
 	                  {photoURL ? (
 	                    <img src={photoURL} alt="" className="h-7 w-7 rounded-lg object-cover" />
 	                  ) : (
-	                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary"><User className="h-4 w-4" /></span>
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15"><SugaryIcon name="crown" size={24} /></span>
 	                  )}
 	                  <span className="max-w-36 truncate text-xs font-black text-slate-700 dark:text-slate-100">{userName || (lang === 'ar' ? 'حسابي' : 'My account')}</span>
 	                </button>

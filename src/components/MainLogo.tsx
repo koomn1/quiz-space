@@ -1,4 +1,5 @@
 import React from 'react';
+import { SugaryIcon } from './SugaryIcon';
 
 interface MainLogoProps {
   className?: string;
@@ -15,19 +16,12 @@ const sizeMap = {
 
 export const MainLogo = ({ className = '', size = 'md', showText = true }: MainLogoProps) => {
   const currentSize = sizeMap[size];
-  const baseUrl = import.meta.env.BASE_URL || '/';
-  const logoSrc = `${baseUrl}brand/quizspace-logo-512.webp`;
 
   return (
     <div className={`inline-flex items-center ${currentSize.spacing} ${className} select-none cursor-pointer group`}>
       <div className={`relative flex items-center justify-center ${currentSize.icon} shrink-0 transition-transform duration-300 group-hover:scale-110`}>
         <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-cyan-400/25 via-violet-500/20 to-amber-300/20 blur-xl opacity-80 group-hover:opacity-100 transition-opacity" />
-        <img
-          src={logoSrc}
-          alt="QuizSpace"
-          className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_12px_rgba(124,58,237,0.55)]"
-          draggable={false}
-        />
+        <SugaryIcon name="rocket" size={112} alt="QuizSpace" className="relative z-10 h-full w-full drop-shadow-[0_0_12px_rgba(124,58,237,0.55)]" />
       </div>
 
       {showText && (

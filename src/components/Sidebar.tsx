@@ -1,10 +1,10 @@
 import React from 'react';
 import {
-  Crown, Gem, Bot, Medal, Home, Compass, Sparkles, BookOpen, Gift,
-  Users, CreditCard, Settings, LogOut, ShieldAlert, User, Check, GraduationCap, MessageCircle, Lock, Building2
+  Crown, Gem, Medal, Sparkles, LogOut, Lock
 } from 'lucide-react';
 import { translations } from '../lib/i18n';
 import { AnimatedSidebarIcon } from './AnimatedSidebarIcon';
+import { SugaryIcon } from './SugaryIcon';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag, BadgeTier, NameColorKey, BadgeColorKey } from './PremiumNameTag';
 import CosmoOrb from './CosmoOrb';
@@ -94,74 +94,51 @@ export default function Sidebar({
   }
   const hasActiveMembership = isPremium || ['gold', 'diamond', 'premium'].includes(planClean);
 
-  // Minimalist Line-Art Icon Mapper
+  // 3D Sugary icon mapper: consistent visual language across the primary navigation.
   const getNavIcon = (id: string, isActive: boolean) => {
-    const size = 18;
-    const colorClass = isActive
-      ? 'sidebar-nav-icon text-primary drop-shadow-[0_0_6px_var(--theme-primary)]'
-      : 'sidebar-nav-icon text-[var(--app-text-muted)] group-hover:text-primary transition-colors duration-200';
+    const size = 30;
+    const className = `sidebar-nav-icon transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`;
 
     switch (id) {
       case 'landing':
-        return <Home size={size} className={colorClass} />;
+        return <SugaryIcon name="home" size={size} className={className} />;
       case 'explore':
-        return <Compass size={size} className={colorClass} />;
+        return <SugaryIcon name="globe" size={size} className={className} />;
       case 'create':
-        return <Sparkles size={size} className={colorClass} />;
+        return <SugaryIcon name="sparkles" size={size} className={className} />;
       case 'my-quizzes':
-        return <BookOpen size={size} className={colorClass} />;
+        return <SugaryIcon name="book" size={size} className={className} />;
       case 'classrooms':
-        return <GraduationCap size={size} className={colorClass} />;
+        return <SugaryIcon name="graduation-cap" size={size} className={className} />;
       case 'institution':
-        return <Building2 size={size} className={colorClass} />;
+        return <SugaryIcon name="layers" size={size} className={className} />;
       case 'motivation':
-        return <Gift size={size} className={colorClass} />;
+        return <SugaryIcon name="gift" size={size} className={className} />;
       case 'aichat':
-        return <Bot size={size} className={colorClass} />;
+        return <SugaryIcon name="sparkles" size={size} className={className} />;
       case 'support':
-        return <MessageCircle size={size} className={colorClass} />;
+        return <SugaryIcon name="document" size={size} className={className} />;
       case 'community':
-        return <Users size={size} className={colorClass} />;
+        return <SugaryIcon name="layers" size={size} className={className} />;
       case 'billing':
-        return <CreditCard size={size} className={colorClass} />;
+        return <SugaryIcon name="coins" size={size} className={className} />;
       case 'settings':
-        return <Settings size={size} className={colorClass} />;
+        return <SugaryIcon name="star" size={size} className={className} />;
       case 'admin':
-        return <ShieldAlert size={size} className={colorClass} />;
+        return <SugaryIcon name="trophy" size={size} className={className} />;
       case 'profile':
-        return <User size={size} className={colorClass} />;
+        return <SugaryIcon name="crown" size={size} className={className} />;
       default:
-        return <Home size={size} className={colorClass} />;
+        return <SugaryIcon name="home" size={size} className={className} />;
     }
   };
 
   return (
     <aside aria-label={isAr ? 'التنقل الرئيسي' : 'Primary navigation'} className="liquid-sidebar w-full h-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-3xl border-none text-slate-700 dark:text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
-      {/* Premium Custom SVG Logo */}
+      {/* 3D Sugary brand mark */}
       <div className="flex items-center gap-2 justify-start select-none py-1 mb-1 shrink-0" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
-        <div
-
-
-          className="relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center shrink-0"
-        >
-          <svg className="w-full h-full overflow-visible" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Background ambient glow */}
-            <circle cx="18" cy="18" r="14" fill="rgba(155, 81, 224, 0.15)" className="blur-md" />
-
-            {/* Neon Galaxy Rings */}
-            <ellipse cx="18" cy="18" rx="16" ry="5" transform="rotate(-20, 18, 18)" stroke="#9b51e0" strokeWidth="2" fill="none" className="opacity-80" />
-            <ellipse cx="18" cy="18" rx="12" ry="3.5" transform="rotate(25, 18, 18)" stroke="#ec4899" strokeWidth="1.5" fill="none" className="opacity-70" />
-
-            {/* Magnifying Glass Frame (integrated with the galaxy core) */}
-            <circle cx="18" cy="18" r="8" stroke="#ffffff" strokeWidth="2" fill="rgba(15, 23, 42, 0.4)" className="backdrop-blur-sm" />
-
-            {/* Magnifying Glass Handle */}
-            <line x1="23.6" y1="23.6" x2="34" y2="34" stroke="#b175ff" strokeWidth="2.5" strokeLinecap="round" />
-            <line x1="25.5" y1="25.5" x2="32" y2="32" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
-
-            {/* Neon pulsating galaxy center (glowing core) */}
-            <circle cx="18" cy="18" r="4" fill="#d8b4fe" style={{ filter: 'drop-shadow(0 0 6px #a855f7)' }} />
-          </svg>
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/80 shadow-sm ring-1 ring-primary/20 dark:bg-slate-900/70">
+          <SugaryIcon name="rocket" size={38} alt="QuizSpace" />
         </div>
         <div className="flex flex-col">
           <span className="font-display font-black text-sm sm:text-base tracking-tight leading-none bg-gradient-to-r from-white via-indigo-200 to-[#b175ff] bg-clip-text text-transparent">

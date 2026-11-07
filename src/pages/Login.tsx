@@ -167,7 +167,7 @@ export default function Login() {
 
         <div className="flex items-center gap-2.5">
           <img
-            src={`${APP_BASE_URL}brand/quizspace-logo-512.webp`}
+            src={`${APP_BASE_URL}icons8/sugary/rocket.png`}
             alt="Quiz Space"
             className="h-9 w-9 rounded-xl object-cover shadow-lg shadow-violet-950/30"
           />

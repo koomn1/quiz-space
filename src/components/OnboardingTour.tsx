@@ -32,7 +32,7 @@ export default function OnboardingTour({
       title: '! ',
       content: 'دعنا نأخذك في جولة تعليمية سريعة ومبسطة للتعرف على المنصة وكيفية استغلال الذكاء الاصطناعي في قياس مستواك وتوليد الأسئلة فوراً!',
       selector: 'body', // Center of screen
-      icon: <img src={`${import.meta.env.BASE_URL || '/'}brand/quizspace-logo-512.webp`} alt="QuizSpace" className="w-6 h-6 object-contain" />
+      icon: <img src={`${import.meta.env.BASE_URL || '/'}icons8/sugary/rocket.png`} alt="QuizSpace" className="w-6 h-6 object-contain" />
     },
     {
       id: 'create-tab',

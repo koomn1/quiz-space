@@ -231,7 +231,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
           <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-600/20 blur-[90px]" />
           <div className="relative z-10 flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/20 to-cyan-400/20 p-1.5 shadow-lg shadow-violet-950/40 border border-white/10">
-              <img src={`${import.meta.env.BASE_URL || '/'}brand/quizspace-logo-512.webp`} alt="QuizSpace" className="h-full w-full object-contain" />
+              <img src={`${import.meta.env.BASE_URL || '/'}icons8/sugary/rocket.png`} alt="QuizSpace" className="h-full w-full object-contain" />
             </div>
             <div>
               <p className="text-sm font-black">Quiz Space</p>

@@ -118,7 +118,7 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
           muted
           playsInline
           preload="metadata"
-          poster={`${import.meta.env.BASE_URL}brand/quizspace-logo-512.webp`}
+          poster={`${import.meta.env.BASE_URL}icons8/sugary/rocket.png`}
           src={splashSource}
           className="absolute inset-0 w-full h-full object-cover opacity-0 pointer-events-none"
         />

@@ -68,7 +68,7 @@ export default function AuroraLoader({ message = 'چاري تحليل البيا
             
             className="w-14 h-14 bg-linear-to-tr from-emerald-500/20 via-teal-400/20 to-blue-500/20 rounded-2xl flex items-center justify-center p-2 shadow-[0_0_30px_rgba(16,185,129,0.5)] border border-white/20"
           >
-            <img src={`${import.meta.env.BASE_URL || '/'}brand/quizspace-logo-512.webp`} alt="QuizSpace" className="w-full h-full object-contain" />
+            <img src={`${import.meta.env.BASE_URL || '/'}icons8/sugary/rocket.png`} alt="QuizSpace" className="w-full h-full object-contain" />
           </div>
         </div>
 
