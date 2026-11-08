@@ -149,7 +149,7 @@ export default function AdminRewardCatalogPanel({ lang }: { lang: 'ar' | 'en' })
           <div className="rounded-2xl bg-violet-100 p-3 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"><Sparkles className="h-5 w-5" /></div>
           <div>
             <h3 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'كتالوج متجر المكافآت' : 'Reward store catalog'}</h3>
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-slate-400">{isAr ? 'اعرض كل ما يظهر في المتجر من إطارات وباقات وكوزمتكس. يمكنك تعديل الإطارات وتغيير ظهور أي عنصر بأمان.' : 'See every frame, bundle, and cosmetic shown in the store. Frames are editable and every item can be shown or hidden safely.'}</p>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-slate-400">{isAr ? 'هذا هو مخزن منتجات المتجر: كل المنتجات مخفية افتراضيًا، وأنت تختار يدويًا أي إطار أو باقة أو كوزمتك يظهر للمستخدمين.' : 'This is the storefront inventory: every product starts hidden, and you manually choose which frame, bundle, or cosmetic becomes visible.'}</p>
           </div>
         </div>
         <button type="button" onClick={() => { setForm(blankFrame()); setNotice(null); }} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.98]"><PlusCircle className="h-4 w-4" />{isAr ? 'إطار جديد' : 'New frame'}</button>

@@ -3731,7 +3731,7 @@ export async function adminSaveRewardFrame(frame: AdminRewardFrameInput) {
     p_min_plan: frame.minPlan,
     p_sort_order: frame.sortOrder,
     p_is_featured: Boolean(frame.isFeatured),
-    p_is_active: frame.isActive !== false,
+    p_is_active: Boolean(frame.isActive),
   });
   if (error) return { success: false, message: error.message };
   return data;
