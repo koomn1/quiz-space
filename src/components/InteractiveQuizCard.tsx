@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { Quiz } from '../types';
 import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet, Printer, ChevronDown, Eye, CheckCircle2, Settings2 } from 'lucide-react';
 import { UserBadge } from './UserBadge';
@@ -9,6 +11,8 @@ import { QuizCompletion } from '../types';
 import { createPortal } from 'react-dom';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
 import { EssayReviewModal } from './EssayReviewModal';
+
+gsap.registerPlugin(useGSAP);
 // Keep the modal and print window independent from transformed/overflow-hidden card ancestors.
 
 interface InteractiveQuizCardProps {
@@ -73,6 +77,13 @@ export function InteractiveQuizCard({
   const [pdfStudentName, setPdfStudentName] = useState('');
   const [pdfExamDate, setPdfExamDate] = useState('');
   const [pdfScore, setPdfScore] = useState('');
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!exportMenuOpen || !exportMenuRef.current) return;
+    gsap.fromTo(exportMenuRef.current, { opacity: 0, y: 8, scale: 0.96, transformOrigin: '100% 100%' }, { opacity: 1, y: 0, scale: 1, duration: 0.24, ease: 'back.out(1.6)' });
+    gsap.fromTo(exportMenuRef.current.querySelectorAll('button'), { opacity: 0, x: isAr ? 8 : -8 }, { opacity: 1, x: 0, duration: 0.18, stagger: 0.045, ease: 'power2.out' });
+  }, { dependencies: [exportMenuOpen, isAr], scope: exportMenuRef });
 
   const openPdfSettings = () => {
     setExportMenuOpen(false);
@@ -460,7 +471,7 @@ export function InteractiveQuizCard({
             <Printer className="w-3.5 h-3.5" />
           </button>
           {exportMenuOpen && (
-            <div data-card-action="export" className="absolute end-0 bottom-full mb-2 z-[90] w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
+            <div ref={exportMenuRef} data-card-action="export" className="absolute end-0 bottom-full mb-2 z-[90] w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-700 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'}>
               <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Eye className="h-4 w-4 text-violet-500" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
               <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Download className="h-4 w-4 text-violet-500" />{isAr ? 'تصدير PDF احترافي' : 'Export professional PDF'}</button>
               <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-950/40"><Printer className="h-4 w-4 text-violet-500" />{isAr ? 'طباعة' : 'Print'}</button>
@@ -677,7 +688,7 @@ export function InteractiveQuizCard({
             <ChevronDown className="h-3.5 w-3.5" />
           </button>
           {exportMenuOpen && (
-            <div data-card-action="export" className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200/80 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95" dir={isAr ? 'rtl' : 'ltr'}>
+            <div ref={exportMenuRef} data-card-action="export" className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200/80 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95" dir={isAr ? 'rtl' : 'ltr'}>
               <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-colors"><Eye className="h-4 w-4 text-primary" />{isAr ? 'معاينة الاختبار' : 'Preview quiz'}</button>
               <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-colors"><Download className="h-4 w-4 text-primary" />{isAr ? 'تصدير PDF احترافي' : 'Export professional PDF'}</button>
               <button type="button" onClick={openPdfSettings} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-primary/10 hover:text-primary transition-colors"><Printer className="h-4 w-4 text-primary" />{isAr ? 'طباعة' : 'Print'}</button>

@@ -5,6 +5,8 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { Quiz } from '../types';
 import {
   Sparkles,
@@ -31,6 +33,9 @@ import {
 } from 'lucide-react';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
 import { PremiumNameTag } from '../components/PremiumNameTag';
+import DailyQuizCard from '../components/DailyQuizCard';
+
+gsap.registerPlugin(useGSAP);
 
 interface DeleteQuizConfirmDialogProps {
   isAr: boolean;
@@ -169,6 +174,45 @@ export default function LandingPage({
   const [activeCategory, setActiveCategory] = React.useState('all');
   const [aiPromptInput, setAiPromptInput] = React.useState('');
   const [quizToDelete, setQuizToDelete] = React.useState<string | null>(null);
+  const [animatedTopic, setAnimatedTopic] = React.useState('');
+  const topicExamples = isAr
+    ? ['الذكاء الاصطناعي التوليدي', 'تشريح القلب والدورة الدموية', 'تاريخ مصر القديمة', 'أساسيات لغة Python', 'إدارة الوقت والمذاكرة']
+    : ['Generative AI', 'Cardiovascular anatomy', 'Ancient Egyptian history', 'Python fundamentals', 'Study time management'];
+
+  React.useEffect(() => {
+    let topicIndex = 0;
+    let characterIndex = 0;
+    let deleting = false;
+    let timer: number | undefined;
+    const tick = () => {
+      const topic = topicExamples[topicIndex % topicExamples.length];
+      if (!deleting) {
+        characterIndex += 1;
+        setAnimatedTopic(topic.slice(0, characterIndex));
+        if (characterIndex >= topic.length) {
+          deleting = true;
+          timer = window.setTimeout(tick, 1450);
+          return;
+        }
+      } else {
+        characterIndex -= 1;
+        setAnimatedTopic(topic.slice(0, characterIndex));
+        if (characterIndex <= 0) {
+          deleting = false;
+          topicIndex += 1;
+        }
+      }
+      timer = window.setTimeout(tick, deleting ? 38 : 72);
+    };
+    timer = window.setTimeout(tick, 500);
+    return () => { if (timer) window.clearTimeout(timer); };
+  }, [isAr, topicExamples.join('|')]);
+
+  const topicPlaceholderRef = React.useRef<HTMLSpanElement>(null);
+  useGSAP(() => {
+    if (!topicPlaceholderRef.current || aiPromptInput) return;
+    gsap.fromTo(topicPlaceholderRef.current, { opacity: 0.35, y: 3 }, { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out' });
+  }, { dependencies: [animatedTopic, aiPromptInput], scope: topicPlaceholderRef });
 
   const categories = React.useMemo(
     () => [
@@ -300,13 +344,15 @@ export default function LandingPage({
                 type="text"
                 value={aiPromptInput}
                 onChange={(e) => setAiPromptInput(e.target.value)}
-                placeholder={
-                  isAr
-                    ? 'اكتب أي موضوع تريده وسيبنيه الذكاء الاصطناعي لك مباشرة...'
-                    : 'Type any study topic and AI builds your quiz...'
-                }
+                placeholder=""
                 className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold"
               />
+              {!aiPromptInput && (
+                <span ref={topicPlaceholderRef} aria-hidden="true" className="pointer-events-none absolute start-14 end-28 truncate text-right text-xs font-semibold text-slate-400 sm:text-sm">
+                  {animatedTopic || (isAr ? 'اكتب أي موضوع...' : 'Type any study topic...')}
+                  <span className="ms-0.5 inline-block h-4 w-px translate-y-0.5 animate-pulse bg-sky-400 align-middle" />
+                </span>
+              )}
               {aiPromptInput && (
                 <button
                   type="button"
@@ -345,9 +391,16 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* Featured Spotlight — Warm Amber Daily Challenge (Rewarding & Energetic) */}
+      {/* Tier-aware private daily challenge — rotates from the bank per plan window. */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
-        <div className="relative p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-amber-500/[0.08] via-orange-500/[0.05] to-transparent border border-amber-500/20 dark:border-amber-400/15 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+        {dailyQuiz ? <DailyQuizCard
+          lang={lang}
+          userId={dailyQuiz.userId || undefined}
+          planName={dailyQuiz.planName}
+          isPremium={dailyQuiz.isPremium}
+          onStartQuiz={dailyQuiz.onStartQuiz}
+          onLoginClick={dailyQuiz.onLoginClick}
+        /> : <div className="relative p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-amber-500/[0.08] via-orange-500/[0.05] to-transparent border border-amber-500/20 dark:border-amber-400/15 backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
           <div className="space-y-2 max-w-2xl text-right">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-black tracking-wide border border-amber-500/20">
               <Flame className="w-3.5 h-3.5 text-amber-500 animate-bounce" />
@@ -391,7 +444,7 @@ export default function LandingPage({
             <Play className="w-4 h-4 fill-white" />
             <span>{isAr ? 'خُض التحدي الآن' : 'Start Challenge Now'}</span>
           </button>
-        </div>
+        </div>}
       </section>
 
       {/* Filter and Live Search Controls — Fully Responsive with zero collisions */}

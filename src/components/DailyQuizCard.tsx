@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Clock, Loader2 } from 'lucide-react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { Clock, Loader2, Sparkles, RefreshCw, Crown } from 'lucide-react';
 import {
   getUserDailyQuizSlot,
   claimUserDailyQuizRefresh,
@@ -12,6 +14,8 @@ import {
 import { DAILY_QUIZ_BANK } from '../data/dailyQuizBank';
 import { shouldRecoverStalledDailyQuizRefresh } from '../lib/dailyQuizRecovery';
 import { MainLogo } from './MainLogo';
+
+gsap.registerPlugin(useGSAP);
 
 // In-memory cache of the latest private daily payload so the start click can
 // guarantee the sessionStorage snapshot exists before navigation.
@@ -65,6 +69,14 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
   const [generationError, setGenerationError] = useState(false);
   const generatingRef = useRef(false);
   const stalledRecoveryRef = useRef(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!cardRef.current) return;
+    gsap.fromTo(cardRef.current, { opacity: 0, y: 18, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.65, ease: 'power3.out' });
+    if (glowRef.current) gsap.to(glowRef.current, { rotation: 360, duration: 18, repeat: -1, ease: 'none' });
+  }, { scope: cardRef, dependencies: [tier] });
 
   const generate = async () => {
     if (!userId || generatingRef.current) return;
@@ -72,8 +84,8 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     setIsGenerating(true);
     setGenerationError(false);
     try {
-      // Pick deterministically from the 60-item bank for this user/tier/time
-      // window. This rotates the bank without any runtime AI generation.
+      // Pick deterministically from the bank for this user/tier/time window.
+      // The tier is part of the seed, so every plan gets its own rotation.
       const intervalSeconds = TIER_REFRESH_SECONDS[tier];
       const intervalMs = intervalSeconds * 1000;
       const windowNumber = Math.floor(Date.now() / intervalMs);
@@ -88,8 +100,8 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         title: ` ${isAr ? 'التحدي اليومي' : 'Daily Challenge'} — ${source.title}`,
         questions: source.questions.map((q: any, i: number) => ({ ...q, id: `${quizId}-q${i + 1}` })),
         creatorId: 'quizspace-daily-bank',
-        creatorName: isAr ? 'QuizSpace  (بنك ثابت)' : 'QuizSpace  (Fixed Bank)',
-        category: isAr ? 'يومي — بنك ثابت' : 'Daily — Fixed Bank',
+        creatorName: isAr ? 'QuizSpace • تحدٍ متجدد' : 'QuizSpace • Rotating Challenge',
+        category: isAr ? `يومي • ${TIER_LABEL[tier].ar}` : `Daily • ${TIER_LABEL[tier].en}`,
         createdAt: new Date().toISOString(),
         totalPlays: 0,
         avgRating: 0,
@@ -248,21 +260,23 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
   // still holds it.
   const startableQuizId = answered ? null : quizId;
   return (
-    <div className={`light-dark-card relative overflow-hidden rounded-[2rem] p-5 mb-6 bg-gradient-to-l ${TIER_GRADIENT[tier]} text-white shadow-lg shadow-black/10`}>
-      <div className="absolute -top-16 -end-12 h-40 w-40 rounded-full border border-white/15 bg-white/10" aria-hidden="true" />
+    <div ref={cardRef} className={`light-dark-card group relative overflow-hidden rounded-[2rem] p-5 mb-6 bg-gradient-to-l ${TIER_GRADIENT[tier]} text-white shadow-xl shadow-black/15`}>
+      <div ref={glowRef} className="pointer-events-none absolute -top-20 -end-14 h-48 w-48 rounded-full border border-white/20 bg-white/10 blur-[1px]" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(255,255,255,.2),transparent_35%)] opacity-80" aria-hidden="true" />
       <div className="relative flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 shrink-0 rounded-2xl bg-white/20 flex items-center justify-center overflow-hidden"><MainLogo size="sm" showText={false} className="!h-10 !w-10" /></div>
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20 ring-1 ring-white/25"><MainLogo size="sm" showText={false} className="!h-10 !w-10" /><Sparkles className="absolute -end-1 -top-1 h-4 w-4 animate-pulse text-amber-200" /></div>
           <div>
-            <h3 className="font-display font-black text-lg leading-tight">{isAr ? 'التحدي اليومي' : 'Daily Challenge'}</h3>
-            <p className="text-sm text-white/80">{isAr ? `اختبارك الشخصي — باقة ${label}` : `Your personal quiz — ${label} tier`}</p>
+            <div className="mb-1 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white/85"><Crown className="h-3 w-3 text-amber-200" />{label}</div>
+            <h3 className="font-display font-black text-lg leading-tight">{isAr ? 'التحدي الحصري المتجدد' : 'Exclusive rotating challenge'}</h3>
+            <p className="text-sm text-white/80">{isAr ? `يتغير تلقائياً حسب باقة ${label}` : `Rotates automatically for the ${label} tier`}</p>
             <p className="mt-1 text-[11px] font-bold text-white/70">{refreshPolicy}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {(!isGuest && (waiting || isGenerating)) && <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 text-sm font-mono tabular-nums"><Clock className="w-4 h-4" />{formatCountdown(secondsLeft, isAr)}</div>}
           {isGuest ? <button onClick={onLoginClick} className="bg-white text-slate-900 font-bold rounded-full px-5 py-2 text-sm hover:scale-105 active:scale-95 transition-transform">{isAr ? 'سجّل الدخول للبدء' : 'Sign in to start'}</button>
-            : waiting ? <span className="text-sm font-semibold bg-white/15 rounded-full px-4 py-2">{nextQuizLabel}</span>
+            : waiting ? <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold"><RefreshCw className="h-4 w-4" />{nextQuizLabel}</span>
             : !isGenerating && startableQuizId ? <button onClick={() => {
               // Guard the start navigation: the quiz must be snapshot-able from
               // sessionStorage before the route changes, otherwise the resolver
