@@ -13,11 +13,10 @@ const sizeMap = {
   xl: { image: 'h-28 w-72' },
 };
 
-/** The original QuizSpace cartoon mark. Keep the logo as one image so its
- * typography and planet/rocket artwork stay identical across themes. */
-export const MainLogo = ({ className = '', size = 'md', showText = true }: MainLogoProps) => {
+/** The platform's official QuizSpace logo asset. */
+export const MainLogo = ({ className = '', size = 'md' }: MainLogoProps) => {
   const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
-  const source = showText ? `${baseUrl}brand/new_cartoon_logo.webp` : `${baseUrl}brand/quizspace-logo-512.webp`;
+  const source = `${baseUrl}brand/quizspace-logo-512.webp`;
   const currentSize = sizeMap[size];
 
   return (
