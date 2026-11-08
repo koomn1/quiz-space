@@ -1189,11 +1189,11 @@ export default function UserProfile({
 
   return (
     <div
-      className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-12 text-slate-800 dark:text-slate-100"
+      className="mx-auto w-full max-w-5xl space-y-7 px-4 pb-14 text-slate-800 animate-fade-in dark:text-slate-100 sm:px-6 lg:px-8"
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
       {/* 1. Profile Banner Header */}
-      <section className="relative bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
+      <section className="relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20">
         <div className="h-44 md:h-56 relative rounded-t-3xl overflow-hidden">
           <GsapCoverBackground mode={chosenBg || "cosmic"} customImage={customBgUrl} />
 

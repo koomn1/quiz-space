@@ -10,7 +10,7 @@ import Notifications from '../pages/settings/Notifications';
 import {
   Compass, Layers, Users, Bookmark, Trophy, Award, Sparkles, Search, MessageSquare,
   Send, ThumbsUp, Trash2, PlusCircle, CheckCircle, Flame, Clock, Heart, Shield, Settings, Pencil,
-  Volume2, VolumeX, Eye, BookOpen, Star, HelpCircle, User, Zap, Info, X
+  Volume2, VolumeX, Eye, BookOpen, Star, HelpCircle, User, Zap, Info, X, Bell
 } from 'lucide-react';
 import { Quiz, QuizCompletion } from '../types';
 import { translations } from '../lib/i18n';
@@ -1735,24 +1735,40 @@ export function SettingsSection({
   };
 
   const tabsConfig = [
-    { id: 1 as const, label: isAr ? 'البيانات الأساسية' : 'Basic Details', icon: '' },
-    { id: 2 as const, label: isAr ? 'إدارة الأمان' : 'Security', icon: '' },
-    { id: 3 as const, label: isAr ? 'تخصيص الواجهة' : 'Interface', icon: '' },
-    { id: 4 as const, label: isAr ? 'الإشعارات' : 'Notifications', icon: '' }
+    { id: 1 as const, label: isAr ? 'البيانات الأساسية' : 'Basic Details', icon: User },
+    { id: 2 as const, label: isAr ? 'إدارة الأمان' : 'Security', icon: Shield },
+    { id: 3 as const, label: isAr ? 'تخصيص الواجهة' : 'Interface', icon: Settings },
+    { id: 4 as const, label: isAr ? 'الإشعارات' : 'Notifications', icon: Bell }
   ];
 
   return (
-    <div ref={containerRef} className="max-w-5xl mx-auto flex flex-col gap-6 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
+    <div ref={containerRef} className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 pb-12 text-right sm:px-6 lg:px-8" style={{ textAlign: isAr ? 'right' : 'left' }}>
+
+      <header className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/75 p-5 shadow-[0_14px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/65 sm:p-7">
+        <div className="absolute -end-10 -top-16 h-40 w-40 rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-500">{isAr ? 'مساحة التحكم' : 'Control center'}</p>
+            <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">{isAr ? 'إعدادات الحساب' : 'Account settings'}</h2>
+            <p className="mt-2 max-w-xl text-xs font-semibold leading-6 text-slate-500 dark:text-slate-400">{isAr ? 'حدّث بياناتك، أمّن حسابك، واضبط تجربة Quiz Space كما تحب.' : 'Update your details, secure your account, and shape your Quiz Space experience.'}</p>
+          </div>
+          <div className="inline-flex w-fit items-center gap-2 rounded-2xl border border-sky-200/80 bg-sky-50 px-3.5 py-2 text-xs font-black text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300">
+            <Sparkles className="h-4 w-4" />
+            <span>{isPremium ? (isAr ? `خطة ${userPlanName}` : `${userPlanName} plan`) : (isAr ? 'الخطة المجانية' : 'Free plan')}</span>
+          </div>
+        </div>
+      </header>
 
       {/* Dynamic Tab Selector header with Layout Animation */}
-      <div className="flex flex-wrap items-center justify-center p-1.5 bg-slate-900/60 dark:bg-[#130b2b]/40 backdrop-blur-md rounded-2xl border border-slate-200/10 gap-1 select-none">
+      <div className="sticky top-20 z-20 flex flex-wrap items-center justify-center gap-1 rounded-2xl border border-slate-200/80 bg-white/85 p-1.5 shadow-lg shadow-slate-950/5 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/75 select-none">
         {tabsConfig.map((tab) => {
           const isActive = activeTab === tab.id;
+          const TabIcon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => { playChimeSound('click'); setActiveTab(tab.id); }}
-              className={`relative px-6 py-3 rounded-xl text-xs font-black transition-all duration-300 cursor-pointer flex items-center gap-2 ${
+              className={`relative min-h-11 flex-1 rounded-xl px-3 py-3 text-[11px] font-black transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 sm:flex-none sm:px-6 ${
                 isActive ? 'text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -1763,7 +1779,7 @@ export function SettingsSection({
 
                 />
               )}
-              <span className="text-sm">{tab.icon}</span>
+              <TabIcon className="h-4 w-4" />
               <span>{tab.label}</span>
             </button>
           );
@@ -1771,7 +1787,7 @@ export function SettingsSection({
       </div>
 
       {/* Main viewport with transition effect */}
-      <div className="bg-white/95 dark:bg-[#0e0a1f]/80 backdrop-blur-2xl border border-slate-200 dark:border-[#3d1d6d]/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden min-h-[450px]">
+      <div className="relative min-h-[450px] overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-[0_18px_55px_rgba(15,23,42,0.07)] backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/65 md:p-8">
 
         {/* TAB 1: البيانات الأساسية */}
         {activeTab === 1 && (
