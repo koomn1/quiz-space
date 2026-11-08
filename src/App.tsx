@@ -609,6 +609,13 @@ export default function App() {
     const isGuest = (!userId || userId.startsWith('user-guest') || userId === '') && !authContext.isAuthenticated;
     const allowedGuestTabs = ['landing', 'explore', 'support'];
     const isLegalTab = tab.startsWith('legal-');
+    if (tab === 'admin' && !isAdminUser) {
+      const basePath = getAppBasePath();
+      const landingParams = new URLSearchParams({ tab: 'landing' });
+      window.history.replaceState(null, '', `${basePath}#/dashboard/landing?${landingParams.toString()}`);
+      setSearchParams(landingParams);
+      return;
+    }
     if (!bypassAuth && isGuest && !allowedGuestTabs.includes(tab) && !isLegalTab) {
       setLoginRedirectTab('landing');
       setAuthModalMode('login');
@@ -843,6 +850,7 @@ export default function App() {
           lang={lang}
           setLang={setLang}
           isUserPremium={isUserPremium}
+          isAdminUser={isAdminUser}
           isSidebarOpen={isSidebarOpen}
           sidebarMenuButtonRef={sidebarMenuButtonRef}
           authIsAuthenticated={authContext.isAuthenticated}

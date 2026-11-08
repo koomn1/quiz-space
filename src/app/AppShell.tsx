@@ -30,6 +30,7 @@ export interface AppShellProps {
   lang: 'ar' | 'en';
   setLang: (lang: 'ar' | 'en') => void;
   isUserPremium: boolean;
+  isAdminUser: boolean;
   isSidebarOpen: boolean;
   sidebarMenuButtonRef: React.RefObject<HTMLButtonElement | null>;
   authIsAuthenticated: boolean;
@@ -48,7 +49,7 @@ export default function AppShell(props: AppShellProps) {
   const {
     children, showAppHeader, activeTab, handleSetTab, isQuizLocked, setIsSidebarOpen, darkMode, setDarkMode,
     colorTheme, setColorTheme, userName, setUserName, userId, userPhoto, setAuthModalMode, setIsAuthModalOpen,
-    handleGoogleLogout, lang, setLang, isUserPremium, isSidebarOpen, sidebarMenuButtonRef, authIsAuthenticated,
+    handleGoogleLogout, lang, setLang, isUserPremium, isAdminUser, isSidebarOpen, sidebarMenuButtonRef, authIsAuthenticated,
     isCommandPaletteOpen, setIsCommandPaletteOpen, isCosmoTab,
     showPushBanner, setShowPushBanner, activePush, setActivePush, setActiveQuizId, quizzes,
   } = props;
@@ -244,7 +245,7 @@ export default function AppShell(props: AppShellProps) {
           currentTab={activeTab}
           setTab={handleSetTab}
           lang={lang}
-          isAdmin={Boolean(authIsAuthenticated && userId && !userId.startsWith('user-guest'))}
+          isAdmin={isAdminUser}
           isAuthenticated={Boolean(authIsAuthenticated && userId && !userId.startsWith('user-guest'))}
         />
       )}
