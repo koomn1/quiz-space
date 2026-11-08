@@ -2,12 +2,12 @@ import { jsPDF } from 'jspdf';
 import type { Question, Quiz } from '../types';
 import { cairoArabicFonts } from './pdfFonts/cairoArabicFonts';
 
-const PAGE_WIDTH = 595.28;
-const PAGE_HEIGHT = 841.89;
 const MARGIN = 36;
-const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
-const CONTENT_RIGHT = PAGE_WIDTH - MARGIN;
-const PAGE_BOTTOM = PAGE_HEIGHT - 45;
+function pageWidth(pdf: PdfDocument) { return pdf.internal.pageSize.getWidth(); }
+function pageHeight(pdf: PdfDocument) { return pdf.internal.pageSize.getHeight(); }
+function contentWidth(pdf: PdfDocument) { return pageWidth(pdf) - MARGIN * 2; }
+function contentRight(pdf: PdfDocument) { return pageWidth(pdf) - MARGIN; }
+function pageBottom(pdf: PdfDocument) { return pageHeight(pdf) - 45; }
 const SECTION_GAP = 14;
 const IMAGE_MAX_DIMENSION = 1200;
 const IMAGE_QUALITY = 0.76;
@@ -30,6 +30,9 @@ export interface QuizPdfBranding {
   score?: number | null;
   /** Answer writing area in PDF points. Clamped to 56–320 for page safety. */
   essayAnswerHeight?: number | null;
+  pageFormat?: 'a4' | 'letter' | null;
+  orientation?: 'portrait' | 'landscape' | null;
+  showAnswers?: boolean | null;
 }
 
 const OPTION_PREFIXES_AR = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح'];
@@ -84,7 +87,7 @@ function addPageHeader(pdf: PdfDocument, pageNumber: number, branding?: QuizPdfB
   pdf.setFontSize(8.5);
   pdf.setTextColor(148, 163, 184); // slate-400
   const publisher = branding?.institutionName || 'Quiz Space — نموذج اختبار رسمي';
-  pdf.text(publisher, CONTENT_RIGHT, 22, {
+  pdf.text(publisher, contentRight(pdf), 22, {
     align: 'right',
     isInputVisual: true,
     isInputRtl: true,
@@ -92,7 +95,7 @@ function addPageHeader(pdf: PdfDocument, pageNumber: number, branding?: QuizPdfB
   });
   pdf.setDrawColor(241, 245, 249);
   pdf.setLineWidth(0.6);
-  pdf.line(MARGIN, 28, CONTENT_RIGHT, 28);
+  pdf.line(MARGIN, 28, contentRight(pdf), 28);
 }
 
 function addPageFooters(pdf: PdfDocument, totalPages: number) {
@@ -100,14 +103,14 @@ function addPageFooters(pdf: PdfDocument, totalPages: number) {
     pdf.setPage(i);
     pdf.setDrawColor(241, 245, 249);
     pdf.setLineWidth(0.6);
-    pdf.line(MARGIN, PAGE_HEIGHT - 28, CONTENT_RIGHT, PAGE_HEIGHT - 28);
+    pdf.line(MARGIN, pageHeight(pdf) - 28, contentRight(pdf), pageHeight(pdf) - 28);
     
     pdf.setFont('Cairo', 'normal');
     pdf.setFontSize(8.5);
     pdf.setTextColor(148, 163, 184);
     
     // Left: Platform tag
-    pdf.text('تم إنشاؤه بواسطة Quiz Space', MARGIN, PAGE_HEIGHT - 16, {
+    pdf.text('تم إنشاؤه بواسطة Quiz Space', MARGIN, pageHeight(pdf) - 16, {
       align: 'left',
       isInputVisual: true,
       isInputRtl: true,
@@ -115,7 +118,7 @@ function addPageFooters(pdf: PdfDocument, totalPages: number) {
     });
 
     // Right: Page counter
-    pdf.text(`صفحة ${i} من ${totalPages}`, CONTENT_RIGHT, PAGE_HEIGHT - 16, {
+    pdf.text(`صفحة ${i} من ${totalPages}`, contentRight(pdf), pageHeight(pdf) - 16, {
       align: 'right',
       isInputVisual: true,
       isInputRtl: true,
@@ -181,9 +184,9 @@ async function loadQuestionImages(questions: Question[]) {
 
 export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBranding | null): Promise<PdfDocument> {
   const pdf = new jsPDF({
-    orientation: 'p',
+    orientation: branding?.orientation === 'landscape' ? 'l' : 'p',
     unit: 'pt',
-    format: 'a4',
+    format: branding?.pageFormat === 'letter' ? 'letter' : 'a4',
     compress: true,
     putOnlyUsedFonts: true,
   });
@@ -201,18 +204,19 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   };
 
   const ensureSpace = (height: number) => {
-    if (y + height > PAGE_BOTTOM) newPage();
+    if (y + height > pageBottom(pdf)) newPage();
   };
 
   const brandColor = getBrandColor(branding);
   const essayAnswerHeight = getEssayAnswerHeight(branding);
+  const showAnswers = branding?.showAnswers === true;
   addPageHeader(pdf, pageNumber, branding);
 
   // Institution Banner / Title Header
   pdf.setFont('Cairo', 'bold');
   pdf.setFontSize(20);
   pdf.setTextColor(...brandColor);
-  pdf.text(branding?.institutionName || 'منصة Quiz Space التعليمية', CONTENT_RIGHT, y + 14, {
+  pdf.text(branding?.institutionName || 'منصة Quiz Space التعليمية', contentRight(pdf), y + 14, {
     align: 'right',
     isInputVisual: true,
     isInputRtl: true,
@@ -223,7 +227,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   pdf.setFont('Cairo', 'normal');
   pdf.setFontSize(9.5);
   pdf.setTextColor(100, 116, 139);
-  pdf.text(branding?.institutionName ? 'ورقة أسئلة نموذجية وموثقة' : 'ورقة أسئلة واختبار تفاعلي — بدون إجابات', CONTENT_RIGHT, y, {
+  pdf.text(branding?.institutionName ? 'ورقة أسئلة نموذجية وموثقة' : 'ورقة أسئلة واختبار تفاعلي — بدون إجابات', contentRight(pdf), y, {
     align: 'right',
     isInputVisual: true,
     isInputRtl: true,
@@ -232,7 +236,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
 
   pdf.setDrawColor(...brandColor);
   pdf.setLineWidth(1.8);
-  pdf.line(MARGIN, y + 8, CONTENT_RIGHT, y + 8);
+  pdf.line(MARGIN, y + 8, contentRight(pdf), y + 8);
   y += 24;
 
   // Quiz Header Box
@@ -242,8 +246,8 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   const examDate = branding?.examDate?.trim() || '____________________________';
   const scoreLabel = typeof branding?.score === 'number' ? `${branding.score} / ${quiz.questions.length}` : '____ / ' + quiz.questions.length;
   
-  const titleLines = pdf.splitTextToSize(title, CONTENT_WIDTH - 24) as string[];
-  const descriptionLines = description ? (pdf.splitTextToSize(description, CONTENT_WIDTH - 24) as string[]) : [];
+  const titleLines = pdf.splitTextToSize(title, contentWidth(pdf) - 24) as string[];
+  const descriptionLines = description ? (pdf.splitTextToSize(description, contentWidth(pdf) - 24) as string[]) : [];
   const infoHeight = 36 + titleLines.length * 22 + descriptionLines.length * 16 + 58;
   ensureSpace(infoHeight);
 
@@ -251,7 +255,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   pdf.setFillColor(248, 250, 252); // slate-50
   pdf.setDrawColor(226, 232, 240); // slate-200
   pdf.setLineWidth(0.8);
-  pdf.roundedRect(MARGIN, y, CONTENT_WIDTH, infoHeight, 8, 8, 'FD');
+  pdf.roundedRect(MARGIN, y, contentWidth(pdf), infoHeight, 8, 8, 'FD');
 
   // Decorative Accent Strip on Left of Title Box
   pdf.setFillColor(...brandColor);
@@ -260,7 +264,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   pdf.setFont('Cairo', 'bold');
   pdf.setFontSize(15);
   pdf.setTextColor(15, 23, 42); // slate-900
-  pdf.text(titleLines, CONTENT_RIGHT - 14, y + 22, {
+  pdf.text(titleLines, contentRight(pdf) - 14, y + 22, {
     align: 'right',
     lineHeightFactor: 1.4,
     isInputVisual: true,
@@ -273,7 +277,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     pdf.setFont('Cairo', 'normal');
     pdf.setFontSize(9.5);
     pdf.setTextColor(71, 85, 105);
-    pdf.text(descriptionLines, CONTENT_RIGHT - 14, infoY, {
+    pdf.text(descriptionLines, contentRight(pdf) - 14, infoY, {
       align: 'right',
       lineHeightFactor: 1.5,
       isInputVisual: true,
@@ -286,14 +290,14 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   // Metadata separator line
   pdf.setDrawColor(226, 232, 240);
   pdf.setLineWidth(0.5);
-  pdf.line(MARGIN + 14, infoY + 6, CONTENT_RIGHT - 14, infoY + 6);
+  pdf.line(MARGIN + 14, infoY + 6, contentRight(pdf) - 14, infoY + 6);
 
   // Metadata fields: labels are above the writing lines so students can fill
   // them in by hand without the label being trapped inside the blank.
   pdf.setFont('Cairo', 'bold');
   pdf.setFontSize(9.5);
   pdf.setTextColor(71, 85, 105);
-  pdf.text('اسم الطالب', CONTENT_RIGHT - 14, infoY + 20, {
+  pdf.text('اسم الطالب', contentRight(pdf) - 14, infoY + 20, {
     align: 'right',
     isInputVisual: true,
     isInputRtl: true,
@@ -302,7 +306,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
 
   pdf.setFont('Cairo', 'normal');
   pdf.setFontSize(9.5);
-  pdf.text(studentLabel, CONTENT_RIGHT - 14, infoY + 38, {
+  pdf.text(studentLabel, contentRight(pdf) - 14, infoY + 38, {
     align: 'right',
     isInputVisual: true,
     isInputRtl: true,
@@ -341,9 +345,9 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
 
     pdf.setFont('Cairo', 'bold');
     pdf.setFontSize(11.5);
-    const questionLines = pdf.splitTextToSize(questionText, CONTENT_WIDTH - 32) as string[];
+    const questionLines = pdf.splitTextToSize(questionText, contentWidth(pdf) - 32) as string[];
     const questionTextHeight = questionLines.length * 18;
-    const imageHeight = image ? Math.min(180, (image.height / image.width) * (CONTENT_WIDTH - 32)) + 16 : 0;
+    const imageHeight = image ? Math.min(180, (image.height / image.width) * (contentWidth(pdf) - 32)) + 16 : 0;
     const options = getOptions(question);
 
     let optionHeight = 0;
@@ -352,7 +356,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     } else if (options.length) {
       pdf.setFont('Cairo', 'normal');
       pdf.setFontSize(10);
-      const optionWidth = (CONTENT_WIDTH - 18) / 2 - 32;
+      const optionWidth = (contentWidth(pdf) - 18) / 2 - 32;
       const rowHeights: number[] = [];
       for (let row = 0; row < Math.ceil(options.length / 2); row += 1) {
         const first = options[row * 2] || '';
@@ -363,9 +367,13 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
       }
       optionHeight = rowHeights.reduce((sum, value) => sum + value + 6, 0);
     }
+    const correctAnswer = question.type === 'essay'
+      ? normaliseText(question.correctAnswer || '')
+      : normaliseText(options[question.correctIndex] || '');
+    const answerHeight = showAnswers ? 24 : 0;
 
     const headerHeight = 26;
-    const totalCardHeight = headerHeight + 12 + questionTextHeight + imageHeight + optionHeight + 18;
+    const totalCardHeight = headerHeight + 12 + questionTextHeight + imageHeight + optionHeight + answerHeight + 18;
 
     // Check space before drawing card
     ensureSpace(totalCardHeight);
@@ -376,18 +384,18 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     pdf.setFillColor(255, 255, 255);
     pdf.setDrawColor(226, 232, 240);
     pdf.setLineWidth(0.8);
-    pdf.roundedRect(MARGIN, cardTop, CONTENT_WIDTH, totalCardHeight, 8, 8, 'FD');
+    pdf.roundedRect(MARGIN, cardTop, contentWidth(pdf), totalCardHeight, 8, 8, 'FD');
 
     // Header Pill Bar
     pdf.setFillColor(...brandColor);
-    pdf.roundedRect(MARGIN, cardTop, CONTENT_WIDTH, headerHeight, 8, 8, 'F');
-    pdf.rect(MARGIN, cardTop + headerHeight - 8, CONTENT_WIDTH, 8, 'F'); // square bottom corners of header fill
+    pdf.roundedRect(MARGIN, cardTop, contentWidth(pdf), headerHeight, 8, 8, 'F');
+    pdf.rect(MARGIN, cardTop + headerHeight - 8, contentWidth(pdf), 8, 'F'); // square bottom corners of header fill
 
     // Question Number Label
     pdf.setFont('Cairo', 'bold');
     pdf.setFontSize(9.5);
     pdf.setTextColor(255, 255, 255);
-    pdf.text(`السؤال ${index + 1} من ${quiz.questions.length}`, CONTENT_RIGHT - 12, cardTop + 17, {
+    pdf.text(`السؤال ${index + 1} من ${quiz.questions.length}`, contentRight(pdf) - 12, cardTop + 17, {
       align: 'right',
       isInputVisual: true,
       isInputRtl: true,
@@ -411,7 +419,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     pdf.setFont('Cairo', 'bold');
     pdf.setFontSize(11.5);
     pdf.setTextColor(15, 23, 42);
-    pdf.text(questionLines, CONTENT_RIGHT - 14, y, {
+    pdf.text(questionLines, contentRight(pdf) - 14, y, {
       align: 'right',
       lineHeightFactor: 1.45,
       isInputVisual: true,
@@ -422,9 +430,9 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
 
     // Question Image if available
     if (image) {
-      const displayWidth = Math.min(CONTENT_WIDTH - 32, 340);
+      const displayWidth = Math.min(contentWidth(pdf) - 32, 340);
       const displayHeight = Math.min(180, (image.height / image.width) * displayWidth);
-      const imageX = CONTENT_RIGHT - 14 - displayWidth;
+      const imageX = contentRight(pdf) - 14 - displayWidth;
       pdf.addImage(image.dataUrl, 'JPEG', imageX, y, displayWidth, displayHeight, undefined, 'FAST');
       y += displayHeight + 12;
     }
@@ -433,11 +441,11 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     if (question.type === 'essay') {
       pdf.setFillColor(248, 250, 252);
       pdf.setDrawColor(203, 213, 225);
-      pdf.roundedRect(MARGIN + 12, y, CONTENT_WIDTH - 24, essayAnswerHeight, 6, 6, 'FD');
+      pdf.roundedRect(MARGIN + 12, y, contentWidth(pdf) - 24, essayAnswerHeight, 6, 6, 'FD');
       pdf.setFont('Cairo', 'normal');
       pdf.setFontSize(9);
       pdf.setTextColor(148, 163, 184);
-      pdf.text('إجابة الطالب:', CONTENT_RIGHT - 24, y + 18, {
+      pdf.text('إجابة الطالب:', contentRight(pdf) - 24, y + 18, {
         align: 'right',
         isInputVisual: true,
         isInputRtl: true,
@@ -445,7 +453,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
       });
       y += essayAnswerHeight + 10;
     } else {
-      const optionWidth = (CONTENT_WIDTH - 18) / 2;
+      const optionWidth = (contentWidth(pdf) - 18) / 2;
       const cellTextWidth = optionWidth - 36;
       const rowCount = Math.ceil(options.length / 2);
       pdf.setFont('Cairo', 'normal');
@@ -459,7 +467,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
         cells.forEach((value, cellIndex) => {
           const optIndex = row * 2 + cellIndex;
           const prefix = OPTION_PREFIXES_AR[optIndex] || `${optIndex + 1}`;
-          const x = CONTENT_RIGHT - 12 - cellIndex * (optionWidth + 6) - optionWidth;
+          const x = contentRight(pdf) - 12 - cellIndex * (optionWidth + 6) - optionWidth;
 
           // Option Box Background
           pdf.setFillColor(248, 250, 252);
@@ -496,6 +504,18 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
         });
         y += rowHeight + 6;
       }
+    }
+    if (showAnswers) {
+      pdf.setFont('Cairo', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(...brandColor);
+      pdf.text(`الإجابة الصحيحة: ${correctAnswer || '—'}`, contentRight(pdf) - 14, y + 12, {
+        align: 'right',
+        isInputVisual: true,
+        isInputRtl: true,
+        isOutputRtl: true,
+      });
+      y += answerHeight;
     }
 
     y = cardTop + totalCardHeight + SECTION_GAP;

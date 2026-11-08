@@ -77,6 +77,9 @@ export function InteractiveQuizCard({
   const [pdfStudentName, setPdfStudentName] = useState('');
   const [pdfExamDate, setPdfExamDate] = useState('');
   const [pdfScore, setPdfScore] = useState('');
+  const [pdfPageFormat, setPdfPageFormat] = useState<'a4' | 'letter'>('a4');
+  const [pdfOrientation, setPdfOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [pdfShowAnswers, setPdfShowAnswers] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
@@ -92,6 +95,9 @@ export function InteractiveQuizCard({
     setPdfStudentName('');
     setPdfExamDate(new Date().toLocaleDateString(isAr ? 'ar-EG' : 'en-US'));
     setPdfScore('');
+    setPdfPageFormat('a4');
+    setPdfOrientation('portrait');
+    setPdfShowAnswers(false);
     setPdfSettingsOpen(true);
   };
 
@@ -107,6 +113,9 @@ export function InteractiveQuizCard({
         examDate: pdfExamDate,
         score: Number.isFinite(parsedScore) ? parsedScore : null,
         essayAnswerHeight,
+        pageFormat: pdfPageFormat,
+        orientation: pdfOrientation,
+        showAnswers: pdfShowAnswers,
       };
       const bytes = await createQuizPdfBytes(quiz, branding);
       downloadQuizPdfBytes(bytes, getQuizPdfFileName(quiz, branding));
@@ -359,6 +368,11 @@ export function InteractiveQuizCard({
               <div><label className="mb-1 block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'التاريخ' : 'Date'}</label><input value={pdfExamDate} onChange={(event) => setPdfExamDate(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white" /></div>
             </div>
             <div><label className="mb-1 block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'الدرجة (اختياري)' : 'Score (optional)'}</label><input type="number" min={0} max={quiz.questions.length} value={pdfScore} onChange={(event) => setPdfScore(event.target.value)} placeholder={`____ / ${quiz.questions.length}`} className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white" /></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'حجم الورق' : 'Paper size'}<select value={pdfPageFormat} onChange={(event) => setPdfPageFormat(event.target.value as 'a4' | 'letter')} className="mt-1 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none dark:border-slate-700 dark:bg-slate-900/80 dark:text-white"><option value="a4">A4</option><option value="letter">Letter</option></select></label>
+              <label className="block text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'اتجاه الصفحة' : 'Orientation'}<select value={pdfOrientation} onChange={(event) => setPdfOrientation(event.target.value as 'portrait' | 'landscape')} className="mt-1 w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none dark:border-slate-700 dark:bg-slate-900/80 dark:text-white"><option value="portrait">{isAr ? 'رأسي' : 'Portrait'}</option><option value="landscape">{isAr ? 'أفقي' : 'Landscape'}</option></select></label>
+            </div>
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-violet-200/70 bg-violet-50/60 px-3 py-3 text-xs font-black text-violet-800 dark:border-violet-500/20 dark:bg-violet-950/20 dark:text-violet-200"><input type="checkbox" checked={pdfShowAnswers} onChange={(event) => setPdfShowAnswers(event.target.checked)} className="h-4 w-4 accent-violet-600" />{isAr ? 'إظهار الإجابات الصحيحة في ملف المدرّس' : 'Show correct answers in teacher copy'}</label>
           </div>
           <aside className="rounded-2xl border border-violet-200/70 bg-violet-50/70 p-4 dark:border-violet-500/20 dark:bg-violet-950/20">
             <h4 className="text-sm font-black text-slate-800 dark:text-slate-100">{isAr ? 'مساحة إجابة المقالي' : 'Essay answer space'}</h4>
