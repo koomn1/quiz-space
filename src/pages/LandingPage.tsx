@@ -7,7 +7,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Quiz } from '../types';
+import { Quiz, QuizCompletion } from '../types';
 import {
   Sparkles,
   Download,
@@ -30,10 +30,12 @@ import {
   Code2,
   Atom,
   History,
+  Eye,
 } from 'lucide-react';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
 import { PremiumNameTag } from '../components/PremiumNameTag';
 import DailyQuizCard from '../components/DailyQuizCard';
+import { getCompletionsByQuizId, getQuizTakersUnique } from '../lib/db';
 
 gsap.registerPlugin(useGSAP);
 
@@ -174,6 +176,9 @@ export default function LandingPage({
   const [activeCategory, setActiveCategory] = React.useState('all');
   const [aiPromptInput, setAiPromptInput] = React.useState('');
   const [quizToDelete, setQuizToDelete] = React.useState<string | null>(null);
+  const [attemptsQuiz, setAttemptsQuiz] = React.useState<Quiz | null>(null);
+  const [attempts, setAttempts] = React.useState<QuizCompletion[]>([]);
+  const [attemptsLoading, setAttemptsLoading] = React.useState(false);
   const [recentPrompts, setRecentPrompts] = React.useState<string[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('quizspace_recent_prompts') || '[]');
@@ -213,6 +218,13 @@ export default function LandingPage({
     timer = window.setTimeout(tick, 500);
     return () => { if (timer) window.clearTimeout(timer); };
   }, [isAr, topicExamples.join('|')]);
+
+  React.useEffect(() => {
+    if (!attemptsQuiz) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [attemptsQuiz]);
 
   const topicPlaceholderRef = React.useRef<HTMLSpanElement>(null);
   useGSAP(() => {
@@ -300,6 +312,25 @@ export default function LandingPage({
     }
   };
 
+  const openAttempts = async (quiz: Quiz) => {
+    setAttemptsQuiz(quiz);
+    setAttempts([]);
+    setAttemptsLoading(true);
+    try {
+      const uniqueTakers = await getQuizTakersUnique(quiz.id);
+      setAttempts(uniqueTakers?.length ? uniqueTakers : await getCompletionsByQuizId(quiz.id));
+    } catch (error) {
+      console.warn('Failed to load homepage quiz solvers:', error);
+      try {
+        setAttempts(await getCompletionsByQuizId(quiz.id));
+      } catch (_) {
+        setAttempts([]);
+      }
+    } finally {
+      setAttemptsLoading(false);
+    }
+  };
+
   return (
     <div className="w-full min-h-dvh pb-32 select-none" dir={isAr ? 'rtl' : 'ltr'}>
       {quizToDelete && (
@@ -308,6 +339,25 @@ export default function LandingPage({
           onCancel={() => setQuizToDelete(null)}
           onConfirm={handleDeleteConfirm}
         />
+      )}
+
+      {attemptsQuiz && (
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-950/70 px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:px-4 sm:pt-8" role="dialog" aria-modal="true" aria-labelledby="homepage-solvers-title" onClick={() => setAttemptsQuiz(null)}>
+          <div className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-2xl dark:border-cyan-900 dark:bg-slate-900 sm:max-h-[calc(100dvh-4rem)]" dir={isAr ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-5 dark:border-slate-800">
+              <div>
+                <h3 id="homepage-solvers-title" className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-white"><Users className="h-5 w-5 text-cyan-500" />{isAr ? 'من حلّوا الاختبار' : 'Quiz solvers'}</h3>
+                <p className="mt-1 max-w-xs truncate text-xs font-bold text-slate-500 dark:text-slate-400">{attemptsQuiz.title}</p>
+              </div>
+              <button type="button" onClick={() => setAttemptsQuiz(null)} className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={isAr ? 'إغلاق' : 'Close'}><X className="h-5 w-5" /></button>
+            </div>
+            <div className="max-h-[65vh] overflow-y-auto p-5">
+              {attemptsLoading ? <p className="py-10 text-center text-sm font-bold text-slate-500">{isAr ? 'جاري تحميل النتائج...' : 'Loading results...'}</p> : attempts.length === 0 ? <p className="py-10 text-center text-sm font-bold text-slate-500">{isAr ? 'لم يحل أحد هذا الاختبار بعد.' : 'No completed attempts yet.'}</p> : (
+                <div className="space-y-2">{attempts.map((attempt, index) => <div key={attempt.id || `${attempt.takerId || 'solver'}-${index}`} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="min-w-0"><p className="truncate text-sm font-black text-slate-900 dark:text-white">{attempt.takerName || (isAr ? 'طالب' : 'Student')}</p><p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p></div><span className="shrink-0 rounded-xl bg-cyan-100 px-2.5 py-1 text-xs font-black text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-200">{attempt.score} / {attempt.totalQuestions}</span></div>)}</div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Hero Atmosphere — Modern, Balanced & Elevated Canvas */}
@@ -556,6 +606,7 @@ export default function LandingPage({
             {filteredQuizzes.map((quiz) => {
               const questionsCount = quiz.questions?.length || 10;
               const isOwner = currentUserId && quiz.creatorId === currentUserId;
+              const canManageQuiz = Boolean(currentUserId && (isOwner || isAdmin));
               const plays = quiz.totalPlays || 0;
               const rating = quiz.avgRating ? quiz.avgRating.toFixed(1) : '5.0';
               const estMinutes = Math.max(3, Math.round(questionsCount * 0.7));
@@ -592,7 +643,7 @@ export default function LandingPage({
 
                       {/* Action Menu (Share, Edit, Delete) */}
                       <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                        {isOwner && onEditQuiz && (
+                        {canManageQuiz && onEditQuiz && (
                           <button
                             type="button"
                             onClick={(e) => {
@@ -629,6 +680,20 @@ export default function LandingPage({
                         >
                           <Share2 className="w-3.5 h-3.5" />
                         </button>
+                        {canManageQuiz && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void openAttempts(quiz);
+                            }}
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors cursor-pointer"
+                            title={isAr ? 'مشاهدة من حلّوا الاختبار' : 'View quiz solvers'}
+                            aria-label={isAr ? `مشاهدة من حلّوا الاختبار (${plays})` : `View quiz solvers (${plays})`}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -654,12 +719,19 @@ export default function LandingPage({
 
                   {/* Card Actions: visible on the card, never hidden in a menu */}
                   <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
-                    <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
-                      <button type="button" onClick={() => void exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[11px] font-black text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200" title={isAr ? 'تصدير الاختبار PDF' : 'Export quiz as PDF'}>
-                        <Download className="h-3.5 w-3.5" />
-                        <span>PDF</span>
-                      </button>
-                    </div>
+                    {canManageQuiz && (
+                      <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
+                        <button type="button" onClick={() => void exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[11px] font-black text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200" title={isAr ? 'تصدير الاختبار PDF' : 'Export quiz as PDF'}>
+                          <Download className="h-3.5 w-3.5" />
+                          <span>PDF</span>
+                        </button>
+                        <button type="button" onClick={() => void openAttempts(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-[11px] font-black text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلّوا الاختبار' : 'View quiz solvers'}>
+                          <Users className="h-3.5 w-3.5" />
+                          <span>{isAr ? 'من حلّه' : 'Solvers'}</span>
+                          <span className="rounded-full bg-cyan-200/70 px-1.5 py-0.5 text-[10px] dark:bg-cyan-900/70">{plays}</span>
+                        </button>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between gap-3">
                     {/* Creator Identity with Verified Look */}
                     <button
