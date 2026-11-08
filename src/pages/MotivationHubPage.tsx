@@ -453,8 +453,9 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
     const itemImageUrl = item.image_url ? resolveFrameAsset(item) : null;
 
     return (
-      <div key={item.id} className="flex flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
-        <div className={`relative mb-4 flex h-28 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br ${item.css_class === 'frame-fire' ? 'from-orange-500 to-rose-600' : item.css_class === 'frame-crystal-luxe' ? 'from-cyan-400 to-indigo-600' : item.css_class === 'frame-star-crown' ? 'from-amber-400 to-yellow-600' : item.css_class === 'frame-diamond-comet' || item.css_class === 'frame-diamond-crown' ? 'from-sky-400 to-violet-700' : 'from-violet-500 to-fuchsia-600'}`}>
+      <div key={item.id} className="group flex flex-col overflow-hidden rounded-[26px] border border-slate-200/80 bg-white/85 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-violet-300 hover:shadow-[0_20px_42px_rgba(124,58,237,0.14)] dark:border-white/10 dark:bg-slate-900/70 dark:hover:border-violet-500/40">
+        <div className={`relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-[22px] bg-gradient-to-br ${item.css_class === 'frame-fire' ? 'from-orange-500 to-rose-600' : item.css_class === 'frame-crystal-luxe' ? 'from-cyan-400 to-indigo-600' : item.css_class === 'frame-star-crown' ? 'from-amber-400 to-yellow-600' : item.css_class === 'frame-diamond-comet' || item.css_class === 'frame-diamond-crown' ? 'from-sky-400 to-violet-700' : 'from-violet-500 to-fuchsia-600'} shadow-inner`}>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,.42),transparent_35%)] opacity-80 transition duration-500 group-hover:scale-125" />
           <div className="relative z-10 h-16 w-16 rounded-full border-4 border-white/90 bg-slate-900/35 shadow-[0_0_0_5px_rgba(255,255,255,.22)] flex items-center justify-center overflow-hidden">
             <Sparkles className="absolute h-6 w-6 text-white/50" />
             {itemImageUrl && (
@@ -464,10 +465,10 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
           {locked && <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/55 text-white"><Lock className="h-6 w-6" /></div>}
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3>
-          <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{lang === 'ar' ? item.description_ar : item.description}</p>
+          <h3 className="text-[15px] font-black tracking-tight text-slate-950 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3>
+          <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{lang === 'ar' ? item.description_ar : item.description}</p>
         </div>
-        <div className="mt-4 flex items-center justify-between gap-2">
+        <div className="mt-5 flex items-center justify-between gap-2 border-t border-slate-200/80 pt-4 dark:border-white/10">
           <span className="text-xs font-black">
             {locked ? (
               <span className="text-amber-600 dark:text-amber-400">{t.diamond}</span>
@@ -487,7 +488,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
               <span className="text-slate-500 dark:text-slate-400">{lang === 'ar' ? 'غير متاح' : 'Unavailable'}</span>
             )}
           </span>
-          <button type="button" disabled={!isActionAvailable || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="rounded-xl bg-violet-600 px-3 py-2 text-[11px] font-black text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-45 shadow-sm shadow-violet-600/20">
+          <button type="button" disabled={!isActionAvailable || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="min-h-10 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-2 text-[11px] font-black text-white shadow-sm shadow-violet-600/20 transition hover:-translate-y-0.5 hover:from-violet-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-45">
             {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : payment.mode === 'cash' ? (lang === 'ar' ? 'شراء بالمال' : 'Buy') : payment.mode === 'unavailable' ? (lang === 'ar' ? 'غير متاح' : 'Unavailable') : t.buy}
           </button>
         </div>
@@ -495,7 +496,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
     );
   };
   return <div className="space-y-8">
-    <div className="flex flex-col gap-4 rounded-[2rem] border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-5 dark:border-amber-900/50 dark:from-amber-950/30 dark:to-orange-950/20 sm:flex-row sm:items-center sm:justify-between"><div><div className="flex items-center gap-2 text-lg font-black text-slate-900 dark:text-white"><Store className="h-5 w-5 text-amber-600" />{t.store}</div><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{lang === 'ar' ? 'اجمع النقاط من الألعاب ثم استبدلها بإطاراتك المفضلة.' : 'Collect points from games and exchange them for your favorite frames.'}</p></div><RewardPill rewards={rewards} lang={lang} /></div>
+    <div className="relative flex flex-col gap-5 overflow-hidden rounded-[28px] border border-amber-200/80 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-5 shadow-[0_14px_38px_rgba(245,158,11,0.10)] dark:border-amber-900/50 dark:from-amber-950/35 dark:via-slate-900 dark:to-orange-950/20 sm:flex-row sm:items-center sm:justify-between sm:p-6"><div className="absolute -end-8 -top-12 h-32 w-32 rounded-full bg-amber-400/15 blur-3xl" /><div className="relative"><div className="flex items-center gap-2 text-xl font-black text-slate-950 dark:text-white"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600"><Store className="h-5 w-5" /></span>{t.store}</div><p className="mt-2 max-w-xl text-xs font-semibold leading-6 text-slate-500 dark:text-slate-400">{lang === 'ar' ? 'اجمع النقاط من الألعاب ثم استبدلها بإطاراتك المفضلة.' : 'Collect points from games and exchange them for your favorite frames.'}</p></div><div className="relative"><RewardPill rewards={rewards} lang={lang} /></div></div>
     {loading ? <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-violet-600" /></div> : <div className="space-y-10">
       {offers.length > 0 && (
         <section>
