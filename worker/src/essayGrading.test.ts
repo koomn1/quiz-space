@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { buildEssayGradingPrompt } from './essayGrading';
+import { buildEssayGradingPrompt, normalizeEssayGradeResult } from './essayGrading';
 
 describe('essay grading prompt', () => {
+  it('normalizes boolean-like AI results without accepting false as true', () => {
+    expect(normalizeEssayGradeResult({ correct: 'true', confidence: 92, reason: 'Equivalent meaning' })).toEqual({
+      correct: true,
+      confidence: 0.92,
+      reason: 'Equivalent meaning',
+    });
+    expect(normalizeEssayGradeResult({ is_correct: 'صحيح', score: 0.8, reason: 'صحيحة' }).correct).toBe(true);
+    expect(normalizeEssayGradeResult({ correct: 'false', confidence: 0.9 }).correct).toBe(false);
+  });
+
   it('grades against the question when the quiz author did not provide a model answer', () => {
     const prompt = buildEssayGradingPrompt(
       'Mention the valves of the heart.',

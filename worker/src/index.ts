@@ -23,7 +23,7 @@ import { handleExtractionRoutes } from './extractionRoutes';
 import { finishTask, retryDelaySeconds } from './taskLedger';
 import { extractAttachmentText, formatSourceForModel } from './attachmentPipeline';
 import { generateWithProviderChain, INCEPTION_MODEL, XKIRO_VISION_MODEL } from './providerChain';
-import { buildEssayGradingPrompt } from './essayGrading';
+import { buildEssayGradingPrompt, normalizeEssayGradeResult } from './essayGrading';
 export type { Env, ExtractionQueueMessage, WorkerExecutionContext } from './platform';
 
 type Provider = 'inception';
@@ -426,8 +426,8 @@ async function extractPowerPointText(data: Uint8Array): Promise<string> {
 
 async function gradeEssayWithFallback(env: Env, question: string, modelAnswer: string, studentAnswer: string): Promise<any> {
   const prompt = buildEssayGradingPrompt(question, modelAnswer, studentAnswer);
-  const result = extractJson(await callAiWithFallback(env, [{ role: 'user', content: prompt }], AI_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 25_000 })) as any;
-  return { correct: result?.correct === true, confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)), reason: typeof result?.reason === 'string' ? result.reason.slice(0, 300) : '', provider: 'inception' };
+  const result = normalizeEssayGradeResult(extractJson(await callAiWithFallback(env, [{ role: 'user', content: prompt }], AI_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 25_000 })));
+  return { ...result, provider: 'inception' };
 }
 
 async function providerText(
