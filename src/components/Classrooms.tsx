@@ -988,7 +988,7 @@ export default function Classrooms({
         priority: annPriority,
         posted_by: currentUserId,
         posted_by_name: currentUserName,
-        reactions: { '': 0, '': 0, '': 0 }
+        reactions: { '\u{1F44D}': 0, '\u{2764}\u{FE0F}': 0, '\u{1F4A1}': 0 }
       }).select().single();
       if (error) throw new Error(error.message);
       void sendPushEvent({ title: ` إعلان جديد في ${activeClassroomView.name}`, body: annContent.slice(0, 160), url: 'https://quiz-space-app.pages.dev/#/classrooms', category: 'classroom', classId: activeClassroomView.id });
@@ -1625,7 +1625,7 @@ export default function Classrooms({
                             </div>
                             <p className="text-xs text-slate-200 leading-relaxed">{ann.content}</p>
                             <div className="flex items-center gap-4 pt-2 border-t border-slate-800/60">
-                              {['', '', '', ''].map(emoji => (
+                              {['\u{1F44D}', '\u{2764}\u{FE0F}', '\u{1F4A1}', '\u{1F389}'].map(emoji => (
                                 <button
 
                                   onClick={() => handleAddReaction(ann.id, emoji)}
@@ -2415,7 +2415,7 @@ export default function Classrooms({
                         </div>
                         <p className="text-xs text-slate-200 leading-relaxed">{ann.content}</p>
                         <div className="flex gap-2 pt-2 border-t border-slate-800/60">
-                          {['', '', ''].map(emoji => (
+                          {['\u{1F44D}', '\u{2764}\u{FE0F}', '\u{1F4A1}'].map(emoji => (
                             <button
 
                               onClick={() => handleAddReaction(ann.id, emoji)}

@@ -174,6 +174,12 @@ export default function LandingPage({
   const [activeCategory, setActiveCategory] = React.useState('all');
   const [aiPromptInput, setAiPromptInput] = React.useState('');
   const [quizToDelete, setQuizToDelete] = React.useState<string | null>(null);
+  const [recentPrompts, setRecentPrompts] = React.useState<string[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('quizspace_recent_prompts') || '[]');
+      return Array.isArray(saved) ? saved.filter((value): value is string => typeof value === 'string').slice(0, 3) : [];
+    } catch (_) { return []; }
+  });
   const [animatedTopic, setAnimatedTopic] = React.useState('');
   const topicExamples = isAr
     ? ['الذكاء الاصطناعي التوليدي', 'تشريح القلب والدورة الدموية', 'تاريخ مصر القديمة', 'أساسيات لغة Python', 'إدارة الوقت والمذاكرة']
@@ -259,6 +265,9 @@ export default function LandingPage({
     const topic = aiPromptInput.trim();
     if (topic) {
       localStorage.setItem('quiz_prefill_topic', topic);
+      const nextRecent = [topic, ...recentPrompts.filter((item) => item.toLowerCase() !== topic.toLowerCase())].slice(0, 3);
+      setRecentPrompts(nextRecent);
+      localStorage.setItem('quizspace_recent_prompts', JSON.stringify(nextRecent));
       onCreateQuizTab(topic);
     } else {
       onCreateQuizTab();
@@ -383,6 +392,16 @@ export default function LandingPage({
                 type="button"
                 onClick={() => setAiPromptInput(prompt)}
                 className="text-[11px] font-semibold px-3 py-1 rounded-full text-slate-700 dark:text-slate-300 hover:text-sky-500 dark:hover:text-sky-400 bg-black/5 dark:bg-white/5 hover:bg-sky-500/10 transition-colors cursor-pointer border border-black/5 dark:border-white/5"
+              >
+                {prompt}
+              </button>
+            ))}
+            {recentPrompts.map((prompt) => (
+              <button
+                key={`recent-${prompt}`}
+                type="button"
+                onClick={() => setAiPromptInput(prompt)}
+                className="text-[11px] font-semibold px-3 py-1 rounded-full text-violet-700 dark:text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 transition-colors cursor-pointer border border-violet-500/15"
               >
                 {prompt}
               </button>
