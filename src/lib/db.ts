@@ -338,6 +338,7 @@ function mapQuizRow(row: any): Quiz {
     description: row.description,
     creatorId: row.creator_id,
     creatorName: row.creator_name,
+    creatorPhotoURL: row.creator_photo_url ? resolveProfileImageUrl(row.creator_photo_url) : '',
     creatorBadgeTier: row.creator_badge_tier || 'none',
     creatorBadgeColor: row.creator_badge_color || 'blue',
     creatorNameColor: row.creator_name_color || 'default',
@@ -435,6 +436,26 @@ export async function getQuizzes(): Promise<Quiz[]> {
       console.error('Error fetching quizzes:', error);
     } else {
       dbQuizzes = (data || []).map(mapQuizRow);
+
+      // Keep creator branding current without reading the protected users table.
+      const creatorIds = Array.from(new Set(dbQuizzes.map((quiz) => quiz.creatorId).filter(Boolean)));
+      if (creatorIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('public_profiles')
+          .select('uid, photo_url')
+          .in('uid', creatorIds);
+        if (profilesError) {
+          console.warn('Could not enrich quiz creator avatars:', profilesError.message);
+        } else {
+          const profileById = new Map(
+            (profiles || []).map((profile: any) => [profile.uid, resolveProfileImageUrl(profile.photo_url)]),
+          );
+          dbQuizzes = dbQuizzes.map((quiz) => ({
+            ...quiz,
+            creatorPhotoURL: profileById.get(quiz.creatorId) || quiz.creatorPhotoURL || '',
+          }));
+        }
+      }
     }
   }
 

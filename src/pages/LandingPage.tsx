@@ -8,6 +8,8 @@ import { createPortal } from 'react-dom';
 import { Quiz } from '../types';
 import {
   Sparkles,
+  Download,
+  Eye,
   Search,
   Play,
   Share2,
@@ -28,6 +30,8 @@ import {
   Atom,
   History,
 } from 'lucide-react';
+import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
+import { PremiumNameTag } from '../components/PremiumNameTag';
 
 interface DeleteQuizConfirmDialogProps {
   isAr: boolean;
@@ -215,6 +219,25 @@ export default function LandingPage({
       onCreateQuizTab(topic);
     } else {
       onCreateQuizTab();
+    }
+  };
+
+  const exportQuizPdf = async (quiz: Quiz) => {
+    try {
+      const branding = {
+        institutionName: quiz.creatorName || '',
+        pdfTitle: quiz.title,
+        pdfDescription: quiz.description || '',
+        studentName: '',
+        examDate: new Date().toLocaleDateString(isAr ? 'ar-EG' : 'en-US'),
+        score: null,
+        essayAnswerHeight: 120,
+      };
+      const bytes = await createQuizPdfBytes(quiz, branding);
+      downloadQuizPdfBytes(bytes, getQuizPdfFileName(quiz, branding));
+    } catch (error) {
+      console.error('Quiz PDF export failed:', error);
+      window.alert(isAr ? 'تعذر تصدير الاختبار حالياً.' : 'Could not export this quiz right now.');
     }
   };
 
@@ -558,8 +581,19 @@ export default function LandingPage({
                     </div>
                   </div>
 
-                  {/* Card Bottom: Creator Identity & Prominent Start Button */}
-                  <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-3">
+                  {/* Card Actions: visible on the card, never hidden in a menu */}
+                  <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
+                      <button type="button" onClick={() => onStartQuiz(quiz.id)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] font-black text-sky-700 transition hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200" title={isAr ? 'مشاهدة الاختبار' : 'View quiz'}>
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>{isAr ? 'مشاهدة الاختبار' : 'View quiz'}</span>
+                      </button>
+                      <button type="button" onClick={() => void exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[11px] font-black text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200" title={isAr ? 'تصدير الاختبار PDF' : 'Export quiz as PDF'}>
+                        <Download className="h-3.5 w-3.5" />
+                        <span>PDF</span>
+                      </button>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
                     {/* Creator Identity with Verified Look */}
                     <button
                       type="button"
@@ -570,13 +604,19 @@ export default function LandingPage({
                       }}
                       className="flex items-center gap-2 group/creator text-right max-w-[150px] truncate cursor-pointer"
                     >
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs">
-                        {quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q'}
+                      <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs ring-2 ring-white/70 dark:ring-slate-800 overflow-hidden">
+                        {quiz.creatorPhotoURL ? <img src={quiz.creatorPhotoURL} alt="" className="h-full w-full object-cover" loading="lazy" /> : (quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q')}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 group-hover/creator:text-sky-400 truncate leading-none">
-                          {quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
-                        </p>
+                        <PremiumNameTag
+                          name={quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
+                          isPremium={!!quiz.creatorBadgeTier && quiz.creatorBadgeTier !== 'none'}
+                          badgeTier={quiz.creatorBadgeTier as any}
+                          nameColor={quiz.creatorNameColor as any}
+                          badgeColor={quiz.creatorBadgeColor as any}
+                          badgeSize="sm"
+                          className="max-w-[130px] truncate text-[11px] font-black group-hover/creator:text-sky-400"
+                        />
                         <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
                           {isAr ? 'صانع الاختبار' : 'Quiz Creator'}
                         </p>
@@ -592,6 +632,7 @@ export default function LandingPage({
                       <Play className="w-3 h-3 fill-current" />
                       <span>{isAr ? 'ابدأ الحل' : 'Start'}</span>
                     </button>
+                    </div>
                   </div>
                 </div>
               );

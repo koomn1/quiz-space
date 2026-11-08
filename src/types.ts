@@ -22,6 +22,7 @@ export interface Quiz {
   description: string;
   creatorId: string;
   creatorName: string;
+  creatorPhotoURL?: string;
   creatorBadgeTier?: string;
   creatorBadgeColor?: string;
   creatorNameColor?: string;

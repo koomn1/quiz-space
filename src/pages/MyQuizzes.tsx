@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Quiz, QuizCompletion } from '../types';
-import { BookOpen, Clock, Download, Edit3, Play, Printer, RefreshCw, Share2, Star, Trash2, Users, X } from 'lucide-react';
+import { BookOpen, Clock, Download, Edit3, Eye, Play, Printer, RefreshCw, Share2, Star, Trash2, Users, X } from 'lucide-react';
 import { EssayReviewModal } from '../components/EssayReviewModal';
+import { PremiumNameTag } from '../components/PremiumNameTag';
 import { getCompletionsByQuizId, getPendingEssayReviews, getQuizTakersUnique } from '../lib/db';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
 
@@ -28,10 +29,12 @@ export function MyQuizzes({
   onEditQuiz,
   onDeleteQuiz,
   onShareQuiz,
-  fetchQuizzesList
+  fetchQuizzesList,
+  isAdmin = false,
 }: MyQuizzesProps) {
   const isAr = lang === 'ar';
-  const myQuizzes = quizzes.filter(q => q.creatorId === userId);
+  // Members manage only their own quizzes; administrators can inspect all.
+  const myQuizzes = isAdmin ? quizzes : quizzes.filter(q => q.creatorId === userId);
   const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [essayModalOpen, setEssayModalOpen] = useState(false);
@@ -151,14 +154,14 @@ export function MyQuizzes({
               <BookOpen className="w-4 h-4" />
             </div>
             <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">
-              {isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes'}
+              {isAdmin ? (isAr ? 'كل اختبارات المنصة' : 'All Platform Quizzes') : (isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes')}
             </h2>
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {myQuizzes.length}
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            {isAr ? 'إدارة وتحرير وحذف كافة الاختبارات العلمية التي قمت بتأليفها.' : 'Manage, edit, and inspect all quizzes authored by your account.'}
+            {isAdmin ? (isAr ? 'مراقبة وإدارة جميع الاختبارات بصلاحيات المسؤول.' : 'Inspect and manage every quiz with administrator access.') : (isAr ? 'إدارة وتحرير وحذف كافة الاختبارات العلمية التي قمت بتأليفها.' : 'Manage, edit, and inspect all quizzes authored by your account.')}
           </p>
         </div>
 
@@ -270,8 +273,12 @@ export function MyQuizzes({
                   </div>
                 </div>
 
-                <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
+                  <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
                   <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
+                    <button type="button" onClick={() => onStartQuiz(quiz.id)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] font-black text-sky-700 transition hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200" title={isAr ? 'مشاهدة الاختبار' : 'View quiz'}>
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>{isAr ? 'مشاهدة الاختبار' : 'View quiz'}</span>
+                    </button>
                     <button type="button" onClick={() => exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[11px] font-black text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200" title={isAr ? 'تصدير الاختبار كملف PDF' : 'Export quiz as PDF'}>
                       <Download className="h-3.5 w-3.5" />
                       <span>{isAr ? 'PDF' : 'PDF'}</span>
@@ -288,14 +295,20 @@ export function MyQuizzes({
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 text-right max-w-[150px] truncate">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs">
-                      {quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q'}
+                  <div className="flex items-center gap-2 text-right max-w-[190px] truncate">
+                    <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs ring-2 ring-white/70 dark:ring-slate-800 overflow-hidden">
+                      {quiz.creatorPhotoURL ? <img src={quiz.creatorPhotoURL} alt="" className="h-full w-full object-cover" loading="lazy" /> : (quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q')}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate leading-none">
-                        {quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
-                      </p>
+                      <PremiumNameTag
+                        name={quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
+                        isPremium={!!quiz.creatorBadgeTier && quiz.creatorBadgeTier !== 'none'}
+                        badgeTier={quiz.creatorBadgeTier as any}
+                        nameColor={quiz.creatorNameColor as any}
+                        badgeColor={quiz.creatorBadgeColor as any}
+                        badgeSize="sm"
+                        className="max-w-[150px] truncate text-[11px] font-black"
+                      />
                       <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
                         {isAr ? 'صانع الاختبار' : 'Quiz Creator'}
                       </p>
