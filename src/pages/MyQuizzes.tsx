@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Quiz, QuizCompletion } from '../types';
@@ -347,7 +348,7 @@ export function MyQuizzes({
         </div>
       )}
 
-      {attemptsQuiz && (
+      {attemptsQuiz && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/70 px-3 py-4 backdrop-blur-md sm:px-4 sm:py-8" role="dialog" aria-modal="true" aria-labelledby="my-quiz-solvers-title" onClick={() => setAttemptsQuiz(null)}>
           <div className="flex w-full max-w-lg max-h-[min(86dvh,720px)] flex-col overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-2xl dark:border-cyan-900 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-5 dark:border-slate-800">
@@ -377,7 +378,8 @@ export function MyQuizzes({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       <EssayReviewModal
