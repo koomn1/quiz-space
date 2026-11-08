@@ -122,13 +122,15 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
           poster={`${import.meta.env.BASE_URL}brand/quizspace-logo-512.webp`}
           src={splashSource}
           aria-hidden="true"
-          className="absolute inset-0 z-0 w-full h-full object-cover opacity-100 pointer-events-none"
+          className="absolute inset-0 z-0 w-full h-full object-cover opacity-45 pointer-events-none"
         />
       )}
 
-      {/* Keep the text/progress fallback only for reduced-motion or constrained
-          connections where the video is intentionally disabled. */}
-      {!splashSource && <div className="relative z-10 flex flex-col items-center justify-center space-y-6 text-center animate-in fade-in zoom-in-95 duration-500">
+      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-[#070913]/35 via-[#070913]/45 to-[#070913]/90 pointer-events-none" />
+
+      {/* Keep this welcome layer visible while the video buffers and when the
+          video is disabled, so the user never sees a blank pre-splash screen. */}
+      <div className="relative z-10 flex flex-col items-center justify-center space-y-5 px-6 text-center animate-in fade-in zoom-in-95 duration-500">
         <div className="p-3 rounded-3xl bg-white/[0.04] backdrop-blur-2xl border border-white/10 shadow-2xl">
           <MainLogo size="lg" showText={false} />
         </div>
@@ -158,7 +160,14 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
             <span>{progress}%</span>
           </div>
         </div>
-      </div>}
+        <button
+          type="button"
+          onClick={finish}
+          className="mt-1 min-h-10 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-xs font-black text-white shadow-lg backdrop-blur-xl transition hover:bg-white/20 active:scale-95"
+        >
+          {isAr ? 'تخطي' : 'Skip'}
+        </button>
+      </div>
     </div>
   );
 }
