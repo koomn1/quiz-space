@@ -479,7 +479,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
     const itemImageUrl = getStoreItemImage(item);
 
     return (
-      <div key={item.id} className="group flex flex-col overflow-hidden rounded-[26px] border border-slate-200/80 bg-white/85 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-violet-300 hover:shadow-[0_20px_42px_rgba(124,58,237,0.14)] dark:border-white/10 dark:bg-slate-900/70 dark:hover:border-violet-500/40">
+      <div key={item.id} data-testid="store-item-card" className="group flex flex-col overflow-hidden rounded-[26px] border border-slate-200/80 bg-white/85 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-violet-300 hover:shadow-[0_20px_42px_rgba(124,58,237,0.14)] dark:border-white/10 dark:bg-slate-900/70 dark:hover:border-violet-500/40">
         <div className={`relative mb-4 flex h-32 items-center justify-center overflow-hidden rounded-[22px] bg-gradient-to-br ${item.css_class === 'frame-fire' ? 'from-orange-500 to-rose-600' : item.css_class === 'frame-crystal-luxe' ? 'from-cyan-400 to-indigo-600' : item.css_class === 'frame-star-crown' ? 'from-amber-400 to-yellow-600' : item.css_class === 'frame-diamond-comet' || item.css_class === 'frame-diamond-crown' ? 'from-sky-400 to-violet-700' : 'from-violet-500 to-fuchsia-600'} shadow-inner`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,.42),transparent_35%)] opacity-80 transition duration-500 group-hover:scale-125" />
           <div className="relative z-10 h-16 w-16 rounded-full border-4 border-white/90 bg-slate-900/35 shadow-[0_0_0_5px_rgba(255,255,255,.22)] flex items-center justify-center overflow-hidden">
@@ -541,7 +541,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {offers.map((item: any) => {
               const offerImage = getStoreItemImage(item);
-              return <div key={item.id} className="relative flex flex-col rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-md dark:border-rose-900/50 dark:from-rose-950/30 dark:via-slate-900 dark:to-amber-950/20">
+              return <div key={item.id} data-testid="store-item-card" className="relative flex flex-col rounded-3xl border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 shadow-md dark:border-rose-900/50 dark:from-rose-950/30 dark:via-slate-900 dark:to-amber-950/20">
                 {offerImage && <div className="relative mb-4 flex h-28 items-center justify-center overflow-hidden rounded-2xl bg-white/70 p-3 dark:bg-slate-950/30"><Sparkles className="absolute h-8 w-8 text-rose-300" /><img src={offerImage} alt="" loading="lazy" className="relative h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} /></div>}
                 {item.badge_text && (
                   <span className="absolute top-4 start-4 rounded-full bg-rose-600 px-3 py-1 text-[10px] font-black text-white shadow-sm">
@@ -597,7 +597,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
                 : payment.mode === 'points'
                   ? `${payment.amount.toLocaleString()} ${t.points} · ${t.buy}`
                   : (lang === 'ar' ? 'غير متاح' : 'Unavailable');
-            return <div key={item.id} className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900">
+            return <div key={item.id} data-testid="store-item-card" className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900">
               <div className="relative flex h-20 items-center justify-center overflow-hidden rounded-2xl bg-emerald-50 p-2 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"><Sparkles className="absolute h-6 w-6 opacity-70" />{bundleImage && <img src={bundleImage} alt="" loading="lazy" className="relative h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} />}</div>
               <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{getStoreBundleBenefitLabel(item, lang)}</p>
@@ -617,7 +617,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
           const locked = planRank < rankFor(item.min_plan);
           const isOwned = owned(item.id);
           const usable = !locked && (payment.mode === 'points' || payment.mode === 'coins' || isOwned);
-          return <article key={item.id} className="flex min-h-48 flex-col rounded-3xl border border-fuchsia-200 bg-gradient-to-br from-fuchsia-50 via-white to-rose-50 p-5 shadow-sm dark:border-fuchsia-900/50 dark:from-fuchsia-950/20 dark:via-slate-900 dark:to-rose-950/20">
+          return <article key={item.id} data-testid="store-item-card" className="flex min-h-48 flex-col rounded-3xl border border-fuchsia-200 bg-gradient-to-br from-fuchsia-50 via-white to-rose-50 p-5 shadow-sm dark:border-fuchsia-900/50 dark:from-fuchsia-950/20 dark:via-slate-900 dark:to-rose-950/20">
             <div className="flex items-start gap-4"><div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/80 p-2 shadow-sm dark:bg-slate-950/40">{itemImage ? <img src={itemImage} alt="" loading="lazy" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} /> : <Sparkles className="h-7 w-7 text-fuchsia-500" />}</div><div className="min-w-0 flex-1"><h3 className="text-base font-black text-slate-900 dark:text-white">{lang === 'ar' ? item.name_ar : item.name}</h3><p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">{lang === 'ar' ? item.description_ar : item.description}</p></div></div>
             <div className="mt-auto flex items-center justify-between gap-3 pt-5"><span className="text-xs font-black text-fuchsia-700 dark:text-fuchsia-300">{locked ? t.diamond : isOwned ? t.owned : payment.mode === 'coins' ? `${payment.amount.toLocaleString()} ${t.coins}` : payment.mode === 'points' ? `${payment.amount.toLocaleString()} ${t.points}` : (lang === 'ar' ? 'غير متاح' : 'Unavailable')}</span><button type="button" disabled={!usable || busy === item.id} onClick={() => void handleStoreAction(item)} className="rounded-xl bg-fuchsia-600 px-4 py-2 text-xs font-black text-white transition hover:bg-fuchsia-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45">{busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (lang === 'ar' ? 'مملوك' : 'Owned') : (lang === 'ar' ? 'شراء' : 'Buy')}</button></div>
           </article>;
