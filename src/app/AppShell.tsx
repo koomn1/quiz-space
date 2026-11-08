@@ -73,7 +73,6 @@ export default function AppShell(props: AppShellProps) {
           lang={lang}
           setLang={setLang}
           isPremium={isUserPremium}
-          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         />
       )}
       <ProcessingCenterBanner

@@ -5,7 +5,6 @@ import {
   Globe,
   User,
   LogIn,
-  Command,
   LogOut,
   Home,
   Plus,
@@ -33,7 +32,6 @@ export interface IOS27HeaderProps {
   lang: 'ar' | 'en';
   setLang: (lang: 'ar' | 'en') => void;
   isPremium?: boolean;
-  onOpenCommandPalette?: () => void;
 }
 
 export default function IOS27Header({
@@ -49,7 +47,6 @@ export default function IOS27Header({
   lang,
   setLang,
   isPremium = false,
-  onOpenCommandPalette,
 }: IOS27HeaderProps) {
   const isAr = lang === 'ar';
   const isAuthenticated = Boolean(userId && !userId.startsWith('user-guest'));
@@ -189,20 +186,6 @@ export default function IOS27Header({
               </div>
             </nav>
           )}
-
-          {/* Quick Command / AI Search Pill */}
-          <button
-            type="button"
-            onClick={onOpenCommandPalette}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer hover:bg-black/10 dark:hover:bg-white/10"
-            title={isAr ? 'بحث سريع' : 'Quick Search'}
-          >
-            <Command className="w-3.5 h-3.5 text-sky-500" />
-            <span className="hidden xl:inline">{isAr ? 'ابحث أو اسأل كوزمو...' : 'Search or ask Cosmo...'}</span>
-            <kbd className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 font-mono font-bold text-slate-400 dark:text-slate-500">
-              ⌘K
-            </kbd>
-          </button>
 
           {/* Action Pills: Lang, Theme, User */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
