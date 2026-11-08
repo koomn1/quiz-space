@@ -179,6 +179,7 @@ export default function LandingPage({
   const [attemptsQuiz, setAttemptsQuiz] = React.useState<Quiz | null>(null);
   const [attempts, setAttempts] = React.useState<QuizCompletion[]>([]);
   const [attemptsLoading, setAttemptsLoading] = React.useState(false);
+  const attemptsScrollYRef = React.useRef(0);
   const [recentPrompts, setRecentPrompts] = React.useState<string[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('quizspace_recent_prompts') || '[]');
@@ -221,9 +222,27 @@ export default function LandingPage({
 
   React.useEffect(() => {
     if (!attemptsQuiz) return;
-    const previousOverflow = document.body.style.overflow;
+    attemptsScrollYRef.current = window.scrollY;
+    const previousBodyStyles = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+    };
+    const previousDocumentOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = previousOverflow; };
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${attemptsScrollYRef.current}px`;
+    document.body.style.width = '100%';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousBodyStyles.overflow;
+      document.body.style.position = previousBodyStyles.position;
+      document.body.style.top = previousBodyStyles.top;
+      document.body.style.width = previousBodyStyles.width;
+      document.documentElement.style.overflow = previousDocumentOverflow;
+      window.scrollTo(0, attemptsScrollYRef.current);
+    };
   }, [attemptsQuiz]);
 
   const topicPlaceholderRef = React.useRef<HTMLSpanElement>(null);
@@ -341,8 +360,8 @@ export default function LandingPage({
         />
       )}
 
-      {attemptsQuiz && (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-950/70 px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:px-4 sm:pt-8" role="dialog" aria-modal="true" aria-labelledby="homepage-solvers-title" onClick={() => setAttemptsQuiz(null)}>
+      {attemptsQuiz && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto overscroll-contain bg-slate-950/70 px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:px-4 sm:pt-8" role="dialog" aria-modal="true" aria-labelledby="homepage-solvers-title" onClick={() => setAttemptsQuiz(null)}>
           <div className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-2xl dark:border-cyan-900 dark:bg-slate-900 sm:max-h-[calc(100dvh-4rem)]" dir={isAr ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-5 dark:border-slate-800">
               <div>
@@ -357,7 +376,8 @@ export default function LandingPage({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* Hero Atmosphere — Modern, Balanced & Elevated Canvas */}
