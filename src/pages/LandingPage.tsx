@@ -622,7 +622,7 @@ export default function LandingPage({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {filteredQuizzes.map((quiz) => {
               const questionsCount = quiz.questions?.length || 10;
               const isOwner = currentUserId && quiz.creatorId === currentUserId;
@@ -634,15 +634,15 @@ export default function LandingPage({
               return (
                 <div
                   key={quiz.id}
-                  className="group relative flex flex-col justify-between p-5 rounded-3xl bg-white/[0.6] dark:bg-slate-900/40 hover:bg-white/[0.9] dark:hover:bg-slate-900/70 border border-slate-200/80 dark:border-white/10 hover:border-sky-500/40 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 text-right backdrop-blur-md"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-[28px] border border-slate-200/90 bg-white/[0.78] p-4 text-right shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-sky-400/60 hover:bg-white/[0.96] hover:shadow-[0_20px_46px_rgba(14,165,233,0.14)] dark:border-white/10 dark:bg-slate-900/60 dark:hover:border-sky-400/40 dark:hover:bg-slate-900/85 sm:p-5"
                 >
                   <div>
                     {/* Top Status Strip: Solvers count, Questions count & Owner Actions */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="mb-4 flex min-h-8 items-center justify-between gap-2">
                       {/* Solvers & Questions Pills */}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Solvers Counter — Clearly highlighting who solved it! */}
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black border border-emerald-500/20">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-black text-emerald-700 shadow-sm dark:text-emerald-300">
                           <Users className="w-3 h-3" />
                           <span>
                             {plays > 0
@@ -651,18 +651,18 @@ export default function LandingPage({
                           </span>
                         </span>
 
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/15 bg-sky-500/10 px-2 py-1.5 text-[10px] font-bold text-sky-700 dark:text-sky-300">
                           <span>{questionsCount} {isAr ? 'سؤالاً' : 'Q’s'}</span>
                         </span>
 
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
                           <Star className="w-2.5 h-2.5 fill-current" />
                           <span>{rating}</span>
                         </span>
                       </div>
 
                       {/* Action Menu (Share, Edit, Delete) */}
-                      <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 rounded-2xl border border-slate-200/70 bg-slate-50/70 p-1 opacity-90 transition-opacity group-hover:opacity-100 dark:border-white/10 dark:bg-slate-950/40">
                         {canManageQuiz && onEditQuiz && (
                           <button
                             type="button"
@@ -670,7 +670,7 @@ export default function LandingPage({
                               e.stopPropagation();
                               onEditQuiz(quiz);
                             }}
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                             title={isAr ? 'تعديل الاختبار' : 'Edit Quiz'}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -683,7 +683,7 @@ export default function LandingPage({
                               e.stopPropagation();
                               setQuizToDelete(quiz.id);
                             }}
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-slate-400 dark:hover:bg-red-950/30"
                             title={isAr ? 'حذف الاختبار' : 'Delete Quiz'}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -695,7 +695,7 @@ export default function LandingPage({
                             e.stopPropagation();
                             onShareQuiz(quiz.id, quiz.title, quiz.description);
                           }}
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                           title={isAr ? 'مشاركة الاختبار' : 'Share Quiz'}
                         >
                           <Share2 className="w-3.5 h-3.5" />
@@ -707,7 +707,7 @@ export default function LandingPage({
                               e.stopPropagation();
                               void openAttempts(quiz);
                             }}
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-cyan-500 dark:hover:text-cyan-300 transition-colors cursor-pointer"
+                            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-cyan-50 hover:text-cyan-600 dark:text-slate-400 dark:hover:bg-cyan-950/30 dark:hover:text-cyan-300"
                             title={isAr ? 'مشاهدة من حلّوا الاختبار' : 'View quiz solvers'}
                             aria-label={isAr ? `مشاهدة من حلّوا الاختبار (${plays})` : `View quiz solvers (${plays})`}
                           >
@@ -720,32 +720,32 @@ export default function LandingPage({
                     {/* Quiz Title */}
                     <h3
                       onClick={() => onStartQuiz(quiz.id)}
-                      className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors cursor-pointer"
+                      className="line-clamp-2 cursor-pointer font-display text-lg font-black leading-[1.35] text-slate-950 transition-colors group-hover:text-sky-600 dark:text-white dark:group-hover:text-sky-300 sm:text-xl"
                     >
                       {quiz.title}
                     </h3>
 
                     {/* Quiz Description */}
-                    <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium">
+                    <p className="mt-2 line-clamp-2 text-[13px] font-medium leading-6 text-slate-600 dark:text-slate-300">
                       {quiz.description || (isAr ? 'اختبار تفاعلي شيق لقياس مستواك المعرفي.' : 'Interactive comprehension quiz.')}
                     </p>
 
                     {/* Duration badge */}
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-3">
+                    <div className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                       <Clock className="w-3 h-3 text-sky-400" />
                       <span>{isAr ? `الزمن المقدر: ~${estMinutes} دقائق` : `Est. time: ~${estMinutes} mins`}</span>
                     </div>
                   </div>
 
                   {/* Card Actions: visible on the card, never hidden in a menu */}
-                  <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
+                  <div className="mt-5 space-y-3 border-t border-slate-200/80 pt-4 dark:border-white/10">
                     {canManageQuiz && (
                       <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
-                        <button type="button" onClick={() => void exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[11px] font-black text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200" title={isAr ? 'تصدير الاختبار PDF' : 'Export quiz as PDF'}>
+                        <button type="button" onClick={() => void exportQuizPdf(quiz)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3.5 py-2 text-[11px] font-black text-violet-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200" title={isAr ? 'تصدير الاختبار PDF' : 'Export quiz as PDF'}>
                           <Download className="h-3.5 w-3.5" />
                           <span>PDF</span>
                         </button>
-                        <button type="button" onClick={() => void openAttempts(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-[11px] font-black text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلّوا الاختبار' : 'View quiz solvers'}>
+                        <button type="button" onClick={() => void openAttempts(quiz)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-[11px] font-black text-cyan-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلّوا الاختبار' : 'View quiz solvers'}>
                           <Users className="h-3.5 w-3.5" />
                           <span>{isAr ? 'من حلّه' : 'Solvers'}</span>
                           <span className="rounded-full bg-cyan-200/70 px-1.5 py-0.5 text-[10px] dark:bg-cyan-900/70">{plays}</span>
