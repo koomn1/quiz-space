@@ -29,9 +29,13 @@ function getSplashSource(): string | null {
   const constrained = Boolean(connection?.saveData || /2g|slow-2g/i.test(connection?.effectiveType || ''));
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   if (constrained || reducedMotion) return null;
-  const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+  const userAgent = navigator.userAgent || '';
+  const isAppleMobile = /iPhone|iPad|iPod/i.test(userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isMobile = isAppleMobile || window.matchMedia?.('(max-width: 767px)').matches;
+  // Keep phones on the portrait/vertical asset even when a large phone is
+  // rotated horizontally. Android tablets do not include the Mobile token.
+  const isAndroidPhone = /Android.*Mobile/i.test(userAgent);
+  const isMobile = isAppleMobile || isAndroidPhone || window.matchMedia?.('(max-width: 767px)').matches;
   return `${import.meta.env.BASE_URL}videos/${isMobile ? 'splash-mobile' : 'splash-desktop'}.mp4`;
 }
 
@@ -55,20 +59,16 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
   useEffect(() => {
     const videoEl = videoRef.current;
 
-    // Fast, responsive splash entry: complete gracefully in 1.1s
+    const splashDuration = splashSource ? 8000 : 1100;
+    const startedAt = Date.now();
     const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 95) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        return prev + 15;
-      });
+      const elapsed = Date.now() - startedAt;
+      setProgress(Math.min(95, Math.round((elapsed / splashDuration) * 100)));
     }, 120);
 
     const completionTimer = setTimeout(() => {
       finish();
-    }, 1100);
+    }, splashDuration + 250);
 
     const handleCanPlay = () => {
       videoEl?.play().catch(() => {});
@@ -110,7 +110,8 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
       {/* Background Ambient Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] sm:w-[500px] h-[380px] sm:h-[500px] rounded-full bg-gradient-to-tr from-cyan-500/20 via-violet-600/20 to-amber-400/15 blur-[120px] pointer-events-none" />
 
-      {/* Hidden/Subtle Video element strictly preserving test contracts */}
+      {/* Official animated splash background: mobile phones use the vertical
+          cut, while desktop browsers use the widescreen cut. */}
       {splashSource && (
         <video
           ref={videoRef}
@@ -120,12 +121,14 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
           preload="metadata"
           poster={`${import.meta.env.BASE_URL}icons8/sugary/rocket.png`}
           src={splashSource}
-          className="absolute inset-0 w-full h-full object-cover opacity-0 pointer-events-none"
+          aria-hidden="true"
+          className="absolute inset-0 z-0 w-full h-full object-cover opacity-100 pointer-events-none"
         />
       )}
 
-      {/* Centerpiece: Clean Official MainLogo */}
-      <div className="relative z-10 flex flex-col items-center justify-center space-y-6 text-center animate-in fade-in zoom-in-95 duration-500">
+      {/* Keep the text/progress fallback only for reduced-motion or constrained
+          connections where the video is intentionally disabled. */}
+      {!splashSource && <div className="relative z-10 flex flex-col items-center justify-center space-y-6 text-center animate-in fade-in zoom-in-95 duration-500">
         <div className="p-3 rounded-3xl bg-white/[0.04] backdrop-blur-2xl border border-white/10 shadow-2xl">
           <MainLogo size="lg" showText={false} />
         </div>
@@ -155,7 +158,7 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
             <span>{progress}%</span>
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
