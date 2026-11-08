@@ -68,6 +68,17 @@ function isGenericExtractionTitle(title?: string): boolean {
   return ['extracted quiz', 'اختبار مستخرج', 'اختبار مستخرج من الملف'].includes(String(title || '').trim().toLocaleLowerCase());
 }
 
+function safeExtractionProgressMessage(message: string | undefined, isAr: boolean): string {
+  const fallback = isAr ? 'جاري معالجة الملف وتجهيز الاختبار...' : 'Processing the file and preparing the quiz...';
+  const value = String(message || '').trim();
+  if (!value) return fallback;
+  const sanitized = value
+    .replace(/\b(nemotron|mercury(?:-decide)?|openrouter|openai|groq|inception|xkiro)\b/gi, isAr ? 'المحرك' : 'the engine')
+    .replace(/\b(?:ai\s+)?model\b/gi, isAr ? 'المحرك' : 'the engine')
+    .replace(/\bprovider\b/gi, isAr ? 'المحرك' : 'the engine');
+  return sanitized || fallback;
+}
+
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
 
@@ -1553,8 +1564,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       total: 1,
       percentage: 0,
         message: isAr
-        ? 'الخطوة 1: جاري تجهيز النص واستخراج الأسئلة بدقة عبر Nemotron...'
-        : 'Step 1: Preparing document text for fast Nemotron extraction...'
+        ? 'الخطوة 1: جاري تجهيز النص واستخراج الأسئلة بدقة...'
+        : 'Step 1: Preparing the document text and extracting questions...'
     });
 
     const fallbackInstruction = `${fileCustomPrompt || ''}\n\n${buildQuestionTypeInstruction(preferredQuestionTypes, false)}`;
@@ -2371,9 +2382,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     : (isAr ? 'جاري صياغة الأسئلة...' : 'Crafting questions...')}
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
-                  {overlayProgress?.message || (isAr
-                    ? 'يقوم محرك الذكاء الاصطناعي بتحليل المحتوى وصياغة اختبار تفاعلي فائق الدقة...'
-                    : 'The AI model is analyzing the material and compiling a highly accurate interactive quiz...')}
+                  {safeExtractionProgressMessage(overlayProgress?.message, isAr)}
                 </p>
               </div>
 
@@ -2400,7 +2409,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     currentStage={ocrProgress.stage}
                     language={isAr ? 'ar' : 'en'}
                     mode={extractionMode}
-                    message={ocrProgress.message}
+                    message={safeExtractionProgressMessage(ocrProgress.message, isAr)}
                     current={ocrProgress.current}
                     total={ocrProgress.total}
                     percentage={ocrProgress.percentage}
@@ -3149,7 +3158,7 @@ A computer is a digital electronic machine...
                       currentStage={ocrProgress.stage}
                       language={isAr ? 'ar' : 'en'}
                       mode={extractionMode}
-                      message={ocrProgress.message}
+                    message={safeExtractionProgressMessage(ocrProgress.message, isAr)}
                       current={ocrProgress.current}
                       total={ocrProgress.total}
                       percentage={ocrProgress.percentage}

@@ -185,6 +185,7 @@ export interface PaymentProof {
   paymentMethod?: string;
   status: 'pending' | 'approved' | 'rejected' | 'needs_info';
   receiptUrl?: string;
+  trialDurationDays?: 7 | 14 | 30;
   submittedAt: string;
   notes?: string;
 }

@@ -1190,12 +1190,12 @@ export default function UserProfile({
 
   return (
     <div
-      className="mx-auto w-full max-w-5xl space-y-7 px-4 pb-14 text-slate-800 animate-fade-in dark:text-slate-100 sm:px-6 lg:px-8"
+      className="mx-auto w-full max-w-5xl space-y-7 px-3 pb-24 text-slate-800 animate-fade-in dark:text-slate-100 sm:px-6 sm:pb-14 lg:px-8"
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
       {/* 1. Profile Banner Header */}
       <section className="relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20">
-        <div className="h-44 md:h-56 relative rounded-t-3xl overflow-hidden">
+        <div className="h-36 sm:h-44 md:h-56 relative rounded-t-3xl overflow-hidden">
           <GsapCoverBackground mode={chosenBg || "cosmic"} customImage={customBgUrl} />
 
           {/* If premium cover text exists, display it beautifully! */}
@@ -1210,7 +1210,7 @@ export default function UserProfile({
           )}
         </div>
 
-        <div className="px-6 pb-6 md:px-10 md:pb-8 relative">
+        <div className="px-4 pb-6 sm:px-6 md:px-10 md:pb-8 relative">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20">
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
@@ -1246,7 +1246,7 @@ export default function UserProfile({
               </div>
 
               <div
-                className="mb-2 w-full text-right space-y-3"
+                className="mb-2 w-full min-w-0 text-right space-y-3"
                 style={{ textAlign: isAr ? "right" : "left" }}
               >
                 {/* Dynamic Trial Progress Bar & In-App Expiration Alert for Active Trial Members */}
@@ -1313,7 +1313,7 @@ export default function UserProfile({
 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
                   <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                    <h1 className="text-2xl md:text-3xl font-black font-display drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] flex items-center">
+                    <h1 className="max-w-full break-words text-xl sm:text-2xl md:text-3xl font-black font-display drop-shadow-[0_2px_8px_rgba(255,255,255,0.7)] dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] flex items-center">
                       <PremiumNameTag
                         name={profileData?.name || currentUserName}
                         isPremium={!!profileData?.isPremium}

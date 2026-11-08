@@ -29,6 +29,8 @@ export interface PaymentRequestRecord {
 export function normalizePaymentRequest(record: PaymentRequestRecord): PaymentProof & { planPrice?: number | string; paymentMethod?: string } {
   const amount = record.amount ?? record.plan_price ?? record.planPrice ?? '';
   const paymentMethod = record.payment_method || record.paymentMethod || 'request';
+  const trialMarker = String(record.payment_screenshot || record.paymentScreenshot || '').match(/TRIAL_OFFER_(7|14|30)_DAYS/i);
+  const trialDurationDays = trialMarker ? Number(trialMarker[1]) as 7 | 14 | 30 : undefined;
   const rawStatus = (record.status || 'pending').toString().toLowerCase().trim();
   const normalizedStatus = (['pending', 'approved', 'rejected', 'needs_info'].includes(rawStatus) ? rawStatus : 'pending') as PaymentProof['status'];
   return {
@@ -44,6 +46,7 @@ export function normalizePaymentRequest(record: PaymentRequestRecord): PaymentPr
     status: normalizedStatus,
     submittedAt: String(record.created_at || record.createdAt || ''),
     receiptUrl: record.payment_screenshot || record.paymentScreenshot || record.receiptUrl || '',
+    trialDurationDays,
     notes: record.notes || undefined,
   };
 }

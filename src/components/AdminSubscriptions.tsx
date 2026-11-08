@@ -1373,6 +1373,11 @@ export default function AdminSubscriptions({
                             <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">
                               {pay.planName}
                             </span>
+                            {pay.trialDurationDays && (
+                              <span className="mt-1 inline-flex rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-black text-violet-600 dark:text-violet-300">
+                                {isAr ? `تجربة ${pay.trialDurationDays} يوم` : `${pay.trialDurationDays}-day trial`}
+                              </span>
+                            )}
                           </div>
                           <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
                             <span className="block text-[10px] font-bold text-slate-500">
@@ -1885,6 +1890,11 @@ export default function AdminSubscriptions({
                     <div className="rounded-xl bg-slate-800/60 p-3">
                       <span className="block text-[10px] font-bold text-slate-400">{isAr ? "الباقة" : "Plan"}</span>
                       <strong className="block truncate text-amber-300 mt-1">{inspectingPayment.planName}</strong>
+                      {inspectingPayment.trialDurationDays && (
+                        <span className="mt-1 block text-[10px] font-black text-violet-300">
+                          {isAr ? `مدة التجربة: ${inspectingPayment.trialDurationDays} يوم` : `Trial duration: ${inspectingPayment.trialDurationDays} days`}
+                        </span>
+                      )}
                     </div>
 
                     <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 col-span-2 sm:col-span-1">

@@ -22,9 +22,11 @@ describe('service worker update contract', () => {
   });
 
   it('versions profile asset caches and precaches the current avatar set', () => {
-    expect(workerSource).toContain("const CACHE_VERSION = 'v8'");
+    expect(workerSource).toContain("const CACHE_VERSION = 'v9'");
     expect(workerSource).toContain('avatar-boy-football-analyst-v2.webp');
     expect(workerSource).toContain('avatar-girl-astronomy-v2.webp');
+    expect(workerSource).toContain('images/animated-frames/frame-galaxy.gif');
+    expect(workerSource).toContain('/images/animated-frames/');
     expect(workerSource).not.toContain('VIDEOS_TO_PRECACHE');
   });
 

@@ -1,6 +1,6 @@
 // Bump this whenever the deployed app shell changes so installed PWAs discard
 // stale cached assets instead of continuing to render an older release.
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9';
 const APP_CACHE = `quiz-space-app-${CACHE_VERSION}`;
 const VIDEO_CACHE = `quiz-space-videos-${CACHE_VERSION}`;
 const PROFILE_ASSET_CACHE = `quiz-space-profile-assets-${CACHE_VERSION}`;
@@ -42,6 +42,15 @@ const PROFILE_ASSETS_TO_PRECACHE = [
   'clean-assets-replacement/school-bus-transparent.webp',
   'clean-assets-replacement/school-stationary-transparent.webp',
   'clean-assets-replacement/star-crown-transparent.webp',
+  'images/animated-frames/frame-aurora.gif',
+  'images/animated-frames/frame-crystal-luxe.gif',
+  'images/animated-frames/frame-fire.gif',
+  'images/animated-frames/frame-galaxy.gif',
+  'images/animated-frames/frame-nature-leaf.gif',
+  'images/animated-frames/frame-neon-orbit.gif',
+  'images/animated-frames/frame-royal-gold.gif',
+  'images/animated-frames/frame-school-bus.gif',
+  'images/animated-frames/frame-star-crown.gif',
 ];
 
 async function cacheProfileAssets() {
@@ -87,7 +96,7 @@ self.addEventListener('fetch', (event) => {
 
   const isNavigation = event.request.mode === 'navigate';
   const isVideo = requestUrl.pathname.includes('/videos/') && /\.(mp4|webm)$/i.test(requestUrl.pathname);
-  const isProfileAsset = requestUrl.pathname.includes('/clean-assets-replacement/') && /\.(webp|png|jpe?g)$/i.test(requestUrl.pathname);
+  const isProfileAsset = (requestUrl.pathname.includes('/clean-assets-replacement/') || requestUrl.pathname.includes('/images/animated-frames/')) && /\.(gif|webp|png|jpe?g)$/i.test(requestUrl.pathname);
   const isStaticAsset = /\/(assets|brand|images|backgrounds|showcase|covers)\//.test(requestUrl.pathname) || requestUrl.pathname.endsWith('/manifest.webmanifest');
 
   if (isNavigation) {
