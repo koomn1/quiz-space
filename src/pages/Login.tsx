@@ -15,10 +15,9 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { EmailVerificationStep } from '../components/EmailVerificationStep';
+import { MainLogo } from '../components/MainLogo';
 import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
 import { getAuthRedirectUrl } from '../lib/authRedirect';
-
-const APP_BASE_URL = import.meta.env.BASE_URL || '/';
 
 export default function Login() {
   const { signIn, signUp, verifyMfaCode, mfaRequired } = useAuth();
@@ -165,13 +164,8 @@ export default function Login() {
           <span>{isAr ? 'الصفحة الرئيسية' : 'Home'}</span>
         </button>
 
-        <div className="flex items-center gap-2.5">
-          <img
-            src={`${APP_BASE_URL}icons8/sugary/rocket.png`}
-            alt="Quiz Space"
-            className="h-9 w-9 rounded-xl object-cover shadow-lg shadow-violet-950/30"
-          />
-          <span className="hidden text-sm font-black tracking-tight text-white sm:inline">Quiz Space</span>
+        <div className="flex items-center gap-2.5" dir="ltr">
+          <MainLogo size="sm" showText />
           <button
             type="button"
             onClick={handleToggleLang}

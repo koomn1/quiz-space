@@ -147,8 +147,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || '👾 كويز جديد مطلوب في فصلك!';
   const options = {
     body: data.body || 'قام المعلم بنشر كويز جديد. اضغط هنا للدخول والحل فوراً قبل انتهاء الوقت.',
-    icon: data.icon || appAsset('/assets/logo.png'),
-    badge: data.badge || appAsset('/assets/logo.png'),
+    icon: data.icon || appAsset('/brand/quizspace-icon-192.webp'),
+    badge: data.badge || appAsset('/brand/quizspace-icon-192.webp'),
     dir: data.dir || 'rtl',
     lang: data.lang || 'ar',
     requireInteraction: Boolean(data.requireInteraction),

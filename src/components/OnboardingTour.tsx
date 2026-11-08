@@ -2,6 +2,7 @@ import React from 'react';
 import { Sparkles, ArrowRight, ArrowLeft, X, BookOpen, ImageIcon, HelpCircle } from 'lucide-react';
 import { playNotificationSound } from '../lib/sound';
 import OverlayPortal from './OverlayPortal';
+import { MainLogo } from './MainLogo';
 
 interface Step {
   id: string;
@@ -32,7 +33,7 @@ export default function OnboardingTour({
       title: '! ',
       content: 'دعنا نأخذك في جولة تعليمية سريعة ومبسطة للتعرف على المنصة وكيفية استغلال الذكاء الاصطناعي في قياس مستواك وتوليد الأسئلة فوراً!',
       selector: 'body', // Center of screen
-      icon: <img src={`${import.meta.env.BASE_URL || '/'}icons8/sugary/rocket.png`} alt="QuizSpace" className="w-6 h-6 object-contain" />
+      icon: <MainLogo size="sm" showText={false} className="!h-6 !w-6" />
     },
     {
       id: 'create-tab',

@@ -10,6 +10,7 @@ import { PremiumNameTag, BadgeTier, NameColorKey, BadgeColorKey } from './Premiu
 import CosmoOrb from './CosmoOrb';
 import ProfileAvatar from './ProfileAvatar';
 import { showToast } from './Toast';
+import { MainLogo } from './MainLogo';
 
 interface SidebarProps {
   currentTab: string;
@@ -135,19 +136,12 @@ export default function Sidebar({
 
   return (
     <aside aria-label={isAr ? 'التنقل الرئيسي' : 'Primary navigation'} className="liquid-sidebar w-full h-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-3xl border-none text-slate-700 dark:text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
-      {/* 3D Sugary brand mark */}
-      <div className="flex items-center gap-2 justify-start select-none py-1 mb-1 shrink-0" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/80 shadow-sm ring-1 ring-primary/20 dark:bg-slate-900/70">
-          <SugaryIcon name="rocket" size={38} alt="QuizSpace" />
-        </div>
-        <div className="flex flex-col">
-          <span className="font-display font-black text-sm sm:text-base tracking-tight leading-none bg-gradient-to-r from-white via-indigo-200 to-[#b175ff] bg-clip-text text-transparent">
-            QuizSpace
-          </span>
-          <span className="text-[8px] sm:text-[9px] font-black text-[#b175ff] tracking-widest mt-0.5 uppercase leading-none">
-            {isAr ? 'الذكاء الاصطناعي السحابي' : 'COSMIC AI PLATFORM'}
-          </span>
-        </div>
+      {/* One official brand treatment; keep its Latin wordmark LTR in Arabic UI. */}
+      <div className="mb-1 shrink-0 py-1" dir="ltr">
+        <MainLogo size="sm" showText />
+        <span className="mt-0.5 block text-[8px] font-black uppercase tracking-widest text-[#b175ff]" dir={isAr ? 'rtl' : 'ltr'}>
+          {isAr ? 'الذكاء الاصطناعي السحابي' : 'COSMIC AI PLATFORM'}
+        </span>
       </div>
 
       {/* User profile card with subtle border ring and hover glow */}

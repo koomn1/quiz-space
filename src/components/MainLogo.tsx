@@ -73,7 +73,9 @@ export const MainLogo = ({ className = '', size = 'md', showText = true }: MainL
   return (
     <div
       ref={rootRef}
-      className={`inline-flex items-center select-none cursor-pointer group ${currentSize.gap} ${className}`}
+      dir="ltr"
+      className={`inline-flex flex-row items-center select-none cursor-pointer group ${currentSize.gap} ${className}`}
+      style={{ direction: 'ltr', unicodeBidi: 'isolate' }}
       aria-label="QuizSpace"
     >
       <img
@@ -86,7 +88,9 @@ export const MainLogo = ({ className = '', size = 'md', showText = true }: MainL
       />
       {showText && (
         <span
+          dir="ltr"
           className={`inline-flex items-baseline whitespace-nowrap font-display font-black tracking-tight ${currentSize.text} [perspective:600px]`}
+          style={{ direction: 'ltr', unicodeBidi: 'isolate' }}
           aria-hidden="true"
         >
           {logoLetters.map((letter, index) => (
