@@ -1223,7 +1223,7 @@ export default function UserProfile({
                     src={activeFrameUrl}
                     alt=""
                     onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                    className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.08] md:scale-[1.1] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`}
+                    className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.28] md:scale-[1.34] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`}
                     style={activeFrameClass && !activeFrameIsAnimated ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
                   />
                 )}
