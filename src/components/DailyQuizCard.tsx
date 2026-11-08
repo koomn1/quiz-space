@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Sparkles, Clock, Loader2 } from 'lucide-react';
+import { Clock, Loader2 } from 'lucide-react';
 import {
   getUserDailyQuizSlot,
   claimUserDailyQuizRefresh,
@@ -11,6 +11,7 @@ import {
 } from '../lib/db';
 import { DAILY_QUIZ_BANK } from '../data/dailyQuizBank';
 import { shouldRecoverStalledDailyQuizRefresh } from '../lib/dailyQuizRecovery';
+import { MainLogo } from './MainLogo';
 
 // In-memory cache of the latest private daily payload so the start click can
 // guarantee the sessionStorage snapshot exists before navigation.
@@ -34,6 +35,7 @@ const TIER_LABEL: Record<DailyQuizTier, { ar: string; en: string }> = {
 const TIER_GRADIENT: Record<DailyQuizTier, string> = {
   free: 'from-slate-500 to-slate-700', gold: 'from-amber-400 to-yellow-600', diamond: 'from-fuchsia-500 to-purple-700',
 };
+const TIER_REFRESH_SECONDS: Record<DailyQuizTier, number> = { free: 86400, gold: 21600, diamond: 3600 };
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -72,7 +74,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     try {
       // Pick deterministically from the 60-item bank for this user/tier/time
       // window. This rotates the bank without any runtime AI generation.
-      const intervalSeconds = tier === 'diamond' ? 60 : tier === 'gold' ? 3600 : 86400;
+      const intervalSeconds = TIER_REFRESH_SECONDS[tier];
       const intervalMs = intervalSeconds * 1000;
       const windowNumber = Math.floor(Date.now() / intervalMs);
       const seedText = `${userId}:${tier}:${windowNumber}`;
@@ -237,19 +239,24 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
 
   const label = isAr ? TIER_LABEL[tier].ar : TIER_LABEL[tier].en;
   const waiting = secondsLeft > 0;
-  const nextQuizLabel = isAr ? `التحدي التالي بعد ${formatCountdown(secondsLeft, true)}` : `Next challenge in ${formatCountdown(secondsLeft, false)}`;
+  const nextQuizLabel = isAr ? `يتجدد التحدي بعد ${formatCountdown(secondsLeft, true)}` : `Challenge renews in ${formatCountdown(secondsLeft, false)}`;
+  const refreshPolicy = isAr
+    ? tier === 'diamond' ? 'تحدٍ جديد كل ساعة' : tier === 'gold' ? 'تحدٍ جديد كل 6 ساعات' : 'تحدٍ جديد كل 24 ساعة'
+    : tier === 'diamond' ? 'A new challenge every hour' : tier === 'gold' ? 'A new challenge every 6 hours' : 'A new challenge every 24 hours';
   // A quiz can only be rated once. If the slot is already answered, never
   // expose a start button for the old daily quiz id, even if sessionStorage
   // still holds it.
   const startableQuizId = answered ? null : quizId;
   return (
-    <div className={`light-dark-card relative overflow-hidden rounded-3xl p-5 mb-6 bg-gradient-to-l ${TIER_GRADIENT[tier]} text-white shadow-lg shadow-black/10`}>
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+    <div className={`light-dark-card relative overflow-hidden rounded-[2rem] p-5 mb-6 bg-gradient-to-l ${TIER_GRADIENT[tier]} text-white shadow-lg shadow-black/10`}>
+      <div className="absolute -top-16 -end-12 h-40 w-40 rounded-full border border-white/15 bg-white/10" aria-hidden="true" />
+      <div className="relative flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 shrink-0 rounded-2xl bg-white/20 flex items-center justify-center"><Sparkles className="w-6 h-6" /></div>
+          <div className="w-12 h-12 shrink-0 rounded-2xl bg-white/20 flex items-center justify-center overflow-hidden"><MainLogo size="sm" showText={false} className="!h-10 !w-10" /></div>
           <div>
             <h3 className="font-display font-black text-lg leading-tight">{isAr ? 'التحدي اليومي' : 'Daily Challenge'}</h3>
             <p className="text-sm text-white/80">{isAr ? `اختبارك الشخصي — باقة ${label}` : `Your personal quiz — ${label} tier`}</p>
+            <p className="mt-1 text-[11px] font-bold text-white/70">{refreshPolicy}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">

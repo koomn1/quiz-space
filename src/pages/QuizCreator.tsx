@@ -19,6 +19,7 @@ import ExtractionTerminalLog from '../components/ExtractionTerminalLog';
 import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
 import { Icons8Icon } from '../components/Icons8Icon';
 import QuestionMedia from '../components/QuestionMedia';
+import { MainLogo } from '../components/MainLogo';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
@@ -2455,7 +2456,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 {activeMode === 'manual' && <Plus className="h-5 w-5" />}
                 {activeMode === 'ocr' && <Camera className="h-5 w-5" />}
                 {activeMode === 'paste' && <FileText className="h-5 w-5" />}
-                {activeMode === 'ai' && <Sparkles className="h-5 w-5" />}
+                {activeMode === 'ai' && <MainLogo size="sm" showText={false} className="!h-5 !w-5" />}
               </span>
               <span>
                 <span className="block text-[10px] font-bold text-violet-600 dark:text-violet-300">طريقة إنشاء الاختبار</span>
@@ -2492,7 +2493,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     }}
                     className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-right transition-all ${selected ? 'bg-gradient-to-l from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20' : 'text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-500/10'}`}
                   >
-                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selected ? 'bg-white/15 text-white' : 'bg-violet-500/10 text-violet-500'}`}><ModeIcon className="h-4 w-4" /></span>
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selected ? 'bg-white/15 text-white' : 'bg-violet-500/10 text-violet-500'}`}>{mode.id === 'ai' ? <MainLogo size="sm" showText={false} className="!h-6 !w-6" /> : <ModeIcon className="h-4 w-4" />}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-xs font-black">{mode.label}</span>
                       <span className={`mt-0.5 block text-[10px] ${selected ? 'text-violet-100' : 'text-slate-500 dark:text-slate-400'}`}>{mode.hint}</span>
@@ -2526,7 +2527,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
             <div className="flex items-start gap-4 relative z-10" dir="rtl">
               <div className="p-3 bg-violet-50 dark:bg-slate-800/80 rounded-2xl text-violet-600 dark:text-violet-400 shadow-sm border border-violet-100 dark:border-violet-900/30">
-                <Wand2 className="w-6 h-6 animate-pulse" />
+                <MainLogo size="sm" showText={false} className="!h-6 !w-6" />
               </div>
               <div className="space-y-1 flex-1 text-right">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -2674,7 +2675,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
               ) : (
                 <>
                   <Wand2 className="w-4 h-4" />
-                  <span>توليد الأسئلة فوراً</span>
+                  <span>توليد الاختبار الآن</span>
                 </>
               )}
             </button>

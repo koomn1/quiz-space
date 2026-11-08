@@ -49,9 +49,9 @@ export function InteractiveQuizCard({
   const isAr = isArProp !== undefined ? isArProp : lang === 'ar';
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
   const canEdit = !isGuest && (isAdminProp || quiz.creatorId === currentUserId);
-  // Attempt details contain private learner results; only the super-admin can
-  // open them across the platform.
-  const canManageQuizAttempts = !isGuest && isAdminProp;
+  // Attempt details are available to the quiz creator and the super-admin;
+  // the database RPC applies the same authorization rule server-side.
+  const canManageQuizAttempts = canEdit;
   const canViewAttempts = canManageQuizAttempts;
   const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
   const [attemptsOpen, setAttemptsOpen] = useState(false);
