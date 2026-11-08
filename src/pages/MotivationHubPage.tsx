@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { showToast } from '../components/Toast';
 import OverlayPortal from '../components/OverlayPortal';
-import { resolveFrameAsset, uniqueProfileFrames } from '../constants/profileAssets';
+import { profileAssetUrl, resolveFrameAsset, uniqueProfileFrames } from '../constants/profileAssets';
 import RewardsSection from '../components/RewardsSection';
 import SmartReviewPanel from '../components/SmartReviewPanel';
 import StreakMomentumCard from '../components/StreakMomentumCard';
@@ -86,8 +86,12 @@ type StoreItem = {
 type Rewards = { points: number; coins: number; dailyStreak: number };
 
 const imageUrl = (name: string) => `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/images/${name}.webp`;
-
 const storeImageUrl = (name: string) => `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/images/${name}`;
+const fallbackStoreImage = (item: Pick<StoreItem, 'item_type'>) => item.item_type === 'points_bundle'
+  ? storeImageUrl('mystery_box.webp')
+  : item.item_type === 'cosmetic'
+    ? storeImageUrl('weekly_achievement.webp')
+    : storeImageUrl('animated-frames/frame-aurora.gif');
 
 function getStoreItemImage(item: Pick<StoreItem, 'id' | 'item_type' | 'image_url'>): string {
   const id = item.id.toLowerCase();
@@ -101,7 +105,7 @@ function getStoreItemImage(item: Pick<StoreItem, 'id' | 'item_type' | 'image_url
     if (id.includes('star') || id.includes('crown')) return storeImageUrl('animated-frames/frame-star-crown.gif');
     return storeImageUrl('animated-frames/frame-aurora.gif');
   }
-  if (item.image_url) return resolveFrameAsset(item);
+  if (item.image_url) return profileAssetUrl(item.image_url);
   if (item.item_type === 'points_bundle') {
     return storeImageUrl(id.includes('diamond') ? 'pass-diamond.webp' : id.includes('gold') ? 'pass-gold.webp' : 'mystery_box.webp');
   }
@@ -481,7 +485,12 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
           <div className="relative z-10 h-16 w-16 rounded-full border-4 border-white/90 bg-slate-900/35 shadow-[0_0_0_5px_rgba(255,255,255,.22)] flex items-center justify-center overflow-hidden">
             <Sparkles className="absolute h-6 w-6 text-white/50" />
             {itemImageUrl && (
-              <img src={itemImageUrl} alt="" onError={(event) => { event.currentTarget.style.opacity = '0'; }} className="absolute inset-0 h-full w-full object-cover scale-110" />
+              <img src={itemImageUrl} alt="" onError={(event) => {
+                const image = event.currentTarget;
+                if (image.dataset.fallbackApplied === 'true') return;
+                image.dataset.fallbackApplied = 'true';
+                image.src = fallbackStoreImage(item);
+              }} className="absolute inset-0 h-full w-full object-cover scale-110" />
             )}
           </div>
           {locked && <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/55 text-white"><Lock className="h-6 w-6" /></div>}

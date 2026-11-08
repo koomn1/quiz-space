@@ -58,6 +58,12 @@ export function SugaryIcon({ name, size = 28, className = '', alt = '', ...props
       className={`inline-block shrink-0 object-contain drop-shadow-[0_2px_3px_rgba(15,23,42,0.18)] ${className}`}
       loading="lazy"
       decoding="async"
+      onError={(event) => {
+        const image = event.currentTarget;
+        if (image.dataset.fallbackApplied === 'true') return;
+        image.dataset.fallbackApplied = 'true';
+        image.src = `${import.meta.env.BASE_URL}icons8/uploaded/icons8-3d-purple-ai-star-100.png`;
+      }}
     />
   );
 }

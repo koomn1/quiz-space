@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Coins, Eye, EyeOff, Loader2, PackageOpen, PlusCircle, Save, Sparkles } from 'lucide-react';
-import { resolveFrameAsset } from '../constants/profileAssets';
+import { profileAssetUrl } from '../constants/profileAssets';
 import { adminSaveRewardFrame, adminSetRewardFrameVisibility, getAdminRewardStoreItems, type AdminRewardFrameInput } from '../lib/db';
 
 type CatalogFrame = AdminRewardFrameInput & { isActive: boolean; isFeatured: boolean };
@@ -55,8 +55,19 @@ const itemPrice = (item: CatalogItem, isAr: boolean) => {
 };
 
 const itemImage = (item: CatalogItem) => {
-  if (item.item_type === 'frame') return resolveFrameAsset(item);
-  return String(item.image_url || '').trim();
+  const id = item.id.toLowerCase();
+  if (item.item_type === 'frame') {
+    if (id.includes('fire') || id.includes('dragon')) return '/images/animated-frames/frame-fire.gif';
+    if (id.includes('galaxy') || id.includes('comet')) return '/images/animated-frames/frame-galaxy.gif';
+    if (id.includes('gold') || id.includes('royal')) return '/images/animated-frames/frame-royal-gold.gif';
+    if (id.includes('school') || id.includes('bus')) return '/images/animated-frames/frame-school-bus.gif';
+    if (id.includes('neon') || id.includes('cyber') || id.includes('matrix')) return '/images/animated-frames/frame-neon-orbit.gif';
+    if (id.includes('crystal')) return '/images/animated-frames/frame-crystal-luxe.gif';
+    if (id.includes('star') || id.includes('crown')) return '/images/animated-frames/frame-star-crown.gif';
+    return '/images/animated-frames/frame-aurora.gif';
+  }
+  if (item.image_url) return profileAssetUrl(item.image_url);
+  return item.item_type === 'points_bundle' ? '/images/mystery_box.webp' : '/images/weekly_achievement.webp';
 };
 
 export default function AdminRewardCatalogPanel({ lang }: { lang: 'ar' | 'en' }) {
@@ -188,7 +199,12 @@ export default function AdminRewardCatalogPanel({ lang }: { lang: 'ar' | 'en' })
           const image = itemImage(item);
           return <article key={item.id} className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-indigo-600 to-slate-900 p-1">
-              {image ? <img src={image} alt="" loading="lazy" className="h-full w-full rounded-xl object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} /> : <PackageOpen className="m-auto h-7 w-7 text-white/70" />}
+              {image ? <img src={image} alt="" loading="lazy" className="h-full w-full rounded-xl object-contain" onError={(event) => {
+                const target = event.currentTarget;
+                if (target.dataset.fallbackApplied === 'true') return;
+                target.dataset.fallbackApplied = 'true';
+                target.src = item.item_type === 'points_bundle' ? '/images/mystery_box.webp' : '/images/weekly_achievement.webp';
+              }} /> : <PackageOpen className="m-auto h-7 w-7 text-white/70" />}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5"><span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-black text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">{typeLabel(item.item_type, isAr)}</span>{item.is_featured && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">{isAr ? 'مميز' : 'Featured'}</span>}</div>
