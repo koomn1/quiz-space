@@ -172,6 +172,19 @@ export default function LandingPage({
   dailyQuiz,
 }: LandingPageProps) {
   const isAr = lang === 'ar';
+  const ownedQuizzes = React.useMemo(
+    () => quizzes.filter((quiz) => Boolean(currentUserId && quiz.creatorId === currentUserId)),
+    [quizzes, currentUserId],
+  );
+  const dashboardStats = React.useMemo(() => {
+    const totalQuestions = ownedQuizzes.reduce((sum, quiz) => sum + (quiz.questions?.length || 0), 0);
+    const totalPlays = ownedQuizzes.reduce((sum, quiz) => sum + (quiz.totalPlays || 0), 0);
+    const ratedQuizzes = ownedQuizzes.filter((quiz) => Number(quiz.avgRating) > 0);
+    const averageRating = ratedQuizzes.length
+      ? ratedQuizzes.reduce((sum, quiz) => sum + Number(quiz.avgRating), 0) / ratedQuizzes.length
+      : 0;
+    return { totalQuestions, totalPlays, averageRating };
+  }, [ownedQuizzes]);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [activeCategory, setActiveCategory] = React.useState('all');
   const [aiPromptInput, setAiPromptInput] = React.useState('');
@@ -480,6 +493,43 @@ export default function LandingPage({
         </div>
       </section>
 
+      {/* Dashboard overview — glanceable metrics and quick actions */}
+      <section className="mx-auto mb-8 grid max-w-5xl grid-cols-2 gap-3 px-4 sm:grid-cols-4 sm:px-6 lg:px-8" aria-label={isAr ? 'ملخص لوحة التحكم' : 'Dashboard overview'}>
+        {[
+          { label: isAr ? 'اختباراتي' : 'My quizzes', value: ownedQuizzes.length, detail: isAr ? 'اختبارات منشورة' : 'Published quizzes', icon: BookOpen, iconClass: 'bg-sky-500/10 text-sky-600 dark:text-sky-300', glowClass: 'bg-sky-500/10' },
+          { label: isAr ? 'الأسئلة' : 'Questions', value: dashboardStats.totalQuestions, detail: isAr ? 'سؤال محفوظ' : 'Saved questions', icon: HelpCircle, iconClass: 'bg-violet-500/10 text-violet-600 dark:text-violet-300', glowClass: 'bg-violet-500/10' },
+          { label: isAr ? 'مرات الحل' : 'Attempts', value: dashboardStats.totalPlays, detail: isAr ? 'تفاعل مع اختباراتك' : 'Quiz interactions', icon: Users, iconClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300', glowClass: 'bg-emerald-500/10' },
+          { label: isAr ? 'التقييم' : 'Rating', value: dashboardStats.averageRating ? dashboardStats.averageRating.toFixed(1) : '—', detail: isAr ? 'متوسط التقييم' : 'Average rating', icon: Star, iconClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-300', glowClass: 'bg-amber-500/10' },
+        ].map(({ label, value, detail, icon: Icon, iconClass, glowClass }) => (
+          <div key={label} className="group relative overflow-hidden rounded-[22px] border border-slate-200/80 bg-white/70 p-3.5 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:border-white/10 dark:bg-slate-900/60 sm:p-4">
+            <div className={`absolute -end-5 -top-6 h-20 w-20 rounded-full ${glowClass} blur-2xl transition-transform duration-500 group-hover:scale-150`} />
+            <div className="relative flex items-start justify-between gap-2">
+              <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconClass}`}><Icon className="h-4 w-4" /></div>
+              <div className="text-end">
+                <p className="text-[10px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+                <p className="mt-1 text-xl font-black tracking-tight text-slate-950 dark:text-white sm:text-2xl">{typeof value === 'number' ? value.toLocaleString(isAr ? 'ar-EG' : 'en-US') : value}</p>
+              </div>
+            </div>
+            <p className="relative mt-2 truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">{detail}</p>
+          </div>
+        ))}
+      </section>
+      <section className="mx-auto mb-9 flex max-w-5xl flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div className="text-end">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-500">{isAr ? 'مساحتك التعليمية' : 'Your learning space'}</p>
+          <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950 dark:text-white sm:text-2xl">{isAr ? 'استكشف اختباراتك وابدأ من هنا' : 'Explore your quizzes and start here'}</h2>
+        </div>
+        <div className="flex w-full gap-2 sm:w-auto">
+          <button type="button" onClick={() => onCreateQuizTab()} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 text-xs font-black text-white shadow-lg shadow-slate-950/10 transition hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 sm:flex-none">
+            <Sparkles className="h-4 w-4 text-sky-400 dark:text-sky-600" />
+            {isAr ? 'إنشاء اختبار' : 'Create quiz'}
+          </button>
+          <button type="button" onClick={() => document.getElementById('dashboard-quiz-search')?.focus()} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/70 px-4 text-xs font-black text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200 sm:flex-none">
+            <Search className="h-4 w-4 text-sky-500" />
+            {isAr ? 'بحث سريع' : 'Quick search'}
+          </button>
+        </div>
+      </section>
       {/* Tier-aware private daily challenge — rotates from the bank per plan window. */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
         {dailyQuiz ? <DailyQuizCard
@@ -542,6 +592,7 @@ export default function LandingPage({
         <div className="relative w-full">
           <Search className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
+            id="dashboard-quiz-search"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
