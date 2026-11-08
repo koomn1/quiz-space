@@ -186,6 +186,7 @@ export default function UserProfile({
   const [rewardCoins, setRewardCoins] = React.useState(0);
   const [activeFrameClass, setActiveFrameClass] = React.useState('');
   const [activeFrameUrl, setActiveFrameUrl] = React.useState('');
+  const activeFrameIsAnimated = /\.gif(?:$|[?#])/i.test(activeFrameUrl);
   const [ownedFrames, setOwnedFrames] = React.useState<any[]>([]);
   const [editFrameId, setEditFrameId] = React.useState('');
   const [isFramesLoading, setIsFramesLoading] = React.useState(false);
@@ -1215,7 +1216,7 @@ export default function UserProfile({
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
               <div
                 className={`w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center transition-all duration-500 ${!activeFrameClass ? 'border-4 border-white dark:border-slate-900 shadow-xl' : 'z-10'}`}
-                style={activeFrameClass ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
+                style={activeFrameClass && !activeFrameIsAnimated ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
               >
                 {activeFrameUrl && (
                   <img
@@ -1223,7 +1224,7 @@ export default function UserProfile({
                     alt=""
                     onError={(event) => { event.currentTarget.style.display = 'none'; }}
                     className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.08] md:scale-[1.1] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`}
-                    style={activeFrameClass ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
+                    style={activeFrameClass && !activeFrameIsAnimated ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
                   />
                 )}
                 <div className="w-full h-full rounded-full overflow-hidden relative z-10">
