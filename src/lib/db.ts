@@ -1865,10 +1865,17 @@ export async function updatePremiumRequest(
 
   if (status === 'approved') {
     let targetUserId = userId;
+    let requestRow: { user_id?: string | null; payment_screenshot?: string | null; plan_name?: string | null; plan_id?: string | null } | null = null;
     if (!targetUserId) {
       try {
-        const { data: reqRow } = await supabase.from('premium_requests').select('user_id').eq('id', requestId).maybeSingle();
+        const { data: reqRow } = await supabase.from('premium_requests').select('user_id, payment_screenshot, plan_name, plan_id').eq('id', requestId).maybeSingle();
+        requestRow = reqRow;
         if (reqRow?.user_id) targetUserId = reqRow.user_id;
+      } catch (_) {}
+    } else {
+      try {
+        const { data: reqRow } = await supabase.from('premium_requests').select('user_id, payment_screenshot, plan_name, plan_id').eq('id', requestId).maybeSingle();
+        requestRow = reqRow;
       } catch (_) {}
     }
 
@@ -1887,11 +1894,16 @@ export async function updatePremiumRequest(
         throw new Error('Unable to approve the subscription request.');
       }
       if (targetUserId) {
+        const trialDuration = getTrialOfferDurationFromMarker(requestRow?.payment_screenshot);
+        const fallbackRenewalDate = trialDuration ? getTrialRenewalDate(trialDuration) : undefined;
         await updateUserSubscription(
           targetUserId,
           true,
-          planName || 'Premium',
-          planId || undefined,
+          planName || requestRow?.plan_name || 'Premium',
+          planId || requestRow?.plan_id || undefined,
+          false,
+          false,
+          fallbackRenewalDate,
         ).catch(() => {});
       }
     }
