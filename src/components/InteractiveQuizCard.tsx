@@ -49,7 +49,9 @@ export function InteractiveQuizCard({
   const isAr = isArProp !== undefined ? isArProp : lang === 'ar';
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
   const canEdit = !isGuest && (isAdminProp || quiz.creatorId === currentUserId);
-  const canManageQuizAttempts = canEdit;
+  // Attempt details contain private learner results; only the super-admin can
+  // open them across the platform.
+  const canManageQuizAttempts = !isGuest && isAdminProp;
   const canViewAttempts = canManageQuizAttempts;
   const [attempts, setAttempts] = useState<QuizCompletion[]>([]);
   const [attemptsOpen, setAttemptsOpen] = useState(false);

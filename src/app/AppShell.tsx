@@ -217,11 +217,22 @@ export default function AppShell(props: AppShellProps) {
           <footer className={`theme-surface w-full border-t py-6 text-center text-xs theme-muted font-medium print:hidden transition-colors ${isCosmoTab ? 'hidden' : ''}`}>
             <p>{lang === 'ar' ? 'جميع الحقوق محفوظة لموقع Quiz Space © 2026 - بواسطة يوسف بدوي' : 'All rights reserved © 2026 Quiz Space - Built by Youssef Badawy'}</p>
             <nav className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4" aria-label={lang === 'ar' ? 'روابط قانونية' : 'Legal links'}>
-              <a href="/legal/terms" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'الشروط' : 'Terms'}</a>
-              <a href="/legal/privacy" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'الخصوصية' : 'Privacy'}</a>
-              <a href="/legal/cookies" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'ملفات الارتباط' : 'Cookies'}</a>
-              <a href="/legal/acceptable-use" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'الاستخدام المقبول' : 'Acceptable use'}</a>
-              <a href="/legal/contact" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'التواصل' : 'Contact'}</a>
+              {[
+                ['terms', lang === 'ar' ? 'الشروط' : 'Terms'],
+                ['privacy', lang === 'ar' ? 'الخصوصية' : 'Privacy'],
+                ['cookies', lang === 'ar' ? 'ملفات الارتباط' : 'Cookies'],
+                ['acceptable-use', lang === 'ar' ? 'الاستخدام المقبول' : 'Acceptable use'],
+                ['contact', lang === 'ar' ? 'التواصل' : 'Contact'],
+              ].map(([page, label]) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => handleSetTab(`legal-${page}`, true)}
+                  className="transition-colors hover:text-cyan-500"
+                >
+                  {label}
+                </button>
+              ))}
               <a href="https://jo-badawy.lovable.app/" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-cyan-500">{lang === 'ar' ? 'البورتفوليو' : 'Portfolio'}</a>
             </nav>
           </footer>

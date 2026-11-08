@@ -9,7 +9,6 @@ import { Quiz } from '../types';
 import {
   Sparkles,
   Download,
-  Eye,
   Search,
   Play,
   Share2,
@@ -584,10 +583,6 @@ export default function LandingPage({
                   {/* Card Actions: visible on the card, never hidden in a menu */}
                   <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
                     <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
-                      <button type="button" onClick={() => onStartQuiz(quiz.id)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] font-black text-sky-700 transition hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200" title={isAr ? 'مشاهدة الاختبار' : 'View quiz'}>
-                        <Eye className="h-3.5 w-3.5" />
-                        <span>{isAr ? 'مشاهدة الاختبار' : 'View quiz'}</span>
-                      </button>
                       <button type="button" onClick={() => void exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[11px] font-black text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200" title={isAr ? 'تصدير الاختبار PDF' : 'Export quiz as PDF'}>
                         <Download className="h-3.5 w-3.5" />
                         <span>PDF</span>

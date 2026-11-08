@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Quiz, QuizCompletion } from '../types';
-import { BookOpen, Clock, Download, Edit3, Eye, Play, Printer, RefreshCw, Share2, Star, Trash2, Users, X } from 'lucide-react';
+import { BookOpen, Clock, Download, Edit3, Play, Printer, RefreshCw, Share2, Star, Trash2, Users, X } from 'lucide-react';
 import { EssayReviewModal } from '../components/EssayReviewModal';
 import { PremiumNameTag } from '../components/PremiumNameTag';
 import { getCompletionsByQuizId, getPendingEssayReviews, getQuizTakersUnique } from '../lib/db';
@@ -33,8 +33,8 @@ export function MyQuizzes({
   isAdmin = false,
 }: MyQuizzesProps) {
   const isAr = lang === 'ar';
-  // Members manage only their own quizzes; administrators can inspect all.
-  const myQuizzes = isAdmin ? quizzes : quizzes.filter(q => q.creatorId === userId);
+  // The library is personal for every account, including the super admin.
+  const myQuizzes = quizzes.filter(q => q.creatorId === userId);
   const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [essayModalOpen, setEssayModalOpen] = useState(false);
@@ -59,9 +59,12 @@ export function MyQuizzes({
   useEffect(() => {
     if (!attemptsQuiz) return;
     const previousOverflow = document.body.style.overflow;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.documentElement.style.overflow = previousDocumentOverflow;
     };
   }, [attemptsQuiz]);
 
@@ -154,14 +157,14 @@ export function MyQuizzes({
               <BookOpen className="w-4 h-4" />
             </div>
             <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">
-              {isAdmin ? (isAr ? 'كل اختبارات المنصة' : 'All Platform Quizzes') : (isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes')}
+              {isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes'}
             </h2>
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {myQuizzes.length}
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            {isAdmin ? (isAr ? 'مراقبة وإدارة جميع الاختبارات بصلاحيات المسؤول.' : 'Inspect and manage every quiz with administrator access.') : (isAr ? 'إدارة وتحرير وحذف كافة الاختبارات العلمية التي قمت بتأليفها.' : 'Manage, edit, and inspect all quizzes authored by your account.')}
+            {isAr ? 'إدارة وتحرير وحذف كافة الاختبارات العلمية التي قمت بتأليفها.' : 'Manage, edit, and inspect all quizzes authored by your account.'}
           </p>
         </div>
 
@@ -275,10 +278,6 @@ export function MyQuizzes({
 
                   <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
                   <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
-                    <button type="button" onClick={() => onStartQuiz(quiz.id)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] font-black text-sky-700 transition hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-200" title={isAr ? 'مشاهدة الاختبار' : 'View quiz'}>
-                      <Eye className="h-3.5 w-3.5" />
-                      <span>{isAr ? 'مشاهدة الاختبار' : 'View quiz'}</span>
-                    </button>
                     <button type="button" onClick={() => exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-[11px] font-black text-violet-700 transition hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-200" title={isAr ? 'تصدير الاختبار كملف PDF' : 'Export quiz as PDF'}>
                       <Download className="h-3.5 w-3.5" />
                       <span>{isAr ? 'PDF' : 'PDF'}</span>
@@ -287,11 +286,11 @@ export function MyQuizzes({
                       <Printer className="h-3.5 w-3.5" />
                       <span>{isAr ? 'طباعة' : 'Print'}</span>
                     </button>
-                    <button type="button" onClick={() => openAttempts(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-[11px] font-black text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلوا الاختبار' : 'View who solved the quiz'}>
+                    {isAdmin && <button type="button" onClick={() => openAttempts(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-[11px] font-black text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلوا الاختبار' : 'View who solved the quiz'}>
                       <Users className="h-3.5 w-3.5" />
                       <span>{isAr ? 'من حلّه' : 'Solvers'}</span>
                       <span className="rounded-full bg-cyan-200/70 px-1.5 py-0.5 text-[10px] dark:bg-cyan-900/70">{plays}</span>
-                    </button>
+                    </button>}
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
@@ -349,8 +348,8 @@ export function MyQuizzes({
       )}
 
       {attemptsQuiz && (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-slate-950/70 px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md sm:px-4 sm:pt-8" role="dialog" aria-modal="true" aria-labelledby="my-quiz-solvers-title" onClick={() => setAttemptsQuiz(null)}>
-          <div className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-2xl dark:border-cyan-900 dark:bg-slate-900 sm:max-h-[calc(100dvh-4rem)]" dir={isAr ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/70 px-3 py-4 backdrop-blur-md sm:px-4 sm:py-8" role="dialog" aria-modal="true" aria-labelledby="my-quiz-solvers-title" onClick={() => setAttemptsQuiz(null)}>
+          <div className="flex w-full max-w-lg max-h-[min(86dvh,720px)] flex-col overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-2xl dark:border-cyan-900 dark:bg-slate-900" dir={isAr ? 'rtl' : 'ltr'} onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-5 dark:border-slate-800">
               <div>
                 <h3 id="my-quiz-solvers-title" className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-white"><Users className="h-5 w-5 text-cyan-500" />{isAr ? 'من حلّوا الاختبار' : 'Quiz solvers'}</h3>
@@ -358,7 +357,7 @@ export function MyQuizzes({
               </div>
               <button type="button" onClick={() => setAttemptsQuiz(null)} className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={isAr ? 'إغلاق' : 'Close'}><X className="h-5 w-5" /></button>
             </div>
-            <div className="max-h-[65vh] overflow-y-auto p-5">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
               {attemptsLoading ? (
                 <p className="py-10 text-center text-sm font-bold text-slate-500">{isAr ? 'جاري تحميل النتائج...' : 'Loading results...'}</p>
               ) : attempts.length === 0 ? (
