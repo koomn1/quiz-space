@@ -745,7 +745,8 @@ export default function QuizResolver({
   }
 
   const currentQuestion = quiz.questions[currentIdx];
-  const progressPercent = Math.round(((currentIdx) / quiz.questions.length) * 100);
+  const answeredQuestionCount = currentIdx + (isAnswersFrozen ? 1 : 0);
+  const progressPercent = Math.min(100, Math.round((answeredQuestionCount / quiz.questions.length) * 100));
 
   // Option submission check
   const handleSelectOption = (idx: number) => {
@@ -1561,7 +1562,21 @@ export default function QuizResolver({
                 )}
               </div>
 
-              {isAnswersFrozen ? (
+              {currentQuestion.type === 'essay' ? (
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
+                  {!isAnswersFrozen
+                    ? (isAr ? 'بانتظار إجابتك' : 'Waiting for your answer')
+                    : essayGrading[currentIdx]
+                      ? (isAr ? 'جارٍ تصحيح الإجابة بالذكاء الاصطناعي...' : 'AI is grading your answer...')
+                      : essayGradingErrors[currentIdx]
+                        ? (isAr ? 'تعذر التصحيح الآلي — لم تُحتسب الإجابة' : 'Automatic grading failed — answer not scored')
+                        : essayAssessed === null
+                          ? (isAr ? 'جارٍ التحقق من الإجابة...' : 'Checking your answer...')
+                          : essayAssessed
+                            ? (isAr ? 'الإجابة صحيحة' : 'Correct answer')
+                            : (isAr ? 'الإجابة خاطئة' : 'Incorrect answer')}
+                </span>
+              ) : isAnswersFrozen ? (
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
                   {selectedIdx === currentQuestion.correctIndex ? 'الإجابة صحيحة' : 'الإجابة خاطئة'}
                 </span>
@@ -1617,7 +1632,7 @@ export default function QuizResolver({
                       <CheckCircle2 className="w-5 h-5" />
                       <span>
                         {quiz?.essayGradingMode === 'ai'
-                          ? (isAr ? 'تأكيد الإجابة وقراءة الجواب النموذجي' : 'Confirm & Read Model Answer')
+                          ? (isAr ? 'إرسال الإجابة وتصحيحها' : 'Submit & Grade Answer')
                           : (isAr ? 'تأكيد وحفظ الإجابة المقالية ' : 'Confirm & Save Written Answer ')}
                       </span>
                     </button>

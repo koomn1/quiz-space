@@ -20,6 +20,13 @@ describe('AI essay grading mode contract', () => {
   it('starts AI grading automatically when the student submits an essay answer', () => {
     expect(source).toContain('void gradeEssayAnswer(currentIdx, currentQuestion, essayAnswerText.trim())');
     expect(statusComponent).toContain("isArabic ? 'جارٍ تصحيح الإجابة المقالية بالذكاء الاصطناعي...' : 'AI is grading your essay...'");
+    expect(source).toContain("جارٍ تصحيح الإجابة بالذكاء الاصطناعي...");
+    expect(source).toContain("essayGradingErrors[currentIdx]");
+  });
+
+  it('counts the submitted current question in progress and caps progress at 100%', () => {
+    expect(source).toContain('const answeredQuestionCount = currentIdx + (isAnswersFrozen ? 1 : 0);');
+    expect(source).toContain('Math.min(100, Math.round((answeredQuestionCount / quiz.questions.length) * 100))');
   });
 
   it('automatically retries transient service errors without exposing a retry button', () => {
