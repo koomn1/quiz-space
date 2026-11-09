@@ -1045,6 +1045,20 @@ async function updateClaimedJob(
   return true;
 }
 
+function startJobLeaseHeartbeat(
+  env: ExtractionJobEnv,
+  authHeader: string,
+  jobId: string,
+  token: string,
+): () => void {
+  const interval = setInterval(() => {
+    void updateClaimedJob(env, authHeader, jobId, token, {}).catch((error) => {
+      console.warn('Extraction job lease heartbeat failed.', { jobId, error });
+    });
+  }, Math.min(60_000, Math.floor(LEASE_MS / 3)));
+  return () => clearInterval(interval);
+}
+
 async function downloadSourceFile(env: ExtractionJobEnv, authHeader: string, path: string): Promise<Uint8Array> {
   const response = await fetch(apiUrl(env, `/storage/v1/object/authenticated/${BUCKET}/${encodeStoragePath(path)}`), {
     headers: databaseHeaders(env, authHeader),
@@ -1291,6 +1305,7 @@ export async function processExtractionJob(
   if (!claimed) return;
   const { job, token } = claimed;
   const startedAt = Date.now();
+  const stopLeaseHeartbeat = startJobLeaseHeartbeat(env, authHeader, job.id, token);
   let provider = 'ai-provider';
   let chunks = 0;
   try {
@@ -1370,6 +1385,8 @@ export async function processExtractionJob(
       console.error('Extraction job error state update failed.', { jobId: job.id, updateError });
     }
     await logExtractionPerformance(env, authHeader, job, provider, 'error', Date.now() - startedAt, chunks);
+  } finally {
+    stopLeaseHeartbeat();
   }
 }
 

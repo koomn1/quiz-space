@@ -62,6 +62,12 @@ describe('dynamic vision chunk planning', () => {
     expect(visionChunkRetryDelaySeconds(10)).toBe(60);
   });
 
+  it('keeps the parent lease alive while a provider call is still running', () => {
+    expect(extractionSource).toContain('function startJobLeaseHeartbeat(');
+    expect(extractionSource).toContain('const stopLeaseHeartbeat = startJobLeaseHeartbeat(env, authHeader, job.id, token);');
+    expect(extractionSource).toContain('stopLeaseHeartbeat();');
+  });
+
   it('accepts supported animated and modern image MIME types', () => {
     const base = {
       idempotencyKey: 'media-test-key-123456',
