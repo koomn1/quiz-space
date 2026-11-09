@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { buildEssayGradingPrompt, normalizeEssayGradeResult } from './essayGrading';
 
+const workerSource = readFileSync(resolve(process.cwd(), 'worker/src/index.ts'), 'utf8');
+
 describe('essay grading prompt', () => {
+  it('gives reasoning models enough budget and requests structured JSON', () => {
+    const gradingSource = workerSource.slice(
+      workerSource.indexOf('async function gradeEssayWithFallback'),
+      workerSource.indexOf('async function providerText'),
+    );
+    expect(gradingSource).toContain('max_tokens: 1_200');
+    expect(gradingSource).toContain("response_format: { type: 'json_object' }");
+    expect(gradingSource).toContain('timeoutMs: 45_000');
+  });
+
   it('normalizes boolean-like AI results without accepting false as true', () => {
     expect(normalizeEssayGradeResult({ correct: 'true', confidence: 92, reason: 'Equivalent meaning' })).toEqual({
       correct: true,

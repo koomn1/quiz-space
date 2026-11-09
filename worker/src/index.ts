@@ -426,7 +426,21 @@ async function extractPowerPointText(data: Uint8Array): Promise<string> {
 
 async function gradeEssayWithFallback(env: Env, question: string, modelAnswer: string, studentAnswer: string): Promise<any> {
   const prompt = buildEssayGradingPrompt(question, modelAnswer, studentAnswer);
-  const result = normalizeEssayGradeResult(extractJson(await callAiWithFallback(env, [{ role: 'user', content: prompt }], AI_TEXT_FALLBACKS, undefined, { max_tokens: 300, temperature: 0, timeoutMs: 25_000 })));
+  const response = await callAiWithFallback(
+    env,
+    [{ role: 'user', content: prompt }],
+    AI_TEXT_FALLBACKS,
+    undefined,
+    {
+      // Mercury uses part of its completion budget for reasoning. A 300-token
+      // limit can end the response before the final JSON is emitted.
+      max_tokens: 1_200,
+      temperature: 0,
+      timeoutMs: 45_000,
+      response_format: { type: 'json_object' },
+    },
+  );
+  const result = normalizeEssayGradeResult(extractJson(response));
   return { ...result, provider: 'inception' };
 }
 
