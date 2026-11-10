@@ -11,6 +11,7 @@ on:
       - 'supabase/functions/**'
       - 'src/lib/classroomPushAuthorization.test.ts'
       - 'src/lib/db.rewards.test.ts'
+      - 'src/lib/couponRedemptionSecurity.contract.test.ts'
       - 'src/components/QuizResolver.tsx'
       - 'src/components/DailyQuizCard.tsx'
       - 'src/lib/db.ts'
@@ -49,7 +50,7 @@ jobs:
         run: pnpm --dir worker install --no-frozen-lockfile --config.strictDepBuilds=false
 
       - name: Run Phase 1 tests
-        run: pnpm exec vitest run worker/src/taskLedger.test.ts worker/src/queue.test.ts src/lib/dailyQuizTierSecurity.contract.test.ts src/lib/classroomPushAuthorization.test.ts src/lib/db.rewards.test.ts
+        run: pnpm exec vitest run worker/src/taskLedger.test.ts worker/src/queue.test.ts src/lib/dailyQuizTierSecurity.contract.test.ts src/lib/classroomPushAuthorization.test.ts src/lib/db.rewards.test.ts src/lib/couponRedemptionSecurity.contract.test.ts
 
       - name: Typecheck application
         run: pnpm typecheck
