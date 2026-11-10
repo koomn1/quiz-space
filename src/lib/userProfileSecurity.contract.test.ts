@@ -15,6 +15,10 @@ describe('profile progression and reward-plan security', () => {
     resolve(process.cwd(), 'supabase/migrations/20261110212740_allow_trusted_subscription_writes.sql'),
     'utf8',
   );
+  const progressionMigration = readFileSync(
+    resolve(process.cwd(), 'supabase/migrations/20261110215000_allow_trusted_progression_updates.sql'),
+    'utf8',
+  );
 
   it('protects XP, level, auth email, and entitlements on direct profile writes', () => {
     expect(profileMigration).toContain('BEFORE INSERT OR UPDATE ON public.users');
@@ -33,6 +37,14 @@ describe('profile progression and reward-plan security', () => {
     expect(trustedSubscriptionMigration).toContain('NEW.renewal_date := OLD.renewal_date');
     expect(trustedSubscriptionMigration).toContain('NEW.xp := OLD.xp');
     expect(trustedSubscriptionMigration).toContain('NEW.email := OLD.email');
+  });
+
+  it('allows XP changes only inside trusted progression RPCs and disables unused escalation RPCs', () => {
+    expect(progressionMigration).toContain("current_setting('app.allow_progression_update',TRUE)");
+    expect(progressionMigration).toContain("set_config('app.allow_progression_update', 'on', true)");
+    expect(progressionMigration).toContain('REVOKE ALL ON FUNCTION public.process_exam_completion_reward');
+    expect(progressionMigration).toContain('REVOKE ALL ON FUNCTION public.rebuild_user_xp_from_completions');
+    expect(progressionMigration).toContain("set_config('app.allow_progression_update', 'off', true)");
   });
 
   it('uses effective membership and canonical plan id for reward-store access', () => {
