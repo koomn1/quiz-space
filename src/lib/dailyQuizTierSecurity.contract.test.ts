@@ -70,7 +70,7 @@ describe('daily quiz tier authorization', () => {
 
   it('stores answer keys in private server tables and grades submitted choices server-side', () => {
     const secure = readFileSync(
-      resolve(process.cwd(), 'supabase/migrations/20261110231100_secure_daily_quiz_scoring.sql'),
+      resolve(process.cwd(), 'supabase/migrations/20261110211548_secure_daily_quiz_scoring.sql'),
       'utf8',
     );
     expect(secure).toContain('CREATE TABLE IF NOT EXISTS public.daily_quiz_answer_keys');
@@ -87,7 +87,7 @@ describe('daily quiz tier authorization', () => {
 
   it('binds v2 scoring to the server-created slot bank id', () => {
     const binding = readFileSync(
-      resolve(process.cwd(), 'supabase/migrations/20261110233000_bind_daily_quiz_slot_to_server_bank.sql'),
+      resolve(process.cwd(), 'supabase/migrations/20261110212112_bind_daily_quiz_slot_to_server_bank.sql'),
       'utf8',
     );
     expect(binding).toContain('ADD COLUMN IF NOT EXISTS bank_id TEXT');
@@ -109,6 +109,16 @@ describe('daily quiz tier authorization', () => {
     expect(resolver).toContain('isDailyQuiz && !isDailyResultVerified');
     expect(db).toContain("'submit_user_daily_quiz_attempt_v2'");
     expect(db).not.toContain("'submit_user_daily_quiz_attempt', {");
+  });
+
+  it('removes direct client access to legacy slot payloads and private bank data', () => {
+    const purge = readFileSync(
+      resolve(process.cwd(), 'supabase/migrations/20261110212156_purge_legacy_daily_quiz_payloads.sql'),
+      'utf8',
+    );
+    expect(purge).toContain('WHERE answered_at IS NULL');
+    expect(purge).toContain('quiz_payload = NULL');
+    expect(purge).toContain('REVOKE ALL ON TABLE public.daily_quiz_user_slots');
   });
 
   it('only finalizes a payload after a refresh claim and validates its basic shape', () => {
