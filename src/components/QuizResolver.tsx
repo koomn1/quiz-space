@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock, LayoutGrid, X } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateQuizAttemptScore, updateGuestQuizAttemptScore, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getUserRatedQuestions, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
+import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getUserRatedQuestions, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { gradeEssayWithAI } from '../services/aiWorkerClient';
@@ -150,7 +150,6 @@ export default function QuizResolver({
   const [isSubmittingReview, setIsSubmittingReview] = React.useState(false);
   const [isReviewSubmitted, setIsReviewSubmitted] = React.useState(false);
   const [isReviewMode, setIsReviewMode] = React.useState(false);
-  const [isReviewDirty, setIsReviewDirty] = React.useState(false);
 
   // Forced rating states
   const [savedCompletionId, setSavedCompletionId] = React.useState<string | null>(null);
@@ -823,12 +822,11 @@ export default function QuizResolver({
   };
 
   const handleReviewChoice = (questionIndex: number, optionIndex: number) => {
-    if (isDailyQuiz && isDailyResultVerified) return;
+    if (savedCompletionId || autoSaveStartedRef.current || (isDailyQuiz && isDailyResultVerified)) return;
     const nextAnswers = [...userAnswers];
     nextAnswers[questionIndex] = optionIndex;
     setUserAnswers(nextAnswers);
     setScore(calculateScore(nextAnswers));
-    setIsReviewDirty(true);
   };
 
   const handleReviewEssay = (questionIndex: number, answer: string) => {
@@ -942,21 +940,6 @@ export default function QuizResolver({
           // finish action below is the authoritative retry and must still run.
           console.warn('Automatic completion save failed; retrying on final submit:', autoSaveErr);
           completionId = null;
-        }
-      }
-
-      if (completionId && isReviewDirty && !isDailyQuiz) {
-        try {
-          if (isGuest) {
-            await updateGuestQuizAttemptScore(completionId, userId, attemptKeyRef.current, score);
-          } else {
-            await updateQuizAttemptScore(completionId, score);
-          }
-          setIsReviewDirty(false);
-        } catch (scoreErr) {
-          // The automatic completion already contains a valid result. A stale
-          // review score must not trap the user on the finished-quiz screen.
-          console.warn('Review score update skipped; saved completion remains valid:', scoreErr);
         }
       }
 
@@ -1957,9 +1940,9 @@ export default function QuizResolver({
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--app-border)] pb-3">
                   <div>
                     <h4 className="text-base font-black text-[var(--app-text)]">{isAr ? 'مراجعة كل الإجابات' : 'Review all answers'}</h4>
-                    <p className="mt-1 text-xs theme-muted">{isAr ? 'يمكنك تغيير أي اختيار قبل التسليم النهائي.' : 'Change any answer before the final submission.'}</p>
+                    <p className="mt-1 text-xs theme-muted">{isAr ? 'المراجعة هنا للقراءة فقط بعد حفظ المحاولة.' : 'Review is read-only after the attempt is saved.'}</p>
                   </div>
-                  {isReviewDirty && <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[11px] font-bold text-amber-600">{isAr ? 'تم تعديل الإجابات' : 'Answers edited'}</span>}
+                  
                 </div>
                 {quiz.questions.map((question, questionIndex) => (
                   <div key={question.id || questionIndex} className="theme-surface rounded-2xl border p-4 shadow-sm">
