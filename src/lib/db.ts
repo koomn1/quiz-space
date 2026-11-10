@@ -2928,21 +2928,19 @@ export async function recordCouponUsage(
 export async function redeemCouponForUser(
   couponId: string,
   userId: string,
-  discountPercent: number,
   planId: string,
-  planName: string,
   orderId: string,
-  renewalDate: string,
 ): Promise<string> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured');
-  const { data, error } = await supabase.rpc('redeem_coupon_for_user', {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user?.id || authData.user.id !== userId) {
+    throw authError || new Error('Coupon redemption requires the signed-in account.');
+  }
+  const { data, error } = await supabase.rpc('redeem_coupon_for_user_v2', {
     p_coupon_id: couponId,
     p_user_id: userId,
-    p_discount_percent: discountPercent,
     p_plan_id: planId,
-    p_plan_name: planName,
     p_order_id: orderId,
-    p_renewal_date: renewalDate,
   });
   if (error) {
     console.error('Error redeeming coupon atomically:', error);
