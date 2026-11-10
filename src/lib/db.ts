@@ -2903,28 +2903,6 @@ export async function getCouponUsageByUser(couponId: string, userId: string): Pr
   return null;
 }
 
-export async function recordCouponUsage(
-  couponId: string,
-  userId: string,
-  discountPercent: number,
-  planId?: string,
-  orderId?: string
-): Promise<string> {
-  if (!isSupabaseConfigured) throw new Error('Supabase is not configured');
-  const { data, error } = await supabase.rpc('record_coupon_usage', {
-    p_coupon_id: couponId,
-    p_user_id: userId,
-    p_discount_percent: discountPercent,
-    p_plan_id: planId,
-    p_order_id: orderId
-  });
-  if (error) {
-    console.error('Error recording coupon usage:', error);
-    throw error;
-  }
-  return String(data || '');
-}
-
 export async function redeemCouponForUser(
   couponId: string,
   userId: string,
