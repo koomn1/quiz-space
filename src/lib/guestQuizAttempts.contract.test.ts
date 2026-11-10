@@ -19,7 +19,7 @@ describe('guest quiz attempts migration contract', () => {
     expect(migration).toContain("IF auth.uid() IS NOT NULL THEN RAISE EXCEPTION 'Guest submission requires an anonymous session'");
     expect(migration).toContain("IF auth.uid() IS NOT NULL THEN RAISE EXCEPTION 'Guest review requires an anonymous session'");
     expect(migration).toContain('REVOKE ALL ON FUNCTION public.submit_guest_quiz_attempt');
-    expect(migration).toContain('REVOKE ALL ON FUNCTION public.update_guest_quiz_attempt_review');
+    expect(migration).toContain('REVOKE ALL ON FUNCTION public.update_guest_quiz_attempt_review_v2');
     expect(migration).toContain('GRANT EXECUTE ON FUNCTION public.submit_guest_quiz_attempt(text, text, text, integer, text, integer, text) TO anon');
     expect(migration).toContain('GRANT EXECUTE ON FUNCTION public.update_guest_quiz_attempt_review(text, text, integer, text) TO anon');
     expect(migration).not.toContain('TO authenticated;\nGRANT EXECUTE ON FUNCTION public.update_guest_quiz_attempt_review');
