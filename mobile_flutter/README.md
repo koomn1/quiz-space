@@ -21,7 +21,7 @@ flutter run \
 
 أضف `google-services.json` كـGitHub Actions Secret باسم `FIREBASE_ANDROID_CONFIG_JSON`، ولا تضعه في source. الـworkflow يكتبه مؤقتًا أثناء البناء، ويثبت Firebase Gradle plugin، ويطابق package `com.quizspace.badawy` مع إعداد Android المرفق.
 
-التطبيق يرسل Firebase ID token إلى Edge Function باسم `mobile-firebase-session-v2`. الخادم يتحقق من توقيع Firebase والبريد المؤكَّد، ثم يبحث عن سجل QuizSpace القديم بالبريد ويعيد UID القديم دون تغييره، أو ينشئ سجلًا جديدًا للمستخدم الجديد. لا يوجد service-role key داخل التطبيق، ولا يعتمد مسار البروفايل على Firebase JWT داخل RLS مباشرة. يجب أن يكون Firebase project المستخدم في `google-services.json` هو مشروع QuizSpace، مع تفعيل Email/Password وGoogle داخل Firebase Authentication.
+التطبيق يرسل Firebase ID token إلى Edge Function باسم `mobile-firebase-session-v2`. الخادم يتحقق من توقيع Firebase والبريد المؤكَّد، ويربط هوية Firebase بمعرّف QuizSpace ثابت في جدول خادمي خاص. يُستخدم البريد المؤكَّد مرة واحدة فقط لربط الحساب القديم، ويُرفض الربط عند وجود أكثر من حساب بنفس البريد؛ أما الحساب الجديد فيحصل على UUID مستقل عن Firebase UID. بعد الربط تعتمد الطلبات التالية على Firebase UID الثابت بدل إعادة البحث بالبريد. لا يوجد service-role key داخل التطبيق، ولا يعتمد مسار البروفايل على Firebase JWT داخل RLS مباشرة. يجب أن يكون Firebase project المستخدم في `google-services.json` هو مشروع QuizSpace، مع تفعيل Email/Password وGoogle داخل Firebase Authentication.
 
 ## البيانات والصلاحيات والاتصال
 
