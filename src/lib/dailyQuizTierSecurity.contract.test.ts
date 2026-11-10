@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 describe('daily quiz tier authorization', () => {
   const migration = readFileSync(
-    resolve(process.cwd(), 'supabase/migrations/20261110120000_harden_daily_quiz_tier_authority.sql'),
+    resolve(process.cwd(), 'supabase/migrations/20261110194201_daily_quiz_tier_authority_hardening.sql'),
     'utf8',
   );
 
@@ -34,7 +34,7 @@ describe('daily quiz tier authorization', () => {
 
   it('keeps the resolver private and restricts daily slot RPCs to authenticated users', () => {
     const privileges = readFileSync(
-      resolve(process.cwd(), 'supabase/migrations/20261110194500_lock_daily_quiz_rpc_execute.sql'),
+      resolve(process.cwd(), 'supabase/migrations/20261110194227_lock_daily_quiz_rpc_execute.sql'),
       'utf8',
     );
     expect(privileges).toContain('FROM PUBLIC, anon, authenticated');
@@ -52,7 +52,7 @@ describe('daily quiz tier authorization', () => {
 
   it('revokes legacy global daily slot RPCs and preserves authenticated completion', () => {
     const legacy = readFileSync(
-      resolve(process.cwd(), 'supabase/migrations/20261110200000_retire_legacy_daily_quiz_rpcs.sql'),
+      resolve(process.cwd(), 'supabase/migrations/20261110194413_retire_legacy_daily_quiz_rpcs.sql'),
       'utf8',
     );
     for (const fn of [
