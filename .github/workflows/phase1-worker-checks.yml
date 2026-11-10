@@ -62,5 +62,13 @@ jobs:
       - name: Build application
         run: pnpm build
 
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Typecheck changed Supabase Edge Functions
+        run: deno check supabase/functions/mobile-firebase-session-v2/index.ts supabase/functions/send-promotion-push/index.ts
+
       - name: Typecheck Worker
         run: pnpm exec tsc --noEmit -p worker/tsconfig.json
