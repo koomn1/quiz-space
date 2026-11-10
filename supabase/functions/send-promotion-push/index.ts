@@ -1,3 +1,5 @@
+import { canBroadcastClassroomPush } from '../_shared/classroomPushAuthorization.ts';
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import webpush from 'npm:web-push';
 
@@ -85,17 +87,25 @@ Deno.serve(async (req) => {
 
       // Classroom push is a broadcast to every enrolled member, not a student action.
       // Only the classroom owner, an admin, or the trusted cron may send it.
-      if (!isCron && !isAdmin && classroom.created_by !== user?.id) {
+      let membershipRole: string | null = null;
+      if (!isCron && !isAdmin && classroom.created_by !== user?.id && user?.id) {
         const { data: membership, error: membershipError } = await adminClient
           .from('classroom_students')
           .select('role')
           .eq('class_id', classId)
-          .eq('student_id', user?.id || '')
+          .eq('student_id', user.id)
           .maybeSingle();
         if (membershipError) throw membershipError;
-        if (membership?.role !== 'teacher') {
-          return new Response('Forbidden', { status: 403, headers: corsHeaders });
-        }
+        membershipRole = membership?.role ?? null;
+      }
+      if (!canBroadcastClassroomPush({
+        userId: user?.id ?? null,
+        classroomOwnerId: classroom.created_by,
+        membershipRole,
+        isAdmin,
+        isCron,
+      })) {
+        return new Response('Forbidden', { status: 403, headers: corsHeaders });
       }
       const { data: members } = await adminClient.from('classroom_students').select('student_id').eq('class_id', classId);
       recipientIds = [...new Set([classroom.created_by, ...(members || []).map((row: any) => row.student_id)])].filter((id) => id !== user?.id);
