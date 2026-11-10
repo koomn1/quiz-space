@@ -16,7 +16,7 @@ describe('profile progression and reward-plan security', () => {
     'utf8',
   );
   const progressionMigration = readFileSync(
-    resolve(process.cwd(), 'supabase/migrations/20261110215000_allow_trusted_progression_updates.sql'),
+    resolve(process.cwd(), 'supabase/migrations/20261110213904_allow_trusted_progression_updates.sql'),
     'utf8',
   );
 
