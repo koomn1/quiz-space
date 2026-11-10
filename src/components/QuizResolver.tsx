@@ -830,12 +830,12 @@ export default function QuizResolver({
   };
 
   const handleReviewEssay = (questionIndex: number, answer: string) => {
+    if (savedCompletionId || autoSaveStartedRef.current) return;
     const nextAnswers = [...essayAnswers];
     nextAnswers[questionIndex] = answer;
     setEssayAnswers(nextAnswers);
     setEssayAssessments((previous) => ({ ...previous, [questionIndex]: false }));
     setScore(calculateScore(userAnswers));
-    setIsReviewDirty(true);
   };
 
   // Submit final scores and reviews to Supabase.
