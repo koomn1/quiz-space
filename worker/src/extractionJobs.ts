@@ -1385,6 +1385,10 @@ export async function processExtractionJob(
       console.error('Extraction job error state update failed.', { jobId: job.id, updateError });
     }
     await logExtractionPerformance(env, authHeader, job, provider, 'error', Date.now() - startedAt, chunks);
+    // The queue consumer must not finish the task as succeeded after the
+    // extraction row has been marked as failed. Re-throw after persisting the
+    // best-effort error state so the consumer can retry/dead-letter it.
+    throw error;
   } finally {
     stopLeaseHeartbeat();
   }

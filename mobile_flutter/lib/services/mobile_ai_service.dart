@@ -24,7 +24,9 @@ class MobileAiService {
 
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
     try {
-      final endpoint = Uri.parse('${workerUrl.replaceFirst(RegExp(r'/+$'), '')}/api/ai/openrouter');
+      // Keep the native client on the same authenticated contract as web.
+      // /api/ai/openrouter was retired and is not served by the Worker.
+      final endpoint = Uri.parse('${workerUrl.replaceFirst(RegExp(r'/+$'), '')}/api/ai/chat');
       final request = await client.postUrl(endpoint).timeout(const Duration(seconds: 10));
       request.headers
         ..set(HttpHeaders.authorizationHeader, 'Bearer $token')

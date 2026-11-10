@@ -77,9 +77,14 @@ Deno.serve(async (req) => {
       if (!classId) return new Response('classId is required for classroom notifications', { status: 400, headers: corsHeaders });
       const { data: classroom } = await adminClient.from('classrooms').select('id, created_by').eq('id', classId).maybeSingle();
       if (!classroom) return new Response('classroom not found', { status: 404, headers: corsHeaders });
+      // Classroom broadcasts are a teacher/owner capability. Membership alone
+      // is not sufficient: a student must never be able to fan out a push to
+      // every member of the classroom.
       if (!isCron && !isAdmin && classroom.created_by !== user?.id) {
-        const { data: membership } = await adminClient.from('classroom_students').select('student_id').eq('class_id', classId).eq('student_id', user?.id || '').maybeSingle();
-        if (!membership) return new Response('Forbidden', { status: 403, headers: corsHeaders });
+        return new Response('Only the classroom owner or an administrator may send classroom notifications', {
+          status: 403,
+          headers: corsHeaders,
+        });
       }
       const { data: members } = await adminClient.from('classroom_students').select('student_id').eq('class_id', classId);
       recipientIds = [...new Set([classroom.created_by, ...(members || []).map((row: any) => row.student_id)])].filter((id) => id !== user?.id);
