@@ -704,13 +704,15 @@ export async function updateGuestQuizAttemptScore(
 export async function updateGuestQuizAttemptReview(
   completionId: string,
   guestId: string,
+  clientAttemptKey: string,
   rating: number,
   feedback = '',
 ): Promise<boolean> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz review cannot be saved.');
-  const { data, error } = await supabase.rpc('update_guest_quiz_attempt_review', {
+  const { data, error } = await supabase.rpc('update_guest_quiz_attempt_review_v2', {
     p_completion_id: completionId,
     p_guest_id: guestId,
+    p_client_attempt_key: clientAttemptKey,
     p_rating: rating,
     p_feedback: feedback,
   });
