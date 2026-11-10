@@ -823,6 +823,7 @@ export default function QuizResolver({
   };
 
   const handleReviewChoice = (questionIndex: number, optionIndex: number) => {
+    if (isDailyQuiz && isDailyResultVerified) return;
     const nextAnswers = [...userAnswers];
     nextAnswers[questionIndex] = optionIndex;
     setUserAnswers(nextAnswers);
@@ -1582,9 +1583,11 @@ export default function QuizResolver({
                 hasShaken ? 'shake-question' : ''
               } ${
                 isAnswersFrozen
-                  ? (selectedIdx === currentQuestion.correctIndex
-                      ? 'border border-emerald-500/30 dark:border-emerald-500/20 shadow-[0_8px_40px_rgb(16,185,129,0.08)]'
-                      : 'border border-rose-500/30 dark:border-rose-500/20 shadow-[0_8px_40px_rgb(244,63,113,0.08)]')
+                  ? (isDailyQuiz
+                      ? 'border border-primary/30 dark:border-primary/20'
+                      : selectedIdx === currentQuestion.correctIndex
+                        ? 'border border-emerald-500/30 dark:border-emerald-500/20 shadow-[0_8px_40px_rgb(16,185,129,0.08)]'
+                        : 'border border-rose-500/30 dark:border-rose-500/20 shadow-[0_8px_40px_rgb(244,63,113,0.08)]')
                   : 'border border-[var(--app-border)] hover:shadow-[0_20px_60px_rgb(0,0,0,0.08)] hover:-translate-y-1'
               }`}
             >
@@ -1621,7 +1624,9 @@ export default function QuizResolver({
                 </span>
               ) : isAnswersFrozen ? (
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
-                  {selectedIdx === currentQuestion.correctIndex ? 'الإجابة صحيحة' : 'الإجابة خاطئة'}
+                  {isDailyQuiz
+                    ? (isAr ? 'تم تسجيل إجابتك' : 'Answer recorded')
+                    : (selectedIdx === currentQuestion.correctIndex ? 'الإجابة صحيحة' : 'الإجابة خاطئة')}
                 </span>
               ) : (
                 <span className="text-[11px] text-primary dark:text-primary-light font-medium tracking-wide">
