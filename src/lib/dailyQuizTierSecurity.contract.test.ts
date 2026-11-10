@@ -104,6 +104,8 @@ describe('daily quiz tier authorization', () => {
     const db = readFileSync(resolve(process.cwd(), 'src/lib/db.ts'), 'utf8');
     expect(card).not.toContain("from '../data/dailyQuizBank'");
     expect(card).toContain('finalizeUserDailyQuizRefresh(userId, resolvedTier, { id: quizId, lang })');
+    expect(card).toContain('seconds === slot.refreshIntervalSeconds');
+    expect(card).toContain('await generate(resolvedTier)');
     expect(resolver).toContain('answers: isDailyQuiz ? quiz.questions.map');
     expect(resolver).toContain('applyDailyServerResult(savedRow)');
     expect(resolver).toContain('isDailyQuiz && !isDailyResultVerified');
