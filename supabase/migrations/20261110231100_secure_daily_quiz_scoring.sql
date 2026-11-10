@@ -205,6 +205,7 @@ DECLARE
   v_user_id TEXT := auth.uid()::TEXT;
   v_slot public.daily_quiz_user_slots%ROWTYPE;
   v_completion public.daily_quiz_completions%ROWTYPE;
+  v_completion_id TEXT;
   v_bank public.daily_quiz_bank%ROWTYPE;
   v_bank_id TEXT;
   v_total INTEGER;
