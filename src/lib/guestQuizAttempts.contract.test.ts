@@ -1,8 +1,13 @@
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { migrationSql } from '../testHelpers/migrationSql';
 
 const migration = migrationSql('supabase/migrations/20260824160000_guest_quiz_attempts.sql');
+const reviewV2Migration = readFileSync(
+  resolve(process.cwd(), 'supabase/migrations/20261110215500_secure_guest_review_attempt_key.sql'),
+  'utf8',
+);
 
 describe('guest quiz attempts migration contract', () => {
   it('keeps guest attempts isolated from user profiles and deduplicates retries', () => {
@@ -19,10 +24,17 @@ describe('guest quiz attempts migration contract', () => {
     expect(migration).toContain("IF auth.uid() IS NOT NULL THEN RAISE EXCEPTION 'Guest submission requires an anonymous session'");
     expect(migration).toContain("IF auth.uid() IS NOT NULL THEN RAISE EXCEPTION 'Guest review requires an anonymous session'");
     expect(migration).toContain('REVOKE ALL ON FUNCTION public.submit_guest_quiz_attempt');
-    expect(migration).toContain('REVOKE ALL ON FUNCTION public.update_guest_quiz_attempt_review_v2');
+    expect(migration).toContain('REVOKE ALL ON FUNCTION public.update_guest_quiz_attempt_review');
     expect(migration).toContain('GRANT EXECUTE ON FUNCTION public.submit_guest_quiz_attempt(text, text, text, integer, text, integer, text) TO anon');
     expect(migration).toContain('GRANT EXECUTE ON FUNCTION public.update_guest_quiz_attempt_review(text, text, integer, text) TO anon');
-    expect(migration).not.toContain('TO authenticated;\nGRANT EXECUTE ON FUNCTION public.update_guest_quiz_attempt_review');
+  });
+
+  it('requires the per-attempt key to edit a guest review', () => {
+    expect(reviewV2Migration).toContain('update_guest_quiz_attempt_review_v2');
+    expect(reviewV2Migration).toContain('p_client_attempt_key TEXT');
+    expect(reviewV2Migration).toContain('AND client_attempt_key=p_client_attempt_key');
+    expect(reviewV2Migration).toContain('GRANT EXECUTE ON FUNCTION public.update_guest_quiz_attempt_review_v2');
+    expect(reviewV2Migration).toContain('TO anon');
   });
 
   it('counts authenticated and guest rows in total plays and public stats', () => {
