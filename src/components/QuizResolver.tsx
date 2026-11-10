@@ -948,7 +948,7 @@ export default function QuizResolver({
         if (selectedRating > 0) {
           try {
             if (isGuest) {
-              await updateGuestQuizAttemptReview(completionId, userId, selectedRating, feedbackText.trim());
+              await updateGuestQuizAttemptReview(completionId, userId, attemptKeyRef.current, selectedRating, feedbackText.trim());
             } else {
               await updateCompletionReview(completionId, selectedRating, feedbackText);
             }
