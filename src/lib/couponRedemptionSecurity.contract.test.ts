@@ -8,6 +8,8 @@ describe('server-authoritative coupon redemption', () => {
     'utf8',
   );
   const db = readFileSync(resolve(process.cwd(), 'src/lib/db.ts'), 'utf8');
+  const redeemStart = db.indexOf('export async function redeemCouponForUser(');
+  const redeemHelper = db.slice(redeemStart, db.indexOf('\n}\n', redeemStart) + 3);
   const billing = readFileSync(resolve(process.cwd(), 'src/components/BillingSection.tsx'), 'utf8');
   const profile = readFileSync(resolve(process.cwd(), 'src/pages/UserProfile.tsx'), 'utf8');
 
@@ -36,10 +38,10 @@ describe('server-authoritative coupon redemption', () => {
   });
 
   it('sends only coupon, account, selected plan id, and order id from the browser', () => {
-    expect(db).toContain("supabase.rpc('redeem_coupon_for_user_v2'");
-    expect(db).not.toContain('p_discount_percent: discountPercent');
-    expect(db).not.toContain('p_plan_name: planName');
-    expect(db).not.toContain('p_renewal_date: renewalDate');
+    expect(redeemHelper).toContain("supabase.rpc('redeem_coupon_for_user_v2'");
+    expect(redeemHelper).not.toContain('p_discount_percent');
+    expect(redeemHelper).not.toContain('p_plan_name');
+    expect(redeemHelper).not.toContain('p_renewal_date');
     expect(billing).toContain('redeemCouponForUser(appliedCouponId, userId, selectedPlan, requestId)');
     expect(profile).toContain("redeemCouponForUser(couponObj.id, currentUserId, 'diamond', requestId)");
   });
