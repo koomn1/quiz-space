@@ -1,0 +1,11 @@
+-- Run ONLY after the updated web client is deployed.
+-- This retires the legacy daily-quiz RPCs that return client-carried answer keys
+-- or accept a client-supplied score. The v2 client uses *_v2 RPCs exclusively.
+REVOKE ALL ON FUNCTION public.get_user_daily_quiz_slot(TEXT,TEXT)
+  FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.finalize_user_daily_quiz_refresh(TEXT,TEXT,JSONB)
+  FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.submit_user_daily_quiz_attempt(TEXT,TEXT,TEXT,INTEGER,INTEGER,INTEGER,TEXT)
+  FROM PUBLIC, anon, authenticated;
+
+NOTIFY pgrst, 'reload schema';
