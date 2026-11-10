@@ -75,11 +75,27 @@ Deno.serve(async (req) => {
 
     if (category === 'classroom') {
       if (!classId) return new Response('classId is required for classroom notifications', { status: 400, headers: corsHeaders });
-      const { data: classroom } = await adminClient.from('classrooms').select('id, created_by').eq('id', classId).maybeSingle();
+      const { data: classroom, error: classroomError } = await adminClient
+        .from('classrooms')
+        .select('id, created_by')
+        .eq('id', classId)
+        .maybeSingle();
+      if (classroomError) throw classroomError;
       if (!classroom) return new Response('classroom not found', { status: 404, headers: corsHeaders });
+
+      // Classroom push is a broadcast to every enrolled member, not a student action.
+      // Only the classroom owner, an admin, or the trusted cron may send it.
       if (!isCron && !isAdmin && classroom.created_by !== user?.id) {
-        const { data: membership } = await adminClient.from('classroom_students').select('student_id').eq('class_id', classId).eq('student_id', user?.id || '').maybeSingle();
-        if (!membership) return new Response('Forbidden', { status: 403, headers: corsHeaders });
+        const { data: membership, error: membershipError } = await adminClient
+          .from('classroom_students')
+          .select('role')
+          .eq('class_id', classId)
+          .eq('student_id', user?.id || '')
+          .maybeSingle();
+        if (membershipError) throw membershipError;
+        if (membership?.role !== 'teacher') {
+          return new Response('Forbidden', { status: 403, headers: corsHeaders });
+        }
       }
       const { data: members } = await adminClient.from('classroom_students').select('student_id').eq('class_id', classId);
       recipientIds = [...new Set([classroom.created_by, ...(members || []).map((row: any) => row.student_id)])].filter((id) => id !== user?.id);
