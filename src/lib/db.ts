@@ -733,6 +733,7 @@ export async function submitQuizAttempt(
     clientAttemptKey?: string;
     totalQuestions?: number;
     essayAnswers?: any;
+    answers?: Array<number | null>;
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
