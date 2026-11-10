@@ -166,7 +166,7 @@ async function loadProfile(context: ServiceContext, appUid: string): Promise<Rec
   const [userResult, quizResult, completionResult] = await Promise.all([
     context.client
       .from("users")
-      .select("uid, custom_id, name, bio, location, photo_url, is_premium, is_founder, is_admin, plan_name, xp")
+      .select("uid, custom_id, name, bio, location, photo_url, is_premium, is_lifetime, is_founder, renewal_date, plan_id, is_admin, plan_name, xp")
       .eq("uid", appUid)
       .limit(1),
     context.client
