@@ -32,6 +32,24 @@ describe('daily quiz tier authorization', () => {
     }
   });
 
+  it('keeps the resolver private and restricts daily slot RPCs to authenticated users', () => {
+    const privileges = readFileSync(
+      resolve(process.cwd(), 'supabase/migrations/20261110194500_lock_daily_quiz_rpc_execute.sql'),
+      'utf8',
+    );
+    expect(privileges).toContain('FROM PUBLIC, anon, authenticated');
+    for (const fn of [
+      'get_user_daily_quiz_slot',
+      'claim_user_daily_quiz_refresh',
+      'finalize_user_daily_quiz_refresh',
+      'release_user_daily_quiz_refresh',
+      'reset_legacy_daily_quiz_slot',
+    ]) {
+      expect(privileges).toContain(`FUNCTION public.${fn}`);
+      expect(privileges).toContain('TO authenticated');
+    }
+  });
+
   it('only finalizes a payload after a refresh claim and validates its basic shape', () => {
     expect(migration).toContain('AND refreshing = true');
     expect(migration).toContain("RAISE EXCEPTION 'Daily quiz refresh was not claimed'");
