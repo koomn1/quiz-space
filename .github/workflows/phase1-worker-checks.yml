@@ -36,8 +36,11 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install Worker-local type dependencies
+        run: pnpm --dir worker install --no-frozen-lockfile
 
       - name: Run Phase 1 tests
         run: pnpm exec vitest run worker/src/taskLedger.test.ts worker/src/queue.test.ts src/lib/dailyQuizTierSecurity.contract.test.ts
