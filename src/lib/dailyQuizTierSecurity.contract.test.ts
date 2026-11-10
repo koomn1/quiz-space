@@ -1,0 +1,37 @@
+import { describe, expect, it } from 'vitest';
+import { migrationSql } from '../testHelpers/migrationSql';
+
+describe('daily quiz tier authorization', () => {
+  const migration = migrationSql('supabase/migrations/20261110120000_harden_daily_quiz_tier_authority.sql');
+
+  it('derives the tier from the authenticated user membership, not the client argument', () => {
+    expect(migration).toContain('quizspace_resolve_daily_quiz_tier');
+    expect(migration).toContain('public.effective_membership_active');
+    expect(migration).toContain('auth.uid()::TEXT <> p_user_id');
+    expect(migration).toContain("RETURN 'diamond'");
+    expect(migration).toContain("RETURN 'gold'");
+    expect(migration).toContain("RETURN 'free'");
+  });
+
+  it('routes every per-user daily slot RPC through the trusted tier resolver', () => {
+    for (const fn of [
+      'get_user_daily_quiz_slot',
+      'claim_user_daily_quiz_refresh',
+      'finalize_user_daily_quiz_refresh',
+      'release_user_daily_quiz_refresh',
+      'reset_legacy_daily_quiz_slot',
+    ]) {
+      const start = migration.indexOf(`FUNCTION public.${fn}`);
+      expect(start).toBeGreaterThanOrEqual(0);
+      const body = migration.slice(start, migration.indexOf('$$;', start));
+      expect(body).toContain('quizspace_resolve_daily_quiz_tier');
+    }
+  });
+
+  it('only finalizes a payload after a refresh claim and validates its basic shape', () => {
+    expect(migration).toContain("AND refreshing = true");
+    expect(migration).toContain("RAISE EXCEPTION 'Daily quiz refresh was not claimed'");
+    expect(migration).toContain("jsonb_typeof(p_quiz_payload->'questions') <> 'array'");
+    expect(migration).toContain("'Invalid daily quiz payload'");
+  });
+});
