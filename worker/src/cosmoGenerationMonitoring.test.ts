@@ -15,7 +15,7 @@ describe('Cosmo generation recovery contract', () => {
   });
 
   it('uses Xkiro as the only vision provider', () => {
-        expect(providerChainSource).toContain("export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free'");
+        expect(providerChainSource).toContain("export const XKIRO_VISION_MODEL = 'cohere/command-a-plus'");
     expect(providerChainSource).toContain("[callXkiro, 'xkiro', XKIRO_VISION_MODEL]");
     expect(providerChainSource).toContain('api.xkiro.com/v1/chat/completions');
   });

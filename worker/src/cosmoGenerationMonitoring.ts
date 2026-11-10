@@ -14,7 +14,7 @@ describe('AI provider chain contract', () => {
   });
 
   it('uses xKiro as the only multimodal provider', () => {
-    expect(providerSource).toContain("export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free'");
+    expect(providerSource).toContain("export const XKIRO_VISION_MODEL = 'cohere/command-a-plus'");
     expect(providerSource).toContain("[[callXkiro, 'xkiro', XKIRO_VISION_MODEL]]");
     expect(providerSource).toContain('api.xkiro.com/v1/chat/completions');
     expect(providerSource).not.toMatch(/callGemini|callOpenAI|openrouter\.ai/);

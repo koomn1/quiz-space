@@ -145,7 +145,7 @@ export async function extractExcelText(source: Uint8Array): Promise<string> {
 }
 
 const AI_TEXT_FALLBACKS = ['mercury-3'];
-const AI_VISION_FALLBACKS = ['qwen/qwen3.8-omni-flash:free'];
+const AI_VISION_FALLBACKS = ['cohere/command-a-plus'];
 
 export function sourceFileBaseName(sourceFileName: string | null | undefined): string {
   const baseName = String(sourceFileName || '').split(/[\\/]/).pop() || '';

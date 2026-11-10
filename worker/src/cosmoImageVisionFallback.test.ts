@@ -60,7 +60,7 @@ describe('Cosmo image → xKiro vision integration', () => {
     expect(calls).toHaveLength(2);
     expect(new URL(calls[0].url).hostname).toBe('api.xkiro.com');
     const body = requestBody(calls[0]);
-    expect(body.model).toBe('qwen/qwen3.8-omni-flash:free');
+    expect(body.model).toBe('cohere/command-a-plus');
     const imageMessage = body.messages.find((message: any) => message.role === 'user');
     expect(imageMessage.content).toContainEqual({ type: 'image_url', image_url: { url: `data:image/png;base64,${IMAGE_BASE64}` } });
     expect(new URL(calls[1].url).hostname).toBe('api.inceptionlabs.ai');

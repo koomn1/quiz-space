@@ -10,7 +10,7 @@ export type ProviderOptions = {
 };
 
 export const INCEPTION_MODEL = 'mercury-3';
-export const XKIRO_VISION_MODEL = 'qwen/qwen3.8-omni-flash:free';
+export const XKIRO_VISION_MODEL = 'cohere/command-a-plus';
 export const THINKING_REASONING_EFFORT = 'high' as const;
 
  type ProviderCall = (env: Env, messages: ProviderMessage[], options: ProviderOptions) => Promise<string>;
