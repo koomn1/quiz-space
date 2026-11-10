@@ -944,18 +944,9 @@ export default function UserProfile({
         const requestId =
           "req-auto-" + Math.random().toString(36).substring(2, 11);
 
-        const renewalDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
         let userErr: any = null;
         try {
-          await redeemCouponForUser(
-            couponObj.id,
-            currentUserId,
-            discountPercent,
-            'diamond',
-            'Diamond',
-            requestId,
-            renewalDate,
-          );
+          await redeemCouponForUser(couponObj.id, currentUserId, 'diamond', requestId);
         } catch (error) {
           userErr = error;
         }
