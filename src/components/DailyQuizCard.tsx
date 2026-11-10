@@ -11,7 +11,6 @@ import {
   planNameToDailyQuizTier,
   DailyQuizTier,
 } from '../lib/db';
-import { DAILY_QUIZ_BANK } from '../data/dailyQuizBank';
 import { shouldRecoverStalledDailyQuizRefresh } from '../lib/dailyQuizRecovery';
 import { MainLogo } from './MainLogo';
 
@@ -21,8 +20,8 @@ gsap.registerPlugin(useGSAP);
 // guarantee the sessionStorage snapshot exists before navigation.
 let latestDailyPayload: Record<string, any> | null = null;
 
-// Fixed offline bank: no AI request is made while users load or solve daily quizzes.
-const DAILY_BANK_SIZE = DAILY_QUIZ_BANK.length;
+// The daily bank and answer keys are stored server-side; only this public count is used for deterministic rotation.
+const DAILY_BANK_SIZE = 10;
 
 interface DailyQuizCardProps {
   lang: 'ar' | 'en';
@@ -92,22 +91,10 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       const seedText = `${userId}:${tier}:${windowNumber}`;
       let hash = 0;
       for (let i = 0; i < seedText.length; i++) hash = (hash * 31 + seedText.charCodeAt(i)) >>> 0;
-      const source = DAILY_QUIZ_BANK[hash % DAILY_BANK_SIZE] as any;
       const quizId = `daily-${userId}-${windowNumber}-${String(hash % DAILY_BANK_SIZE + 1).padStart(2, '0')}`;
-      const quiz = {
-        ...source,
-        id: quizId,
-        title: ` ${isAr ? 'التحدي اليومي' : 'Daily Challenge'} — ${source.title}`,
-        questions: source.questions.map((q: any, i: number) => ({ ...q, id: `${quizId}-q${i + 1}` })),
-        creatorId: 'quizspace-daily-bank',
-        creatorName: isAr ? 'QuizSpace • تحدٍ متجدد' : 'QuizSpace • Rotating Challenge',
-        category: isAr ? `يومي • ${TIER_LABEL[tier].ar}` : `Daily • ${TIER_LABEL[tier].en}`,
-        createdAt: new Date().toISOString(),
-        totalPlays: 0,
-        avgRating: 0,
-        ratingsCount: 0,
-      } as any;
-      await finalizeUserDailyQuizRefresh(userId, tier, quiz);
+      // Only the quiz id and language leave the browser. The server chooses the
+      // bank record and returns questions without the correct-answer key.
+      const quiz = await finalizeUserDailyQuizRefresh(userId, tier, { id: quizId, lang });
       window.sessionStorage.setItem(`quizspace-daily-${quiz.id}`, JSON.stringify(quiz));
       latestDailyPayload = quiz;
       setQuizId(quiz.id);
