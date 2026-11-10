@@ -46,7 +46,13 @@ async function rpc<T>(env: Env, authHeader: string, name: string, body: Record<s
     body: JSON.stringify(body),
   });
   if (!response.ok) throw new Error(`Task ledger RPC ${name} failed (${response.status})`);
-  return await response.json() as T;
+  const responseText = await response.text();
+  if (!responseText.trim()) return undefined as T;
+  try {
+    return JSON.parse(responseText) as T;
+  } catch {
+    throw new Error(`Task ledger RPC ${name} returned invalid JSON`);
+  }
 }
 
 export async function claimTask(env: Env, authHeader: string, input: ClaimTaskInput): Promise<TaskRun> {
