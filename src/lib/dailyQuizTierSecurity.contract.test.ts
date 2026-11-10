@@ -68,6 +68,36 @@ describe('daily quiz tier authorization', () => {
     expect(legacy).toContain('TO authenticated');
   });
 
+  it('stores answer keys in private server tables and grades submitted choices server-side', () => {
+    const secure = readFileSync(
+      resolve(process.cwd(), 'supabase/migrations/20261110231100_secure_daily_quiz_scoring.sql'),
+      'utf8',
+    );
+    expect(secure).toContain('CREATE TABLE IF NOT EXISTS public.daily_quiz_answer_keys');
+    expect(secure).toContain('ALTER TABLE public.daily_quiz_answer_keys ENABLE ROW LEVEL SECURITY');
+    expect(secure).toContain('FROM PUBLIC, anon, authenticated');
+    expect(secure).toContain('FUNCTION public.submit_user_daily_quiz_attempt_v2');
+    expect(secure).toContain('p_answers JSONB');
+    expect(secure).toContain('FROM public.daily_quiz_answer_keys AS k');
+    expect(secure).toContain('INTO v_score');
+    expect(secure).toContain("'correctIndex', -1");
+    expect(secure).toContain("'source_bank_id', v_bank_id");
+    expect(secure).not.toContain('p_score INTEGER');
+  });
+
+  it('does not ship the daily answer bank or grade answers in the browser', () => {
+    const card = readFileSync(resolve(process.cwd(), 'src/components/DailyQuizCard.tsx'), 'utf8');
+    const resolver = readFileSync(resolve(process.cwd(), 'src/components/QuizResolver.tsx'), 'utf8');
+    const db = readFileSync(resolve(process.cwd(), 'src/lib/db.ts'), 'utf8');
+    expect(card).not.toContain("from '../data/dailyQuizBank'");
+    expect(card).toContain('finalizeUserDailyQuizRefresh(userId, tier, { id: quizId, lang })');
+    expect(resolver).toContain('answers: isDailyQuiz ? quiz.questions.map');
+    expect(resolver).toContain('applyDailyServerResult(savedRow)');
+    expect(resolver).toContain('isDailyQuiz && !isDailyResultVerified');
+    expect(db).toContain("'submit_user_daily_quiz_attempt_v2'");
+    expect(db).not.toContain("'submit_user_daily_quiz_attempt', {");
+  });
+
   it('only finalizes a payload after a refresh claim and validates its basic shape', () => {
     expect(migration).toContain('AND refreshing = true');
     expect(migration).toContain("RAISE EXCEPTION 'Daily quiz refresh was not claimed'");
