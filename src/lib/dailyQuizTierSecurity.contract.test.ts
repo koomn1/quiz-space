@@ -1,8 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { migrationSql } from '../testHelpers/migrationSql';
 
 describe('daily quiz tier authorization', () => {
-  const migration = migrationSql('supabase/migrations/20261110120000_harden_daily_quiz_tier_authority.sql');
+  const migration = readFileSync(
+    resolve(process.cwd(), 'supabase/migrations/20261110120000_harden_daily_quiz_tier_authority.sql'),
+    'utf8',
+  );
 
   it('derives the tier from the authenticated user membership, not the client argument', () => {
     expect(migration).toContain('quizspace_resolve_daily_quiz_tier');
@@ -29,9 +33,9 @@ describe('daily quiz tier authorization', () => {
   });
 
   it('only finalizes a payload after a refresh claim and validates its basic shape', () => {
-    expect(migration).toContain("AND refreshing = true");
+    expect(migration).toContain('AND refreshing = true');
     expect(migration).toContain("RAISE EXCEPTION 'Daily quiz refresh was not claimed'");
-    expect(migration).toContain("jsonb_typeof(p_quiz_payload->'questions') <> 'array'");
+    expect(migration).toContain("jsonb_typeof(p_quiz_payload->'questions') IS DISTINCT FROM 'array'");
     expect(migration).toContain("'Invalid daily quiz payload'");
   });
 });
