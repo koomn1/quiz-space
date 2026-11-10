@@ -5,7 +5,7 @@ import { migrationSql } from '../testHelpers/migrationSql';
 
 const migration = migrationSql('supabase/migrations/20260824160000_guest_quiz_attempts.sql');
 const reviewV2Migration = readFileSync(
-  resolve(process.cwd(), 'supabase/migrations/20261110215500_secure_guest_review_attempt_key.sql'),
+  resolve(process.cwd(), 'supabase/migrations/20261110214552_secure_guest_review_attempt_key.sql'),
   'utf8',
 );
 
