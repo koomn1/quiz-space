@@ -855,7 +855,7 @@ export default function QuizResolver({
       // Prevent duplicate insert if already saved (e.g. from autoSave or handleFinalSubmitAndExit)
       if (savedCompletionId && !isDailyQuiz) {
         if (isGuest) {
-          await updateGuestQuizAttemptReview(savedCompletionId, userId, rating, feedback.trim());
+          await updateGuestQuizAttemptReview(savedCompletionId, userId, attemptKeyRef.current, rating, feedback.trim());
         } else {
           await updateCompletionReview(savedCompletionId, rating, feedback);
         }
