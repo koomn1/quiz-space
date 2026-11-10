@@ -261,7 +261,8 @@ BEGIN
     SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'question_id', p_quiz_id || '-q' || k.question_number,
       'correct_index', k.correct_index,
-      'explanation', CASE WHEN p_feedback LIKE 'en:%' THEN k.explanation_en ELSE k.explanation_ar END
+      'explanation_ar', k.explanation_ar,
+      'explanation_en', k.explanation_en
     ) ORDER BY k.question_number), '[]'::JSONB)
     INTO v_correct_answers
     FROM public.daily_quiz_answer_keys AS k
@@ -320,7 +321,8 @@ BEGIN
   SELECT jsonb_agg(jsonb_build_object(
     'question_id', p_quiz_id || '-q' || k.question_number,
     'correct_index', k.correct_index,
-    'explanation', CASE WHEN p_feedback LIKE 'en:%' THEN k.explanation_en ELSE k.explanation_ar END
+    'explanation_ar', k.explanation_ar,
+      'explanation_en', k.explanation_en
   ) ORDER BY k.question_number)
   INTO v_correct_answers
   FROM public.daily_quiz_answer_keys AS k
