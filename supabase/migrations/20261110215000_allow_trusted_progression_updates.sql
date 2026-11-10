@@ -174,7 +174,7 @@ EXCEPTION WHEN OTHERS THEN
   PERFORM set_config('quizspace.internal_completion_write', 'off', true);
   RAISE;
 END;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.award_quiz_completion_rewards(p_completion_id text)
@@ -316,7 +316,7 @@ BEGIN
     'milestone_reached', v_total_completed IN (5, 10)
   );
 END;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.grade_quiz_essay_attempt(p_completion_id text, p_is_guest boolean, p_awarded_score integer, p_feedback text DEFAULT ''::text)
@@ -439,7 +439,7 @@ EXCEPTION WHEN OTHERS THEN
   PERFORM set_config('app.allow_progression_update', 'off', true);
   RAISE;
 END;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.submit_user_daily_quiz_attempt(p_quiz_id text, p_taker_id text, p_taker_name text, p_score integer, p_total_questions integer, p_rating integer DEFAULT NULL::integer, p_feedback text DEFAULT ''::text)
@@ -644,7 +644,7 @@ BEGIN
     COALESCE(v_total_points, 0),
     true;
 END;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.submit_user_daily_quiz_attempt_v2(p_quiz_id text, p_taker_id text, p_taker_name text, p_answers jsonb, p_rating integer DEFAULT NULL::integer, p_feedback text DEFAULT ''::text)
@@ -866,5 +866,5 @@ BEGIN
     'correct_answers', v_correct_answers
   );
 END;
-$function$
+$function$;
 
