@@ -85,6 +85,19 @@ describe('daily quiz tier authorization', () => {
     expect(secure).not.toContain('p_score INTEGER');
   });
 
+  it('binds v2 scoring to the server-created slot bank id', () => {
+    const binding = readFileSync(
+      resolve(process.cwd(), 'supabase/migrations/20261110233000_bind_daily_quiz_slot_to_server_bank.sql'),
+      'utf8',
+    );
+    expect(binding).toContain('ADD COLUMN IF NOT EXISTS bank_id TEXT');
+    expect(binding).toContain('bank_id = v_bank_id');
+    expect(binding).toContain('s.bank_id IS NULL');
+    expect(binding).toContain('v_bank_id := v_slot.bank_id');
+    expect(binding).toContain('AND s.bank_id IS NOT NULL');
+    expect(binding).toContain('bank_id = NULL');
+  });
+
   it('does not ship the daily answer bank or grade answers in the browser', () => {
     const card = readFileSync(resolve(process.cwd(), 'src/components/DailyQuizCard.tsx'), 'utf8');
     const resolver = readFileSync(resolve(process.cwd(), 'src/components/QuizResolver.tsx'), 'utf8');
