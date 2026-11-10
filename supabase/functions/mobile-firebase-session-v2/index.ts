@@ -495,6 +495,7 @@ Deno.serve(async (request: Request) => {
       return response({ error: "تعذر التحقق من جلسة Google. تأكد أن نسخة Android مرتبطة بنفس مشروع Firebase ثم حدّث التطبيق وحاول مرة أخرى." }, 401);
     }
     if (message === "firebase_email_not_verified") return response({ error: "أكد بريدك الإلكتروني في Google أولًا ثم سجّل الدخول مرة أخرى." }, 403);
+    if (message === "identity_missing") return genericFailure(400);
     if (message === "ambiguous_legacy_email" || message === "identity_conflict") return response({ error: "تعذر ربط الحساب تلقائيًا. تواصل مع الدعم." }, 409);
     if (message === "quiz_not_owned" || message === "quiz_not_found") return genericFailure(404);
     if (message === "invalid_quiz" || message === "invalid_questions" || message === "invalid_attempt") return response({ error: "بيانات الاختبار أو المحاولة غير صالحة." }, 400);
@@ -505,7 +506,7 @@ Deno.serve(async (request: Request) => {
     if (message === "notification_preferences_failed") return response({ error: "تعذر تحميل تفضيلات الإشعارات الآن." }, 500);
     if (message === "admin_required") return response({ error: "الصلاحية الإدارية مطلوبة." }, 403);
     if (message === "admin_overview_failed") return response({ error: "تعذر تحميل مؤشرات الإدارة الآن." }, 500);
-    if (message === "users_lookup_failed" || message === "users_email_lookup_failed" || message === "profile_load_failed" || message === "profile_not_found") return response({ error: "تم التحقق من Google، لكن تعذر ربط الحساب بملف QuizSpace. حاول مرة أخرى بعد لحظات." }, 503);
+    if (message === "identity_resolution_failed" || message === "users_lookup_failed" || message === "users_email_lookup_failed" || message === "profile_load_failed" || message === "profile_not_found") return response({ error: "تم التحقق من Google، لكن تعذر ربط الحساب بملف QuizSpace. حاول مرة أخرى بعد لحظات." }, 503);
     if (message === "users_insert_failed") return response({ error: "تم اختيار الحساب، لكن تعذر إنشاء ملف QuizSpace. حاول مرة أخرى." }, 503);
     if (message === "server_configuration_missing") return genericFailure(503);
     return genericFailure(500);
