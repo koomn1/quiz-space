@@ -13,3 +13,10 @@ NOTIFY pgrst, 'reload schema';
 -- The new guest review client sends a per-attempt key to the v2 RPC.
 REVOKE ALL ON FUNCTION public.update_guest_quiz_attempt_review(TEXT,TEXT,INTEGER,TEXT)
   FROM PUBLIC, anon, authenticated;
+
+-- Score-edit RPCs allowed clients to rewrite a saved completion after the quiz.
+-- The new review UI is read-only; creator essay grading uses grade_quiz_essay_attempt.
+REVOKE ALL ON FUNCTION public.update_quiz_attempt_score(TEXT,INTEGER)
+  FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.update_guest_quiz_attempt_score(TEXT,TEXT,TEXT,INTEGER)
+  FROM PUBLIC, anon, authenticated;
