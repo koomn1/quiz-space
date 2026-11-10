@@ -8,7 +8,7 @@ import {
   validateCreateExtractionJobInput,
   type ExtractionJobControl,
 } from './extractionJobs';
-import { claimTask, taskIdempotencyKey } from './taskLedger';
+import { claimTask, finishTask, taskIdempotencyKey } from './taskLedger';
 import { scheduleExtractionJob } from './queue';
 import { publicExtractionJob, type Env } from './platform';
 import { json, isAuthenticated, type RouteContext, type RouteResult, routePath } from './routes';
@@ -40,6 +40,14 @@ function startPendingExtraction(context: RouteContext, jobId: string, taskId?: s
           ...(context.env.SUPABASE_SERVICE_ROLE_KEY ? {} : { authHeader: workerAuthHeader }),
         })));
       });
+      if (taskId) {
+        const completedJob = await getExtractionJob(context.env, workerAuthHeader, jobId);
+        if (completedJob?.status === 'complete') {
+          await finishTask(context.env, workerAuthHeader, taskId, 'succeeded');
+        } else if (completedJob?.status === 'error') {
+          await finishTask(context.env, workerAuthHeader, taskId, 'failed', completedJob.error_message || 'Extraction job failed.');
+        }
+      }
     } catch (error) {
       console.error('Inline extraction fallback failed; queue retry remains available.', { jobId, error });
     }
