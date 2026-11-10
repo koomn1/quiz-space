@@ -19,6 +19,8 @@ describe('mobile Firebase identity linking', () => {
     resolve(process.cwd(), 'supabase/functions/mobile-firebase-session-v2/index.ts'),
     'utf8',
   );
+  const mobileAi = readFileSync(resolve(process.cwd(), 'mobile_flutter/lib/services/mobile_ai_service.dart'), 'utf8');
+  const workerIndex = readFileSync(resolve(process.cwd(), 'worker/src/index.ts'), 'utf8');
 
   it('stores Firebase UID to app UID links in a private service-role-only table', () => {
     expect(baseMigration).toContain('mobile_firebase_identity_links');
@@ -40,6 +42,12 @@ describe('mobile Firebase identity linking', () => {
   it('serializes first-time linking by Firebase UID and verified email', () => {
     expect(lockingMigration).toContain('hashtextextended(trim(p_firebase_project_id)');
     expect(lockingMigration).toContain("hashtextextended('verified-email:' || v_email,0)");
+  });
+
+  it('routes native Cosmo requests to the implemented Worker chat endpoint', () => {
+    expect(mobileAi).toContain('/api/ai/chat');
+    expect(mobileAi).not.toContain('/api/ai/openrouter');
+    expect(workerIndex).toContain("path === '/api/ai/chat'");
   });
 
   it('uses the server identity RPC instead of repeated client-side email matching', () => {
