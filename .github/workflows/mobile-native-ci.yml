@@ -6,6 +6,7 @@ on:
     paths:
       - 'mobile_flutter/**'
       - 'supabase/functions/mobile-firebase-session/**'
+      - 'supabase/functions/mobile-firebase-session-v2/**'
       - '.github/workflows/mobile-native-ci.yml'
   pull_request:
     paths:
