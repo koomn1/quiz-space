@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'worker/**'
+      - 'mobile_flutter/lib/services/mobile_ai_service.dart'
       - 'src/lib/dailyQuizTierSecurity.contract.test.ts'
       - 'supabase/migrations/**'
       - 'supabase/functions/**'
@@ -52,7 +53,7 @@ jobs:
         run: pnpm --dir worker install --no-frozen-lockfile --config.strictDepBuilds=false
 
       - name: Run Phase 1 tests
-        run: pnpm exec vitest run worker/src/taskLedger.test.ts worker/src/queue.test.ts src/lib/dailyQuizTierSecurity.contract.test.ts src/lib/classroomPushAuthorization.test.ts src/lib/db.rewards.test.ts src/lib/couponRedemptionSecurity.contract.test.ts src/lib/userProfileSecurity.contract.test.ts src/lib/mobileFirebaseIdentity.contract.test.ts
+        run: pnpm exec vitest run worker/src/taskLedger.test.ts worker/src/queue.test.ts worker/src/auth.test.ts src/lib/dailyQuizTierSecurity.contract.test.ts src/lib/classroomPushAuthorization.test.ts src/lib/db.rewards.test.ts src/lib/couponRedemptionSecurity.contract.test.ts src/lib/userProfileSecurity.contract.test.ts src/lib/mobileFirebaseIdentity.contract.test.ts
 
       - name: Typecheck application
         run: pnpm typecheck
