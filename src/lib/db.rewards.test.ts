@@ -29,16 +29,32 @@ describe('reward and persistence database helpers', () => {
       type: string;
       constructor(type: string) { this.type = type; }
     });
-    mocks.rpc.mockResolvedValueOnce({
-      data: [{ id: 'daily-completion-1', points_awarded: 35, total_points: 235, daily_completed: true }],
-      error: null,
-    });
+    const serverResult = {
+      id: 'daily-completion-1', score: 2, total_questions: 3,
+      points_awarded: 35, total_points: 235, daily_completed: true,
+      correct_answers: [
+        { question_id: 'daily-demo-q1', correct_index: 1, explanation_ar: 'شرح', explanation_en: 'Explanation' },
+        { question_id: 'daily-demo-q2', correct_index: 0, explanation_ar: 'شرح', explanation_en: 'Explanation' },
+        { question_id: 'daily-demo-q3', correct_index: 2, explanation_ar: 'شرح', explanation_en: 'Explanation' },
+      ],
+    };
+    mocks.rpc.mockResolvedValueOnce({ data: serverResult, error: null });
 
     await expect(submitQuizAttempt('daily-demo', {
-      takerId: 'student-1', takerName: 'Student', score: 3, totalQuestions: 3,
-    })).resolves.toEqual([{ id: 'daily-completion-1', points_awarded: 35, total_points: 235, daily_completed: true }]);
+      takerId: 'student-1', takerName: 'Student', score: 99, totalQuestions: 3,
+      answers: [1, 0, 1],
+    })).resolves.toEqual(serverResult);
 
-    expect(mocks.rpc).toHaveBeenNthCalledWith(1, 'submit_user_daily_quiz_attempt', expect.objectContaining({ p_quiz_id: 'daily-demo' }));
+    expect(mocks.rpc).toHaveBeenNthCalledWith(1, 'submit_user_daily_quiz_attempt_v2', {
+      p_quiz_id: 'daily-demo',
+      p_taker_id: 'student-1',
+      p_taker_name: 'Student',
+      p_answers: [1, 0, 1],
+      p_rating: null,
+      p_feedback: '',
+    });
+    expect(mocks.rpc.mock.calls[0][1]).not.toHaveProperty('p_score');
+    expect(mocks.rpc.mock.calls[0][1]).not.toHaveProperty('p_total_questions');
     expect(mocks.rpc).toHaveBeenCalledTimes(1);
     expect(mocks.rpc).not.toHaveBeenCalledWith('award_quiz_completion_rewards', expect.anything());
     expect(dispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: 'quizspace-rewards-updated' }));
