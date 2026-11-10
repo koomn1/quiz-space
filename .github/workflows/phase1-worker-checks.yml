@@ -8,6 +8,8 @@ on:
       - 'worker/**'
       - 'src/lib/dailyQuizTierSecurity.contract.test.ts'
       - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+      - 'src/lib/classroomPushAuthorization.test.ts'
       - 'vitest.config.ts'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -43,7 +45,7 @@ jobs:
         run: pnpm --dir worker install --no-frozen-lockfile --config.strictDepBuilds=false
 
       - name: Run Phase 1 tests
-        run: pnpm exec vitest run worker/src/taskLedger.test.ts worker/src/queue.test.ts src/lib/dailyQuizTierSecurity.contract.test.ts
+        run: pnpm exec vitest run worker/src/taskLedger.test.ts worker/src/queue.test.ts src/lib/dailyQuizTierSecurity.contract.test.ts src/lib/classroomPushAuthorization.test.ts
 
       - name: Typecheck Worker
         run: pnpm exec tsc --noEmit -p worker/tsconfig.json
