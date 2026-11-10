@@ -1,4 +1,4 @@
-import { canBroadcastClassroomPush } from '../_shared/classroomPushAuthorization.ts';
+import { canBroadcastClassroomPush, isClassroomScopedNotification } from '../_shared/classroomPushAuthorization.ts';
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import webpush from 'npm:web-push';
@@ -57,8 +57,9 @@ Deno.serve(async (req) => {
     if (!['classroom', 'community', 'quiz', 'promotion', 'system'].includes(category)) {
       return new Response('invalid category', { status: 400, headers: corsHeaders });
     }
-    if (classId && category !== 'classroom') {
-      return new Response('classId is only valid for classroom notifications', { status: 400, headers: corsHeaders });
+    const isClassroomScoped = isClassroomScopedNotification(category, classId);
+    if (classId && !isClassroomScoped) {
+      return new Response('classId is only valid for classroom-scoped notifications', { status: 400, headers: corsHeaders });
     }
 
     const { data: adminRow, error: adminLookupError } = user
@@ -67,7 +68,7 @@ Deno.serve(async (req) => {
     if (adminLookupError) throw adminLookupError;
     const isAdmin = adminRow?.is_admin === true;
     const isGlobalCategory = category === 'community' || category === 'promotion' || category === 'system';
-    if ((isGlobalCategory || category === 'quiz') && !isAdmin && !isCron && category !== 'community') {
+    if ((isGlobalCategory || (category === 'quiz' && !isClassroomScoped)) && !isAdmin && !isCron && category !== 'community') {
       return new Response('Forbidden', { status: 403, headers: corsHeaders });
     }
 
@@ -75,7 +76,7 @@ Deno.serve(async (req) => {
       ? [...new Set(body.recipientIds.map((id: unknown) => String(id).trim()).filter(Boolean))].slice(0, 5000)
       : [];
 
-    if (category === 'classroom') {
+    if (isClassroomScoped) {
       if (!classId) return new Response('classId is required for classroom notifications', { status: 400, headers: corsHeaders });
       const { data: classroom, error: classroomError } = await adminClient
         .from('classrooms')
@@ -163,7 +164,7 @@ Deno.serve(async (req) => {
     const expiredIds: string[] = [];
     for (const subscription of subscriptions ?? []) {
       const pref = prefMap.get(subscription.user_id);
-      if (category === 'classroom' && (pref?.classroom_paused || Number(pref?.classroom_missed_count || 0) >= 3)) continue;
+      if (isClassroomScoped && (pref?.classroom_paused || Number(pref?.classroom_missed_count || 0) >= 3)) continue;
       if (category === 'promotion' && pref?.last_promotion_at && Date.now() - Date.parse(pref.last_promotion_at) < 6 * 60 * 60 * 1000) continue;
 
       const { data: event } = await adminClient.from('push_notification_events').insert({
@@ -181,11 +182,11 @@ Deno.serve(async (req) => {
         }, JSON.stringify({ title, body: message, url, category, eventId: event?.id || null, tag: `${category}-spacequiz` }));
         sent++;
 
-        const nextMissed = category === 'classroom' ? Number(pref?.classroom_missed_count || 0) + 1 : Number(pref?.classroom_missed_count || 0);
+        const nextMissed = isClassroomScoped ? Number(pref?.classroom_missed_count || 0) + 1 : Number(pref?.classroom_missed_count || 0);
         await adminClient.from('push_notification_preferences').upsert({
           user_id: subscription.user_id,
           classroom_missed_count: nextMissed,
-          classroom_paused: category === 'classroom' && nextMissed >= 3 ? true : Boolean(pref?.classroom_paused),
+          classroom_paused: isClassroomScoped && nextMissed >= 3 ? true : Boolean(pref?.classroom_paused),
           last_promotion_at: category === 'promotion' ? new Date().toISOString() : (pref?.last_promotion_at || null),
           updated_at: new Date().toISOString(),
         });
