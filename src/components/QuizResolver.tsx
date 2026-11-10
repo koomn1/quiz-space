@@ -134,6 +134,7 @@ export default function QuizResolver({
   const [essayGrading, setEssayGrading] = React.useState<Record<number, boolean>>({});
   const [essayGradingErrors, setEssayGradingErrors] = React.useState<Record<number, string>>({});
   const [score, setScore] = React.useState(0);
+  const [isDailyResultVerified, setIsDailyResultVerified] = React.useState(false);
   const [isQuizCompleted, setIsQuizCompleted] = React.useState(false);
   const [hasShaken, setHasShaken] = React.useState(false);
 
@@ -175,6 +176,31 @@ export default function QuizResolver({
     autoSavePromiseRef.current = null;
   }, [quizId, createAttemptKey]);
   const isDailyQuiz = quizId.startsWith('daily-');
+
+  const applyDailyServerResult = React.useCallback((row: any) => {
+    if (!isDailyQuiz || !quiz || !Array.isArray(row?.correct_answers)
+      || row.correct_answers.length !== quiz.questions.length) return false;
+    const answerById = new Map<string, any>(
+      row.correct_answers.map((answer: any) => [String(answer.question_id), answer]),
+    );
+    setQuiz((current) => current ? ({
+      ...current,
+      questions: current.questions.map((question) => {
+        const serverAnswer = answerById.get(question.id);
+        if (!serverAnswer || !Number.isInteger(Number(serverAnswer.correct_index))) return question;
+        return {
+          ...question,
+          correctIndex: Number(serverAnswer.correct_index),
+          explanation: lang === 'en'
+            ? String(serverAnswer.explanation_en || '')
+            : String(serverAnswer.explanation_ar || ''),
+        };
+      }),
+    }) : current);
+    setScore(Number(row.score) || 0);
+    setIsDailyResultVerified(true);
+    return true;
+  }, [isDailyQuiz, lang, quiz]);
 
   // Question ratings states
   const [questionRatings, setQuestionRatings] = React.useState<Record<string, 'like' | 'dislike'>>({});
@@ -219,6 +245,13 @@ export default function QuizResolver({
   }, [isQuestionsOverviewOpen]);
 
   const handleFetchAiFlashcardExplanation = async (qId: string, q: Question) => {
+    if (isDailyQuiz && !isDailyResultVerified) {
+      setAiFlashcardExplanations(prev => ({
+        ...prev,
+        [qId]: isAr ? 'سيظهر الشرح بعد اعتماد إجابتك من الخادم.' : 'The explanation will be available after the server verifies your answers.',
+      }));
+      return;
+    }
     if (!hasCosmoAccess) {
       setAiFlashcardExplanations(prev => ({
         ...prev,
@@ -487,6 +520,7 @@ export default function QuizResolver({
                 feedback: '',
                 clientAttemptKey: attemptKeyRef.current,
                 totalQuestions: quiz.questions.length,
+                answers: isDailyQuiz ? quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null) : undefined,
                 essayAnswers: essayPayload,
               });
 
@@ -496,6 +530,7 @@ export default function QuizResolver({
           // second time (which previously made XP appear not to update).
           const savedRow = Array.isArray(res) ? res[0] : (res?.completion || res);
           if (!savedRow?.id) throw new Error('Quiz completion was not recorded.');
+          if (isDailyQuiz && !applyDailyServerResult(savedRow)) throw new Error('The server did not return a verified daily quiz score.');
           setSavedCompletionId(savedRow.id);
           console.log('Quiz auto-saved successfully, completion ID:', savedRow.id, 'XP:', savedRow.xp_awarded ?? 0);
           if (isDailyQuiz) {
@@ -506,6 +541,7 @@ export default function QuizResolver({
           return savedRow?.id ? String(savedRow.id) : null;
         } catch (e) {
           console.error('Quiz auto-save failed:', e);
+          if (isDailyQuiz) setSaveError(isAr ? 'تعذر اعتماد النتيجة من الخادم. أعد المحاولة.' : 'The server could not verify this result. Please retry.');
           throw e;
         }
       };
@@ -515,7 +551,7 @@ export default function QuizResolver({
         onQuizLockChange(false);
       }
     }
-  }, [isQuizCompleted, quizId, userId, takerName, userName, score, isDailyQuiz, isGuest, quiz?.questions.length, onQuizLockChange, persistIncorrectAnswers]);
+  }, [isQuizCompleted, quizId, userId, takerName, userName, score, isDailyQuiz, isGuest, quiz?.questions.length, onQuizLockChange, persistIncorrectAnswers, applyDailyServerResult, isAr]);
 
   // Fetch single Quiz on load with localStorage restore capability
   React.useEffect(() => {
@@ -535,6 +571,7 @@ export default function QuizResolver({
         setEssayAssessed(null);
         setEssayAssessments({});
         setScore(0);
+        setIsDailyResultVerified(false);
         setIsQuizCompleted(false);
         setHasShaken(false);
         setTimeLeft(0);
@@ -754,24 +791,24 @@ export default function QuizResolver({
     setSelectedIdx(idx);
     setIsAnswersFrozen(true);
 
-    const isCorrect = idx === currentQuestion.correctIndex;
-    if (isCorrect) {
-      setScore(prev => prev + 1);
-      try {
-        playNotificationSound('success');
-      } catch (_) {}
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.8 },
-        colors: ['#4F46E5', '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B']
-      });
+    if (isDailyQuiz) {
+      try { playNotificationSound('tap'); } catch (_) {}
     } else {
-      try {
-        playNotificationSound('tap');
-      } catch (_) {}
-      setHasShaken(true);
-      setTimeout(() => setHasShaken(false), 500);
+      const isCorrect = idx === currentQuestion.correctIndex;
+      if (isCorrect) {
+        setScore(prev => prev + 1);
+        try { playNotificationSound('success'); } catch (_) {}
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.8 },
+          colors: ['#4F46E5', '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B']
+        });
+      } else {
+        try { playNotificationSound('tap'); } catch (_) {}
+        setHasShaken(true);
+        setTimeout(() => setHasShaken(false), 500);
+      }
     }
 
     const nextAnswers = [...userAnswers];
@@ -809,6 +846,7 @@ export default function QuizResolver({
       return;
     }
     setIsSubmittingReview(true);
+    setSaveError(null);
 
     try {
       const previousBestScore = await getBestScoreByQuizId(quizId);
@@ -840,8 +878,10 @@ export default function QuizResolver({
           rating,
           feedback: feedback.trim(),
           essayAnswers: getEssayAnswersPayload(),
+          answers: isDailyQuiz ? quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null) : undefined,
         });
         const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
+        if (isDailyQuiz && !applyDailyServerResult(completionRow)) throw new Error('The server did not return a verified daily quiz score.');
         if (completionRow?.id) setSavedCompletionId(completionRow.id);
       }
       if (isDailyQuiz) {
@@ -858,6 +898,7 @@ export default function QuizResolver({
       setIsReviewSubmitted(true);
     } catch (e) {
       console.error(e);
+      if (isDailyQuiz) setSaveError(isAr ? 'تعذر اعتماد النتيجة من الخادم. أعد المحاولة.' : 'The server could not verify this result. Please retry.');
       alert(isAr
         ? 'تعذر تأكيد حفظ تقييمك في قاعدة البيانات. قد تكون النتيجة محفوظة؛ تحقق من الاتصال ثم أعد المحاولة.'
         : 'Your rating could not be confirmed in the database. The quiz result may already be saved; check your connection and retry.');
@@ -967,9 +1008,11 @@ export default function QuizResolver({
           feedback: feedbackText.trim(),
           clientAttemptKey: attemptKeyRef.current,
           totalQuestions: quiz.questions.length,
+          answers: isDailyQuiz ? quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null) : undefined,
           essayAnswers: getEssayAnswersPayload(),
         });
         const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
+        if (isDailyQuiz && !applyDailyServerResult(completionRow)) throw new Error('The server did not return a verified daily quiz score.');
         if (completionRow?.id) {
           setSavedCompletionId(completionRow.id);
           setHasRatedQuiz(true);
@@ -1822,6 +1865,13 @@ export default function QuizResolver({
 
           </>
           )}
+        </div>
+      ) : isDailyQuiz && !isDailyResultVerified ? (
+        <div className="mx-auto max-w-xl rounded-3xl border border-primary/20 bg-white p-8 text-center shadow-sm dark:bg-slate-900">
+          <RefreshCw className="mx-auto h-10 w-10 animate-spin text-primary" />
+          <h3 className="mt-4 text-xl font-black text-slate-800 dark:text-slate-100">{isAr ? 'جارٍ تصحيح التحدي اليومي' : 'Verifying your daily challenge'}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">{isAr ? 'يتم حساب الدرجة والنقاط على الخادم. لن تظهر الإجابات الصحيحة قبل اعتماد المحاولة.' : 'Your score and rewards are being calculated securely on the server.'}</p>
+          {saveError && <div className="mt-5 space-y-3"><p className="text-sm font-semibold text-rose-600">{saveError}</p><button type="button" onClick={() => void handleSaveResult()} disabled={isSubmittingReview} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">{isSubmittingReview ? (isAr ? 'جارٍ إعادة المحاولة...' : 'Retrying...') : (isAr ? 'إعادة محاولة التصحيح' : 'Retry verification')}</button></div>}
         </div>
       ) : (
         /* Completed Results Screen Panel */
