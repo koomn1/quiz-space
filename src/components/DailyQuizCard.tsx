@@ -192,7 +192,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
           stalledRecoveryRef.current = true;
           try {
             const won = await claimUserDailyQuizRefresh(userId, tier);
-            if (won) await generate();
+            if (won) await generate(resolvedTier);
           } finally {
             stalledRecoveryRef.current = false;
           }
@@ -203,7 +203,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       }
       if (!activeQuizId) {
         const won = await claimUserDailyQuizRefresh(userId, tier);
-        if (won) await generate();
+        if (won) await generate(resolvedTier);
         else setIsGenerating(true);
       }
     } catch (error) {
