@@ -648,6 +648,7 @@ export async function submitGuestQuizAttempt(
     rating?: number;
     feedback?: string;
     essayAnswers?: any;
+    answers?: Array<number | null>;
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
@@ -771,12 +772,11 @@ export async function submitQuizAttempt(
   // Daily challenges are private payloads and intentionally do not exist in quizzes.
   // Use their dedicated RPC so solving them still records XP and completion.
   if (quizId.startsWith('daily-')) {
-    const { data: dailyResult, error: dailyError } = await supabase.rpc('submit_user_daily_quiz_attempt', {
+    const { data: dailyResult, error: dailyError } = await supabase.rpc('submit_user_daily_quiz_attempt_v2', {
       p_quiz_id: quizId,
       p_taker_id: authenticatedTakerId,
       p_taker_name: data.takerName,
-      p_score: data.score,
-      p_total_questions: data.totalQuestions || 1,
+      p_answers: data.answers ?? [],
       p_rating: data.rating ?? null,
       p_feedback: data.feedback || '',
     });
@@ -1464,7 +1464,7 @@ export async function getUserDailyQuizSlot(userId: string, tier: DailyQuizTier):
     return null;
   }
   const effectiveUserId = authenticatedUserId === userId ? userId : authenticatedUserId;
-  const { data, error } = await supabase.rpc('get_user_daily_quiz_slot', { p_user_id: effectiveUserId, p_tier: tier });
+  const { data, error } = await supabase.rpc('get_user_daily_quiz_slot_v2', { p_user_id: effectiveUserId, p_tier: tier });
   const row: any = Array.isArray(data) ? data[0] : data;
   if (error || !row) {
     console.error('Error loading user daily quiz slot:', {
@@ -1510,12 +1510,28 @@ export async function claimUserDailyQuizRefresh(userId: string, tier: DailyQuizT
   return !!data;
 }
 
-export async function finalizeUserDailyQuizRefresh(userId: string, tier: DailyQuizTier, quizPayload: Quiz): Promise<void> {
-  if (!userId || !isSupabaseConfigured) return;
-  const { data: authData } = await supabase.auth.getUser();
+export async function finalizeUserDailyQuizRefresh(
+  userId: string,
+  tier: DailyQuizTier,
+  request: { id: string; lang: 'ar' | 'en' },
+): Promise<Quiz> {
+  if (!userId || !isSupabaseConfigured) throw new Error('Daily quiz is unavailable.');
+  const { data: authData, error: authError } = await supabase.auth.getUser();
   const effectiveUserId = authData.user?.id || userId;
-  const { error } = await supabase.rpc('finalize_user_daily_quiz_refresh', { p_user_id: effectiveUserId, p_tier: tier, p_quiz_payload: quizPayload });
+  if (authError || !effectiveUserId || effectiveUserId !== userId) {
+    throw authError || new Error('Daily quiz requires the signed-in account.');
+  }
+  const { data, error } = await supabase.rpc('finalize_user_daily_quiz_refresh_v2', {
+    p_user_id: effectiveUserId,
+    p_tier: tier,
+    p_quiz_request: request,
+  });
   if (error) throw error;
+  const payload = Array.isArray(data) ? data[0] : data;
+  if (!payload?.id || !Array.isArray(payload.questions) || payload.questions.length === 0) {
+    throw new Error('The server did not return a valid daily quiz.');
+  }
+  return payload as Quiz;
 }
 
 export async function releaseUserDailyQuizRefresh(userId: string, tier: DailyQuizTier): Promise<void> {
