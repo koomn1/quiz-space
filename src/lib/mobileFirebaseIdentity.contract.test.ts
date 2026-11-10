@@ -8,11 +8,11 @@ describe('mobile Firebase identity linking', () => {
     'utf8',
   );
   const uniquenessMigration = readFileSync(
-    resolve(process.cwd(), 'supabase/migrations/20261110213500_prevent_duplicate_mobile_identity_links.sql'),
+    resolve(process.cwd(), 'supabase/migrations/20261110213058_prevent_duplicate_mobile_identity_links.sql'),
     'utf8',
   );
   const lockingMigration = readFileSync(
-    resolve(process.cwd(), 'supabase/migrations/20261110214000_lock_mobile_identity_email_resolution.sql'),
+    resolve(process.cwd(), 'supabase/migrations/20261110213149_lock_mobile_identity_email_resolution.sql'),
     'utf8',
   );
   const edge = readFileSync(
