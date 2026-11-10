@@ -11,12 +11,14 @@ export async function enqueueExtractionJob(env: Env, authHeader: string, jobId: 
   });
 }
 
-export async function scheduleExtractionJob(env: Env, authHeader: string, jobId: string, taskId?: string): Promise<void> {
+export async function scheduleExtractionJob(env: Env, authHeader: string, jobId: string, taskId?: string): Promise<boolean> {
   try {
     await enqueueExtractionJob(env, authHeader, jobId, taskId);
+    return true;
   } catch (error) {
     // The job stays pending and its private source remains in Storage. A later
     // authenticated poll can submit it again after a transient queue failure.
-    console.error('Unable to schedule extraction job; it will be retried on polling.', { jobId, error });
+    console.error('Unable to schedule extraction job; inline fallback will be attempted.', { jobId, error });
+    return false;
   }
 }
