@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canBroadcastClassroomPush } from '../../supabase/functions/_shared/classroomPushAuthorization';
+import { canBroadcastClassroomPush, isClassroomScopedNotification } from '../../supabase/functions/_shared/classroomPushAuthorization';
 
 describe('classroom push broadcast authorization', () => {
   const base = {
@@ -27,5 +27,14 @@ describe('classroom push broadcast authorization', () => {
 
   it('rejects unauthenticated non-cron callers', () => {
     expect(canBroadcastClassroomPush({ ...base, userId: null })).toBe(false);
+  });
+});
+
+describe('classroom-scoped notification routing', () => {
+  it('allows quiz notifications to be scoped to a classroom without granting global quiz broadcast', () => {
+    expect(isClassroomScopedNotification('quiz', 'class-1')).toBe(true);
+    expect(isClassroomScopedNotification('quiz', null)).toBe(false);
+    expect(isClassroomScopedNotification('classroom', null)).toBe(true);
+    expect(isClassroomScopedNotification('promotion', 'class-1')).toBe(false);
   });
 });
