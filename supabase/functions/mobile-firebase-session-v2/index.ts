@@ -58,10 +58,6 @@ function boundedString(value: unknown, maxLength: number): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
-function escapeLike(value: string): string {
-  return value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
-}
-
 function readBearer(request: Request): string | null {
   const value = request.headers.get("Authorization") ?? "";
   if (!value.startsWith("Bearer ")) return null;
@@ -134,57 +130,36 @@ async function resolveQuizSpaceUid(context: ServiceContext, claims: FirebaseClai
   const email = boundedString(claims.email, MAX_EMAIL_LENGTH).toLowerCase();
   if (!firebaseUid || !email) throw new Error("identity_missing");
 
-  const byUid = await context.client
-    .from("users")
-    .select("uid, email")
-    .eq("uid", firebaseUid)
-    .limit(1);
-  if (byUid.error) throw new Error("users_lookup_failed");
-  if (byUid.data?.length === 1) {
-    const storedEmail = boundedString(byUid.data[0].email, MAX_EMAIL_LENGTH).toLowerCase();
-    if (storedEmail !== email) throw new Error("identity_conflict");
-    return { uid: firebaseUid, created: false };
+  const rawPhoto = boundedString(claims.picture, MAX_PHOTO_LENGTH);
+  let photoUrl = "";
+  if (rawPhoto) {
+    try {
+      const parsed = new URL(rawPhoto);
+      if (parsed.protocol === "https:") photoUrl = parsed.toString();
+    } catch {
+      photoUrl = "";
+    }
   }
 
-  // The legacy web account is authoritative. Never rewrite its UID: many tables
-  // reference it. A verified Firebase email is used only to resolve that row.
-  let byEmail = await context.client
-    .from("users")
-    .select("uid")
-    .eq("email", email)
-    .limit(2);
-  if (byEmail.error) throw new Error("users_email_lookup_failed");
-  if ((byEmail.data?.length ?? 0) === 0) {
-    byEmail = await context.client
-      .from("users")
-      .select("uid")
-      .ilike("email", escapeLike(email))
-      .limit(2);
-    if (byEmail.error) throw new Error("users_email_lookup_failed");
-  }
-  if ((byEmail.data?.length ?? 0) > 1) throw new Error("ambiguous_legacy_email");
-  if (byEmail.data?.length === 1) {
-    return { uid: boundedString(byEmail.data[0].uid, MAX_UID_LENGTH), created: false };
-  }
-
-  const name = boundedString(claims.name, MAX_NAME_LENGTH) || email.split("@")[0].slice(0, MAX_NAME_LENGTH) || "طالب جديد";
-  const photoUrl = boundedString(claims.picture, MAX_PHOTO_LENGTH);
-  const inserted = await context.client.from("users").insert({
-    uid: firebaseUid,
-    email,
-    name,
-    photo_url: photoUrl,
-    plan_name: "Free",
-    is_premium: false,
+  const { data, error } = await context.client.rpc("resolve_mobile_firebase_identity", {
+    p_firebase_project_id: context.firebaseProjectId,
+    p_firebase_uid: firebaseUid,
+    p_verified_email: email,
+    p_name: boundedString(claims.name, MAX_NAME_LENGTH),
+    p_photo_url: photoUrl,
   });
-  if (inserted.error) {
-    // A simultaneous request may have created the row. Re-read only by the
-    // authenticated Firebase UID; never guess another user's identity.
-    const retry = await context.client.from("users").select("uid").eq("uid", firebaseUid).limit(1);
-    if (retry.error || retry.data?.length !== 1) throw new Error("users_insert_failed");
-    return { uid: firebaseUid, created: false };
+  if (error) {
+    const message = error.message || "";
+    if (message.includes("ambiguous_legacy_email")) throw new Error("ambiguous_legacy_email");
+    if (message.includes("identity_conflict")) throw new Error("identity_conflict");
+    if (message.includes("identity_missing")) throw new Error("identity_missing");
+    throw new Error("identity_resolution_failed");
   }
-  return { uid: firebaseUid, created: true };
+
+  const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | null;
+  const uid = boundedString(row?.app_user_uid, MAX_UID_LENGTH);
+  if (!uid) throw new Error("identity_resolution_failed");
+  return { uid, created: row?.created === true };
 }
 
 async function loadProfile(context: ServiceContext, appUid: string): Promise<Record<string, unknown>> {
