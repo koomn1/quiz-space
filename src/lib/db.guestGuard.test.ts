@@ -26,8 +26,10 @@ describe('guest database guards', () => {
     expect(mocks.rpc).toHaveBeenCalledWith('submit_guest_quiz_attempt_v2', expect.objectContaining({
       p_guest_id: 'user-guest-X4WP7E',
       p_client_attempt_key: 'attempt-key-1234567890',
+      p_answers: [1],
     }));
     expect(mocks.rpc).not.toHaveBeenCalledWith('submit_quiz_attempt_v2', expect.anything());
+    expect(mocks.rpc.mock.calls[0][1]).not.toHaveProperty('p_score');
   });
 
   it('does not send a guest identity to the authenticated Error Bank RPC', async () => {
