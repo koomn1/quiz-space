@@ -31,10 +31,10 @@ Consequence: server-authoritative score calculation prevents client score forger
 
 - Worker routes `/api/ai/chat` and `/api/ai/chat/stream` resolve the caller identity and load effective membership context.
 - `getCosmoAccountContext()` injects membership status into the model prompt; this is not an authorization or quota enforcement boundary.
-- The Worker has an in-memory limit of 40 requests per minute keyed by client IP. It is isolate-local, resets with the isolate, and is not a durable per-user or per-plan allowance.
-- The current rate-limit check runs before route dispatch, so it also counts non-AI requests such as polling and other Worker endpoints.
+- The Worker had an in-memory limit of 40 requests per minute keyed by client IP. It was isolate-local and reset with the isolate. Phase 2 now scopes this IP burst guard to AI POST routes only; it remains a secondary burst control, not a durable account quota.
 - The database has `ai_performance_logs` for telemetry, but no dedicated AI quota/usage ledger table was found in the public schema.
-- No authoritative per-plan Cosmo request allowance was found in the inspected billing/UI code. Exact free/paid limits must be agreed before enabling product-facing quota enforcement.
+- The current QuizCreator UI does define generation allowances, but enforces them only in browser localStorage: Free users get 3/day for topic generation and pasted-text generation; Silver/Gold/Diamond are unlimited for those two modes. File OCR is 3/day for Free and Silver, while Gold/Diamond are unlimited. These are UI rules, not server-authoritative quotas, and can be reset/bypassed by clearing storage or calling Worker routes directly.
+- No dedicated AI quota ledger table or server-side atomic quota RPC exists yet. Cosmo chat itself has no defined daily cap in the inspected UI; paid-only explain/essay routes already have separate effective-membership checks.
 
 ### Live data inventory (connected Supabase project)
 
@@ -97,6 +97,24 @@ Use a non-exposed schema (for example `private`) for answer keys, not a publicly
 - Keep a compatibility window for old clients; do not revoke legacy RPCs until the new web and mobile clients are deployed and verified.
 
 ### 2. AI quota enforcement
+
+Preserve the existing product rules but move their enforcement from browser storage to a durable server-side quota ledger:
+
+| Operation | Free | Silver | Gold / Diamond |
+|---|---:|---:|---:|
+| Topic generation | 3 per UTC day | Unlimited | Unlimited |
+| Pasted-text generation | 3 per UTC day | Unlimited | Unlimited |
+| File OCR / document extraction | 3 per UTC day | 3 per UTC day | Unlimited |
+| Cosmo chat | No daily allowance found in current UI | No daily allowance found | No daily allowance found |
+
+- The first three rows are grounded in the current QuizCreator UI; today they are stored in localStorage and therefore are not security controls.
+- Derive the tier from the server's effective membership record (is_premium, plan name, renewal date, lifetime/founder status). Never trust the client userPlan.
+- Implement an atomic daily usage ledger keyed by authenticated user (and a privacy-preserving IP hash for guests), operation, and UTC date.
+- Generation currently fans out into multiple Worker requests for one UI action. Quota accounting must reserve one generation session and bind subsequent batch requests to that reservation, with a maximum question budget, rather than charging every batch or trusting a reusable client idempotency key.
+- File extraction jobs already have idempotency keys; retries and polling must not consume additional daily quota.
+- Keep the IP burst guard as a separate short-window control. It is now scoped to AI POST routes, but remains isolate-local.
+- Fail closed if authoritative quota state cannot be checked. The Worker must have a server-only service credential for the quota RPC; deployment must verify that secret exists before enabling enforcement.
+- Keep chat quota policy separate until a product limit is defined; do not infer one from the UI's generation quotas.
 
 Use a durable server-side usage ledger and an atomic quota-consumption RPC (or an equivalent durable Cloudflare primitive). Do not use the in-memory Map as the authoritative quota.
 
