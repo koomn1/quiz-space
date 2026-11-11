@@ -474,6 +474,13 @@ export async function getQuizById(id: string): Promise<Quiz | null> {
   // otherwise an old published row can win before the current session snapshot.
   const isPrivateDailyQuiz = String(id).startsWith('daily-');
   if (isSupabaseConfigured && !isPrivateDailyQuiz) {
+    // Owners receive their answer key through an owner-checked RPC. Everyone
+    // else falls through to the sanitized public question payload.
+    const { data: ownedQuiz, error: ownedQuizError } = await supabase.rpc('get_owned_quiz_with_answers', {
+      p_quiz_id: id,
+    });
+    if (!ownedQuizError && ownedQuiz) return mapQuizRow(ownedQuiz);
+
     const { data, error } = await supabase.from('quizzes').select('*').eq('id', id).single();
     if (!error && data) return mapQuizRow(data);
     if (error && error.code !== 'PGRST116') {
@@ -495,6 +502,38 @@ export async function getQuizById(id: string): Promise<Quiz | null> {
     } catch (e) { console.warn('Could not restore private daily quiz:', e); }
   }
   return null;
+}
+
+export async function getOwnedQuizWithAnswers(quizId: string): Promise<Quiz> {
+  if (!quizId || !isSupabaseConfigured) throw new Error('Quiz editing is unavailable.');
+  const { data, error } = await supabase.rpc('get_owned_quiz_with_answers', { p_quiz_id: quizId });
+  if (error || !data) throw error || new Error('Quiz not found or not owned.');
+  return mapQuizRow(data);
+}
+
+export async function getQuizAnswerReview(quizId: string, completionId: string): Promise<any[]> {
+  if (!quizId || !completionId || !isSupabaseConfigured) return [];
+  const { data, error } = await supabase.rpc('get_quiz_answer_review', {
+    p_quiz_id: quizId,
+    p_completion_id: completionId,
+  });
+  if (error) throw error;
+  return Array.isArray(data?.answers) ? data.answers : [];
+}
+
+export async function getGuestQuizAnswerReview(
+  quizId: string,
+  attemptId: string,
+  clientAttemptKey: string,
+): Promise<any[]> {
+  if (!quizId || !attemptId || !clientAttemptKey || !isSupabaseConfigured) return [];
+  const { data, error } = await supabase.rpc('get_guest_quiz_answer_review', {
+    p_quiz_id: quizId,
+    p_attempt_id: attemptId,
+    p_client_attempt_key: clientAttemptKey,
+  });
+  if (error) throw error;
+  return Array.isArray(data?.answers) ? data.answers : [];
 }
 
 export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPlays' | 'avgRating' | 'ratingsCount'> & { id?: string; timeLimit?: number }): Promise<Quiz> {

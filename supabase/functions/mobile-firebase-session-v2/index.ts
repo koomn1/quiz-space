@@ -364,49 +364,57 @@ async function submitQuizAttempt(context: ServiceContext, appUid: string, claims
   const quizId = boundedString(body.quiz_id, MAX_QUIZ_ID_LENGTH);
   const rawAnswers = body.answers;
   if (!quizId || !Array.isArray(rawAnswers) || rawAnswers.length > MAX_ANSWERS) throw new Error("invalid_attempt");
+
   const quiz = await loadQuizDetails(context, appUid, quizId);
   const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
-  if (questions.length < 1 || questions.length > MAX_QUESTIONS || rawAnswers.length !== questions.length) throw new Error("invalid_attempt");
-  let score = 0;
-  questions.forEach((rawQuestion, index) => {
-    if (!rawQuestion || typeof rawQuestion !== "object" || Array.isArray(rawQuestion)) return;
+  if (questions.length < 1 || questions.length > MAX_QUESTIONS || rawAnswers.length !== questions.length) {
+    throw new Error("invalid_attempt");
+  }
+
+  // The mobile client may send an option index or the selected option text.
+  // Normalize to indexes here; the database grades them against private keys.
+  const answers = questions.map((rawQuestion, index) => {
+    if (!rawQuestion || typeof rawQuestion !== "object" || Array.isArray(rawQuestion)) throw new Error("invalid_attempt");
     const question = rawQuestion as Record<string, unknown>;
-    const options = Array.isArray(question.options) ? question.options.map((item) => boundedString(item, MAX_OPTION_LENGTH)) : [];
-    const rawCorrect = question.correctAnswer ?? question.correct_answer;
-    const storedCorrectIndex = question.correctIndex;
-    let correct = "";
-    if (typeof storedCorrectIndex === "number" && Number.isInteger(storedCorrectIndex)
-      && storedCorrectIndex >= 0 && storedCorrectIndex < options.length) {
-      correct = options[storedCorrectIndex];
-    } else {
-      correct = boundedString(rawCorrect, MAX_OPTION_LENGTH);
-      const correctIndex = typeof rawCorrect === "number" || /^\d+$/.test(correct) ? Number(rawCorrect) : -1;
-      if (correctIndex >= 0 && correctIndex < options.length) correct = options[correctIndex];
-    }
+    const options = Array.isArray(question.options)
+      ? question.options.map((item) => boundedString(item, MAX_OPTION_LENGTH))
+      : [];
     const submitted = rawAnswers[index];
-    let answer = boundedString(submitted, MAX_OPTION_LENGTH);
-    const answerIndex = typeof submitted === "number" || /^\d+$/.test(answer) ? Number(submitted) : -1;
-    if (answerIndex >= 0 && answerIndex < options.length) answer = options[answerIndex];
-    if (correct && answer && correct === answer) score += 1;
+    if (submitted === null || submitted === undefined || submitted === "") return null;
+
+    if (typeof submitted === "number" && Number.isInteger(submitted)) {
+      if (submitted < 0 || submitted >= options.length) throw new Error("invalid_attempt");
+      return submitted;
+    }
+
+    const answerText = boundedString(submitted, MAX_OPTION_LENGTH);
+    const answerIndex = options.indexOf(answerText);
+    if (answerIndex < 0) throw new Error("invalid_attempt");
+    return answerIndex;
   });
 
   const userResult = await context.client.from("users").select("name").eq("uid", appUid).limit(1);
   if (userResult.error || userResult.data?.length !== 1) throw new Error("profile_not_found");
-  const takerName = boundedString(userResult.data[0].name, MAX_NAME_LENGTH) || boundedString(claims.name, MAX_NAME_LENGTH) || "عضو QuizSpace";
+  const takerName = boundedString(userResult.data[0].name, MAX_NAME_LENGTH)
+    || boundedString(claims.name, MAX_NAME_LENGTH)
+    || "عضو QuizSpace";
   const ratingValue = body.rating == null || body.rating === "" ? null : Number(body.rating);
-  const rating = ratingValue !== null && Number.isInteger(ratingValue) && ratingValue >= 1 && ratingValue <= 5 ? ratingValue : null;
+  const rating = ratingValue !== null && Number.isInteger(ratingValue) && ratingValue >= 1 && ratingValue <= 5
+    ? ratingValue
+    : null;
   const feedback = boundedString(body.feedback, MAX_FEEDBACK_LENGTH);
-  const result = await context.client.rpc("submit_mobile_quiz_attempt", {
+
+  const result = await context.client.rpc("submit_mobile_quiz_attempt_v2", {
     p_quiz_id: quizId,
     p_taker_id: appUid,
     p_taker_name: takerName,
-    p_score: score,
+    p_answers: answers,
     p_rating: rating,
     p_feedback: feedback,
   });
   if (result.error || !result.data) throw new Error("attempt_save_failed");
   const row = Array.isArray(result.data) ? result.data[0] : result.data;
-  return typeof row === "object" && row !== null ? row as Record<string, unknown> : { score, total_questions: questions.length };
+  return typeof row === "object" && row !== null ? row as Record<string, unknown> : { total_questions: questions.length };
 }
 
 async function loadQuizTakers(context: ServiceContext, appUid: string, quizId: string): Promise<unknown[]> {
