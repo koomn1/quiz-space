@@ -31,6 +31,18 @@ const assetNames = [
   'neon-orbit-transparent.webp',
   'royal-gold-transparent.webp',
 ];
+const cachedAssetNames = [
+  ...assetNames,
+  'images/animated-frames/frame-aurora.gif',
+  'images/animated-frames/frame-crystal-luxe.gif',
+  'images/animated-frames/frame-fire.gif',
+  'images/animated-frames/frame-galaxy.gif',
+  'images/animated-frames/frame-nature-leaf.gif',
+  'images/animated-frames/frame-neon-orbit.gif',
+  'images/animated-frames/frame-royal-gold.gif',
+  'images/animated-frames/frame-school-bus.gif',
+  'images/animated-frames/frame-star-crown.gif',
+];
 
 async function expectLoadedImage(page: import('@playwright/test').Page, source: string) {
   const absoluteUrl = new URL(`clean-assets-replacement/${source}`, baseURL).toString();
@@ -85,7 +97,7 @@ test.describe('published profile asset delivery', () => {
         active.postMessage({ type: 'PRECACHE_PROFILE_ASSETS' }, [channel.port2]);
       });
     });
-    expect(cacheState).toEqual({ active: true, count: assetNames.length });
+    expect(cacheState).toEqual({ active: true, count: cachedAssetNames.length });
 
     const cachedPaths = await page.evaluate(async () => {
       const cacheName = (await caches.keys()).find((name) => name.startsWith('quiz-space-profile-assets-'));
@@ -94,7 +106,7 @@ test.describe('published profile asset delivery', () => {
       const requests = await cache.keys();
       return requests.map((request) => new URL(request.url).pathname);
     });
-    expect(cachedPaths).toHaveLength(assetNames.length);
+    expect(cachedPaths).toHaveLength(cachedAssetNames.length);
     expect(cachedPaths.every((path) => path.includes('/clean-assets-replacement/'))).toBe(true);
   });
 
