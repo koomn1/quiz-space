@@ -56,8 +56,9 @@ These counts make a transactional migration feasible, but it must explicitly pre
 The first answer-key isolation slice is now implemented on this branch:
 
 - Added `private.quiz_answer_keys` in migration `20261111073000_private_quiz_answer_keys.sql`.
-- A database trigger captures keys and explanations on quiz insert/update, then strips answer indexes, answer text, and explanations from `public.quizzes.questions`.
-- Existing quiz rows are backfilled through the same trigger. Invalid legacy keys are stored as unresolved (NULL), never guessed.
+- Migration `20261111073000_private_quiz_answer_keys.sql` creates private key storage and backfills all existing rows. Its trigger captures keys/explanations on insert/update but deliberately preserves the legacy public payload during the compatibility phase.
+- Migration `20261111074000_sanitize_public_quiz_answer_keys.sql` is the separate cutover: it activates a private marker, then strips answer indexes, answer text, and explanations from `public.quizzes.questions` on all existing rows and all future writes.
+- Invalid legacy keys are stored as unresolved (NULL), never guessed.
 - The standard scoring helper now grades by the private `(quiz_id, question_id)` key and fails closed when an objective question has an unresolved key.
 - Added owner-only editor retrieval RPC `get_owned_quiz_with_answers`.
 - Added authenticated and guest post-submission review RPCs, each bound to the saved completion/attempt.
@@ -78,7 +79,9 @@ The first answer-key isolation slice is now implemented on this branch:
 - The existing client direct-write quiz creation/update paths rely on the database trigger to split keys. This is intentional for compatibility, but the next security review must verify no alternate write path can bypass the trigger.
 - AI quota enforcement remains a separate workstream; no per-plan usage numbers have been invented or activated.
 
-**Deployment status:** This migration has only been dry-run transactionally. It has NOT been applied to production. No web/Worker deployment, PR merge, or legacy RPC revocation has occurred.
+**Deployment order:** Apply the preparation migration first; deploy the updated web client and `mobile-firebase-session-v2` Edge Function; verify both against private-key RPCs; only then apply the separate public-payload cutover migration. Do not apply the cutover before the clients/Edge Function are deployed.
+
+**Deployment status:** Neither migration has been applied to production. No web/Worker/Edge Function deployment, PR merge, or legacy RPC revocation has occurred.
 
 ## Recommended implementation design
 
