@@ -70,7 +70,7 @@ describe('reward and persistence database helpers', () => {
     mocks.rpc.mockResolvedValueOnce({ data: null, error: new Error('Daily quiz is unavailable') });
 
     await expect(submitQuizAttempt('daily-demo', {
-      takerId: 'student-1', takerName: 'Student', score: 3, totalQuestions: 3,
+      takerId: 'student-1', takerName: 'Student', score: 3, totalQuestions: 3, answers: [1, 0, 1],
     })).rejects.toThrow('Daily quiz is unavailable');
 
     expect(dispatchEvent).not.toHaveBeenCalled();
