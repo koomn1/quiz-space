@@ -879,7 +879,7 @@ export default function QuizResolver({
           rating,
           feedback: feedback.trim(),
           essayAnswers: getEssayAnswersPayload(),
-          answers: isDailyQuiz ? quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null) : undefined,
+          answers: quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null),
         });
         const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
         if (isDailyQuiz && !applyDailyServerResult(completionRow)) throw new Error('The server did not return a verified daily quiz score.');
