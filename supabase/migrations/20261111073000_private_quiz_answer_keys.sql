@@ -437,7 +437,7 @@ RETURNS TABLE (
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, private, pg_temp
-AS $
+AS $$
 DECLARE
   v_completion_id TEXT;
   v_questions JSONB;
@@ -510,7 +510,7 @@ EXCEPTION WHEN OTHERS THEN
   PERFORM set_config('quizspace.internal_completion_write', 'off', true);
   RAISE;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.submit_mobile_quiz_attempt_v2(TEXT, TEXT, TEXT, JSONB, INTEGER, TEXT) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.submit_mobile_quiz_attempt_v2(TEXT, TEXT, TEXT, JSONB, INTEGER, TEXT) TO service_role;
