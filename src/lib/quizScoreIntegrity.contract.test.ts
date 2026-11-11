@@ -41,6 +41,8 @@ describe('saved quiz review integrity', () => {
     expect(privateKeysMigration).toContain('get_quiz_answer_review');
     expect(privateKeysMigration).toContain('get_guest_quiz_answer_review');
     expect(resolver).toContain('revealPrivateAnswerReview');
+    expect(resolver).not.toContain('const isCorrect = idx === currentQuestion.correctIndex;');
+    expect(resolver).toContain('getQuizAnswerReview');
     expect(resolver).toContain('getGuestQuizAnswerReview');
     expect(db).toContain("supabase.rpc('get_owned_quiz_with_answers'");
   });
