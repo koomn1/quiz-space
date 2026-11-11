@@ -210,20 +210,9 @@ BEGIN
       CONTINUE;
     END IF;
 
-    IF v_answer = 'null'::JSONB THEN
-      CONTINUE;
-    END IF;
-    IF jsonb_typeof(v_answer) IS DISTINCT FROM 'number'
-       OR (v_answer #>> '{}')::NUMERIC <> trunc((v_answer #>> '{}')::NUMERIC) THEN
-      RAISE EXCEPTION 'One or more selected answers are invalid';
-    END IF;
-
-    v_answer_index := (v_answer #>> '{}')::INTEGER;
     v_options := v_question->'options';
-    IF jsonb_typeof(v_options) IS DISTINCT FROM 'array'
-       OR v_answer_index < 0
-       OR v_answer_index >= jsonb_array_length(v_options) THEN
-      RAISE EXCEPTION 'Selected answer is outside the available options';
+    IF jsonb_typeof(v_options) IS DISTINCT FROM 'array' THEN
+      RAISE EXCEPTION 'Quiz question options are invalid';
     END IF;
 
     v_quiz_id := NULLIF(v_question->>'_quizId', '');
@@ -240,6 +229,19 @@ BEGIN
 
     IF NOT COALESCE(v_key_found, FALSE) OR v_correct_index IS NULL THEN
       RAISE EXCEPTION 'Quiz contains an unresolved answer key; creator review is required';
+    END IF;
+
+    IF v_answer = 'null'::JSONB THEN
+      CONTINUE;
+    END IF;
+    IF jsonb_typeof(v_answer) IS DISTINCT FROM 'number'
+       OR (v_answer #>> '{}')::NUMERIC <> trunc((v_answer #>> '{}')::NUMERIC) THEN
+      RAISE EXCEPTION 'One or more selected answers are invalid';
+    END IF;
+
+    v_answer_index := (v_answer #>> '{}')::INTEGER;
+    IF v_answer_index < 0 OR v_answer_index >= jsonb_array_length(v_options) THEN
+      RAISE EXCEPTION 'Selected answer is outside the available options';
     END IF;
 
     IF v_answer_index = v_correct_index THEN
