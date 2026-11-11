@@ -60,6 +60,31 @@ describe('reward and persistence database helpers', () => {
     expect(dispatchEvent).toHaveBeenCalledWith(expect.objectContaining({ type: 'quizspace-rewards-updated' }));
   });
 
+  it('submits standard quiz answer selections without sending a client score', async () => {
+    const completion = {
+      id: 'completion-1', quiz_id: 'quiz-1', score: 1, total_questions: 2,
+      xp_awarded: 20, review_status: 'completed',
+    };
+    mocks.rpc.mockResolvedValueOnce({ data: [completion], error: null });
+
+    await expect(submitQuizAttempt('quiz-1', {
+      takerId: 'student-1', takerName: 'Student', score: 999,
+      answers: [1, 0],
+    })).resolves.toEqual([completion]);
+
+    expect(mocks.rpc).toHaveBeenCalledWith('submit_quiz_attempt_v2', {
+      p_quiz_id: 'quiz-1',
+      p_taker_id: 'student-1',
+      p_taker_name: 'Student',
+      p_answers: [1, 0],
+      p_rating: null,
+      p_feedback: '',
+      p_essay_answers: null,
+    });
+    expect(mocks.rpc.mock.calls[0][1]).not.toHaveProperty('p_score');
+    expect(mocks.rpc).toHaveBeenCalledTimes(1);
+  });
+
   it('does not refresh reward views when the atomic daily completion fails', async () => {
     const dispatchEvent = vi.fn();
     vi.stubGlobal('window', { dispatchEvent });
