@@ -786,10 +786,9 @@ export async function submitQuizAttempt(
     if (data.rating !== undefined && Number(completionRow.rating) !== data.rating) {
       throw new Error('Quiz result was recorded, but the rating could not be confirmed.');
     }
-    if (completionRow?.id) {
-      const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: completionRow.id });
-      if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
-      else if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+    // The v2 scoring RPC records the completion and reward ledger atomically.
+    if (completionRow?.id && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
     }
     return result;
   }
