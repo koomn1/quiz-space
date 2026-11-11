@@ -117,9 +117,8 @@ The following smoke tests ran inside transactions and were rolled back:
 
 ## 5. CI verification
 
-- The Phase 1 workflow has previously passed all unit/contract tests, application TypeScript, production build, Deno checks for changed Edge Functions, and Worker TypeScript.
-- A newer run after adding standard scoring and the Flutter scoring contract is in progress: [latest Phase 1 checks](https://github.com/koomn1/quiz-space/actions).
-- Mobile Flutter CI is also running against the current branch; its final result must be checked before merge.
+- Phase 1 CI [42968734345](https://github.com/koomn1/quiz-space/actions/runs/42968734345) passed: **69 tests across 12 files**, application TypeScript, production build, Deno checks for both changed Edge Functions, and Worker TypeScript.
+- Mobile Flutter CI [42968865670](https://github.com/koomn1/quiz-space/actions/runs/42968865670) is running against the current report-updated branch. Dart analysis and widget tests passed on the immediately preceding run; the current APK build still needs its final result checked before merge.
 
 Do not treat a queued/in-progress workflow as a pass.
 
