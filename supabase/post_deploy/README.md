@@ -5,7 +5,7 @@ This script is intentionally outside `supabase/migrations` because it must run *
 ## Required order
 
 1. Merge and deploy the updated web application from the Phase 1 branch.
-2. Verify that the deployed application calls `get_user_daily_quiz_slot_v2`, `finalize_user_daily_quiz_refresh_v2`, and `submit_user_daily_quiz_attempt_v2`.
+2. Verify that the deployed application calls the daily-quiz v2 RPCs, `submit_quiz_attempt_v2`, `submit_guest_quiz_attempt_v2`, and `update_guest_quiz_attempt_review_v2`.
 3. Run `revoke_legacy_daily_quiz_rpcs.sql` against the production Supabase project.
 4. Verify that all eight legacy RPCs (three daily-quiz functions, guest review, two score-edit functions, and two client-scored quiz submission functions) are no longer executable by `authenticated` or `anon`.
 
