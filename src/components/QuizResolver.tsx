@@ -217,7 +217,7 @@ export default function QuizResolver({
           if (!answer) return question;
           return {
             ...question,
-            ...(Number.isInteger(Number(answer.correct_index))
+            ...(answer.correct_index !== null && answer.correct_index !== undefined && Number.isInteger(Number(answer.correct_index))
               ? { correctIndex: Number(answer.correct_index) }
               : {}),
             ...(answer.correct_answer ? { correctAnswer: String(answer.correct_answer) } : {}),
