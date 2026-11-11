@@ -50,6 +50,36 @@ Read-only inspection on 2026-11-11 found:
 
 These counts make a transactional migration feasible, but it must explicitly preserve unresolved items and validate the answer-key coverage before the public JSON is sanitized. A read-only SQL preflight script is included at `supabase/tests/quiz_answer_key_confidentiality_preflight.sql`.
 
+
+## Phase 2 implementation checkpoint (2026-11-11)
+
+The first answer-key isolation slice is now implemented on this branch:
+
+- Added `private.quiz_answer_keys` in migration `20261111073000_private_quiz_answer_keys.sql`.
+- A database trigger captures keys and explanations on quiz insert/update, then strips answer indexes, answer text, and explanations from `public.quizzes.questions`.
+- Existing quiz rows are backfilled through the same trigger. Invalid legacy keys are stored as unresolved (NULL), never guessed.
+- The standard scoring helper now grades by the private `(quiz_id, question_id)` key and fails closed when an objective question has an unresolved key.
+- Added owner-only editor retrieval RPC `get_owned_quiz_with_answers`.
+- Added authenticated and guest post-submission review RPCs, each bound to the saved completion/attempt.
+- Added `submit_mobile_quiz_attempt_v2`, restricted to `service_role`; the mobile Firebase Edge Function normalizes selected answers and no longer calculates the score from client-visible question JSON.
+- Web creator editing now fetches answer keys through the owner-only RPC. The web resolver no longer reveals correctness locally and retrieves answer review only after a saved completion.
+- Added SQL smoke coverage and updated web/mobile contract tests.
+
+### Validation performed
+
+- Executed the complete migration and SQL smoke test together inside a transaction against the connected Supabase project, then rolled the transaction back.
+- The dry run completed successfully with no persistent schema or data changes.
+- The smoke test verified that public question JSON contains no answer fields, private key rows are created, valid answers are scored from private storage, unresolved keys fail closed, and API roles cannot directly SELECT the private table.
+
+### Important remaining integration work
+
+- The two existing invalid objective keys (`correctIndex = -1`) must be corrected by their quiz owners before those quizzes can be submitted after cutover.
+- The mobile app currently displays the saved score but does not yet show a detailed correct-answer review; its scoring path is now server-authoritative.
+- The existing client direct-write quiz creation/update paths rely on the database trigger to split keys. This is intentional for compatibility, but the next security review must verify no alternate write path can bypass the trigger.
+- AI quota enforcement remains a separate workstream; no per-plan usage numbers have been invented or activated.
+
+**Deployment status:** This migration has only been dry-run transactionally. It has NOT been applied to production. No web/Worker deployment, PR merge, or legacy RPC revocation has occurred.
+
 ## Recommended implementation design
 
 ### 1. Answer-key separation
