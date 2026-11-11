@@ -648,7 +648,7 @@ export async function submitGuestQuizAttempt(
     rating?: number;
     feedback?: string;
     essayAnswers?: any;
-    answers?: Array<number | null>;
+    answers: Array<number | null>;
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
@@ -656,7 +656,7 @@ export async function submitGuestQuizAttempt(
     p_quiz_id: quizId,
     p_guest_id: data.guestId,
     p_guest_name: data.guestName,
-    p_score: data.score,
+    p_answers: data.answers,
     p_client_attempt_key: data.clientAttemptKey,
     p_rating: data.rating ?? null,
     p_feedback: data.feedback || '',
@@ -723,6 +723,7 @@ export async function submitQuizAttempt(
       guestId: data.takerId,
       guestName: data.takerName,
       score: data.score,
+      answers: data.answers,
       clientAttemptKey: data.clientAttemptKey,
       rating: data.rating,
       feedback: data.feedback,
@@ -770,11 +771,11 @@ export async function submitQuizAttempt(
     return dailyResult;
   }
 
-  const { data: result, error } = await supabase.rpc('submit_quiz_attempt', {
+  const { data: result, error } = await supabase.rpc('submit_quiz_attempt_v2', {
     p_quiz_id: quizId,
     p_taker_id: authenticatedTakerId,
     p_taker_name: data.takerName,
-    p_score: data.score,
+    p_answers: data.answers,
     p_rating: data.rating ?? null,
     p_feedback: data.feedback || '',
     p_essay_answers: data.essayAnswers ?? null,
