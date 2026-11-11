@@ -1,0 +1,79 @@
+name: Quiz Space Phase 1+2 Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - codex/phase-1-rewards-security
+    paths:
+      - 'worker/**'
+      - 'mobile_flutter/lib/services/mobile_ai_service.dart'
+      - 'src/lib/dailyQuizTierSecurity.contract.test.ts'
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+      - 'supabase/tests/**'
+      - 'src/pages/**'
+      - 'src/lib/classroomPushAuthorization.test.ts'
+      - 'src/lib/db.rewards.test.ts'
+      - 'src/lib/couponRedemptionSecurity.contract.test.ts'
+      - 'src/lib/userProfileSecurity.contract.test.ts'
+      - 'src/lib/mobileFirebaseIdentity.contract.test.ts'
+      - 'src/lib/mobileQuizScoring.contract.test.ts'
+      - 'src/lib/guestQuizAttempts.contract.test.ts'
+      - 'src/lib/quizScoreIntegrity.contract.test.ts'
+      - 'src/components/QuizResolver.tsx'
+      - 'src/components/DailyQuizCard.tsx'
+      - 'src/lib/db.ts'
+      - 'vitest.config.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/phase1-worker-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  worker-tests:
+    name: Worker unit tests and typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.21.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Worker-local type dependencies
+        run: pnpm --dir worker install --no-frozen-lockfile --config.strictDepBuilds=false
+
+      - name: Run Phase 1 and 2 contract tests
+        run: pnpm exec vitest run worker/src/taskLedger.test.ts worker/src/queue.test.ts worker/src/auth.test.ts worker/src/rateLimitScope.test.ts src/lib/dailyQuizTierSecurity.contract.test.ts src/lib/classroomPushAuthorization.test.ts src/lib/db.rewards.test.ts src/lib/couponRedemptionSecurity.contract.test.ts src/lib/userProfileSecurity.contract.test.ts src/lib/mobileFirebaseIdentity.contract.test.ts src/lib/mobileQuizScoring.contract.test.ts src/lib/guestQuizAttempts.contract.test.ts src/lib/quizScoreIntegrity.contract.test.ts
+
+      - name: Typecheck application
+        run: pnpm typecheck
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Typecheck changed Supabase Edge Functions
+        run: deno check --node-modules-dir=auto supabase/functions/mobile-firebase-session-v2/index.ts supabase/functions/send-promotion-push/index.ts
+
+      - name: Typecheck Worker
+        run: pnpm exec tsc --noEmit -p worker/tsconfig.json

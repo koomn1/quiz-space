@@ -6,11 +6,13 @@ on:
     paths:
       - 'mobile_flutter/**'
       - 'supabase/functions/mobile-firebase-session/**'
+      - 'supabase/functions/mobile-firebase-session-v2/**'
       - '.github/workflows/mobile-native-ci.yml'
   pull_request:
     paths:
       - 'mobile_flutter/**'
       - 'supabase/functions/mobile-firebase-session/**'
+      - 'supabase/functions/mobile-firebase-session-v2/**'
       - '.github/workflows/mobile-native-ci.yml'
   workflow_dispatch:
 
@@ -31,6 +33,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Java 17 for Android Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2

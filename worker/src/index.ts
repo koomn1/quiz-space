@@ -1163,7 +1163,12 @@ export default {
           message.retry({ delaySeconds });
           continue;
         }
-        if (taskId) await finishTask(env, workerAuthHeader, taskId, 'succeeded');
+        const latestJob = await getExtractionJob(env, workerAuthHeader, jobId);
+        if (taskId && latestJob?.status === 'complete') {
+          await finishTask(env, workerAuthHeader, taskId, 'succeeded');
+        } else if (taskId && latestJob?.status === 'error') {
+          await finishTask(env, workerAuthHeader, taskId, 'failed', latestJob.error_message || 'Extraction chunk processing failed.');
+        }
         message.ack();
         continue;
       }
@@ -1177,7 +1182,12 @@ export default {
             ...(env.SUPABASE_SERVICE_ROLE_KEY ? {} : { authHeader: workerAuthHeader }),
           })));
         });
-        if (taskId) await finishTask(env, workerAuthHeader, taskId, 'succeeded');
+        const latestJob = await getExtractionJob(env, workerAuthHeader, jobId);
+        if (taskId && latestJob?.status === 'complete') {
+          await finishTask(env, workerAuthHeader, taskId, 'succeeded');
+        } else if (taskId && latestJob?.status === 'error') {
+          await finishTask(env, workerAuthHeader, taskId, 'failed', latestJob.error_message || 'Extraction job failed.');
+        }
         message.ack();
       } catch (error) {
         const retryable = attempts < 3;

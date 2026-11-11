@@ -53,7 +53,7 @@ export async function getAccountProfile(request: Request, env: Env, userId: stri
   if (!userId || userId === 'guest' || userId === 'placeholder-user') return null;
   const authorization = request.headers.get('Authorization') || '';
   try {
-    const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/users?uid=eq.${encodeURIComponent(userId)}&select=is_premium,plan_name&limit=1`;
+    const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/users?uid=eq.${encodeURIComponent(userId)}&select=is_premium,is_lifetime,is_founder,renewal_date,plan_id,plan_name&limit=1`;
     const response = await fetch(url, { headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: authorization } });
     if (response.ok) {
       const rows = await response.json() as Array<Record<string, unknown>>;
@@ -67,14 +67,17 @@ export async function getAccountProfile(request: Request, env: Env, userId: stri
   return profile && typeof profile === 'object' ? profile : null;
 }
 
-export function isPaidCosmoPlan(planName: unknown): boolean {
-  const plan = typeof planName === 'string' ? planName.trim().toLowerCase() : '';
-  return ['silver', 'gold', 'diamond', 'الفضية', 'الذهبية', 'الماسية'].some(token => plan.includes(token));
+export function isEffectivePaidMembership(profile: Record<string, unknown> | null, now = Date.now()): boolean {
+  if (!profile || profile.is_premium !== true) return false;
+  if (profile.is_lifetime === true || profile.is_founder === true) return true;
+  if (profile.renewal_date === null || profile.renewal_date === undefined || profile.renewal_date === '') return true;
+  const expiry = Date.parse(String(profile.renewal_date));
+  return Number.isFinite(expiry) && expiry > now;
 }
 
 export async function hasPaidCosmoAccess(request: Request, env: Env, userId: string | null): Promise<boolean> {
   const profile = await getAccountProfile(request, env, userId);
-  return Boolean(profile?.is_premium) || isPaidCosmoPlan(profile?.plan_name);
+  return isEffectivePaidMembership(profile);
 }
 
 export async function getCosmoAccountContext(request: Request, env: Env, userId: string | null): Promise<string> {
@@ -83,5 +86,5 @@ export async function getCosmoAccountContext(request: Request, env: Env, userId:
   }
   const profile = await getAccountProfile(request, env, userId);
   if (!profile) return 'حالة الحساب الموثقة: تعذر قراءة ملف العضوية الآن. لا تخمّن الباقة ولا حالة الحساب.';
-  return `حالة الحساب الموثقة من الخادم: المستخدم الحالي فقط. العضوية المفعلة: ${profile.is_premium ? 'نعم' : 'لا'}؛ اسم الباقة: ${profile.plan_name || 'مجانية أو غير محددة'}. لا توجد لك أي صلاحية لتغيير هذه القيم.`;
+  return `حالة الحساب الموثقة من الخادم: المستخدم الحالي فقط. العضوية المفعلة: ${isEffectivePaidMembership(profile) ? 'نعم' : 'لا'}؛ اسم الباقة: ${profile.plan_name || 'مجانية أو غير محددة'}. لا توجد لك أي صلاحية لتغيير هذه القيم.`;
 }

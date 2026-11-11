@@ -24,7 +24,7 @@ class MobileAiService {
 
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
     try {
-      final endpoint = Uri.parse('${workerUrl.replaceFirst(RegExp(r'/+$'), '')}/api/ai/openrouter');
+      final endpoint = Uri.parse('${workerUrl.replaceFirst(RegExp(r'/+$'), '')}/api/ai/chat');
       final request = await client.postUrl(endpoint).timeout(const Duration(seconds: 10));
       request.headers
         ..set(HttpHeaders.authorizationHeader, 'Bearer $token')

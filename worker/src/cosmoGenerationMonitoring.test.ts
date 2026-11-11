@@ -70,7 +70,7 @@ describe('Cosmo generation recovery contract', () => {
     expect(workerSource).toContain("if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);");
     expect(workerSource).toContain("if (!(await hasPaidCosmoAccess(request, env, userId))) return json({ error: 'Cosmo explanations require an active paid plan.' }, 403, headers);");
     expect(routeSources).toContain('&limit=1');
-    expect(routeSources).toContain('Boolean(profile?.is_premium) || isPaidCosmoPlan(profile?.plan_name)');
+    expect(routeSources).toContain('isEffectivePaidMembership(profile)');
   });
 
   it('bounds explanation inputs before constructing the provider prompt', () => {

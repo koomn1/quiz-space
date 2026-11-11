@@ -648,14 +648,15 @@ export async function submitGuestQuizAttempt(
     rating?: number;
     feedback?: string;
     essayAnswers?: any;
+    answers: Array<number | null>;
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
-  const { data: result, error } = await supabase.rpc('submit_guest_quiz_attempt', {
+  const { data: result, error } = await supabase.rpc('submit_guest_quiz_attempt_v2', {
     p_quiz_id: quizId,
     p_guest_id: data.guestId,
     p_guest_name: data.guestName,
-    p_score: data.score,
+    p_answers: data.answers,
     p_client_attempt_key: data.clientAttemptKey,
     p_rating: data.rating ?? null,
     p_feedback: data.feedback || '',
@@ -673,43 +674,20 @@ export async function submitGuestQuizAttempt(
   return result;
 }
 
-export async function updateQuizAttemptScore(completionId: string, score: number): Promise<boolean> {
-  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz score cannot be finalized.');
-  const { data, error } = await supabase.rpc('update_quiz_attempt_score', {
-    p_completion_id: completionId,
-    p_score: score,
-  });
-  if (error) throw new Error('تعذر تحديث الدرجة بعد مراجعة الإجابات.');
-  return data === true;
-}
 
-export async function updateGuestQuizAttemptScore(
-  completionId: string,
-  guestId: string,
-  clientAttemptKey: string,
-  score: number,
-): Promise<boolean> {
-  if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz score cannot be finalized.');
-  const { data, error } = await supabase.rpc('update_guest_quiz_attempt_score', {
-    p_completion_id: completionId,
-    p_guest_id: guestId,
-    p_client_attempt_key: clientAttemptKey,
-    p_score: score,
-  });
-  if (error) throw new Error('تعذر تحديث الدرجة بعد مراجعة الإجابات.');
-  return data === true;
-}
 
 export async function updateGuestQuizAttemptReview(
   completionId: string,
   guestId: string,
+  clientAttemptKey: string,
   rating: number,
   feedback = '',
 ): Promise<boolean> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz review cannot be saved.');
-  const { data, error } = await supabase.rpc('update_guest_quiz_attempt_review', {
+  const { data, error } = await supabase.rpc('update_guest_quiz_attempt_review_v2', {
     p_completion_id: completionId,
     p_guest_id: guestId,
+    p_client_attempt_key: clientAttemptKey,
     p_rating: rating,
     p_feedback: feedback,
   });
@@ -732,6 +710,7 @@ export async function submitQuizAttempt(
     clientAttemptKey?: string;
     totalQuestions?: number;
     essayAnswers?: any;
+    answers: Array<number | null>;
   }
 ): Promise<any> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured; quiz progress cannot be saved.');
@@ -744,6 +723,7 @@ export async function submitQuizAttempt(
       guestId: data.takerId,
       guestName: data.takerName,
       score: data.score,
+      answers: data.answers,
       clientAttemptKey: data.clientAttemptKey,
       rating: data.rating,
       feedback: data.feedback,
@@ -771,12 +751,11 @@ export async function submitQuizAttempt(
   // Daily challenges are private payloads and intentionally do not exist in quizzes.
   // Use their dedicated RPC so solving them still records XP and completion.
   if (quizId.startsWith('daily-')) {
-    const { data: dailyResult, error: dailyError } = await supabase.rpc('submit_user_daily_quiz_attempt', {
+    const { data: dailyResult, error: dailyError } = await supabase.rpc('submit_user_daily_quiz_attempt_v2', {
       p_quiz_id: quizId,
       p_taker_id: authenticatedTakerId,
       p_taker_name: data.takerName,
-      p_score: data.score,
-      p_total_questions: data.totalQuestions || 1,
+      p_answers: data.answers ?? [],
       p_rating: data.rating ?? null,
       p_feedback: data.feedback || '',
     });
@@ -792,11 +771,11 @@ export async function submitQuizAttempt(
     return dailyResult;
   }
 
-  const { data: result, error } = await supabase.rpc('submit_quiz_attempt', {
+  const { data: result, error } = await supabase.rpc('submit_quiz_attempt_v2', {
     p_quiz_id: quizId,
     p_taker_id: authenticatedTakerId,
     p_taker_name: data.takerName,
-    p_score: data.score,
+    p_answers: data.answers,
     p_rating: data.rating ?? null,
     p_feedback: data.feedback || '',
     p_essay_answers: data.essayAnswers ?? null,
@@ -807,10 +786,9 @@ export async function submitQuizAttempt(
     if (data.rating !== undefined && Number(completionRow.rating) !== data.rating) {
       throw new Error('Quiz result was recorded, but the rating could not be confirmed.');
     }
-    if (completionRow?.id) {
-      const { error: rewardError } = await supabase.rpc('award_quiz_completion_rewards', { p_completion_id: completionRow.id });
-      if (rewardError) console.warn('Rewards migration is not ready yet:', rewardError.message);
-      else if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+    // The v2 scoring RPC records the completion and reward ledger atomically.
+    if (completionRow?.id && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
     }
     return result;
   }
@@ -1464,7 +1442,7 @@ export async function getUserDailyQuizSlot(userId: string, tier: DailyQuizTier):
     return null;
   }
   const effectiveUserId = authenticatedUserId === userId ? userId : authenticatedUserId;
-  const { data, error } = await supabase.rpc('get_user_daily_quiz_slot', { p_user_id: effectiveUserId, p_tier: tier });
+  const { data, error } = await supabase.rpc('get_user_daily_quiz_slot_v2', { p_user_id: effectiveUserId, p_tier: tier });
   const row: any = Array.isArray(data) ? data[0] : data;
   if (error || !row) {
     console.error('Error loading user daily quiz slot:', {
@@ -1510,12 +1488,28 @@ export async function claimUserDailyQuizRefresh(userId: string, tier: DailyQuizT
   return !!data;
 }
 
-export async function finalizeUserDailyQuizRefresh(userId: string, tier: DailyQuizTier, quizPayload: Quiz): Promise<void> {
-  if (!userId || !isSupabaseConfigured) return;
-  const { data: authData } = await supabase.auth.getUser();
+export async function finalizeUserDailyQuizRefresh(
+  userId: string,
+  tier: DailyQuizTier,
+  request: { id: string; lang: 'ar' | 'en' },
+): Promise<Quiz> {
+  if (!userId || !isSupabaseConfigured) throw new Error('Daily quiz is unavailable.');
+  const { data: authData, error: authError } = await supabase.auth.getUser();
   const effectiveUserId = authData.user?.id || userId;
-  const { error } = await supabase.rpc('finalize_user_daily_quiz_refresh', { p_user_id: effectiveUserId, p_tier: tier, p_quiz_payload: quizPayload });
+  if (authError || !effectiveUserId || effectiveUserId !== userId) {
+    throw authError || new Error('Daily quiz requires the signed-in account.');
+  }
+  const { data, error } = await supabase.rpc('finalize_user_daily_quiz_refresh_v2', {
+    p_user_id: effectiveUserId,
+    p_tier: tier,
+    p_quiz_request: request,
+  });
   if (error) throw error;
+  const payload = Array.isArray(data) ? data[0] : data;
+  if (!payload?.id || !Array.isArray(payload.questions) || payload.questions.length === 0) {
+    throw new Error('The server did not return a valid daily quiz.');
+  }
+  return payload as Quiz;
 }
 
 export async function releaseUserDailyQuizRefresh(userId: string, tier: DailyQuizTier): Promise<void> {
@@ -2887,46 +2881,22 @@ export async function getCouponUsageByUser(couponId: string, userId: string): Pr
   return null;
 }
 
-export async function recordCouponUsage(
-  couponId: string,
-  userId: string,
-  discountPercent: number,
-  planId?: string,
-  orderId?: string
-): Promise<string> {
-  if (!isSupabaseConfigured) throw new Error('Supabase is not configured');
-  const { data, error } = await supabase.rpc('record_coupon_usage', {
-    p_coupon_id: couponId,
-    p_user_id: userId,
-    p_discount_percent: discountPercent,
-    p_plan_id: planId,
-    p_order_id: orderId
-  });
-  if (error) {
-    console.error('Error recording coupon usage:', error);
-    throw error;
-  }
-  return String(data || '');
-}
-
 export async function redeemCouponForUser(
   couponId: string,
   userId: string,
-  discountPercent: number,
   planId: string,
-  planName: string,
   orderId: string,
-  renewalDate: string,
 ): Promise<string> {
   if (!isSupabaseConfigured) throw new Error('Supabase is not configured');
-  const { data, error } = await supabase.rpc('redeem_coupon_for_user', {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user?.id || authData.user.id !== userId) {
+    throw authError || new Error('Coupon redemption requires the signed-in account.');
+  }
+  const { data, error } = await supabase.rpc('redeem_coupon_for_user_v2', {
     p_coupon_id: couponId,
     p_user_id: userId,
-    p_discount_percent: discountPercent,
     p_plan_id: planId,
-    p_plan_name: planName,
     p_order_id: orderId,
-    p_renewal_date: renewalDate,
   });
   if (error) {
     console.error('Error redeeming coupon atomically:', error);

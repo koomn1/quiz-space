@@ -7,9 +7,8 @@ import {
   restartExpiredJob,
   validateCreateExtractionJobInput,
   type ExtractionJobControl,
-  type ExtractionJobRow,
 } from './extractionJobs';
-import { claimTask, taskIdempotencyKey } from './taskLedger';
+import { claimTask, finishTask, taskIdempotencyKey } from './taskLedger';
 import { scheduleExtractionJob } from './queue';
 import { publicExtractionJob, type Env } from './platform';
 import { json, isAuthenticated, type RouteContext, type RouteResult, routePath } from './routes';
@@ -26,7 +25,7 @@ export function isExtractionJobRequest(request: Request): boolean {
 
 const controls = new Set<ExtractionJobControl>(['pause', 'resume', 'cancel', 'retry-failed']);
 
-function startPendingExtraction(context: RouteContext, jobId: string): void {
+function startPendingExtraction(context: RouteContext, jobId: string, taskId?: string): void {
   if (!context.executionCtx) return;
   const workerAuthHeader = context.env.SUPABASE_SERVICE_ROLE_KEY
     ? `Bearer ${context.env.SUPABASE_SERVICE_ROLE_KEY}`
@@ -37,9 +36,18 @@ function startPendingExtraction(context: RouteContext, jobId: string): void {
         await Promise.all(chunkIds.map(chunkId => context.env.EXTRACTION_JOBS.send({
           jobId: parentJobId,
           chunkId,
+          ...(taskId ? { taskId } : {}),
           ...(context.env.SUPABASE_SERVICE_ROLE_KEY ? {} : { authHeader: workerAuthHeader }),
         })));
       });
+      if (taskId) {
+        const completedJob = await getExtractionJob(context.env, workerAuthHeader, jobId);
+        if (completedJob?.status === 'complete') {
+          await finishTask(context.env, workerAuthHeader, taskId, 'succeeded');
+        } else if (completedJob?.status === 'error') {
+          await finishTask(context.env, workerAuthHeader, taskId, 'failed', completedJob.error_message || 'Extraction job failed.');
+        }
+      }
     } catch (error) {
       console.error('Inline extraction fallback failed; queue retry remains available.', { jobId, error });
     }
@@ -54,25 +62,11 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
   if (context.request.method === 'GET') {
     if (path === '/api/ai/extraction-jobs') {
       const jobs = await listActiveExtractionJobs(context.env, context.authHeader);
-      const resumable: ExtractionJobRow[] = [];
-      for (const job of jobs) {
-        const current = await restartExpiredJob(context.env, context.authHeader, job);
-        if (current.status === 'pending') {
-          await scheduleExtractionJob(context.env, context.authHeader, current.id);
-          startPendingExtraction(context, current.id);
-        }
-        resumable.push(current);
-      }
-      return json({ jobs: resumable.map(publicExtractionJob) }, 200, context.headers);
+      return json({ jobs: jobs.map(publicExtractionJob) }, 200, context.headers);
     }
     const jobId = path.split('/')[4] || '';
     let job = await getExtractionJob(context.env, context.authHeader, jobId);
     if (!job) return json({ error: 'Extraction job not found' }, 404, context.headers);
-    job = await restartExpiredJob(context.env, context.authHeader, job);
-    if (job.status === 'pending') {
-      await scheduleExtractionJob(context.env, context.authHeader, job.id);
-      startPendingExtraction(context, job.id);
-    }
     return json(publicExtractionJob(job), 200, context.headers);
   }
 
@@ -84,8 +78,8 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
     const job = await controlExtractionJob(context.env, context.authHeader, jobId, control);
     if (!job) return json({ error: 'Extraction job not found' }, 404, context.headers);
     if (job.status === 'pending') {
-      await scheduleExtractionJob(context.env, context.authHeader, job.id);
-      startPendingExtraction(context, job.id);
+      const scheduled = await scheduleExtractionJob(context.env, context.authHeader, job.id);
+      if (!scheduled) startPendingExtraction(context, job.id);
     }
     return json(publicExtractionJob(job), 200, context.headers);
   }
@@ -122,8 +116,8 @@ export async function handleExtractionRoutes(context: RouteContext): Promise<Rou
   }
   job = await restartExpiredJob(context.env, context.authHeader, job);
   if (job.status === 'pending') {
-    await scheduleExtractionJob(context.env, context.authHeader, job.id, taskId);
-    startPendingExtraction(context, job.id);
+    const scheduled = await scheduleExtractionJob(context.env, context.authHeader, job.id, taskId);
+    if (!scheduled) startPendingExtraction(context, job.id, taskId);
   }
   return json({ job: publicExtractionJob(job) }, 202, context.headers);
 }

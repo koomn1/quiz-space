@@ -11,7 +11,6 @@ import {
   planNameToDailyQuizTier,
   DailyQuizTier,
 } from '../lib/db';
-import { DAILY_QUIZ_BANK } from '../data/dailyQuizBank';
 import { shouldRecoverStalledDailyQuizRefresh } from '../lib/dailyQuizRecovery';
 import { MainLogo } from './MainLogo';
 
@@ -21,8 +20,8 @@ gsap.registerPlugin(useGSAP);
 // guarantee the sessionStorage snapshot exists before navigation.
 let latestDailyPayload: Record<string, any> | null = null;
 
-// Fixed offline bank: no AI request is made while users load or solve daily quizzes.
-const DAILY_BANK_SIZE = DAILY_QUIZ_BANK.length;
+// The daily bank and answer keys are stored server-side; only this public count is used for deterministic rotation.
+const DAILY_BANK_SIZE = 10;
 
 interface DailyQuizCardProps {
   lang: 'ar' | 'en';
@@ -61,7 +60,9 @@ function formatCountdown(totalSeconds: number, isAr: boolean): string {
 export default function DailyQuizCard({ lang, userId, planName, isPremium, onStartQuiz, onLoginClick }: DailyQuizCardProps) {
   const isAr = lang === 'ar';
   const isGuest = !userId || userId.startsWith('user-');
-  const tier = planNameToDailyQuizTier(planName, isPremium);
+  const clientTier = planNameToDailyQuizTier(planName, isPremium);
+  const [serverTier, setServerTier] = useState<DailyQuizTier | null>(null);
+  const tier = serverTier ?? clientTier;
   const [quizId, setQuizId] = useState<string | null>(null);
   const [answered, setAnswered] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -78,7 +79,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     if (glowRef.current) gsap.to(glowRef.current, { rotation: 360, duration: 18, repeat: -1, ease: 'none' });
   }, { scope: cardRef, dependencies: [tier] });
 
-  const generate = async () => {
+  const generate = async (resolvedTier: DailyQuizTier = tier) => {
     if (!userId || generatingRef.current) return;
     generatingRef.current = true;
     setIsGenerating(true);
@@ -86,28 +87,16 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     try {
       // Pick deterministically from the bank for this user/tier/time window.
       // The tier is part of the seed, so every plan gets its own rotation.
-      const intervalSeconds = TIER_REFRESH_SECONDS[tier];
+      const intervalSeconds = TIER_REFRESH_SECONDS[resolvedTier];
       const intervalMs = intervalSeconds * 1000;
       const windowNumber = Math.floor(Date.now() / intervalMs);
-      const seedText = `${userId}:${tier}:${windowNumber}`;
+      const seedText = `${userId}:${resolvedTier}:${windowNumber}`;
       let hash = 0;
       for (let i = 0; i < seedText.length; i++) hash = (hash * 31 + seedText.charCodeAt(i)) >>> 0;
-      const source = DAILY_QUIZ_BANK[hash % DAILY_BANK_SIZE] as any;
       const quizId = `daily-${userId}-${windowNumber}-${String(hash % DAILY_BANK_SIZE + 1).padStart(2, '0')}`;
-      const quiz = {
-        ...source,
-        id: quizId,
-        title: ` ${isAr ? 'التحدي اليومي' : 'Daily Challenge'} — ${source.title}`,
-        questions: source.questions.map((q: any, i: number) => ({ ...q, id: `${quizId}-q${i + 1}` })),
-        creatorId: 'quizspace-daily-bank',
-        creatorName: isAr ? 'QuizSpace • تحدٍ متجدد' : 'QuizSpace • Rotating Challenge',
-        category: isAr ? `يومي • ${TIER_LABEL[tier].ar}` : `Daily • ${TIER_LABEL[tier].en}`,
-        createdAt: new Date().toISOString(),
-        totalPlays: 0,
-        avgRating: 0,
-        ratingsCount: 0,
-      } as any;
-      await finalizeUserDailyQuizRefresh(userId, tier, quiz);
+      // Only the quiz id and language leave the browser. The server chooses the
+      // bank record and returns questions without the correct-answer key.
+      const quiz = await finalizeUserDailyQuizRefresh(userId, resolvedTier, { id: quizId, lang });
       window.sessionStorage.setItem(`quizspace-daily-${quiz.id}`, JSON.stringify(quiz));
       latestDailyPayload = quiz;
       setQuizId(quiz.id);
@@ -116,7 +105,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     } catch (error) {
       console.error('Failed to prepare fixed daily quiz:', error);
       setGenerationError(true);
-      await releaseUserDailyQuizRefresh(userId, tier);
+      await releaseUserDailyQuizRefresh(userId, resolvedTier);
     } finally {
       setIsGenerating(false);
       generatingRef.current = false;
@@ -133,6 +122,8 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         setIsGenerating(false);
         return;
       }
+      const resolvedTier = (Object.entries(TIER_REFRESH_SECONDS).find(([, seconds]) => seconds === slot.refreshIntervalSeconds)?.[0] as DailyQuizTier | undefined) ?? 'free';
+      if (serverTier !== resolvedTier) setServerTier(resolvedTier);
       const hasPrivatePayload = !!slot.quizPayload?.id;
       // Older deployments generated daily IDs with Date.now(), leaving an
       // unanswered payload pinned forever. Current IDs use the tier window
@@ -143,7 +134,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         : null;
       const isLegacyPayload = !!legacyPayloadMatch && Number(legacyPayloadMatch[1]) > 1_000_000_000;
       if (hasPrivatePayload && isLegacyPayload && !slot.answered) {
-        await resetLegacyDailyQuizSlot(userId, tier);
+        await resetLegacyDailyQuizSlot(userId, resolvedTier);
         latestDailyPayload = null;
         setQuizId(null);
         setAnswered(false);
@@ -170,8 +161,8 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         if (slot.secondsUntilRefresh > 0) { setIsGenerating(false); return; }
         // Cooldown elapsed (or never started): release and claim a fresh one.
         if (slot.refreshing) { setIsGenerating(true); return; }
-        const won = await claimUserDailyQuizRefresh(userId, tier);
-        if (won) await generate();
+        const won = await claimUserDailyQuizRefresh(userId, resolvedTier);
+        if (won) await generate(resolvedTier);
         else setIsGenerating(true);
         return;
       }
@@ -201,7 +192,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
           stalledRecoveryRef.current = true;
           try {
             const won = await claimUserDailyQuizRefresh(userId, tier);
-            if (won) await generate();
+            if (won) await generate(resolvedTier);
           } finally {
             stalledRecoveryRef.current = false;
           }
@@ -212,7 +203,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       }
       if (!activeQuizId) {
         const won = await claimUserDailyQuizRefresh(userId, tier);
-        if (won) await generate();
+        if (won) await generate(resolvedTier);
         else setIsGenerating(true);
       }
     } catch (error) {
@@ -221,6 +212,10 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
       setIsGenerating(false);
     }
   };
+
+  useEffect(() => {
+    setServerTier(null);
+  }, [userId]);
 
   useEffect(() => {
     if (isGuest) { setQuizId(null); setAnswered(false); setSecondsLeft(0); setIsGenerating(false); return; }

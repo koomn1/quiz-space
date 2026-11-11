@@ -59,7 +59,7 @@ function boundedString(value: unknown, maxLength: number): string {
 }
 
 function escapeLike(value: string): string {
-  return value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+  return value.replace(/[\\%_]/g, "\\function readBearer(request: Request): string | null {");
 }
 
 function readBearer(request: Request): string | null {
@@ -134,64 +134,43 @@ async function resolveQuizSpaceUid(context: ServiceContext, claims: FirebaseClai
   const email = boundedString(claims.email, MAX_EMAIL_LENGTH).toLowerCase();
   if (!firebaseUid || !email) throw new Error("identity_missing");
 
-  const byUid = await context.client
-    .from("users")
-    .select("uid, email")
-    .eq("uid", firebaseUid)
-    .limit(1);
-  if (byUid.error) throw new Error("users_lookup_failed");
-  if (byUid.data?.length === 1) {
-    const storedEmail = boundedString(byUid.data[0].email, MAX_EMAIL_LENGTH).toLowerCase();
-    if (storedEmail !== email) throw new Error("identity_conflict");
-    return { uid: firebaseUid, created: false };
+  const rawPhoto = boundedString(claims.picture, MAX_PHOTO_LENGTH);
+  let photoUrl = "";
+  if (rawPhoto) {
+    try {
+      const parsed = new URL(rawPhoto);
+      if (parsed.protocol === "https:") photoUrl = parsed.toString();
+    } catch {
+      photoUrl = "";
+    }
   }
 
-  // The legacy web account is authoritative. Never rewrite its UID: many tables
-  // reference it. A verified Firebase email is used only to resolve that row.
-  let byEmail = await context.client
-    .from("users")
-    .select("uid")
-    .eq("email", email)
-    .limit(2);
-  if (byEmail.error) throw new Error("users_email_lookup_failed");
-  if ((byEmail.data?.length ?? 0) === 0) {
-    byEmail = await context.client
-      .from("users")
-      .select("uid")
-      .ilike("email", escapeLike(email))
-      .limit(2);
-    if (byEmail.error) throw new Error("users_email_lookup_failed");
-  }
-  if ((byEmail.data?.length ?? 0) > 1) throw new Error("ambiguous_legacy_email");
-  if (byEmail.data?.length === 1) {
-    return { uid: boundedString(byEmail.data[0].uid, MAX_UID_LENGTH), created: false };
-  }
-
-  const name = boundedString(claims.name, MAX_NAME_LENGTH) || email.split("@")[0].slice(0, MAX_NAME_LENGTH) || "طالب جديد";
-  const photoUrl = boundedString(claims.picture, MAX_PHOTO_LENGTH);
-  const inserted = await context.client.from("users").insert({
-    uid: firebaseUid,
-    email,
-    name,
-    photo_url: photoUrl,
-    plan_name: "Free",
-    is_premium: false,
+  const { data, error } = await context.client.rpc("resolve_mobile_firebase_identity", {
+    p_firebase_project_id: context.firebaseProjectId,
+    p_firebase_uid: firebaseUid,
+    p_verified_email: email,
+    p_name: boundedString(claims.name, MAX_NAME_LENGTH),
+    p_photo_url: photoUrl,
   });
-  if (inserted.error) {
-    // A simultaneous request may have created the row. Re-read only by the
-    // authenticated Firebase UID; never guess another user's identity.
-    const retry = await context.client.from("users").select("uid").eq("uid", firebaseUid).limit(1);
-    if (retry.error || retry.data?.length !== 1) throw new Error("users_insert_failed");
-    return { uid: firebaseUid, created: false };
+  if (error) {
+    const message = error.message || "";
+    if (message.includes("ambiguous_legacy_email")) throw new Error("ambiguous_legacy_email");
+    if (message.includes("identity_conflict")) throw new Error("identity_conflict");
+    if (message.includes("identity_missing")) throw new Error("identity_missing");
+    throw new Error("identity_resolution_failed");
   }
-  return { uid: firebaseUid, created: true };
+
+  const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | null;
+  const uid = boundedString(row?.app_user_uid, MAX_UID_LENGTH);
+  if (!uid) throw new Error("identity_resolution_failed");
+  return { uid, created: row?.created === true };
 }
 
 async function loadProfile(context: ServiceContext, appUid: string): Promise<Record<string, unknown>> {
   const [userResult, quizResult, completionResult] = await Promise.all([
     context.client
       .from("users")
-      .select("uid, custom_id, name, bio, location, photo_url, is_premium, is_founder, is_admin, plan_name, xp")
+      .select("uid, custom_id, name, bio, location, photo_url, is_premium, is_lifetime, is_founder, renewal_date, plan_id, is_admin, plan_name, xp")
       .eq("uid", appUid)
       .limit(1),
     context.client
@@ -387,16 +366,23 @@ async function submitQuizAttempt(context: ServiceContext, appUid: string, claims
   if (!quizId || !Array.isArray(rawAnswers) || rawAnswers.length > MAX_ANSWERS) throw new Error("invalid_attempt");
   const quiz = await loadQuizDetails(context, appUid, quizId);
   const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
-  if (questions.length < 1 || questions.length > MAX_QUESTIONS) throw new Error("invalid_attempt");
+  if (questions.length < 1 || questions.length > MAX_QUESTIONS || rawAnswers.length !== questions.length) throw new Error("invalid_attempt");
   let score = 0;
   questions.forEach((rawQuestion, index) => {
     if (!rawQuestion || typeof rawQuestion !== "object" || Array.isArray(rawQuestion)) return;
     const question = rawQuestion as Record<string, unknown>;
     const options = Array.isArray(question.options) ? question.options.map((item) => boundedString(item, MAX_OPTION_LENGTH)) : [];
     const rawCorrect = question.correctAnswer ?? question.correct_answer;
-    let correct = boundedString(rawCorrect, MAX_OPTION_LENGTH);
-    const correctIndex = typeof rawCorrect === "number" || /^\d+$/.test(correct) ? Number(rawCorrect) : -1;
-    if (correctIndex >= 0 && correctIndex < options.length) correct = options[correctIndex];
+    const storedCorrectIndex = question.correctIndex;
+    let correct = "";
+    if (typeof storedCorrectIndex === "number" && Number.isInteger(storedCorrectIndex)
+      && storedCorrectIndex >= 0 && storedCorrectIndex < options.length) {
+      correct = options[storedCorrectIndex];
+    } else {
+      correct = boundedString(rawCorrect, MAX_OPTION_LENGTH);
+      const correctIndex = typeof rawCorrect === "number" || /^\d+$/.test(correct) ? Number(rawCorrect) : -1;
+      if (correctIndex >= 0 && correctIndex < options.length) correct = options[correctIndex];
+    }
     const submitted = rawAnswers[index];
     let answer = boundedString(submitted, MAX_OPTION_LENGTH);
     const answerIndex = typeof submitted === "number" || /^\d+$/.test(answer) ? Number(submitted) : -1;
@@ -408,7 +394,7 @@ async function submitQuizAttempt(context: ServiceContext, appUid: string, claims
   if (userResult.error || userResult.data?.length !== 1) throw new Error("profile_not_found");
   const takerName = boundedString(userResult.data[0].name, MAX_NAME_LENGTH) || boundedString(claims.name, MAX_NAME_LENGTH) || "عضو QuizSpace";
   const ratingValue = body.rating == null || body.rating === "" ? null : Number(body.rating);
-  const rating = Number.isInteger(ratingValue) && ratingValue >= 1 && ratingValue <= 5 ? ratingValue : null;
+  const rating = ratingValue !== null && Number.isInteger(ratingValue) && ratingValue >= 1 && ratingValue <= 5 ? ratingValue : null;
   const feedback = boundedString(body.feedback, MAX_FEEDBACK_LENGTH);
   const result = await context.client.rpc("submit_mobile_quiz_attempt", {
     p_quiz_id: quizId,
@@ -520,6 +506,7 @@ Deno.serve(async (request: Request) => {
       return response({ error: "تعذر التحقق من جلسة Google. تأكد أن نسخة Android مرتبطة بنفس مشروع Firebase ثم حدّث التطبيق وحاول مرة أخرى." }, 401);
     }
     if (message === "firebase_email_not_verified") return response({ error: "أكد بريدك الإلكتروني في Google أولًا ثم سجّل الدخول مرة أخرى." }, 403);
+    if (message === "identity_missing") return genericFailure(400);
     if (message === "ambiguous_legacy_email" || message === "identity_conflict") return response({ error: "تعذر ربط الحساب تلقائيًا. تواصل مع الدعم." }, 409);
     if (message === "quiz_not_owned" || message === "quiz_not_found") return genericFailure(404);
     if (message === "invalid_quiz" || message === "invalid_questions" || message === "invalid_attempt") return response({ error: "بيانات الاختبار أو المحاولة غير صالحة." }, 400);
@@ -530,7 +517,7 @@ Deno.serve(async (request: Request) => {
     if (message === "notification_preferences_failed") return response({ error: "تعذر تحميل تفضيلات الإشعارات الآن." }, 500);
     if (message === "admin_required") return response({ error: "الصلاحية الإدارية مطلوبة." }, 403);
     if (message === "admin_overview_failed") return response({ error: "تعذر تحميل مؤشرات الإدارة الآن." }, 500);
-    if (message === "users_lookup_failed" || message === "users_email_lookup_failed" || message === "profile_load_failed" || message === "profile_not_found") return response({ error: "تم التحقق من Google، لكن تعذر ربط الحساب بملف QuizSpace. حاول مرة أخرى بعد لحظات." }, 503);
+    if (message === "identity_resolution_failed" || message === "users_lookup_failed" || message === "users_email_lookup_failed" || message === "profile_load_failed" || message === "profile_not_found") return response({ error: "تم التحقق من Google، لكن تعذر ربط الحساب بملف QuizSpace. حاول مرة أخرى بعد لحظات." }, 503);
     if (message === "users_insert_failed") return response({ error: "تم اختيار الحساب، لكن تعذر إنشاء ملف QuizSpace. حاول مرة أخرى." }, 503);
     if (message === "server_configuration_missing") return genericFailure(503);
     return genericFailure(500);

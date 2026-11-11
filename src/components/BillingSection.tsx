@@ -581,16 +581,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         if (!appliedCouponId) {
           throw new Error('The 100% coupon must be validated from the database before activation.');
         }
-        const renewalDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        await redeemCouponForUser(
-          appliedCouponId,
-          userId,
-          promoDiscount,
-          selectedPlan,
-          targetPlanObj?.name || selectedPlan,
-          requestId,
-          renewalDate,
-        );
+        await redeemCouponForUser(appliedCouponId, userId, selectedPlan, requestId);
       }
 
       try {
