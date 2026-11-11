@@ -58,6 +58,10 @@ function boundedString(value: unknown, maxLength: number): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, "\\function readBearer(request: Request): string | null {");
+}
+
 function readBearer(request: Request): string | null {
   const value = request.headers.get("Authorization") ?? "";
   if (!value.startsWith("Bearer ")) return null;
@@ -383,7 +387,7 @@ async function submitQuizAttempt(context: ServiceContext, appUid: string, claims
   if (userResult.error || userResult.data?.length !== 1) throw new Error("profile_not_found");
   const takerName = boundedString(userResult.data[0].name, MAX_NAME_LENGTH) || boundedString(claims.name, MAX_NAME_LENGTH) || "عضو QuizSpace";
   const ratingValue = body.rating == null || body.rating === "" ? null : Number(body.rating);
-  const rating = Number.isInteger(ratingValue) && ratingValue >= 1 && ratingValue <= 5 ? ratingValue : null;
+  const rating = ratingValue !== null && Number.isInteger(ratingValue) && ratingValue >= 1 && ratingValue <= 5 ? ratingValue : null;
   const feedback = boundedString(body.feedback, MAX_FEEDBACK_LENGTH);
   const result = await context.client.rpc("submit_mobile_quiz_attempt", {
     p_quiz_id: quizId,
