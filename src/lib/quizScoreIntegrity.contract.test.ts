@@ -7,6 +7,7 @@ describe('saved quiz review integrity', () => {
   const db = readFileSync(resolve(process.cwd(), 'src/lib/db.ts'), 'utf8');
   const postDeploy = readFileSync(resolve(process.cwd(), 'supabase/post_deploy/revoke_legacy_daily_quiz_rpcs.sql'), 'utf8');
   const scoringMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261111054631_server_authoritative_quiz_scoring.sql'), 'utf8');
+  const privateKeysMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261111073000_private_quiz_answer_keys.sql'), 'utf8');
 
   it('locks answer edits after the saved completion exists', () => {
     expect(resolver).toContain('if (savedCompletionId || autoSaveStartedRef.current');
@@ -33,6 +34,15 @@ describe('saved quiz review integrity', () => {
     expect(db).not.toContain('p_score: data.score');
     expect(resolver).toContain('answers: quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null)');
     expect(resolver).toContain("if (question.type === 'essay') return total;");
+    expect(privateKeysMigration).toContain('CREATE TABLE IF NOT EXISTS private.quiz_answer_keys');
+    expect(privateKeysMigration).toContain('BEFORE INSERT OR UPDATE OF questions ON public.quizzes');
+    expect(privateKeysMigration).toContain("- 'correctIndex'");
+    expect(privateKeysMigration).toContain('get_owned_quiz_with_answers');
+    expect(privateKeysMigration).toContain('get_quiz_answer_review');
+    expect(privateKeysMigration).toContain('get_guest_quiz_answer_review');
+    expect(resolver).toContain('revealPrivateAnswerReview');
+    expect(resolver).toContain('getGuestQuizAnswerReview');
+    expect(db).toContain("supabase.rpc('get_owned_quiz_with_answers'");
   });
 
   it('documents revoking legacy score mutation and client-scored submission RPCs after the new client deploys', () => {
