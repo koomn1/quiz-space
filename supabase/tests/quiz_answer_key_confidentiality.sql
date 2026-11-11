@@ -70,15 +70,15 @@ BEGIN
   END IF;
 
   v_score := public.quizspace_score_objective_answers(
-    v_questions,
-    '[0,null]'::JSONB
+    jsonb_build_array(v_questions->0),
+    '[0]'::JSONB
   );
   IF v_score <> 1 THEN
     RAISE EXCEPTION 'Expected private-key score 1, got %', v_score;
   END IF;
 
   BEGIN
-    PERFORM public.quizspace_score_objective_answers(v_questions, '[0,1]'::JSONB);
+    PERFORM public.quizspace_score_objective_answers(v_questions, '[0,null]'::JSONB);
   EXCEPTION WHEN OTHERS THEN
     v_failed_closed := SQLERRM LIKE '%unresolved answer key%';
   END;
