@@ -640,10 +640,15 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   if (request.method === 'OPTIONS') return new Response(null, { headers });
   const path = new URL(request.url).pathname;
   
-  // Rate Limit check: max 40 AI requests per minute per IP
-  const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'anonymous';
-  if (!checkRateLimit(`${request.method}:${clientIp}`)) {
-    return json({ error: 'Rate limit exceeded. Please wait a moment before sending more requests.' }, 429, headers);
+  // This is an IP-level burst guard for AI POST endpoints only. It is not
+  // an account quota: the durable per-user/per-plan allowance is enforced
+  // separately at the operation boundary.
+  const isAiPostRequest = request.method === 'POST' && path.startsWith('/api/ai/');
+  if (isAiPostRequest) {
+    const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'anonymous';
+    if (!checkRateLimit(clientIp)) {
+      return json({ error: 'Rate limit exceeded. Please wait a moment before sending more requests.' }, 429, headers);
+    }
   }
 
   const isPublicQuizShare = request.method === 'GET' && (path === '/share/quiz' || path === '/share/quiz/');
