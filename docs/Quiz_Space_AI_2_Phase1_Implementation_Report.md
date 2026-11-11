@@ -118,14 +118,14 @@ The following smoke tests ran inside transactions and were rolled back:
 ## 5. CI verification
 
 - Phase 1 CI [42968734345](https://github.com/koomn1/quiz-space/actions/runs/42968734345) passed: **69 tests across 12 files**, application TypeScript, production build, Deno checks for both changed Edge Functions, and Worker TypeScript.
-- Mobile Flutter CI [42968865670](https://github.com/koomn1/quiz-space/actions/runs/42968865670) is running against the current report-updated branch. Dart analysis and widget tests passed on the immediately preceding run; the current APK build still needs its final result checked before merge.
+- Mobile Flutter CI [42968966080](https://github.com/koomn1/quiz-space/actions/runs/42968966080) is running against the current branch; the final Android APK build and artifact steps are still pending.
 
 Do not treat a queued/in-progress workflow as a pass.
 
 ## 6. Security Advisor snapshot
 
 After the applied database changes, the Supabase Security Advisor reported:
-- 5 RLS-enabled tables without policies (informational; direct anon/auth table grants were separately checked).
+- 5 RLS-enabled tables without policies; direct anon/authenticated SELECT/INSERT/UPDATE grants were checked and are absent for all five (`daily_quiz_answer_keys`, `daily_quiz_bank`, `guest_quiz_attempts`, `mobile_firebase_identity_links`, `web_vitals`).
 - 14 anon-executable SECURITY DEFINER functions.
 - 125 authenticated-executable SECURITY DEFINER functions.
 - 1 leaked-password-protection warning.
