@@ -44,7 +44,16 @@ DECLARE
   v_option_count INTEGER;
   v_ordinality INTEGER := 0;
 BEGIN
-  IF TG_OP = 'UPDATE' AND NEW.questions IS NOT DISTINCT FROM OLD.questions THEN
+  IF TG_OP = 'UPDATE'
+     AND NEW.questions IS NOT DISTINCT FROM OLD.questions
+     AND NOT EXISTS (
+       SELECT 1
+       FROM jsonb_array_elements(COALESCE(OLD.questions, '[]'::JSONB)) AS existing_question(value)
+       WHERE existing_question.value ?| ARRAY[
+         'correctIndex', 'correct_index', 'correctAnswer', 'correct_answer',
+         'explanation', 'answerExplanation', 'answer_explanation'
+       ]
+     ) THEN
     RETURN NEW;
   END IF;
 
