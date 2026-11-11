@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     }
 
     let recipientIds: string[] = Array.isArray(body.recipientIds)
-      ? [...new Set(body.recipientIds.map((id: unknown) => String(id).trim()).filter(Boolean))].slice(0, 5000)
+      ? Array.from(new Set<string>(body.recipientIds.map((id: unknown) => String(id).trim()).filter((id: string) => id.length > 0))).slice(0, 5000)
       : [];
 
     if (isClassroomScoped) {
