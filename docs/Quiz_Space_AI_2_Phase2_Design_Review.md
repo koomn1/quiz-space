@@ -19,8 +19,9 @@ No production schema or deployment changes are made by this review document.
 
 - `public.quizzes` has an RLS SELECT policy named `quizzes_read` with `USING (true)`.
 - `public.quizzes.questions` is JSONB and currently contains `correctIndex`, `correctAnswer`, and sometimes explanations.
-- `getQuizzes()` and `getQuizById()` currently use direct `.from('quizzes').select('*')`.
+- The browser's `getQuizzes()` and `getQuizById()` currently use direct `.from('quizzes').select('*')`; these are the central public read points to replace.
 - The web resolver uses question answer fields for immediate local scoring and review.
+- The mobile Firebase Edge Function `mobile-firebase-session-v2` reads the full question JSON, computes objective score server-side, and calls `submit_mobile_quiz_attempt`; the RPC is executable only by `service_role`, not `anon` or `authenticated`. The mobile read/create paths still need to be moved to the new sanitized/private-key contract.
 - The creator editor also needs answer keys to reopen and edit an owned quiz.
 - Standard authenticated and guest scoring RPCs already compute objective score server-side, but currently read the answers from `quizzes.questions`.
 
@@ -42,12 +43,12 @@ Read-only inspection on 2026-11-11 found:
 - 73 standard quiz rows.
 - 2,970 total questions: 2,836 objective questions and 134 essays.
 - All 2,970 rows have a question id and a `correctIndex` property.
-- 2 objective questions have an invalid/missing/out-of-range answer index and need creator review; they must not be silently assigned a guessed answer during migration.
+- 2 objective questions have an invalid answer index (`-1` on True/False questions) and need creator review; they must not be silently assigned a guessed answer during migration. They are in quiz ids `quiz-4c29hf7to` and `quiz-fo4tvkrg8`.
 - 103 essay questions have no reference `correctAnswer`; these must remain valid manual-review essays and must not be blocked by objective-answer migration.
 - 1,932 questions contain non-empty explanations. Explanations should be released after submission with the answer review, not as part of the public pre-attempt payload.
-- No unknown question types were found in the current sample.
+- No unknown question types or duplicate question ids within a quiz were found in the current sample.
 
-These counts make a transactional migration feasible, but it must explicitly preserve unresolved items and validate the answer-key coverage before the public JSON is sanitized.
+These counts make a transactional migration feasible, but it must explicitly preserve unresolved items and validate the answer-key coverage before the public JSON is sanitized. A read-only SQL preflight script is included at `supabase/tests/quiz_answer_key_confidentiality_preflight.sql`.
 
 ## Recommended implementation design
 
