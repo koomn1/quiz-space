@@ -503,6 +503,7 @@ export default function QuizResolver({
                 guestId: userId,
                 guestName: finalName,
                 score,
+                answers: quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null),
                 clientAttemptKey: attemptKeyRef.current,
                 feedback: '',
                 essayAnswers: essayPayload,
@@ -519,7 +520,7 @@ export default function QuizResolver({
                 feedback: '',
                 clientAttemptKey: attemptKeyRef.current,
                 totalQuestions: quiz.questions.length,
-                answers: isDailyQuiz ? quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null) : undefined,
+                answers: quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null),
                 essayAnswers: essayPayload,
               });
 
@@ -716,7 +717,7 @@ export default function QuizResolver({
   const calculateScore = React.useCallback((answers: number[]) => {
     if (!quiz) return 0;
     return quiz.questions.reduce((total, question, index) => {
-      if (question.type === 'essay') return total + (essayAssessments[index] === true ? 1 : 0);
+      if (question.type === 'essay') return total;
       return total + (answers[index] === question.correctIndex ? 1 : 0);
     }, 0);
   }, [essayAssessments, quiz]);
@@ -862,6 +863,7 @@ export default function QuizResolver({
           guestId: userId,
           guestName: takerName.trim(),
           score,
+          answers: quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null),
           clientAttemptKey: attemptKeyRef.current,
           rating,
           feedback: feedback.trim(),
@@ -973,6 +975,7 @@ export default function QuizResolver({
           guestId: userId,
           guestName: finalName,
           score,
+          answers: quiz.questions.map((_, index) => Number.isInteger(userAnswers[index]) ? userAnswers[index] : null),
           clientAttemptKey: attemptKeyRef.current,
           rating: selectedRating > 0 ? selectedRating : undefined,
           feedback: feedbackText.trim(),
