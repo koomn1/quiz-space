@@ -6,12 +6,16 @@ BEGIN;
 DO $$
 DECLARE
   v_quiz_id TEXT := 'phase2-answer-key-smoke-' || gen_random_uuid()::TEXT;
+  v_creator_id TEXT;
   v_questions JSONB;
   v_score INTEGER;
   v_key_count INTEGER;
   v_has_public_key BOOLEAN;
   v_failed_closed BOOLEAN := FALSE;
 BEGIN
+  SELECT uid::TEXT INTO v_creator_id FROM public.users LIMIT 1;
+  IF v_creator_id IS NULL THEN RAISE EXCEPTION 'A test creator profile is required'; END IF;
+
   INSERT INTO public.quizzes (
     id, title, description, creator_id, creator_name, questions,
     category, distribution_routing, time_limit
@@ -19,7 +23,7 @@ BEGIN
     v_quiz_id,
     'Phase 2 answer-key smoke test',
     'Temporary transactional test row',
-    'phase2-test-owner',
+    v_creator_id,
     'Phase 2 Test',
     jsonb_build_array(
       jsonb_build_object(
