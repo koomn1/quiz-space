@@ -20,3 +20,11 @@ REVOKE ALL ON FUNCTION public.update_guest_quiz_attempt_score(TEXT,TEXT,TEXT,INT
   FROM PUBLIC, anon, authenticated;
 
 NOTIFY pgrst, 'reload schema';
+
+-- Retire the old public/authenticated quiz submission RPCs that accept p_score.
+REVOKE ALL ON FUNCTION public.submit_quiz_attempt(TEXT,TEXT,TEXT,INTEGER,INTEGER,TEXT,JSONB)
+  FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.submit_guest_quiz_attempt(TEXT,TEXT,TEXT,INTEGER,TEXT,INTEGER,TEXT,JSONB)
+  FROM PUBLIC, anon, authenticated;
+
+NOTIFY pgrst, 'reload schema';
