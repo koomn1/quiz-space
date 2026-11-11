@@ -366,16 +366,23 @@ async function submitQuizAttempt(context: ServiceContext, appUid: string, claims
   if (!quizId || !Array.isArray(rawAnswers) || rawAnswers.length > MAX_ANSWERS) throw new Error("invalid_attempt");
   const quiz = await loadQuizDetails(context, appUid, quizId);
   const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
-  if (questions.length < 1 || questions.length > MAX_QUESTIONS) throw new Error("invalid_attempt");
+  if (questions.length < 1 || questions.length > MAX_QUESTIONS || rawAnswers.length !== questions.length) throw new Error("invalid_attempt");
   let score = 0;
   questions.forEach((rawQuestion, index) => {
     if (!rawQuestion || typeof rawQuestion !== "object" || Array.isArray(rawQuestion)) return;
     const question = rawQuestion as Record<string, unknown>;
     const options = Array.isArray(question.options) ? question.options.map((item) => boundedString(item, MAX_OPTION_LENGTH)) : [];
     const rawCorrect = question.correctAnswer ?? question.correct_answer;
-    let correct = boundedString(rawCorrect, MAX_OPTION_LENGTH);
-    const correctIndex = typeof rawCorrect === "number" || /^\d+$/.test(correct) ? Number(rawCorrect) : -1;
-    if (correctIndex >= 0 && correctIndex < options.length) correct = options[correctIndex];
+    const storedCorrectIndex = question.correctIndex;
+    let correct = "";
+    if (typeof storedCorrectIndex === "number" && Number.isInteger(storedCorrectIndex)
+      && storedCorrectIndex >= 0 && storedCorrectIndex < options.length) {
+      correct = options[storedCorrectIndex];
+    } else {
+      correct = boundedString(rawCorrect, MAX_OPTION_LENGTH);
+      const correctIndex = typeof rawCorrect === "number" || /^\d+$/.test(correct) ? Number(rawCorrect) : -1;
+      if (correctIndex >= 0 && correctIndex < options.length) correct = options[correctIndex];
+    }
     const submitted = rawAnswers[index];
     let answer = boundedString(submitted, MAX_OPTION_LENGTH);
     const answerIndex = typeof submitted === "number" || /^\d+$/.test(answer) ? Number(submitted) : -1;
