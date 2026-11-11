@@ -8,6 +8,7 @@ DECLARE
   v_quiz_id TEXT := 'phase2-answer-key-smoke-' || gen_random_uuid()::TEXT;
   v_creator_id TEXT;
   v_questions JSONB;
+  v_owned_quiz JSONB;
   v_score INTEGER;
   v_key_count INTEGER;
   v_has_public_key BOOLEAN;
@@ -69,6 +70,12 @@ BEGIN
     RAISE EXCEPTION 'Expected two private answer-key rows, got %', v_key_count;
   END IF;
 
+  PERFORM set_config('request.jwt.claim.sub', v_creator_id, TRUE);
+  v_owned_quiz := public.get_owned_quiz_with_answers(v_quiz_id);
+  IF NOT (v_owned_quiz->'questions' @> '[{"id":"valid-mcq","correctIndex":0,"explanation":"Private explanation"}]'::JSONB) THEN
+    RAISE EXCEPTION 'Owner-only editor RPC did not restore the private answer key';
+  END IF;
+
   v_score := public.quizspace_score_objective_answers(
     jsonb_build_array(v_questions->0),
     '[0]'::JSONB
@@ -85,6 +92,10 @@ BEGIN
 
   IF NOT v_failed_closed THEN
     RAISE EXCEPTION 'Unresolved objective answer key did not fail closed';
+  END IF;
+
+  IF has_function_privilege('anon', 'public.get_owned_quiz_with_answers(text)', 'EXECUTE') THEN
+    RAISE EXCEPTION 'Anonymous callers can execute the owner-only editor RPC';
   END IF;
 
   IF has_table_privilege('anon', 'private.quiz_answer_keys', 'SELECT')
