@@ -7,7 +7,7 @@ import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
 import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock, LayoutGrid, X } from 'lucide-react';
-import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getUserRatedQuestions, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
+import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, getQuizAnswerReview, getGuestQuizAnswerReview, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getUserRatedQuestions, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
 import { gradeEssayWithAI } from '../services/aiWorkerClient';
@@ -200,6 +200,38 @@ export default function QuizResolver({
     setIsDailyResultVerified(true);
     return true;
   }, [isDailyQuiz, lang, quiz]);
+
+  const revealPrivateAnswerReview = async (completionId: string, authoritativeScore?: number) => {
+    if (!quiz || isDailyQuiz || !completionId) return;
+    try {
+      const answers = isGuest
+        ? await getGuestQuizAnswerReview(quizId, completionId, attemptKeyRef.current)
+        : await getQuizAnswerReview(quizId, completionId);
+      const answerById = new Map<string, any>(
+        answers.map((answer: any) => [String(answer.question_id), answer]),
+      );
+      setQuiz((current) => current ? ({
+        ...current,
+        questions: current.questions.map((question) => {
+          const answer = answerById.get(question.id);
+          if (!answer) return question;
+          return {
+            ...question,
+            ...(answer.correct_index !== null && answer.correct_index !== undefined && Number.isInteger(Number(answer.correct_index))
+              ? { correctIndex: Number(answer.correct_index) }
+              : {}),
+            ...(answer.correct_answer ? { correctAnswer: String(answer.correct_answer) } : {}),
+            ...(answer.explanation ? { explanation: String(answer.explanation) } : {}),
+          };
+        }),
+      }) : current);
+      if (Number.isFinite(Number(authoritativeScore))) setScore(Number(authoritativeScore));
+    } catch (error) {
+      // The attempt score is already persisted server-side. A temporary review
+      // endpoint failure must not invalidate or resubmit the completion.
+      console.warn('Private answer review could not be loaded:', error);
+    }
+  };
 
   // Question ratings states
   const [questionRatings, setQuestionRatings] = React.useState<Record<string, 'like' | 'dislike'>>({});
@@ -532,6 +564,7 @@ export default function QuizResolver({
           if (!savedRow?.id) throw new Error('Quiz completion was not recorded.');
           if (isDailyQuiz && !applyDailyServerResult(savedRow)) throw new Error('The server did not return a verified daily quiz score.');
           setSavedCompletionId(savedRow.id);
+          if (!isDailyQuiz) await revealPrivateAnswerReview(String(savedRow.id), savedRow.score);
           console.log('Quiz auto-saved successfully, completion ID:', savedRow.id, 'XP:', savedRow.xp_awarded ?? 0);
           if (isDailyQuiz) {
             try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}
@@ -791,25 +824,9 @@ export default function QuizResolver({
     setSelectedIdx(idx);
     setIsAnswersFrozen(true);
 
-    if (isDailyQuiz) {
-      try { playNotificationSound('tap'); } catch (_) {}
-    } else {
-      const isCorrect = idx === currentQuestion.correctIndex;
-      if (isCorrect) {
-        setScore(prev => prev + 1);
-        try { playNotificationSound('success'); } catch (_) {}
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.8 },
-          colors: ['#4F46E5', '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B']
-        });
-      } else {
-        try { playNotificationSound('tap'); } catch (_) {}
-        setHasShaken(true);
-        setTimeout(() => setHasShaken(false), 500);
-      }
-    }
+    // Standard quiz correctness is intentionally not evaluated in the
+    // browser. The server grades against private answer keys after submission.
+    try { playNotificationSound('tap'); } catch (_) {}
 
     const nextAnswers = [...userAnswers];
     nextAnswers[currentIdx] = idx;
@@ -870,7 +887,10 @@ export default function QuizResolver({
           essayAnswers: getEssayAnswersPayload(),
         });
         const completionRow = Array.isArray(result) ? result[0] : result;
-        if (completionRow?.id) setSavedCompletionId(completionRow.id);
+        if (completionRow?.id) {
+          setSavedCompletionId(completionRow.id);
+          await revealPrivateAnswerReview(String(completionRow.id), completionRow.score);
+        }
       } else {
         const result = await submitQuizAttempt(quizId, {
           takerId: userId,
@@ -883,7 +903,10 @@ export default function QuizResolver({
         });
         const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
         if (isDailyQuiz && !applyDailyServerResult(completionRow)) throw new Error('The server did not return a verified daily quiz score.');
-        if (completionRow?.id) setSavedCompletionId(completionRow.id);
+        if (completionRow?.id) {
+          setSavedCompletionId(completionRow.id);
+          if (!isDailyQuiz) await revealPrivateAnswerReview(String(completionRow.id), completionRow.score);
+        }
       }
       if (isDailyQuiz) {
         try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}

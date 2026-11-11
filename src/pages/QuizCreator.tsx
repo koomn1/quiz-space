@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Question, Quiz } from '../types';
 import { Plus, Trash2, Camera, Sparkles, Wand2, Save, FileText, ChevronLeft, Image as ImageIcon, HelpCircle, Clock, Check, MessageSquare, User, BookOpen, Tag, FolderOpen, XCircle, Search, Crown } from 'lucide-react';
-import { createQuiz, updateQuiz, getQuizzes, persistQuestionImages } from '../lib/db';
+import { createQuiz, updateQuiz, getQuizzes, getOwnedQuizWithAnswers, persistQuestionImages } from '../lib/db';
 import { translations } from '../lib/i18n';
 import { getApiUrl, getAppOrigin } from '../lib/origin';
 import { supabase } from '../lib/supabaseClient';
@@ -776,27 +776,48 @@ export default function QuizCreator({
     );
   };
 
-  // Load quizToEdit if edited
+  // Load editable answer keys through the owner-checked RPC. Public quiz
+  // listings intentionally contain sanitized questions after the Phase 2 cutover.
   React.useEffect(() => {
-    if (quizToEdit) {
+    if (!quizToEdit) return;
+    let active = true;
+
+    const loadOwnedQuiz = async () => {
       setTitle(quizToEdit.title || '');
       setDescription(quizToEdit.description || '');
       setTimeLimit(quizToEdit.timeLimit || 0);
       setEssayGradingMode(quizToEdit.essayGradingMode || 'manual');
       setCreatorName(quizToEdit.creatorName || userName);
       setCategory(quizToEdit.category || 'عام');
-      if (quizToEdit.questions && Array.isArray(quizToEdit.questions)) {
-        setQuestions(quizToEdit.questions);
-      }
-      if (quizToEdit.distributionRouting) {
-        setDistributionRouting(quizToEdit.distributionRouting);
-      }
-      if (quizToEdit.classroomId) {
-        setSelectedClassroomId(quizToEdit.classroomId);
-      }
+      if (quizToEdit.distributionRouting) setDistributionRouting(quizToEdit.distributionRouting);
+      if (quizToEdit.classroomId) setSelectedClassroomId(quizToEdit.classroomId);
       setActiveMode('manual');
-    }
-  }, [quizToEdit, userName]);
+      setSaveError(null);
+
+      try {
+        const ownedQuiz = await getOwnedQuizWithAnswers(quizToEdit.id);
+        if (!active) return;
+        setTitle(ownedQuiz.title || '');
+        setDescription(ownedQuiz.description || '');
+        setTimeLimit(ownedQuiz.timeLimit || 0);
+        setEssayGradingMode(ownedQuiz.essayGradingMode || 'manual');
+        setCreatorName(ownedQuiz.creatorName || userName);
+        setCategory(ownedQuiz.category || 'عام');
+        setQuestions(Array.isArray(ownedQuiz.questions) ? ownedQuiz.questions : []);
+        if (ownedQuiz.distributionRouting) setDistributionRouting(ownedQuiz.distributionRouting);
+        if (ownedQuiz.classroomId) setSelectedClassroomId(ownedQuiz.classroomId);
+      } catch (error) {
+        if (!active) return;
+        console.error('Unable to load private quiz answer keys for editing:', error);
+        setSaveError(isAr
+          ? 'تعذر تحميل مفتاح الإجابات الخاص بهذا الاختبار. لم يتم فتح المحرر ببيانات ناقصة.'
+          : 'The private answer key could not be loaded. The editor was not opened with incomplete data.');
+      }
+    };
+
+    void loadOwnedQuiz();
+    return () => { active = false; };
+  }, [quizToEdit, userName, isAr]);
 
   // Simulate progress
   React.useEffect(() => {
