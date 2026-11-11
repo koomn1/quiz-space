@@ -8,8 +8,6 @@ REVOKE ALL ON FUNCTION public.finalize_user_daily_quiz_refresh(TEXT,TEXT,JSONB)
 REVOKE ALL ON FUNCTION public.submit_user_daily_quiz_attempt(TEXT,TEXT,TEXT,INTEGER,INTEGER,INTEGER,TEXT)
   FROM PUBLIC, anon, authenticated;
 
-NOTIFY pgrst, 'reload schema';
-
 -- The new guest review client sends a per-attempt key to the v2 RPC.
 REVOKE ALL ON FUNCTION public.update_guest_quiz_attempt_review(TEXT,TEXT,INTEGER,TEXT)
   FROM PUBLIC, anon, authenticated;
@@ -20,3 +18,5 @@ REVOKE ALL ON FUNCTION public.update_quiz_attempt_score(TEXT,INTEGER)
   FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.update_guest_quiz_attempt_score(TEXT,TEXT,TEXT,INTEGER)
   FROM PUBLIC, anon, authenticated;
+
+NOTIFY pgrst, 'reload schema';
