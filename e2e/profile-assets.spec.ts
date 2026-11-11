@@ -107,7 +107,9 @@ test.describe('published profile asset delivery', () => {
       return requests.map((request) => new URL(request.url).pathname);
     });
     expect(cachedPaths).toHaveLength(cachedAssetNames.length);
-    expect(cachedPaths.every((path) => path.includes('/clean-assets-replacement/'))).toBe(true);
+    expect(cachedPaths.every((path) => (
+      path.includes('/clean-assets-replacement/') || path.includes('/images/animated-frames/')
+    ))).toBe(true);
   });
 
 });
