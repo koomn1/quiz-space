@@ -35,6 +35,20 @@ Consequence: server-authoritative score calculation prevents client score forger
 - The database has `ai_performance_logs` for telemetry, but no dedicated AI quota/usage ledger table was found in the public schema.
 - No authoritative per-plan Cosmo request allowance was found in the inspected billing/UI code. Exact free/paid limits must be agreed before enabling product-facing quota enforcement.
 
+### Live data inventory (connected Supabase project)
+
+Read-only inspection on 2026-11-11 found:
+
+- 73 standard quiz rows.
+- 2,970 total questions: 2,836 objective questions and 134 essays.
+- All 2,970 rows have a question id and a `correctIndex` property.
+- 2 objective questions have an invalid/missing/out-of-range answer index and need creator review; they must not be silently assigned a guessed answer during migration.
+- 103 essay questions have no reference `correctAnswer`; these must remain valid manual-review essays and must not be blocked by objective-answer migration.
+- 1,932 questions contain non-empty explanations. Explanations should be released after submission with the answer review, not as part of the public pre-attempt payload.
+- No unknown question types were found in the current sample.
+
+These counts make a transactional migration feasible, but it must explicitly preserve unresolved items and validate the answer-key coverage before the public JSON is sanitized.
+
 ## Recommended implementation design
 
 ### 1. Answer-key separation
