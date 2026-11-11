@@ -720,7 +720,7 @@ export default function QuizResolver({
       if (question.type === 'essay') return total;
       return total + (answers[index] === question.correctIndex ? 1 : 0);
     }, 0);
-  }, [essayAssessments, quiz]);
+  }, [quiz]);
 
   // Next question navigation
   const handleNextQuestion = React.useCallback(() => {
