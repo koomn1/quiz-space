@@ -118,16 +118,20 @@ BEGIN
       NEW.id, v_question_id, v_correct_index, v_correct_answer, v_explanation, v_question_type, now()
     );
 
-    -- A public question retains only presentation/attempt metadata. All known
-    -- answer and explanation fields are removed before the row is committed.
-    v_clean_question := v_question
-      - 'correctIndex'
-      - 'correct_index'
-      - 'correctAnswer'
-      - 'correct_answer'
-      - 'explanation'
-      - 'answerExplanation'
-      - 'answer_explanation';
+    -- Preparation phase: keep the legacy public payload compatible while
+    -- copying keys into private storage. A later cutover migration creates
+    -- private.quiz_answer_key_cutover; only then does this trigger strip keys.
+    v_clean_question := v_question;
+    IF to_regclass('private.quiz_answer_key_cutover') IS NOT NULL THEN
+      v_clean_question := v_clean_question
+        - 'correctIndex'
+        - 'correct_index'
+        - 'correctAnswer'
+        - 'correct_answer'
+        - 'explanation'
+        - 'answerExplanation'
+        - 'answer_explanation';
+    END IF;
     v_clean_question := jsonb_set(v_clean_question, '{_quizId}', to_jsonb(NEW.id), TRUE);
     v_clean_questions := v_clean_questions || jsonb_build_array(v_clean_question);
   END LOOP;
