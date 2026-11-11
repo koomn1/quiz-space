@@ -69,7 +69,7 @@ jobs:
           deno-version: v2.x
 
       - name: Typecheck changed Supabase Edge Functions
-        run: deno check supabase/functions/mobile-firebase-session-v2/index.ts supabase/functions/send-promotion-push/index.ts
+        run: deno check --node-modules-dir=auto supabase/functions/mobile-firebase-session-v2/index.ts supabase/functions/send-promotion-push/index.ts
 
       - name: Typecheck Worker
         run: pnpm exec tsc --noEmit -p worker/tsconfig.json
