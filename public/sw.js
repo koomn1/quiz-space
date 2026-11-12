@@ -13,6 +13,8 @@ const APP_SHELL = [
   appAsset('/manifest.webmanifest'),
   appAsset('/brand/quizspace-icon-192.webp'),
   appAsset('/brand/quizspace-logo-512.webp'),
+  appAsset('/backgrounds/quiz-wallpaper-pc.webp'),
+  appAsset('/backgrounds/quiz-wallpaper-phone.webp'),
 ];
 const PROFILE_ASSETS_TO_PRECACHE = [
   'clean-assets-replacement/boy-robotics-transparent.webp',
@@ -51,8 +53,6 @@ const PROFILE_ASSETS_TO_PRECACHE = [
   'clean-assets-replacement/frame-royal-emerald-transparent.webp',
   'clean-assets-replacement/frame-wolf-guardian-transparent.webp',
   'clean-assets-replacement/frame-rose-thorn-transparent.webp',
-  'backgrounds/quiz-wallpaper-pc.webp',
-  'backgrounds/quiz-wallpaper-phone.webp',
   'images/animated-frames/frame-aurora.gif',
   'images/animated-frames/frame-crystal-luxe.gif',
   'images/animated-frames/frame-fire.gif',
