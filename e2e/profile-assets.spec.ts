@@ -30,6 +30,15 @@ const assetNames = [
   'fire-trail-transparent.webp',
   'neon-orbit-transparent.webp',
   'royal-gold-transparent.webp',
+  'frame-cyber-eagle-transparent.webp',
+  'frame-ice-dragon-transparent.webp',
+  'frame-dual-dragon-transparent.webp',
+  'frame-sea-crown-transparent.webp',
+  'frame-cyber-ice-ring-transparent.webp',
+  'frame-inferno-spike-transparent.webp',
+  'frame-royal-emerald-transparent.webp',
+  'frame-wolf-guardian-transparent.webp',
+  'frame-rose-thorn-transparent.webp',
 ];
 const cachedAssetNames = [
   ...assetNames,
