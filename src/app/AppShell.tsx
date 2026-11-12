@@ -197,6 +197,7 @@ export default function AppShell(props: AppShellProps) {
                   </div>
                 </div>
                 <button
+                  aria-label={lang === 'ar' ? 'إغلاق التنبيه' : 'Close notification'}
                   onClick={(e) => {
                     e.stopPropagation();
                     setActivePush(null);
@@ -228,7 +229,7 @@ export default function AppShell(props: AppShellProps) {
                   key={page}
                   type="button"
                   onClick={() => handleSetTab(`legal-${page}`, true)}
-                  className="transition-colors hover:text-cyan-500"
+                  className="min-h-11 px-2 inline-flex items-center transition-colors hover:text-cyan-500"
                 >
                   {label}
                 </button>

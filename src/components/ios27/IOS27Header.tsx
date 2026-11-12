@@ -193,7 +193,7 @@ export default function IOS27Header({
             <button
               type="button"
               onClick={() => setLang(isAr ? 'en' : 'ar')}
-              className="h-8 px-2 sm:px-2.5 rounded-full flex items-center gap-1 text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors border border-black/5 dark:border-white/10 cursor-pointer min-w-[36px] justify-center"
+              className="min-h-11 h-11 px-2 sm:px-2.5 rounded-full flex items-center gap-1 text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors border border-black/5 dark:border-white/10 cursor-pointer min-w-[44px] justify-center"
               title={isAr ? 'Switch to English' : 'التحويل للعربية'}
             >
               <Globe className="w-3.5 h-3.5" />
@@ -204,7 +204,8 @@ export default function IOS27Header({
             <button
               type="button"
               onClick={() => setDarkMode(!darkMode)}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors border border-black/5 dark:border-white/10 cursor-pointer"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors border border-black/5 dark:border-white/10 cursor-pointer"
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               title={darkMode ? 'Light Mode' : 'Dark Mode'}
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
@@ -269,7 +270,7 @@ export default function IOS27Header({
                 variant="liquid-glass"
                 size="small"
                 onClick={onLogin}
-                className="!text-[11px] sm:!text-xs !py-1.5 !px-3 sm:!px-4 font-bold !rounded-full shadow-sm"
+                className="!min-h-11 !text-[11px] sm:!text-xs !py-1.5 !px-3 sm:!px-4 font-bold !rounded-full shadow-sm"
               >
                 <LogIn className="w-3.5 h-3.5 text-sky-500" />
                 <span>{isAr ? 'تسجيل الدخول' : 'Sign In'}</span>
