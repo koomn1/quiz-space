@@ -1,6 +1,6 @@
 // Bump this whenever the deployed app shell changes so installed PWAs discard
 // stale cached assets instead of continuing to render an older release.
-const CACHE_VERSION = 'v9';
+const CACHE_VERSION = 'v10';
 const APP_CACHE = `quiz-space-app-${CACHE_VERSION}`;
 const VIDEO_CACHE = `quiz-space-videos-${CACHE_VERSION}`;
 const PROFILE_ASSET_CACHE = `quiz-space-profile-assets-${CACHE_VERSION}`;
@@ -42,6 +42,17 @@ const PROFILE_ASSETS_TO_PRECACHE = [
   'clean-assets-replacement/school-bus-transparent.webp',
   'clean-assets-replacement/school-stationary-transparent.webp',
   'clean-assets-replacement/star-crown-transparent.webp',
+  'clean-assets-replacement/frame-cyber-eagle-transparent.webp',
+  'clean-assets-replacement/frame-ice-dragon-transparent.webp',
+  'clean-assets-replacement/frame-dual-dragon-transparent.webp',
+  'clean-assets-replacement/frame-sea-crown-transparent.webp',
+  'clean-assets-replacement/frame-cyber-ice-ring-transparent.webp',
+  'clean-assets-replacement/frame-inferno-spike-transparent.webp',
+  'clean-assets-replacement/frame-royal-emerald-transparent.webp',
+  'clean-assets-replacement/frame-wolf-guardian-transparent.webp',
+  'clean-assets-replacement/frame-rose-thorn-transparent.webp',
+  'backgrounds/quiz-wallpaper-pc.webp',
+  'backgrounds/quiz-wallpaper-phone.webp',
   'images/animated-frames/frame-aurora.gif',
   'images/animated-frames/frame-crystal-luxe.gif',
   'images/animated-frames/frame-fire.gif',

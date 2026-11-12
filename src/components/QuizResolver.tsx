@@ -105,6 +105,7 @@ export default function QuizResolver({
 }: QuizResolverProps) {
   const t = translations[lang];
   const isAr = lang === 'ar';
+  const appBaseUrl = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
   // Cosmo is paid: Free users must be blocked in both the UI and the request flow.
   // Silver includes the personal AI assistant in the billing catalog.
   const hasCosmoAccess = Boolean(isPremium) || userPlan === 'Silver' || userPlan === 'Gold' || userPlan === 'Diamond';
@@ -1185,7 +1186,13 @@ export default function QuizResolver({
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 pb-8 pb-28 sm:space-y-6 sm:pb-32 print:bg-white print:p-0">
+    <div
+      className="quiz-resolver-shell relative isolate mx-auto max-w-3xl space-y-4 overflow-hidden rounded-[2rem] pb-8 pb-28 sm:space-y-6 sm:pb-32 print:bg-white print:p-0"
+      style={{
+        '--quiz-wallpaper-pc': `url("${appBaseUrl}backgrounds/quiz-wallpaper-pc.webp")`,
+        '--quiz-wallpaper-phone': `url("${appBaseUrl}backgrounds/quiz-wallpaper-phone.webp")`,
+      } as React.CSSProperties}
+    >
 
       {/* Sleek top progress bar tracking percentage of completed questions */}
       {!isQuizCompleted && (

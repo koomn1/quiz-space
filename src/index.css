@@ -2427,3 +2427,42 @@ html[dir="rtl"] .quizspace-sidebar-panel,
     background: var(--app-surface-strong) !important;
   }
 }
+
+/* Quiz artwork supplied for the solving workspace. The custom properties are
+   injected by QuizResolver so GitHub Pages and Cloudflare Pages both honor
+   their configured base path. */
+.quiz-resolver-shell {
+  background-image:
+    linear-gradient(180deg, color-mix(in srgb, #041923 74%, transparent), color-mix(in srgb, #041923 86%, transparent)),
+    var(--quiz-wallpaper-pc);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.quiz-resolver-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 12%, rgba(24, 169, 182, 0.16), transparent 42%);
+}
+
+@media (max-width: 640px) {
+  .quiz-resolver-shell {
+    border-radius: 1.25rem;
+    background-image:
+      linear-gradient(180deg, color-mix(in srgb, #041923 70%, transparent), color-mix(in srgb, #041923 88%, transparent)),
+      var(--quiz-wallpaper-phone);
+    background-position: center top;
+    background-attachment: scroll;
+  }
+}
+
+@media print {
+  .quiz-resolver-shell {
+    background-image: none !important;
+  }
+}

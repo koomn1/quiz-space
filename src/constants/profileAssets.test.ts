@@ -42,15 +42,24 @@ describe('profile asset catalog', () => {
     expect(AVATAR_PRESETS.filter((avatar) => avatar.gender === 'girl')).toHaveLength(11);
   });
 
-  it('keeps five free frames available and maps them to replacement assets', () => {
+  it('keeps the built-in free frames available and maps them to replacement assets', () => {
     expect(FREE_PROFILE_FRAMES.map((frame) => frame.id)).toEqual([
       'frame_free_1',
       'frame_free_2',
       'frame_aurora_neon',
       'frame_royal_ember',
       'frame_cosmic_pulse',
+      'frame_cyber_eagle',
+      'frame_ice_dragon',
+      'frame_dual_dragon',
+      'frame_sea_crown',
+      'frame_cyber_ice_ring',
+      'frame_inferno_spike',
+      'frame_royal_emerald',
+      'frame_wolf_guardian',
+      'frame_rose_thorn',
     ]);
-    expect(uniqueProfileFrames(FREE_PROFILE_FRAMES)).toHaveLength(5);
+    expect(uniqueProfileFrames(FREE_PROFILE_FRAMES)).toHaveLength(14);
     expect(FREE_PROFILE_FRAMES.every((frame) => frame.image_url.includes('/clean-assets-replacement/'))).toBe(true);
   });
 
