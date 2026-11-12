@@ -211,14 +211,14 @@ export default function UserProfile({
     try {
       const [inventory, items] = await Promise.all([getRewardInventory(profileId), getRewardStoreItems()]);
       const ownedIds = new Set((inventory || []).map((row: any) => row.item_id));
+      const availableFrames = uniqueProfileFrames([
+        ...FREE_PROFILE_FRAMES,
+        ...(items || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)),
+      ]);
 
       // Update owned frames list for the edit modal (only if it's our profile)
       if (isOwnProfile) {
-        const frames = uniqueProfileFrames([
-          ...FREE_PROFILE_FRAMES,
-          ...(items || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)),
-        ]);
-        setOwnedFrames(frames);
+        setOwnedFrames(availableFrames);
       }
 
       const dbActiveId = profileData?.activeFrameId || '';
@@ -228,16 +228,16 @@ export default function UserProfile({
       // explicit legacy/no-frame state while older profiles migrate to the RPC.
       const selectedId = dbActiveId || (hasExplicitLocalSelection ? localFrameSelection : null);
 
-      let selected = (items || []).find((item: any) => item.id === selectedId);
+      // Built-in frames are not reward_store_items rows. Search the complete
+      // rendered catalog or every local selection falls back to frame_free_1.
+      let selected = availableFrames.find((item: any) => item.id === selectedId);
 
       // A blank local selection means the user explicitly chose no frame; do not
       // silently reselect the first owned frame after a page refresh.
       const isExplicitlyNoFrame = hasExplicitLocalSelection && !localFrameSelection && !dbActiveId;
       const isFreeFrame = (id?: string | null) => FREE_PROFILE_FRAMES.some((frame) => frame.id === id);
       if (!selected && !isExplicitlyNoFrame) {
-        selected = isOwnProfile
-          ? [...FREE_PROFILE_FRAMES, ...(items || [])].find((item: any) => item.item_type === 'frame' && (ownedIds.has(item.id) || isFreeFrame(item.id)))
-          : null;
+        selected = isOwnProfile ? availableFrames[0] || null : null;
       }
       if (selected && !ownedIds.has(selected.id) && !isFreeFrame(selected.id)) {
         selected = null;
