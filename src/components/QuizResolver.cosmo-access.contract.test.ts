@@ -20,7 +20,7 @@ describe('QuizResolver Cosmo entitlement contract', () => {
   });
 
   it('keeps the next action close and reachable on short mobile viewports', () => {
-    expect(resolverSource).toContain('space-y-4 pb-8');
+    expect(resolverSource).toContain('space-y-4 overflow-hidden rounded-[2rem] pb-8');
     expect(resolverSource).toContain('space-y-5 sm:space-y-10');
     expect(resolverSource).toContain('min-h-12 items-center');
     expect(resolverSource).toContain('sticky bottom-2');
