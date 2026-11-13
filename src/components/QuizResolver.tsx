@@ -135,6 +135,10 @@ export default function QuizResolver({
   const [essayGrading, setEssayGrading] = React.useState<Record<number, boolean>>({});
   const [essayGradingErrors, setEssayGradingErrors] = React.useState<Record<number, string>>({});
   const [score, setScore] = React.useState(0);
+  // Standard quizzes are graded by the server because the answer key is private.
+  // Keep that authoritative value separate from the local draft score so the
+  // completed screen never shows the initial 0 while the save is in flight.
+  const [authoritativeScore, setAuthoritativeScore] = React.useState<number | null>(null);
   const [isDailyResultVerified, setIsDailyResultVerified] = React.useState(false);
   const [isQuizCompleted, setIsQuizCompleted] = React.useState(false);
   const [hasShaken, setHasShaken] = React.useState(false);
@@ -197,7 +201,9 @@ export default function QuizResolver({
         };
       }),
     }) : current);
-    setScore(Number(row.score) || 0);
+    const verifiedScore = Number(row.score);
+    setScore(Number.isFinite(verifiedScore) ? verifiedScore : 0);
+    setAuthoritativeScore(Number.isFinite(verifiedScore) ? verifiedScore : 0);
     setIsDailyResultVerified(true);
     return true;
   }, [isDailyQuiz, lang, quiz]);
@@ -226,7 +232,11 @@ export default function QuizResolver({
           };
         }),
       }) : current);
-      if (Number.isFinite(Number(authoritativeScore))) setScore(Number(authoritativeScore));
+      if (Number.isFinite(Number(authoritativeScore))) {
+        const verifiedScore = Number(authoritativeScore);
+        setScore(verifiedScore);
+        setAuthoritativeScore(verifiedScore);
+      }
     } catch (error) {
       // The attempt score is already persisted server-side. A temporary review
       // endpoint failure must not invalidate or resubmit the completion.
@@ -563,6 +573,11 @@ export default function QuizResolver({
           // second time (which previously made XP appear not to update).
           const savedRow = Array.isArray(res) ? res[0] : (res?.completion || res);
           if (!savedRow?.id) throw new Error('Quiz completion was not recorded.');
+          const verifiedScore = Number(savedRow.score);
+          if (Number.isFinite(verifiedScore)) {
+            setScore(verifiedScore);
+            setAuthoritativeScore(verifiedScore);
+          }
           if (isDailyQuiz && !applyDailyServerResult(savedRow)) throw new Error('The server did not return a verified daily quiz score.');
           setSavedCompletionId(savedRow.id);
           if (!isDailyQuiz) await revealPrivateAnswerReview(String(savedRow.id), savedRow.score);
@@ -605,6 +620,7 @@ export default function QuizResolver({
         setEssayAssessed(null);
         setEssayAssessments({});
         setScore(0);
+        setAuthoritativeScore(null);
         setIsDailyResultVerified(false);
         setIsQuizCompleted(false);
         setHasShaken(false);
@@ -816,6 +832,8 @@ export default function QuizResolver({
   }
 
   const currentQuestion = quiz.questions[currentIdx];
+  const displayedScore = authoritativeScore ?? score;
+  const isDisplayedScoreReady = isDailyQuiz ? isDailyResultVerified : authoritativeScore !== null;
   const answeredQuestionCount = currentIdx + (isAnswersFrozen ? 1 : 0);
   const progressPercent = Math.min(100, Math.round((answeredQuestionCount / quiz.questions.length) * 100));
 
@@ -889,6 +907,11 @@ export default function QuizResolver({
         });
         const completionRow = Array.isArray(result) ? result[0] : result;
         if (completionRow?.id) {
+          const verifiedScore = Number(completionRow.score);
+          if (Number.isFinite(verifiedScore)) {
+            setScore(verifiedScore);
+            setAuthoritativeScore(verifiedScore);
+          }
           setSavedCompletionId(completionRow.id);
           await revealPrivateAnswerReview(String(completionRow.id), completionRow.score);
         }
@@ -1025,6 +1048,11 @@ export default function QuizResolver({
         const completionRow = Array.isArray(result) ? result[0] : (result?.completion || result);
         if (isDailyQuiz && !applyDailyServerResult(completionRow)) throw new Error('The server did not return a verified daily quiz score.');
         if (completionRow?.id) {
+          const verifiedScore = Number(completionRow.score);
+          if (Number.isFinite(verifiedScore)) {
+            setScore(verifiedScore);
+            setAuthoritativeScore(verifiedScore);
+          }
           setSavedCompletionId(completionRow.id);
           setHasRatedQuiz(true);
         }
@@ -1913,7 +1941,7 @@ export default function QuizResolver({
                 <div className="relative mx-auto w-32 h-32 flex items-center justify-center rounded-full bg-amber-500/10 dark:bg-amber-950/20 border-4 border-amber-500">
                   <div className="text-center">
                     <span className="font-display font-black text-2xl text-amber-500 block">
-                      {score} / {quiz.questions.filter(q => q.type !== 'essay').length}
+                      {isDisplayedScoreReady ? displayedScore : '—'} / {quiz.questions.filter(q => q.type !== 'essay').length}
                     </span>
                     <span className="text-[10px] text-slate-400 font-medium block">
                       {isAr ? 'درجة الموضوعي' : 'Objective Score'}
@@ -1938,19 +1966,21 @@ export default function QuizResolver({
                 <div className="relative mx-auto w-32 h-32 flex items-center justify-center rounded-full bg-primary-light/50 dark:bg-slate-900 border-4 border-primary">
                   <div className="text-center">
                     <span className="font-display font-black text-3xl text-primary block">
-                      {Math.round((score / quiz.questions.length) * 100)}%
+                      {isDisplayedScoreReady ? `${Math.round((displayedScore / quiz.questions.length) * 100)}%` : '—'}
                     </span>
                     <span className="text-[10px] text-slate-400 font-medium">
-                      {score} من أصل {quiz.questions.length} صحيح
+                      {isDisplayedScoreReady ? `${displayedScore} من أصل ${quiz.questions.length} صحيح` : (isAr ? 'جارٍ اعتماد الدرجة من الخادم' : 'Final score is being verified by the server')}
                     </span>
                   </div>
                 </div>
 
                 {/* User score assessment feedback banner */}
                 <div className="max-w-md mx-auto text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {score === quiz.questions.length ? (
+                  {!isDisplayedScoreReady ? (
+                    <span className="p-2 py-1.5 rounded-xl bg-primary-light dark:bg-primary/20 text-primary font-bold block">{isAr ? 'تم حفظ المحاولة، جارٍ اعتماد الدرجة النهائية...' : 'Attempt saved, verifying the final score...'}</span>
+                  ) : displayedScore === quiz.questions.length ? (
                     <span className="p-2 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 font-bold block">علامة كاملة وممتازة! أنت خبير ومتقن لهذا الموضوع بالكامل. </span>
-                  ) : score >= quiz.questions.length / 2 ? (
+                  ) : displayedScore >= quiz.questions.length / 2 ? (
                     <span className="p-2 py-1.5 rounded-xl bg-primary-light dark:bg-primary/20 text-primary font-bold block">نتيجة مميزة جداً! استمر في التعلم والدراسة لتسجيل الدرجة النهائية. </span>
                   ) : (
                     <span className="p-2 py-1.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 font-bold block">جيد، حاول مراجعة الإجابات الخاطئة وإعادة المحاولة لتحسين نتيجتك وتدريب مهاراتك. </span>
