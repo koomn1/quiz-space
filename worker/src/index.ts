@@ -46,10 +46,19 @@ const json = (data: unknown, status = 200, headers: HeadersInit = {}) => new Res
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_REQUESTS = 40;
+const MAX_JSON_BODY_BYTES = 56 * 1024 * 1024;
+const RATE_LIMIT_POLICIES = {
+  ai: { guest: 10, authenticated: 30 },
+  expensive: { guest: 3, authenticated: 8 },
+} as const;
 
-function checkRateLimit(key: string): boolean {
+function checkRateLimit(key: string, limit: number): boolean {
   const now = Date.now();
+  if (rateLimitMap.size > 2_000) {
+    for (const [entryKey, entry] of rateLimitMap) {
+      if (entry.resetAt <= now) rateLimitMap.delete(entryKey);
+    }
+  }
   const current = rateLimitMap.get(key);
 
   if (!current || current.resetAt <= now) {
@@ -57,26 +66,51 @@ function checkRateLimit(key: string): boolean {
     return true;
   }
 
-  if (current.count >= RATE_LIMIT_MAX_REQUESTS) return false;
+  if (current.count >= limit) return false;
   current.count += 1;
   return true;
 }
 
+function allowedOrigins(env: Env): string[] {
+  const configured = String(env.ALLOWED_ORIGIN || '')
+    .split(',')
+    .map(value => value.trim().replace(/\/$/, ''))
+    .filter(value => value && !/(^|\.)github\.io(?:\/|$)/i.test(value));
+  return [...new Set([...configured, 'https://quiz-space-app.pages.dev'])];
+}
+
+function isAllowedOrigin(request: Request, env: Env): boolean {
+  const origin = request.headers.get('Origin') || '';
+  return !origin || allowedOrigins(env).includes(origin.replace(/\/$/, ''));
+}
+
 function cors(request: Request, env: Env): HeadersInit {
   const origin = request.headers.get('Origin') || '';
-  const configuredOrigins = String(env.ALLOWED_ORIGIN || '')
-    .split(',')
-    .map(value => value.trim())
-    .filter(value => value && !/(^|\.)github\.io(?:\/|$)/i.test(value));
-  const primaryOrigin = 'https://quiz-space-app.pages.dev';
-  const allowed = [...configuredOrigins, primaryOrigin];
-  const allowOrigin = allowed.includes(origin) ? origin : primaryOrigin;
-  return {
-    'Access-Control-Allow-Origin': allowOrigin,
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Vary': 'Origin',
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   };
+  if (origin && isAllowedOrigin(request, env)) headers['Access-Control-Allow-Origin'] = origin;
+  return headers;
+}
+
+function requestBodyLimit(path: string): number {
+  return path === '/api/ai/generate-file' || path === '/api/ai/generate-file/stream'
+    ? MAX_JSON_BODY_BYTES
+    : 2 * 1024 * 1024;
+}
+
+function rateLimitClass(path: string): keyof typeof RATE_LIMIT_POLICIES {
+  return path.includes('generate') || path.includes('extraction-jobs') || path === '/api/ai/search'
+    ? 'expensive'
+    : 'ai';
 }
 
 
@@ -637,16 +671,23 @@ function hasCosmoAttachment(body: any): boolean {
 
 async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext): Promise<Response> {
   const headers = cors(request, env);
-  if (request.method === 'OPTIONS') return new Response(null, { headers });
   const path = new URL(request.url).pathname;
+  if (!isAllowedOrigin(request, env)) {
+    return json({ error: 'Origin not allowed.' }, 403, headers);
+  }
+  if (request.method === 'OPTIONS') return new Response(null, { headers });
   
   // This is an IP-level burst guard for AI POST endpoints only. It is not
   // an account quota. Per-plan daily allowances are still a separate control.
   const isAiPostRequest = request.method === 'POST' && path.startsWith('/api/ai/');
   if (isAiPostRequest) {
-    const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'anonymous';
-    if (!checkRateLimit(clientIp)) {
+    const clientIp = request.headers.get('CF-Connecting-IP') || 'anonymous';
+    if (!checkRateLimit(`ip:${clientIp}`, 20)) {
       return json({ error: 'Rate limit exceeded. Please wait a moment before sending more requests.' }, 429, headers);
+    }
+    const contentLength = Number(request.headers.get('Content-Length') || 0);
+    if (contentLength > requestBodyLimit(path)) {
+      return json({ error: 'Request body is too large.' }, 413, headers);
     }
   }
 
@@ -673,6 +714,16 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
         throw error;
       }
       userId ||= 'guest';
+  if (isAiPostRequest) {
+    const policy = RATE_LIMIT_POLICIES[rateLimitClass(path)];
+    const identityKey = userId === 'guest' || userId === 'placeholder-user'
+      ? `guest:${request.headers.get('CF-Connecting-IP') || 'anonymous'}`
+      : `user:${userId}`;
+    const limit = userId === 'guest' || userId === 'placeholder-user' ? policy.guest : policy.authenticated;
+    if (!checkRateLimit(identityKey, limit)) {
+      return json({ error: 'Too many requests. Please wait before trying again.' }, 429, headers);
+    }
+  }
   const authHeader = request.headers.get('Authorization') || '';
   const startTime = Date.now();
   let aiOperation = 'request';
@@ -710,7 +761,12 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
       return json(publicExtractionJob(job), 200, headers);
     }
 
-    const body = await request.json() as any;
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return json({ error: 'Invalid JSON request.' }, 400, headers);
+    }
 
       if (path === '/api/ai/extraction-jobs') {
         if (userId === 'guest' || userId === 'placeholder-user') return json({ error: 'Authentication required' }, 401, headers);
