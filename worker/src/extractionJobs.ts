@@ -228,6 +228,23 @@ function cleanMessage(value: unknown): string {
   return 'تعذر إكمال استخراج الأسئلة من الملف. تأكد من أن الملف سليم ثم أعد المحاولة.';
 }
 
+/**
+ * Admin-only diagnostics. Keep provider/status details, but never persist
+ * common personal or credential-like values in the monitoring table.
+ */
+function technicalErrorMessage(value: unknown): string {
+  const text = value instanceof Error ? value.message : String(value || '');
+  const redacted = text
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[email]')
+    .replace(/Bearer\s+[^\s"']+/gi, 'Bearer [token]')
+    .replace(/\b[0-9a-f]{8}-[0-9a-f-]{27,}\b/gi, '[id]')
+    .replace(/(?:https?:\/\/|\/)[^\s"']+\.(?:pdf|docx?|xlsx?|pptx?|png|jpe?g|webp)(?:\?[^\s"']*)?/gi, '[file]')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 480);
+  return redacted || 'Unknown extraction error';
+}
+
 export function detectSourceLanguage(text: string): 'ar' | 'en' | 'unknown' {
   const sample = String(text || '').slice(0, 120_000);
   const arabic = (sample.match(/[\u0600-\u06ff]/g) || []).length;
@@ -1113,7 +1130,7 @@ async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: strin
         chunk_count: chunks,
         status,
         latency_ms: latencyMs,
-        error_message: status === 'error' ? cleanMessage(errorMessage) : null,
+        error_message: status === 'error' ? technicalErrorMessage(errorMessage) : null,
       }),
     });
   } catch (error) {
