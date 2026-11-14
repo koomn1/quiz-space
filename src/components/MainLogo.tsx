@@ -74,7 +74,7 @@ export const MainLogo = ({ className = '', size = 'md', showText = true }: MainL
     <div
       ref={rootRef}
       dir="ltr"
-      className={`inline-flex flex-row items-center select-none cursor-pointer group ${currentSize.gap} ${className}`}
+      className={`main-logo-wordmark inline-flex w-max max-w-full shrink-0 flex-row items-center select-none cursor-pointer group ${currentSize.gap} ${className}`}
       style={{ direction: 'ltr', unicodeBidi: 'isolate' }}
       aria-label="QuizSpace"
     >

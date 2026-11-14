@@ -1919,7 +1919,7 @@ export default function AIChat({
         ? '[QUESTION_TYPES_ALLOWED: mcq]'
         : quizConfig.questionTypes === 'tf'
           ? '[QUESTION_TYPES_ALLOWED: tf]'
-          : '[QUESTION_TYPES_ALLOWED: mcq, tf]';
+          : '[QUESTION_TYPES_ALLOWED: mcq, tf, essay]';
 
       const countInstruction = attachmentForGeneration
         ? 'استخرج كل الأسئلة الموجودة في الملف كما هي، بما في ذلك MCQ وWritten وTrue/False، ولا تضع حدًا عدديًا من إعدادات الواجهة. إذا كان الملف شرحًا أو مادة تعليمية، أنشئ كل الأسئلة الموثوقة التي تغطي جميع التعريفات والمفاهيم والعلاقات والاستنتاجات المهمة في المصدر، ولا تتوقف عند 3 أسئلة ولا تأخذ عينة صغيرة.'

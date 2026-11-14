@@ -130,7 +130,7 @@ export default function IOS27Header({
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <CardNav
-          logo={<MainLogo size="sm" showText={false} />}
+          logo={<MainLogo size="sm" showText />}
           logoAlt="QuizSpace"
           logoHref="#"
           onLogoClick={() => setTab('landing')}

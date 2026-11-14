@@ -173,6 +173,22 @@
   overflow: hidden;
 }
 
+/* The platform wordmark is wider than the icon-only default. Keep it visible
+   inside the compact mobile navigation instead of clipping it to --cn-logo. */
+.card-nav__logo:has(.main-logo-wordmark) {
+  width: min(42vw, 220px);
+  max-width: min(42vw, 220px);
+  overflow: visible;
+}
+
+.card-nav__logo:has(.main-logo-wordmark) > .main-logo-wordmark {
+  width: 100% !important;
+  max-width: 100%;
+  height: var(--cn-logo) !important;
+  max-height: var(--cn-logo);
+  overflow: visible;
+}
+
 .card-nav__cta {
   display: inline-flex;
   align-items: center;
