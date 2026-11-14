@@ -62,7 +62,7 @@ import {
 } from 'lucide-react';
 import { profileAssetUrl } from '../constants/profileAssets';
 import ProfileAvatar from '../components/ProfileAvatar';
-import { ThinkingOrb as LibraryThinkingOrb, type OrbState } from 'thinking-orbs';
+import { type OrbState } from 'thinking-orbs';
 import { BorderBeam } from 'border-beam';
 import { Liquid } from 'liquid-gooey';
 import {
@@ -1222,7 +1222,7 @@ function StreamingRow({ text, theme }: { text: string; theme: Palette }) {
 }
 
 /* ─── Thinking Row ──────────────────────────────────────── */
-function ThinkingRow({ isAr, theme, state = 'working' }: { isAr: boolean; theme: Palette; state?: OrbState }) {
+function ThinkingRow({ isAr, theme, state = 'working', stageLabel }: { isAr: boolean; theme: Palette; state?: OrbState; stageLabel?: string }) {
   const labels: Record<OrbState, { ar: string; en: string }> = {
     working: { ar: 'كوزمو بيشتغل على طلبك...', en: 'Cosmo is working on your request...' },
     searching: { ar: 'كوزمو يبحث في الويب والمصادر الحية...', en: 'Cosmo is searching the web...' },
@@ -1236,20 +1236,23 @@ function ThinkingRow({ isAr, theme, state = 'working' }: { isAr: boolean; theme:
   };
 
   return (
-    <div className="flex items-start gap-4 max-w-3xl">
+    <div className="flex items-start gap-4 max-w-3xl" role="status" aria-live="polite">
       <AssistantAvatar />
       <div className="flex-1">
-        <p className="text-sm font-semibold mb-2" style={{ color: theme.FG }}>{ASSISTANT_NAME_AR}</p>
-        <div className="flex items-center gap-3 p-4 rounded-2xl border" style={{ background: theme.SURFACE, borderColor: `${ACCENT}40` }}>
-          <div className="flex items-center justify-center rounded-xl" style={{ width: 64, height: 64, flexShrink: 0, background: theme.CARD }}>
-            <LibraryThinkingOrb state={state} size={64} theme={theme.IS_DARK ? 'dark' : 'light'} aria-label="Cosmo thinking" />
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-bold" style={{ color: ACCENT }}>{isAr ? labels[state].ar : labels[state].en}</span>
-            <span className="text-xs" style={{ color: theme.SUBTLE_TEXT }}>
-              {isAr ? 'يعالج السياق التعليمي لتقديم إجابة موثوقة' : 'Processing context for maximum accuracy…'}
-            </span>
-          </div>
+        <p className="mb-2 flex items-center gap-2 text-sm font-semibold" style={{ color: theme.FG }}>
+          <span>{ASSISTANT_NAME_AR}</span>
+          <span className="rounded-full border border-indigo-400/30 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold text-indigo-300">
+            {isAr ? 'قيد المعالجة' : 'Working'}
+          </span>
+        </p>
+        <div className="flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-sm" style={{ background: theme.SURFACE, borderColor: `${ACCENT}40` }}>
+          <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: `${ACCENT}18`, color: ACCENT }} aria-hidden="true">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-current" />
+          </span>
+          <span className="text-sm font-bold" style={{ color: ACCENT }}>
+            {stageLabel || (isAr ? labels[state].ar : labels[state].en)}
+            <span className="thinking-dots" aria-hidden="true">...</span>
+          </span>
         </div>
       </div>
     </div>
@@ -2785,8 +2788,7 @@ export default function AIChat({
               {/* Streaming or Thinking state */}
               {isAnalyzing && (
                 <>
-                  {streamingText ? <StreamingRow text={streamingText} theme={theme} /> : <ThinkingRow isAr={isAr} theme={theme} state={activityState} />}
-                  <div className="mx-auto w-full max-w-3xl"><AgentPlanRow steps={agentSteps} isAr={isAr} theme={theme} /></div>
+                  {streamingText ? <StreamingRow text={streamingText} theme={theme} /> : <ThinkingRow isAr={isAr} theme={theme} state={activityState} stageLabel={modeStageLabel} />}
                 </>
               )}
 

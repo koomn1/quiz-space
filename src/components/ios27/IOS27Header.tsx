@@ -15,6 +15,9 @@ import {
   Building2,
   CreditCard,
   ChevronDown,
+  Bell,
+  Settings,
+  ShieldAlert,
 } from 'lucide-react';
 import { MainLogo } from '../MainLogo';
 import { Button } from '../../ios27/components/Button';
@@ -32,6 +35,7 @@ export interface IOS27HeaderProps {
   lang: 'ar' | 'en';
   setLang: (lang: 'ar' | 'en') => void;
   isPremium?: boolean;
+  isAdmin?: boolean;
 }
 
 export default function IOS27Header({
@@ -47,6 +51,7 @@ export default function IOS27Header({
   lang,
   setLang,
   isPremium = false,
+  isAdmin = false,
 }: IOS27HeaderProps) {
   const isAr = lang === 'ar';
   const isAuthenticated = Boolean(userId && !userId.startsWith('user-guest'));
@@ -81,7 +86,12 @@ export default function IOS27Header({
     { id: 'motivation', label: isAr ? 'مركز التحفيز' : 'Motivation Hub', icon: Flame },
     { id: 'institution', label: isAr ? 'مساحة المؤسسة' : 'Institution Workspace', icon: Building2 },
     { id: 'billing', label: isAr ? 'باقات الاشتراك' : 'Subscription Plans', icon: CreditCard },
+    { id: 'settings', label: isAr ? 'الإعدادات' : 'Settings', icon: Settings },
+    { id: 'notifications', label: isAr ? 'الإشعارات' : 'Notifications', icon: Bell },
   ];
+  if (isAdmin) {
+    toolsItems.push({ id: 'admin', label: isAr ? 'لوحة الإدارة' : 'Admin Panel', icon: ShieldAlert });
+  }
 
   function SparklesIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -189,6 +199,39 @@ export default function IOS27Header({
 
           {/* Action Pills: Lang, Theme, User */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {isAuthenticated && (
+              <div className="hidden lg:flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setTab('notifications')}
+                  className={`relative flex h-11 w-11 items-center justify-center rounded-full border transition-colors cursor-pointer ${currentTab === 'notifications' ? 'bg-sky-500/15 text-sky-500 dark:text-sky-300 border-sky-500/30' : 'text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10'}`}
+                  aria-label={isAr ? 'فتح الإشعارات' : 'Open notifications'}
+                  title={isAr ? 'الإشعارات' : 'Notifications'}
+                >
+                  <Bell className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTab('settings')}
+                  className={`flex h-11 w-11 items-center justify-center rounded-full border transition-colors cursor-pointer ${currentTab === 'settings' ? 'bg-sky-500/15 text-sky-500 dark:text-sky-300 border-sky-500/30' : 'text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10'}`}
+                  aria-label={isAr ? 'فتح الإعدادات' : 'Open settings'}
+                  title={isAr ? 'الإعدادات' : 'Settings'}
+                >
+                  <Settings className="h-4 w-4" />
+                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setTab('admin')}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border transition-colors cursor-pointer ${currentTab === 'admin' ? 'bg-rose-500/15 text-rose-500 dark:text-rose-300 border-rose-500/30' : 'text-slate-700 dark:text-slate-200 bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10'}`}
+                    aria-label={isAr ? 'فتح لوحة الإدارة' : 'Open admin panel'}
+                    title={isAr ? 'لوحة الإدارة' : 'Admin panel'}
+                  >
+                    <ShieldAlert className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
             {/* Language Toggle */}
             <button
               type="button"

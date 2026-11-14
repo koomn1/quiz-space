@@ -141,8 +141,16 @@
   gap: 8px;
   padding: 12px;
   border-radius: var(--pb-radius);
-  background: var(--pb-bg);
+  border: 1px solid color-mix(in srgb, var(--pb-ink) 12%, transparent);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--pb-bg) 96%, white 4%), var(--pb-bg));
   cursor: text;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.prompt-bar__field:focus-within {
+  border-color: color-mix(in srgb, var(--pb-spark) 64%, transparent);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pb-spark) 16%, transparent), 0 14px 34px rgba(0, 0, 0, 0.18);
 }
 
 .prompt-bar__field::before {
@@ -240,6 +248,11 @@
 
 .prompt-bar__input::placeholder {
   color: color-mix(in srgb, var(--pb-ink) 45%, transparent);
+}
+
+.prompt-bar__input:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 @media (pointer: coarse) {
@@ -513,5 +526,24 @@
   .prompt-bar__send[data-pressed] {
     transform: none;
   }
+  .prompt-bar__field {
+    transition: none;
+  }
 }
 
+.thinking-dots {
+  display: inline-block;
+  min-width: 1.25rem;
+  overflow: hidden;
+  vertical-align: bottom;
+  animation: thinking-dots 1.2s steps(4, end) infinite;
+}
+
+@keyframes thinking-dots {
+  0% { width: 0; }
+  100% { width: 1.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking-dots { animation: none; }
+}
