@@ -34,12 +34,13 @@ import {
   GraduationCap, Plus, Users, Copy, Check,
   Award, Clock, Star, BookOpen, ShieldCheck,
   Sparkles, Lock,
-  Bell, FileText, Download, FolderOpen,
+  FileText, Download, FolderOpen,
   MessageSquare, PlusCircle, Calendar, ClipboardList, Megaphone,
   CheckCircle, BarChart2, Settings, Play, Trash,
   ChevronRight, Users2, SendHorizontal, AlertCircle, Flame, MessageCircle, Eye, Target, ClipboardCheck, CircleX
 } from 'lucide-react';
 import { playChimeSound } from '../lib/chime';
+import { showToast } from './Toast';
 import { encryptMessage, decryptMessage } from '../lib/encryption';
 import { supabase } from '../lib/supabaseClient';
 import { useHorizontalDragScroll } from '../hooks/useHorizontalDragScroll';
@@ -150,13 +151,6 @@ interface LessonVideo {
   isPinned: boolean;
   viewCount: number;
   createdAt: string;
-}
-
-interface ToastMessage {
-  id: string;
-  title: string;
-  body: string;
-  type: 'message' | 'quiz' | 'info';
 }
 
 function DecryptedClassMessage({ msg, classId, isAr, onStartQuiz }: { msg: any; classId: string; isAr: boolean; onStartQuiz?: (quizId: string) => void }) {
@@ -329,8 +323,6 @@ export default function Classrooms({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const classroomTabsScroll = useHorizontalDragScroll();
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-
   // AI Generator Prompt Modal
   const [isAiQuizOpen, setIsAiQuizOpen] = useState(false);
   const [aiQuizTopic, setAiQuizTopic] = useState('');
@@ -342,9 +334,8 @@ export default function Classrooms({
 
   // Toast notifier
   const triggerToast = (title: string, body: string, type: 'message' | 'quiz' | 'info') => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts(prev => [...prev, { id, title, body, type }]);
-    setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, 5000);
+    const severity = /^(error|خطأ)$/i.test(title.trim()) ? 'error' : type === 'quiz' ? 'success' : 'info';
+    showToast(severity, body, title);
   };
 
   // Fetch PostgreSQL Classrooms & Students (with resilient local fallback)
@@ -738,11 +729,14 @@ export default function Classrooms({
         setClassrooms(prev => prev.filter(c => c.id !== classId));
         if (activeClassroomView?.id === classId) setActiveClassroomView(null);
         playChimeSound('wrong');
+        showToast('success', isAr ? 'تم حذف الفصل الدراسي.' : 'Classroom deleted.');
       } else {
         console.error('Error deleting classroom:', error.message);
+        showToast('error', isAr ? 'تعذر حذف الفصل الدراسي.' : 'The classroom could not be deleted.');
       }
     } catch (err) {
       console.error(err);
+      showToast('error', isAr ? 'تعذر حذف الفصل الدراسي.' : 'The classroom could not be deleted.');
     }
   };
 
@@ -1288,29 +1282,6 @@ export default function Classrooms({
 
   return (
     <div className="flex flex-col w-full min-h-[calc(100vh-140px)] gap-6" style={{ direction: isAr ? 'rtl' : 'ltr' }}>
-
-      {/* Toast Popup Pipeline */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm pointer-events-none">
-
-          {toasts.map(toast => (
-            <div
-
-
-
-
-              className="pointer-events-auto p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl flex gap-3 items-start"
-            >
-              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 shrink-0">
-                <Bell className="w-4 h-4" />
-              </div>
-              <div>
-                <h5 className="font-bold text-white text-xs leading-none mb-1">{toast.title}</h5>
-                <p className="text-[10px] text-slate-400 leading-normal">{toast.body}</p>
-              </div>
-            </div>
-          ))}
-
-      </div>
 
       {/* Error / Success Notifications banner */}
       {errorText && (

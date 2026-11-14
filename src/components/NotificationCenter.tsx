@@ -1,8 +1,8 @@
 import React from 'react';
-import { Bell, CheckCheck, Loader2, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Bell, CheckCheck, Loader2, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { pushNotificationsManager, PushNotificationPayload } from '../lib/pushNotifications';
-import Shredder from './Shredder';
+import SwipeRow from './SwipeRow';
 
 interface AppNotification {
   id: string;
@@ -17,6 +17,13 @@ interface AppNotification {
 interface NotificationCenterProps {
   userId: string;
   lang: 'ar' | 'en';
+}
+
+interface SwipeNotificationAction {
+  id: 'dismiss' | 'mark-read';
+  label: string;
+  icon: React.ReactNode;
+  onSelect?: () => void;
 }
 
 function fromPush(payload: PushNotificationPayload): AppNotification {
@@ -101,7 +108,7 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
     setItems((previous) => previous.map((current) => current.id === item.id ? { ...current, is_read: true } : current));
   };
 
-  const shredNotification = async (item: AppNotification) => {
+  const dismissNotification = async (item: AppNotification) => {
     if (item.id.startsWith('push-')) {
       pushNotificationsManager.markRead([item.id]);
       setItems((previous) => previous.filter((current) => current.id !== item.id));
@@ -113,7 +120,7 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
       .eq('id', item.id)
       .eq('user_id', userId);
     if (updateError) {
-      console.warn('[QuizSpace] notification could not be shredded', updateError);
+      console.warn('[QuizSpace] notification could not be dismissed', updateError);
       return;
     }
     setItems((previous) => previous.filter((current) => current.id !== item.id));
@@ -137,37 +144,65 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
       <div className="rounded-[2rem] border border-violet-200/70 bg-gradient-to-b from-violet-50/80 to-white/80 p-3 shadow-xl shadow-violet-950/5 dark:border-violet-900/60 dark:from-slate-950/80 dark:to-slate-900/90 sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3 px-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-violet-500">{isAr ? 'اسحب للإزالة' : 'Drag to shred'}</p>
-            <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{isAr ? 'اسحب الإشعار إلى آلة التقطيع لإخفائه بعد قراءته.' : 'Drag a notification into the shredder to dismiss it after reading.'}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-violet-500">{isAr ? 'اسحب للإجراءات' : 'Swipe for actions'}</p>
+            <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{isAr ? 'اسحب الإشعار لإخفائه أو تحديده كمقروء.' : 'Swipe a notification to dismiss it or mark it as read.'}</p>
           </div>
           <ShieldCheck className="h-6 w-6 shrink-0 text-violet-500/70" />
         </div>
-        {loading ? <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-violet-600" /></div> : items.length === 0 ? <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center text-sm font-bold text-slate-500 dark:border-slate-700">{isAr ? 'لا توجد إشعارات دفع حالياً.' : 'There are no push notifications yet.'}</div> : <Shredder
-          items={items}
-          renderItem={(item) => (
-            <button
-              type="button"
-              onClick={() => void markRead(item)}
-              className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-start transition hover:-translate-y-0.5 ${item.is_read ? 'border-slate-200 bg-white/70 opacity-70 dark:border-slate-800 dark:bg-slate-900/70' : 'border-violet-200 bg-violet-50/90 dark:border-violet-800/50 dark:bg-violet-950/30'}`}
-            >
-              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300"><ShieldCheck className="h-5 w-5" /></span>
-              <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><strong className="truncate text-sm text-slate-900 dark:text-white">{item.title}</strong><time className="shrink-0 text-[10px] text-slate-400">{new Date(item.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}</time></span><span className="mt-1 block text-xs leading-6 text-slate-600 dark:text-slate-300">{item.body || item.message || (isAr ? 'إشعار جديد من QuizSpace.' : 'A new QuizSpace notification.')}</span></span>
-            </button>
-          )}
-          onShred={(item) => void shredNotification(item)}
-          onReorder={(next) => setItems(next)}
-          width={520}
-          height={Math.min(560, Math.max(330, items.length * 92 + 210))}
-          feedSpeed={180}
-          bite={18}
-          stripWidth={10}
-          curl={1}
-          autoAnimate={false}
-          loop={false}
-          loopAfterDelete={false}
-          fallHeight={140}
-          className="mx-auto"
-        />}
+        {loading ? (
+          <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-violet-600" /></div>
+        ) : items.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center text-sm font-bold text-slate-500 dark:border-slate-700">{isAr ? 'لا توجد إشعارات دفع حالياً.' : 'There are no push notifications yet.'}</div>
+        ) : (
+          <div className="space-y-3">
+            {items.map((item) => {
+              const actions: SwipeNotificationAction[] = [
+                { id: 'dismiss', label: isAr ? 'إخفاء' : 'Dismiss', icon: <Trash2 className="h-5 w-5" /> },
+                ...(!item.is_read ? [{ id: 'mark-read' as const, label: isAr ? 'قراءة' : 'Mark read', icon: <CheckCheck className="h-5 w-5" />, onSelect: () => { void markRead(item); } }] : []),
+              ];
+              return (
+                <SwipeRow
+                  key={item.id}
+                  actions={actions}
+                  onCommit={(action: SwipeNotificationAction) => {
+                    if (action.id === 'dismiss') void dismissNotification(item);
+                  }}
+                  actionColor="#be123c"
+                  drawerColor="#4c1d95"
+                  rowColor="transparent"
+                  textColor="#0f172a"
+                  height={108}
+                  radius={18}
+                  actionWidth={82}
+                  direction={isAr ? 'right' : 'left'}
+                  snapBounce={0.16}
+                  resistance={0.55}
+                  collapseMs={220}
+                  commitAt={0.72}
+                  fullSwipe
+                  label={isAr ? `إشعار: ${item.title}` : `Notification: ${item.title}`}
+                  toggleLabel={isAr ? 'إظهار إجراءات الإشعار' : 'Show notification actions'}
+                  style={{ marginBottom: 2 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => void markRead(item)}
+                    className={`flex h-full w-full items-start gap-3 rounded-2xl border p-3 text-start transition ${item.is_read ? 'border-slate-200 bg-white/80 opacity-75 dark:border-slate-800 dark:bg-slate-900/80' : 'border-violet-200 bg-violet-50/95 dark:border-violet-800/50 dark:bg-violet-950/50'}`}
+                  >
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300"><ShieldCheck className="h-5 w-5" /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center justify-between gap-2">
+                        <strong className="truncate text-sm text-slate-900 dark:text-white">{item.title}</strong>
+                        <time className="shrink-0 text-[10px] text-slate-400">{new Date(item.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}</time>
+                      </span>
+                      <span className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{item.body || item.message || (isAr ? 'إشعار جديد من QuizSpace.' : 'A new QuizSpace notification.')}</span>
+                    </span>
+                  </button>
+                </SwipeRow>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

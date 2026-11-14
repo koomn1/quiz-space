@@ -1,3 +1,4 @@
+import { showAppMessage } from './Toast';
 import React from 'react';
 import {
   BadgeCheck, Layers, Clipboard, CheckCircle, Calendar, Play, BookOpen,
@@ -318,7 +319,7 @@ export default function ProfileStatsView({
   const handleCopyIdPopup = (idToCopy: string) => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(idToCopy);
-      alert(isAr ? 'تم نسخ معرّف التفعيل بنجاح! أرسله للمعلم لتفعيل باقتك.' : 'Activation ID copied successfully! Send it to the teacher to activate.');
+      showAppMessage(isAr ? 'تم نسخ معرّف التفعيل بنجاح! أرسله للمعلم لتفعيل باقتك.' : 'Activation ID copied successfully! Send it to the teacher to activate.');
     } else {
       const textArea = document.createElement("textarea");
       textArea.value = idToCopy;
@@ -328,7 +329,7 @@ export default function ProfileStatsView({
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert(isAr ? 'تم نسخ معرّف التفعيل بنجاح! أرسله للمعلم لتفعيل باقتك.' : 'Activation ID copied successfully! Send it to the teacher to activate.');
+      showAppMessage(isAr ? 'تم نسخ معرّف التفعيل بنجاح! أرسله للمعلم لتفعيل باقتك.' : 'Activation ID copied successfully! Send it to the teacher to activate.');
     }
   };
 

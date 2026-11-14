@@ -1,3 +1,4 @@
+import { showAppMessage } from './Toast';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -97,10 +98,10 @@ export default function ShareModal({
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       } else {
-        alert(isAr ? "برجاء تحديد الرابط ونسخه يدوياً" : "Please select and copy the link manually.");
+        showAppMessage(isAr ? "برجاء تحديد الرابط ونسخه يدوياً" : "Please select and copy the link manually.");
       }
     } catch (err) {
-      alert(isAr ? "برجاء تحديد الرابط ونسخه يدوياً" : "Please select and copy the link manually.");
+      showAppMessage(isAr ? "برجاء تحديد الرابط ونسخه يدوياً" : "Please select and copy the link manually.");
     }
     document.body.removeChild(textArea);
   };

@@ -14,6 +14,7 @@ import { EssayReviewModal } from '../components/EssayReviewModal';
 import AdminSubscriptions from '../components/AdminSubscriptions';
 import AdminMotivationUsagePanel from '../components/AdminMotivationUsagePanel';
 import OverlayPortal from '../components/OverlayPortal';
+import {showToast, showAppMessage} from '../components/Toast';
 
 function DecryptedMessageItem({ msg, classId, isAr, currentUserEmail }: { msg: any; classId: string; isAr: boolean; currentUserEmail?: string }) {
   const [decrypted, setDecrypted] = useState<string>('...');
@@ -826,11 +827,11 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                                   }
                                 }
 
-                                alert(isAr ? `تم إرسال العرض بنجاح وبدأ كوزمو بإرسال الرسائل لجميع الـ ${allUsers.length} مستخدمين!` : `Offer sent successfully, AI is messaging all ${allUsers.length} users!`);
+                                showAppMessage(isAr ? `تم إرسال العرض بنجاح وبدأ كوزمو بإرسال الرسائل لجميع الـ ${allUsers.length} مستخدمين!` : `Offer sent successfully, AI is messaging all ${allUsers.length} users!`);
                                 setPromoCode('');
                                 setPromoMessage('');
                               } catch (err) {
-                                alert('Error sending promo.');
+                                showAppMessage('Error sending promo.');
                               } finally {
                                 setIsSendingPromo(false);
                               }
@@ -868,8 +869,9 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                                           if (Array.isArray(list)) {
                                             setCoupons(list);
                                           }
+                                          showToast('success', isAr ? 'تم حذف الكوبون.' : 'Coupon deleted.');
                                         } catch (err) {
-                                          alert(isAr ? 'فشل حذف الكوبون' : 'Failed to delete coupon');
+                                          showToast('error', isAr ? 'فشل حذف الكوبون.' : 'Failed to delete coupon.');
                                         }
                                       }
                                     }}

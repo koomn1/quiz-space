@@ -1,3 +1,4 @@
+import { showAppMessage } from './Toast';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -878,7 +879,7 @@ export default function QuizResolver({
   // Submit final scores and reviews to Supabase.
   const handleSaveResult = async () => {
     if (!takerName.trim()) {
-      alert('فضلاً قم بإدراج اسمك أولاً قبل حفظ النتيجة.');
+      showAppMessage('فضلاً قم بإدراج اسمك أولاً قبل حفظ النتيجة.');
       return;
     }
     setIsSubmittingReview(true);
@@ -947,7 +948,7 @@ export default function QuizResolver({
     } catch (e) {
       console.error(e);
       if (isDailyQuiz) setSaveError(isAr ? 'تعذر اعتماد النتيجة من الخادم. أعد المحاولة.' : 'The server could not verify this result. Please retry.');
-      alert(isAr
+      showAppMessage(isAr
         ? 'تعذر تأكيد حفظ تقييمك في قاعدة البيانات. قد تكون النتيجة محفوظة؛ تحقق من الاتصال ثم أعد المحاولة.'
         : 'Your rating could not be confirmed in the database. The quiz result may already be saved; check your connection and retry.');
     } finally {
@@ -1203,11 +1204,11 @@ export default function QuizResolver({
 
       downloadQuizPdfBytes(bytes, fileName);
       if (shouldPersist && !historySaved) {
-        alert('تم تنزيل ملف PDF، لكن تعذر حفظه في سجل التصدير حالياً. يمكنك المحاولة مرة أخرى لاحقاً.');
+        showAppMessage('تم تنزيل ملف PDF، لكن تعذر حفظه في سجل التصدير حالياً. يمكنك المحاولة مرة أخرى لاحقاً.');
       }
     } catch (err: any) {
       console.error('Error generating clean quiz PDF:', err);
-      alert(`حدث خطأ أثناء تصدير الاختبار. يرجى المحاولة مرة أخرى.${err?.message ? `\n(${err.message})` : ''}`);
+      showAppMessage(`حدث خطأ أثناء تصدير الاختبار. يرجى المحاولة مرة أخرى.${err?.message ? `\n(${err.message})` : ''}`);
     } finally {
       setIsGeneratingPdf(false);
     }

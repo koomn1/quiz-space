@@ -42,6 +42,7 @@ import { UserBadge } from './UserBadge';
 import { playChimeSound } from '../lib/chime';
 import { useTheme } from '../context/ThemeContext';
 import { InteractiveQuizCard } from './InteractiveQuizCard';
+import {showToast, showAppMessage} from './Toast';
 
 export { playChimeSound } from '../lib/chime';
 
@@ -625,7 +626,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
   const handleOpenInsights = (post: CommunityPost) => {
     const isAdmin = isAdminProp === true;
     if (!isAdmin) {
-      alert(isAr ? 'عذراً، هذه الإحصائيات التفصيلية للمشاهدات متاحة فقط للمشرف الإداري.' : 'Sorry, detailed viewer insights are only available to admins.');
+      showAppMessage(isAr ? 'عذراً، هذه الإحصائيات التفصيلية للمشاهدات متاحة فقط للمشرف الإداري.' : 'Sorry, detailed viewer insights are only available to admins.');
       return;
     }
     setSelectedPostForInsights(post);
@@ -708,7 +709,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
   const handlePublish = async () => {
     if (!inputText.trim() || isPublishing) return;
     if (isGuest) {
-      alert(isAr ? 'سجل الدخول للاستمرار.' : 'Sign in to continue.');
+      showAppMessage(isAr ? 'سجل الدخول للاستمرار.' : 'Sign in to continue.');
       return;
     }
     setIsPublishing(true);
@@ -745,7 +746,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
   const handleReact = async (postId: string, reaction: ReactionType, e: React.MouseEvent) => {
     e.stopPropagation();
     if (isGuest) {
-      alert(isAr ? 'سجل الدخول للاستمرار.' : 'Sign in to continue.');
+      showAppMessage(isAr ? 'سجل الدخول للاستمرار.' : 'Sign in to continue.');
       return;
     }
     playChimeSound('click');
@@ -1043,22 +1044,23 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                         });
                       } catch (err) {
                         console.error('Failed to edit community post:', err);
-                        alert(isAr ? 'تعذر تعديل المنشور. ربما انتهت نافذة الدقيقتين.' : 'The post could not be edited. The two-minute window may have expired.');
+                        showAppMessage(isAr ? 'تعذر تعديل المنشور. ربما انتهت نافذة الدقيقتين.' : 'The post could not be edited. The two-minute window may have expired.');
                         throw err;
                       }
                     }}
                     onDelete={async (postId) => {
                       if (window.confirm(isAr ? 'هل أنت متأكد من حذف هذا المنشور؟' : 'Are you sure you want to delete this post?')) {
                         try {
-                          await deleteCommunityPost(postId);
-                          setPosts(prev => {
-                            const next = prev.filter(p => p.id !== postId);
-                            postsRef.current = next;
-                            return next;
-                          });
-                        } catch (err) {
-                          console.error('Failed to delete post on server:', err);
-                          alert(isAr ? 'تعذر حذف المنشور. تحقق من الصلاحية أو نافذة الدقيقتين.' : 'The post could not be deleted. Check your permission or the two-minute window.');
+                        await deleteCommunityPost(postId);
+                        setPosts(prev => {
+                          const next = prev.filter(p => p.id !== postId);
+                          postsRef.current = next;
+                          return next;
+                        });
+                        showToast('success', isAr ? 'تم حذف المنشور.' : 'Post deleted.');
+                      } catch (err) {
+                        console.error('Failed to delete post on server:', err);
+                        showToast('error', isAr ? 'تعذر حذف المنشور. تحقق من الصلاحية أو نافذة الدقيقتين.' : 'The post could not be deleted. Check your permission or the two-minute window.');
                         }
                       }
                     }}
@@ -1624,17 +1626,17 @@ export function SettingsSection({
         localStorage.setItem(`gdrive_linked_${currentUserId}`, 'true');
         localStorage.setItem(`gdrive_account_${currentUserId}`, email);
       }
-      alert(isAr ? 'تم ربط حساب Google Drive بنجاح!' : 'Google Drive linked successfully!');
+      showAppMessage(isAr ? 'تم ربط حساب Google Drive بنجاح!' : 'Google Drive linked successfully!');
     } catch (err: any) {
       console.error('Error linking Google Drive:', err);
       if (err.message?.includes('popup_closed') || err.message?.includes('access_denied')) {
-        alert(
+        showAppMessage(
           isAr
             ? ' يبدو أن نافذة تسجيل الدخول قد أُغلقت أو تم حظرها من قِبل المتصفح. نظرًا لأنك في وضع المعاينة (iframe)، يرجى فتح التطبيق في علامة تبويب جديدة بالضغط على زر "فتح في علامة تبويب جديدة" أعلى اليمين والمحاولة من هناك لتجنب قيود الأمان.'
             : ' The sign-in popup was closed or blocked. Because you are inside the development preview iframe, please open the app in a new tab using the top-right button, then authorize Google Drive from there.'
         );
       } else {
-        alert(isAr ? 'فشلت عملية الربط مع Google Drive.' : 'Failed to authorize Google Drive.');
+        showAppMessage(isAr ? 'فشلت عملية الربط مع Google Drive.' : 'Failed to authorize Google Drive.');
       }
     } finally {
       setIsDriveLoading(false);
@@ -1725,7 +1727,7 @@ export function SettingsSection({
     setBadgeSaveError('');
     try {
       await updateBadgeAndNameColor(currentUserId, badgeTier, nameColor);
-      alert(isAr ? 'تم حفظ تفضيلات الشعار والتخصيص بنجاح!' : 'Branding customization saved successfully!');
+      showAppMessage(isAr ? 'تم حفظ تفضيلات الشعار والتخصيص بنجاح!' : 'Branding customization saved successfully!');
     } catch (err: any) {
       console.error(err);
       setBadgeSaveError(err?.message || (isAr ? 'فشل حفظ التخصيص.' : 'Failed to save customization.'));

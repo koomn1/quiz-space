@@ -1,3 +1,4 @@
+import { showAppMessage } from './Toast';
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -420,7 +421,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             if (applicablePlans) {
               const allowed = applicablePlans.split(',').map((plan: string) => plan.trim().toLowerCase());
               if (!allowed.includes(selectedPlan.toLowerCase())) {
-                alert(isAr
+                showAppMessage(isAr
                   ? `تنبيه: كود الخصم المطبق "${code}" لا يسري على باقة "${selectedPlan}". تم إلغاء تفعيل الخصم.`
                   : `Notice: applied coupon "${code}" is not applicable on the selected plan "${selectedPlan}". Discount reset.`
                 );
@@ -443,7 +444,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
   const handleApplyPromo = async () => {
     const code = promoCode.trim().toUpperCase();
     if (!code) {
-      alert(isAr ? 'يرجى كتابة كود الخصم أولاً.' : 'Please enter a coupon code.');
+      showAppMessage(isAr ? 'يرجى كتابة كود الخصم أولاً.' : 'Please enter a coupon code.');
       return;
     }
 
@@ -451,7 +452,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
     try {
       if (code === 'QUIZ50' || code === 'SUPER50' || code === 'AI55') {
         setPromoDiscount(50);
-        alert(isAr ? 'تم تطبيق كود الخصم بنجاح (50% خصم)!' : 'Coupon applied! Enjoy 50% discount.');
+        showAppMessage(isAr ? 'تم تطبيق كود الخصم بنجاح (50% خصم)!' : 'Coupon applied! Enjoy 50% discount.');
         setIsApplyingPromo(false);
         return;
       }
@@ -465,7 +466,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         const applicablePlans = coupon.applicable_plans ?? coupon.applicablePlans;
         const discountPercent = coupon.discount_percent ?? coupon.discountPercent ?? 0;
         if (!isActive) {
-          alert(isAr ? 'كود الخصم هذا موقوف حالياً.' : 'This coupon is currently inactive.');
+          showAppMessage(isAr ? 'كود الخصم هذا موقوف حالياً.' : 'This coupon is currently inactive.');
           setPromoDiscount(0);
           return;
         }
@@ -473,14 +474,14 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         if (expiryDate) {
           const expDate = new Date(expiryDate);
           if (expDate < new Date()) {
-            alert(isAr ? 'عذراً، كود الخصم منتهي الصلاحية.' : 'Sorry, this coupon is expired.');
+            showAppMessage(isAr ? 'عذراً، كود الخصم منتهي الصلاحية.' : 'Sorry, this coupon is expired.');
             setPromoDiscount(0);
             return;
           }
         }
 
         if (maxUses && usedCount >= maxUses) {
-          alert(isAr ? 'عذراً، استنفد هذا الكود الحد الأقصى للاستخدام.' : 'Sorry, this coupon reached max uses.');
+          showAppMessage(isAr ? 'عذراً، استنفد هذا الكود الحد الأقصى للاستخدام.' : 'Sorry, this coupon reached max uses.');
           setPromoDiscount(0);
           return;
         }
@@ -488,7 +489,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         if (applicablePlans) {
           const allowed = applicablePlans.split(',').map((plan: string) => plan.trim().toLowerCase());
           if (!allowed.includes(selectedPlan.toLowerCase())) {
-            alert(isAr ? `عذراً، هذا الكود لا يسري على الباقة المحددة.` : `Sorry, coupon is not valid for this plan.`);
+            showAppMessage(isAr ? `عذراً، هذا الكود لا يسري على الباقة المحددة.` : `Sorry, coupon is not valid for this plan.`);
             setPromoDiscount(0);
             return;
           }
@@ -496,18 +497,18 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
         setPromoDiscount(discountPercent);
         setAppliedCouponId(coupon.id || null);
-        alert(isAr
+        showAppMessage(isAr
           ? `تم تطبيق كود الخصم بنسبة ${discountPercent}% بنجاح!`
           : `Promo code discount of ${discountPercent}% applied successfully!`
         );
       } else {
-        alert(isAr ? 'كود الخصم غير موجود أو انتهت صلاحيته.' : 'Discount code not found or expired.');
+        showAppMessage(isAr ? 'كود الخصم غير موجود أو انتهت صلاحيته.' : 'Discount code not found or expired.');
         setPromoDiscount(0);
         setAppliedCouponId(null);
       }
     } catch (err) {
       console.error(err);
-      alert(isAr ? 'حدث خطأ أثناء تفعيل كود الخصم.' : 'Error checking coupon code.');
+      showAppMessage(isAr ? 'حدث خطأ أثناء تفعيل كود الخصم.' : 'Error checking coupon code.');
       setPromoDiscount(0);
     } finally {
       setIsApplyingPromo(false);
@@ -555,17 +556,17 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
     e.preventDefault();
 
     if (!subscriberName.trim()) {
-      alert(isAr ? 'يرجى كتابة اسم المشترك' : 'Please input subscriber name.');
+      showAppMessage(isAr ? 'يرجى كتابة اسم المشترك' : 'Please input subscriber name.');
       return;
     }
 
     if (!subscriberEmail.trim()) {
-      alert(isAr ? 'يرجى كتابة البريد الإلكتروني للمطابقة والتفعيل' : 'Please input email address.');
+      showAppMessage(isAr ? 'يرجى كتابة البريد الإلكتروني للمطابقة والتفعيل' : 'Please input email address.');
       return;
     }
 
     if (promoDiscount < 100 && !screenshotBase64) {
-      alert(isAr ? 'يرجى إرفاق صورة إيصال التحويل لإثبات المعاملة.' : 'Please attach payment receipt photo.');
+      showAppMessage(isAr ? 'يرجى إرفاق صورة إيصال التحويل لإثبات المعاملة.' : 'Please attach payment receipt photo.');
       return;
     }
 
@@ -606,13 +607,13 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       }
 
       if (promoDiscount === 100) {
-        alert(isAr
+        showAppMessage(isAr
           ? 'تهانينا! كود الخصم فعّل لك باقة النخبة فوراً مجاناً! '
           : 'Congratulations! Your coupon immediately activated your Premium status! '
         );
         window.location.reload();
       } else {
-        alert(isAr
+        showAppMessage(isAr
           ? 'تم إرسال طلب التفعيل وإيصال الدفع بنجاح! سيقوم فريق الإدارة بمراجعة الإيصال وتفعيل باقتك سريعاً.'
           : 'Receipt submitted successfully! Admin will verify and activate your account shortly.'
         );
@@ -628,7 +629,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       await reloadMembership();
     } catch (err) {
       console.error('Failed paid request submission:', err);
-      alert(isAr ? 'حدث خطأ أثناء إرسال الإيصال. يرجى المحاولة مرة أخرى.' : 'Error sending receipt. Please retry.');
+      showAppMessage(isAr ? 'حدث خطأ أثناء إرسال الإيصال. يرجى المحاولة مرة أخرى.' : 'Error sending receipt. Please retry.');
     } finally {
       setIsSubmitting(false);
     }
@@ -913,7 +914,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                       disabled={isSubmitting}
                       onClick={async () => {
                         if (!subscriberName.trim() || !subscriberEmail.trim()) {
-                          alert(isAr ? 'يرجى كتابة اسمك وبريدك الإلكتروني في نموذج التفعيل أولاً.' : 'Please enter your name and email in activation form below first.');
+                          showAppMessage(isAr ? 'يرجى كتابة اسمك وبريدك الإلكتروني في نموذج التفعيل أولاً.' : 'Please enter your name and email in activation form below first.');
                           return;
                         }
                         try {
@@ -932,14 +933,14 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                             status: 'pending',
                             createdAt: new Date().toISOString()
                           });
-                          alert(isAr
+                          showAppMessage(isAr
                             ? `تم إرسال طلب العرض التجريبي (${days} يوماً) بنجاح! سيتم مراجعته وتفعيله قريباً.`
                             : `Trial request (${days} days) submitted successfully!`
                           );
                           await fetchMyRequests();
                         } catch (err) {
                           console.error('Failed trial request:', err);
-                          alert(isAr ? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.' : 'Error sending trial request. Try again.');
+                          showAppMessage(isAr ? 'حدث خطأ أثناء إرسال الطلب. حاول مرة أخرى.' : 'Error sending trial request. Try again.');
                         } finally {
                           setIsSubmitting(false);
                         }

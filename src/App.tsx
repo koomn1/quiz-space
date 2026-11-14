@@ -23,7 +23,7 @@ import { PostRegisterOnboardingModal } from './components/PostRegisterOnboarding
 import OverlayPortal from './components/OverlayPortal';
 import DailyQuizCard from './components/DailyQuizCard';
 import SplashScreen from './components/SplashScreen';
-import { ToastHost } from './components/Toast';
+import {ToastHost, showAppMessage} from './components/Toast';
 import ProcessingCenterBanner from './components/ProcessingCenterBanner';
 import CommandPalette from './components/CommandPalette';
 import { Sparkles, Edit, Compass, Info, XCircle, Award, Volume2, Globe, Bell, AlertTriangle, ExternalLink, User, Bot, Zap, MessageCircle } from 'lucide-react';
@@ -505,7 +505,7 @@ export default function App() {
   // Auth session or a verified database row. Those actions must prompt sign-in.
   const activateLocalSandboxMode = () => {
     if (typeof window !== 'undefined' && window.navigator && window.navigator.onLine === false) {
-      alert(lang === 'ar' ? 'عذراً، التطبيق يحتاج إلى اتصال بالإنترنت للاتصال بقاعدة البيانات ومزامنة الحسابات. يرجى التحقق من الشبكة والمحاولة مرة أخرى.' : 'Offline mode is disabled. Please check your internet connection to sync with Supabase.');
+      showAppMessage(lang === 'ar' ? 'عذراً، التطبيق يحتاج إلى اتصال بالإنترنت للاتصال بقاعدة البيانات ومزامنة الحسابات. يرجى التحقق من الشبكة والمحاولة مرة أخرى.' : 'Offline mode is disabled. Please check your internet connection to sync with Supabase.');
       return;
     }
     const guestIdentity = getOrCreateGuestIdentity(lang);
@@ -567,7 +567,7 @@ export default function App() {
     } catch (e: any) {
       console.error('Google Sign In Error:', e?.message || 'unknown');
       const message = e?.message || (lang === 'ar' ? 'تعذر تسجيل الدخول بجوجل حالياً.' : 'Google sign-in is unavailable right now.');
-      alert(message);
+      showAppMessage(message);
     }
   };
 
@@ -787,8 +787,8 @@ export default function App() {
     if (isSuperAdmin || isTeacher || isGroupOwner || !!userId) {
       setSharingQuiz({ id, title, description: desc });
     } else {
-      alert(lang === 'ar' 
-        ? 'عذراً! ميزة مشاركة الاختبارات مخصصة حصرياً لمعلمي المجموعات، ملاك الفصول، والمشرفين الإداريين.' 
+      showAppMessage(lang === 'ar'
+        ? 'عذراً! ميزة مشاركة الاختبارات مخصصة حصرياً لمعلمي المجموعات، ملاك الفصول، والمشرفين الإداريين.'
         : 'Access Restricted! Quiz sharing is a privilege reserved exclusively for Group Owners, Teachers, and Super Admins.'
       );
     }

@@ -1,3 +1,4 @@
+import { showAppMessage } from '../components/Toast';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -333,7 +334,7 @@ export default function LandingPage({
       downloadQuizPdfBytes(bytes, getQuizPdfFileName(quiz, branding));
     } catch (error) {
       console.error('Quiz PDF export failed:', error);
-      window.alert(isAr ? 'تعذر تصدير الاختبار حالياً.' : 'Could not export this quiz right now.');
+      showAppMessage(isAr ? 'تعذر تصدير الاختبار حالياً.' : 'Could not export this quiz right now.');
     }
   };
 

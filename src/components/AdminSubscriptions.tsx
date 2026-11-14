@@ -29,7 +29,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { UserBadge } from "./UserBadge";
-import { showToast } from "./Toast";
+import {showToast, showAppMessage} from "./Toast";
 import { UserStats, SubscriptionPlan, PaymentProof } from "../types";
 import { supabase } from "../lib/supabaseClient";
 import { askAI } from "../services/aiWorkerClient";
@@ -317,11 +317,11 @@ export default function AdminSubscriptions({
 
   const handleSaveCoupon = async () => {
     if (!newPromoCode.trim()) {
-      alert(isAr ? "برجاء إدخال كود الخصم." : "Please enter discount code.");
+      showAppMessage(isAr ? "برجاء إدخال كود الخصم." : "Please enter discount code.");
       return;
     }
     if (!newExpiryDate) {
-      alert(
+      showAppMessage(
         isAr
           ? "برجاء اختيار تاريخ صلاحية الانتهاء."
           : "Please select expiration date.",
@@ -329,7 +329,7 @@ export default function AdminSubscriptions({
       return;
     }
     if (newApplicablePlans.length === 0) {
-      alert(
+      showAppMessage(
         isAr
           ? "برجاء اختيار باقة واحدة على الأقل ليسري عليها كود الخصم."
           : "Please select at least one applicable plan.",
@@ -350,7 +350,7 @@ export default function AdminSubscriptions({
         createdAt: new Date().toISOString()
       });
 
-      alert(
+      showAppMessage(
         isAr ? "تم حفظ كود الخصم بنجاح!" : "Coupon code saved successfully!",
       );
       setNewPromoCode("");
@@ -430,7 +430,7 @@ export default function AdminSubscriptions({
 
   const handleBroadcastMessage = async () => {
     if (!aiPromoMsg.trim()) {
-      alert(
+      showAppMessage(
         isAr
           ? "برجاء توليد أو كتابة نص الرسالة أولاً."
           : "Please enter or generate message content first.",
@@ -485,7 +485,7 @@ export default function AdminSubscriptions({
         console.warn('Push broadcast is unavailable until the Edge Function is deployed:', pushError);
       }
 
-      alert(
+      showAppMessage(
         isAr
           ? `تم بث الإعلان بنجاح ونشره بالمجتمع! الرسائل الخاصة: ${messagesToInsert.length}، وإشعارات الهاتف: ${pushSent}.`
           : `Promotion broadcasted successfully! Direct messages: ${messagesToInsert.length}; push notifications: ${pushSent}.`,
@@ -493,7 +493,7 @@ export default function AdminSubscriptions({
       setAiPromoMsg("");
     } catch (err) {
       console.error(err);
-      alert(isAr ? "فشل إرسال البث لجميع الطلاب." : "Failed to broadcast message.");
+      showAppMessage(isAr ? "فشل إرسال البث لجميع الطلاب." : "Failed to broadcast message.");
     } finally {
       setIsBroadcasting(false);
     }
@@ -521,12 +521,12 @@ export default function AdminSubscriptions({
         );
         const seatLimit = Number.parseInt(seatInput || "15", 10);
         if (!Number.isInteger(seatLimit) || seatLimit < 1 || seatLimit > 100) {
-          alert(isAr ? "عدد المقاعد يجب أن يكون بين 1 و100." : "Seat count must be between 1 and 100.");
+          showAppMessage(isAr ? "عدد المقاعد يجب أن يكون بين 1 و100." : "Seat count must be between 1 and 100.");
           return;
         }
 
         await activateDiamondInstitution(selectedUser.userId, institutionName, seatLimit);
-        alert(isAr ? "تم تفعيل المؤسسة والمقاعد. يمكن للمالك الآن إدارة الفريق من مساحة المؤسسة." : "Institution and seats activated. The owner can now manage the team from Institution Workspace.");
+        showAppMessage(isAr ? "تم تفعيل المؤسسة والمقاعد. يمكن للمالك الآن إدارة الفريق من مساحة المؤسسة." : "Institution and seats activated. The owner can now manage the team from Institution Workspace.");
         await loadRealData();
         return;
       }
@@ -539,7 +539,7 @@ export default function AdminSubscriptions({
       const { error } = await updateUserSubscription(selectedUser.userId, targetIsPremium, targetPlanName, plan?.id, isLifetime, isFounder, renewalDate);
 
       if (!error) {
-        alert(
+        showAppMessage(
           isAr
             ? "تم تحديث خطة الاشتراك بنجاح في قاعدة البيانات!"
             : "Subscription plan updated successfully in database!",
@@ -584,7 +584,7 @@ export default function AdminSubscriptions({
         // Refresh with all database info too
         loadRealData();
       } else {
-        alert(
+        showAppMessage(
           isAr
             ? `فشل تحديث اشتراك العضو: ${error.message}`
             : `Failed to update subscription: ${error.message}`,
@@ -592,7 +592,7 @@ export default function AdminSubscriptions({
       }
     } catch (err) {
       console.error(err);
-      alert(
+      showAppMessage(
         isAr
           ? "فشل الاتصال بالخادم لتحديث الاشتراك."
           : "Server connection failed while updating subscription.",
@@ -960,7 +960,7 @@ export default function AdminSubscriptions({
                       const { error } = await updateUserSubscription(uidVal, true, planVal);
 
                       if (!error) {
-                        alert(
+                        showAppMessage(
                           isAr
                             ? `تم تفعيل حساب ${uidVal} بنجاح لخطة ${planVal}`
                             : `Activated ${uidVal} successfully to ${planVal}`,
@@ -981,7 +981,7 @@ export default function AdminSubscriptions({
                         }
                         return;
                       } else {
-                        alert(
+                        showAppMessage(
                           isAr
                             ? "فشل تفعيل الاشتراك: " + error.message
                             : "Failed to activate subscription: " + error.message,

@@ -7,6 +7,8 @@ const readSource = (relativePath: string) =>
 const css = readSource('../index.css');
 const billing = readSource('../components/BillingSection.tsx');
 const analytics = readSource('../pages/AnalyticsDashboard.tsx');
+const toastHost = readSource('../components/Toast.tsx');
+const swipeToastCss = readSource('../components/SwipeToast.css');
 
 describe('glass surface design contracts', () => {
   it('uses shared readable surfaces and preserves selected plan/border states', () => {
@@ -26,7 +28,6 @@ describe('glass surface design contracts', () => {
 
   it('applies glass surfaces to floating notices and dashboard menus', () => {
     for (const path of [
-      '../components/Toast.tsx',
       '../components/ProcessingCenterBanner.tsx',
       '../components/AdminPaymentNotificationToast.tsx',
       '../components/NotificationDropdown.tsx',
@@ -35,5 +36,12 @@ describe('glass surface design contracts', () => {
     ]) {
       expect(readSource(path), `${path} should use the shared glass utility`).toContain('uipro-glass-surface');
     }
+  });
+
+  it('uses the swipeable toast design for global notifications', () => {
+    expect(toastHost).toContain('<SwipeToast');
+    expect(toastHost).toContain('swipe-toast-stack');
+    expect(toastHost).toContain("role={toast.type === 'error' ? 'alert' : 'status'}");
+    expect(swipeToastCss).toContain('.swipe-toast-stack');
   });
 });

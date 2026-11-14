@@ -13,6 +13,7 @@ import { TelegramBadge } from './ProfileStatsView';
 import { playChimeSound } from '../lib/chime';
 import { UserBadge } from './UserBadge';
 import { profileAssetUrl } from '../constants/profileAssets';
+import {showToast, showAppMessage} from './Toast';
 
 interface MessageInboxProps {
   lang: 'ar' | 'en';
@@ -237,9 +238,10 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
       await deleteDirectMessage(messageId);
       setMessages(prev => prev.filter(message => message.id !== messageId));
       playChimeSound('click');
+      showToast('success', isAr ? 'تم حذف الرسالة.' : 'Message deleted.');
     } catch (e) {
       console.error('Failed to delete direct message:', e);
-      alert(isAr ? 'تعذر حذف الرسالة. حاول مرة أخرى.' : 'Failed to delete the message. Please try again.');
+      showToast('error', isAr ? 'تعذر حذف الرسالة. حاول مرة أخرى.' : 'Failed to delete the message. Please try again.');
     }
   };
 
@@ -275,7 +277,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
     } catch (e) {
       console.error('Failed to dispatch direct message:', e);
       setInputText(msgText); // restore what they typed so it isn't silently lost
-      alert(isAr ? 'تعذر إرسال الرسالة، حاول مرة أخرى.' : 'Failed to send message, please try again.');
+      showAppMessage(isAr ? 'تعذر إرسال الرسالة، حاول مرة أخرى.' : 'Failed to send message, please try again.');
     }
   };
 

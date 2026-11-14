@@ -14,6 +14,7 @@ import SpotlightCard from '../components/SpotlightCard';
 import ClickSpark from '../components/ClickSpark';
 import { Attachment01Icon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { COSMO_QUIZ_COUNT_OPTIONS, COSMO_QUIZ_MAX_COUNT, COSMO_QUIZ_MIN_COUNT, parseAutomaticCoveragePlan, parseCoverageAuditReplacementIds, parseExplicitQuestionCount, validateCoverageAssignments, type CosmoCoverageConcept } from '../lib/cosmoQuizCount';
+import { showToast } from '../components/Toast';
 import {
   Image as ImageIcon,
   FileText,
@@ -2067,14 +2068,20 @@ export default function AIChat({
   };
 
   const handleConvDelete = async (convId: string) => {
-    await deleteAIChatConversation(convId);
-    const deleted = readLocalChatData(userId);
-    deleted.conversations = deleted.conversations.filter(c => c.id !== convId);
-    delete deleted.messages[convId];
-    writeLocalChatData(userId, deleted);
-    setConversations(prev => prev.filter(c => c.id !== convId));
-    if (activeConversationId === convId) {
-      startNewChat();
+    try {
+      await deleteAIChatConversation(convId);
+      const deleted = readLocalChatData(userId);
+      deleted.conversations = deleted.conversations.filter(c => c.id !== convId);
+      delete deleted.messages[convId];
+      writeLocalChatData(userId, deleted);
+      setConversations(prev => prev.filter(c => c.id !== convId));
+      if (activeConversationId === convId) {
+        startNewChat();
+      }
+      showToast('success', isAr ? 'تم حذف المحادثة.' : 'Conversation deleted.');
+    } catch (error) {
+      console.error('Failed to delete Cosmo conversation:', error);
+      showToast('error', isAr ? 'تعذر حذف المحادثة. حاول مرة أخرى.' : 'The conversation could not be deleted. Please try again.');
     }
   };
 

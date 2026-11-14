@@ -1,3 +1,4 @@
+import { showAppMessage } from './Toast';
 import React, { useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -121,7 +122,7 @@ export function InteractiveQuizCard({
       downloadQuizPdfBytes(bytes, getQuizPdfFileName(quiz, branding));
     } catch (error) {
       console.error('Quiz PDF export failed:', error);
-      window.alert(isAr ? 'تعذر إنشاء ملف PDF حالياً. حاول مرة أخرى.' : 'Could not create the PDF right now. Please try again.');
+      showAppMessage(isAr ? 'تعذر إنشاء ملف PDF حالياً. حاول مرة أخرى.' : 'Could not create the PDF right now. Please try again.');
     }
   };
 

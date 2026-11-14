@@ -5,6 +5,7 @@ import { getUserProfileStats, deleteQuiz } from '../lib/db';
 import { getUserRoleAndPlan } from '../types';
 import { playNotificationSound } from '../lib/sound';
 import CosmicLoader from '../components/CosmicLoader';
+import {showToast, showAppMessage} from '../components/Toast';
 import PageSkeleton from '../components/PageSkeleton';
 import type { MotivationSection } from '../pages/MotivationHubPage';
 
@@ -218,10 +219,11 @@ export default function AppRoutes(props: AppRoutesProps) {
                       await deleteQuiz(quizId);
                       playNotificationSound('delete');
                       await fetchQuizzesList();
+                      showToast('success', lang === 'ar' ? 'تم حذف الاختبار بنجاح.' : 'Quiz deleted successfully.');
                       window.requestAnimationFrame(() => window.scrollTo({ top: preservedScrollY, behavior: 'instant' }));
                     } catch (e) {
                       console.error(e);
-                      alert(lang === 'ar' ? 'عذراً، فشل حذف الاختبار من خوادم قاعدة البيانات.' : 'Error, failed to remove quiz from server.');
+                      showToast('error', lang === 'ar' ? 'عذراً، فشل حذف الاختبار من خوادم قاعدة البيانات.' : 'Sorry, the quiz could not be deleted from the database.');
                     }
                   }}
                   lang={lang}
@@ -268,7 +270,7 @@ export default function AppRoutes(props: AppRoutesProps) {
                       window.requestAnimationFrame(() => window.scrollTo({ top: preservedScrollY, behavior: 'instant' }));
                     } catch (e) {
                       console.error(e);
-                      alert(lang === 'ar' ? 'عذراً، فشل الحذف.' : 'Delete failed.');
+                      showAppMessage(lang === 'ar' ? 'عذراً، فشل الحذف.' : 'Delete failed.');
                     }
                   }}
                   onShareQuiz={handleShareQuiz}
