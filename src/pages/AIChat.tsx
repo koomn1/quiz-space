@@ -7,6 +7,8 @@ import { GeneratedQuiz } from '../types';
 import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, archiveAIChatConversation, searchAIChatContent, AIChatConversation, CosmoSearchResult } from '../lib/db';
 import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
+import PromptBar from '../components/PromptBar';
+import { Attachment01Icon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { COSMO_QUIZ_COUNT_OPTIONS, COSMO_QUIZ_MAX_COUNT, COSMO_QUIZ_MIN_COUNT, parseAutomaticCoveragePlan, parseCoverageAuditReplacementIds, parseExplicitQuestionCount, validateCoverageAssignments, type CosmoCoverageConcept } from '../lib/cosmoQuizCount';
 import {
   Image as ImageIcon,
@@ -1807,6 +1809,30 @@ export default function AIChat({
     setStreamingText('');
   };
 
+  const handlePromptAttach = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePromptDictate = (): Promise<string> => {
+    if (typeof window === 'undefined') return Promise.resolve('');
+    const SpeechRecognition = (window as Window & { SpeechRecognition?: new () => any; webkitSpeechRecognition?: new () => any }).SpeechRecognition
+      || (window as Window & { webkitSpeechRecognition?: new () => any }).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setLastError(isAr ? 'الإملاء الصوتي غير مدعوم في هذا المتصفح.' : 'Voice dictation is not supported in this browser.');
+      return Promise.resolve('');
+    }
+    return new Promise<string>((resolve) => {
+      const recognition = new SpeechRecognition();
+      recognition.lang = isAr ? 'ar-EG' : 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = (event: any) => resolve(String(event.results?.[0]?.[0]?.transcript || ''));
+      recognition.onerror = () => resolve('');
+      recognition.onend = () => resolve('');
+      recognition.start();
+    });
+  };
+
   /* Edit message and Regenerate handlers */
   const handleEditMessage = (msg: Message) => {
     setEditingMessageId(msg.id);
@@ -2855,218 +2881,88 @@ export default function AIChat({
               </div>
             )}
 
-            {/* Composer Capsule */}
-            <BorderBeam size="md" colorVariant="colorful" strength={0.65} active={!isAnalyzing} theme={darkMode ? 'dark' : 'light'}>
-              <div
-                className="rounded-3xl overflow-hidden shadow-2xl transition-all border backdrop-blur-2xl focus-within:ring-2 focus-within:ring-indigo-500/30"
-                style={{ background: theme.SURFACE, borderColor: theme.BORDER }}
-              >
-                <textarea
-                  ref={textareaRef}
-                  value={inputText}
-                  onChange={handleInput}
-                  onKeyDown={handleKey}
-                  placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي سؤال دراسي، أو اطلب تلخيص ملف، أو كويز فوري...` : `Ask ${ASSISTANT_NAME_EN} anything, or request a summary or quiz...`}
-                  rows={1}
-                  dir="rtl"
-                  className="w-full px-5 pt-4 pb-2 bg-transparent resize-none outline-none text-[15px] leading-7 placeholder:text-slate-400"
-                  style={{ color: theme.FG, fontFamily: 'inherit', maxHeight: '160px', caretColor: ACCENT, textAlign: 'right' }}
-                />
+            {/* React Bits PromptBar — replacement for the legacy Cosmo composer */}
+            <div className="relative z-20 mx-auto w-full max-w-3xl" dir={isAr ? 'rtl' : 'ltr'}>
+              <PromptBar
+                placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي سؤال دراسي، أو اطلب تلخيص ملف، أو كويز فوري...` : `Ask ${ASSISTANT_NAME_EN} anything, or request a summary or quiz...`}
+                sources={[
+                  { key: 'files', name: isAr ? 'ملفات وصور' : 'Photos & files', description: isAr ? 'ارفع من جهازك' : 'Upload from this device', icon: Attachment01Icon, attach: true },
+                  { key: 'web', name: isAr ? 'بحث في الويب' : 'Web search', description: isAr ? 'نتائج مباشرة' : 'Live results', icon: Globe02Icon },
+                ]}
+                commands={[
+                  { key: 'summarize', name: '/summarize', description: isAr ? 'لخّص المحادثة الحالية' : 'Digest the thread so far' },
+                  { key: 'quiz', name: '/quiz', description: isAr ? 'افتح استوديو الكويز الذكي' : 'Open the smart quiz studio' },
+                ]}
+                models={[{ key: 'cosmo', name: 'Cosmo 2.5 Flash', tag: isAr ? 'تعليمي' : 'Education' }]}
+                defaultModel="cosmo"
+                efforts={isAr ? ['منخفض', 'متوسط', 'عالٍ', 'إضافي', 'أقصى'] : ['Low', 'Medium', 'High', 'Extra', 'Max']}
+                defaultEffort={isAr ? 'متوسط' : 'Medium'}
+                onEffortChange={() => undefined}
+                busy={isAnalyzing}
+                onSend={(text) => {
+                  if (text.trim().toLowerCase() === '/quiz') {
+                    openQuizStudio();
+                    return;
+                  }
+                  const webRequested = text.includes('@Web search') || text.includes('@بحث في الويب');
+                  if (webRequested) setWebSearchEnabled(true);
+                  void sendMessage(text.replace(/@(Web search|بحث في الويب)\s*/gi, '').trim());
+                }}
+                onStop={handleStopGenerating}
+                onAttach={handlePromptAttach}
+                onDictate={handlePromptDictate}
+                background={darkMode ? '#131d31' : '#ffffff'}
+                color={theme.FG}
+                menuBackground={darkMode ? '#1e293b' : '#334155'}
+                sparkColor={darkMode ? '#b39dff' : '#6366f1'}
+                sparkBoost={isAnalyzing ? 0 : 1}
+                width={900}
+                radius={24}
+                maxRows={5}
+                className="mx-auto shadow-2xl"
+              />
+              <input type="file" ref={imageInputRef} accept="image/*" className="hidden" onChange={e => { void handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
+              <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,text/markdown,text/plain" className="hidden" onChange={e => { void handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
 
-                <div className="flex items-center justify-between px-3.5 pb-3 pt-1" dir="rtl">
-                  {/* File, Quiz & Tool toggles */}
-                  <div className="flex items-center gap-1.5">
-                    {/* 8-Mode Selector Popover */}
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setShowModeSelector(v => !v)}
-                        title={isAr ? 'تبديل وضع الذكاء الاصطناعي (8 أوضاع)' : 'Switch AI Mode'}
-                        className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer border"
-                        style={{
-                          background: activeMode.bgTint,
-                          borderColor: activeMode.borderTint,
-                          color: activeMode.color,
-                        }}
-                      >
-                        {React.createElement(activeMode.icon, { className: 'w-3.5 h-3.5' })}
-                        <span className="max-w-[75px] sm:max-w-none truncate">{isAr ? activeMode.labelAr : activeMode.labelEn}</span>
-                        <ChevronDown className="w-3 h-3 opacity-60" />
-                      </button>
-
-                      {showModeSelector && (
-                        <div
-                          className="uipro-glass-surface absolute bottom-full mb-2 right-0 w-72 sm:w-80 rounded-2xl p-2.5 shadow-2xl border border-white/60 dark:border-white/10 backdrop-blur-2xl z-50 animate-in fade-in zoom-in-95 duration-150"
-                          style={{
-                            background: theme.IS_DARK ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.98)',
-                            borderColor: theme.BORDER,
-                            boxShadow: '0 16px 40px rgba(0,0,0,0.35)',
-                          }}
-                        >
-                          <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b" style={{ borderColor: theme.BORDER }}>
-                            <span className="text-[11px] font-extrabold uppercase tracking-wider" style={{ color: theme.MUTED }}>
-                              {isAr ? 'أوضاع كوزمو الذكية' : 'Cosmo AI Modes'}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setAutoMode(v => !v)}
-                              className="text-[10px] px-2 py-0.5 rounded-full font-bold border transition-colors cursor-pointer"
-                              style={{
-                                background: autoMode ? 'rgba(99,102,241,0.2)' : 'transparent',
-                                borderColor: autoMode ? ACCENT : theme.BORDER,
-                                color: autoMode ? ACCENT : theme.MUTED,
-                              }}
-                            >
-                              {isAr ? (autoMode ? 'توجيه تلقائي ' : 'توجيه يدوي') : (autoMode ? 'Auto ' : 'Manual')}
-                            </button>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-1.5 max-h-64 overflow-y-auto">
-                            {COSMO_MODES.map((mode) => {
-                              const isSelected = selectedMode === mode.id;
-                              const ModeIcon = mode.icon as React.ComponentType<{ className?: string }>;
-                              return (
-                                <button
-                                  key={mode.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedMode(mode.id);
-                                    setAutoMode(false);
-                                    setShowModeSelector(false);
-                                  }}
-                                  className="flex items-start gap-2 p-2 rounded-xl text-right transition-all cursor-pointer border"
-                                  style={{
-                                    background: isSelected ? mode.bgTint : 'transparent',
-                                    borderColor: isSelected ? mode.borderTint : 'transparent',
-                                  }}
-                                  onMouseEnter={e => {
-                                    if (!isSelected) (e.currentTarget as HTMLElement).style.background = theme.HOVER_SOFT;
-                                  }}
-                                  onMouseLeave={e => {
-                                    if (!isSelected) (e.currentTarget as HTMLElement).style.background = 'transparent';
-                                  }}
-                                >
-                                  <div
-                                    className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-                                    style={{ background: mode.bgTint, color: mode.color }}
-                                  >
-                                    <ModeIcon className="w-3.5 h-3.5" />
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="text-xs font-bold truncate" style={{ color: isSelected ? mode.color : theme.FG }}>
-                                      {isAr ? mode.labelAr : mode.labelEn}
-                                    </p>
-                                    <p className="text-[10px] leading-tight truncate" style={{ color: theme.MUTED, opacity: 0.88 }}>
-                                      {isAr ? mode.descAr : mode.descEn}
-                                    </p>
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openQuizStudio()}
+                  className="flex min-h-9 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all"
+                  style={{ background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.3)', color: '#f59e0b' }}
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>{isAr ? 'كويز ذكي' : 'Smart quiz'}</span>
+                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowModeSelector(v => !v)}
+                    className="flex min-h-9 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all"
+                    style={{ background: activeMode.bgTint, borderColor: activeMode.borderTint, color: activeMode.color }}
+                  >
+                    {React.createElement(activeMode.icon, { className: 'h-3.5 w-3.5' })}
+                    <span>{isAr ? activeMode.labelAr : activeMode.labelEn}</span>
+                    <ChevronDown className="h-3 w-3 opacity-60" />
+                  </button>
+                  {showModeSelector && (
+                    <div className="uipro-glass-surface absolute bottom-full right-0 z-50 mb-2 w-72 rounded-2xl border p-2.5 shadow-2xl backdrop-blur-2xl" style={{ background: theme.IS_DARK ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.98)', borderColor: theme.BORDER }}>
+                      <div className="mb-2 flex items-center justify-between border-b px-2 pb-2" style={{ borderColor: theme.BORDER }}>
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider" style={{ color: theme.MUTED }}>{isAr ? 'أوضاع كوزمو الذكية' : 'Cosmo AI Modes'}</span>
+                        <button type="button" onClick={() => setAutoMode(v => !v)} className="rounded-full border px-2 py-0.5 text-[10px] font-bold" style={{ background: autoMode ? 'rgba(99,102,241,0.2)' : 'transparent', borderColor: autoMode ? ACCENT : theme.BORDER, color: autoMode ? ACCENT : theme.MUTED }}>{isAr ? (autoMode ? 'توجيه تلقائي' : 'توجيه يدوي') : (autoMode ? 'Auto' : 'Manual')}</button>
+                      </div>
+                      <div className="grid max-h-64 grid-cols-2 gap-1.5 overflow-y-auto">
+                        {COSMO_MODES.map((mode) => {
+                          const isSelected = selectedMode === mode.id;
+                          const ModeIcon = mode.icon as React.ComponentType<{ className?: string }>;
+                          return <button key={mode.id} type="button" onClick={() => { setSelectedMode(mode.id); setAutoMode(false); setShowModeSelector(false); }} className="flex items-start gap-2 rounded-xl border p-2 text-start transition-all" style={{ background: isSelected ? mode.bgTint : 'transparent', borderColor: isSelected ? mode.borderTint : 'transparent' }}><div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg" style={{ background: mode.bgTint, color: mode.color }}><ModeIcon className="h-3.5 w-3.5" /></div><div className="min-w-0"><p className="truncate text-xs font-bold" style={{ color: isSelected ? mode.color : theme.FG }}>{isAr ? mode.labelAr : mode.labelEn}</p><p className="truncate text-[10px] leading-tight" style={{ color: theme.MUTED }}>{isAr ? mode.descAr : mode.descEn}</p></div></button>;
+                        })}
+                      </div>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => openQuizStudio()}
-                      title={isAr ? 'توليد كويز فوري ذكي' : 'Generate quiz'}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer border"
-                      style={{
-                        background: 'rgba(245,158,11,0.12)',
-                        borderColor: 'rgba(245,158,11,0.3)',
-                        color: '#f59e0b'
-                      }}
-                    >
-                      <Zap className="w-3.5 h-3.5" />
-                      <span>{isAr ? 'كويز ذكي' : 'Quiz'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => imageInputRef.current?.click()}
-                      title={isAr ? 'إرفاق صورة للتحليل البصري' : 'Attach image'}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer border"
-                      style={{ color: theme.FG, background: theme.HOVER_SOFT, borderColor: theme.BORDER_SOFT }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
-                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER_SOFT}
-                    >
-                      <ImageIcon className="w-4 h-4 text-cyan-400" />
-                      <span className="hidden sm:inline">{isAr ? 'صورة' : 'Image'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      title={isAr ? 'إرفاق ملف (PDF, Word, Excel, PowerPoint, Text)' : 'Attach file'}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer border"
-                      style={{ color: theme.FG, background: theme.HOVER_SOFT, borderColor: theme.BORDER_SOFT }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER}
-                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = theme.HOVER_SOFT}
-                    >
-                      <FileText className="w-4 h-4 text-indigo-400" />
-                      <span className="hidden sm:inline">{isAr ? 'ملف' : 'File'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setWebSearchEnabled(v => !v)}
-                      title={isAr ? 'تفعيل البحث المباشر في الويب' : 'Toggle live web search'}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer border"
-                      style={{
-                        background: webSearchEnabled ? 'rgba(6,182,212,0.15)' : theme.HOVER_SOFT,
-                        borderColor: webSearchEnabled ? 'rgba(6,182,212,0.4)' : 'transparent',
-                        color: webSearchEnabled ? '#06b6d4' : theme.FG
-                      }}
-                    >
-                      <Globe className="w-3.5 h-3.5 text-cyan-400" />
-                      <span className="hidden sm:inline">{isAr ? 'بحث ويب' : 'Web'}</span>
-                    </button>
-
-                    <input type="file" ref={imageInputRef} accept="image/*" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
-                    <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,text/markdown,text/plain" className="hidden" onChange={e => { handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
-                  </div>
-
-                  {/* Send / Stop Generation Button */}
-                  <div className="flex items-center gap-2">
-                    {isAnalyzing ? (
-                      <button
-                        type="button"
-                        onClick={handleStopGenerating}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 transition-all cursor-pointer shadow-md"
-                        title={isAr ? 'إيقاف التوليد' : 'Stop generating'}
-                      >
-                        <Square className="w-3.5 h-3.5 fill-current" />
-                        <span>{isAr ? 'إيقاف' : 'Stop'}</span>
-                      </button>
-                    ) : (
-                      <Liquid blur={6} contrast={18} fill={darkMode ? '#131D31' : '#ffffff'} className="flex items-center">
-                        <Liquid.Item effect="morph" transition="bouncy">
-                          <button
-                            ref={sendBtnRef}
-                            onClick={() => sendMessage()}
-                            disabled={(!inputText.trim() && !selectedAttachment) || isAnalyzing}
-                            aria-label={isAr ? 'إرسال' : 'Send'}
-                            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90 disabled:opacity-30 cursor-pointer shadow-md"
-                            style={{
-                              background: (inputText.trim() || selectedAttachment)
-                                ? 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)'
-                                : theme.SEND_IDLE,
-                              boxShadow: (inputText.trim() || selectedAttachment)
-                                ? '0 4px 14px rgba(99,102,241,0.45)'
-                                : 'none',
-                            }}
-                          >
-                            <Send className="w-4 h-4" strokeWidth={2.5} style={{ color: '#ffffff' }} />
-                          </button>
-                        </Liquid.Item>
-                      </Liquid>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
-            </BorderBeam>
+            </div>
 
             {/* Privacy & Security Guarantee Note */}
             <div className="flex items-center justify-center gap-2 mt-2.5 text-[11px] text-slate-400 text-center">
