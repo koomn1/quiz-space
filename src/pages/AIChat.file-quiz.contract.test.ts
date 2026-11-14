@@ -24,9 +24,9 @@ describe('Cosmo file quiz flow contract', () => {
     expect(source).toContain('export function parseQuizRequest');
   });
 
-  it('routes authenticated attached files through chunked generation for complete source coverage', () => {
+  it('routes authenticated attached question banks through complete extraction for quiz creation', () => {
     expect(source).toContain("attachmentForGeneration.kind === 'file' && userId && !userId.startsWith('user-guest')");
-    expect(source).toContain('extractionMode: \'generate\'');
+    expect(source).toContain("extractionMode: 'literal'");
     expect(source).toContain('requestedQuestionCount: undefined');
     expect(source).toContain('const verified = validateAndCleanQuiz(generated);');
     expect(source).not.toContain('generated.questions.slice(0, quizConfig.amount)');

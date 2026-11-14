@@ -1944,13 +1944,18 @@ export default function AIChat({
           }
         });
       } else if (attachmentForGeneration.kind === 'file' && userId && !userId.startsWith('user-guest')) {
-        setQuizGenStage(isAr ? 'تحليل الملف وتقسيمه إلى أجزاء لضمان تغطية المحتوى...' : 'Analyzing and chunking the file for full coverage...');
+        setQuizGenStage(isAr ? 'قراءة بنك الأسئلة كاملًا وتجهيزه كاختبار...' : 'Reading the complete question bank and building the quiz...');
         const job = await createExtractionJob({
           file: attachmentToFile(attachmentForGeneration),
           sourceFileName: attachmentForGeneration.name,
-          extractionMode: 'generate',
+          // Cosmo file quizzes must preserve every question already present in
+          // the uploaded bank. The Generate route estimates a target from text
+          // density and can turn a 150-question bank into an 11-question
+          // sample. Literal mode uses the complete source question set, then
+          // Cosmo still validates it and presents it as an interactive quiz.
+          extractionMode: 'literal',
           customInstruction: sourceInstruction,
-          // File extraction is comprehensive; the quiz UI count applies only to topic generation.
+          // The file defines the count; never let the Cosmo UI count truncate it.
           requestedQuestionCount: undefined,
         });
         let currentJob = job;
