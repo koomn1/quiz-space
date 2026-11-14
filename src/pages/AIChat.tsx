@@ -9,6 +9,9 @@ import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAICh
 import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
 import PromptBar from '../components/PromptBar';
 import StarBorder from '../components/StarBorder';
+import FadeContent from '../components/FadeContent';
+import SpotlightCard from '../components/SpotlightCard';
+import ClickSpark from '../components/ClickSpark';
 import { Attachment01Icon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { COSMO_QUIZ_COUNT_OPTIONS, COSMO_QUIZ_MAX_COUNT, COSMO_QUIZ_MIN_COUNT, parseAutomaticCoveragePlan, parseCoverageAuditReplacementIds, parseExplicitQuestionCount, validateCoverageAssignments, type CosmoCoverageConcept } from '../lib/cosmoQuizCount';
 import {
@@ -1337,7 +1340,6 @@ export default function AIChat({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const sendBtnRef = useRef<HTMLButtonElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
-  const welcomeRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -2492,7 +2494,13 @@ export default function AIChat({
         >
           {emptyState ? (
             /* ── Gemini / ChatGPT Style Hero Welcome ── */
-            <div ref={welcomeRef} className="flex flex-col items-center justify-center min-h-full px-4 py-12 max-w-2xl mx-auto">
+            <FadeContent
+              className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center px-4 py-12"
+              effect="focus"
+              blur={8}
+              duration={0.8}
+              trigger="mount"
+            >
               <div className="welcome-title flex flex-col items-center text-center mb-10">
                 <div className="relative mb-6">
                   <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500/30 to-cyan-500/20 blur-2xl scale-150 animate-pulse" />
@@ -2531,41 +2539,53 @@ export default function AIChat({
               </div>
 
               {/* Quick Starter Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full">
-                {starters.map(({ icon: Icon, title, sub, color, bg, border }) => (
-                  <button
-                    key={title}
-                    onClick={() => {
-                      if (title.includes('اختبرني')) {
-                        openQuizStudio('معلومات عامة وتفكير نقدي');
-                      } else {
-                        sendMessage(title);
-                      }
-                    }}
-                    className="group text-right p-4 rounded-2xl transition-all duration-200 border cursor-pointer hover:-translate-y-1 shadow-sm hover:shadow-lg"
-                    style={{ background: theme.CARD, borderColor: theme.BORDER }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = color;
-                      (e.currentTarget as HTMLElement).style.background = bg;
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = theme.BORDER;
-                      (e.currentTarget as HTMLElement).style.background = theme.CARD;
-                    }}
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 shadow-xs" style={{ background: bg, border: `1px solid ${border}` }}>
-                        <Icon className="w-5 h-5" style={{ color }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold truncate" style={{ color: theme.FG }}>{title}</p>
-                        <p className="text-xs mt-0.5 truncate text-slate-400">{sub}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+              <ClickSpark
+                className="w-full"
+                sparkColor={[ACCENT, ACCENT_CYAN, ACCENT_PURPLE]}
+                sparkSize={8}
+                sparkCount={8}
+                sparkRadius={18}
+                duration={520}
+                shape="star"
+                glow={1}
+              >
+                <div className="grid w-full grid-cols-1 gap-3.5 sm:grid-cols-2">
+                  {starters.map(({ icon: Icon, title, sub, color, bg, border }) => (
+                    <SpotlightCard
+                      key={title}
+                      theme={theme.IS_DARK ? 'dark' : 'light'}
+                      spotlightColor={color}
+                      intensity={0.22}
+                      spotlightSize={220}
+                      borderGlow={0.7}
+                      className="!rounded-2xl !p-0"
+                    >
+                      <button
+                        onClick={() => {
+                          if (title.includes('اختبرني')) {
+                            openQuizStudio('معلومات عامة وتفكير نقدي');
+                          } else {
+                            sendMessage(title);
+                          }
+                        }}
+                        className="group w-full cursor-pointer p-4 text-right transition-transform duration-200 hover:-translate-y-0.5"
+                        style={{ color: theme.FG }}
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-xs transition-transform group-hover:scale-110" style={{ background: bg, border: `1px solid ${border}` }}>
+                            <Icon className="h-5 w-5" style={{ color }} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-bold" style={{ color: theme.FG }}>{title}</p>
+                            <p className="mt-0.5 truncate text-xs text-slate-400">{sub}</p>
+                          </div>
+                        </div>
+                      </button>
+                    </SpotlightCard>
+                  ))}
+                </div>
+              </ClickSpark>
+            </FadeContent>
           ) : (
             /* ── Message Feed ── */
             <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">

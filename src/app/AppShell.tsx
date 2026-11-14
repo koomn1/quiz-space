@@ -4,6 +4,8 @@ import IOS27FloatingTabBar from '../components/ios27/IOS27FloatingTabBar';
 import ProcessingCenterBanner from '../components/ProcessingCenterBanner';
 import CommandPalette from '../components/CommandPalette';
 import { PremiumCursor } from '../components/PremiumCursor';
+import Aurora from '../components/Aurora';
+import ClickSpark from '../components/ClickSpark';
 import { Award, Bell, X } from 'lucide-react';
 import { registerPushNotifications } from '../lib/pushManager';
 import { pushNotificationsManager, PushNotificationPayload } from '../lib/pushNotifications';
@@ -98,6 +100,17 @@ export default function AppShell(props: AppShellProps) {
 
         <div className={`relative flex min-h-0 min-w-0 flex-1 flex-col ${isCosmoTab ? 'h-full overflow-hidden' : 'min-h-dvh overflow-x-hidden'}`}>
           <div className={`theme-animated-bg fixed inset-0 pointer-events-none z-0 overflow-hidden select-none ${isCosmoTab ? 'hidden' : ''}`}>
+            <Aurora
+              className="absolute inset-0 opacity-25 dark:opacity-40"
+              colorStops={['#5227FF', '#06B6D4', '#8B5CF6', '#5227FF']}
+              amplitude={0.8}
+              blend={0.55}
+              speed={0.22}
+              layers={2}
+              brightness={0.75}
+              glow={0.45}
+              mouseInteraction
+            />
             {/* Light mode background elements */}
             <div className="absolute inset-0 dark:hidden opacity-30">
               <div
@@ -210,8 +223,21 @@ export default function AppShell(props: AppShellProps) {
               </div>
             )}
 
-            {/* Main page frame wrapping */}
-            {children}
+            {/* Main page frame: React Bits click feedback is applied consistently to all non-chat pages. */}
+            {isCosmoTab ? children : (
+              <ClickSpark
+                className="min-h-0 w-full"
+                sparkColor={['#7C3AED', '#06B6D4', '#F59E0B']}
+                sparkSize={7}
+                sparkCount={7}
+                sparkRadius={16}
+                duration={480}
+                shape="dot"
+                glow={0.8}
+              >
+                {children}
+              </ClickSpark>
+            )}
           </div>
 
           {/* Footer copyright — hidden on the Cosmo chat page so the chat
