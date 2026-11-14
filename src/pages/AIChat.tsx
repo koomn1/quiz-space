@@ -8,6 +8,7 @@ import { createQuiz } from '../lib/db';
 import { getAIChatHistory, saveAIChatMessage, getAIChatConversations, createAIChatConversation, renameAIChatConversation, deleteAIChatConversation, archiveAIChatConversation, searchAIChatContent, AIChatConversation, CosmoSearchResult } from '../lib/db';
 import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
 import PromptBar from '../components/PromptBar';
+import StarBorder from '../components/StarBorder';
 import { Attachment01Icon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { COSMO_QUIZ_COUNT_OPTIONS, COSMO_QUIZ_MAX_COUNT, COSMO_QUIZ_MIN_COUNT, parseAutomaticCoveragePlan, parseCoverageAuditReplacementIds, parseExplicitQuestionCount, validateCoverageAssignments, type CosmoCoverageConcept } from '../lib/cosmoQuizCount';
 import {
@@ -2925,15 +2926,31 @@ export default function AIChat({
               <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,text/markdown,text/plain" className="hidden" onChange={e => { void handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
 
               <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                <button
+                <StarBorder
                   type="button"
                   onClick={() => openQuizStudio()}
-                  className="flex min-h-9 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all"
-                  style={{ background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.3)', color: '#f59e0b' }}
+                  color={theme.IS_DARK ? '#fde68a' : '#f59e0b'}
+                  trailColor="#f59e0b"
+                  duration={4}
+                  direction="clockwise"
+                  stars={1}
+                  trailLength={0.3}
+                  thickness={1}
+                  radius={12}
+                  glow={0.6}
+                  hover="lap"
+                  sparkle={false}
+                  clickPulse
+                  theme={theme.IS_DARK ? 'dark' : 'light'}
+                  backgroundColor={theme.IS_DARK ? 'rgba(245,158,11,0.14)' : 'rgba(245,158,11,0.12)'}
+                  textColor="#f59e0b"
+                  borderColor="rgba(245,158,11,0.3)"
+                  style={{}}
+                  className="min-h-9 px-3 py-1.5 text-[11px] font-bold"
                 >
                   <Zap className="h-3.5 w-3.5" />
                   <span>{isAr ? 'كويز ذكي' : 'Smart quiz'}</span>
-                </button>
+                </StarBorder>
                 <div className="relative">
                   <button
                     type="button"
