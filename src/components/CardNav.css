@@ -147,6 +147,9 @@
   align-items: center;
   justify-self: center;
   height: var(--cn-logo);
+  width: var(--cn-logo);
+  max-width: var(--cn-logo);
+  overflow: hidden;
   color: var(--cn-text);
   text-decoration: none;
   outline: none;
@@ -155,8 +158,19 @@
 .card-nav__logo img,
 .card-nav__logo svg {
   display: block;
-  height: 100%;
-  width: auto;
+  width: var(--cn-logo);
+  height: var(--cn-logo);
+  max-width: var(--cn-logo);
+  max-height: var(--cn-logo);
+  object-fit: contain;
+}
+
+.card-nav__logo > * {
+  width: var(--cn-logo) !important;
+  height: var(--cn-logo) !important;
+  max-width: var(--cn-logo);
+  max-height: var(--cn-logo);
+  overflow: hidden;
 }
 
 .card-nav__cta {
