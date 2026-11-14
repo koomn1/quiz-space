@@ -2922,6 +2922,9 @@ export default function AIChat({
                 defaultModel="cosmo"
                 efforts={isAr ? ['منخفض', 'متوسط', 'عالٍ', 'إضافي', 'أقصى'] : ['Low', 'Medium', 'High', 'Extra', 'Max']}
                 defaultEffort={isAr ? 'متوسط' : 'Medium'}
+                effortValue={isAr
+                  ? ({ low: 'منخفض', medium: 'متوسط', high: 'عالٍ' }[selectedEffort] || 'متوسط')
+                  : ({ low: 'Low', medium: 'Medium', high: 'High' }[selectedEffort] || 'Medium')}
                 onEffortChange={(value) => {
                   const normalized = /منخفض|low/i.test(value) ? 'low' : /عالٍ|إضافي|أقصى|high|extra|max/i.test(value) ? 'high' : 'medium';
                   setSelectedEffort(normalized);
@@ -2934,7 +2937,7 @@ export default function AIChat({
                   }
                   const webRequested = text.includes('@Web search') || text.includes('@بحث في الويب');
                   if (webRequested) setWebSearchEnabled(true);
-                  void sendMessage(text.replace(/@(Web search|بحث في الويب)\s*/gi, '').trim(), null, options?.effort);
+                  void sendMessage(text.replace(/@(Web search|بحث في الويب)\s*/gi, '').trim(), null, options?.effort || selectedEffort);
                 }}
                 onStop={handleStopGenerating}
                 onAttach={handlePromptAttach}

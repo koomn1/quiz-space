@@ -124,6 +124,7 @@ export default function PromptBar({
   defaultModel = '',
   efforts = DEFAULT_EFFORTS,
   defaultEffort = '',
+  effortValue = '',
   onEffortChange,
   busy = false,
   onSend,
@@ -172,6 +173,12 @@ export default function PromptBar({
   const [active, setActive] = useState(0);
   const [listening, setListening] = useState(false);
   const [pressed, setPressed] = useState(false);
+
+  useEffect(() => {
+    const requested = effortValue || defaultEffort;
+    const next = efforts.indexOf(requested);
+    if (next >= 0 && next !== effortIndex) setEffortIndex(next);
+  }, [effortValue, defaultEffort, efforts, effortIndex]);
 
   const model = models.find(m => m.key === modelKey) ?? models[0];
   const token = dismissed ? null : parseToken(draft);
@@ -350,7 +357,10 @@ export default function PromptBar({
 
   const setEffort = i => {
     const next = Math.max(0, Math.min(efforts.length - 1, i));
-    if (next === effortIndex) return;
+    if (next === effortIndex) {
+      latest.current.onEffortChange?.(efforts[next]);
+      return;
+    }
     setEffortIndex(next);
     latest.current.onEffortChange?.(efforts[next]);
   };
@@ -723,4 +733,3 @@ export default function PromptBar({
     </div>
   );
 }
-
