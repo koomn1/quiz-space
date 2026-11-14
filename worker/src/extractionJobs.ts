@@ -1101,7 +1101,7 @@ async function createVisionChunks(env: ExtractionJobEnv, authHeader: string, job
   return created.length ? created : fetchJobChunks(env, authHeader, jobId);
 }
 
-async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: string, job: ExtractionJobRow, provider: string, status: 'success' | 'error', latencyMs: number, chunks?: number): Promise<void> {
+async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: string, job: ExtractionJobRow, provider: string, status: 'success' | 'error', latencyMs: number, chunks?: number, errorMessage?: unknown): Promise<void> {
   try {
     await fetch(apiUrl(env, '/rest/v1/ai_performance_logs'), {
       method: 'POST',
@@ -1113,6 +1113,7 @@ async function logExtractionPerformance(env: ExtractionJobEnv, authHeader: strin
         chunk_count: chunks,
         status,
         latency_ms: latencyMs,
+        error_message: status === 'error' ? cleanMessage(errorMessage) : null,
       }),
     });
   } catch (error) {
@@ -1199,7 +1200,7 @@ async function reconcileVisionParentJob(
       processing_token: null,
       processing_lease_expires_at: null,
     });
-    await logExtractionPerformance(env, authHeader, parent, 'xkiro', 'error', Date.now() - startedAt, total);
+    await logExtractionPerformance(env, authHeader, parent, 'xkiro', 'error', Date.now() - startedAt, total, failed[0].error_message);
     return;
   }
 
@@ -1230,7 +1231,7 @@ async function reconcileVisionParentJob(
       processing_token: null,
       processing_lease_expires_at: null,
     });
-    await logExtractionPerformance(env, authHeader, parent, 'xkiro', 'error', Date.now() - startedAt, total);
+    await logExtractionPerformance(env, authHeader, parent, 'xkiro', 'error', Date.now() - startedAt, total, 'لم يتم العثور على أسئلة واضحة من الأجزاء المعالجة.');
     return;
   }
 
@@ -1388,7 +1389,7 @@ export async function processExtractionJob(
     } catch (updateError) {
       console.error('Extraction job error state update failed.', { jobId: job.id, updateError });
     }
-    await logExtractionPerformance(env, authHeader, job, provider, 'error', Date.now() - startedAt, chunks);
+    await logExtractionPerformance(env, authHeader, job, provider, 'error', Date.now() - startedAt, chunks, error);
   } finally {
     stopLeaseHeartbeat();
   }
