@@ -79,14 +79,14 @@ describe('dynamic vision chunk planning', () => {
     expect(validateCreateExtractionJobInput({ ...base, mimeType: 'image/avif' }, '00000000-0000-4000-8000-000000000001')).toBeNull();
   });
 
-  it('never truncates literal extraction, even when a legacy job contains a requested count', () => {
+  it('never truncates file extraction, even when a legacy job contains a requested count', () => {
     const questions = Array.from({ length: 5 }, (_, index) => ({ text: `Question ${index + 1}` }));
     expect(applyRequestedQuestionCount(questions, 'literal', 2)).toHaveLength(5);
-    expect(applyRequestedQuestionCount(questions, 'generate', 2)).toHaveLength(2);
+    expect(applyRequestedQuestionCount(questions, 'generate', 2)).toHaveLength(5);
     expect(extractionSource).toContain("extractionMode !== 'generate'");
     expect(extractionSource).toContain('const automaticCount = questionBank.isQuestionBank');
     expect(extractionSource).toContain('Math.min(600, Math.max(1, questionBank.numberedQuestions))');
-    expect(extractionSource).toContain('const requestedCount = job.requested_question_count || automaticCount;');
+    expect(extractionSource).toContain('const requestedCount = automaticCount;');
     expect(routeSource).toContain("requestedQuestionCount: extractionMode === 'generate'");
   });
 
