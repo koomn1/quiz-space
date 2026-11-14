@@ -27,7 +27,7 @@ describe('Cosmo file quiz flow contract', () => {
   it('routes authenticated attached files through chunked generation for complete source coverage', () => {
     expect(source).toContain("attachmentForGeneration.kind === 'file' && userId && !userId.startsWith('user-guest')");
     expect(source).toContain('extractionMode: \'generate\'');
-    expect(source).toContain('requestedQuestionCount: pendingQuiz.amount');
+    expect(source).toContain('requestedQuestionCount: pendingQuiz?.amount ?? quizConfig.amount');
     expect(source).not.toContain("attachmentForGeneration.data.length > 5_000_000");
   });
 
