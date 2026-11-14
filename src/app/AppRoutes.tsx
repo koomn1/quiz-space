@@ -138,7 +138,7 @@ export default function AppRoutes(props: AppRoutesProps) {
   } = props;
 
   return (
-    <main id="main-content" ref={mainContainerRef} tabIndex={-1} className={`theme-page ${isCosmoTab ? 'flex-1 w-full p-0 overflow-hidden min-h-0' : (isNotFoundTab ? 'flex-1 w-full min-h-0 p-0 relative z-10' : (usesSharedFrame ? 'flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 pt-2 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10'))}`}>
+    <main id="main-content" ref={mainContainerRef} tabIndex={-1} className={`${isCosmoTab ? 'theme-page flex-1 w-full p-0 overflow-hidden min-h-0' : (isNotFoundTab ? 'flex-1 w-full min-h-0 p-0 relative z-10' : (usesSharedFrame ? 'page-ground flex-1 w-full px-0 pb-8 pt-2 relative z-10' : 'flex-1 w-full min-h-[100dvh] p-0 relative z-10'))}`}>
 
         {/* Dynamic screen display selection routing */}
         {activeQuizId ? (
