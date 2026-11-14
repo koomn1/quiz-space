@@ -369,7 +369,7 @@ export interface AiChatMessage {
 
 export async function askAI(
   prompt: string,
-  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string; expectedAnswerCount?: number } = {},
+  options: { model?: string; systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string; expectedAnswerCount?: number; effort?: string } = {},
 ): Promise<{ text: string }> {
   try {
     return await workerRequest<{ text: string }>('/api/ai/chat', { prompt, ...options });
@@ -428,7 +428,7 @@ export async function searchCosmoWeb(query: string): Promise<{ query: string; re
 // server-side by then).
 export async function askAIStream(
   prompt: string,
-  options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string; signal?: AbortSignal },
+  options: { systemInstruction?: string; history?: AiChatMessage[]; image?: { data: string; mimeType: string }; attachment?: AiChatAttachment; currentPage?: string; siteStatus?: string; effort?: string; signal?: AbortSignal },
   onChunk: (deltaText: string, fullTextSoFar: string) => void,
 ): Promise<{ text: string }> {
   // Multimodal requests must use the regular Worker route. Streaming providers

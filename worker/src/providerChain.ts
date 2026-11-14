@@ -5,6 +5,7 @@ export type ProviderOptions = {
   max_tokens?: number;
   temperature?: number;
   timeoutMs?: number;
+  reasoning_effort?: 'low' | 'medium' | 'high';
   response_format?: { type: 'json_object' };
   validateResponse?: (text: string, provider: string, model: string) => void;
 };
@@ -65,7 +66,7 @@ async function callInception(env: Env, messages: ProviderMessage[], options: Pro
     body: JSON.stringify({
       model: INCEPTION_MODEL,
       messages,
-      reasoning_effort: THINKING_REASONING_EFFORT,
+      reasoning_effort: options.reasoning_effort || THINKING_REASONING_EFFORT,
       max_completion_tokens: options.max_tokens || 12_000,
       temperature: options.temperature ?? 0.7,
       ...(options.response_format ? { response_format: options.response_format } : {}),
@@ -81,7 +82,7 @@ async function callXkiro(env: Env, messages: ProviderMessage[], options: Provide
     body: JSON.stringify({
       model: XKIRO_VISION_MODEL,
       messages,
-      reasoning_effort: THINKING_REASONING_EFFORT,
+      reasoning_effort: options.reasoning_effort || THINKING_REASONING_EFFORT,
       include_reasoning: true,
       max_tokens: options.max_tokens || 12_000,
       ...(options.temperature != null ? { temperature: options.temperature } : {}),

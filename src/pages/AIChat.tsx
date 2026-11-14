@@ -1354,6 +1354,7 @@ export default function AIChat({
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [isIncognito, setIsIncognito] = useState(false);
+  const [selectedEffort, setSelectedEffort] = useState('medium');
 
   // 8-Mode Engine State
   const [selectedMode, setSelectedMode] = useState<CosmoMode>('instant');
@@ -1550,7 +1551,7 @@ export default function AIChat({
   };
 
   /* Send message */
-  const sendMessage = useCallback(async (text?: string, attachmentOverride?: ChatAttachment | null) => {
+  const sendMessage = useCallback(async (text?: string, attachmentOverride?: ChatAttachment | null, effortOverride?: string) => {
     const trimmed = (text ?? inputText).trim();
     const attachmentForRequest = attachmentOverride || selectedAttachment || selectedAttachmentRef.current;
     if (!trimmed && !attachmentForRequest) return;
@@ -1729,6 +1730,7 @@ export default function AIChat({
           currentPage,
           siteStatus,
           attachment: activeAttachment ? { data: activeAttachment.data, mimeType: activeAttachment.mimeType, name: activeAttachment.name, kind: activeAttachment.kind } : undefined,
+          effort: effortOverride || selectedEffort,
           signal: abortController.signal,
         },
         (_delta, fullTextSoFar) => {
@@ -1794,7 +1796,7 @@ export default function AIChat({
       setStreamingText('');
       streamAbortRef.current = null;
     }
-  }, [inputText, selectedAttachment, pendingQuiz, isAnalyzing, userId, activeConversationId, isAr, webSearchEnabled, currentPage, siteStatus, messages, draftKey, autoMode, selectedMode, isIncognito, updateAgentStep]);
+  }, [inputText, selectedAttachment, pendingQuiz, isAnalyzing, userId, activeConversationId, isAr, webSearchEnabled, currentPage, siteStatus, messages, draftKey, autoMode, selectedMode, selectedEffort, isIncognito, updateAgentStep]);
 
   /* Stop generating streamed answer */
   const handleStopGenerating = () => {
@@ -2920,16 +2922,19 @@ export default function AIChat({
                 defaultModel="cosmo"
                 efforts={isAr ? ['منخفض', 'متوسط', 'عالٍ', 'إضافي', 'أقصى'] : ['Low', 'Medium', 'High', 'Extra', 'Max']}
                 defaultEffort={isAr ? 'متوسط' : 'Medium'}
-                onEffortChange={() => undefined}
+                onEffortChange={(value) => {
+                  const normalized = /منخفض|low/i.test(value) ? 'low' : /عالٍ|إضافي|أقصى|high|extra|max/i.test(value) ? 'high' : 'medium';
+                  setSelectedEffort(normalized);
+                }}
                 busy={isAnalyzing}
-                onSend={(text) => {
+                onSend={(text, options) => {
                   if (text.trim().toLowerCase() === '/quiz') {
                     openQuizStudio();
                     return;
                   }
                   const webRequested = text.includes('@Web search') || text.includes('@بحث في الويب');
                   if (webRequested) setWebSearchEnabled(true);
-                  void sendMessage(text.replace(/@(Web search|بحث في الويب)\s*/gi, '').trim());
+                  void sendMessage(text.replace(/@(Web search|بحث في الويب)\s*/gi, '').trim(), null, options?.effort);
                 }}
                 onStop={handleStopGenerating}
                 onAttach={handlePromptAttach}
