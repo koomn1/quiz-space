@@ -8,6 +8,8 @@ import { EssayReviewModal } from '../components/EssayReviewModal';
 import { PremiumNameTag } from '../components/PremiumNameTag';
 import { getCompletionsByQuizId, getPendingEssayReviews, getQuizTakersUnique } from '../lib/db';
 import { createQuizPdfBytes, downloadQuizPdfBytes, getQuizPdfFileName } from '../lib/quizPdf';
+import ShinyText from '../components/ShinyText';
+import ElectricBorder from '../components/ElectricBorder';
 
 interface MyQuizzesProps {
   quizzes: Quiz[];
@@ -158,7 +160,16 @@ export function MyQuizzes({
               <BookOpen className="w-4 h-4" />
             </div>
             <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">
-              {isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes'}
+              <ShinyText
+                text={isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes'}
+                color={isAr ? '#0f172a' : '#e2e8f0'}
+                shineColor="#67e8f9"
+                speed={3.2}
+                shineWidth={34}
+                glow={0.24}
+                trigger="view"
+                className="dark:text-slate-100"
+              />
             </h2>
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {myQuizzes.length}
@@ -225,13 +236,13 @@ export function MyQuizzes({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {myQuizzes.map((quiz) => {
+          {myQuizzes.map((quiz, quizIndex) => {
             const questionsCount = quiz.questions?.length || 10;
             const plays = quiz.totalPlays || 0;
             const rating = quiz.avgRating ? quiz.avgRating.toFixed(1) : '5.0';
             const estMinutes = Math.max(3, Math.round(questionsCount * 0.7));
 
-            return (
+            const card = (
               <div
                 key={quiz.id}
                 className="my-quiz-card-wrapper group relative flex flex-col justify-between p-5 rounded-3xl bg-white/[0.6] dark:bg-slate-900/40 hover:bg-white/[0.9] dark:hover:bg-slate-900/70 border border-slate-200/80 dark:border-white/10 hover:border-sky-500/40 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 text-right backdrop-blur-md"
@@ -323,6 +334,11 @@ export function MyQuizzes({
                 </div>
               </div>
             );
+            return quizIndex === 0 ? (
+              <ElectricBorder key={`featured-${quiz.id}`} color="#22d3ee" glowColor="#8b5cf6" speed={0.7} chaos={0.08} spread={0.7} intensity={0.7} glow={0.8} borderRadius={24} theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'} interactive>
+                {card}
+              </ElectricBorder>
+            ) : card;
           })}
         </div>
       )}

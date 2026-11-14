@@ -20,6 +20,7 @@ import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
 import { Icons8Icon } from '../components/Icons8Icon';
 import QuestionMedia from '../components/QuestionMedia';
 import { MainLogo } from '../components/MainLogo';
+import ShinyText from '../components/ShinyText';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
 import { useSearchParams } from '../hooks/useSearchParams';
@@ -2452,7 +2453,16 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
           <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-slate-800 dark:text-slate-100">
-            {quizToEdit ? 'تعديل وتحديث الاختبار الحالي' : 'استوديو صياغة الأسئلة والاختبارات'}
+            <ShinyText
+              text={quizToEdit ? 'تعديل وتحديث الاختبار الحالي' : 'استوديو صياغة الأسئلة والاختبارات'}
+              color="#e2e8f0"
+              shineColor="#c4b5fd"
+              speed={3.6}
+              shineWidth={28}
+              glow={0.18}
+              trigger="view"
+              className="dark:text-slate-100"
+            />
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {quizToEdit ? 'قم بتنقيح بيانات الأسئلة وخيارات الحل بدقة تامة ثم احفظ التعديلات.' : 'اختر طريقتك المفضلة لبدء صياغة اختبار حديث ومشاركته فوراً مع شبكتك العلمية.'}
