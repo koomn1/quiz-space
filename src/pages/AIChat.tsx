@@ -666,10 +666,13 @@ interface AIChatProps {
 }
 
 /* ─── Assistant avatar ───────────── */
-function AssistantAvatar() {
+function AssistantAvatar({ activity = 'idle' }: { activity?: OrbState | 'idle' }) {
+  const isActive = activity !== 'idle';
+  const ActivityIcon = activity === 'searching' || activity === 'connecting' ? Globe : activity === 'solving' ? BrainCircuit : Sparkles;
   return (
     <div className="relative flex-shrink-0">
-      <div className="relative w-10 h-10 rounded-full flex items-center justify-center p-0.5 border-2 border-indigo-500/60 shadow-lg shadow-indigo-500/25 ring-2 ring-indigo-500/20 bg-slate-900">
+      {isActive && <span className="pointer-events-none absolute -inset-1 rounded-full border border-indigo-400/50 animate-ping" aria-hidden="true" />}
+      <div className={`relative w-10 h-10 rounded-full flex items-center justify-center p-0.5 border-2 border-indigo-500/60 shadow-lg shadow-indigo-500/25 ring-2 ring-indigo-500/20 bg-slate-900 ${isActive ? 'animate-[pulse_1.8s_ease-in-out_infinite]' : ''}`}>
         <ProfileAvatar
           src={COSMO_AVATAR}
           alt="Cosmo AI"
@@ -679,6 +682,7 @@ function AssistantAvatar() {
           fallbackClassName="text-sm font-black text-indigo-300"
         />
       </div>
+      {isActive && <span className="absolute -end-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-slate-900 bg-indigo-500 text-white shadow-sm" aria-label={activity === 'searching' ? 'Cosmo is searching' : 'Cosmo is working'}><ActivityIcon className="h-2.5 w-2.5" /></span>}
       <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full shadow-sm" title="Online" />
     </div>
   );
@@ -1227,7 +1231,7 @@ function MessageRow({
 function StreamingRow({ text, theme }: { text: string; theme: Palette }) {
   return (
     <div className="flex items-start gap-4 max-w-3xl">
-      <AssistantAvatar />
+      <AssistantAvatar activity="composing" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold mb-2 flex items-center gap-2" style={{ color: theme.FG }}>
           <span>{ASSISTANT_NAME_AR}</span>
@@ -1260,7 +1264,7 @@ function ThinkingRow({ isAr, theme, state = 'working', stageLabel }: { isAr: boo
 
   return (
     <div className="flex items-start gap-4 max-w-3xl" role="status" aria-live="polite">
-      <AssistantAvatar />
+      <AssistantAvatar activity={state} />
       <div className="flex-1">
         <p className="mb-2 flex items-center gap-2 text-sm font-semibold" style={{ color: theme.FG }}>
           <span>{ASSISTANT_NAME_AR}</span>
@@ -1433,16 +1437,16 @@ export default function AIChat({
   useEffect(() => {
     const local = readLocalChatData(userId);
     setConversations(local.conversations);
-    if (local.conversations.length > 0 && !activeConversationId) {
-      setActiveConversationId(local.conversations[0].id);
-    }
+    // A full browser/app restart starts a fresh Cosmo chat. Previous chats
+    // remain in the sidebar and can be reopened explicitly by the user.
+    setActiveConversationId(null);
+    setMessages([]);
     (async () => {
       if (!userId) return;
       const remote = await getAIChatConversations(userId);
       const merged = [...remote, ...local.conversations.filter(l => !remote.some(r => r.id === l.id))]
         .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
       setConversations(merged);
-      if (merged.length > 0 && !activeConversationId) setActiveConversationId(merged[0].id);
     })();
   }, [userId]);
 

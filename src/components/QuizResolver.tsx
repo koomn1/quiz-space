@@ -7,7 +7,7 @@ import { showAppMessage } from './Toast';
 import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
-import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, ThumbsUp, ThumbsDown, Sparkles, Lock, LayoutGrid, X } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, Loader2, ThumbsUp, ThumbsDown, Sparkles, Lock, LayoutGrid, X } from 'lucide-react';
 import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, getQuizAnswerReview, getGuestQuizAnswerReview, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getUserRatedQuestions, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
@@ -1777,7 +1777,14 @@ export default function QuizResolver({
                   let optClass = 'border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/50 backdrop-blur-md border hover:border-primary/40 dark:hover:border-primary/40 text-slate-700 dark:text-slate-200 hover:bg-white/90 dark:hover:bg-slate-800/60 shadow-2xs hover:shadow-sm';
 
                   if (showFeedback) {
-                    if (isCorrect) {
+                    if (isDailyQuiz && !isDailyResultVerified) {
+                      // Daily quizzes keep the answer key private until the
+                      // server verifies the submission. Do not label the
+                      // selected option as wrong while correctIndex is -1.
+                      optClass = isSelected
+                        ? 'border-primary bg-primary/10 text-primary dark:border-primary/70 dark:bg-primary/20 dark:text-primary-light border-2 backdrop-blur-md shadow-md shadow-primary/10'
+                        : 'opacity-40 border-slate-100 bg-transparent text-slate-400 dark:border-slate-800 border';
+                    } else if (isCorrect) {
                       optClass = 'border-emerald-500 bg-emerald-50/70 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-500/70 dark:text-emerald-300 border-2 backdrop-blur-md shadow-md shadow-emerald-500/10';
                     } else if (isSelected) {
                       optClass = 'border-rose-500 bg-rose-50/70 text-rose-800 dark:bg-rose-950/40 dark:border-rose-500/70 dark:text-rose-300 border-2 backdrop-blur-md shadow-md shadow-rose-500/10';
@@ -1801,8 +1808,11 @@ export default function QuizResolver({
                       <div className="absolute left-6 flex items-center justify-center">
                         {showFeedback ? (
                           <>
-                            {isCorrect && <CheckCircle2 className="w-5 h-5 text-emerald-500 animate-bounce" />}
-                            {!isCorrect && isSelected && <XCircle className="w-5 h-5 text-rose-500 shadow-sm" />}
+                            {isDailyQuiz && !isDailyResultVerified && isSelected
+                              ? <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                              : isCorrect
+                                ? <CheckCircle2 className="w-5 h-5 text-emerald-500 animate-bounce" />
+                                : isSelected && <XCircle className="w-5 h-5 text-rose-500 shadow-sm" />}
                           </>
                         ) : (
                           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-bold border border-slate-100 dark:border-slate-700/50 transition-colors group-hover:border-primary group-hover:text-primary">
