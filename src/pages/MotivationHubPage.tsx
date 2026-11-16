@@ -169,7 +169,7 @@ function SectionNav({ section, onNavigate, lang }: Pick<MotivationHubPageProps, 
           key={item.id}
           type="button"
           onClick={() => onNavigate(item.id)}
-          className={`flex min-h-11 items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition duration-200 motion-reduce:transform-none ${section === item.id ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'}`}
+          className={`flex min-h-11 items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition duration-200 motion-reduce:transform-none ${section === item.id ? 'bg-violet-700 text-white shadow-md shadow-violet-700/20 hover:bg-violet-800 dark:bg-violet-500 dark:hover:bg-violet-400' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'}`}
         >
           {item.icon}{item.label}
         </button>
@@ -315,7 +315,7 @@ function LuckyWheelPanel({ onRewardsChanged, lang }: { onRewardsChanged: () => v
   return (
     <div className="mx-auto max-w-4xl rounded-[2.5rem] border border-slate-200 bg-white/60 p-6 text-center shadow-2xl backdrop-blur-sm dark:border-white/10 dark:bg-[#0c071e]/60 sm:p-10">
       <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-500/15 to-cyan-500/20 text-primary shadow-inner"><Gift className="h-10 w-10 animate-pulse" /></div>
-      <h2 className="bg-gradient-to-r from-primary via-purple-500 to-cyan-500 bg-clip-text text-3xl font-black text-transparent">{t.lucky}</h2>
+      <h2 className="text-3xl font-black tracking-tight text-violet-800 dark:text-violet-200">{t.lucky}</h2>
       <p className="mx-auto mt-3 max-w-lg text-sm font-bold leading-7 text-slate-500 dark:text-slate-400">{t.spinHint}</p>
 
       <div className="mx-auto my-10 grid max-w-3xl items-center gap-8 md:grid-cols-[minmax(0,1fr)_220px]">
@@ -522,7 +522,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
               <span className="text-slate-500 dark:text-slate-400">{lang === 'ar' ? 'غير متاح' : 'Unavailable'}</span>
             )}
           </span>
-          <button type="button" disabled={!isActionAvailable || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="min-h-10 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-2 text-[11px] font-black text-white shadow-sm shadow-violet-600/20 transition hover:-translate-y-0.5 hover:from-violet-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-45">
+          <button type="button" disabled={!isActionAvailable || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="min-h-10 rounded-xl bg-violet-700 px-3.5 py-2 text-[11px] font-black text-white shadow-sm shadow-violet-700/20 transition hover:-translate-y-0.5 hover:bg-violet-800 dark:bg-violet-500 dark:hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-45">
             {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : payment.mode === 'cash' ? (lang === 'ar' ? 'شراء بالمال' : 'Buy') : payment.mode === 'unavailable' ? (lang === 'ar' ? 'غير متاح' : 'Unavailable') : t.buy}
           </button>
         </div>
