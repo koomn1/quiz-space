@@ -332,6 +332,28 @@ export async function removeBookmark(userId: string, quizId: string): Promise<vo
 // not by a manual getAuthenticatedUser() check like the Express version had.
 
 function mapQuizRow(row: any): Quiz {
+  const rawQuestions = Array.isArray(row.questions)
+    ? row.questions
+    : typeof row.questions === 'string'
+      ? (() => {
+          try {
+            const parsed = JSON.parse(row.questions);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        })()
+      : [];
+  const questions = rawQuestions.map((question: any, index: number) => ({
+    ...question,
+    id: question?.id || `q-${index + 1}`,
+    type: question?.type === 'essay' || question?.type === 'tf' ? question.type : 'mcq',
+    text: String(question?.text ?? '').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '').replace(/\r\n/g, '\n'),
+    options: Array.isArray(question?.options) ? question.options.map((option: unknown) => String(option ?? '').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')) : [],
+    correctIndex: Number.isInteger(question?.correctIndex) ? question.correctIndex : -1,
+    correctAnswer: question?.correctAnswer == null ? '' : String(question.correctAnswer),
+    explanation: question?.explanation == null ? '' : String(question.explanation),
+  }));
   return {
     id: row.id,
     title: row.title,
@@ -342,7 +364,7 @@ function mapQuizRow(row: any): Quiz {
     creatorBadgeTier: row.creator_badge_tier || 'none',
     creatorBadgeColor: row.creator_badge_color || 'blue',
     creatorNameColor: row.creator_name_color || 'default',
-    questions: row.questions,
+    questions,
     totalPlays: row.total_plays,
     avgRating: row.avg_rating,
     ratingsCount: row.ratings_count,
@@ -507,8 +529,13 @@ export async function getQuizById(id: string): Promise<Quiz | null> {
 export async function getOwnedQuizWithAnswers(quizId: string): Promise<Quiz> {
   if (!quizId || !isSupabaseConfigured) throw new Error('Quiz editing is unavailable.');
   const { data, error } = await supabase.rpc('get_owned_quiz_with_answers', { p_quiz_id: quizId });
-  if (error || !data) throw error || new Error('Quiz not found or not owned.');
-  return mapQuizRow(data);
+  if (!error && data) return mapQuizRow(Array.isArray(data) ? data[0] : data);
+
+  // Older deployments may not have the owner RPC yet. RLS still enforces
+  // ownership on this direct query, so use it only as a compatibility path.
+  const fallback = await supabase.from('quizzes').select('*').eq('id', quizId).maybeSingle();
+  if (!fallback.error && fallback.data) return mapQuizRow(fallback.data);
+  throw error || fallback.error || new Error('Quiz not found or not owned.');
 }
 
 export async function getQuizAnswerReview(quizId: string, completionId: string): Promise<any[]> {

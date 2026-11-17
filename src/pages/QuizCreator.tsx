@@ -66,6 +66,13 @@ function deriveLocalQuizTitle(fileName?: string): string {
   return baseName || 'اختبار مستخرج من الملف';
 }
 
+function cleanQuizText(value: unknown): string {
+  return String(value ?? '')
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+    .replace(/\r\n/g, '\n')
+    .trim();
+}
+
 function isGenericExtractionTitle(title?: string): boolean {
   return ['extracted quiz', 'اختبار مستخرج', 'اختبار مستخرج من الملف'].includes(String(title || '').trim().toLocaleLowerCase());
 }
@@ -2100,13 +2107,13 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       const sanitizedQuestions = questionsToSave.map((q, index) => ({
         id: q.id || `q-${index}-${Date.now()}`,
         type: q.type || 'mcq',
-        text: q.text.trim(),
+        text: cleanQuizText(q.text),
         options: q.type === 'tf'
           ? (/^[^\u0600-\u06ff]*[A-Za-z][^\u0600-\u06ff]*$/u.test(q.text) ? ['True', 'False'] : ['صح', 'خطأ'])
-          : q.options,
+          : q.options.map(option => cleanQuizText(option)),
         correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : -1,
-        correctAnswer: q.correctAnswer || '',
-        explanation: q.explanation || '',
+        correctAnswer: cleanQuizText(q.correctAnswer),
+        explanation: cleanQuizText(q.explanation),
         imageUrl: q.imageUrl || ''
       }));
 
@@ -4049,6 +4056,8 @@ A computer is a digital electronic machine...
                             placeholder="مثال: أي من المحيطات التالية هو الأكبر مساحة على كوكب الأرض؟"
                             value={question.text}
                             onChange={(e) => handleQuestionChange(qIdx, { text: e.target.value })}
+                            dir="auto"
+                            style={{ unicodeBidi: 'plaintext' }}
                             className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 px-5 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner backdrop-blur-sm"
                           />
                         </div>
@@ -4117,6 +4126,8 @@ A computer is a digital electronic machine...
                                     placeholder={`الخيار ${optIdx + 1}...`}
                                     value={option}
                                     onChange={(e) => handleOptionChange(qIdx, optIdx, e.target.value)}
+                                    dir="auto"
+                                    style={{ unicodeBidi: 'plaintext' }}
                                     className={`flex-1 bg-transparent outline-none text-sm font-semibold transition-all ${
                                       isCorrect ? 'text-emerald-900 dark:text-emerald-100 placeholder-emerald-700/40 dark:placeholder-emerald-300/40' : 'text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500'
                                     }`}
@@ -4172,6 +4183,8 @@ A computer is a digital electronic machine...
                             placeholder="اكتب الجواب الكامل أو المعاير النموذجية لمراجعتها ذاتياً عند الانتهاء..."
                             value={question.correctAnswer || ''}
                             onChange={(e) => handleQuestionChange(qIdx, { correctAnswer: e.target.value })}
+                            dir="auto"
+                            style={{ unicodeBidi: 'plaintext' }}
                             rows={3}
                             className="w-full bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-900/30 px-5 py-4 rounded-[20px] outline-none text-sm text-emerald-900 dark:text-emerald-100 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold resize-none shadow-inner backdrop-blur-sm text-right leading-relaxed"
                           />

@@ -43,8 +43,9 @@ function registerArabicFont(pdf: PdfDocument) {
   pdf.addFileToVFS('Cairo-Bold.ttf', cairoArabicFonts.bold);
   pdf.addFont('Cairo-Bold.ttf', 'Cairo', 'bold');
   pdf.setFont('Cairo', 'normal');
-  // Feed jsPDF logical text and let its bidi engine create the visual glyph order.
-  // setR2L reverses the complete string and corrupts mixed Arabic/Latin content.
+  // Keep logical text order. jsPDF's Arabic preProcessText hook shapes Arabic
+  // glyphs automatically; manually marking output as visual RTL reverses mixed
+  // Arabic/Latin strings and corrupts punctuation, numbers, and English terms.
   pdf.setR2L(false);
 }
 
@@ -58,7 +59,12 @@ export function getQuizPdfFileName(quiz: Quiz, branding?: QuizPdfBranding | null
 }
 
 function normaliseText(value: unknown) {
-  return String(value ?? '').replace(/\r\n/g, '\n').trim();
+  return String(value ?? '')
+    // PDFs often carry directional controls that reverse a whole mixed
+    // Arabic/Latin sentence in viewers. Keep the logical characters only.
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+    .replace(/\r\n/g, '\n')
+    .trim();
 }
 
 function getOptions(question: Question) {
@@ -89,10 +95,6 @@ function addPageHeader(pdf: PdfDocument, pageNumber: number, branding?: QuizPdfB
   const publisher = branding?.institutionName || 'Quiz Space — نموذج اختبار رسمي';
   pdf.text(publisher, contentRight(pdf), 22, {
     align: 'right',
-    isInputVisual: false,
-    isInputRtl: true,
-    isOutputVisual: true,
-    isOutputRtl: true,
   });
   pdf.setDrawColor(241, 245, 249);
   pdf.setLineWidth(0.6);
@@ -113,19 +115,11 @@ function addPageFooters(pdf: PdfDocument, totalPages: number) {
     // Left: Platform tag
     pdf.text('تم إنشاؤه بواسطة Quiz Space', MARGIN, pageHeight(pdf) - 16, {
       align: 'left',
-      isInputVisual: false,
-      isInputRtl: true,
-      isOutputVisual: true,
-    isOutputRtl: true,
     });
 
     // Right: Page counter
     pdf.text(`صفحة ${i} من ${totalPages}`, contentRight(pdf), pageHeight(pdf) - 16, {
       align: 'right',
-      isInputVisual: false,
-      isInputRtl: true,
-      isOutputVisual: true,
-    isOutputRtl: true,
     });
   }
 }
@@ -221,10 +215,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   pdf.setTextColor(...brandColor);
   pdf.text(branding?.institutionName || 'منصة Quiz Space التعليمية', contentRight(pdf), y + 14, {
     align: 'right',
-    isInputVisual: false,
-    isInputRtl: true,
-    isOutputVisual: true,
-    isOutputRtl: true,
   });
   y += 24;
 
@@ -233,10 +223,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   pdf.setTextColor(100, 116, 139);
   pdf.text(branding?.institutionName ? 'ورقة أسئلة نموذجية وموثقة' : 'ورقة أسئلة واختبار تفاعلي — بدون إجابات', contentRight(pdf), y, {
     align: 'right',
-    isInputVisual: false,
-    isInputRtl: true,
-    isOutputVisual: true,
-    isOutputRtl: true,
   });
 
   pdf.setDrawColor(...brandColor);
@@ -272,10 +258,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   pdf.text(titleLines, contentRight(pdf) - 14, y + 22, {
     align: 'right',
     lineHeightFactor: 1.4,
-    isInputVisual: false,
-    isInputRtl: true,
-    isOutputVisual: true,
-    isOutputRtl: true,
   });
 
   let infoY = y + 22 + titleLines.length * 22;
@@ -286,10 +268,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     pdf.text(descriptionLines, contentRight(pdf) - 14, infoY, {
       align: 'right',
       lineHeightFactor: 1.5,
-      isInputVisual: false,
-      isInputRtl: true,
-      isOutputVisual: true,
-    isOutputRtl: true,
     });
     infoY += descriptionLines.length * 16;
   }
@@ -306,45 +284,25 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
   pdf.setTextColor(71, 85, 105);
   pdf.text('اسم الطالب', contentRight(pdf) - 14, infoY + 20, {
     align: 'right',
-    isInputVisual: false,
-    isInputRtl: true,
-    isOutputVisual: true,
-    isOutputRtl: true,
   });
 
   pdf.setFont('Cairo', 'normal');
   pdf.setFontSize(9.5);
   pdf.text(studentLabel, contentRight(pdf) - 14, infoY + 38, {
     align: 'right',
-    isInputVisual: false,
-    isInputRtl: true,
-    isOutputVisual: true,
-    isOutputRtl: true,
   });
 
   pdf.setFont('Cairo', 'bold');
   pdf.text(`الدرجة: ${scoreLabel}`, MARGIN + 20, infoY + 30, {
     align: 'right',
-    isInputVisual: false,
-    isInputRtl: true,
-    isOutputVisual: true,
-    isOutputRtl: true,
   });
 
   pdf.text(`التاريخ: ${examDate}`, MARGIN + 150, infoY + 30, {
     align: 'left',
-    isInputVisual: false,
-    isInputRtl: true,
-    isOutputVisual: true,
-    isOutputRtl: true,
   });
 
   pdf.text(`عدد الأسئلة: ${quiz.questions.length}`, MARGIN + 310, infoY + 30, {
     align: 'right',
-    isInputVisual: false,
-    isInputRtl: true,
-    isOutputVisual: true,
-    isOutputRtl: true,
   });
 
   y += infoHeight + SECTION_GAP + 4;
@@ -409,10 +367,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     pdf.setTextColor(255, 255, 255);
     pdf.text(`السؤال ${index + 1} من ${quiz.questions.length}`, contentRight(pdf) - 12, cardTop + 17, {
       align: 'right',
-      isInputVisual: false,
-      isInputRtl: true,
-      isOutputVisual: true,
-    isOutputRtl: true,
     });
 
     // Optional Question Points/Type Tag
@@ -422,10 +376,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     pdf.setTextColor(238, 242, 255);
     pdf.text(typeTag, MARGIN + 12, cardTop + 17, {
       align: 'left',
-      isInputVisual: false,
-      isInputRtl: true,
-      isOutputVisual: true,
-    isOutputRtl: true,
     });
 
     // Question Body Text
@@ -436,10 +386,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     pdf.text(questionLines, contentRight(pdf) - 14, y, {
       align: 'right',
       lineHeightFactor: 1.45,
-      isInputVisual: false,
-      isInputRtl: true,
-      isOutputVisual: true,
-    isOutputRtl: true,
     });
     y += questionTextHeight + 10;
 
@@ -462,10 +408,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
       pdf.setTextColor(148, 163, 184);
       pdf.text('إجابة الطالب:', contentRight(pdf) - 24, y + 18, {
         align: 'right',
-        isInputVisual: false,
-        isInputRtl: true,
-        isOutputVisual: true,
-    isOutputRtl: true,
       });
       y += essayAnswerHeight + 10;
     } else {
@@ -501,10 +443,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
           pdf.setTextColor(...brandColor);
           pdf.text(prefix, x + optionWidth - 14, y + rowHeight / 2 + 3, {
             align: 'center',
-            isInputVisual: false,
-            isInputRtl: true,
-            isOutputVisual: true,
-    isOutputRtl: true,
           });
 
           // Option Text
@@ -514,10 +452,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
           pdf.text(cellLines[cellIndex], x + optionWidth - 28, y + 15, {
             align: 'right',
             lineHeightFactor: 1.4,
-            isInputVisual: false,
-            isInputRtl: true,
-            isOutputVisual: true,
-    isOutputRtl: true,
           });
         });
         y += rowHeight + 6;
@@ -529,10 +463,6 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
       pdf.setTextColor(...brandColor);
       pdf.text(`الإجابة الصحيحة: ${correctAnswer || '—'}`, contentRight(pdf) - 14, y + 12, {
         align: 'right',
-        isInputVisual: false,
-        isInputRtl: true,
-        isOutputVisual: true,
-    isOutputRtl: true,
       });
       y += answerHeight;
     }
