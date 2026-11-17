@@ -536,13 +536,26 @@ async function callAiWithFallback(
   _models: string[],
   options?: { maxTokens?: number; temperature?: number; validateResponse?: (text: string) => void },
 ): Promise<{ text: string; model: string }> {
-  const result = await generateWithProviderChain(env as any, messages, {
+  const requestOptions = {
     max_tokens: options?.maxTokens,
     temperature: options?.temperature,
     timeoutMs: VISION_MODEL_TIMEOUT_MS,
     validateResponse: options?.validateResponse ?? (text => { parseJson(text); }),
-  });
-  return { text: result.text, model: `${result.provider}/${result.model}` };
+  };
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const result = await generateWithProviderChain(env as any, messages, requestOptions);
+      return { text: result.text, model: `${result.provider}/${result.model}` };
+    } catch (error) {
+      lastError = error;
+      const message = String(error instanceof Error ? error.message : error);
+      const transient = /429|503|502|504|overload|rate limit|busy|timeout|timed out|unavailable/i.test(message);
+      if (!transient || attempt === 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 5_000));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('AI provider failed');
 }
 
 async function extractPdfVision(
@@ -719,8 +732,9 @@ async function generateQuestionsFromText(
   let title = deriveQuizTitle(job.source_file_name, text);
   let description = `أسئلة مولدة من محتوى ${sourceFileBaseName(job.source_file_name) || 'الملف'}.`;
 
-  // Keep provider traffic bounded while processing every source section.
-  const concurrency = 3;
+  // Text extraction uses one provider. Serializing sections avoids sending a
+  // burst of large JSON requests that the provider rejects as overloaded.
+  const concurrency = 1;
   for (let start = 0; start < sourceChunks.length; start += concurrency) {
     const batch = sourceChunks.slice(start, start + concurrency);
     const results = await Promise.all(batch.map(async (sourceChunk) => {

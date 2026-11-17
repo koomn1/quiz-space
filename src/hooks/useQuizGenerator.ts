@@ -46,8 +46,10 @@ async function generateQuestionBatches(options: {
   const results: Array<{ index: number; data: GeneratedQuiz | null; error: Error | null }> = [];
   let nextIndex = 0;
 
-  // Two concurrent requests cut the wall-clock time for 100–200 questions
-  // without creating an unbounded browser queue.
+  // The text provider is currently a single-provider path. Parallel browser
+  // requests make 429/503 bursts much more likely and leave the UI at 0/N
+  // while both large responses are waiting. Keep this recovery path serial;
+  // the worker owns bounded concurrency for sources that can safely use it.
   const worker = async () => {
     while (nextIndex < batchCount) {
       const index = nextIndex++;
@@ -62,7 +64,7 @@ async function generateQuestionBatches(options: {
     }
   };
 
-  await Promise.all(Array.from({ length: Math.min(2, batchCount) }, () => worker()));
+  await worker();
   results.sort((a, b) => a.index - b.index);
   return {
     questions: results.flatMap(result => result.data?.questions || []),
@@ -134,10 +136,9 @@ export function useQuizGenerator() {
       let finalTitle = '';
       let finalDescription = '';
 
-      // Forty questions in one JSON response can keep the UI at 0/40 while a
-      // provider generates a very large answer or retries a slow model. Two
-      // parallel batches of twenty return sooner and expose progress earlier.
-      const BATCH_SIZE = 20;
+      // Smaller responses finish more reliably under provider load and expose
+      // progress after each completed batch instead of waiting at 0/N.
+      const BATCH_SIZE = 10;
 
       if (type === 'topic') {
         const generated = await generateQuestionBatches({

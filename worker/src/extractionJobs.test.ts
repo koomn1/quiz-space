@@ -68,6 +68,13 @@ describe('dynamic vision chunk planning', () => {
     expect(extractionSource).toContain('stopLeaseHeartbeat();');
   });
 
+  it('serializes text sections and retries transient provider overload once', () => {
+    expect(extractionSource).toContain('const concurrency = 1;');
+    expect(extractionSource).toContain('for (let attempt = 0; attempt < 2; attempt += 1)');
+    expect(extractionSource).toContain('/429|503|502|504|overload|rate limit|busy|timeout|timed out|unavailable/i');
+    expect(extractionSource).toContain('await new Promise(resolve => setTimeout(resolve, 5_000));');
+  });
+
   it('accepts supported animated and modern image MIME types', () => {
     const base = {
       idempotencyKey: 'media-test-key-123456',
