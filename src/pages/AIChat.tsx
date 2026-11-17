@@ -1909,9 +1909,12 @@ export default function AIChat({
         const job = await createExtractionJob({
           file: attachmentToFile(attachmentForGeneration),
           sourceFileName: attachmentForGeneration.name,
-          extractionMode: 'generate',
+          // Question-bank files must use the complete literal extraction path;
+          // the verifier can enrich answers afterward without truncating the
+          // source to the requested preview amount.
+          extractionMode: 'literal',
           customInstruction: sourceInstruction,
-          requestedQuestionCount: pendingQuiz.amount,
+          requestedQuestionCount: undefined,
         });
         let currentJob = job;
         const deadline = Date.now() + 12 * 60_000;
@@ -1955,10 +1958,7 @@ export default function AIChat({
       setQuizGenStage(isAr ? 'تدقيق الإجابات وحفظ الاختبار في حسابك...' : 'Validating and saving quiz...');
       setQuizGenPercent(92);
 
-      const limitedGenerated = attachmentForGeneration && pendingQuiz.amount > 0
-        ? { ...generated, questions: generated.questions.slice(0, pendingQuiz.amount) }
-        : generated;
-      const verified = validateAndCleanQuiz(limitedGenerated);
+      const verified = validateAndCleanQuiz(generated);
 
       const saved = await createQuiz({
         title: verified.title,

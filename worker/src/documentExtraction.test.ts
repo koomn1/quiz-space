@@ -114,6 +114,13 @@ describe('literal document question extraction', () => {
     expect(questions[0].options).toHaveLength(4);
   });
 
+  it('reads a short visually reversed Arabic presentation-form phrase in question text', () => {
+    const questions = parseLiteralQuestions('1. ﺎﺴﻧﻹ ﻮﻘﺣ');
+
+    expect(questions).toHaveLength(1);
+    expect(questions[0].text).toBe('حقوق الإنسان');
+  });
+
   it('keeps Arabic PDF markers on the deterministic path instead of generating a short fallback batch', async () => {
     const result = await extractQuestionsFromText([
       '\u202bس \u202a.١\u202c تهدف حقوق الإنسان أساسًا إلى حماية:\u202c',

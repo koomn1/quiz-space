@@ -95,6 +95,29 @@ if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
 }
 
+const CLIENT_PDF_MIRROR: Record<string, string> = {
+  '(': ')', ')': '(', '[': ']', ']': '[', '{': '}', '}': '{',
+  '<': '>', '>': '<', '«': '»', '»': '«',
+};
+const CLIENT_PDF_CONTROL_MARKS = /[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g;
+
+function normalizeClientPdfLine(value: string): string {
+  const clean = value.replace(CLIENT_PDF_CONTROL_MARKS, '');
+  const hasPresentationForms = /[\uFB50-\uFDFF\uFE70-\uFEFF]/u.test(clean);
+  let text = clean;
+  if (hasPresentationForms) {
+    text = Array.from(clean).reverse().map(char => CLIENT_PDF_MIRROR[char] ?? char).join('')
+      .replace(/[A-Za-z0-9\u0660-\u0669]+(?:[.,:][A-Za-z0-9]+)*/g,
+        run => Array.from(run).reverse().join(''));
+  }
+  return text.normalize('NFKC')
+    .replace(/[یى]/g, 'ي').replace(/ک/g, 'ك')
+    .replace(/[\u00a0\u2007\u202f]/g, ' ')
+    .replace(/[：﹕]/g, ':')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Extracts text page-by-page from an uploaded PDF
 const extractTextFromPdf = async (file: File): Promise<string[]> => {
   const data = new Uint8Array(await file.arrayBuffer());
@@ -105,7 +128,7 @@ const extractTextFromPdf = async (file: File): Promise<string[]> => {
       const page = await pdf.getPage(i);
       try {
         const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+        const pageText = textContent.items.map((item: any) => normalizeClientPdfLine(String(item.str || ''))).join(' ').trim();
         pageTexts.push(pageText);
       } finally {
         page.cleanup();
@@ -146,7 +169,7 @@ const extractHybridPagesFromPdf = async (
       const page = await pdf.getPage(i);
       try {
         const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: any) => item.str).join(' ').trim();
+        const pageText = textContent.items.map((item: any) => normalizeClientPdfLine(String(item.str || ''))).join(' ').trim();
         // If page contains less than 150 characters, it is most likely a scanned page or image
         if (pageText.length > 150) {
           onPageProgress(i, pdf.numPages, 'text');

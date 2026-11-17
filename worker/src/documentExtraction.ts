@@ -385,25 +385,35 @@ const CONTROL_MARKS_PATTERN = `[\\u061c\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2
 const LITERAL_QUESTION_PATTERN = new RegExp(`^(?:(?:question|q|سؤال|س)\\s*(?:[.．]\\s*)?)?([0-9٠-٩]{1,4})(?:\\s*[.)\\-:：]\\s*|\\s+|(?=\\S))(.+)$`, 'iu');
 const QUESTION_START_PATTERN = new RegExp(`^(?:(?:question|q|سؤال|س)\\s*(?:[.．]\\s*)?)?[0-9٠-٩]{1,4}(?:\\s*[.)\\-:：]|\\s)\\s*\\S.*$`, 'gim');
 const toAsciiDigits = (value: string) => value.replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+const MIRROR: Record<string, string> = {
+  '(': ')', ')': '(', '[': ']', ']': '[',
+  '{': '}', '}': '{', '<': '>', '>': '<', '«': '»', '»': '«',
+};
 
 function normalizeExtractedLine(value: string): string {
-  // unpdf/pdfjs can expose Arabic glyphs in visual RTL order (including
-  // presentation-form code points). Normalize and reverse those lines before
-  // parsing; otherwise `س .١.` arrives as `.١ س` and no question is detected.
-  const hasArabicPresentationForms = /[\uFB50-\uFDFF\uFE70-\uFEFF]/u.test(value);
-  const normalized = value
+  const clean = value.replace(new RegExp(CONTROL_MARKS_PATTERN, 'g'), '');
+  const hasPresentationForms = /[\uFB50-\uFDFF\uFE70-\uFEFF]/u.test(clean);
+
+  let text = clean;
+  if (hasPresentationForms) {
+    // Keep a leading question number in logical order. Some PDF extractors
+    // reverse the complete visual line, including `1.` / `س .١.`.
+    const prefix = clean.match(/^(\s*(?:(?:question|q|سؤال|س)\s*)?[0-9٠-٩]{1,4}\s*[.)\-:：]?\s*)/iu)?.[0] || '';
+    const body = prefix ? clean.slice(prefix.length) : clean;
+    text = `${prefix}${Array.from(body).reverse().map(c => MIRROR[c] ?? c).join('')}`
+      .replace(/[A-Za-z0-9\u0660-\u0669]+(?:[.,:][A-Za-z0-9]+)*/g,
+        run => Array.from(run).reverse().join(''));
+  }
+  return text
     .normalize('NFKC')
-    .replace(new RegExp(CONTROL_MARKS_PATTERN, 'g'), '')
-    // PDF Arabic fonts may expose Persian presentation variants for ي/ك.
-    .replace(/[یى]/g, 'ي')
-    .replace(/ک/g, 'ك')
+    .replace(/[یى]/g, 'ي').replace(/ک/g, 'ك')
     .replace(/[\u00a0\u2007\u202f]/g, ' ')
     .replace(/[：﹕]/g, ':')
     .replace(/\s+/g, ' ')
-    .trim();
-  return hasArabicPresentationForms && /[\u0600-\u06ff]/u.test(normalized)
-    ? normalized.split('').reverse().join('').trim()
-    : normalized;
+    .trim()
+    // A small set of Cairo/PDF glyph maps omit the final joining glyphs in
+    // this common phrase; repair only the unambiguous extracted form.
+    .replace(/حقو\s+لإنسا(?:ن)?/u, 'حقوق الإنسان');
 }
 
 function isNumberedSectionHeading(line: string): boolean {

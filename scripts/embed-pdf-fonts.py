@@ -1,5 +1,12 @@
 from base64 import b64encode
 from pathlib import Path
+import subprocess, sys
+
+# Idempotent repair: existing cmap entries are skipped by the patcher.
+subprocess.run(
+    [sys.executable, str(Path(__file__).with_name("patch-cairo-presentation-forms.py"))],
+    check=True,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 FONT_DIR = ROOT / "src" / "lib" / "pdfFonts"
