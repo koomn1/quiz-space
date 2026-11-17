@@ -136,6 +136,21 @@ describe('literal document question extraction', () => {
     });
   });
 
+  it('repairs the extended Arabic human-rights sample shown in the quiz', () => {
+    const questions = parseLiteralQuestions([
+      '1. تھفد حقا قولإنساأ نساسا ً إلي حماية:',
+      'A.فئة معينة ما نلمجتمع',
+      'B.كارمة الإنساو نحرياتھ',
+      'C.أصحاا بلمناصب فقط',
+      'D.المؤسساا تلاقتصادية فقط',
+    ].join('\n'));
+
+    expect(questions[0]).toMatchObject({
+      text: 'تهدف حقوق الإنسان أساسًا إلى حماية:',
+      options: ['فئة معينة من المجتمع', 'كرامة الإنسان وحرياته', 'أصحاب المناصب فقط', 'المؤسسات الاقتصادية فقط'],
+    });
+  });
+
   it('keeps Arabic PDF markers on the deterministic path instead of generating a short fallback batch', async () => {
     const result = await extractQuestionsFromText([
       '\u202bس \u202a.١\u202c تهدف حقوق الإنسان أساسًا إلى حماية:\u202c',

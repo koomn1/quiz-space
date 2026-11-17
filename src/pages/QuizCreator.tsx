@@ -24,6 +24,7 @@ import BidiText from '../components/BidiText';
 import ShinyText from '../components/ShinyText';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
+import { normalizeArabicText } from '../lib/arabicText';
 import { useSearchParams } from '../hooks/useSearchParams';
 import { applySourceAnswerKey, applyVerifiedAnswerReviews, normalizeSingleQuestionReviewResponse } from '../lib/extractedAnswerReview';
 import { countVerifiedQuizQuestions, getInvalidQuizQuestions } from '../lib/quizSaveValidation';
@@ -67,17 +68,7 @@ function deriveLocalQuizTitle(fileName?: string): string {
 }
 
 function cleanQuizText(value: unknown): string {
-  return String(value ?? '')
-    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
-    .replace(/\r\n/g, '\n')
-    .replace(/حقول\s*إنسان/gu, 'حقوق الإنسان')
-    .replace(/مب\s*:\s*أد/gu, 'مبادئ')
-    .replace(/بيا\s*نلأفدار/gu, 'بين الأفراد')
-    .replace(/المسااو\s*ة\s*اولكارمة/gu, 'المساواة والكرامة')
-    .replace(/إلغاا\s*ءلحريات/gu, 'إلغاء الحريات')
-    .replace(/علي\s+أخير/gu, 'على أخرى')
-    .replace(/حقو\s+لإنسا(?:ن)?/u, 'حقوق الإنسان')
-    .trim();
+  return normalizeArabicText(value);
 }
 
 function isGenericExtractionTitle(title?: string): boolean {
@@ -102,37 +93,8 @@ if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
 }
 
-const CLIENT_PDF_MIRROR: Record<string, string> = {
-  '(': ')', ')': '(', '[': ']', ']': '[', '{': '}', '}': '{',
-  '<': '>', '>': '<', '«': '»', '»': '«',
-};
-const CLIENT_PDF_CONTROL_MARKS = /[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g;
-
-function repairClientArabicGlyphRuns(value: string): string {
-  return value
-    .replace(/حقول\s*إنسان/gu, 'حقوق الإنسان')
-    .replace(/مب\s*:\s*أد/gu, 'مبادئ')
-    .replace(/بيا\s*نلأفدار/gu, 'بين الأفراد')
-    .replace(/المسااو\s*ة\s*اولكارمة/gu, 'المساواة والكرامة')
-    .replace(/إلغاا\s*ءلحريات/gu, 'إلغاء الحريات')
-    .replace(/علي\s+أخير/gu, 'على أخرى');
-}
-
 function normalizeClientPdfLine(value: string): string {
-  const clean = value.replace(CLIENT_PDF_CONTROL_MARKS, '');
-  const hasPresentationForms = /[\uFB50-\uFDFF\uFE70-\uFEFF]/u.test(clean);
-  let text = clean;
-  if (hasPresentationForms) {
-    text = Array.from(clean).reverse().map(char => CLIENT_PDF_MIRROR[char] ?? char).join('')
-      .replace(/[A-Za-z0-9\u0660-\u0669]+(?:[.,:][A-Za-z0-9]+)*/g,
-        run => Array.from(run).reverse().join(''));
-  }
-  return repairClientArabicGlyphRuns(text.normalize('NFKC')
-    .replace(/[یى]/g, 'ي').replace(/ک/g, 'ك')
-    .replace(/[\u00a0\u2007\u202f]/g, ' ')
-    .replace(/[：﹕]/g, ':')
-    .replace(/\s+/g, ' ')
-    .trim());
+  return normalizeArabicText(value);
 }
 
 // Extracts text page-by-page from an uploaded PDF
