@@ -28,7 +28,7 @@ const DOCUMENT_EXTRACTION_MODELS = ['mercury-3'];
 // Keep each provider request bounded: one huge 100–200 question prompt is slow,
 // exceeds output limits easily, and makes the whole extraction fail atomically.
 const DOCUMENT_SINGLE_REQUEST_LIMIT = 120_000;
-const EXTRACTION_OPTIONS = { max_tokens: 12_000, temperature: 0.1 };
+const EXTRACTION_OPTIONS = { max_tokens: 12_000, temperature: 0.1, reasoning_effort: 'low' as const };
 
 function extractJson(text: string): unknown {
   const cleaned = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');

@@ -313,6 +313,7 @@ interface LegacyAiRequestOptions {
   max_tokens?: number;
   temperature?: number;
   timeoutMs?: number;
+  reasoning_effort?: 'low' | 'medium' | 'high';
   response_format?: { type: 'json_object' };
   expectedAnswerCount?: number;
   allowPartial?: boolean;
@@ -397,6 +398,7 @@ interface AiRequestOptions {
   max_tokens?: number;
   temperature?: number;
   timeoutMs?: number;
+  reasoning_effort?: 'low' | 'medium' | 'high';
   response_format?: { type: 'json_object' };
   expectedAnswerCount?: number;
   allowPartial?: boolean;
@@ -489,7 +491,7 @@ async function providerText(
   _provider: Provider,
   prompt: string,
   env: Env,
-  options: { timeoutMs?: number } = {},
+  options: { timeoutMs?: number; reasoning_effort?: 'low' | 'medium' | 'high' } = {},
 ): Promise<string> {
   try {
     return await callAiWithFallback(
@@ -497,7 +499,7 @@ async function providerText(
       [{ role: 'user', content: prompt }],
       AI_TEXT_FALLBACKS,
       undefined,
-      { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs },
+      { max_tokens: 8_000, temperature: 0.35, timeoutMs: options.timeoutMs, reasoning_effort: options.reasoning_effort || 'low' },
     );
   } catch (aiProviderError) {
     throw aiProviderError;
@@ -805,7 +807,8 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
         }
         const baseQuestions = Array.isArray(body.alreadyGeneratedQuestions) ? body.alreadyGeneratedQuestions.slice(0, 100) : [];
         const initialBatchSize = Math.min(body.amount, 25);
-        let text = await providerText(provider, quizPrompt(body.topic, initialBatchSize, baseQuestions), env);
+        const reasoning_effort = normalizeReasoningEffort(body.effort || 'low');
+        let text = await providerText(provider, quizPrompt(body.topic, initialBatchSize, baseQuestions), env, { reasoning_effort });
         let result = extractJson(text) as any;
         // Models occasionally stop early and return fewer questions than
         // requested — ask for bounded batches so large requests do not exceed
@@ -822,7 +825,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
               `${body.topic} — أكمل الاختبار السابق بالأسئلة الناقصة فقط دون تكرار، وأجب بعدد ${batchAmount} سؤال بالضبط`,
               batchAmount,
               [...baseQuestions, ...((result?.questions || []).map((q: any) => String(q.text || '')))].slice(-200)
-            ), env);
+            ), env, { reasoning_effort });
             const extra = extractJson(remainder) as any;
             if (Array.isArray(extra?.questions) && extra.questions.length > 0) {
               if (!result.title && extra.title) result.title = extra.title;

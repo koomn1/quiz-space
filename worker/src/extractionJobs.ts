@@ -540,6 +540,7 @@ async function callAiWithFallback(
     max_tokens: options?.maxTokens,
     temperature: options?.temperature,
     timeoutMs: VISION_MODEL_TIMEOUT_MS,
+    reasoning_effort: 'low' as const,
     validateResponse: options?.validateResponse ?? (text => { parseJson(text); }),
   };
   let lastError: unknown;
