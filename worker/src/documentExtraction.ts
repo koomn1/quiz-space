@@ -537,7 +537,11 @@ function parseFsmQuestionsForLegacyOutput(text: string, allowedTypes: AllowedQue
 }
 
 export function isReliableLiteralExtraction(text: string, questions: any[]): boolean {
-  const questionMarkers = text.split(/\r?\n/).map(line => line.trim()).filter(line =>
+  // PDF text commonly contains bidi control marks around the Arabic label and
+  // punctuation. Count markers using the same normalization as the parser;
+  // checking raw lines made valid local parses look unreliable and incorrectly
+  // sent them to the short AI fallback batch.
+  const questionMarkers = text.split(/\r?\n/).map(normalizeExtractedLine).filter(line =>
     !isNumberedSectionHeading(line) && LITERAL_QUESTION_PATTERN.test(line),
   ).length;
   return questionMarkers > 0
@@ -636,7 +640,7 @@ export async function extractQuestionsFromText(
         modelsUsed.add(item.result.model);
         try {
           const parsed = extractJson(item.result.raw);
-          const markerCount = item.chunk.split(/\r?\n/).map(line => line.trim()).filter(line => LITERAL_QUESTION_PATTERN.test(line)).length;
+          const markerCount = item.chunk.split(/\r?\n/).map(normalizeExtractedLine).filter(line => LITERAL_QUESTION_PATTERN.test(line)).length;
           const extractedCount = normalizeQuestions(parsed, allowedTypes).length;
           if (markerCount > extractedCount) throw new Error(`Expected at least ${markerCount} source questions in a chunk, got ${extractedCount}.`);
           parsedResults.push(parsed);

@@ -113,4 +113,22 @@ describe('literal document question extraction', () => {
     expect(questions[0]).toMatchObject({ type: 'mcq', number: 1, correctIndex: 1 });
     expect(questions[0].options).toHaveLength(4);
   });
+
+  it('keeps Arabic PDF markers on the deterministic path instead of generating a short fallback batch', async () => {
+    const result = await extractQuestionsFromText([
+      '\u202bس \u202a.١\u202c تهدف حقوق الإنسان أساسًا إلى حماية:\u202c',
+      'أ) فئة معينة من المجتمع',
+      'ب) كرامة الإنسان وحرياته',
+      'ج) أصحاب المناصب فقط',
+      'د) المؤسسات الاقتصادية فقط',
+      'الإجابة الصحيحة: (ب) كرامة الإنسان وحرياته.',
+      '\u202bس \u202a.٢\u202c ما المقصود بحقوق الإنسان؟\u202c',
+      'الإجابة النموذجية: هي الحقوق والحريات الملازمة لكل إنسان.',
+    ].join('\n'), {} as any);
+
+    expect(result.provider).toBe('local-format-parser');
+    expect(result.questions).toHaveLength(2);
+    expect(result.questions[0]).toMatchObject({ type: 'mcq', number: 1, correctIndex: 1 });
+    expect(result.questions[1]).toMatchObject({ type: 'essay', number: 2 });
+  });
 });
