@@ -151,6 +151,20 @@ describe('literal document question extraction', () => {
     });
   });
 
+  it('repairs the additional Arabic glyph runs shown in the editor', () => {
+    const questions = parseLiteralQuestions([
+      '1. ا .حتمار حقا قولإنسان يساعد علي تحقي:ق',
+      'A.الاستقاو رارلسلام',
+      'B.زياا ةدلنازعات',
+      'C.انتشاا رلتمييز',
+      'D.تقييد جميع الحريات',
+    ].join('\n'));
+    expect(questions[0]).toMatchObject({
+      text: 'احترام حقوق الإنسان يساعد على تحقيق',
+      options: ['الاستقرار والسلام', 'زيادة النزاعات', 'انتشار التمييز', 'تقييد جميع الحريات'],
+    });
+  });
+
   it('keeps Arabic PDF markers on the deterministic path instead of generating a short fallback batch', async () => {
     const result = await extractQuestionsFromText([
       '\u202bس \u202a.١\u202c تهدف حقوق الإنسان أساسًا إلى حماية:\u202c',

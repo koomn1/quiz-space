@@ -2328,8 +2328,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                             <span className="rounded-full bg-white/[0.07] px-2.5 py-1 text-[10px] font-bold text-slate-300">{question.type === 'mcq' ? 'اختيار من متعدد' : question.type === 'tf' ? 'صح / خطأ' : 'مقالي'}</span>
                             <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${hasAnswer ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>{hasAnswer ? 'إجابة مؤكدة' : 'يحتاج مراجعة'}</span>
                           </div>
-                          <BidiText as="p" className="whitespace-pre-wrap text-right text-sm font-bold leading-7 text-white">{question.text}</BidiText>
-                          {question.type === 'mcq' && <div className="mt-3 grid gap-2 sm:grid-cols-2">{(question.options || []).map((option, optionIndex) => <div key={optionIndex} className={`rounded-xl border px-3 py-2 text-right text-xs ${optionIndex === question.correctIndex ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200' : 'border-white/10 bg-black/10 text-slate-300'}`}><span dir="ltr" className="mr-1 inline-block font-black">{String.fromCharCode(65 + optionIndex)}.</span><BidiText>{option || 'خيار فارغ'}</BidiText></div>)}</div>}
+                          <BidiText as="p" className="whitespace-pre-wrap text-right text-sm font-bold leading-7 text-white">{cleanQuizText(question.text)}</BidiText>
+                          {question.type === 'mcq' && <div className="mt-3 grid gap-2 sm:grid-cols-2">{(question.options || []).map((option, optionIndex) => <div key={optionIndex} className={`rounded-xl border px-3 py-2 text-right text-xs ${optionIndex === question.correctIndex ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200' : 'border-white/10 bg-black/10 text-slate-300'}`}><span dir="ltr" className="mr-1 inline-block font-black">{String.fromCharCode(65 + optionIndex)}.</span><BidiText>{cleanQuizText(option) || 'خيار فارغ'}</BidiText></div>)}</div>}
                           {question.type === 'essay' && (
                             <div className="mt-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.06] p-3">
                               <label className="mb-2 block text-xs font-bold text-amber-200">الإجابة النموذجية (اختياريًا إذا لم تكن موجودة في الملف)</label>
@@ -4056,7 +4056,7 @@ A computer is a digital electronic machine...
                             type="text"
                             required
                             placeholder="مثال: أي من المحيطات التالية هو الأكبر مساحة على كوكب الأرض؟"
-                            value={question.text}
+                            value={cleanQuizText(question.text)}
                             onChange={(e) => handleQuestionChange(qIdx, { text: e.target.value })}
                             dir="auto"
                             style={{ unicodeBidi: 'plaintext' }}
@@ -4126,7 +4126,7 @@ A computer is a digital electronic machine...
                                   <input
                                     type="text"
                                     placeholder={`الخيار ${optIdx + 1}...`}
-                                    value={option}
+                                    value={cleanQuizText(option)}
                                     onChange={(e) => handleOptionChange(qIdx, optIdx, e.target.value)}
                                     dir="auto"
                                     style={{ unicodeBidi: 'plaintext' }}
