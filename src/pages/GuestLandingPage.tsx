@@ -223,7 +223,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
           <button
             type="button"
             onClick={onLogin}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 font-black text-xs sm:text-sm px-6 py-3 transition-all duration-200 active:scale-95 shadow-md cursor-pointer shrink-0"
+            className="guest-landing__cta inline-flex min-h-12 items-center justify-center gap-2 rounded-full font-black text-xs sm:text-sm px-6 py-3 transition-all duration-200 active:scale-95 shadow-md cursor-pointer shrink-0"
           >
             <span>{isAr ? 'الدخول إلى المنصة' : 'Enter the platform'}</span>
             <ChevronLeft className="h-4 w-4 rtl:rotate-180" />

@@ -127,12 +127,13 @@ export default function Header({
   };
 
   const isGuest = !userId || userId.startsWith('user-');
+  const isGuestLanding = isGuest && currentTab === 'landing';
 
   return (
     <header className="liquid-header fixed inset-x-0 top-0 z-50 w-full transition-all duration-300 pointer-events-none">
       <div className="w-full">
         <div
-          className="liquid-header__bar pointer-events-auto flex min-w-0 items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 bg-white/75 dark:bg-slate-950/75 backdrop-blur-2xl border border-white/60 dark:border-white/10 rounded-2xl px-3 sm:px-6 lg:px-10 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] transition-all duration-500"
+          className={`liquid-header__bar pointer-events-auto flex min-w-0 items-center justify-between h-14 sm:h-16 w-full flex-row gap-2 px-3 sm:px-6 lg:px-10 transition-all duration-500 ${isGuestLanding ? 'liquid-header__bar--guest bg-transparent border-transparent shadow-none rounded-none' : 'bg-white/75 dark:bg-slate-950/75 backdrop-blur-2xl border border-white/60 dark:border-white/10 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]'}`}
 
 
 

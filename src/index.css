@@ -133,6 +133,14 @@ a {
   transition: background-color var(--ios27-duration-fast) var(--ios27-easing-apple-default), border-color var(--ios27-duration-fast) var(--ios27-easing-apple-default), box-shadow var(--ios27-duration-fast) var(--ios27-easing-apple-default);
 }
 
+.liquid-header__bar--guest {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 @media (prefers-reduced-transparency: reduce), (pointer: coarse) and (max-width: 480px) {
   .liquid-header__bar {
     backdrop-filter: none;
@@ -2242,6 +2250,8 @@ html[dir="rtl"] .quizspace-sidebar-panel,
 .guest-landing__copy { color: var(--app-text-muted); }
 .guest-landing__primary { color: #fff; background: linear-gradient(100deg, var(--theme-primary), var(--theme-gradient-to)); }
 .guest-landing__secondary { border: 1px solid var(--app-border-strong); background: color-mix(in srgb, var(--app-surface-strong) 72%, var(--theme-primary) 28%); color: var(--app-text); }
+.guest-landing__cta { color: var(--app-text-on-primary, #fff); background: var(--theme-primary); box-shadow: 0 10px 24px color-mix(in srgb, var(--theme-primary) 24%, transparent); }
+.guest-landing__cta:hover { background: var(--theme-primary-dark); }
 .guest-landing__preview { border: 1px solid var(--app-border); background: color-mix(in srgb, var(--app-surface-strong) 78%, var(--theme-primary) 22%); }
 .guest-landing__preview-note { border: 1px solid var(--app-border); background: color-mix(in srgb, var(--app-surface-strong) 88%, var(--theme-primary) 12%); color: var(--app-text); }
 .guest-landing__preview-muted { color: var(--app-text-muted); }
