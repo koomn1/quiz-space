@@ -48,6 +48,10 @@ import { ProfileQuickBadgeRail } from "../components/ProfileQuickBadgeRail";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, resolveProfileImageUrl, uniqueProfileFrames } from "../constants/profileAssets";
+import Lanyard from "../components/lanyard/Lanyard";
+import lanyardFrontImage from "../components/lanyard/card-front.webp";
+import lanyardBackImage from "../components/lanyard/card-back.webp";
+import lanyardStrapImage from "../components/lanyard/lanyard.png";
 
 async function prepareProfileImage(file: File): Promise<{ preview: string; uploadFile: File; compressionPercent: number }> {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Unsupported image type.');
@@ -364,6 +368,7 @@ export default function UserProfile({
     blur: 5,
   });
   const [coverText, setCoverText] = React.useState("");
+  const [showLanyard, setShowLanyard] = React.useState(false);
 
   const [activeTab, setActiveTab] = React.useState<
     "overview" | "quizzes" | "achievements" | "exports" | "errors"
@@ -547,6 +552,7 @@ export default function UserProfile({
           let parsedFacebook = "";
           let parsedRole = "";
           let parsedCountry = "";
+          let parsedShowLanyard = false;
 
           if (locStr.includes("||bg:")) {
             const afterBg = locStr.split("||bg:")[1] || "";
@@ -571,6 +577,7 @@ export default function UserProfile({
               if (chunk.startsWith("role:")) parsedRole = chunk.substring(5);
               if (chunk.startsWith("country:"))
                 parsedCountry = chunk.substring(8);
+              if (chunk.startsWith("lanyard:")) parsedShowLanyard = chunk.substring(8) === 'on';
             });
           } else {
             // backward compatibility
@@ -650,6 +657,7 @@ export default function UserProfile({
             blur: parsedBgBlur,
           });
           setCoverText(parsedCoverText);
+          setShowLanyard(parsedShowLanyard);
           setGithubUrl(parsedGithub);
           setInstagramUrl(parsedInstagram);
           setLinkedinUrl(parsedLinkedin);
@@ -752,7 +760,7 @@ export default function UserProfile({
       }
 
       // Serialize background, custom cover slogan, custom social urls and verification badge customization back into location field
-      const serializedLocation = `||bg:${chosenBg}||customBg:${customBgUrl}||coverText:${coverText.trim()}||github:${githubUrl.trim()}||instagram:${instagramUrl.trim()}||linkedin:${linkedinUrl.trim()}||facebook:${facebookUrl.trim()}||role:${editRole.trim()}||country:${editCountry.trim()}||bgSpeed:${bgSettings.speed}||bgBrightness:${bgSettings.brightness}||bgGlow:${bgSettings.glow}||bgDensity:${bgSettings.density}||bgWaveHeight:${bgSettings.waveHeight}||bgTheme:${bgSettings.theme}||bgBlur:${bgSettings.blur}`;
+      const serializedLocation = `||bg:${chosenBg}||customBg:${customBgUrl}||coverText:${coverText.trim()}||lanyard:${showLanyard ? 'on' : 'off'}||github:${githubUrl.trim()}||instagram:${instagramUrl.trim()}||linkedin:${linkedinUrl.trim()}||facebook:${facebookUrl.trim()}||role:${editRole.trim()}||country:${editCountry.trim()}||bgSpeed:${bgSettings.speed}||bgBrightness:${bgSettings.brightness}||bgGlow:${bgSettings.glow}||bgDensity:${bgSettings.density}||bgWaveHeight:${bgSettings.waveHeight}||bgTheme:${bgSettings.theme}||bgBlur:${bgSettings.blur}`;
 
       await saveUserProfile(
         profileId,
@@ -1479,6 +1487,34 @@ export default function UserProfile({
         </div>
       </section>
 
+      {Boolean(isPremium) && showLanyard && (
+        <section className="relative overflow-hidden rounded-[2rem] border border-violet-300/30 bg-gradient-to-br from-slate-950 via-indigo-950/90 to-slate-950 shadow-[0_20px_80px_rgba(79,70,229,0.22)]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(139,92,246,0.3),transparent_55%)]" />
+          <div className="relative flex items-center justify-between px-5 pt-5 sm:px-8">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-violet-300">QuizSpace Premium</p>
+              <h2 className="mt-1 text-lg font-black text-white">{isAr ? 'بطاقة الملف التفاعلية' : 'Interactive profile card'}</h2>
+            </div>
+            <span className="rounded-full border border-violet-300/30 bg-violet-400/10 px-3 py-1 text-[10px] font-black text-violet-200">Lanyard</span>
+          </div>
+          <div className="relative h-[420px] w-full sm:h-[520px]">
+            <Lanyard
+              frontImage={displayPhotoURL || lanyardFrontImage}
+              backImage={lanyardBackImage}
+              strapImage={lanyardStrapImage}
+              cardColor="#f8fafc"
+              finish="holographic"
+              metal="silver"
+              size={0.62}
+              interactive
+              intro
+              className="h-full w-full"
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
+        </section>
+      )}
+
       {/* Comprehensive Editing Area when triggered */}
       {isEditing && (
         <section className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 rounded-[2rem] p-4 sm:p-8 space-y-6 sm:space-y-8 animate-fade-in shadow-xl">
@@ -2106,6 +2142,19 @@ export default function UserProfile({
                   }
                 />
               </div>
+              {Boolean(isPremium) && (
+                <div className="flex items-center justify-between gap-4 rounded-3xl border border-violet-300/50 bg-gradient-to-r from-violet-500/10 to-cyan-500/10 p-4">
+                  <div>
+                    <h4 className="text-xs font-black text-slate-800 dark:text-white">
+                      {isAr ? 'بطاقة الملف التفاعلية' : 'Interactive profile card'}
+                    </h4>
+                    <p className="mt-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                      {isAr ? 'فعّل بطاقة Lanyard ثلاثية الأبعاد لتظهر في ملفك.' : 'Show a draggable 3D Lanyard card on your profile.'}
+                    </p>
+                  </div>
+                  <LiquidGlassSwitch checked={showLanyard} onChange={setShowLanyard} />
+                </div>
+              )}
             </div>
           </div>
           {/* Quick Buttons */}
