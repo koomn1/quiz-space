@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import type { Question, Quiz } from '../types';
 import { cairoArabicFonts } from './pdfFonts/cairoArabicFonts';
+import { normalizeArabicText } from './arabicText';
 
 const MARGIN = 36;
 function pageWidth(pdf: PdfDocument) { return pdf.internal.pageSize.getWidth(); }
@@ -59,12 +60,7 @@ export function getQuizPdfFileName(quiz: Quiz, branding?: QuizPdfBranding | null
 }
 
 function normaliseText(value: unknown) {
-  return String(value ?? '')
-    // PDFs often carry directional controls that reverse a whole mixed
-    // Arabic/Latin sentence in viewers. Keep the logical characters only.
-    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
-    .replace(/\r\n/g, '\n')
-    .trim();
+  return normalizeArabicText(value);
 }
 
 function getOptions(question: Question) {
