@@ -1326,6 +1326,11 @@ export default function AIChat({
   onOpenGeneratedQuiz
 }: AIChatProps) {
   const isAr = lang === 'ar';
+  const accountEffortLabel = /diamond|الماسي|الماسية/i.test(planName)
+    ? (isAr ? 'عالٍ' : 'High')
+    : /gold|الذهبي|الذهبية/i.test(planName)
+      ? (isAr ? 'متوسط' : 'Medium')
+      : (isAr ? 'منخفض' : 'Low');
   const theme = usePalette(darkMode);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -2894,8 +2899,10 @@ export default function AIChat({
                 ]}
                 models={[{ key: 'cosmo', name: 'Cosmo 2.5 Flash', tag: isAr ? 'تعليمي' : 'Education' }]}
                 defaultModel="cosmo"
-                efforts={isAr ? ['منخفض', 'متوسط', 'عالٍ', 'إضافي', 'أقصى'] : ['Low', 'Medium', 'High', 'Extra', 'Max']}
-                defaultEffort={isAr ? 'متوسط' : 'Medium'}
+                efforts={isAr ? ['منخفض', 'متوسط', 'عالٍ'] : ['Low', 'Medium', 'High']}
+                defaultEffort={accountEffortLabel}
+                effortValue={accountEffortLabel}
+                effortLocked
                 onEffortChange={() => undefined}
                 busy={isAnalyzing}
                 onSend={(text) => {

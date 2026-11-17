@@ -23,7 +23,7 @@ describe('Cosmo generation recovery contract', () => {
   it('batches Cosmo quiz generation within provider output limits', () => {
     expect(workerSource).toContain("if (provider !== 'inception'");
     expect(workerSource).toContain('const initialBatchSize = Math.min(body.amount, 25);');
-    expect(workerSource).toContain('const reasoning_effort = normalizeReasoningEffort(body.effort || \'low\');');
+    expect(workerSource).toContain('const reasoning_effort = await getAccountReasoningEffort(request, env, userId);');
     expect(workerSource).toContain('providerText(provider, quizPrompt(body.topic, initialBatchSize, baseQuestions), env, { reasoning_effort });');
     expect(workerSource).toContain('Math.min(missing, 25)');
   });

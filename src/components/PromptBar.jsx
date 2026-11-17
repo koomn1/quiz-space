@@ -126,6 +126,7 @@ export default function PromptBar({
   defaultEffort = '',
   effortValue = '',
   onEffortChange,
+  effortLocked = false,
   busy = false,
   onSend,
   onStop,
@@ -667,7 +668,7 @@ export default function PromptBar({
               <HugeiconsIcon icon={ArrowDown01Icon} size={12} strokeWidth={2.4} />
             </button>
           ) : null}
-          {efforts.length > 0 ? (
+          {efforts.length > 0 && !effortLocked ? (
             <button
               type="button"
               className="prompt-bar__pick"
@@ -686,6 +687,11 @@ export default function PromptBar({
               <HugeiconsIcon icon={SparklesIcon} size={13} strokeWidth={2} />
               <span>{level}</span>
             </button>
+          ) : effortLocked && level ? (
+            <span className="prompt-bar__pick" aria-label={`Automatic reasoning: ${level}`} title="Reasoning is assigned by your active plan">
+              <HugeiconsIcon icon={SparklesIcon} size={13} strokeWidth={2} />
+              <span>{level}</span>
+            </span>
           ) : null}
           <span className="prompt-bar__spacer" />
           {onDictate ? (

@@ -75,6 +75,27 @@ export function isEffectivePaidMembership(profile: Record<string, unknown> | nul
   return Number.isFinite(expiry) && expiry > now;
 }
 
+export type AccountReasoningEffort = 'low' | 'medium' | 'high';
+
+/** Resolve the model budget from server-verified membership, never client input. */
+export function resolveAccountReasoningEffort(
+  profile: Record<string, unknown> | null,
+  now = Date.now(),
+): AccountReasoningEffort {
+  if (!isEffectivePaidMembership(profile, now)) return 'low';
+  const planId = String(profile?.plan_id || '').trim().toLowerCase();
+  const planName = String(profile?.plan_name || '').trim().toLowerCase();
+  if (planId === 'diamond' || /diamond|الماسي|الماسية/.test(planName)) return 'high';
+  if (planId === 'gold' || /gold|الذهبي|الذهبية/.test(planName)) return 'medium';
+  // Silver and unrecognised plans cannot unlock high reasoning.
+  return 'low';
+}
+
+export async function getAccountReasoningEffort(request: Request, env: Env, userId: string | null): Promise<AccountReasoningEffort> {
+  if (!userId || userId === 'guest' || userId === 'placeholder-user') return 'low';
+  return resolveAccountReasoningEffort(await getAccountProfile(request, env, userId));
+}
+
 export async function hasPaidCosmoAccess(request: Request, env: Env, userId: string | null): Promise<boolean> {
   const profile = await getAccountProfile(request, env, userId);
   return isEffectivePaidMembership(profile);
@@ -86,5 +107,5 @@ export async function getCosmoAccountContext(request: Request, env: Env, userId:
   }
   const profile = await getAccountProfile(request, env, userId);
   if (!profile) return 'حالة الحساب الموثقة: تعذر قراءة ملف العضوية الآن. لا تخمّن الباقة ولا حالة الحساب.';
-  return `حالة الحساب الموثقة من الخادم: المستخدم الحالي فقط. العضوية المفعلة: ${isEffectivePaidMembership(profile) ? 'نعم' : 'لا'}؛ اسم الباقة: ${profile.plan_name || 'مجانية أو غير محددة'}. لا توجد لك أي صلاحية لتغيير هذه القيم.`;
+  return `حالة الحساب الموثقة من الخادم: المستخدم الحالي فقط. العضوية المفعلة: ${isEffectivePaidMembership(profile) ? 'نعم' : 'لا'}؛ اسم الباقة: ${profile.plan_name || 'مجانية أو غير محددة'}؛ مستوى reasoning المسموح: ${resolveAccountReasoningEffort(profile)}. لا توجد لك أي صلاحية لتغيير هذه القيم.`;
 }
