@@ -121,6 +121,21 @@ describe('literal document question extraction', () => {
     expect(questions[0].text).toBe('حقوق الإنسان');
   });
 
+  it('repairs Arabic glyph-run corruption in a question and its choices', () => {
+    const questions = parseLiteralQuestions([
+      '1. ترتبط حقولإنسان بمب:أد',
+      'A.التمييز بيا نلأفدار',
+      'B.المسااو ةاولكارمة الإنسانية',
+      'C.إلغاا ءلحريات',
+      'D.تفضيل فئة علي أخير',
+    ].join('\n'));
+
+    expect(questions[0]).toMatchObject({
+      text: 'ترتبط حقوق الإنسان بمبادئ',
+      options: ['التمييز بين الأفراد', 'المساواة والكرامة الإنسانية', 'إلغاء الحريات', 'تفضيل فئة على أخرى'],
+    });
+  });
+
   it('keeps Arabic PDF markers on the deterministic path instead of generating a short fallback batch', async () => {
     const result = await extractQuestionsFromText([
       '\u202bس \u202a.١\u202c تهدف حقوق الإنسان أساسًا إلى حماية:\u202c',

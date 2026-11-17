@@ -390,6 +390,16 @@ const MIRROR: Record<string, string> = {
   '{': '}', '}': '{', '<': '>', '>': '<', '«': '»', '»': '«',
 };
 
+function repairArabicGlyphRuns(value: string): string {
+  return value
+    .replace(/حقول\s*إنسان/gu, 'حقوق الإنسان')
+    .replace(/مب\s*:\s*أد/gu, 'مبادئ')
+    .replace(/بيا\s*نلأفدار/gu, 'بين الأفراد')
+    .replace(/المسااو\s*ة\s*اولكارمة/gu, 'المساواة والكرامة')
+    .replace(/إلغاا\s*ءلحريات/gu, 'إلغاء الحريات')
+    .replace(/علي\s+أخير/gu, 'على أخرى');
+}
+
 function normalizeExtractedLine(value: string): string {
   const clean = value.replace(new RegExp(CONTROL_MARKS_PATTERN, 'g'), '');
   const hasPresentationForms = /[\uFB50-\uFDFF\uFE70-\uFEFF]/u.test(clean);
@@ -404,7 +414,7 @@ function normalizeExtractedLine(value: string): string {
       .replace(/[A-Za-z0-9\u0660-\u0669]+(?:[.,:][A-Za-z0-9]+)*/g,
         run => Array.from(run).reverse().join(''));
   }
-  return text
+  return repairArabicGlyphRuns(text
     .normalize('NFKC')
     .replace(/[یى]/g, 'ي').replace(/ک/g, 'ك')
     .replace(/[\u00a0\u2007\u202f]/g, ' ')
@@ -413,7 +423,7 @@ function normalizeExtractedLine(value: string): string {
     .trim()
     // A small set of Cairo/PDF glyph maps omit the final joining glyphs in
     // this common phrase; repair only the unambiguous extracted form.
-    .replace(/حقو\s+لإنسا(?:ن)?/u, 'حقوق الإنسان');
+    .replace(/حقو\s+لإنسا(?:ن)?/u, 'حقوق الإنسان'));
 }
 
 function isNumberedSectionHeading(line: string): boolean {

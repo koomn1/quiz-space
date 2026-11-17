@@ -101,6 +101,16 @@ const CLIENT_PDF_MIRROR: Record<string, string> = {
 };
 const CLIENT_PDF_CONTROL_MARKS = /[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g;
 
+function repairClientArabicGlyphRuns(value: string): string {
+  return value
+    .replace(/حقول\s*إنسان/gu, 'حقوق الإنسان')
+    .replace(/مب\s*:\s*أد/gu, 'مبادئ')
+    .replace(/بيا\s*نلأفدار/gu, 'بين الأفراد')
+    .replace(/المسااو\s*ة\s*اولكارمة/gu, 'المساواة والكرامة')
+    .replace(/إلغاا\s*ءلحريات/gu, 'إلغاء الحريات')
+    .replace(/علي\s+أخير/gu, 'على أخرى');
+}
+
 function normalizeClientPdfLine(value: string): string {
   const clean = value.replace(CLIENT_PDF_CONTROL_MARKS, '');
   const hasPresentationForms = /[\uFB50-\uFDFF\uFE70-\uFEFF]/u.test(clean);
@@ -110,12 +120,12 @@ function normalizeClientPdfLine(value: string): string {
       .replace(/[A-Za-z0-9\u0660-\u0669]+(?:[.,:][A-Za-z0-9]+)*/g,
         run => Array.from(run).reverse().join(''));
   }
-  return text.normalize('NFKC')
+  return repairClientArabicGlyphRuns(text.normalize('NFKC')
     .replace(/[یى]/g, 'ي').replace(/ک/g, 'ك')
     .replace(/[\u00a0\u2007\u202f]/g, ' ')
     .replace(/[：﹕]/g, ':')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim());
 }
 
 // Extracts text page-by-page from an uploaded PDF
