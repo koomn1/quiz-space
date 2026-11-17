@@ -387,12 +387,23 @@ const QUESTION_START_PATTERN = new RegExp(`^(?:(?:question|q|سؤال|س)\\s*(?:
 const toAsciiDigits = (value: string) => value.replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
 
 function normalizeExtractedLine(value: string): string {
-  return value
+  // unpdf/pdfjs can expose Arabic glyphs in visual RTL order (including
+  // presentation-form code points). Normalize and reverse those lines before
+  // parsing; otherwise `س .١.` arrives as `.١ س` and no question is detected.
+  const hasArabicPresentationForms = /[\uFB50-\uFDFF\uFE70-\uFEFF]/u.test(value);
+  const normalized = value
+    .normalize('NFKC')
     .replace(new RegExp(CONTROL_MARKS_PATTERN, 'g'), '')
+    // PDF Arabic fonts may expose Persian presentation variants for ي/ك.
+    .replace(/[یى]/g, 'ي')
+    .replace(/ک/g, 'ك')
     .replace(/[\u00a0\u2007\u202f]/g, ' ')
     .replace(/[：﹕]/g, ':')
     .replace(/\s+/g, ' ')
     .trim();
+  return hasArabicPresentationForms && /[\u0600-\u06ff]/u.test(normalized)
+    ? normalized.split('').reverse().join('').trim()
+    : normalized;
 }
 
 function isNumberedSectionHeading(line: string): boolean {
@@ -415,6 +426,8 @@ export function parseLiteralQuestions(text: string): any[] {
   const lines = text.split(/\r?\n/).map(normalizeExtractedLine).filter(Boolean);
 
   for (const line of lines) {
+    if (/^(?:page|صفحة)\s+[0-9٠-٩]+\s+(?:of|من)\s+[0-9٠-٩]+$/iu.test(line)
+      || /[0-9٠-٩]\s+(?:egaP|of)\b/iu.test(line)) continue;
     if (isNumberedSectionHeading(line)) {
       flush();
       continue;
@@ -441,7 +454,7 @@ export function parseLiteralQuestions(text: string): any[] {
     // next numbered question.
     if (current.answerSeen) continue;
 
-    const labelledOption = line.match(/^([A-H]|[أبجدهوزح])\s*(?:[).:،\-–—])\s*(.+)$/iu);
+    const labelledOption = line.match(/^([A-H]|[أبجدهوزح])\s*(?:[().:،\-–—])\s*(.+)$/iu);
     const bulletOption = line.match(/^[-*•▪◦–—]\s+(.+)$/u);
     const optionText = labelledOption?.[2] || bulletOption?.[1];
     if (optionText) {
@@ -457,7 +470,7 @@ export function parseLiteralQuestions(text: string): any[] {
       current.answerSeen = true;
       current.correctAnswer = answer;
       current.sourceText = `${current.sourceText}\n${line}`;
-      const letter = answer.match(/^[\s([{]*([A-Hأبجدهوزح])(?:[).}:\-–—]|\s|$)/iu);
+      const letter = answer.match(/^[^A-Hأبجدهوزح]{0,3}([A-Hأبجدهوزح])/iu);
       if (letter && current.options.length > 0) {
         const label = letter[1].toLocaleUpperCase();
         const arabicLabels: Record<string, number> = { 'أ': 0, 'ب': 1, 'ج': 2, 'د': 3, 'ه': 4, 'و': 5, 'ز': 6, 'ح': 7 };

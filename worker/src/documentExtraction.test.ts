@@ -98,4 +98,19 @@ describe('literal document question extraction', () => {
       correctAnswer: 'هي الحقوق والحريات الملازمة لكل إنسان.',
     });
   });
+
+  it('repairs Arabic presentation-form lines emitted by unpdf before parsing', () => {
+    const questions = parseLiteralQuestions([
+      ':ﺔﯾﺎﻣﺣ ﻰﻟإ ً ﺎﺳﺎﺳن أﺎﺳﻧﻹوق اﻘﺣ دفﮭﺗ .١ س',
+      'ﻊﻣﺗﺟﻣﻟن اﻣ ﺔﻧﯾﻌﻣ ﺔﺋﻓ (أ',
+      'ﮫﺗﺎﯾرﺣن وﺎﺳﻧﻹا ﺔﻣراﻛ (ب',
+      'طﻘﻓ بﺻﺎﻧﻣﻟب اﺎﺣﺻأ (ج',
+      'طﻘﻓ ﺔﯾدﺎﺻﺗﻗﻻت اﺎﺳﺳؤﻣﻟا (د',
+      '.ﮫﺗﺎﯾرﺣن وﺎﺳﻧﻹا ﺔﻣراﻛ (ب) :ﺔﺣﯾﺣﺻﻟا ﺔﺑﺎﺟﻹا',
+    ].join('\n'));
+
+    expect(questions).toHaveLength(1);
+    expect(questions[0]).toMatchObject({ type: 'mcq', number: 1, correctIndex: 1 });
+    expect(questions[0].options).toHaveLength(4);
+  });
 });
