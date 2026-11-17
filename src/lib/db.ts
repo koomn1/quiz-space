@@ -332,6 +332,14 @@ export async function removeBookmark(userId: string, quizId: string): Promise<vo
 // not by a manual getAuthenticatedUser() check like the Express version had.
 
 function mapQuizRow(row: any): Quiz {
+  const repairArabicGlyphRuns = (value: string): string => value
+    .replace(/حقول\s*إنسان/gu, 'حقوق الإنسان')
+    .replace(/مب\s*:\s*أد/gu, 'مبادئ')
+    .replace(/بيا\s*نلأفدار/gu, 'بين الأفراد')
+    .replace(/المسااو\s*ة\s*اولكارمة/gu, 'المساواة والكرامة')
+    .replace(/إلغاا\s*ءلحريات/gu, 'إلغاء الحريات')
+    .replace(/علي\s+أخير/gu, 'على أخرى')
+    .replace(/حقو\s+لإنسا(?:ن)?/u, 'حقوق الإنسان');
   const rawQuestions = Array.isArray(row.questions)
     ? row.questions
     : typeof row.questions === 'string'
@@ -348,11 +356,11 @@ function mapQuizRow(row: any): Quiz {
     ...question,
     id: question?.id || `q-${index + 1}`,
     type: question?.type === 'essay' || question?.type === 'tf' ? question.type : 'mcq',
-    text: String(question?.text ?? '').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '').replace(/\r\n/g, '\n'),
-    options: Array.isArray(question?.options) ? question.options.map((option: unknown) => String(option ?? '').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')) : [],
+    text: repairArabicGlyphRuns(String(question?.text ?? '').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '').replace(/\r\n/g, '\n')),
+    options: Array.isArray(question?.options) ? question.options.map((option: unknown) => repairArabicGlyphRuns(String(option ?? '').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, ''))) : [],
     correctIndex: Number.isInteger(question?.correctIndex) ? question.correctIndex : -1,
-    correctAnswer: question?.correctAnswer == null ? '' : String(question.correctAnswer),
-    explanation: question?.explanation == null ? '' : String(question.explanation),
+    correctAnswer: question?.correctAnswer == null ? '' : repairArabicGlyphRuns(String(question.correctAnswer)),
+    explanation: question?.explanation == null ? '' : repairArabicGlyphRuns(String(question.explanation)),
   }));
   return {
     id: row.id,

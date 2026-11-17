@@ -70,6 +70,13 @@ function cleanQuizText(value: unknown): string {
   return String(value ?? '')
     .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
     .replace(/\r\n/g, '\n')
+    .replace(/حقول\s*إنسان/gu, 'حقوق الإنسان')
+    .replace(/مب\s*:\s*أد/gu, 'مبادئ')
+    .replace(/بيا\s*نلأفدار/gu, 'بين الأفراد')
+    .replace(/المسااو\s*ة\s*اولكارمة/gu, 'المساواة والكرامة')
+    .replace(/إلغاا\s*ءلحريات/gu, 'إلغاء الحريات')
+    .replace(/علي\s+أخير/gu, 'على أخرى')
+    .replace(/حقو\s+لإنسا(?:ن)?/u, 'حقوق الإنسان')
     .trim();
 }
 

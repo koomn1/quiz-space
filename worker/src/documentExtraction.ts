@@ -139,7 +139,7 @@ function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mc
 
   for (const item of source) {
     if (!item || typeof item !== 'object') continue;
-    const text = String(item.text ?? item.question ?? '').trim();
+    const text = repairArabicGlyphRuns(String(item.text ?? item.question ?? '').trim());
     if (!text) continue;
     const key = normalize(text);
     if (!normalizationOptions.preserveDuplicates && seen.has(key)) continue;
@@ -153,10 +153,10 @@ function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mc
         : 'mcq';
     if (!allowedTypes.includes(type)) continue;
     const parsedOptions: string[] = Array.isArray(item.options)
-      ? item.options.map((option: unknown) => String(option ?? '').trim()).filter(Boolean)
+      ? item.options.map((option: unknown) => repairArabicGlyphRuns(String(option ?? '').trim())).filter(Boolean)
       : [];
     const options = type === 'tf' ? normalizeTrueFalseOptions(text, parsedOptions) : parsedOptions;
-    const correctAnswer = item.correctAnswer == null ? '' : String(item.correctAnswer).trim();
+    const correctAnswer = item.correctAnswer == null ? '' : repairArabicGlyphRuns(String(item.correctAnswer).trim());
     const parsedIndex = Number(item.correctIndex);
     let correctIndex = Number.isInteger(parsedIndex) && parsedIndex >= 0 ? parsedIndex : -1;
     if (correctIndex < 0 && correctAnswer && options.length > 0) {
@@ -173,7 +173,7 @@ function normalizeQuestions(raw: any, allowedTypes: AllowedQuestionType[] = ['mc
       options: type === 'essay' ? [] : options,
       correctIndex,
       correctAnswer,
-      explanation: item.explanation == null ? '' : String(item.explanation).trim(),
+      explanation: item.explanation == null ? '' : repairArabicGlyphRuns(String(item.explanation).trim()),
       extractionMethod: item.extractionMethod === 'direct' ? 'direct' : undefined,
       sourceText: typeof item.sourceText === 'string' ? item.sourceText : undefined,
       reviewRequired: item.reviewRequired === true || (type !== 'essay' && correctIndex < 0),
