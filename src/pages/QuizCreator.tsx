@@ -20,6 +20,7 @@ import { LiquidGlassSelect } from '../components/LiquidGlassSelect';
 import { Icons8Icon } from '../components/Icons8Icon';
 import QuestionMedia from '../components/QuestionMedia';
 import { MainLogo } from '../components/MainLogo';
+import BidiText from '../components/BidiText';
 import ShinyText from '../components/ShinyText';
 import OverlayPortal from '../components/OverlayPortal';
 import { encryptMessage } from '../lib/encryption';
@@ -2299,7 +2300,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 <button type="button" onClick={() => setPreviewDraft(null)} className="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-slate-300 transition hover:bg-white/10">إغلاق</button>
               </div>
               <div className="grid shrink-0 grid-cols-2 gap-3 border-b border-white/10 p-4 sm:grid-cols-4 sm:px-7">
-                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">العنوان</span><strong dir="auto" className="mt-1 block truncate text-right text-sm [unicode-bidi:plaintext]">{previewDraft.title}</strong></div>
+                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">العنوان</span><BidiText as="strong" className="mt-1 block truncate text-right text-sm">{previewDraft.title}</BidiText></div>
                 <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">عدد الأسئلة</span><strong className="mt-1 block text-lg text-violet-300">{previewDraft.questions.length}</strong></div>
                 <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">اختيار من متعدد</span><strong className="mt-1 block text-lg text-cyan-300">{previewDraft.questions.filter(q => q.type === 'mcq').length}</strong></div>
                 <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">مقالي / صح وخطأ</span><strong className="mt-1 block text-lg text-amber-300">{previewDraft.questions.filter(q => q.type !== 'mcq').length}</strong></div>
@@ -2318,8 +2319,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                             <span className="rounded-full bg-white/[0.07] px-2.5 py-1 text-[10px] font-bold text-slate-300">{question.type === 'mcq' ? 'اختيار من متعدد' : question.type === 'tf' ? 'صح / خطأ' : 'مقالي'}</span>
                             <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${hasAnswer ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>{hasAnswer ? 'إجابة مؤكدة' : 'يحتاج مراجعة'}</span>
                           </div>
-                          <p dir="auto" className="whitespace-pre-wrap text-right text-sm font-bold leading-7 text-white [unicode-bidi:plaintext]">{question.text}</p>
-                          {question.type === 'mcq' && <div className="mt-3 grid gap-2 sm:grid-cols-2">{(question.options || []).map((option, optionIndex) => <div key={optionIndex} dir="auto" className={`rounded-xl border px-3 py-2 text-right text-xs [unicode-bidi:plaintext] ${optionIndex === question.correctIndex ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200' : 'border-white/10 bg-black/10 text-slate-300'}`}><span dir="ltr" className="mr-1 inline-block font-black">{String.fromCharCode(65 + optionIndex)}.</span><span dir="auto" className="[unicode-bidi:plaintext]">{option || 'خيار فارغ'}</span></div>)}</div>}
+                          <BidiText as="p" className="whitespace-pre-wrap text-right text-sm font-bold leading-7 text-white">{question.text}</BidiText>
+                          {question.type === 'mcq' && <div className="mt-3 grid gap-2 sm:grid-cols-2">{(question.options || []).map((option, optionIndex) => <div key={optionIndex} className={`rounded-xl border px-3 py-2 text-right text-xs ${optionIndex === question.correctIndex ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200' : 'border-white/10 bg-black/10 text-slate-300'}`}><span dir="ltr" className="mr-1 inline-block font-black">{String.fromCharCode(65 + optionIndex)}.</span><BidiText>{option || 'خيار فارغ'}</BidiText></div>)}</div>}
                           {question.type === 'essay' && (
                             <div className="mt-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.06] p-3">
                               <label className="mb-2 block text-xs font-bold text-amber-200">الإجابة النموذجية (اختياريًا إذا لم تكن موجودة في الملف)</label>
@@ -2339,7 +2340,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                               />
                             </div>
                           )}
-                          {question.explanation && <p className="mt-3 border-t border-white/10 pt-3 text-xs leading-6 text-slate-400">الشرح: {question.explanation}</p>}
+                          {question.explanation && <p className="mt-3 border-t border-white/10 pt-3 text-xs leading-6 text-slate-400">الشرح: <BidiText>{question.explanation}</BidiText></p>}
                         </div>
                       </div>
                     </article>
