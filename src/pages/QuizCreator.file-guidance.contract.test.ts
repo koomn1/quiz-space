@@ -29,6 +29,13 @@ describe('QuizCreator file guidance contract', () => {
     expect(source).toContain('localStorage.removeItem(getQuizCreatorDraftKey(draftOwnerId));');
   });
 
+  it('allows missing essay answers to be entered from the extraction preview', () => {
+    expect(source).toContain("question.type === 'essay'\n                    ? Boolean(question.correctAnswer?.trim())");
+    expect(source).toContain('الإجابة النموذجية (اختياريًا إذا لم تكن موجودة في الملف)');
+    expect(source).toContain('aria-label={`الإجابة النموذجية للسؤال ${index + 1}`}');
+    expect(source).toContain('correctAnswer: event.target.value');
+  });
+
   it('runs a distinct post-extraction solve stage before final persistence', () => {
     expect(source).toContain('const solveExtractedQuiz = async');
     expect(source).toContain('const prepareAndSolveExtractedQuiz = async');

@@ -2306,7 +2306,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
               </div>
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-7">
                 {previewDraft.questions.map((question, index) => {
-                  const hasAnswer = question.type === 'essay' || (typeof question.correctIndex === 'number' && question.correctIndex >= 0 && (question.type !== 'mcq' || Boolean(question.options?.[question.correctIndex]?.trim())));
+                  const hasAnswer = question.type === 'essay'
+                    ? Boolean(question.correctAnswer?.trim())
+                    : (typeof question.correctIndex === 'number' && question.correctIndex >= 0 && (question.type !== 'mcq' || Boolean(question.options?.[question.correctIndex]?.trim())));
                   return (
                     <article key={question.id || index} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-violet-400/40">
                       <div className="flex items-start gap-3">
@@ -2318,6 +2320,24 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                           </div>
                           <p className="whitespace-pre-wrap text-sm font-bold leading-7 text-white">{question.text}</p>
                           {question.type === 'mcq' && <div className="mt-3 grid gap-2 sm:grid-cols-2">{(question.options || []).map((option, optionIndex) => <div key={optionIndex} className={`rounded-xl border px-3 py-2 text-xs ${optionIndex === question.correctIndex ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200' : 'border-white/10 bg-black/10 text-slate-300'}`}><span className="ml-1 font-black">{String.fromCharCode(65 + optionIndex)}.</span>{option || 'خيار فارغ'}</div>)}</div>}
+                          {question.type === 'essay' && (
+                            <div className="mt-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.06] p-3">
+                              <label className="mb-2 block text-xs font-bold text-amber-200">الإجابة النموذجية (اختياريًا إذا لم تكن موجودة في الملف)</label>
+                              <textarea
+                                value={question.correctAnswer || ''}
+                                onChange={(event) => setPreviewDraft(previous => previous ? {
+                                  ...previous,
+                                  questions: previous.questions.map((item, itemIndex) => itemIndex === index
+                                    ? { ...item, correctAnswer: event.target.value }
+                                    : item),
+                                } : previous)}
+                                rows={3}
+                                placeholder="اكتب الإجابة النموذجية هنا، أو اتركها فارغة للتصحيح اليدوي..."
+                                aria-label={`الإجابة النموذجية للسؤال ${index + 1}`}
+                                className="w-full resize-y rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-amber-300/60 focus:ring-2 focus:ring-amber-300/20"
+                              />
+                            </div>
+                          )}
                           {question.explanation && <p className="mt-3 border-t border-white/10 pt-3 text-xs leading-6 text-slate-400">الشرح: {question.explanation}</p>}
                         </div>
                       </div>
