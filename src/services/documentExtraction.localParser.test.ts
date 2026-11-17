@@ -126,4 +126,10 @@ C - 100°C`;
     expect(questions.map(question => question.number)).toEqual([1, 2]);
     expect(questions.map(question => question.text)).toEqual(['What is two plus two?', 'What is three plus three?']);
   });
+
+  it('trusts valid parsed structure when RTL marker counts differ', () => {
+    const parsed = parseLiteralQuestions(`س .١. ما الهدف من حقوق الإنسان؟\nأ) حماية الكرامة\nب) إلغاء الحقوق\nالإجابة الصحيحة: (أ) حماية الكرامة`);
+    expect(parsed).toHaveLength(1);
+    expect(isReliableLiteralExtraction('س .١. ما الهدف من حقوق الإنسان؟\nس .٢. سطر بصري مكرر', parsed)).toBe(true);
+  });
 });

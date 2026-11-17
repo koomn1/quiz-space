@@ -537,15 +537,11 @@ function parseFsmQuestionsForLegacyOutput(text: string, allowedTypes: AllowedQue
 }
 
 export function isReliableLiteralExtraction(text: string, questions: any[]): boolean {
-  // PDF text commonly contains bidi control marks around the Arabic label and
-  // punctuation. Count markers using the same normalization as the parser;
-  // checking raw lines made valid local parses look unreliable and incorrectly
-  // sent them to the short AI fallback batch.
-  const questionMarkers = text.split(/\r?\n/).map(normalizeExtractedLine).filter(line =>
-    !isNumberedSectionHeading(line) && LITERAL_QUESTION_PATTERN.test(line),
-  ).length;
-  return questionMarkers > 0
-    && questionMarkers === questions.length
+  // PDF text commonly contains bidi control marks, duplicated visual lines,
+  // and RTL ordering artifacts. The marker count is only a hint and must not
+  // reject a structurally valid parse when it differs from the parsed count.
+  // Trust the normalized question objects that the parser actually built.
+  return questions.length > 0
     && questions.every(question => Boolean(question?.text?.trim())
       && (question.type === 'essay' || (Array.isArray(question.options) && question.options.length >= 2)));
 }
