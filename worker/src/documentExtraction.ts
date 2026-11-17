@@ -377,9 +377,23 @@ export async function extractTableQuestionsFromPdf(data: Uint8Array): Promise<an
  * it only accepts numbered questions and clearly labelled options/answers, so
  * it cannot invent content when a document has no question structure.
  */
-const LITERAL_QUESTION_PATTERN = /^(?:(?:question|q|سؤال)\s*)?([0-9٠-٩]{1,4})(?:[.)\-:]\s*|\s+)(.+)$/iu;
-const QUESTION_START_PATTERN = /^(?:(?:question|q|سؤال)\s*)?[0-9٠-٩]{1,4}(?:[.)\-:]|\s)\s*\S.*$/gim;
+// Arabic browser-generated PDFs commonly export question labels as
+// "س .١." or "س ١." rather than "سؤال ١:". They may also contain bidi
+// control marks immediately before punctuation, which otherwise prevents the
+// answer-label regex from matching.
+const CONTROL_MARKS_PATTERN = `[\\u061c\\u200e\\u200f\\u202a-\\u202e\\u2066-\\u2069\\ufeff]`;
+const LITERAL_QUESTION_PATTERN = new RegExp(`^(?:(?:question|q|سؤال|س)\\s*(?:[.．]\\s*)?)?([0-9٠-٩]{1,4})(?:\\s*[.)\\-:：]\\s*|\\s+|(?=\\S))(.+)$`, 'iu');
+const QUESTION_START_PATTERN = new RegExp(`^(?:(?:question|q|سؤال|س)\\s*(?:[.．]\\s*)?)?[0-9٠-٩]{1,4}(?:\\s*[.)\\-:：]|\\s)\\s*\\S.*$`, 'gim');
 const toAsciiDigits = (value: string) => value.replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+
+function normalizeExtractedLine(value: string): string {
+  return value
+    .replace(new RegExp(CONTROL_MARKS_PATTERN, 'g'), '')
+    .replace(/[\u00a0\u2007\u202f]/g, ' ')
+    .replace(/[：﹕]/g, ':')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 function isNumberedSectionHeading(line: string): boolean {
   const value = line.trim();
@@ -398,7 +412,7 @@ export function parseLiteralQuestions(text: string): any[] {
     }
     current = null;
   };
-  const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  const lines = text.split(/\r?\n/).map(normalizeExtractedLine).filter(Boolean);
 
   for (const line of lines) {
     if (isNumberedSectionHeading(line)) {
@@ -437,13 +451,13 @@ export function parseLiteralQuestions(text: string): any[] {
       continue;
     }
 
-    const answerMatch = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?)\s*[:\-]\s*(.+)$/iu);
+    const answerMatch = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+(?:الصحيحة|النموذجية))?|الاجابة(?:\s+(?:الصحيحة|النموذجية))?|اإلجابة(?:\s+(?:الصحيحة|النموذجية))?)\s*(?:\(\s*)?[:\-]\s*(.+)$/iu);
     if (answerMatch) {
       const answer = answerMatch[1].trim();
       current.answerSeen = true;
       current.correctAnswer = answer;
       current.sourceText = `${current.sourceText}\n${line}`;
-      const letter = answer.match(/^([A-Hأبجدهوزح])(?:[).:\-–—]|\s|$)/iu);
+      const letter = answer.match(/^[\s([{]*([A-Hأبجدهوزح])(?:[).}:\-–—]|\s|$)/iu);
       if (letter && current.options.length > 0) {
         const label = letter[1].toLocaleUpperCase();
         const arabicLabels: Record<string, number> = { 'أ': 0, 'ب': 1, 'ج': 2, 'د': 3, 'ه': 4, 'و': 5, 'ز': 6, 'ح': 7 };

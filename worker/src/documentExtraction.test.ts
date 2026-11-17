@@ -74,4 +74,28 @@ describe('literal document question extraction', () => {
     expect(result.provider).toBe('local-format-parser');
     expect(result.questions.every(question => question.correctIndex >= 0)).toBe(true);
   });
+
+  it('parses Arabic browser-PDF labels written as س .١. and keeps essay answers', () => {
+    const questions = parseLiteralQuestions([
+      'بنك أسئلة حقوق الإنسان',
+      'أولًا: أسئلة الاختيار من متعدد',
+      'س .١. تهدف حقوق الإنسان أساسًا إلى حماية:',
+      'أ) فئة معينة من المجتمع',
+      'ب) كرامة الإنسان وحرياته',
+      'ج) أصحاب المناصب فقط',
+      'د) المؤسسات الاقتصادية فقط',
+      'الإجابة الصحيحة: (ب) كرامة الإنسان وحرياته.',
+      'ثانيًا: الأسئلة المقالية (الكتابية)',
+      'س .١. ما المقصود بحقوق الإنسان؟',
+      'الإجابة النموذجية: هي الحقوق والحريات الملازمة لكل إنسان.',
+    ].join('\n'));
+
+    expect(questions).toHaveLength(2);
+    expect(questions[0]).toMatchObject({ type: 'mcq', number: 1, correctIndex: 1 });
+    expect(questions[1]).toMatchObject({
+      type: 'essay',
+      number: 1,
+      correctAnswer: 'هي الحقوق والحريات الملازمة لكل إنسان.',
+    });
+  });
 });
