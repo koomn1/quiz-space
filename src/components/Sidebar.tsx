@@ -79,6 +79,7 @@ export default function Sidebar({
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms' },
     { id: 'institution', label: isAr ? 'مساحة المؤسسة' : 'Institution Workspace' },
     { id: 'motivation', label: isAr ? 'مركز التحفيز' : 'Motivation Hub' },
+    { id: 'store', label: isAr ? 'المتجر' : 'Store' },
     { id: 'aichat', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant' },
     { id: 'community', label: isAr ? 'المجتمع' : 'Community' },
     { id: 'billing', label: isAr ? 'باقات الاشتراك' : 'Subscription Plans' },
@@ -115,6 +116,8 @@ export default function Sidebar({
         return <SugaryIcon name="layers" size={size} className={className} />;
       case 'motivation':
         return <SugaryIcon name="gift" size={size} className={className} />;
+      case 'store':
+        return <SugaryIcon name="coins" size={size} className={className} />;
       case 'aichat':
         return <SugaryIcon name="sparkles" size={size} className={className} />;
       case 'support':

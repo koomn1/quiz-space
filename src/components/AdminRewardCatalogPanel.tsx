@@ -22,6 +22,7 @@ type CatalogItem = {
   sort_order?: number | null;
   is_active?: boolean;
   is_featured?: boolean;
+  subscriber_free?: boolean;
 };
 
 const blankFrame = (): CatalogFrame => ({
@@ -211,7 +212,7 @@ export default function AdminRewardCatalogPanel({ lang }: { lang: 'ar' | 'en' })
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5"><span className="rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-black text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">{typeLabel(item.item_type, isAr)}</span>{item.is_featured && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-black text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">{isAr ? 'مميز' : 'Featured'}</span>}</div>
               <p className="mt-1 truncate text-xs font-black text-slate-900 dark:text-white">{isAr ? item.name_ar || item.name : item.name || item.name_ar}</p>
-              <p className="mt-0.5 truncate text-[10px] text-slate-500 dark:text-slate-400">{item.id} · {itemPrice(item, isAr)}{Number(item.reward_points) > 0 ? ` · +${Number(item.reward_points).toLocaleString()} ${isAr ? 'نقطة' : 'pts'}` : ''}</p>
+              <p className="mt-0.5 truncate text-[10px] text-slate-500 dark:text-slate-400">{item.id} · {itemPrice(item, isAr)}{item.subscriber_free ? ` · ${isAr ? 'مجاني للمشتركين' : 'Free for subscribers'}` : ''}{Number(item.reward_points) > 0 ? ` · +${Number(item.reward_points).toLocaleString()} ${isAr ? 'نقطة' : 'pts'}` : ''}</p>
               <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[9px] font-black ${item.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300'}`}>{item.is_active ? (isAr ? 'ظاهر' : 'Visible') : (isAr ? 'مخفي' : 'Hidden')}</span>
             </div>
             <div className="flex shrink-0 flex-col gap-1">

@@ -84,7 +84,7 @@ type StoreItem = {
   subscriber_free?: boolean;
 };
 
-type Rewards = { points: number; coins: number; dailyStreak: number };
+export type Rewards = { points: number; coins: number; dailyStreak: number };
 
 const imageUrl = (name: string) => `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/images/${name}.webp`;
 const storeImageUrl = (name: string) => `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/images/${name}`;
@@ -393,7 +393,7 @@ function BrainChallengePanel({ onRewardsChanged, lang }: { onRewardsChanged: () 
   );
 }
 
-function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, lang }: { userId: string; isPremium?: boolean; planName?: string; rewards: Rewards; onRewardsChanged: () => void; lang: 'ar' | 'en' }) {
+export function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, lang }: { userId: string; isPremium?: boolean; planName?: string; rewards: Rewards; onRewardsChanged: () => void; lang: 'ar' | 'en' }) {
   const t = labels[lang];
   const [items, setItems] = React.useState<StoreItem[]>([]);
   const [inventory, setInventory] = React.useState<any[]>([]);

@@ -54,6 +54,7 @@ export default function IOS27Header({
       links: [
         { label: isAr ? 'الفصول الدراسية' : 'Classrooms', tab: 'classrooms' },
         { label: isAr ? 'مركز التحفيز' : 'Motivation hub', tab: 'motivation' },
+        { label: isAr ? 'المتجر' : 'Store', tab: 'store' },
         { label: isAr ? 'مساحة المؤسسة' : 'Institution workspace', tab: 'institution' },
         { label: isAr ? 'باقات الاشتراك' : 'Subscription plans', tab: 'billing' },
         { label: isAr ? 'الدعم والمساعدة' : 'Support', tab: 'support' },

@@ -74,6 +74,7 @@ const LazyLeaderboardSection = lazyWithRetry(() => import('../components/ExtraFe
 const LazyAIChat = lazyWithRetry(() => import('../pages/AIChat'), 'ai-chat');
 const LazyClassrooms = lazyWithRetry(() => import('../components/Classrooms'), 'classrooms');
 const LazyMotivationHubPage = lazyWithRetry(() => import('../pages/MotivationHubPage'), 'motivation-hub');
+const LazyStorePage = lazyWithRetry(() => import('../pages/StorePage'), 'store');
 
 export interface AppRoutesProps {
   mainContainerRef: React.RefObject<HTMLElement | null>;
@@ -192,6 +193,16 @@ export default function AppRoutes(props: AppRoutesProps) {
                   onNavigate={(section) => handleSetTab(section)}
                 />
               ))}
+              {activeTab === 'store' && (
+                <LazyStorePage
+                  userId={userId}
+                  userName={userName}
+                  isPremium={isUserPremium}
+                  planName={userPlanName}
+                  lang={lang}
+                  onNavigate={handleSetTab}
+                />
+              )}
               {activeTab === 'landing' && (
                 authIsAuthenticated && userId && !userId.startsWith('user-guest') ? (
                   <LazyLandingPage
