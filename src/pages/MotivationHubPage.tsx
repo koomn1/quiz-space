@@ -81,6 +81,7 @@ type StoreItem = {
   is_featured?: boolean;
   discount_percent?: number;
   badge_text?: string | null;
+  subscriber_free?: boolean;
 };
 
 type Rewards = { points: number; coins: number; dailyStreak: number };
@@ -103,6 +104,8 @@ function getStoreItemImage(item: Pick<StoreItem, 'id' | 'item_type' | 'image_url
     if (id.includes('neon') || id.includes('cyber') || id.includes('matrix')) return storeImageUrl('animated-frames/frame-neon-orbit.gif');
     if (id.includes('crystal')) return storeImageUrl('animated-frames/frame-crystal-luxe.gif');
     if (id.includes('star') || id.includes('crown')) return storeImageUrl('animated-frames/frame-star-crown.gif');
+    if (id.includes('waves')) return profileAssetUrl('clean-assets-replacement/frame-waves-quizspace-transparent.svg');
+    if (id.includes('sun')) return profileAssetUrl('clean-assets-replacement/frame-sun-quizspace-transparent.svg');
     return storeImageUrl('animated-frames/frame-aurora.gif');
   }
   if (item.image_url) return profileAssetUrl(item.image_url);
@@ -424,8 +427,11 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
   };
   const buyFrame = async (item: StoreItem) => {
     if (busy) return;
+    const subscriberFree = Boolean(item.subscriber_free && isPremium);
     const priceCoins = item.price_coins || 0;
-    if (priceCoins > 0) {
+    if (subscriberFree) {
+      // The server is authoritative; subscribers do not need a points balance.
+    } else if (priceCoins > 0) {
       if (priceCoins > rewards.coins) { showToast('error', lang === 'ar' ? 'رصيد العملات غير كافٍ.' : 'Not enough coins.'); return; }
     } else if (item.price_points > rewards.points) {
       showToast('error', t.notEnough); return;
@@ -475,6 +481,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
     const locked = planRank < rankFor(item.min_plan);
     const isOwned = owned(item.id);
     const payment = getStorePaymentMode(item);
+    const subscriberFree = Boolean(item.subscriber_free && isPremium);
     const isActionAvailable = isStoreItemActionAvailable({ isOwned, isLocked: locked, paymentMode: payment.mode });
     const itemImageUrl = getStoreItemImage(item);
 
@@ -508,6 +515,8 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
               <span className="text-amber-600 dark:text-amber-400">{t.diamond}</span>
             ) : isOwned ? (
               <span className="text-emerald-600 dark:text-emerald-400">{t.owned}</span>
+            ) : subscriberFree ? (
+              <span className="text-emerald-600 dark:text-emerald-400">{lang === 'ar' ? 'مجاني للمشتركين' : 'Free for subscribers'}</span>
             ) : payment.mode === 'coins' ? (
               <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400">
                 <Coins className="h-3 w-3" />
@@ -523,7 +532,7 @@ function StorePanel({ userId, isPremium, planName, rewards, onRewardsChanged, la
             )}
           </span>
           <button type="button" disabled={!isActionAvailable || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="min-h-10 rounded-xl bg-violet-700 px-3.5 py-2 text-[11px] font-black text-white shadow-sm shadow-violet-700/20 transition hover:-translate-y-0.5 hover:bg-violet-800 dark:bg-violet-500 dark:hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-45">
-            {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : payment.mode === 'cash' ? (lang === 'ar' ? 'شراء بالمال' : 'Buy') : payment.mode === 'unavailable' ? (lang === 'ar' ? 'غير متاح' : 'Unavailable') : t.buy}
+            {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : subscriberFree ? (lang === 'ar' ? 'احصل عليه مجانًا' : 'Get free') : payment.mode === 'cash' ? (lang === 'ar' ? 'شراء بالمال' : 'Buy') : payment.mode === 'unavailable' ? (lang === 'ar' ? 'غير متاح' : 'Unavailable') : t.buy}
           </button>
         </div>
       </div>

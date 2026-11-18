@@ -64,6 +64,8 @@ const itemImage = (item: CatalogItem) => {
     if (id.includes('neon') || id.includes('cyber') || id.includes('matrix')) return '/images/animated-frames/frame-neon-orbit.gif';
     if (id.includes('crystal')) return '/images/animated-frames/frame-crystal-luxe.gif';
     if (id.includes('star') || id.includes('crown')) return '/images/animated-frames/frame-star-crown.gif';
+    if (id.includes('waves')) return profileAssetUrl('clean-assets-replacement/frame-waves-quizspace-transparent.svg');
+    if (id.includes('sun')) return profileAssetUrl('clean-assets-replacement/frame-sun-quizspace-transparent.svg');
     return '/images/animated-frames/frame-aurora.gif';
   }
   if (item.image_url) return profileAssetUrl(item.image_url);

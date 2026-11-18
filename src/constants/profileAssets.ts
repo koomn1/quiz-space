@@ -289,6 +289,8 @@ export const FRAME_ASSET_OVERRIDES: Record<string, string> = {
   frame_aurora_neon: profileAssetUrl('images/animated-frames/frame-neon-orbit.gif'),
   frame_royal_ember: profileAssetUrl('images/animated-frames/frame-royal-gold.gif'),
   frame_cosmic_pulse: profileAssetUrl('images/animated-frames/frame-crystal-luxe.gif'),
+  frame_waves_quiz: profileAssetUrl('clean-assets-replacement/frame-waves-quizspace-transparent.svg'),
+  frame_sun_quiz: profileAssetUrl('clean-assets-replacement/frame-sun-quizspace-transparent.svg'),
 };
 
 export function uniqueProfileFrames<T extends { id?: string | null; image_url?: string | null }>(frames: T[]): T[] {
