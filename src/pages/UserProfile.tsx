@@ -64,6 +64,7 @@ import Lanyard from '../components/lanyard/Lanyard';
 import lanyardFrontImage from '../components/lanyard/card-front.webp';
 import lanyardStrapImage from '../components/lanyard/lanyard.png';
 import { PremiumNameTag } from '../components/PremiumNameTag';
+import { THEME_PRESETS } from '../lib/themePresets';
 import { showToast } from '../components/Toast';
 import SpotlightCard from '../components/SpotlightCard';
 import SplitText from '../components/reactbits/SplitText';
@@ -101,6 +102,8 @@ export default function UserProfile({
   onStartQuiz,
   onShareQuiz,
   lang,
+  colorTheme,
+  setColorTheme,
   onPremiumStatusChange,
   onOpenBilling,
   onNavigate,
@@ -144,6 +147,7 @@ export default function UserProfile({
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
   // Coupon state
   const [couponCode, setCouponCode] = useState('');
@@ -370,20 +374,32 @@ export default function UserProfile({
 
       const finalLocation = writeLanyardVisibility(editLocation, showLanyard);
 
+      const rawCustomId = editCustomId.trim().toLowerCase();
+      if (/^\+?\d{8,}$/.test(rawCustomId)) {
+        showToast(
+          'error',
+          isAr
+            ? 'المعرف الفريد (Custom ID) لا يمكن أن يكون مجرد أرقام هاتف. يرجى إدخال اسم مستخدم نصي.'
+            : 'Custom handle cannot be merely a phone number. Please enter a valid username.'
+        );
+        setIsSaving(false);
+        return;
+      }
+
       await saveUserProfile({
         userId: currentUserId,
-        name: editName,
+        name: editName.trim() || currentUserName,
         photoURL: editPhoto || undefined,
         email: currentUserEmail || undefined,
         bio: editBio,
         location: finalLocation,
-        customId: editCustomId || undefined,
-        phone: editPhone || undefined,
+        customId: rawCustomId || undefined,
+        phone: editPhone.trim() || undefined,
       });
 
-      onUpdateName?.(editName);
+      onUpdateName?.(editName.trim() || currentUserName);
       if (editPhoto) onUpdatePhoto?.(editPhoto);
-      if (editCustomId) onUpdateCustomId?.(editCustomId);
+      if (rawCustomId) onUpdateCustomId?.(rawCustomId);
 
       showToast('success', isAr ? 'تم حفظ التعديلات بنجاح.' : 'Profile updated successfully.');
       setIsEditing(false);
@@ -687,14 +703,9 @@ export default function UserProfile({
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (onNavigate) {
-                        onNavigate('customization');
-                      } else {
-                        window.location.hash = 'customization';
-                      }
-                    }}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-4 py-2.5 text-xs font-black text-[#007472] dark:text-[#2AC3BB] transition hover:bg-[#2AC3BB]/20"
+                    onClick={() => setIsThemeModalOpen(true)}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-4 py-2.5 text-xs font-black text-[#007472] dark:text-[#2AC3BB] transition hover:bg-[#2AC3BB]/20 active:scale-98 cursor-pointer"
+                    title={isAr ? 'تخصيص ألوان وثيم المظهر' : 'Customize appearance & theme'}
                   >
                     <Palette className="h-4 w-4 text-[#2AC3BB]" />
                     <span>{isAr ? 'تخصيص المظهر' : 'Customize'}</span>
@@ -1069,31 +1080,40 @@ export default function UserProfile({
               {/* Name */}
               <div>
                 <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
-                  {isAr ? 'الاسم' : 'Display Name'}
+                  {isAr ? 'الاسم المعروض' : 'Display Name'}
                 </label>
                 <input
                   type="text"
+                  name="quiz_user_display_name"
+                  autoComplete="name"
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-cyan-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                 />
               </div>
 
               {/* Custom Handle */}
               <div>
                 <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
-                  {isAr ? 'المعرف الفريد (Custom ID)' : 'Custom Handle'}
+                  {isAr ? 'اسم المستخدم / المعرف (@Username)' : 'Username / Custom Handle (@handle)'}
                 </label>
                 <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1 text-xs font-bold dark:border-slate-800 dark:bg-slate-900">
-                  <span className="text-slate-400">@</span>
+                  <span className="text-[#2AC3BB] font-mono font-black">@</span>
                   <input
                     type="text"
+                    name="quiz_user_custom_handle"
+                    autoComplete="username"
+                    spellCheck={false}
+                    placeholder={isAr ? 'مثال: ahmed_dev' : 'e.g. ahmed_dev'}
                     value={editCustomId}
                     onChange={(e) => setEditCustomId(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    className="w-full bg-transparent px-1 py-1.5 outline-none dark:text-white"
+                    className="w-full bg-transparent px-1.5 py-1.5 outline-none dark:text-white font-mono"
                   />
                 </div>
+                <p className="mt-1 text-[10px] text-slate-400">
+                  {isAr ? 'حروف إنجليزية صغيرة وأرقام و _ فقط (لا تكتب رقم الهاتف هنا).' : 'Lowercase English letters, numbers, and _ only (do not enter phone number here).'}
+                </p>
               </div>
 
               {/* Bio */}
@@ -1103,9 +1123,11 @@ export default function UserProfile({
                 </label>
                 <textarea
                   rows={3}
+                  name="quiz_user_bio"
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-medium outline-none focus:border-cyan-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                  placeholder={isAr ? 'اكتب نبذة مميزة عنك واهتماماتك التعليمية...' : 'Write a short bio about yourself and your learning goals...'}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-medium outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                 />
               </div>
 
@@ -1117,20 +1139,25 @@ export default function UserProfile({
                   </label>
                   <input
                     type="text"
+                    name="quiz_user_location"
+                    autoComplete="address-level2"
                     value={editLocation}
                     onChange={(e) => setEditLocation(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-cyan-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
-                    {isAr ? 'رقم الهاتف' : 'Phone'}
+                    {isAr ? 'رقم الهاتف المتنقل' : 'Phone'}
                   </label>
                   <input
-                    type="text"
+                    type="tel"
+                    name="quiz_user_phone_number"
+                    autoComplete="tel"
+                    placeholder="01XXXXXXXXX"
                     value={editPhone}
                     onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-cyan-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                   />
                 </div>
               </div>
@@ -1213,6 +1240,120 @@ export default function UserProfile({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6. THEME & APPEARANCE CUSTOMIZER MODAL */}
+      {isThemeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm">
+          <div className="my-auto w-full max-w-lg rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB]">
+                  <Palette className="h-5 w-5" />
+                </div>
+                <h3 className="text-base font-black text-slate-900 dark:text-[#FCF6EE]">
+                  {isAr ? 'تخصيص المظهر والثيم' : 'Customize Appearance & Theme'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsThemeModalOpen(false)}
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-5">
+              <div>
+                <label className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  {isAr ? 'لوحة ألوان المنصة (Color Palette)' : 'Platform Color Palette'}
+                </label>
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                  {THEME_PRESETS.map((preset) => {
+                    const isSelected = (colorTheme || 'petrol') === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => {
+                          setColorTheme?.(preset.id);
+                          localStorage.setItem('quiz_color_theme', preset.id);
+                          window.dispatchEvent(new CustomEvent('quizspace-theme-updated', { detail: preset.id }));
+                          showToast('success', isAr ? `تم تطبيق ثيم ${preset.id}.` : `Theme ${preset.id} applied.`);
+                        }}
+                        className={`flex flex-col items-start gap-2 rounded-2xl border p-3 text-start transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-[#2AC3BB] bg-[#2AC3BB]/10 shadow-sm ring-2 ring-[#2AC3BB]/40'
+                            : 'border-slate-200 bg-slate-50 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900'
+                        }`}
+                      >
+                        <div className="flex w-full items-center justify-between">
+                          <div
+                            className="h-5 w-5 rounded-full border border-white/50 shadow-sm"
+                            style={{ backgroundColor: preset.primary }}
+                          />
+                          {isSelected && <Check className="h-4 w-4 text-[#007472] dark:text-[#2AC3BB]" />}
+                        </div>
+                        <span className="text-xs font-black capitalize text-slate-900 dark:text-[#FCF6EE]">
+                          {preset.id === 'petrol'
+                            ? (isAr ? 'الفيروزي العميق' : 'Petrol (Brand)')
+                            : preset.id === 'indigo'
+                            ? (isAr ? 'النيلي الملكي' : 'Royal Indigo')
+                            : preset.id === 'emerald'
+                            ? (isAr ? 'الزمردي' : 'Emerald')
+                            : preset.id === 'sunset'
+                            ? (isAr ? 'المرجاني' : 'Sunset Coral')
+                            : preset.id}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Advanced Customization shortcut */}
+              <div className="rounded-2xl border border-[#2AC3BB]/25 bg-gradient-to-br from-[#007472]/10 via-[#2AC3BB]/5 to-transparent p-4">
+                <div className="flex items-center gap-2 mb-1.5 text-[#007472] dark:text-[#2AC3BB]">
+                  <Sparkles className="h-4 w-4 text-[#EE8361]" />
+                  <h4 className="text-xs font-black">
+                    {isAr ? 'تخصيص الأفاتار والإطارات المتقدمة' : 'Avatar & Frame Customization'}
+                  </h4>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
+                  {isAr
+                    ? 'اختر من بين إطارات البروفايل وبطاقات الاختبارات والأفاتارات الحصرية في صفحة التخصيص.'
+                    : 'Choose from exclusive profile frames, quiz-card frames, and avatar presets.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsThemeModalOpen(false);
+                    if (onNavigate) {
+                      onNavigate('customization');
+                    } else {
+                      window.location.hash = 'customization';
+                    }
+                  }}
+                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] px-4 py-2 text-xs font-black text-[#FCF6EE] shadow-sm transition hover:brightness-110 active:scale-98 cursor-pointer"
+                >
+                  <Palette className="h-3.5 w-3.5" />
+                  <span>{isAr ? 'فتح استوديو التخصيص الكامل' : 'Open Full Customization Studio'}</span>
+                </button>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsThemeModalOpen(false)}
+                  className="rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                >
+                  {isAr ? 'إغلاق' : 'Close'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
