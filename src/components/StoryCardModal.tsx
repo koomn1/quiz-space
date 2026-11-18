@@ -1,6 +1,5 @@
 import React, { useRef, useState } from 'react';
 import { X, Download, Share2, Sparkles, Check, Loader2, Award, QrCode } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import { showToast } from './Toast';
 import { MainLogo } from './MainLogo';
 import { resolveProfileImageUrl } from '../constants/profileAssets';
@@ -45,6 +44,8 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
     if (!cardRef.current || isExporting) return;
     setIsExporting(true);
     try {
+      const html2canvasModule = await import('html2canvas');
+      const html2canvas = html2canvasModule.default || html2canvasModule;
       const canvas = await html2canvas(cardRef.current, {
         scale: 2.5,
         useCORS: true,
