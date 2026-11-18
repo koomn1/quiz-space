@@ -48,18 +48,9 @@ WHERE item_type IN ('frame', 'cosmetic')
     'frame_rose_thorn', 'frame_waves_quiz', 'frame_sun_quiz'
   );
 
--- Do not leave a user pointing at a retired legacy item. Latest free frames
--- remain valid and all historical ownership rows remain archived above.
-UPDATE public.users
-SET active_frame_id = NULL, updated_at = now()
-WHERE active_frame_id IS NOT NULL
-  AND active_frame_id NOT IN (
-    'frame_free_1', 'frame_free_2', 'frame_aurora_neon', 'frame_royal_ember',
-    'frame_cosmic_pulse', 'frame_cyber_eagle', 'frame_ice_dragon',
-    'frame_dual_dragon', 'frame_sea_crown', 'frame_cyber_ice_ring',
-    'frame_inferno_spike', 'frame_royal_emerald', 'frame_wolf_guardian',
-    'frame_rose_thorn', 'frame_waves_quiz', 'frame_sun_quiz'
-  );
+-- Existing active selections are intentionally preserved. The database trigger
+-- requires ownership verification for any change, so the new UI changes a
+-- selection only through the existing secure activation/deactivation RPCs.
 
 REVOKE ALL ON TABLE public.legacy_reward_store_items_archive_20261118 FROM anon, authenticated;
 REVOKE ALL ON TABLE public.legacy_reward_inventory_archive_20261118 FROM anon, authenticated;
