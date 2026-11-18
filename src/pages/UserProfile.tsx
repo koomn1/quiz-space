@@ -50,7 +50,6 @@ import { showToast } from "../components/Toast";
 import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, resolveProfileImageUrl, uniqueProfileFrames } from "../constants/profileAssets";
 import Lanyard from "../components/lanyard/Lanyard";
 import lanyardFrontImage from "../components/lanyard/card-front.webp";
-import lanyardBackImage from "../components/lanyard/card-back.webp";
 import lanyardStrapImage from "../components/lanyard/lanyard.png";
 
 async function prepareProfileImage(file: File): Promise<{ preview: string; uploadFile: File; compressionPercent: number }> {
@@ -1222,36 +1221,57 @@ export default function UserProfile({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20">
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
-              <div
-                className={`w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center transition-all duration-500 ${!activeFrameClass ? 'border-4 border-white dark:border-slate-900 shadow-xl' : 'z-10'}`}
-                style={activeFrameClass && !activeFrameIsAnimated ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
-              >
-                {activeFrameUrl && (
-                  <img
-                    src={activeFrameUrl}
-                    alt=""
-                    onError={(event) => { event.currentTarget.style.display = 'none'; }}
-                    className={`absolute inset-0 z-20 h-full w-full object-contain scale-[1.28] md:scale-[1.34] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]`}
-                    style={activeFrameClass && !activeFrameIsAnimated ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
+              {Boolean(isPremium) && showLanyard ? (
+                <div
+                  className="relative h-64 w-40 shrink-0 overflow-hidden rounded-[1.75rem] border border-slate-300/70 bg-slate-950/20 shadow-[0_14px_34px_rgba(15,23,42,0.18)] dark:border-white/15"
+                  aria-label={isAr ? "بطاقة الملف الشخصية" : "Profile card"}
+                >
+                  <Lanyard
+                    frontImage={displayPhotoURL || lanyardFrontImage}
+                    backImage={`${import.meta.env.BASE_URL}brand/quizspace-card-back.webp`}
+                    strapImage={lanyardStrapImage}
+                    cardColor="#e8edf5"
+                    finish="matte"
+                    metal="silver"
+                    size={0.46}
+                    interactive
+                    intro
+                    className="h-full w-full"
+                    style={{ width: '100%', height: '100%' }}
                   />
-                )}
-                <div className="w-full h-full rounded-full overflow-hidden relative z-10">
-                  {displayPhotoURL ? (
-                    <img
-                      src={displayPhotoURL}
-                      alt="Profile"
-                      onError={handleProfileImageError}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-4xl font-black text-primary uppercase">
-                        {(profileData?.name || currentUserName).charAt(0)}
-                      </span>
-                    </div>
-                  )}
                 </div>
-              </div>
+              ) : (
+                <div
+                  className={`w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center transition-all duration-500 ${!activeFrameClass ? 'border-4 border-white dark:border-slate-900 shadow-xl' : 'z-10'}`}
+                  style={activeFrameClass && !activeFrameIsAnimated ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
+                >
+                  {activeFrameUrl && (
+                    <img
+                      src={activeFrameUrl}
+                      alt=""
+                      onError={(event) => { event.currentTarget.style.display = 'none'; }}
+                      className="absolute inset-0 z-20 h-full w-full object-contain scale-[1.28] md:scale-[1.34] pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)]"
+                      style={activeFrameClass && !activeFrameIsAnimated ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
+                    />
+                  )}
+                  <div className="w-full h-full rounded-full overflow-hidden relative z-10">
+                    {displayPhotoURL ? (
+                      <img
+                        src={displayPhotoURL}
+                        alt="Profile"
+                        onError={handleProfileImageError}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-4xl font-black text-primary uppercase">
+                          {(profileData?.name || currentUserName).charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div
                 className="mb-2 w-full min-w-0 text-right space-y-3"
@@ -1495,34 +1515,6 @@ export default function UserProfile({
           </div>
         </div>
       </section>
-
-      {Boolean(isPremium) && showLanyard && (
-        <section className="relative overflow-hidden rounded-[2rem] border border-violet-300/30 bg-gradient-to-br from-slate-950 via-indigo-950/90 to-slate-950 shadow-[0_20px_80px_rgba(79,70,229,0.22)]">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(139,92,246,0.3),transparent_55%)]" />
-          <div className="relative flex items-center justify-between px-5 pt-5 sm:px-8">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-violet-300">QuizSpace Premium</p>
-              <h2 className="mt-1 text-lg font-black text-white">{isAr ? 'بطاقة الملف التفاعلية' : 'Interactive profile card'}</h2>
-            </div>
-            <span className="rounded-full border border-violet-300/30 bg-violet-400/10 px-3 py-1 text-[10px] font-black text-violet-200">Lanyard</span>
-          </div>
-          <div className="relative h-[420px] w-full sm:h-[520px]">
-            <Lanyard
-              frontImage={displayPhotoURL || lanyardFrontImage}
-              backImage={lanyardBackImage}
-              strapImage={lanyardStrapImage}
-              cardColor="#f8fafc"
-              finish="holographic"
-              metal="silver"
-              size={0.62}
-              interactive
-              intro
-              className="h-full w-full"
-              style={{ width: '100%', height: '100%' }}
-            />
-          </div>
-        </section>
-      )}
 
       {/* Comprehensive Editing Area when triggered */}
       {isEditing && (
