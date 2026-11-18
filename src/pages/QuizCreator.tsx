@@ -1,4 +1,3 @@
-import PageWallpaper from '../components/PageWallpaper';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -2479,12 +2478,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         </OverlayPortal>
 
 
-      <PageWallpaper
-        src={`${(import.meta.env.BASE_URL || '/').replace(/\/?$/, '')}/images/quiz-creator-bg.jpg`}
-        overlayClassName="bg-white/88 dark:bg-[#031717]/88 backdrop-blur-[1.5px]"
-      />
-
-      <div className="max-w-4xl mx-auto space-y-8 pb-16 animate-fade-in text-right" dir="rtl">
+      <div className="max-w-4xl mx-auto space-y-8 pb-16 animate-fade-in text-right bg-transparent" dir="rtl">
 
       {/* Visual Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
