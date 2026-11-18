@@ -24,11 +24,11 @@ export default function IOS27FloatingTabBar({
   const [isMoreSheetOpen, setIsMoreSheetOpen] = React.useState(false);
 
   const secondaryTools = [
-    { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms', desc: isAr ? 'الواجبات والتحديات الطلابية' : 'Student assignments & live tests', icon: GraduationCap, color: 'text-blue-500 bg-blue-500/10' },
-    { id: 'store', label: isAr ? 'المتجر' : 'Store', desc: isAr ? 'باقات النقاط والإطارات المميزة' : 'Points packages & premium frames', icon: ShoppingBag, color: 'text-amber-500 bg-amber-500/10' },
-    { id: 'institution', label: isAr ? 'مساحة المؤسسة' : 'Institution Workspace', desc: isAr ? 'إدارة المدارس والجامعات' : 'Schools & Universities enterprise', icon: Building2, color: 'text-indigo-500 bg-indigo-500/10' },
+    { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms', desc: isAr ? 'الواجبات والتحديات الطلابية' : 'Student assignments & live tests', icon: GraduationCap, color: 'text-[#2AC3BB] bg-[#2AC3BB]/10' },
+    { id: 'store', label: isAr ? 'المتجر' : 'Store', desc: isAr ? 'باقات النقاط والإطارات المميزة' : 'Points packages & premium frames', icon: ShoppingBag, color: 'text-[#EE8361] bg-[#EE8361]/10' },
+    { id: 'institution', label: isAr ? 'مساحة المؤسسة' : 'Institution Workspace', desc: isAr ? 'إدارة المدارس والجامعات' : 'Schools & Universities enterprise', icon: Building2, color: 'text-[#007472] bg-[#007472]/10 dark:text-[#2AC3BB] dark:bg-[#2AC3BB]/10' },
     { id: 'billing', label: isAr ? 'باقات الاشتراك' : 'Subscription Plans', desc: isAr ? 'ترقية الحساب والوصول غير المحدود' : 'Upgrade to Pro & VIP', icon: CreditCard, color: 'text-emerald-500 bg-emerald-500/10' },
-    { id: 'support', label: isAr ? 'الدعم والمساعدة' : 'Support', desc: isAr ? 'تواصل مع فريق الدعم الفني' : 'Technical help & FAQs', icon: HelpCircle, color: 'text-purple-500 bg-purple-500/10' },
+    { id: 'support', label: isAr ? 'الدعم والمساعدة' : 'Support', desc: isAr ? 'تواصل مع فريق الدعم الفني' : 'Technical help & FAQs', icon: HelpCircle, color: 'text-[#EE8361] bg-[#EE8361]/10' },
   ];
 
   if (isAdmin) {
@@ -84,11 +84,11 @@ export default function IOS27FloatingTabBar({
             <button
               type="button"
               onClick={() => setTab('create')}
-              className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center -translate-y-2 bg-gradient-to-tr from-sky-500 via-indigo-600 to-violet-600 hover:from-sky-400 hover:to-violet-500 text-white shadow-lg shadow-sky-500/30 ring-3 ring-white/30 dark:ring-slate-900/60 active:scale-90 transition-all duration-200 cursor-pointer"
+              className="w-12 h-12 rounded-full shrink-0 flex items-center justify-center -translate-y-2 bg-gradient-to-tr from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-[#FCF6EE] shadow-lg shadow-[#007472]/40 ring-3 ring-white/30 dark:ring-[#031717]/60 active:scale-90 transition-all duration-200 cursor-pointer"
               title={isAr ? 'إنشاء اختبار جديد' : 'Create Quiz'}
               aria-label={isAr ? 'إنشاء اختبار جديد' : 'Create Quiz'}
             >
-              <Plus className="w-6 h-6 text-white stroke-[2.8]" />
+              <Plus className="w-6 h-6 text-[#FCF6EE] stroke-[2.8]" />
             </button>
           </div>
 
@@ -98,7 +98,7 @@ export default function IOS27FloatingTabBar({
             onClick={() => setTab('my-quizzes')}
             className={`flex-1 min-w-[52px] sm:min-w-[64px] min-h-[46px] rounded-full flex flex-col items-center justify-center gap-1 text-xs transition-all duration-200 cursor-pointer ${
               currentTab === 'my-quizzes'
-                ? 'text-indigo-500 dark:text-indigo-400 bg-indigo-500/15 font-bold shadow-xs'
+                ? 'text-[#007472] dark:text-[#2AC3BB] bg-[#007472]/15 font-bold shadow-xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >

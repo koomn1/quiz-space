@@ -69,6 +69,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty('--theme-primary-light', selected.primaryLight);
     root.style.setProperty('--theme-primary-dark', selected.primaryDark);
     root.style.setProperty('--theme-secondary', selected.secondary);
+    root.style.setProperty('--theme-coral', '#EE8361');
+    root.style.setProperty('--theme-sand', '#FBDFC7');
+    root.style.setProperty('--theme-ivory', '#FCF6EE');
+    root.style.setProperty('--theme-petrol', '#007472');
+    root.style.setProperty('--theme-bright-teal', '#2AC3BB');
     root.style.setProperty('--theme-canvas', modeTokens.canvas);
     root.style.setProperty('--theme-surface', modeTokens.surface);
     root.style.setProperty('--theme-surface-strong', modeTokens.surfaceStrong);

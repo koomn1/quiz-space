@@ -1655,13 +1655,14 @@ export function SettingsSection({
 
   const themes = THEME_PRESETS.map((theme) => ({
     id: theme.id,
-    name: theme.id === 'indigo' ? (isAr ? 'داكن (بنفسجي فضائي)' : 'Space Purple')
-      : theme.id === 'light' ? (isAr ? 'فاتح (أبيض رصين)' : 'Minimalist Light')
+    name: theme.id === 'petrol' ? (isAr ? 'البترولي الملكي (الهوية الفاخرة)' : 'Royal Petrol (Luxury Brand)')
+      : theme.id === 'indigo' ? (isAr ? 'البترولي الكلاسيكي' : 'Classic Petrol')
+      : theme.id === 'light' ? (isAr ? 'العاجي الفاخر (فاتح)' : 'Ivory Minimalist (Light)')
       : theme.id === 'sky' ? (isAr ? 'أزرق محيطي' : 'Ocean Blue')
           : theme.id === 'blue' ? (isAr ? 'أزرق هادئ' : 'Calm Blue')
             : theme.id === 'deep-night' ? (isAr ? 'ليلي عميق جدًا' : 'Deep Night')
           : theme.id === 'emerald' ? (isAr ? 'داكن (أخضر زمردي)' : 'Emerald Green')
-            : theme.id === 'sunset' ? (isAr ? 'داكن (برتقالي الشمس)' : 'Sunset Orange')
+            : theme.id === 'sunset' ? (isAr ? 'غروب مرجاني فخم' : 'Coral Sunset')
               : theme.id === 'pastelp' ? (isAr ? 'فاتح (وردي باستيل)' : 'Pastel Pink')
                 : (isAr ? 'ذهبي العسل' : 'Golden Honey'),
     color: theme.swatch,

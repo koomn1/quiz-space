@@ -100,8 +100,8 @@ export const MainLogo = ({ className = '', size = 'md', showText = true }: MainL
                 if (element) lettersRef.current[index] = element;
               }}
               className={index < 4
-                ? 'text-slate-800 transition-colors duration-300 dark:text-white'
-                : 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-500 to-purple-500 transition-colors duration-300 group-hover:from-indigo-400 group-hover:to-fuchsia-500'}
+                ? 'text-slate-800 transition-colors duration-300 dark:text-[#FCF6EE]'
+                : 'text-transparent bg-clip-text bg-gradient-to-r from-[#2AC3BB] via-[#007472] to-[#EE8361] transition-colors duration-300 group-hover:from-[#007472] group-hover:to-[#EE8361]'}
               style={{ display: 'inline-block', willChange: 'transform, opacity' }}
             >
               {letter}

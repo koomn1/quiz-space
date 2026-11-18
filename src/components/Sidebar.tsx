@@ -142,7 +142,7 @@ export default function Sidebar({
       {/* One official brand treatment; keep its Latin wordmark LTR in Arabic UI. */}
       <div className="mb-1 shrink-0 py-1" dir="ltr">
         <MainLogo size="sm" showText />
-        <span className="mt-0.5 block text-[8px] font-black uppercase tracking-widest text-[#b175ff]" dir={isAr ? 'rtl' : 'ltr'}>
+        <span className="mt-0.5 block text-[8px] font-black uppercase tracking-widest text-[#2AC3BB]" dir={isAr ? 'rtl' : 'ltr'}>
           {isAr ? 'الذكاء الاصطناعي السحابي' : 'COSMIC AI PLATFORM'}
         </span>
       </div>

@@ -57,6 +57,9 @@ import {
 } from '../constants/profileAssets';
 import { PremiumNameTag } from '../components/PremiumNameTag';
 import { showToast } from '../components/Toast';
+import SpotlightCard from '../components/SpotlightCard';
+import SplitText from '../components/reactbits/SplitText';
+import DecryptedText from '../components/reactbits/DecryptedText';
 import type { UserStats, Quiz, QuizCompletion } from '../types';
 
 export interface UserProfileProps {
@@ -394,11 +397,11 @@ export default function UserProfile({
       {/* 1. HERO & IDENTITY BANNER */}
       <div className="gsap-hero relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
         {/* Cover Photo / Graphic */}
-        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-cyan-950 sm:h-56">
+        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-r from-[#031717] via-[#007472] to-[#0a2f2e] sm:h-56">
           {profileData?.coverUrl ? (
             <img src={profileData.coverUrl} alt="Cover" className="h-full w-full object-cover" />
           ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(14,165,233,0.3),rgba(255,255,255,0))]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_75%_20%,rgba(238,131,97,0.25),transparent)]" />
           )}
 
           {/* Change cover button for own profile */}
@@ -407,7 +410,7 @@ export default function UserProfile({
               type="button"
               disabled={isUploadingCover}
               onClick={() => coverInputRef.current?.click()}
-              className="absolute end-4 top-4 flex items-center gap-2 rounded-2xl bg-slate-950/40 px-3.5 py-2 text-xs font-black text-white backdrop-blur-md transition hover:bg-slate-950/60"
+              className="absolute end-4 top-4 flex items-center gap-2 rounded-2xl bg-black/40 px-3.5 py-2 text-xs font-black text-[#FCF6EE] backdrop-blur-md transition hover:bg-black/60"
             >
               {isUploadingCover ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
               <span>{isAr ? 'تغيير الغلاف' : 'Change Cover'}</span>
@@ -422,7 +425,7 @@ export default function UserProfile({
             {/* Avatar with Frame */}
             <div className="relative -mt-20 sm:-mt-24 flex items-end gap-4">
               <div className="gsap-avatar relative flex h-36 w-36 items-center justify-center sm:h-44 sm:w-44">
-                <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-xl dark:border-slate-900 dark:bg-slate-800 sm:h-36 sm:w-36">
+                <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-xl dark:border-[#031717] dark:bg-[#072424] sm:h-36 sm:w-36">
                   {profileData?.photoURL ? (
                     <img
                       src={resolveProfileImageUrl(profileData.photoURL)}
@@ -431,7 +434,7 @@ export default function UserProfile({
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-cyan-500/10 text-4xl font-black text-cyan-600 sm:text-5xl">
+                    <div className="flex h-full w-full items-center justify-center bg-[#007472]/15 text-4xl font-black text-[#007472] dark:text-[#2AC3BB] sm:text-5xl">
                       {profileData?.name?.[0]?.toUpperCase() || 'U'}
                     </div>
                   )}
@@ -447,7 +450,7 @@ export default function UserProfile({
                 )}
 
                 {/* Level badge */}
-                <div className="absolute -bottom-1 end-2 rounded-full border-2 border-white bg-gradient-to-r from-cyan-600 to-blue-600 px-2.5 py-0.5 text-[11px] font-black text-white shadow-md dark:border-slate-900">
+                <div className="absolute -bottom-1 end-2 rounded-full border-2 border-white dark:border-[#031717] bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-2.5 py-0.5 text-[11px] font-black text-[#FCF6EE] shadow-md">
                   Lv.{level}
                 </div>
               </div>
@@ -455,7 +458,7 @@ export default function UserProfile({
               {/* Quick Info next to Avatar */}
               <div className="gsap-profile-info mb-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-black text-slate-900 dark:text-white sm:text-3xl">
+                  <h1 className="text-2xl font-black text-slate-900 dark:text-[#FCF6EE] sm:text-3xl">
                     <PremiumNameTag
                       name={profileData?.name || currentUserName}
                       nameColor={profileData?.nameColor as any}
@@ -470,12 +473,20 @@ export default function UserProfile({
                 </div>
 
                 {profileData?.customId && (
-                  <p className="mt-0.5 text-xs font-bold text-cyan-600 dark:text-cyan-400">
-                    @{profileData.customId}
-                  </p>
+                  <div className="mt-0.5 flex items-center gap-1 text-xs font-bold text-[#2AC3BB]">
+                    <span>@</span>
+                    <DecryptedText
+                      text={profileData.customId}
+                      speed={40}
+                      maxIterations={6}
+                      className="font-mono font-bold tracking-wide"
+                      encryptedClassName="text-[#EE8361] opacity-80"
+                      animateOn="both"
+                    />
+                  </div>
                 )}
 
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-[#8BAEAD]">
                   {profileData?.location && (
                     <span className="flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5" />
@@ -497,7 +508,7 @@ export default function UserProfile({
                   <button
                     type="button"
                     onClick={handleOpenEdit}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl bg-cyan-600 px-4 py-2.5 text-xs font-black text-white shadow-md shadow-cyan-600/20 transition hover:bg-cyan-500 active:scale-98"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl bg-[#007472] px-4 py-2.5 text-xs font-black text-[#FCF6EE] shadow-md shadow-[#007472]/25 transition hover:bg-[#005e5c] active:scale-98"
                   >
                     <Edit3 className="h-4 w-4" />
                     <span>{isAr ? 'تعديل الملف' : 'Edit Profile'}</span>
@@ -505,9 +516,9 @@ export default function UserProfile({
                   <button
                     type="button"
                     onClick={() => onNavigate ? onNavigate('customization') : setActiveTab('edit')}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-4 py-2.5 text-xs font-black text-[#007472] dark:text-[#2AC3BB] transition hover:bg-[#2AC3BB]/20"
                   >
-                    <Palette className="h-4 w-4 text-cyan-500" />
+                    <Palette className="h-4 w-4 text-[#2AC3BB]" />
                     <span>{isAr ? 'تخصيص المظهر' : 'Customize'}</span>
                   </button>
                 </>
@@ -515,7 +526,7 @@ export default function UserProfile({
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-black text-slate-700 transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-black text-slate-700 transition hover:bg-slate-50 dark:border-[#2AC3BB]/20 dark:bg-[#072424] dark:text-[#FCF6EE]"
                 title={isAr ? 'مشاركة الملف' : 'Share profile'}
               >
                 <Share2 className="h-4 w-4" />
@@ -534,55 +545,67 @@ export default function UserProfile({
 
       {/* 2. STATS OVERVIEW CARDS */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="gsap-stat-card rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-          <div className="flex items-center gap-2 text-cyan-500">
+        <SpotlightCard
+          className="gsap-stat-card !p-4 !rounded-2xl border border-[#2AC3BB]/20 bg-white/80 dark:bg-[#072424]/90 backdrop-blur-sm shadow-sm"
+          spotlightColor="rgba(42, 195, 187, 0.22)"
+        >
+          <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]">
             <BookOpen className="h-4 w-4" />
-            <span className="text-[11px] font-black uppercase text-slate-400">{isAr ? 'الاختبارات المنشورة' : 'Quizzes Created'}</span>
+            <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'الاختبارات المنشورة' : 'Quizzes Created'}</span>
           </div>
-          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-white">{createdQuizzes.length}</p>
-        </div>
+          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{createdQuizzes.length}</p>
+        </SpotlightCard>
 
-        <div className="gsap-stat-card rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-          <div className="flex items-center gap-2 text-emerald-500">
+        <SpotlightCard
+          className="gsap-stat-card !p-4 !rounded-2xl border border-[#2AC3BB]/20 bg-white/80 dark:bg-[#072424]/90 backdrop-blur-sm shadow-sm"
+          spotlightColor="rgba(42, 195, 187, 0.22)"
+        >
+          <div className="flex items-center gap-2 text-[#2AC3BB]">
             <CheckCircle2 className="h-4 w-4" />
-            <span className="text-[11px] font-black uppercase text-slate-400">{isAr ? 'الاختبارات المحلولة' : 'Solved Quizzes'}</span>
+            <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'الاختبارات المحلولة' : 'Solved Quizzes'}</span>
           </div>
-          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-white">{completions.length}</p>
-        </div>
+          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{completions.length}</p>
+        </SpotlightCard>
 
-        <div className="gsap-stat-card rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-          <div className="flex items-center gap-2 text-indigo-500">
+        <SpotlightCard
+          className="gsap-stat-card !p-4 !rounded-2xl border border-[#007472]/20 bg-white/80 dark:bg-[#072424]/90 backdrop-blur-sm shadow-sm"
+          spotlightColor="rgba(0, 116, 114, 0.28)"
+        >
+          <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]">
             <Target className="h-4 w-4" />
-            <span className="text-[11px] font-black uppercase text-slate-400">{isAr ? 'معدل الدقة' : 'Accuracy'}</span>
+            <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'معدل الدقة' : 'Accuracy'}</span>
           </div>
-          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-white">{accuracy}%</p>
-        </div>
+          <p className="mt-2 text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{accuracy}%</p>
+        </SpotlightCard>
 
-        <div className="gsap-stat-card rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-          <div className="flex items-center gap-2 text-amber-500">
+        <SpotlightCard
+          className="gsap-stat-card !p-4 !rounded-2xl border border-[#EE8361]/30 bg-white/80 dark:bg-[#072424]/90 backdrop-blur-sm shadow-sm"
+          spotlightColor="rgba(238, 131, 97, 0.3)"
+        >
+          <div className="flex items-center gap-2 text-[#EE8361]">
             <Zap className="h-4 w-4" />
-            <span className="text-[11px] font-black uppercase text-slate-400">{isAr ? 'نقاط الخبرة XP' : 'Total XP'}</span>
+            <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'نقاط الخبرة XP' : 'Total XP'}</span>
           </div>
           <div className="mt-2 flex items-baseline justify-between">
-            <p className="text-2xl font-black text-slate-900 dark:text-white">{(profileData?.xp || 0).toLocaleString()}</p>
-            <span className="text-[10px] font-bold text-slate-400">{xpCurrentLevel}/500</span>
+            <p className="text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{(profileData?.xp || 0).toLocaleString()}</p>
+            <span className="text-[10px] font-bold text-[#EE8361]">{xpCurrentLevel}/500</span>
           </div>
           {/* Progress bar */}
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
-            <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: `${(xpCurrentLevel / 500) * 100}%` }} />
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#031717]">
+            <div className="h-full rounded-full bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] transition-all duration-500" style={{ width: `${(xpCurrentLevel / 500) * 100}%` }} />
           </div>
-        </div>
+        </SpotlightCard>
       </div>
 
       {/* 3. TABS NAVIGATION */}
-      <div className="gsap-tabs-bar flex items-center gap-1 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+      <div className="gsap-tabs-bar flex items-center gap-1 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm dark:border-[#2AC3BB]/20 dark:bg-[#072424]/90">
         <button
           type="button"
           onClick={() => setActiveTab('quizzes')}
           className={`flex-1 rounded-xl py-2.5 text-xs font-black transition-all ${
             activeTab === 'quizzes'
-              ? 'bg-cyan-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900'
+              ? 'bg-[#007472] text-[#FCF6EE] shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100 dark:text-[#8BAEAD] dark:hover:bg-[#0C3232]'
           }`}
         >
           {isAr ? 'الاختبارات المنشورة' : 'Public Quizzes'} ({createdQuizzes.length})
@@ -593,8 +616,8 @@ export default function UserProfile({
           onClick={() => setActiveTab('activity')}
           className={`flex-1 rounded-xl py-2.5 text-xs font-black transition-all ${
             activeTab === 'activity'
-              ? 'bg-cyan-600 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900'
+              ? 'bg-[#007472] text-[#FCF6EE] shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100 dark:text-[#8BAEAD] dark:hover:bg-[#0C3232]'
           }`}
         >
           {isAr ? 'سجل المحاولات' : 'Activity'} ({completions.length})
@@ -606,8 +629,8 @@ export default function UserProfile({
             onClick={() => setActiveTab('membership')}
             className={`flex-1 rounded-xl py-2.5 text-xs font-black transition-all ${
               activeTab === 'membership'
-                ? 'bg-cyan-600 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900'
+                ? 'bg-[#007472] text-[#FCF6EE] shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 dark:text-[#8BAEAD] dark:hover:bg-[#0C3232]'
             }`}
           >
             {isAr ? 'الاشتراك والعضوية' : 'Membership'}
@@ -650,7 +673,7 @@ export default function UserProfile({
                       <button
                         type="button"
                         onClick={() => onStartQuiz(quiz.id)}
-                        className="rounded-xl bg-cyan-600 px-3.5 py-1.5 text-xs font-black text-white transition hover:bg-cyan-500"
+                        className="rounded-xl bg-[#007472] px-3.5 py-1.5 text-xs font-black text-[#FCF6EE] transition hover:bg-[#005e5c]"
                       >
                         {isAr ? 'بدء الحل' : 'Solve Quiz'}
                       </button>
@@ -711,33 +734,33 @@ export default function UserProfile({
         {activeTab === 'membership' && isOwnProfile && (
           <div className="grid gap-5 md:grid-cols-2">
             {/* Membership Details */}
-            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/80 space-y-4">
+            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-[#2AC3BB]/20 dark:bg-[#072424]/90 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EE8361]/15 text-[#EE8361]">
                   <Crown className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'حالة العضوية الحالية' : 'Current Membership'}</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-[#FCF6EE]">{isAr ? 'حالة العضوية الحالية' : 'Current Membership'}</h3>
+                  <p className="text-xs text-slate-400 dark:text-[#8BAEAD]">
                     {profileData?.isPremium ? (isAr ? 'اشتراكك نشط وتتمتع بكافة المميزات.' : 'Active subscription with full privileges.') : (isAr ? 'خطة مجانية' : 'Free tier')}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900/60 space-y-2 text-xs">
+              <div className="rounded-2xl bg-slate-50 p-4 dark:bg-[#031717]/60 space-y-2 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">{isAr ? 'الباقة:' : 'Plan:'}</span>
-                  <span className="font-black text-slate-900 dark:text-white">{profileData?.planName || 'Free'}</span>
+                  <span className="text-slate-500 dark:text-[#8BAEAD]">{isAr ? 'الباقة:' : 'Plan:'}</span>
+                  <span className="font-black text-slate-900 dark:text-[#FCF6EE]">{profileData?.planName || 'Free'}</span>
                 </div>
                 {profileData?.renewalDate && (
                   <div className="flex justify-between">
-                    <span className="text-slate-500">{isAr ? 'تاريخ التجديد:' : 'Renewal Date:'}</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{new Date(profileData.renewalDate).toLocaleDateString()}</span>
+                    <span className="text-slate-500 dark:text-[#8BAEAD]">{isAr ? 'تاريخ التجديد:' : 'Renewal Date:'}</span>
+                    <span className="font-bold text-slate-900 dark:text-[#FCF6EE]">{new Date(profileData.renewalDate).toLocaleDateString()}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-slate-500">{isAr ? 'نوع الحساب:' : 'Account Type:'}</span>
-                  <span className="font-bold text-emerald-600">
+                  <span className="text-slate-500 dark:text-[#8BAEAD]">{isAr ? 'نوع الحساب:' : 'Account Type:'}</span>
+                  <span className="font-bold text-[#2AC3BB]">
                     {profileData?.isLifetime ? (isAr ? 'مدى الحياة' : 'Lifetime') : profileData?.isFounder ? (isAr ? 'عضو مؤسس' : 'Founder') : (isAr ? 'عادي' : 'Standard')}
                   </span>
                 </div>
@@ -746,7 +769,7 @@ export default function UserProfile({
               <button
                 type="button"
                 onClick={onOpenBilling}
-                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 px-4 py-2.5 text-xs font-black text-white shadow-md shadow-amber-600/20 transition hover:brightness-105"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-4 py-2.5 text-xs font-black text-[#FCF6EE] shadow-md shadow-[#007472]/20 transition hover:brightness-105"
               >
                 <Crown className="h-4 w-4" />
                 <span>{isAr ? 'ترقية أو تجديد الباقة' : 'Upgrade or Renew Plan'}</span>
@@ -754,14 +777,14 @@ export default function UserProfile({
             </div>
 
             {/* Coupon Box */}
-            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/80 space-y-4">
+            <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-[#2AC3BB]/20 dark:bg-[#072424]/90 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-600">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB]">
                   <Ticket className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'تفعيل كوبون ترقية' : 'Redeem Coupon'}</h3>
-                  <p className="text-xs text-slate-400">{isAr ? 'أدخل كود الكوبون لتفعيل ميزات الخطة مباشرة.' : 'Enter your coupon code to unlock benefits.'}</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-[#FCF6EE]">{isAr ? 'تفعيل كوبون ترقية' : 'Redeem Coupon'}</h3>
+                  <p className="text-xs text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'أدخل كود الكوبون لتفعيل ميزات الخطة مباشرة.' : 'Enter your coupon code to unlock benefits.'}</p>
                 </div>
               </div>
 
@@ -771,13 +794,13 @@ export default function UserProfile({
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                   placeholder={isAr ? 'مثال: VIP2026' : 'e.g., VIP2026'}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold tracking-wider outline-none focus:border-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold tracking-wider outline-none focus:border-[#2AC3BB] dark:border-slate-700 dark:bg-[#031717] dark:text-[#FCF6EE]"
                 />
                 <button
                   type="button"
                   disabled={!couponCode.trim() || isRedeemingCoupon}
                   onClick={handleRedeemCoupon}
-                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-cyan-500 disabled:opacity-50"
+                  className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#007472] px-4 py-2.5 text-xs font-black text-[#FCF6EE] transition hover:bg-[#005e5c] disabled:opacity-50"
                 >
                   {isRedeemingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ticket className="h-4 w-4" />}
                   <span>{isAr ? 'تطبيق الكوبون' : 'Apply Coupon'}</span>
@@ -930,7 +953,7 @@ export default function UserProfile({
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 text-xs font-black text-white transition hover:bg-cyan-500 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#007472] px-5 py-2.5 text-xs font-black text-[#FCF6EE] transition hover:bg-[#005e5c] disabled:opacity-50"
                 >
                   {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   <span>{isAr ? 'حفظ التغييرات' : 'Save Changes'}</span>

@@ -12,30 +12,35 @@
   --font-display: "Space Grotesk", "Cairo", "IBM Plex Sans Arabic", "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   
-  /* QuizSpace AI-Native palette: violet intelligence + cyan action. */
-  --color-primary: var(--theme-primary, #7C3AED);
-  --color-primary-hover: var(--theme-primary-hover, #6D28D9);
-  --color-primary-light: var(--theme-primary-light, #FAF5FF);
-  --color-primary-dark: var(--theme-primary-dark, #1E1B4B);
-  --color-gradient-from: var(--theme-gradient-from, #7C3AED);
-  --color-gradient-to: var(--theme-gradient-to, #0891B2);
-  --color-secondary: var(--theme-secondary, #22D3EE);
-  --color-theme-canvas: var(--theme-canvas, #0D0A1A);
-  --color-theme-surface: var(--theme-surface, #17112B);
-  --color-theme-surface-strong: var(--theme-surface-strong, #24183D);
-  --color-theme-border: var(--theme-border, rgba(167,139,250,.24));
-  --color-theme-text: var(--theme-text, #F7F3FF);
-  --color-theme-muted: var(--theme-muted, #B9AED1);
-  --color-theme-glow: var(--theme-glow, rgba(139,92,246,.22));
+  /* QuizSpace Luxury Brand Palette: Petrol + Bright Teal + Ivory + Coral + Sand */
+  --color-primary: var(--theme-primary, #007472);
+  --color-primary-hover: var(--theme-primary-hover, #005E5C);
+  --color-primary-light: var(--theme-primary-light, #FCF6EE);
+  --color-primary-dark: var(--theme-primary-dark, #004847);
+  --color-gradient-from: var(--theme-gradient-from, #007472);
+  --color-gradient-to: var(--theme-gradient-to, #EE8361);
+  --color-secondary: var(--theme-secondary, #2AC3BB);
+  --color-coral: var(--theme-coral, #EE8361);
+  --color-sand: var(--theme-sand, #FBDFC7);
+  --color-ivory: var(--theme-ivory, #FCF6EE);
+  --color-petrol: var(--theme-petrol, #007472);
+  --color-bright-teal: var(--theme-bright-teal, #2AC3BB);
+  --color-theme-canvas: var(--theme-canvas, #031717);
+  --color-theme-surface: var(--theme-surface, #072424);
+  --color-theme-surface-strong: var(--theme-surface-strong, #0C3232);
+  --color-theme-border: var(--theme-border, rgba(42,195,187,.22));
+  --color-theme-text: var(--theme-text, #FCF6EE);
+  --color-theme-muted: var(--theme-muted, #8BAEAD);
+  --color-theme-glow: var(--theme-glow, rgba(42,195,187,.28));
 
   /* Cosmo AI Design System Tokens */
-  --color-cosmo-canvas: #070913;
-  --color-cosmo-surface: #0F172A;
-  --color-cosmo-card: #111827;
-  --color-cosmo-indigo: #6366F1;
-  --color-cosmo-cyan: #06B6D4;
-  --color-cosmo-purple: #8B5CF6;
-  --color-cosmo-amber: #F59E0B;
+  --color-cosmo-canvas: #031717;
+  --color-cosmo-surface: #072424;
+  --color-cosmo-card: #0C3232;
+  --color-cosmo-indigo: #007472;
+  --color-cosmo-cyan: #2AC3BB;
+  --color-cosmo-purple: #008B89;
+  --color-cosmo-amber: #EE8361;
   --color-cosmo-emerald: #10B981;
 
   --animate-fade-in: fade-in 0.3s ease-out;

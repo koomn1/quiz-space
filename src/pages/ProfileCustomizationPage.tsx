@@ -138,15 +138,15 @@ export default function ProfileCustomizationPage({
   return (
     <section dir={isAr ? 'rtl' : 'ltr'} className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
       {/* Header */}
-      <header className="mb-6 rounded-[28px] border border-cyan-400/20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 p-6 text-white shadow-xl">
+      <header className="mb-6 rounded-[28px] border border-[#2AC3BB]/25 bg-gradient-to-r from-[#031717] via-[#007472] to-[#0a2f2e] p-6 text-[#FCF6EE] shadow-xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/20 text-cyan-300">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#2AC3BB]/20 text-[#2AC3BB]">
               <Palette className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-black">{isAr ? 'تخصيص الملف الشخصي' : 'Profile Customization'}</h1>
-              <p className="mt-1 text-sm text-slate-300">
+              <h1 className="text-2xl font-black text-[#FCF6EE]">{isAr ? 'تخصيص الملف الشخصي' : 'Profile Customization'}</h1>
+              <p className="mt-1 text-sm text-[#FCF6EE]/80">
                 {isAr ? 'اختر صورتك وإطار حسابك وإطار بطاقات الاختبار من مكان واحد.' : 'Manage your photo, profile frame, and quiz-card style in one place.'}
               </p>
             </div>
@@ -154,7 +154,7 @@ export default function ProfileCustomizationPage({
           <button
             type="button"
             onClick={() => onNavigate?.('store')}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/20"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[#EE8361] px-5 py-2.5 text-xs font-black text-[#FCF6EE] shadow-md shadow-[#EE8361]/25 transition hover:brightness-110 active:scale-98"
           >
             <ShoppingBag className="h-4 w-4" />
             {isAr ? 'زيارة المتجر' : 'Visit Store'}

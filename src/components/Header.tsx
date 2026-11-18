@@ -111,10 +111,11 @@ export default function Header({
   };
 
   const themes = [
-    { id: 'indigo', name: t.themeIndigo, emoji: '', color: 'from-indigo-500 to-purple-600' },
+    { id: 'petrol', name: lang === 'ar' ? 'البترولي الملكي' : 'Royal Petrol', emoji: '', color: 'from-[#007472] to-[#EE8361]' },
+    { id: 'indigo', name: t.themeIndigo, emoji: '', color: 'from-[#007472] to-[#2AC3BB]' },
     { id: 'emerald', name: t.themeEmerald, emoji: '', color: 'from-teal-500 to-emerald-600' },
-    { id: 'sunset', name: t.themeSunset, emoji: '', color: 'from-rose-500 to-orange-500' },
-    { id: 'sky', name: t.themeSky, emoji: '', color: 'from-sky-500 to-cyan-500' },
+    { id: 'sunset', name: t.themeSunset, emoji: '', color: 'from-rose-500 to-[#EE8361]' },
+    { id: 'sky', name: t.themeSky, emoji: '', color: 'from-sky-500 to-[#2AC3BB]' },
     { id: 'honey', name: t.themeHoney, emoji: '', color: 'from-amber-500 to-yellow-500' }
   ];
 
