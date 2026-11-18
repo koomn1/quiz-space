@@ -1226,7 +1226,7 @@ export default function UserProfile({
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
               {Boolean(isPremium) && showLanyard ? (
                 <div
-                  className="relative h-64 w-40 shrink-0 overflow-hidden rounded-[1.75rem] border border-slate-300/70 bg-slate-950/20 shadow-[0_14px_34px_rgba(15,23,42,0.18)] dark:border-white/15"
+                  className="relative h-72 w-44 shrink-0 overflow-visible"
                   aria-label={isAr ? "بطاقة الملف الشخصية" : "Profile card"}
                 >
                   <Lanyard
@@ -1236,7 +1236,7 @@ export default function UserProfile({
                     cardColor="#e8edf5"
                     finish="matte"
                     metal="silver"
-                    size={0.46}
+                    size={0.54}
                     interactive
                     intro
                     className="h-full w-full"

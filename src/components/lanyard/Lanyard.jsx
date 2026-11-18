@@ -417,6 +417,8 @@ const buildWeaveTexture = () => {
 };
 
 const drawFitted = (ctx, image, width, height, fit) => {
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   const scale = (fit === 'contain' ? Math.min : Math.max)(width / image.width, height / image.height);
   const w = image.width * scale;
   const h = image.height * scale;
@@ -426,6 +428,8 @@ const drawFitted = (ctx, image, width, height, fit) => {
 const paintFace = (canvas, image, color, fit) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.fillStyle = toCss(color);
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   if (image) drawFitted(ctx, image, canvas.width, canvas.height, fit);
@@ -1250,7 +1254,9 @@ const Lanyard = ({
     const resize = () => {
       view.width = Math.max(1, container.clientWidth);
       view.height = Math.max(1, container.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      // Keep the card sharp on high-density mobile screens without allowing
+      // an unbounded DPR to overload weaker devices.
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
       renderer.setSize(view.width, view.height, false);
       apply();
       render();
