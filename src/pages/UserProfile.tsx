@@ -193,6 +193,7 @@ export default function UserProfile({
   const activeFrameIsAnimated = /\.gif(?:$|[?#])/i.test(activeFrameUrl);
   const [ownedFrames, setOwnedFrames] = React.useState<any[]>([]);
   const [editFrameId, setEditFrameId] = React.useState('');
+  const initialEditFrameIdRef = React.useRef('');
   const [editQuizFrameId, setEditQuizFrameId] = React.useState('');
   const [isFramesLoading, setIsFramesLoading] = React.useState(false);
   const [isAvatarUploading, setIsAvatarUploading] = React.useState(false);
@@ -811,7 +812,11 @@ export default function UserProfile({
       // Free catalog frames ship with the app (no inventory row), so they skip
       // the ownership RPC and persist through the profile update below.
       const previousFrameId = profileData?.activeFrameId || '';
-      if (editFrameId !== previousFrameId) {
+      // Do not re-run entitlement validation when the user only edits their
+      // name, bio, cover, avatar, or other profile fields. This also prevents
+      // stale legacy frame IDs from blocking unrelated profile saves.
+      const frameSelectionChanged = editFrameId !== initialEditFrameIdRef.current;
+      if (frameSelectionChanged && editFrameId !== previousFrameId) {
         const isFreeFrameSelection = FREE_PROFILE_FRAMES.some((frame) => frame.id === editFrameId);
         const frameResponse = editFrameId
           ? (isFreeFrameSelection ? { success: true } : await activateRewardFrame(editFrameId))
@@ -846,6 +851,7 @@ export default function UserProfile({
         onUpdateCustomId(editCustomId);
       }
       setIsEditing(false);
+      initialEditFrameIdRef.current = editFrameId;
 
       setProfileData((prev) =>
         prev
@@ -1476,7 +1482,10 @@ export default function UserProfile({
                     </>
                   ) : (
                     <button
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => {
+                        initialEditFrameIdRef.current = editFrameId;
+                        setIsEditing(true);
+                      }}
                       className="px-5 py-2.5 rounded-full font-bold text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/50 dark:border-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Edit2 className="w-3.5 h-3.5 text-primary" />
