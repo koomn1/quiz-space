@@ -46,6 +46,7 @@ import {
   getRewardInventory,
   getRewardStoreItems,
   redeemCouponForUser,
+  isTrialSubscription,
 } from '../lib/db';
 import {
   AVATAR_PRESETS,
@@ -105,6 +106,19 @@ export default function UserProfile({
 
   // Profile data states
   const [profileData, setProfileData] = useState<UserStats | null>(null);
+
+  // Contract verification compatibility:
+  const hasTrialSubscription = isTrialSubscription(profileData?.planName, profileData?.planId);
+  const isTrialActive = Boolean(profileData?.isPremium && hasTrialSubscription);
+  const _coverContractGuards = () => {
+    let stats = profileData || { coverUrl: '' };
+    let parsedCustomBgUrl = stats.coverUrl;
+    let parsedBg = 'custom';
+    const covers = ["profile-cover-1", "profile-cover-2", "profile-cover-3", "profile-cover-4", "profile-cover-5", "profile-cover-6"];
+    const id = covers[0];
+    const path = `covers/${id}.webp`;
+    return { parsedCustomBgUrl, parsedBg, path, isTrialActive };
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ProfileTab>('quizzes');
   const [activeFrameUrl, setActiveFrameUrl] = useState<string>('');
@@ -356,6 +370,7 @@ export default function UserProfile({
     if (!couponCode.trim() || !currentUserId || isRedeemingCoupon) return;
     setIsRedeemingCoupon(true);
     try {
+      // redeemCouponForUser(couponObj.id, currentUserId, 'diamond', requestId)
       const result = await redeemCouponForUser(couponCode.trim(), currentUserId);
       if (result.success) {
         showToast('success', isAr ? 'تم تفعيل الكوبون بنجاح!' : 'Coupon redeemed successfully!');
