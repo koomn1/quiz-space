@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1600, initial-scale=1" />
+  <title>مميزات الاشتراك في QuizSpace</title>
+  <style>
+    :root { font-family: "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; width: 1600px; min-height: 1000px; color: #f8fbff; background: #070b1c; }
+    main { position: relative; min-height: 1000px; overflow: hidden; padding: 66px 78px 58px; background:
+      radial-gradient(circle at 15% 5%, rgba(81, 101, 255, .34), transparent 30%),
+      radial-gradient(circle at 89% 16%, rgba(15, 194, 220, .2), transparent 28%),
+      linear-gradient(140deg, #080c20 0%, #111337 48%, #071526 100%); }
+    main::before { content: ""; position:absolute; inset: 22px; border: 1px solid rgba(152, 177, 255, .18); border-radius: 36px; pointer-events:none; }
+    .glow { position:absolute; width: 420px; height:420px; border-radius:50%; filter: blur(80px); opacity:.24; background:#6d4aff; left:-150px; bottom:-160px; }
+    .glow.two { background:#00d9ff; right:-180px; top:410px; left:auto; }
+    .top { position:relative; display:flex; align-items:center; justify-content:space-between; gap:40px; z-index:1; }
+    .brand { display:flex; align-items:center; gap:18px; }
+    .brand img { width:74px; height:74px; object-fit:contain; filter: drop-shadow(0 12px 28px rgba(41, 107, 255, .35)); }
+    .brand-name { font-weight:900; font-size:25px; letter-spacing:.02em; }
+    .brand-sub { margin-top:5px; color:#93a6d3; font-size:14px; font-weight:700; }
+    .eyebrow { display:inline-flex; align-items:center; gap:10px; border:1px solid rgba(113, 152, 255, .4); background:rgba(76, 102, 221, .14); border-radius:999px; padding:11px 18px; color:#cbd8ff; font-size:14px; font-weight:900; }
+    h1 { position:relative; z-index:1; margin:48px 0 12px; max-width:1120px; font-size:54px; line-height:1.16; letter-spacing:-.045em; }
+    h1 span { color:#6fe3ff; }
+    .intro { position:relative; z-index:1; margin:0; max-width:920px; color:#aebddd; font-size:20px; line-height:1.65; font-weight:650; }
+    .plans { position:relative; z-index:1; display:grid; grid-template-columns:repeat(3, 1fr); gap:22px; margin-top:44px; }
+    .card { min-height:535px; padding:28px 27px 26px; border-radius:28px; background:rgba(15, 24, 52, .82); border:1px solid rgba(150, 174, 255, .22); box-shadow:0 24px 65px rgba(0, 0, 0, .24); backdrop-filter: blur(14px); }
+    .card.silver { border-color:rgba(157, 178, 220, .5); }
+    .card.gold { border-color:rgba(251, 191, 36, .65); background:linear-gradient(160deg, rgba(60, 45, 18, .86), rgba(19, 27, 56, .9)); transform:translateY(-10px); box-shadow:0 30px 80px rgba(245, 158, 11, .16); }
+    .card.diamond { border-color:rgba(34, 211, 238, .6); background:linear-gradient(160deg, rgba(8, 52, 78, .86), rgba(17, 25, 60, .9)); }
+    .card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:15px; }
+    .icon { width:52px; height:52px; display:flex; align-items:center; justify-content:center; border-radius:17px; font-size:28px; background:rgba(255,255,255,.1); }
+    .silver .icon { background:rgba(148,163,184,.2); }
+    .gold .icon { background:rgba(245,158,11,.2); }
+    .diamond .icon { background:rgba(34,211,238,.18); }
+    .tag { border-radius:999px; padding:8px 12px; font-size:12px; font-weight:900; color:#dbe6ff; background:rgba(255,255,255,.1); white-space:nowrap; }
+    .gold .tag { color:#301d00; background:#fbbf24; }
+    .diamond .tag { color:#062a38; background:#67e8f9; }
+    h2 { margin:23px 0 8px; font-size:28px; letter-spacing:-.025em; }
+    .audience { margin:0; color:#a9b9d9; font-size:14px; font-weight:700; }
+    .price { display:flex; align-items:baseline; gap:8px; margin:24px 0 21px; color:#fff; }
+    .price strong { font-size:30px; }
+    .price small { color:#aab9d5; font-size:14px; font-weight:800; }
+    ul { list-style:none; margin:0; padding:0; border-top:1px solid rgba(171, 192, 255, .16); }
+    li { display:flex; gap:11px; align-items:flex-start; padding:15px 0; border-bottom:1px solid rgba(171, 192, 255, .12); color:#e6edff; font-size:15px; line-height:1.55; font-weight:700; }
+    li::before { content:"✓"; flex:0 0 auto; display:flex; align-items:center; justify-content:center; width:22px; height:22px; margin-top:1px; border-radius:50%; color:#071426; background:#6ee7f9; font-size:13px; font-weight:1000; }
+    .silver li::before { background:#cbd5e1; }
+    .gold li::before { background:#fbbf24; }
+    .diamond li::before { background:#67e8f9; }
+    .footer { position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:30px; margin-top:38px; padding:20px 26px; border:1px solid rgba(114, 155, 255, .22); border-radius:20px; background:rgba(9, 16, 39, .56); }
+    .footer strong { font-size:20px; }
+    .footer p { margin:5px 0 0; color:#9fb1d4; font-size:14px; font-weight:700; }
+    .cta { padding:14px 27px; border-radius:14px; color:#071426; background:linear-gradient(110deg, #67e8f9, #a5b4fc); font-size:16px; font-weight:1000; white-space:nowrap; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="glow"></div><div class="glow two"></div>
+    <div class="top">
+      <div class="brand"><img src="../brand/quizspace-logo-512.webp" alt="QuizSpace"><div><div class="brand-name">QuizSpace</div><div class="brand-sub">تعلّم أذكى. أنجز أكثر.</div></div></div>
+      <div class="eyebrow">✦ عضويتك تفتح لك تجربة تعليمية أقوى</div>
+    </div>
+    <h1>اشترك في QuizSpace واستفيد <span>أكثر</span></h1>
+    <p class="intro">اختر الباقة المناسبة لهدفك، واحصل على أدوات ذكاء اصطناعي وتقارير وتحكم أكبر في تجربة التعلّم والاختبارات.</p>
+    <section class="plans">
+      <article class="card silver"><div class="card-head"><div class="icon">◈</div><div class="tag">للطلاب</div></div><h2>الباقة الفضية</h2><p class="audience">للطالب الذي يريد مساعدة ذكية وحلولاً أوضح</p><div class="price"><strong>150 ج.م</strong><small>شهرياً</small></div><ul><li>مساعد Cosmo AI الشخصي بلا حدود</li><li>توليد 15 اختباراً متقدماً بالذكاء الاصطناعي شهرياً</li><li>تقارير حلول الاختبارات المفصلة بصيغة PDF</li><li>إطار فضي حصري وخصم 10% في متجر النقاط</li></ul></article>
+      <article class="card gold"><div class="card-head"><div class="icon">♛</div><div class="tag">الأكثر طلباً</div></div><h2>الباقة الذهبية</h2><p class="audience">للمعلمين والمعلمات وإدارة الفصول</p><div class="price"><strong>300 ج.م</strong><small>شهرياً</small></div><ul><li>توليد لا محدود بالذكاء الاصطناعي للملفات والكتب</li><li>لوحات متصدرين خاصة بفصولك وطلابك</li><li>تحكم كامل بزمن الاختبارات وإصدار الشهادات</li><li>تقارير تفصيلية لكل صف وتحليل الإجابات</li><li>إطار ذهبي متحرك وشارة معلم معتمد</li></ul></article>
+      <article class="card diamond"><div class="card-head"><div class="icon">◇</div><div class="tag">للمؤسسات</div></div><h2>الباقة الماسية</h2><p class="audience">للمدارس والمراكز التعليمية والفرق الكبيرة</p><div class="price"><strong>1500 ج.م</strong><small>شهرياً</small></div><ul><li>حساب موحد يصل إلى 15 معلماً</li><li>تصدير درجات الطلاب بصيغة Excel وPDF</li><li>تحليل فجوات التعلم لكل طالب بالذكاء الاصطناعي</li><li>تخصيص الألوان وإزالة الشعار من الاختبارات والتقارير</li><li>دعم فني خاص على مدار الساعة وإطار ماسي</li></ul></article>
+    </section>
+    <div class="footer"><div><strong>ابدأ الترقية اليوم</strong><p>كل باقة مصممة لتوفر لك وقتاً أكثر ونتائج تعليمية أفضل.</p></div><div class="cta">اكتشف الباقات الآن ←</div></div>
+  </main>
+</body>
+</html>
