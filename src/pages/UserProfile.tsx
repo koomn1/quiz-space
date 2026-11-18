@@ -215,34 +215,43 @@ export default function UserProfile({
     try {
       const [inventory, items] = await Promise.all([getRewardInventory(profileId), getRewardStoreItems()]);
       const ownedIds = new Set((inventory || []).map((row: any) => row.item_id));
-      const availableFrames = uniqueProfileFrames([
+      const catalogFrames = [
         ...FREE_PROFILE_FRAMES,
         ...(items || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)),
-      ]);
+      ];
+      const availableFrames = uniqueProfileFrames(catalogFrames);
 
       // Update owned frames list for the edit modal (only if it's our profile)
       if (isOwnProfile) {
         setOwnedFrames(availableFrames);
       }
 
-      const dbActiveId = profileData?.activeFrameId || '';
+      const dbActiveId = String(profileData?.activeFrameId || '').trim();
       const localFrameSelection = isOwnProfile ? localStorage.getItem('quizspace_active_frame') : null;
       const hasExplicitLocalSelection = isOwnProfile && localFrameSelection !== null;
-      // The database is the source of truth. localStorage is only used for the
-      // explicit legacy/no-frame state while older profiles migrate to the RPC.
-      const selectedId = dbActiveId || (hasExplicitLocalSelection ? localFrameSelection : null);
+      // The local selection is updated immediately after a successful frame
+      // activation and prevents a stale profile snapshot from briefly showing
+      // the first catalog item. The database remains the source of truth after
+      // the next profile refresh.
+      const selectedId = isOwnProfile && hasExplicitLocalSelection
+        ? String(localFrameSelection || '').trim()
+        : dbActiveId;
 
       // Built-in frames are not reward_store_items rows. Search the complete
       // rendered catalog or every local selection falls back to frame_free_1.
-      let selected = availableFrames.find((item: any) => item.id === selectedId);
+      let selected = availableFrames.find((item: any) => item.id === selectedId)
+        // Keep the active item renderable even when uniqueProfileFrames removed
+        // it because another catalog entry points at the same fallback asset.
+        || catalogFrames.find((item: any) => item.id === selectedId);
 
       // A blank local selection means the user explicitly chose no frame; do not
       // silently reselect the first owned frame after a page refresh.
       const isExplicitlyNoFrame = hasExplicitLocalSelection && !localFrameSelection && !dbActiveId;
       const isFreeFrame = (id?: string | null) => FREE_PROFILE_FRAMES.some((frame) => frame.id === id);
-      if (!selected && !isExplicitlyNoFrame) {
-        selected = isOwnProfile ? availableFrames[0] || null : null;
-      }
+      // Never substitute availableFrames[0] when a saved ID is missing. That
+      // made every unavailable/stale selection look like the animated rose
+      // frame and hid the real persistence problem.
+      if (!selected && (isExplicitlyNoFrame || selectedId)) selected = null;
       if (selected && !ownedIds.has(selected.id) && !isFreeFrame(selected.id)) {
         selected = null;
       }
