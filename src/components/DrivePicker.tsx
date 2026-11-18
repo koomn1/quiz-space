@@ -59,7 +59,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
       setAccessToken(token);
       try {
         sessionStorage.setItem('gdrive_access_token', token);
-      } catch (_) {}
+      } catch (error) { console.debug('Handled non-fatal exception:', error); }
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) {
@@ -105,7 +105,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
         if (res.status === 401) {
           // Token expired, clear it
           setAccessToken(null);
-          try { sessionStorage.removeItem('gdrive_access_token'); } catch (_) {}
+          try { sessionStorage.removeItem('gdrive_access_token'); } catch (error) { console.debug('Handled non-fatal exception:', error); }
           throw new Error(isAr ? 'انتهت صلاحية الاتصال، يرجى إعادة الاتصال بـ Google Drive.' : 'Session expired. Please reconnect Google Drive.');
         }
         throw new Error(isAr ? 'فشل جلب الملفات من سحابتك.' : 'Failed to fetch files from Google Drive.');
@@ -384,7 +384,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                   <button
                     onClick={() => {
                       setAccessToken(null);
-                      try { sessionStorage.removeItem('gdrive_access_token'); } catch (_) {}
+                      try { sessionStorage.removeItem('gdrive_access_token'); } catch (error) { console.debug('Handled non-fatal exception:', error); }
                     }}
                     className="hover:underline hover:text-red-400 transition-colors"
                   >

@@ -75,7 +75,7 @@ export function useNotificationsRealtime({
           body: data.body || '',
           icon: 'bell',
         });
-        try { playNotificationSound('chime'); } catch (_) {}
+        try { playNotificationSound('chime'); } catch (error) { console.debug('Handled non-fatal exception:', error); }
       })
       .subscribe();
 
@@ -113,7 +113,7 @@ export function useNotificationsRealtime({
           body: text.length > 50 ? `${text.slice(0, 50)}…` : text,
           icon: 'message',
         });
-        try { playNotificationSound('chime'); } catch (_) {}
+        try { playNotificationSound('chime'); } catch (error) { console.debug('Handled non-fatal exception:', error); }
       })
       .subscribe();
 

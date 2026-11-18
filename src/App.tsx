@@ -494,7 +494,9 @@ export default function App() {
             setUserPhoto(normalizeUserPhoto(stats.photoURL));
           }
         }
-      } catch (_) {}
+      } catch (error) {
+        console.debug('Handled storage error:', error);
+      }
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
@@ -773,7 +775,9 @@ export default function App() {
         const parsed = JSON.parse(storedClassrooms);
         isGroupOwner = Array.isArray(parsed) && parsed.some((c: any) => c.createdBy === userId);
       }
-    } catch (_) {}
+    } catch (error) {
+      console.debug('Handled storage error:', error);
+    }
 
     if (isSuperAdmin || isTeacher || isGroupOwner || !!userId) {
       setSharingQuiz({ id, title, description: desc });

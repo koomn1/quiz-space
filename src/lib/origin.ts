@@ -46,7 +46,7 @@ export function getAppOrigin(): string {
       if (match && match[1] && !match[1].includes('aistudio.google.com')) {
         matchedOrigin = match[1];
       }
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
   }
 
   // 2. Try window.location.origin if it is valid (not aistudio.google.com or null)
@@ -65,7 +65,7 @@ export function getAppOrigin(): string {
       if (match && match[1] && !match[1].includes('aistudio.google.com') && !match[1].includes('null')) {
         matchedOrigin = match[1];
       }
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
   }
 
   // 4. Try to read from localStorage cached server origin
@@ -103,7 +103,7 @@ export function getAppOrigin(): string {
           }
         }
       }
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
   }
 
   // 6. Fallback if still custom or empty

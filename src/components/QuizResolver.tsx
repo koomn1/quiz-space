@@ -411,7 +411,7 @@ export default function QuizResolver({
         }
       });
       setQuestionRatings(ratingMap);
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
     return () => { active = false; };
   }, [userId, quiz?.id]);
 
@@ -592,7 +592,7 @@ export default function QuizResolver({
           if (!isDailyQuiz) await revealPrivateAnswerReview(String(savedRow.id), savedRow.score);
           console.log('Quiz auto-saved successfully, completion ID:', savedRow.id, 'XP:', savedRow.xp_awarded ?? 0);
           if (isDailyQuiz) {
-            try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}
+            try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (error) { console.debug('Handled non-fatal exception:', error); }
             window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
           }
           window.dispatchEvent(new CustomEvent('quizspace:xp-updated', { detail: { userId, xpAwarded: savedRow?.xp_awarded ?? 0 } }));
@@ -854,7 +854,7 @@ export default function QuizResolver({
 
     // Standard quiz correctness is intentionally not evaluated in the
     // browser. The server grades against private answer keys after submission.
-    try { playNotificationSound('tap'); } catch (_) {}
+    try { playNotificationSound('tap'); } catch (error) { console.debug('Handled non-fatal exception:', error); }
 
     const nextAnswers = [...userAnswers];
     nextAnswers[currentIdx] = idx;
@@ -942,7 +942,7 @@ export default function QuizResolver({
         }
       }
       if (isDailyQuiz) {
-        try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (_) {}
+        try { window.sessionStorage.removeItem(`quizspace-daily-${quizId}`); } catch (error) { console.debug('Handled non-fatal exception:', error); }
         window.dispatchEvent(new CustomEvent('quizspace:daily-completed', { detail: { userId, quizId } }));
       }
       if (previousBestScore > 0 && score > previousBestScore) {
@@ -1022,7 +1022,7 @@ export default function QuizResolver({
             return;
           }
         }
-        try { playNotificationSound('success'); } catch (_) {}
+        try { playNotificationSound('success'); } catch (error) { console.debug('Handled non-fatal exception:', error); }
         if (onQuizLockChange) onQuizLockChange(false);
         onGoHome();
         return;
@@ -1069,7 +1069,7 @@ export default function QuizResolver({
 
       try {
         playNotificationSound('success');
-      } catch (_) {}
+      } catch (error) { console.debug('Handled non-fatal exception:', error); }
 
       // Release route block!
       if (onQuizLockChange) {
@@ -1091,7 +1091,7 @@ export default function QuizResolver({
           savedAt: new Date().toISOString(),
         });
         localStorage.setItem(offlineKey, JSON.stringify(existing.slice(-20)));
-      } catch (_) {}
+      } catch (error) { console.debug('Handled non-fatal exception:', error); }
       const rawMessage = String(err?.message || '').trim();
       const isSessionError = /session|jwt|token|auth|not authorized/i.test(rawMessage);
       const isQuizMissing = /quiz not found|invalid quiz/i.test(rawMessage);
@@ -1127,7 +1127,7 @@ export default function QuizResolver({
     // client session or overwrite the student's improvement history.
     try {
       localStorage.removeItem(`quiz_session_${userId || 'anonymous'}_${quizId}`);
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
     setCurrentIdx(0);
     setSelectedIdx(null);
     setIsAnswersFrozen(false);
@@ -1164,7 +1164,7 @@ export default function QuizResolver({
         : ` Scored ${score}/${quiz.questions.length} on "${quiz.title}"! Challenge yourself and share your scores `;
       await createCommunityPost(text, authUser, authorDisplayName);
       setIsSharedToCommunity(true);
-      try { playNotificationSound('success'); } catch (_) {}
+      try { playNotificationSound('success'); } catch (error) { console.debug('Handled non-fatal exception:', error); }
     } catch (e) {
       console.warn('Community post failed:', e);
       setIsSharedToCommunity(true);

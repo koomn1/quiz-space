@@ -80,7 +80,7 @@ export function useAppUiEffects({
         const existing = localStorage.getItem(cacheKey);
         const existingData = existing ? JSON.parse(existing) : {};
         localStorage.setItem(cacheKey, JSON.stringify({ ...existingData, uid: userId, photoURL: userPhoto, customId: userCustomId }));
-      } catch (_) {}
+      } catch (error) { console.debug('Handled non-fatal exception:', error); }
     }
   }, [userId, userPhoto, userCustomId, isStatsLoaded]);
 }

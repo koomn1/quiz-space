@@ -812,7 +812,7 @@ export async function submitQuizAttempt(
           authData = refreshRes.data;
           authError = null;
         }
-      } catch (_) {}
+      } catch (error) { console.debug('Handled non-fatal exception:', error); }
     }
     if (authError || !authData.user?.id) throw authError || new Error('Your authenticated session is not ready.');
     authenticatedTakerId = authData.user.id;
@@ -1710,7 +1710,7 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
     if (authData?.user?.id) {
       effectiveUserId = authData.user.id;
     }
-  } catch (_) {}
+  } catch (error) { console.debug('Handled non-fatal exception:', error); }
 
   const numericPlanPrice = typeof reqData.planPrice === 'number' && Number.isFinite(reqData.planPrice)
     ? reqData.planPrice
@@ -1757,7 +1757,7 @@ export async function getPremiumRequests(userId?: string, options: { adminQueue?
     try {
       const { data: authData } = await supabase.auth.getUser();
       targetUid = authData?.user?.id;
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
   }
 
   let query = supabase.from('premium_requests').select('*');
@@ -1797,7 +1797,7 @@ export async function getPremiumRequests(userId?: string, options: { adminQueue?
           updatedAt: row.updated_at || row.updatedAt,
         }));
       }
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
     throw error;
   }
   return (data || []).map((row: any) => ({
@@ -1937,12 +1937,12 @@ export async function updatePremiumRequest(
         const { data: reqRow } = await supabase.from('premium_requests').select('user_id, payment_screenshot, plan_name, plan_id').eq('id', requestId).maybeSingle();
         requestRow = reqRow;
         if (reqRow?.user_id) targetUserId = reqRow.user_id;
-      } catch (_) {}
+      } catch (error) { console.debug('Handled non-fatal exception:', error); }
     } else {
       try {
         const { data: reqRow } = await supabase.from('premium_requests').select('user_id, payment_screenshot, plan_name, plan_id').eq('id', requestId).maybeSingle();
         requestRow = reqRow;
-      } catch (_) {}
+      } catch (error) { console.debug('Handled non-fatal exception:', error); }
     }
 
     const { error } = await supabase.rpc('approve_premium_request', {

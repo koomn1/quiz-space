@@ -676,6 +676,9 @@ function hasCosmoAttachment(body: any): boolean {
 async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext): Promise<Response> {
   const headers = cors(request, env);
   const path = new URL(request.url).pathname;
+  if (path === '/healthz' || path === '/health') {
+    return json({ status: 'healthy', timestamp: new Date().toISOString() }, 200, headers);
+  }
   if (!isAllowedOrigin(request, env)) {
     return json({ error: 'Origin not allowed.' }, 403, headers);
   }

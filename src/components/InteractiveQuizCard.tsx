@@ -76,7 +76,7 @@ export function InteractiveQuizCard({
     try {
       const res = await getQuizTakersUnique(quiz.id);
       if (res && res.length > 0) setAttempts(res);
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
   };
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);

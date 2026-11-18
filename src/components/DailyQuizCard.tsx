@@ -224,7 +224,7 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
     const onDailyCompleted = (event: Event) => {
       const completedQuizId = (event as CustomEvent<{ quizId?: string }>).detail?.quizId;
       if (completedQuizId) {
-        try { window.sessionStorage.removeItem(`quizspace-daily-${completedQuizId}`); } catch (_) {}
+        try { window.sessionStorage.removeItem(`quizspace-daily-${completedQuizId}`); } catch (error) { console.debug('Handled non-fatal exception:', error); }
       }
       latestDailyPayload = null;
       setQuizId(null);

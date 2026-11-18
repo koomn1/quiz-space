@@ -1,4 +1,4 @@
-import type { ExtractionJobRow } from './extractionJobs';
+import type { ExtractionJobRow } from './types';
 
 export interface Env {
   /** Primary text-generation provider. */

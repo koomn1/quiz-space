@@ -233,7 +233,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
       navigator.clipboard.writeText(text);
       setCopiedText(label);
       setTimeout(() => setCopiedText(null), 2500);
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
   };
 
   // Membership loader

@@ -534,7 +534,7 @@ export default function QuizCreator({
           setQuestions(parsed.questions);
         }
       }
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
   }, [draftOwnerId, quizToEdit]);
 
   // Auto-save ordinary editor changes under the same owner-specific key.
@@ -557,7 +557,7 @@ export default function QuizCreator({
           savedAt: Date.now()
         }));
       }
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
   }, [title, description, category, timeLimit, essayGradingMode, questions, draftOwnerId, quizToEdit, postExtractionSolvePending]);
 
   // Extracted drafts are separate from ordinary editor drafts and are surfaced

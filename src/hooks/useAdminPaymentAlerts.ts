@@ -79,7 +79,7 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
     // 1. Play soft audio chime (respects user interaction and mute settings)
     try {
       playNotificationSound('chime');
-    } catch (_) {}
+    } catch (error) { console.debug('Handled non-fatal exception:', error); }
 
     // 2. Set floating in-app banner alert
     setLatestAlert(alert);
@@ -98,7 +98,7 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
             onNavigateToPayments();
           }
         };
-      } catch (_) {}
+      } catch (error) { console.debug('Handled non-fatal exception:', error); }
     }
 
     // 4. Update count

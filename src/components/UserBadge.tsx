@@ -1,11 +1,7 @@
 import React, { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { BADGE_COLOR_PRESETS, BadgeColorKey } from './PremiumNameTag';
-
-gsap.registerPlugin(useGSAP);
-
-export type SubscriptionTier = 'free' | 'verified' | 'pro' | 'premium' | 'team' | 'enterprise' | 'lifetime' | 'founder' | 'royal';
+import { BADGE_COLOR_PRESETS, BadgeColorKey, SubscriptionTier } from '../constants/badgePresets';
 
 interface UserBadgeProps {
   tier: SubscriptionTier;
