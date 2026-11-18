@@ -186,9 +186,9 @@ export default function Login() {
 
           <h1 className="max-w-xl text-4xl font-black leading-[1.18] tracking-tight text-white sm:text-5xl lg:text-[4.35rem]">
             {isAr ? (
-              <>رحلتك تبدأ من <span className="bg-gradient-to-l from-cyan-200 via-primary-light to-fuchsia-300 bg-clip-text text-transparent">سؤال.</span></>
+              <>رحلتك تبدأ من <span className="bg-gradient-to-l from-[#2AC3BB] via-[#FCF6EE] to-[#EE8361] bg-clip-text text-transparent">سؤال.</span></>
             ) : (
-              <>Your journey starts with a <span className="bg-gradient-to-r from-cyan-200 via-primary-light to-fuchsia-300 bg-clip-text text-transparent">question.</span></>
+              <>Your journey starts with a <span className="bg-gradient-to-r from-[#2AC3BB] via-[#FCF6EE] to-[#EE8361] bg-clip-text text-transparent">question.</span></>
             )}
           </h1>
           <p className="mt-6 max-w-lg text-sm leading-8 text-slate-200 sm:text-base">
@@ -210,7 +210,7 @@ export default function Login() {
             ))}
           </div>
 
-          <div className="relative mt-10 hidden max-w-lg overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.1] to-white/[0.025] p-5 shadow-2xl shadow-violet-950/20 sm:block">
+          <div className="relative mt-10 hidden max-w-lg overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.1] to-white/[0.025] p-5 shadow-2xl shadow-[#007472]/20 sm:block">
             <div className="absolute -left-12 -top-16 h-40 w-40 rounded-full border border-cyan-200/20" />
             <div className="absolute -left-5 -top-9 h-28 w-28 rounded-full border border-primary/20" />
             <div className="flex items-center justify-between gap-4">
@@ -218,7 +218,7 @@ export default function Login() {
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200/90">Cosmo signal</p>
                 <p className="mt-2 text-sm font-black text-white">{isAr ? 'مساحتك الخاصة للتعلّم' : 'Your personal learning orbit'}</p>
               </div>
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-cyan-400 shadow-lg shadow-violet-950/40">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-cyan-400 shadow-lg shadow-[#007472]/30">
                 <Sparkles className="h-5 w-5 text-white" aria-hidden="true" />
               </div>
             </div>

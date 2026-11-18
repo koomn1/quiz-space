@@ -834,7 +834,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                                 setIsSendingPromo(false);
                               }
                             }}
-                            className="w-full py-3 bg-gradient-to-r from-primary to-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer"
+                            className="w-full py-3 bg-gradient-to-r from-primary to-[#007472] text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer"
                           >
                             {isSendingPromo ? (isAr ? 'جاري الإرسال...' : 'Sending...') : (isAr ? 'إرسال التنبيه الآن' : 'Send Notification Now')}
                           </button>
@@ -932,7 +932,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                               onClick={() => {
                                 setActiveAdminClassroom(c);
                               }}
-                              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm shadow-purple-500/15 cursor-pointer"
+                              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] text-white font-black hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm shadow-purple-500/15 cursor-pointer"
                             >
                               <EyeOff className="w-3.5 h-3.5" />
                               <span>{isAr ? 'دخول في وضع التخفي' : 'Stealth Access'}</span>

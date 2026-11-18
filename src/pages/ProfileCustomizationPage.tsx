@@ -369,7 +369,7 @@ export default function ProfileCustomizationPage({
           <section className="rounded-[26px] border border-slate-200/80 bg-white/90 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
-                <LayoutTemplate className="h-5 w-5 text-indigo-500" />
+                <LayoutTemplate className="h-5 w-5 text-[#007472] dark:text-[#2AC3BB]" />
                 <h2 className="text-lg font-black text-slate-900 dark:text-white">{isAr ? 'إطار بطاقات الاختبار' : 'Quiz-card Frame'}</h2>
               </div>
               {activeQuizFrame && (
@@ -397,15 +397,15 @@ export default function ProfileCustomizationPage({
                     onClick={() => void selectQuizFrame(qFrame.id)}
                     className={`relative flex flex-col items-center rounded-2xl border-2 p-3 transition-all hover:scale-[1.02] active:scale-95 motion-reduce:transform-none ${
                       isSelected
-                        ? 'border-indigo-500 bg-indigo-500/10 shadow-md ring-2 ring-indigo-400/30'
-                        : 'border-slate-200 bg-slate-50 hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-900'
+                        ? 'border-[#007472] dark:border-[#2AC3BB] bg-[#007472]/10 dark:bg-[#2AC3BB]/10 shadow-md ring-2 ring-[#2AC3BB]/30'
+                        : 'border-slate-200 bg-slate-50 hover:border-[#007472]/40 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-[#2AC3BB]/40'
                     }`}
                   >
                     <div className={`aspect-video w-full rounded-xl border p-2 flex items-center justify-center text-[10px] font-bold ${qFrame.previewClass}`}>
                       {name}
                     </div>
                     {isSelected && (
-                      <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm">
+                      <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#007472] text-white shadow-sm">
                         <Check className="h-3.5 w-3.5 stroke-[3]" />
                       </span>
                     )}

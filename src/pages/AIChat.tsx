@@ -84,11 +84,11 @@ const COSMO_AVATAR = profileAssetUrl('avatars/cosmo-cartoon.webp');
 
 const ASSISTANT_NAME_AR = 'كوزمو AI';
 const ASSISTANT_NAME_EN = 'Cosmo AI';
-const ACCENT = '#6366F1'; // Cosmic Indigo
-const ACCENT_HOVER = '#4F46E5';
-const ACCENT_CYAN = '#06B6D4'; // Nebula Cyan
-const ACCENT_AMBER = '#F59E0B'; // Solar Amber
-const ACCENT_PURPLE = '#8B5CF6'; // Cosmic Violet
+const ACCENT = '#007472'; // Royal Petrol
+const ACCENT_HOVER = '#005e5c';
+const ACCENT_CYAN = '#2AC3BB'; // Bright Teal
+const ACCENT_AMBER = '#EE8361'; // Warm Coral
+const ACCENT_PURPLE = '#2AC3BB';
 // Smaller batches keep JSON complete when questions include four options and
 // detailed explanations, especially on mobile networks and free providers.
 const COSMO_QUIZ_BATCH_SIZE = 10;
@@ -119,7 +119,7 @@ const COSMO_MODES: CosmoModeConfig[] = [
   {
     id: 'instant', labelAr: 'إجابة فورية', labelEn: 'Instant',
     descAr: 'إجابات سريعة ومباشرة', descEn: 'Quick and direct answers',
-    icon: Zap, color: '#6366F1', bgTint: 'rgba(99,102,241,0.12)', borderTint: 'rgba(99,102,241,0.3)',
+    icon: Zap, color: '#007472', bgTint: 'rgba(0,116,114,0.12)', borderTint: 'rgba(0,116,114,0.3)',
     orbState: 'composing', stateLabelsAr: ['يكتب الرد...'], stateLabelsEn: ['Composing reply...'],
   },
   {
@@ -664,14 +664,14 @@ interface AIChatProps {
 function AssistantAvatar() {
   return (
     <div className="relative flex-shrink-0">
-      <div className="relative w-10 h-10 rounded-full flex items-center justify-center p-0.5 border-2 border-indigo-500/60 shadow-lg shadow-indigo-500/25 ring-2 ring-indigo-500/20 bg-slate-900">
+      <div className="relative w-10 h-10 rounded-full flex items-center justify-center p-0.5 border-2 border-[#2AC3BB]/60 shadow-lg shadow-[#007472]/25 ring-2 ring-[#2AC3BB]/20 bg-slate-900">
         <ProfileAvatar
           src={COSMO_AVATAR}
           alt="Cosmo AI"
           fallback="C"
           className="w-full h-full rounded-full overflow-hidden"
           imageClassName="w-full h-full object-cover"
-          fallbackClassName="text-sm font-black text-indigo-300"
+          fallbackClassName="text-sm font-black text-[#2AC3BB]"
         />
       </div>
       <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full shadow-sm" title="Online" />
@@ -686,7 +686,7 @@ function renderInlineMd(line: string, keyPrefix: string, theme: Palette): React.
   codeSplit.forEach((chunk, ci) => {
     if (chunk.startsWith('`') && chunk.endsWith('`') && chunk.length > 1) {
       parts.push(
-        <code key={`${keyPrefix}-code-${ci}`} className="px-1.5 py-0.5 rounded-md text-[0.85em] font-mono border" style={{ background: theme.IS_DARK ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)', borderColor: 'rgba(99,102,241,0.2)', color: theme.IS_DARK ? '#a5b4fc' : '#4f46e5' }}>
+        <code key={`${keyPrefix}-code-${ci}`} className="px-1.5 py-0.5 rounded-md text-[0.85em] font-mono border" style={{ background: theme.IS_DARK ? 'rgba(0,116,114,0.15)' : 'rgba(0,116,114,0.08)', borderColor: 'rgba(42,195,187,0.25)', color: theme.IS_DARK ? '#2AC3BB' : '#007472' }}>
           {chunk.slice(1, -1)}
         </code>
       );
@@ -695,7 +695,7 @@ function renderInlineMd(line: string, keyPrefix: string, theme: Palette): React.
     const boldItalicSplit = chunk.split(/(\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_)/g);
     boldItalicSplit.forEach((piece, pi) => {
       if (/^\*\*[^*]+\*\*$/.test(piece)) {
-        parts.push(<strong key={`${keyPrefix}-b-${ci}-${pi}`} className="font-bold text-indigo-300/90">{piece.slice(2, -2)}</strong>);
+        parts.push(<strong key={`${keyPrefix}-b-${ci}-${pi}`} className="font-bold text-[#007472] dark:text-[#2AC3BB]">{piece.slice(2, -2)}</strong>);
       } else if (/^\*[^*]+\*$/.test(piece) || /^_[^_]+_$/.test(piece)) {
         parts.push(<em key={`${keyPrefix}-i-${ci}-${pi}`} className="italic">{piece.slice(1, -1)}</em>);
       } else if (piece) {
@@ -778,7 +778,7 @@ function FormattedText({ text, fg, theme }: { text: string; fg: string; theme: P
             rendered.push(
               <div key={`table-${blockIdx}-${i}`} className="my-3 overflow-x-auto rounded-2xl border shadow-sm" style={{ borderColor: theme.BORDER }}>
                 <table dir="rtl" className="w-full text-xs">
-                  <thead style={{ background: theme.IS_DARK ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.06)' }}>
+                  <thead style={{ background: theme.IS_DARK ? 'rgba(0,116,114,0.15)' : 'rgba(0,116,114,0.06)' }}>
                     <tr>{header.map((h, hi) => <th key={hi} className="px-3.5 py-2.5 text-right font-bold" style={{ color: fg }}>{renderInlineMd(h, `th-${i}-${hi}`, theme)}</th>)}</tr>
                   </thead>
                   <tbody>
@@ -818,7 +818,7 @@ function FormattedText({ text, fg, theme }: { text: string; fg: string; theme: P
           } else if (numberedMatch) {
             rendered.push(
               <div key={`nli-${i}`} className="flex items-start gap-2 pr-1">
-                <span className="shrink-0 font-bold text-xs px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(99,102,241,0.12)', color: ACCENT }}>{numberedMatch[1]}</span>
+                <span className="shrink-0 font-bold text-xs px-1.5 py-0.5 rounded-md" style={{ background: 'rgba(0,116,114,0.12)', color: ACCENT }}>{numberedMatch[1]}</span>
                 <p className="flex-1">{parts}</p>
               </div>
             );
@@ -860,14 +860,14 @@ function QuizShowcaseCard({
       className="mt-4 rounded-2xl border p-5 shadow-xl transition-all"
       style={{
         background: theme.IS_DARK ? 'linear-gradient(145deg, #101628 0%, #0c101c 100%)' : 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-        borderColor: 'rgba(99,102,241,0.35)',
-        boxShadow: '0 8px 30px rgba(99,102,241,0.12)'
+        borderColor: 'rgba(0,116,114,0.35)',
+        boxShadow: '0 8px 30px rgba(0,116,114,0.12)'
       }}
       dir="rtl"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-tr from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-tr from-[#007472] to-[#2AC3BB] text-white shadow-lg shadow-[#007472]/25">
             <Zap className="w-6 h-6" />
           </div>
           <div>
@@ -887,7 +887,7 @@ function QuizShowcaseCard({
       {/* Meta Stats Badges */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
         <div className="p-2.5 rounded-xl border flex items-center gap-2" style={{ background: theme.INPUT_BG, borderColor: theme.BORDER }}>
-          <Layers className="w-4 h-4 text-indigo-400" />
+          <Layers className="w-4 h-4 text-[#2AC3BB]" />
           <div>
             <span className="block text-[10px] text-slate-400">{isAr ? 'عدد الأسئلة' : 'Questions'}</span>
             <span className="font-bold text-xs" style={{ color: theme.FG }}>{quiz.questionCount} سؤال</span>
@@ -908,10 +908,10 @@ function QuizShowcaseCard({
           </div>
         </div>
         <div className="p-2.5 rounded-xl border flex items-center gap-2" style={{ background: theme.INPUT_BG, borderColor: theme.BORDER }}>
-          <Sparkles className="w-4 h-4 text-purple-400" />
+          <Sparkles className="w-4 h-4 text-[#EE8361]" />
           <div>
             <span className="block text-[10px] text-slate-400">{isAr ? 'مكافأة الإنجاز' : 'Reward'}</span>
-            <span className="font-bold text-xs text-indigo-400">+{quiz.questionCount * 5} XP</span>
+            <span className="font-bold text-xs text-[#2AC3BB]">+{quiz.questionCount * 5} XP</span>
           </div>
         </div>
       </div>
@@ -920,8 +920,8 @@ function QuizShowcaseCard({
       <div className="flex flex-wrap items-center gap-2.5">
         <button
           onClick={() => onStartQuiz?.(quiz.id)}
-          className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
-          style={{ background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)' }}
+          className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs text-white shadow-lg shadow-[#007472]/25 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+          style={{ background: 'linear-gradient(135deg, #007472 0%, #2AC3BB 100%)' }}
         >
           <Play className="w-4 h-4 fill-current" />
           <span>{isAr ? 'ابدأ الاختبار الآن في المنصة' : 'Start Quiz in Platform'}</span>
@@ -930,10 +930,10 @@ function QuizShowcaseCard({
         {quiz.questions && quiz.questions.length > 0 && (
           <button
             onClick={() => setShowPreview(prev => !prev)}
-            className="flex items-center gap-1.5 px-4 py-3 rounded-xl font-bold text-xs border transition-all hover:bg-indigo-500/10 cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-3 rounded-xl font-bold text-xs border transition-all hover:bg-[#007472]/10 cursor-pointer"
             style={{ background: theme.INPUT_BG, borderColor: theme.BORDER, color: theme.FG }}
           >
-            <Eye className="w-4 h-4 text-indigo-400" />
+            <Eye className="w-4 h-4 text-[#007472] dark:text-[#2AC3BB]" />
             <span>{showPreview ? (isAr ? 'إخفاء المعاينة' : 'Hide') : (isAr ? `معاينة الأسئلة (${quiz.questions.length})` : 'Preview')}</span>
             {showPreview ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
@@ -941,7 +941,7 @@ function QuizShowcaseCard({
 
         <button
           onClick={handleCopyLink}
-          className="p-3 rounded-xl border transition-all hover:bg-indigo-500/10 cursor-pointer"
+          className="p-3 rounded-xl border transition-all hover:bg-[#007472]/10 cursor-pointer"
           style={{ background: theme.INPUT_BG, borderColor: theme.BORDER, color: theme.MUTED }}
           title={isAr ? 'نسخ رابط الاختبار للمشاركة' : 'Share Quiz'}
         >
@@ -952,12 +952,12 @@ function QuizShowcaseCard({
       {/* Questions Preview Accordion */}
       {showPreview && quiz.questions && (
         <div className="mt-4 pt-4 border-t space-y-3.5" style={{ borderColor: theme.BORDER_SOFT }}>
-          <p className="text-xs font-bold text-indigo-400">{isAr ? 'قائمة الأسئلة والإجابات النموذجية والشروحات:' : 'Questions and Model Answers:'}</p>
+          <p className="text-xs font-bold text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'قائمة الأسئلة والإجابات النموذجية والشروحات:' : 'Questions and Model Answers:'}</p>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
             {quiz.questions.map((q, qIndex) => (
               <div key={qIndex} className="p-3.5 rounded-xl border text-xs" style={{ background: theme.INPUT_BG, borderColor: theme.BORDER }}>
                 <div className="flex items-start gap-2 mb-2 font-bold" style={{ color: theme.FG }}>
-                  <span className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB] flex items-center justify-center text-[10px] shrink-0 mt-0.5">
                     {qIndex + 1}
                   </span>
                   <p className="flex-1 leading-relaxed">{q.text}</p>
@@ -1057,7 +1057,7 @@ function MessageRow({
             {msg.attachmentName && (
               <div
                 className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl text-xs font-semibold border shadow-xs"
-                style={{ background: theme.IS_DARK ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.08)', borderColor: 'rgba(99,102,241,0.3)', color: ACCENT }}
+                style={{ background: theme.IS_DARK ? 'rgba(0,116,114,0.18)' : 'rgba(0,116,114,0.08)', borderColor: 'rgba(0,116,114,0.3)', color: ACCENT }}
               >
                 <FileText className="w-4 h-4 shrink-0" />
                 <span className="truncate max-w-[200px]">{msg.attachmentName}</span>
@@ -1072,7 +1072,7 @@ function MessageRow({
               {onEditMessage && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onEditMessage(msg); }}
-                  className="p-1 rounded-md transition-colors cursor-pointer opacity-0 group-hover:opacity-100 hover:bg-indigo-500/15"
+                  className="p-1 rounded-md transition-colors cursor-pointer opacity-0 group-hover:opacity-100 hover:bg-[#007472]/15"
                   style={{ color: theme.MUTED }}
                   title={isAr ? 'تعديل الرسالة' : 'Edit message'}
                 >
@@ -1086,7 +1086,7 @@ function MessageRow({
             src={userPhoto}
             alt={userInitial}
             fallback={userInitial}
-            className="h-8 w-8 rounded-full flex-shrink-0 border border-indigo-400/30 shadow-sm"
+            className="h-8 w-8 rounded-full flex-shrink-0 border border-[#2AC3BB]/30 shadow-sm"
             imageClassName="h-full w-full object-cover"
             fallbackClassName="text-sm font-semibold text-white"
           />
@@ -1100,8 +1100,8 @@ function MessageRow({
               <span
                 className="text-[10px] px-2 py-0.5 rounded-full font-semibold border flex items-center gap-1 shadow-sm"
                 style={{
-                  background: theme.IS_DARK ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)',
-                  borderColor: theme.IS_DARK ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.2)',
+                  background: theme.IS_DARK ? 'rgba(0,116,114,0.15)' : 'rgba(0,116,114,0.08)',
+                  borderColor: theme.IS_DARK ? 'rgba(0,116,114,0.3)' : 'rgba(0,116,114,0.2)',
                   color: ACCENT,
                 }}
               >
@@ -1141,7 +1141,7 @@ function MessageRow({
                 <button
                   onClick={() => onCreateQuizFromReply(msg.text)}
                   className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border"
-                  style={{ background: 'rgba(99,102,241,0.08)', borderColor: 'rgba(99,102,241,0.25)', color: ACCENT }}
+                  style={{ background: 'rgba(0,116,114,0.08)', borderColor: 'rgba(0,116,114,0.25)', color: ACCENT }}
                   title="أنشئ كويز تفاعلي من هذا الشرح"
                 >
                   <FileQuestion className="w-3.5 h-3.5" />
@@ -1208,13 +1208,13 @@ function StreamingRow({ text, theme }: { text: string; theme: Palette }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold mb-2 flex items-center gap-2" style={{ color: theme.FG }}>
           <span>{ASSISTANT_NAME_AR}</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 animate-pulse">
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB] border border-[#2AC3BB]/30 animate-pulse">
             جاري الكتابة...
           </span>
         </p>
         <div className="p-5 rounded-2xl border shadow-sm" style={{ background: theme.SURFACE, borderColor: theme.BORDER }}>
           <FormattedText text={text} fg={theme.FG} theme={theme} />
-          <span className="inline-block w-2 h-4 bg-indigo-500 animate-pulse ml-1 align-middle rounded-xs" />
+          <span className="inline-block w-2 h-4 bg-[#2AC3BB] animate-pulse ml-1 align-middle rounded-xs" />
         </div>
       </div>
     </div>
@@ -1294,7 +1294,7 @@ function AgentPlanRow({ steps, isAr, theme }: { steps: AgentStep[]; isAr: boolea
 
 /* ─── Gemini Starter Cards ─────────────────────────────── */
 const starters = [
-  { icon: BookOpen,      title: 'اشرحلي درس أو مفهوم معقد', sub: 'تبسيط النظريات والقوانين بأمثلة عملية', color: '#6366F1', bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.25)' },
+  { icon: BookOpen,      title: 'اشرحلي درس أو مفهوم معقد', sub: 'تبسيط النظريات والقوانين بأمثلة عملية', color: '#007472', bg: 'rgba(0,116,114,0.08)', border: 'rgba(0,116,114,0.25)' },
   { icon: BrainCircuit,  title: 'لخصلي محتوى ملف أو محاضرة', sub: 'استخراج الأفكار الرئيسية والمفاهيم المهمة', color: '#06B6D4', bg: 'rgba(6,182,212,0.08)', border: 'rgba(6,182,212,0.25)' },
   { icon: Zap,           title: 'اختبرني فوراً في مادة محددة', sub: 'توليد كويز تفاعلي فوري لقياس الفهم', color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)' },
   { icon: GraduationCap, title: 'ضع لي خطة مراجعة للامتحان', sub: 'جدول دراسي مركز وتوقعات لأهم الأسئلة', color: '#8B5CF6', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.25)' },
@@ -2186,13 +2186,13 @@ export default function AIChat({
               onClick={startNewChat}
               className="flex-1 flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-sm transition-all border shadow-xs cursor-pointer group"
               style={{
-                background: theme.IS_DARK ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.08)',
-                borderColor: 'rgba(99,102,241,0.25)',
+                background: theme.IS_DARK ? 'rgba(0,116,114,0.12)' : 'rgba(0,116,114,0.08)',
+                borderColor: 'rgba(0,116,114,0.25)',
                 color: theme.FG,
               }}
             >
               <div className="flex items-center gap-2.5">
-                <SquarePen className="w-4 h-4 text-indigo-400 group-hover:rotate-6 transition-transform" />
+                <SquarePen className="w-4 h-4 text-[#2AC3BB] group-hover:rotate-6 transition-transform" />
                 <span>{isAr ? 'محادثة جديدة' : 'New chat'}</span>
               </div>
               <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-normal opacity-60 bg-slate-800 text-slate-300">Ctrl+K</span>
@@ -2213,7 +2213,7 @@ export default function AIChat({
               value={convSearchQuery}
               onChange={e => setConvSearchQuery(e.target.value)}
               placeholder={isAr ? 'ابحث بالاسم أو كود المحادثة...' : 'Search by name or code...'}
-              className="w-full pl-3 pr-8 py-2 rounded-xl text-xs outline-none border transition-colors focus:border-indigo-500/50"
+              className="w-full pl-3 pr-8 py-2 rounded-xl text-xs outline-none border transition-colors focus:border-[#2AC3BB]/50"
               style={{
                 background: theme.IS_DARK ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
                 borderColor: theme.BORDER,
@@ -2232,7 +2232,7 @@ export default function AIChat({
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
             {filteredConvs.length === 0 ? (
               <div className="text-center py-10 px-4">
-                <Sparkles className="w-8 h-8 mx-auto mb-2 text-indigo-400/40" />
+                <Sparkles className="w-8 h-8 mx-auto mb-2 text-[#2AC3BB]/40" />
                 <p className="text-xs font-medium" style={{ color: theme.MUTED }}>
                   {convSearchQuery ? (isAr ? 'لم يتم العثور على محادثات مطابقة' : 'No matching chats') : (isAr ? 'لا توجد محادثات سابقة' : 'No past conversations')}
                 </p>
@@ -2250,9 +2250,9 @@ export default function AIChat({
                         className="group relative flex items-center justify-between rounded-xl px-3 py-2 text-xs transition-all cursor-pointer border"
                         style={{
                           background: isActive
-                            ? (theme.IS_DARK ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.1)')
+                            ? (theme.IS_DARK ? 'rgba(0,116,114,0.18)' : 'rgba(0,116,114,0.1)')
                             : 'transparent',
-                          borderColor: isActive ? 'rgba(99,102,241,0.35)' : 'transparent',
+                          borderColor: isActive ? 'rgba(0,116,114,0.35)' : 'transparent',
                           color: isActive ? theme.FG : theme.MUTED,
                         }}
                         onClick={() => setActiveConversationId(c.id)}
@@ -2268,13 +2268,13 @@ export default function AIChat({
                                 if (e.key === 'Enter') handleConvRename(c.id);
                                 if (e.key === 'Escape') setRenamingConvId(null);
                               }}
-                              className="w-full bg-transparent outline-none font-medium border-b border-indigo-400"
+                              className="w-full bg-transparent outline-none font-medium border-b border-[#2AC3BB]"
                               onClick={e => e.stopPropagation()}
                             />
                           ) : (
                             <>
                               <p className="font-semibold truncate text-[13px]">{c.title}</p>
-                              <div className="flex items-center gap-1.5 mt-0.5 font-mono text-[10px] text-indigo-400/70">
+                              <div className="flex items-center gap-1.5 mt-0.5 font-mono text-[10px] text-[#2AC3BB]/70">
                                 <span>#{code}</span>
                               </div>
                             </>
@@ -2284,7 +2284,7 @@ export default function AIChat({
                         <div className="hidden group-hover:flex items-center gap-1 bg-slate-900/90 rounded-lg p-1 shadow-sm border border-slate-700">
                           <button
                             onClick={(e) => { e.stopPropagation(); copyChatCode(code); }}
-                            className="p-1 hover:text-indigo-300"
+                            className="p-1 hover:text-[#2AC3BB]"
                             title="نسخ كود المحادثة"
                           >
                             <Copy className="w-3 h-3" />
@@ -2317,7 +2317,7 @@ export default function AIChat({
             <div className="p-2.5 rounded-xl border flex items-center justify-between text-[11px]"
               style={{ background: theme.IS_DARK ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', borderColor: theme.BORDER_SOFT }}>
               <div className="flex items-center gap-1.5 text-slate-400">
-                <HardDrive className="w-3.5 h-3.5 text-indigo-400" />
+                <HardDrive className="w-3.5 h-3.5 text-[#2AC3BB]" />
                 <span>الملفات المؤقتة: {tempStats.count} ({formatBytes(tempStats.totalBytes)})</span>
               </div>
               {tempStats.count > 0 && (
@@ -2333,7 +2333,7 @@ export default function AIChat({
 
             <div className="flex items-center justify-between p-2 rounded-xl" style={{ background: theme.CARD }}>
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-[#007472] flex items-center justify-center text-white font-bold text-xs">
                   {userPhoto ? <img src={userPhoto} alt={userName || ''} className="w-full h-full object-cover" /> : userInitial}
                 </div>
                 <div className="min-w-0">
@@ -2341,7 +2341,7 @@ export default function AIChat({
                   <p className="text-[10px] text-slate-400 truncate">{planName || 'الخطة القياسية'}</p>
                 </div>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#007472]/10 text-[#007472] dark:bg-[#2AC3BB]/10 dark:text-[#2AC3BB] border border-[#2AC3BB]/20">
                 {isPremium ? 'VIP' : 'PRO'}
               </span>
             </div>
@@ -2377,7 +2377,7 @@ export default function AIChat({
               </button>
             )}
             <div className="flex items-center gap-2">
-              <div className="relative w-8 h-8 rounded-xl overflow-hidden p-0.5 border border-indigo-400/30 shadow-sm" style={{ background: theme.CARD }}>
+              <div className="relative w-8 h-8 rounded-xl overflow-hidden p-0.5 border border-[#2AC3BB]/30 shadow-sm" style={{ background: theme.CARD }}>
                 <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover rounded-lg" />
               </div>
               <div>
@@ -2399,16 +2399,16 @@ export default function AIChat({
             <div
               className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs text-xs font-mono"
               style={{
-                background: theme.IS_DARK ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.06)',
-                borderColor: 'rgba(99,102,241,0.25)',
+                background: theme.IS_DARK ? 'rgba(0,116,114,0.1)' : 'rgba(0,116,114,0.06)',
+                borderColor: 'rgba(0,116,114,0.25)',
                 color: theme.FG
               }}
             >
               <span className="text-[11px] font-sans text-slate-400 font-semibold">{isAr ? 'كود المحادثة:' : 'Code:'}</span>
-              <span className="font-bold tracking-wider text-indigo-400">#{currentChatCode}</span>
+              <span className="font-bold tracking-wider text-[#007472] dark:text-[#2AC3BB]">#{currentChatCode}</span>
               <button
                 onClick={() => copyChatCode(currentChatCode)}
-                className="p-1 rounded-md hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-300 transition-colors cursor-pointer"
+                className="p-1 rounded-md hover:bg-[#007472]/20 text-slate-400 hover:text-[#2AC3BB] transition-colors cursor-pointer"
                 title="نسخ كود المحادثة"
               >
                 {copiedCodeBanner ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -2447,8 +2447,8 @@ export default function AIChat({
               onClick={startNewChat}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
               style={{
-                background: theme.IS_DARK ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)',
-                borderColor: 'rgba(99,102,241,0.3)',
+                background: theme.IS_DARK ? 'rgba(0,116,114,0.15)' : 'rgba(0,116,114,0.08)',
+                borderColor: 'rgba(0,116,114,0.3)',
                 color: ACCENT,
               }}
             >
@@ -2497,9 +2497,9 @@ export default function AIChat({
             <div ref={welcomeRef} className="flex flex-col items-center justify-center min-h-full px-4 py-12 max-w-2xl mx-auto">
               <div className="welcome-title flex flex-col items-center text-center mb-10">
                 <div className="relative mb-6">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-indigo-500/30 to-cyan-500/20 blur-2xl scale-150 animate-pulse" />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#007472]/30 to-[#2AC3BB]/20 blur-2xl scale-150 animate-pulse" />
                   <div
-                    className="relative w-24 h-24 rounded-3xl overflow-hidden p-1.5 border-2 border-indigo-400/40 shadow-2xl shadow-indigo-500/30"
+                    className="relative w-24 h-24 rounded-3xl overflow-hidden p-1.5 border-2 border-[#2AC3BB]/40 shadow-2xl shadow-[#007472]/30"
                     style={{ background: theme.CARD }}
                   >
                     <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover rounded-2xl" />
@@ -2511,17 +2511,17 @@ export default function AIChat({
 
                 <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold mb-3 border"
                   style={{
-                    background: theme.IS_DARK ? 'rgba(99,102,241,0.15)' : 'rgba(99,102,241,0.08)',
-                    borderColor: 'rgba(99,102,241,0.3)',
+                    background: theme.IS_DARK ? 'rgba(0,116,114,0.15)' : 'rgba(0,116,114,0.08)',
+                    borderColor: 'rgba(0,116,114,0.3)',
                     color: ACCENT,
                   }}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#EE8361]" />
                   <span>{isAr ? 'المساعد الفضائي الذكي • الجيل الأحدث' : 'Next-Gen Educational AI'}</span>
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-3" style={{ color: theme.FG }}>
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-cyan-400">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361]">
                     {isAr ? `أهلاً بك يا ${userName || 'صديقي'} ` : `Welcome, ${userName || 'Scholar'} `}
                   </span>
                 </h1>
@@ -2596,13 +2596,13 @@ export default function AIChat({
                   dir="rtl"
                   style={{
                     background: theme.IS_DARK ? 'linear-gradient(145deg, #10162a 0%, #0d1222 100%)' : 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-                    borderColor: 'rgba(99,102,241,0.45)',
-                    boxShadow: '0 12px 36px rgba(99,102,241,0.15)'
+                    borderColor: 'rgba(0,116,114,0.45)',
+                    boxShadow: '0 12px 36px rgba(0,116,114,0.15)'
                   }}
                 >
                   <div className="flex items-start justify-between gap-3 mb-5">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-tr from-amber-500 to-indigo-600 text-white shadow-lg shadow-amber-500/25">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-tr from-[#007472] to-[#2AC3BB] text-white shadow-lg shadow-[#007472]/25">
                         <Zap className="w-6 h-6" />
                       </div>
                       <div>
@@ -2653,7 +2653,7 @@ export default function AIChat({
                               onClick={() => setPendingQuiz(prev => prev ? { ...prev, amount: count } : prev)}
                               className="py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center"
                               style={{
-                                background: isSelected ? 'rgba(99,102,241,0.2)' : theme.INPUT_BG,
+                                background: isSelected ? 'rgba(0,116,114,0.2)' : theme.INPUT_BG,
                                 borderColor: isSelected ? ACCENT : theme.BORDER,
                                 color: isSelected ? (theme.IS_DARK ? '#ffffff' : ACCENT) : theme.MUTED,
                               }}
@@ -2734,8 +2734,8 @@ export default function AIChat({
 
                     {/* Attached file reminder if present */}
                     {pendingQuizAttachment && (
-                      <div className="p-3 rounded-xl border flex items-center gap-2.5 text-xs text-indigo-300 bg-indigo-500/10 border-indigo-500/30">
-                        <FileText className="w-4 h-4 text-indigo-400" />
+                      <div className="p-3 rounded-xl border flex items-center gap-2.5 text-xs text-[#007472] dark:text-[#2AC3BB] bg-[#007472]/10 border-[#2AC3BB]/30">
+                        <FileText className="w-4 h-4 text-[#2AC3BB]" />
                         <span>سيتم استخراج الأسئلة مباشرة من ملفك المحلي: <strong>{pendingQuizAttachment.name}</strong> </span>
                       </div>
                     )}
@@ -2743,8 +2743,8 @@ export default function AIChat({
 
                   {/* Generation Progress Bar */}
                   {isGeneratingQuiz && (
-                    <div className="mt-5 p-4 rounded-2xl border space-y-2 bg-slate-900/50 border-indigo-500/30">
-                      <div className="flex items-center justify-between text-xs font-bold text-indigo-300">
+                    <div className="mt-5 p-4 rounded-2xl border space-y-2 bg-slate-900/50 border-[#2AC3BB]/30">
+                      <div className="flex items-center justify-between text-xs font-bold text-[#007472] dark:text-[#2AC3BB]">
                         <span>{quizGenStage || (isAr ? 'جاري صياغة وتوليد الاختبار...' : 'Generating quiz...')}</span>
                         <span>{quizGenPercent}%</span>
                       </div>
@@ -2753,7 +2753,7 @@ export default function AIChat({
                           className="h-full rounded-full transition-all duration-300"
                           style={{
                             width: `${quizGenPercent}%`,
-                            background: 'linear-gradient(90deg, #6366F1, #06B6D4, #8B5CF6)'
+                            background: 'linear-gradient(90deg, #007472, #2AC3BB, #EE8361)'
                           }}
                         />
                       </div>
@@ -2776,8 +2776,8 @@ export default function AIChat({
                       type="button"
                       onClick={confirmQuizGeneration}
                       disabled={isGeneratingQuiz || !pendingQuiz.topic.trim()}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-xl py-3 font-extrabold text-xs text-white shadow-xl shadow-indigo-500/30 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
-                      style={{ background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)' }}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl py-3 font-extrabold text-xs text-white shadow-xl shadow-[#007472]/30 transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #007472 0%, #2AC3BB 100%)' }}
                     >
                       <Zap className="w-4 h-4" />
                       <span>{isGeneratingQuiz ? (isAr ? 'جاري التوليد والتدقيق...' : 'Generating...') : (isAr ? (pendingQuiz.amount === 0 ? 'توليد الاختبار بالعدد المناسب تلقائيًا' : `توليد الاختبار الآن (${pendingQuiz.amount} أسئلة)`) : (pendingQuiz.amount === 0 ? 'Generate an auto-sized quiz' : `Generate Quiz Now (${pendingQuiz.amount} questions)`) )}</span>
@@ -2820,7 +2820,7 @@ export default function AIChat({
             className="absolute bottom-28 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-lg border text-xs font-semibold backdrop-blur-md cursor-pointer transition-all hover:scale-105"
             style={{ background: theme.SURFACE, borderColor: theme.BORDER, color: theme.FG }}
           >
-            <ArrowDown className="w-3.5 h-3.5 text-indigo-400" />
+            <ArrowDown className="w-3.5 h-3.5 text-[#2AC3BB]" />
             <span>{isAr ? 'انزل لأسفل' : 'Scroll down'}</span>
           </button>
         )}
@@ -2835,7 +2835,7 @@ export default function AIChat({
                   key={suggestion.label}
                   onClick={() => sendMessage(suggestion.prompt)}
                   className="min-h-9 shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer border"
-                  style={{ color: ACCENT, background: theme.IS_DARK ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.06)', borderColor: 'rgba(99,102,241,0.25)' }}
+                  style={{ color: ACCENT, background: theme.IS_DARK ? 'rgba(0,116,114,0.1)' : 'rgba(0,116,114,0.06)', borderColor: 'rgba(42,195,187,0.25)' }}
                 >
                   {suggestion.label}
                 </button>
@@ -2859,12 +2859,12 @@ export default function AIChat({
             {selectedAttachment && (
               <div
                 className="relative inline-flex items-center gap-2.5 mb-2.5 p-2 rounded-xl border shadow-md"
-                style={{ background: theme.SURFACE, borderColor: 'rgba(99,102,241,0.3)' }}
+                style={{ background: theme.SURFACE, borderColor: 'rgba(42,195,187,0.3)' }}
               >
                 {selectedAttachment.kind === 'image' ? (
                   <img src={selectedAttachment.data} alt="Preview" className="h-12 w-12 rounded-lg object-cover border" style={{ borderColor: theme.BORDER }} />
                 ) : (
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-indigo-500/15 text-indigo-400">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB]">
                     <FileText className="w-5 h-5" />
                   </div>
                 )}
@@ -2971,7 +2971,7 @@ export default function AIChat({
                     <div className="uipro-glass-surface absolute bottom-full right-0 z-50 mb-2 w-72 rounded-2xl border p-2.5 shadow-2xl backdrop-blur-2xl" style={{ background: theme.IS_DARK ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.98)', borderColor: theme.BORDER }}>
                       <div className="mb-2 flex items-center justify-between border-b px-2 pb-2" style={{ borderColor: theme.BORDER }}>
                         <span className="text-[11px] font-extrabold uppercase tracking-wider" style={{ color: theme.MUTED }}>{isAr ? 'أوضاع كوزمو الذكية' : 'Cosmo AI Modes'}</span>
-                        <button type="button" onClick={() => setAutoMode(v => !v)} className="rounded-full border px-2 py-0.5 text-[10px] font-bold" style={{ background: autoMode ? 'rgba(99,102,241,0.2)' : 'transparent', borderColor: autoMode ? ACCENT : theme.BORDER, color: autoMode ? ACCENT : theme.MUTED }}>{isAr ? (autoMode ? 'توجيه تلقائي' : 'توجيه يدوي') : (autoMode ? 'Auto' : 'Manual')}</button>
+                        <button type="button" onClick={() => setAutoMode(v => !v)} className="rounded-full border px-2 py-0.5 text-[10px] font-bold" style={{ background: autoMode ? 'rgba(0,116,114,0.2)' : 'transparent', borderColor: autoMode ? ACCENT : theme.BORDER, color: autoMode ? ACCENT : theme.MUTED }}>{isAr ? (autoMode ? 'توجيه تلقائي' : 'توجيه يدوي') : (autoMode ? 'Auto' : 'Manual')}</button>
                       </div>
                       <div className="grid max-h-64 grid-cols-2 gap-1.5 overflow-y-auto">
                         {COSMO_MODES.map((mode) => {
@@ -3004,8 +3004,8 @@ export default function AIChat({
         <div className="absolute inset-0 flex items-center justify-center z-40 backdrop-blur-sm" style={{ background: theme.OVERLAY_BACKDROP }}>
           <div className="rounded-3xl p-8 max-w-sm text-center space-y-4 shadow-2xl border"
             style={{ background: theme.OVERLAY_BG, border: `1px solid ${theme.BORDER}`, color: theme.FG }}>
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-indigo-500/25"
-              style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-[#007472]/25"
+              style={{ background: 'linear-gradient(135deg, #007472, #2AC3BB)' }}>
               <Sparkles className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-lg font-bold" style={{ color: theme.FG }}>
@@ -3016,8 +3016,8 @@ export default function AIChat({
             </p>
             <button
               onClick={() => onOpenAuthModal?.('register')}
-              className="w-full py-3.5 rounded-xl font-bold text-sm text-white shadow-lg shadow-indigo-500/30 transition-all active:scale-95 cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
+              className="w-full py-3.5 rounded-xl font-bold text-sm text-white shadow-lg shadow-[#007472]/30 transition-all active:scale-95 cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, #007472, #2AC3BB)' }}>
               {isAr ? 'تسجيل الدخول / إنشاء حساب مجاني' : 'Sign in / Create Free Account'}
             </button>
           </div>

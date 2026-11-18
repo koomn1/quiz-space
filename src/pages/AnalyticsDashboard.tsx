@@ -141,7 +141,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
       {/* Title block */}
       <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/65 sm:p-6">
-        <div className="pointer-events-none absolute -top-16 left-8 h-36 w-36 rounded-full bg-indigo-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -top-16 left-8 h-36 w-36 rounded-full bg-[#2AC3BB]/10 blur-3xl" />
         <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
           <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center border border-primary/20">
@@ -209,8 +209,8 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 {
                   label: isAr ? 'معدل الدقة الإجمالي' : 'Overall Accuracy',
                   val: `${avgSolvingPercentage}%`,
-                  icon: <Activity className="w-5 h-5 text-indigo-500" />,
-                  bg: 'bg-indigo-500/5 border-indigo-500/10'
+                  icon: <Activity className="w-5 h-5 text-[#007472] dark:text-[#2AC3BB]" />,
+                  bg: 'bg-[#007472]/5 border-[#007472]/10 dark:bg-[#2AC3BB]/5 dark:border-[#2AC3BB]/10'
                 },
                 {
                   label: isAr ? 'الدرجات الكاملة (١٠٠٪)' : 'Perfect Matches',
@@ -225,7 +225,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                   bg: 'bg-purple-500/5 border-purple-500/10'
                 }
               ].map((m) => (
-                <div key={m.label} className="uipro-glass-surface flex items-center justify-between rounded-3xl border border-slate-200 p-5 shadow-sm transition-colors hover:border-indigo-300 dark:border-slate-800 dark:hover:border-indigo-500/50">
+                <div key={m.label} className="uipro-glass-surface flex items-center justify-between rounded-3xl border border-slate-200 p-5 shadow-sm transition-colors hover:border-[#007472]/40 dark:border-slate-800 dark:hover:border-[#2AC3BB]/50">
                   <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <span className="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block">{m.label}</span>
                     <span className="text-xl font-black text-slate-800 dark:text-white font-mono block">{m.val}</span>
@@ -238,16 +238,16 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
             </div>
 
             {totalQuizzesSolved > 0 && (
-              <div className="flex flex-col gap-3 rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 rounded-3xl border border-[#007472]/20 bg-[#007472]/5 dark:border-[#2AC3BB]/20 dark:bg-[#007472]/10 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs font-black text-indigo-700 dark:text-indigo-300">{isAr ? 'قراءة سريعة لأدائك' : 'A quick read on your progress'}</p>
+                  <p className="text-xs font-black text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'قراءة سريعة لأدائك' : 'A quick read on your progress'}</p>
                   <p className="mt-1 text-sm font-bold text-slate-800 dark:text-slate-100">
                     {avgSolvingPercentage >= 80
                       ? (isAr ? `نتيجتك مستقرة؛ أفضل دقة وصلت إلى ${bestSolvingPercentage}%. واصل على نفس النمط.` : `Your performance is steady; your best accuracy is ${bestSolvingPercentage}%. Keep the pattern going.`)
                       : (isAr ? `متوسطك ${avgSolvingPercentage}%؛ ابدأ بمراجعة آخر محاولة أقل من 80% ثم أعد التحدي.` : `Your average is ${avgSolvingPercentage}%; review the most recent attempt below 80%, then replay it.`)}
                   </p>
                 </div>
-                <span className="inline-flex shrink-0 items-center rounded-xl bg-white px-3 py-2 text-xs font-black text-indigo-700 shadow-sm dark:bg-slate-950 dark:text-indigo-300">{isAr ? `الأفضل ${bestSolvingPercentage}%` : `Best ${bestSolvingPercentage}%`}</span>
+                <span className="inline-flex shrink-0 items-center rounded-xl bg-white px-3 py-2 text-xs font-black text-[#007472] shadow-sm dark:bg-slate-950 dark:text-[#2AC3BB]">{isAr ? `الأفضل ${bestSolvingPercentage}%` : `Best ${bestSolvingPercentage}%`}</span>
               </div>
             )}
 
@@ -286,7 +286,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                               return (
                                 <div className="bg-slate-900 text-white p-3.5 rounded-xl shadow-xl border border-slate-800 text-right space-y-1 text-xs">
                                   <p className="font-black text-slate-100">{item.quizTitle}</p>
-                                  <p className="font-bold text-indigo-400">{isAr ? `الدرجة: %${item.percentage}` : `Accuracy: ${item.percentage}%`}</p>
+                                  <p className="font-bold text-[#007472] dark:text-[#2AC3BB]">{isAr ? `الدرجة: %${item.percentage}` : `Accuracy: ${item.percentage}%`}</p>
                                   <p className="text-[10px] text-slate-400 font-mono">{isAr ? `النتيجة: ${item.scoreText}` : `Result: ${item.scoreText}`}</p>
                                 </div>
                               );
@@ -310,7 +310,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 {/* Score Range Distribution Bar Chart */}
                 <div className="uipro-glass-surface lg:col-span-4 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
-                    <Activity className="w-4.5 h-4.5 text-indigo-500" />
+                    <Activity className="w-4.5 h-4.5 text-[#007472] dark:text-[#2AC3BB]" />
                     <span>{isAr ? 'توزيع درجات الإجابات' : 'Result Category Ratios'}</span>
                   </h3>
                   <div className="h-[280px] w-full">
@@ -359,7 +359,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                         const accuracyStr = `${Math.round(scoreRatio * 100)}%`;
                         let badgeColor = 'bg-red-500/10 text-red-500';
                         if (scoreRatio >= 0.8) badgeColor = 'bg-emerald-500/10 text-emerald-500';
-                        else if (scoreRatio >= 0.5) badgeColor = 'bg-indigo-500/10 text-indigo-500';
+                        else if (scoreRatio >= 0.5) badgeColor = 'bg-[#007472]/10 text-[#007472] dark:bg-[#2AC3BB]/10 dark:text-[#2AC3BB]';
 
                         return (
                           <tr  className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
@@ -424,8 +424,8 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 {
                   label: isAr ? 'الاختبارات المؤلّفة' : 'Created Quizzes',
                   val: myCreatedQuizzes.length,
-                  icon: <BookOpen className="w-5 h-5 text-indigo-500" />,
-                  bg: 'bg-indigo-500/5 border-indigo-500/10'
+                  icon: <BookOpen className="w-5 h-5 text-[#007472] dark:text-[#2AC3BB]" />,
+                  bg: 'bg-[#007472]/5 border-[#007472]/10 dark:bg-[#2AC3BB]/5 dark:border-[#2AC3BB]/10'
                 },
                 {
                   label: isAr ? 'إجمالي لعب الطلاب والمحاولات' : 'Global Student Plays',
@@ -446,7 +446,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                   bg: 'bg-emerald-500/5 border-emerald-500/10'
                 }
               ].map((m) => (
-                <div key={m.label} className="uipro-glass-surface flex items-center justify-between rounded-3xl border border-slate-200 p-5 shadow-sm transition-colors hover:border-indigo-300 dark:border-slate-800 dark:hover:border-indigo-500/50">
+                <div key={m.label} className="uipro-glass-surface flex items-center justify-between rounded-3xl border border-slate-200 p-5 shadow-sm transition-colors hover:border-[#007472]/40 dark:border-slate-800 dark:hover:border-[#2AC3BB]/50">
                   <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <span className="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block">{m.label}</span>
                     <span className="text-xl font-black text-slate-800 dark:text-white font-mono block">{m.val}</span>
@@ -536,25 +536,25 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
             )}
 
             {myCreatedQuizzes.length > 0 && (
-              <section className="uipro-glass-surface space-y-5 rounded-[28px] border border-indigo-200/80 p-5 shadow-sm dark:border-indigo-500/20 sm:p-6">
+              <section className="uipro-glass-surface space-y-5 rounded-[28px] border border-[#007472]/20 p-5 shadow-sm dark:border-[#2AC3BB]/20 sm:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-300"><Target className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">{isAr ? 'قراءة المدرّس' : 'Teacher intelligence'}</span></div>
+                    <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]"><Target className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">{isAr ? 'قراءة المدرّس' : 'Teacher intelligence'}</span></div>
                     <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-white">{isAr ? 'أين يحتاج طلابك إلى دعم؟' : 'Where do your students need support?'}</h3>
                   </div>
-                  <span className="rounded-xl bg-white/80 px-3 py-2 text-xs font-black text-indigo-700 shadow-sm dark:bg-slate-950/70 dark:text-indigo-300">{totalTeacherStudents} {isAr ? 'طلاب فريدون' : 'unique students'}</span>
+                  <span className="rounded-xl bg-white/80 px-3 py-2 text-xs font-black text-[#007472] shadow-sm dark:bg-slate-950/70 dark:text-[#2AC3BB]">{totalTeacherStudents} {isAr ? 'طلاب فريدون' : 'unique students'}</span>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   {[
                     { label: isAr ? 'متوسط دقة الطلاب' : 'Student accuracy', value: `${teacherAverageAccuracy}%`, icon: <ShieldCheck className="h-4 w-4 text-emerald-500" /> },
-                    { label: isAr ? 'إجمالي المحاولات' : 'Total attempts', value: totalTeacherAttempts, icon: <Users className="h-4 w-4 text-violet-500" /> },
+                    { label: isAr ? 'إجمالي المحاولات' : 'Total attempts', value: totalTeacherAttempts, icon: <Users className="h-4 w-4 text-[#EE8361]" /> },
                     { label: isAr ? 'يحتاج مراجعة' : 'Needs review', value: hardestTeacherQuiz?.quiz.title || (isAr ? 'لا توجد بيانات' : 'No data'), icon: <Target className="h-4 w-4 text-amber-500" /> },
                   ].map((item) => <div key={item.label} className="uipro-glass-surface rounded-2xl border border-white/80 p-4 dark:border-slate-800/80"><div className="flex items-center gap-2 text-[10px] font-black text-slate-600 dark:text-slate-300">{item.icon}{item.label}</div><p className="mt-2 truncate text-base font-black text-slate-900 dark:text-white" title={String(item.value)}>{item.value}</p></div>)}
                 </div>
                 <div className="uipro-glass-surface overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
                   <table className="w-full min-w-[640px] text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <thead><tr className="border-b border-slate-100 bg-slate-50/80 text-[10px] font-black text-slate-500 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400"><th className="px-4 py-3">{isAr ? 'الاختبار' : 'Quiz'}</th><th className="px-4 py-3">{isAr ? 'طلاب' : 'Students'}</th><th className="px-4 py-3">{isAr ? 'محاولات' : 'Attempts'}</th><th className="px-4 py-3">{isAr ? 'الدقة' : 'Accuracy'}</th><th className="px-4 py-3">{isAr ? 'الاجتياز' : 'Pass rate'}</th></tr></thead>
-                    <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700 dark:divide-slate-800 dark:text-slate-200">{teacherQuizPerformance.map((item) => <tr key={item.quiz.id} className="transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20"><td className="max-w-[230px] truncate px-4 py-3" title={item.quiz.title}>{item.quiz.title}</td><td className="px-4 py-3 font-mono">{item.studentCount}</td><td className="px-4 py-3 font-mono">{item.attempts.length}</td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 font-mono ${item.averageAccuracy < 50 ? 'bg-rose-500/10 text-rose-600' : item.averageAccuracy < 80 ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>{item.averageAccuracy}%</span></td><td className="px-4 py-3 font-mono">{item.passRate}%</td></tr>)}</tbody>
+                    <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700 dark:divide-slate-800 dark:text-slate-200">{teacherQuizPerformance.map((item) => <tr key={item.quiz.id} className="transition-colors hover:bg-[#007472]/5 dark:hover:bg-[#007472]/15"><td className="max-w-[230px] truncate px-4 py-3" title={item.quiz.title}>{item.quiz.title}</td><td className="px-4 py-3 font-mono">{item.studentCount}</td><td className="px-4 py-3 font-mono">{item.attempts.length}</td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 font-mono ${item.averageAccuracy < 50 ? 'bg-rose-500/10 text-rose-600' : item.averageAccuracy < 80 ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>{item.averageAccuracy}%</span></td><td className="px-4 py-3 font-mono">{item.passRate}%</td></tr>)}</tbody>
                   </table>
                 </div>
               </section>
@@ -595,7 +595,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                             </div>
                           </td>
                           <td className="px-6 py-4.5">
-                            <span className="px-2.5 py-1 text-[10.5px] font-black rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 border border-indigo-500/10">
+                            <span className="px-2.5 py-1 text-[10.5px] font-black rounded-lg bg-[#007472]/5 dark:bg-[#007472]/20 text-[#007472] dark:text-[#2AC3BB] border border-[#007472]/15 dark:border-[#2AC3BB]/15">
                               {q.category || (isAr ? 'عام' : 'General')}
                             </span>
                           </td>

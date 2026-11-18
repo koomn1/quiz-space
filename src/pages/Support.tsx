@@ -36,7 +36,7 @@ export default function Support({ lang }: SupportProps) {
       title: isAr ? 'البريد الإلكتروني الرسمي' : 'Official Email',
       value: 'youssefbadawy5002@gmail.com',
       link: 'mailto:youssefbadawy5002@gmail.com',
-      color: 'from-blue-500 to-indigo-600',
+      color: 'from-[#007472] to-[#2AC3BB]',
       badgeColor: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
       desc: isAr ? 'راسلنا في أي وقت للاستفسارات الرسمية والشراكات الأكاديمية وسنرد خلال 24 ساعة.' : 'Email us for formal inquiries and academic partnerships. We reply within 24 hours.',
       brandSvg: (
@@ -47,7 +47,7 @@ export default function Support({ lang }: SupportProps) {
       title: isAr ? 'الدعم الهاتفي المباشر' : 'Direct Phone Support',
       value: '+20 101 899 5002',
       link: 'tel:01018995002',
-      color: 'from-purple-500 to-violet-600',
+      color: 'from-[#2AC3BB] to-[#EE8361]',
       badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
       desc: isAr ? 'فريق الدعم الفني جاهز لاستقبال مكالماتكم واستفساراتكم العاجلة طوال أيام الأسبوع.' : 'Our technical support team is ready to take your urgent calls throughout the week.',
       brandSvg: (

@@ -116,7 +116,7 @@ export default function LegalPage({ page, lang }: LegalPageProps) {
   return (
     <section className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-14" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70">
-        <div className="relative overflow-hidden border-b border-slate-200/70 bg-gradient-to-br from-indigo-950 via-slate-950 to-cyan-950 px-6 py-10 text-white sm:px-10">
+        <div className="relative overflow-hidden border-b border-slate-200/70 bg-gradient-to-br from-[#031717] via-slate-950 to-[#007472]/30 px-6 py-10 text-white sm:px-10">
           <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl" />
           <div className="relative flex items-start gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-cyan-200"><ShieldCheck className="h-7 w-7" /></div>
@@ -135,13 +135,13 @@ export default function LegalPage({ page, lang }: LegalPageProps) {
             </article>
           ))}
           {page === 'portfolio' && (
-            <a href={portfolioUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-500 px-5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5">
+            <a href={portfolioUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] px-5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition hover:-translate-y-0.5">
               <Sparkles className="h-4 w-4" />
               {isAr ? 'فتح البورتفوليو الشخصي' : 'Open personal portfolio'}
               <ExternalLink className="h-4 w-4" />
             </a>
           )}
-          <a href="#/dashboard/landing" className="mt-2 inline-flex items-center gap-2 text-sm font-black text-indigo-600 transition hover:text-cyan-500 dark:text-cyan-300">
+          <a href="#/dashboard/landing" className="mt-2 inline-flex items-center gap-2 text-sm font-black text-[#007472] transition hover:text-[#2AC3BB] dark:text-[#2AC3BB]">
             <BackIcon className="h-4 w-4" />
             {isAr ? 'العودة إلى Quiz Space' : 'Back to Quiz Space'}
           </a>

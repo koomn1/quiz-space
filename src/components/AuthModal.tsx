@@ -226,10 +226,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
         className="uipro-glass-surface relative my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-950/85 backdrop-blur-2xl shadow-[0_30px_100px_-35px_rgba(0,0,0,0.65)] motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200 sm:max-h-[calc(100dvh-3rem)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <section className="relative hidden w-[42%] shrink-0 overflow-hidden bg-[#0a1022] p-8 text-white lg:flex lg:flex-col lg:justify-between">
-          <div className="pointer-events-none absolute -left-24 top-12 h-64 w-64 rounded-full border border-cyan-200/10" />
-          <div className="pointer-events-none absolute -left-10 top-28 h-44 w-44 rounded-full border border-violet-200/15" />
-          <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-600/20 blur-[90px]" />
+        <section className="relative hidden w-[42%] shrink-0 overflow-hidden bg-[#031717] p-8 text-white lg:flex lg:flex-col lg:justify-between">
+          <div className="pointer-events-none absolute -left-24 top-12 h-64 w-64 rounded-full border border-[#2AC3BB]/10" />
+          <div className="pointer-events-none absolute -left-10 top-28 h-44 w-44 rounded-full border border-[#2AC3BB]/15" />
+          <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-[#007472]/25 blur-[90px]" />
           <div className="relative z-10" dir="ltr">
             <MainLogo size="sm" showText />
             <p className="mt-1 text-[10px] font-bold text-cyan-100/85" dir="rtl">تعلم أذكى، خطوة بخطوة</p>
@@ -237,11 +237,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
 
           <div className="relative z-10 py-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black text-cyan-100/80">
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" aria-hidden="true" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#2AC3BB]" aria-hidden="true" />
               مساحة تعلم شخصية
             </span>
             <h3 className="mt-5 text-4xl font-black leading-[1.25] tracking-tight">
-              كل سؤال يقرّبك من <span className="bg-gradient-to-l from-cyan-200 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">هدفك.</span>
+              كل سؤال يقرّبك من <span className="bg-gradient-to-l from-[#2AC3BB] via-[#FCF6EE] to-[#EE8361] bg-clip-text text-transparent">هدفك.</span>
             </h3>
             <p className="mt-5 text-sm leading-7 text-slate-200/90">
               احفظ اختباراتك، تابع تقدمك، وخلي أدوات الذكاء الاصطناعي تساعدك تذاكر بوضوح أكبر.
@@ -295,7 +295,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
             <button
               type="button"
               onClick={handleClose}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-slate-400 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40 dark:hover:bg-slate-800 dark:hover:text-white"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-slate-400 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2AC3BB]/40 dark:hover:bg-slate-800 dark:hover:text-white"
               aria-label="إغلاق"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -304,7 +304,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
 
           {step === 'email' ? (
             <div className="space-y-6 py-3 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB]">
                 <Mail className="h-8 w-8 motion-safe:animate-pulse" aria-hidden="true" />
               </div>
               <div className="space-y-2">
@@ -372,7 +372,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 <button
                   type="button"
                   onClick={() => { setStep('forgot'); setSuccess(''); setError(''); }}
-                  className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-800 transition-all duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20 dark:border-slate-700 dark:text-white dark:hover:bg-slate-900"
+                  className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-black text-slate-800 transition-all duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#2AC3BB]/30 dark:border-slate-700 dark:text-white dark:hover:bg-slate-900"
                 >
                   إرسال الرابط مرة أخرى
                 </button>

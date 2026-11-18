@@ -381,10 +381,10 @@ export default function QuizCreator({
     return (
       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black shadow-[0_0_15px_rgba(139,92,246,0.25)] ${
         usesCount > 0
-          ? 'bg-violet-500/10 border border-violet-500/30 text-violet-400'
+          ? 'bg-[#007472]/10 dark:bg-[#2AC3BB]/10 border border-[#007472]/30 dark:border-[#2AC3BB]/30 text-[#2AC3BB]'
           : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
       }`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${usesCount > 0 ? 'bg-violet-400' : 'bg-rose-400'} animate-ping`} />
+        <span className={`w-1.5 h-1.5 rounded-full ${usesCount > 0 ? 'bg-[#2AC3BB]' : 'bg-rose-400'} animate-ping`} />
         <span>{isAr ? `متبقي لديك ${usesCount} من المحاولات` : `${usesCount} attempts remaining`}</span>
       </span>
     );
@@ -396,8 +396,8 @@ export default function QuizCreator({
       <OverlayPortal>
               <div className="fixed inset-0 z-[10000] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/95 p-4 backdrop-blur-xl animate-fade-in">
 
-        <div className="my-auto flex w-full max-w-lg flex-col items-center justify-center space-y-5 rounded-[32px] border border-violet-500/35 bg-slate-950/95 p-6 text-center shadow-[0_0_50px_rgba(139,92,246,0.3)]">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-violet-600 via-fuchsia-600 to-pink-500 flex items-center justify-center border border-white/15 shadow-[0_0_25px_rgba(139,92,246,0.5)] animate-pulse">
+        <div className="my-auto flex w-full max-w-lg flex-col items-center justify-center space-y-5 rounded-[32px] border border-[#007472]/35 dark:border-[#2AC3BB]/35 bg-slate-950/95 p-6 text-center shadow-[0_0_50px_rgba(0,116,114,0.3)]">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#007472] via-[#2AC3BB] to-[#EE8361] flex items-center justify-center border border-white/15 shadow-[0_0_25px_rgba(42,195,187,0.4)] animate-pulse">
           <Sparkles className="w-8 h-8 text-white" />
         </div>
 
@@ -422,7 +422,7 @@ export default function QuizCreator({
               window.location.hash = '#billing';
             }
           }}
-          className="px-6 py-3 bg-gradient-to-r from-amber-500 via-violet-600 to-pink-500 text-white font-black text-xs rounded-xl hover:brightness-110 shadow-lg shadow-violet-500/20 transition-all flex items-center gap-2 cursor-pointer border border-white/10"
+          className="px-6 py-3 bg-gradient-to-r from-[#EE8361] via-[#007472] to-[#2AC3BB] text-white font-black text-xs rounded-xl hover:brightness-110 shadow-lg shadow-[#007472]/20 transition-all flex items-center gap-2 cursor-pointer border border-white/10"
         >
           <Crown className="w-4 h-4 text-amber-200" />
           <span>{isAr ? 'ترقية الاشتراك إلى الباقة الذهبية الآن' : 'Upgrade to Gold Plan Now'}</span>
@@ -768,7 +768,7 @@ export default function QuizCreator({
                   }
                 }
               }}
-              className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-black transition-all shadow-md shadow-violet-600/10 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#007472] hover:bg-[#005e5c] text-white rounded-xl text-xs font-black transition-all shadow-md shadow-[#007472]/10 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
             >
               <span>{isAr ? ' حاول مرة أخرى' : ' Retry'}</span>
             </button>
@@ -2299,10 +2299,10 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       {previewDraft && (
         <OverlayPortal>
           <div className="fixed inset-0 z-[10020] flex items-center justify-center overflow-y-auto bg-slate-950/85 p-3 backdrop-blur-xl sm:p-6" dir={isAr ? 'rtl' : 'ltr'}>
-            <div className="my-auto flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-[30px] border border-violet-300/20 bg-[#0b1020] text-white shadow-[0_0_80px_rgba(124,58,237,0.28)]">
-              <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-gradient-to-l from-violet-600/20 to-transparent px-5 py-4 sm:px-7">
+            <div className="my-auto flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-[30px] border border-[#2AC3BB]/20 bg-[#0b1020] text-white shadow-[0_0_80px_rgba(0,116,114,0.3)]">
+              <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-gradient-to-l from-[#007472]/20 to-transparent px-5 py-4 sm:px-7">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-violet-300">QuizSpace Preview</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#2AC3BB]">QuizSpace Preview</p>
                   <h2 className="mt-1 text-xl font-black sm:text-2xl">معاينة الاختبار قبل الحفظ</h2>
                   <p className="mt-1 text-xs text-slate-400">راجع الأسئلة والإجابات، ثم اعتمد الاختبار أو ارجع للتعديل.</p>
                 </div>
@@ -2310,7 +2310,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
               </div>
               <div className="grid shrink-0 grid-cols-2 gap-3 border-b border-white/10 p-4 sm:grid-cols-4 sm:px-7">
                 <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">العنوان</span><BidiText as="strong" className="mt-1 block truncate text-right text-sm">{previewDraft.title}</BidiText></div>
-                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">عدد الأسئلة</span><strong className="mt-1 block text-lg text-violet-300">{previewDraft.questions.length}</strong></div>
+                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">عدد الأسئلة</span><strong className="mt-1 block text-lg text-[#2AC3BB]">{previewDraft.questions.length}</strong></div>
                 <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">اختيار من متعدد</span><strong className="mt-1 block text-lg text-cyan-300">{previewDraft.questions.filter(q => q.type === 'mcq').length}</strong></div>
                 <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">مقالي / صح وخطأ</span><strong className="mt-1 block text-lg text-amber-300">{previewDraft.questions.filter(q => q.type !== 'mcq').length}</strong></div>
               </div>
@@ -2320,9 +2320,9 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     ? Boolean(question.correctAnswer?.trim())
                     : (typeof question.correctIndex === 'number' && question.correctIndex >= 0 && (question.type !== 'mcq' || Boolean(question.options?.[question.correctIndex]?.trim())));
                   return (
-                    <article key={question.id || index} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-violet-400/40">
+                    <article key={question.id || index} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#2AC3BB]/40">
                       <div className="flex items-start gap-3">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-500/20 text-xs font-black text-violet-200">{index + 1}</span>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#007472]/20 dark:bg-[#2AC3BB]/20 text-xs font-black text-[#2AC3BB]">{index + 1}</span>
                         <div className="min-w-0 flex-1">
                           <div className="mb-2 flex flex-wrap items-center gap-2">
                             <span className="rounded-full bg-white/[0.07] px-2.5 py-1 text-[10px] font-bold text-slate-300">{question.type === 'mcq' ? 'اختيار من متعدد' : question.type === 'tf' ? 'صح / خطأ' : 'مقالي'}</span>
@@ -2358,7 +2358,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
               </div>
               <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-white/10 bg-black/15 p-4 sm:flex-row sm:justify-between sm:px-7">
                 <button type="button" onClick={() => setPreviewDraft(null)} className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-black text-slate-200 transition hover:bg-white/10">العودة للتعديل</button>
-                <button type="button" onClick={async () => { const draft = previewDraft; const saved = await handlePublishQuiz(draft.questions, { title: draft.title, description: draft.description }, { skipPreview: true }); if (saved) setPreviewDraft(null); }} disabled={isSaving} className="rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-violet-600/25 transition hover:brightness-110 disabled:opacity-50">اعتماد وحفظ الاختبار</button>
+                <button type="button" onClick={async () => { const draft = previewDraft; const saved = await handlePublishQuiz(draft.questions, { title: draft.title, description: draft.description }, { skipPreview: true }); if (saved) setPreviewDraft(null); }} disabled={isSaving} className="rounded-2xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] px-6 py-3 text-sm font-black text-white shadow-lg shadow-[#007472]/25 transition hover:brightness-110 disabled:opacity-50">اعتماد وحفظ الاختبار</button>
               </div>
             </div>
           </div>
@@ -2368,7 +2368,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
         <OverlayPortal>
           <div className="fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-md" role="dialog" aria-modal="true" dir={isAr ? 'rtl' : 'ltr'}>
             <div className="uipro-glass-surface w-full max-w-md rounded-[28px] border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl p-6 text-center shadow-2xl sm:p-8">
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-[#007472] dark:bg-[#007472]/15 dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB]">
                 <FileText className="h-8 w-8" />
               </div>
               <h2 className="text-xl font-black text-slate-900 dark:text-white">
@@ -2380,7 +2380,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                   : `${pendingExtractedDraft.questions.length} extracted questions from “${pendingExtractedDraft.fileName}” were found. You can continue reviewing them or clear them and start over.`}
               </p>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <button type="button" onClick={handleResumeExtractedDraft} className="min-h-11 rounded-xl bg-violet-600 px-4 py-3 text-sm font-black text-white transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400">
+                <button type="button" onClick={handleResumeExtractedDraft} className="min-h-11 rounded-xl bg-[#007472] px-4 py-3 text-sm font-black text-white transition hover:bg-[#005e5c] focus:outline-none focus:ring-2 focus:ring-[#2AC3BB]">
                   {isAr ? 'نعم، استكمال الاختبار' : 'Yes, continue'}
                 </button>
                 <button type="button" onClick={handleDiscardExtractedDraft} className="min-h-11 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
@@ -2406,14 +2406,14 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
             {/* Pulsating colorful blobs backing */}
             <div className="absolute inset-0 pointer-events-none opacity-60">
               <div className="absolute top-1/4 left-1/4 w-[300px] sm:w-[450px] h-[300px] sm:h-[450px] bg-blue-400 dark:bg-blue-600/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[80px] sm:blur-[120px] animate-blob"></div>
-              <div className="absolute top-1/3 right-1/4 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-purple-400 dark:bg-purple-600/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[80px] sm:blur-[120px] animate-blob animation-delay-2000"></div>
+              <div className="absolute top-1/3 right-1/4 w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] bg-[#2AC3BB]/20 dark:bg-[#007472]/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[80px] sm:blur-[120px] animate-blob animation-delay-2000"></div>
               <div className="absolute bottom-1/4 left-1/3 w-[280px] sm:w-[400px] h-[280px] sm:h-[400px] bg-pink-300 dark:bg-pink-600/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[80px] sm:blur-[120px] animate-blob animation-delay-4000"></div>
             </div>
 
             <div className="relative z-10 my-auto w-full max-w-lg space-y-8 px-2 text-center sm:px-6">
               {/* Video loader engine — perfectly cropped inside circle with hidden edges */}
               <div className="flex justify-center">
-                <div className="relative w-28 h-28 rounded-full overflow-hidden shadow-[0_0_40px_rgba(99,102,241,0.5)] ring-2 ring-indigo-500/50 transform-gpu">
+                <div className="relative w-28 h-28 rounded-full overflow-hidden shadow-[0_0_40px_rgba(0,116,114,0.4)] ring-2 ring-[#2AC3BB]/50 transform-gpu">
                   <video
                     autoPlay
                     muted
@@ -2423,7 +2423,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     className="absolute inset-0 w-full h-full object-cover rounded-full"
                     src={`${import.meta.env.BASE_URL}videos/splash-intro.mp4`}
                   />
-                  <div className="absolute inset-0 bg-indigo-900/20 pointer-events-none rounded-full" />
+                  <div className="absolute inset-0 bg-[#007472]/20 pointer-events-none rounded-full" />
                 </div>
               </div>
 
@@ -2443,7 +2443,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
               <div className="bg-white/40 dark:bg-slate-900/40 p-5 rounded-[24px] border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md shadow-lg space-y-3" aria-live="polite">
                 <div className="flex justify-between items-center text-xs font-extrabold text-slate-700 dark:text-slate-300" dir={isAr ? 'rtl' : 'ltr'}>
                   <span>{isAr ? 'نسبة التقدم الكلية:' : 'Overall Progress:'}</span>
-                  <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                  <span className="font-mono text-[#007472] dark:text-[#2AC3BB]">
                     {overlayProgress?.total === 1 && overlayProgress.percentage != null
                       ? `${Math.round(overlayProgress.percentage)}%`
                       : `${overlayProgress ? overlayProgress.current : 0} / ${overlayProgress ? overlayProgress.total : overlayFallbackTotal} ${isAr ? 'سؤال' : 'questions'}`}
@@ -2451,7 +2451,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div
-                    className="bg-indigo-600 dark:bg-indigo-500 h-full transition-all duration-500 ease-out"
+                    className="bg-[#007472] dark:bg-[#2AC3BB] h-full transition-all duration-500 ease-out"
                     style={{
                       width: `${Math.min(100, Math.max(8, (overlayProgress ? (overlayProgress.current / (overlayProgress.total || 1)) * 100 : 0)))}%`
                     }}
@@ -2520,17 +2520,17 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
             aria-haspopup="listbox"
             aria-expanded={isModeMenuOpen}
             onClick={() => setIsModeMenuOpen((open) => !open)}
-            className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-violet-500/25 bg-gradient-to-l from-violet-600/10 via-white/80 to-indigo-500/10 px-4 py-4 text-right shadow-lg shadow-violet-950/5 backdrop-blur-xl transition-all hover:border-violet-500/50 hover:shadow-violet-500/10 focus:outline-none focus:ring-4 focus:ring-violet-500/10 dark:from-violet-500/15 dark:via-slate-900/80 dark:to-indigo-500/10"
+            className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-[#007472]/25 dark:border-[#2AC3BB]/25 bg-gradient-to-l from-[#007472]/10 via-white/80 to-[#2AC3BB]/10 px-4 py-4 text-right shadow-lg shadow-slate-950/5 backdrop-blur-xl transition-all hover:border-[#007472]/50 dark:border-[#2AC3BB]/50 hover:shadow-[#007472]/10 focus:outline-none focus:ring-4 focus:ring-[#007472]/10 dark:from-[#007472]/15 dark:via-slate-900/80 dark:to-[#2AC3BB]/10"
           >
             <span className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#007472] to-[#2AC3BB] text-white shadow-md shadow-[#007472]/20">
                 {activeMode === 'manual' && <Plus className="h-5 w-5" />}
                 {activeMode === 'ocr' && <Camera className="h-5 w-5" />}
                 {activeMode === 'paste' && <FileText className="h-5 w-5" />}
                 {activeMode === 'ai' && <MainLogo size="sm" showText={false} className="!h-5 !w-5" />}
               </span>
               <span>
-                <span className="block text-[10px] font-bold text-violet-600 dark:text-violet-300">طريقة إنشاء الاختبار</span>
+                <span className="block text-[10px] font-bold text-[#007472] dark:text-[#2AC3BB]">طريقة إنشاء الاختبار</span>
                 <span className="mt-0.5 block text-sm font-black text-slate-800 dark:text-slate-100">
                   {activeMode === 'manual' && 'كتابة يدوية'}
                   {activeMode === 'ocr' && 'صورة أو PDF'}
@@ -2539,7 +2539,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 </span>
               </span>
             </span>
-            <span className={`text-xl text-violet-500 transition-transform duration-300 ${isModeMenuOpen ? 'rotate-180' : ''}`}>⌄</span>
+            <span className={`text-xl text-[#007472] dark:text-[#2AC3BB] transition-transform duration-300 ${isModeMenuOpen ? 'rotate-180' : ''}`}>⌄</span>
           </button>
 
           {isModeMenuOpen && (
@@ -2562,12 +2562,12 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                       setActiveMode(mode.id);
                       setIsModeMenuOpen(false);
                     }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-right transition-all ${selected ? 'bg-gradient-to-l from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20' : 'text-slate-700 hover:bg-violet-50 dark:text-slate-200 dark:hover:bg-violet-500/10'}`}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-right transition-all ${selected ? 'bg-gradient-to-l from-[#007472] to-[#2AC3BB] text-white shadow-md shadow-[#007472]/20' : 'text-slate-700 hover:bg-[#007472]/5 dark:text-slate-200 dark:hover:bg-[#007472]/50/10'}`}
                   >
-                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selected ? 'bg-white/15 text-white' : 'bg-violet-500/10 text-violet-500'}`}>{mode.id === 'ai' ? <MainLogo size="sm" showText={false} className="!h-6 !w-6" /> : <ModeIcon className="h-4 w-4" />}</span>
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selected ? 'bg-white/15 text-white' : 'bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-[#007472] dark:text-[#2AC3BB]'}`}>{mode.id === 'ai' ? <MainLogo size="sm" showText={false} className="!h-6 !w-6" /> : <ModeIcon className="h-4 w-4" />}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-xs font-black">{mode.label}</span>
-                      <span className={`mt-0.5 block text-[10px] ${selected ? 'text-violet-100' : 'text-slate-500 dark:text-slate-400'}`}>{mode.hint}</span>
+                      <span className={`mt-0.5 block text-[10px] ${selected ? 'text-[#FCF6EE]' : 'text-slate-500 dark:text-slate-400'}`}>{mode.hint}</span>
                     </span>
                     {selected && <Check className="h-4 w-4 shrink-0" />}
                   </button>
@@ -2591,13 +2591,13 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
             className="glass-card p-6 sm:p-10 rounded-[32px] space-y-6 relative overflow-hidden"
           >
-            <div className="absolute -top-32 -left-32 w-64 h-64 bg-violet-500/10 rounded-full blur-[60px] pointer-events-none" />
-            <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-indigo-500/10 rounded-full blur-[60px] pointer-events-none" />
+            <div className="absolute -top-32 -left-32 w-64 h-64 bg-[#007472]/10 dark:bg-[#2AC3BB]/10 rounded-full blur-[60px] pointer-events-none" />
+            <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-[#2AC3BB]/10 rounded-full blur-[60px] pointer-events-none" />
 
             {showPaywallSentence && renderPaywallOverlay("كويز من جملة", "Single Sentence Quiz")}
 
             <div className="flex items-start gap-4 relative z-10" dir="rtl">
-              <div className="p-3 bg-violet-50 dark:bg-slate-800/80 rounded-2xl text-violet-600 dark:text-violet-400 shadow-sm border border-violet-100 dark:border-violet-900/30">
+              <div className="p-3 bg-[#007472]/5 dark:bg-slate-800/80 rounded-2xl text-[#007472] dark:text-[#2AC3BB] shadow-sm border border-[#007472]/15 dark:border-[#2AC3BB]/15 dark:border-[#2AC3BB]/20">
                 <MainLogo size="sm" showText={false} className="!h-6 !w-6" />
               </div>
               <div className="space-y-1 flex-1 text-right">
@@ -2636,22 +2636,22 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                         onClick={() => setAiCount(opt.value)}
                         className={`group relative flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 overflow-hidden text-right select-none active:scale-[0.98] cursor-pointer ${
                           isSelected
-                            ? 'border-violet-500 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/5 shadow-[0_4px_20px_rgba(139,92,246,0.12)] ring-1 ring-violet-500/20'
+                            ? 'border-[#007472] dark:border-[#2AC3BB] bg-gradient-to-r from-[#007472]/10 to-[#2AC3BB]/5 shadow-[0_4px_20px_rgba(0,116,114,0.12)] ring-1 ring-[#007472]/20 dark:ring-[#2AC3BB]/20'
                             : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-900/50'
                         }`} key={opt.value}
                       >
                         {isSelected && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-fuchsia-500/5 opacity-100" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#007472]/5 to-[#2AC3BB]/5 opacity-100" />
                         )}
                         <div className="flex items-center gap-3 w-full flex-row-reverse text-right z-10">
                           <div className={`p-2.5 rounded-xl transition-all duration-300 ${
-                            isSelected ? 'bg-violet-500 text-white shadow-md shadow-violet-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-700'
+                            isSelected ? 'bg-[#007472]/50 text-white shadow-md shadow-[#007472]/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-700'
                           }`}>
                             <Icons8Icon name={opt.icon as any} size={28} />
                           </div>
 
                           <div className="flex-1 min-w-0 pr-1">
-                            <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-violet-600 dark:text-violet-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                            <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-[#007472] dark:text-[#2AC3BB]' : 'text-slate-700 dark:text-slate-300'}`}>
                               {opt.label}
                             </div>
                             <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
@@ -2660,7 +2660,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                           </div>
 
                           <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 mr-auto ${
-                            isSelected ? 'border-violet-500 bg-violet-500 text-white scale-100' : 'border-slate-300 dark:border-slate-700 bg-transparent scale-90'
+                            isSelected ? 'border-[#007472] dark:border-[#2AC3BB] bg-[#007472]/50 text-white scale-100' : 'border-slate-300 dark:border-slate-700 bg-transparent scale-90'
                           }`}>
                             {isSelected ? (
                               <Check className="w-3 h-3 stroke-[3]" />
@@ -2696,7 +2696,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                         onClick={() => setPreferredQuestionTypes(prev => prev.includes(typeId) ? (prev.length > 1 ? prev.filter(type => type !== typeId) : prev) : [...prev, typeId])}
                         className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
                           isSelected
-                            ? 'border-violet-500 bg-violet-500/10 text-violet-600 dark:text-violet-400 ring-2 ring-violet-500/20 font-black shadow-xs'
+                            ? 'border-[#007472] dark:border-[#2AC3BB] bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-[#007472] dark:text-[#2AC3BB] ring-2 ring-[#007472]/20 dark:ring-[#2AC3BB]/20 font-black shadow-xs'
                             : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
@@ -2808,22 +2808,22 @@ A computer is a digital electronic machine...
                         onClick={() => setPasteCount(opt.value)}
                         className={`group relative flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300 overflow-hidden text-right select-none active:scale-[0.98] cursor-pointer ${
                           isSelected
-                            ? 'border-violet-500 bg-gradient-to-r from-violet-500/10 to-fuchsia-500/5 shadow-[0_4px_20px_rgba(139,92,246,0.12)] ring-1 ring-violet-500/20'
+                            ? 'border-[#007472] dark:border-[#2AC3BB] bg-gradient-to-r from-[#007472]/10 to-[#2AC3BB]/5 shadow-[0_4px_20px_rgba(0,116,114,0.12)] ring-1 ring-[#007472]/20 dark:ring-[#2AC3BB]/20'
                             : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-900/50'
                         }`} key={opt.value}
                       >
                         {isSelected && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-fuchsia-500/5 opacity-100" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#007472]/5 to-[#2AC3BB]/5 opacity-100" />
                         )}
                         <div className="flex items-center gap-3 w-full flex-row-reverse text-right z-10">
                           <div className={`p-2.5 rounded-xl transition-all duration-300 ${
-                            isSelected ? 'bg-violet-500 text-white shadow-md shadow-violet-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-700'
+                            isSelected ? 'bg-[#007472]/50 text-white shadow-md shadow-[#007472]/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-slate-200 dark:group-hover:bg-slate-700'
                           }`}>
                             <Icons8Icon name={opt.icon as any} size={28} />
                           </div>
 
                           <div className="flex-1 min-w-0 pr-1">
-                            <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-violet-600 dark:text-violet-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                            <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-[#007472] dark:text-[#2AC3BB]' : 'text-slate-700 dark:text-slate-300'}`}>
                               {opt.label}
                             </div>
                             <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
@@ -2832,7 +2832,7 @@ A computer is a digital electronic machine...
                           </div>
 
                           <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-300 mr-auto ${
-                            isSelected ? 'border-violet-500 bg-violet-500 text-white scale-100' : 'border-slate-300 dark:border-slate-700 bg-transparent scale-90'
+                            isSelected ? 'border-[#007472] dark:border-[#2AC3BB] bg-[#007472]/50 text-white scale-100' : 'border-slate-300 dark:border-slate-700 bg-transparent scale-90'
                           }`}>
                             {isSelected ? (
                               <Check className="w-3 h-3 stroke-[3]" />
@@ -2923,11 +2923,11 @@ A computer is a digital electronic machine...
             </div>
 
             {uploadedFile && (
-              <div className="relative z-10 rounded-2xl border border-indigo-200/80 bg-indigo-50/70 px-4 py-3 text-right dark:border-indigo-900/60 dark:bg-indigo-950/20" dir="rtl">
-                <p className="text-[10px] font-black uppercase tracking-wide text-indigo-500 dark:text-indigo-300">{isAr ? 'مصدر الاختبار' : 'Quiz source'}</p>
+              <div className="relative z-10 rounded-2xl border border-[#007472]/20 bg-[#007472]/5 px-4 py-3 text-right dark:border-[#2AC3BB]/20 dark:bg-[#007472]/15" dir="rtl">
+                <p className="text-[10px] font-black uppercase tracking-wide text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'مصدر الاختبار' : 'Quiz source'}</p>
                 <p className="mt-1 truncate text-sm font-extrabold text-slate-800 dark:text-slate-100" title={uploadedFile.name}>{uploadedFile.name}</p>
                 {!isGenericExtractionTitle(title) && (
-                  <p className="mt-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">{isAr ? 'الموضوع المستخلص:' : 'Extracted topic:'} {title}</p>
+                  <p className="mt-1 text-xs font-bold text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'الموضوع المستخلص:' : 'Extracted topic:'} {title}</p>
                 )}
               </div>
             )}
@@ -2968,9 +2968,9 @@ A computer is a digital electronic machine...
                 {/* Column 2: Import from Google Drive (Connected) */}
                 <div
                   onClick={() => setIsDrivePickerOpen(true)}
-                  className="group relative border border-slate-200 dark:border-slate-800 rounded-[24px] p-8 text-center bg-gradient-to-br from-[#1a73e8]/5 via-[#34a853]/5 to-[#f9ab00]/5 hover:from-[#1a73e8]/10 hover:via-[#34a853]/10 hover:to-[#f9ab00]/10 border-indigo-500/10 hover:border-indigo-500/30 cursor-pointer backdrop-blur-sm shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-center items-center min-h-[220px]"
+                  className="group relative border border-slate-200 dark:border-slate-800 rounded-[24px] p-8 text-center bg-gradient-to-br from-[#1a73e8]/5 via-[#34a853]/5 to-[#f9ab00]/5 hover:from-[#1a73e8]/10 hover:via-[#34a853]/10 hover:to-[#f9ab00]/10 border-[#007472]/15 hover:border-[#2AC3BB]/30 cursor-pointer backdrop-blur-sm shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 flex flex-col justify-center items-center min-h-[220px]"
                 >
-                  <div className="absolute inset-0 bg-radial-gradient from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[24px]" />
+                  <div className="absolute inset-0 bg-radial-gradient from-[#007472]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[24px]" />
 
                   <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 shadow-md flex items-center justify-center shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300 border border-slate-150 dark:border-slate-800">
                     <svg className="w-8 h-8" viewBox="0 0 1000 866" xmlns="http://www.w3.org/2000/svg">
@@ -2984,7 +2984,7 @@ A computer is a digital electronic machine...
                     <p className="text-sm font-black text-slate-800 dark:text-slate-100 leading-tight">
                       {isAr ? 'استيراد من Google Drive' : 'Import from Google Drive'}
                     </p>
-                    <p className="text-[11px] text-slate-400 dark:text-indigo-300 font-bold">
+                    <p className="text-[11px] text-slate-400 dark:text-[#2AC3BB] font-bold">
                       {isAr ? 'توليد فوري من مستندات السحابة' : 'Instant generation from cloud documents'}
                     </p>
                   </div>
@@ -3057,7 +3057,7 @@ A computer is a digital electronic machine...
                     const basePath = window.location.hostname.includes('github.io') ? '/quiz-space/' : '/';
                     window.history.pushState(null, '', `${basePath}#/dashboard/settings?tab=settings&section=connected`);
                   }}
-                  className="text-xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 font-bold hover:underline cursor-pointer flex items-center gap-1.5 bg-indigo-500/5 dark:bg-indigo-500/10 px-4 py-2.5 rounded-xl border border-indigo-500/10 hover:border-indigo-500/20"
+                  className="text-xs text-[#007472] hover:text-[#007472] dark:text-[#2AC3BB] dark:hover:text-[#2AC3BB] font-bold hover:underline cursor-pointer flex items-center gap-1.5 bg-[#007472]/5 dark:bg-[#2AC3BB]/10 px-4 py-2.5 rounded-xl border border-[#007472]/15 dark:border-[#2AC3BB]/20 hover:border-[#007472]/30"
                 >
                   <span>{isAr ? '+ ربط حساباتك السحابية للتوليد الفوري' : '+ Connect your cloud accounts for instant generation'}</span>
                 </button>
@@ -3068,10 +3068,10 @@ A computer is a digital electronic machine...
 
             {uploadedFile && (fileType === 'pdf' || fileType === 'document') && (
               <div className="space-y-3 p-4 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-2xl text-right animate-fade-in">
-                <div className="flex items-start gap-3 rounded-2xl border border-violet-200/70 bg-violet-500/5 p-4 dark:border-violet-900/50 dark:bg-violet-500/10" dir="rtl">
+                <div className="flex items-start gap-3 rounded-2xl border border-[#007472]/20 dark:border-[#2AC3BB]/20 bg-[#007472]/5 p-4 dark:border-[#2AC3BB]/20 dark:bg-[#007472]/10 dark:bg-[#2AC3BB]/10" dir="rtl">
                   <Icons8Icon name="sparkles" size={28} />
                   <div>
-                    <p className="text-xs font-black text-violet-700 dark:text-violet-300">استخراج شامل بدون حد لعدد الأسئلة</p>
+                    <p className="text-xs font-black text-[#007472] dark:text-[#2AC3BB]">استخراج شامل بدون حد لعدد الأسئلة</p>
                     <p className="mt-1 text-[10px] leading-5 text-slate-600 dark:text-slate-400">سيقرأ النظام الملف بالكامل ويستخرج كل أسئلة MCQ وTrue/False المسموح بها حسب اختيارك، مع إزالة التكرار فقط.</p>
                   </div>
                 </div>
@@ -3100,7 +3100,7 @@ A computer is a digital electronic machine...
                           onClick={() => setPreferredQuestionTypes(prev => prev.includes(typeId) ? (prev.length > 1 ? prev.filter(type => type !== typeId) : prev) : [...prev, typeId])}
                           className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all duration-200 cursor-pointer ${
                             isSelected
-                              ? 'border-violet-500 bg-violet-500/10 text-violet-600 dark:text-violet-400 ring-2 ring-violet-500/20 font-black shadow-xs'
+                              ? 'border-[#007472] dark:border-[#2AC3BB] bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-[#007472] dark:text-[#2AC3BB] ring-2 ring-[#007472]/20 dark:ring-[#2AC3BB]/20 font-black shadow-xs'
                               : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                           }`}
                         >
@@ -3116,10 +3116,10 @@ A computer is a digital electronic machine...
 
             {/* Chat discussion file prompt box (As requested) */}
             {uploadedFile && (
-              <div className="space-y-3.5 p-5 bg-gradient-to-br from-violet-500/5 to-fuchsia-500/5 border border-violet-100/70 dark:border-slate-800/85 rounded-3xl text-right animate-fade-in shadow-xs">
+              <div className="space-y-3.5 p-5 bg-gradient-to-br from-[#007472]/5 to-[#2AC3BB]/5 border border-[#007472]/15 dark:border-[#2AC3BB]/15 dark:border-slate-800/85 rounded-3xl text-right animate-fade-in shadow-xs">
                 <div className="flex items-center gap-2 justify-end">
-                  <span className="text-xs font-extrabold text-violet-600 dark:text-violet-400">دردشة توجيهية سريعة مع الملف (اختياري)</span>
-                  <div className="p-1 px-1.5 rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400">
+                  <span className="text-xs font-extrabold text-[#007472] dark:text-[#2AC3BB]">دردشة توجيهية سريعة مع الملف (اختياري)</span>
+                  <div className="p-1 px-1.5 rounded-lg bg-[#007472]/10 dark:bg-[#007472]/20 text-[#007472] dark:text-[#2AC3BB]">
                     <MessageSquare className="w-3.5 h-3.5" />
                   </div>
                 </div>
@@ -3134,15 +3134,15 @@ A computer is a digital electronic machine...
                   placeholder={fileGuidanceMessages.length > 0
                     ? (isAr ? 'اكتب سؤال متابعة عن الملف أو عدّل خطة الاستخراج...' : 'Ask a follow-up about the file or adjust the extraction plan...')
                     : (isAr ? "اكتب هنا أية شروط إضافية تود إجبار الذكاء الاصطناعي عليها لتفصيل محتوى الملف بدقة تامة..." : "Write here any extra constraints or chat prompts you would like the AI model to prioritize...")}
-                  className="w-full h-24 p-3.5 bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs text-right text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 transition-all font-sans"
+                  className="w-full h-24 p-3.5 bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs text-right text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#007472]/25 focus:border-[#007472] dark:border-[#2AC3BB] transition-all font-sans"
                   dir="rtl"
                 />
 
                 {fileGuidanceMessages.length > 0 && (
-                  <div className="max-h-64 space-y-2 overflow-y-auto rounded-2xl border border-violet-200/70 bg-slate-950/[0.03] p-3 dark:border-violet-900/50 dark:bg-black/10" dir="rtl">
-                    <div className="text-[10px] font-black text-violet-600 dark:text-violet-400">{isAr ? 'سجل الدردشة مع الملف' : 'File guidance chat'}</div>
+                  <div className="max-h-64 space-y-2 overflow-y-auto rounded-2xl border border-[#007472]/20 dark:border-[#2AC3BB]/20 bg-slate-950/[0.03] p-3 dark:border-[#2AC3BB]/20 dark:bg-black/10" dir="rtl">
+                    <div className="text-[10px] font-black text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'سجل الدردشة مع الملف' : 'File guidance chat'}</div>
                     {fileGuidanceMessages.map((message, index) => (
-                      <div key={`${message.role}-${index}`} className={`rounded-xl px-3 py-2 text-[11px] leading-6 whitespace-pre-wrap ${message.role === 'user' ? 'bg-violet-100/80 text-violet-950 dark:bg-violet-950/40 dark:text-violet-100' : 'bg-white/80 text-slate-700 dark:bg-slate-900/70 dark:text-slate-200'}`}>
+                      <div key={`${message.role}-${index}`} className={`rounded-xl px-3 py-2 text-[11px] leading-6 whitespace-pre-wrap ${message.role === 'user' ? 'bg-[#007472]/10 text-slate-800 dark:bg-[#007472]/20 dark:text-[#FCF6EE]' : 'bg-white/80 text-slate-700 dark:bg-slate-900/70 dark:text-slate-200'}`}>
                         <span className="mb-0.5 block text-[9px] font-black opacity-60">{message.role === 'user' ? (isAr ? 'أنت' : 'You') : 'Cosmo'}</span>
                         {message.text}
                       </div>
@@ -3151,7 +3151,7 @@ A computer is a digital electronic machine...
                   </div>
                 )}
 
-                <div className="flex flex-col gap-2 rounded-2xl border border-violet-200/70 dark:border-violet-900/50 bg-white/60 dark:bg-slate-950/30 p-3">
+                <div className="flex flex-col gap-2 rounded-2xl border border-[#007472]/20 dark:border-[#2AC3BB]/20 dark:border-[#2AC3BB]/20 bg-white/60 dark:bg-slate-950/30 p-3">
                   <div className="flex items-center justify-between gap-3" dir="rtl">
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
                       {isAr ? 'اجعل كوزمو يقرأ الملف أولًا ويشرح لك ما سيفعله قبل الاستخراج.' : 'Let Cosmo read the file first and explain what it will do before extraction.'}
@@ -3160,7 +3160,7 @@ A computer is a digital electronic machine...
                       type="button"
                       onClick={handleGuideFile}
                       disabled={isGuidingFile || isProcessingOcr || fileType === 'document' || uploadedFile.size > 10 * 1024 * 1024}
-                      className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-3 py-2 text-[10px] font-black text-white shadow-sm shadow-violet-600/20 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#007472] px-3 py-2 text-[10px] font-black text-white shadow-sm shadow-[#007472]/20 transition hover:bg-[#005e5c] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {isGuidingFile ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <Sparkles className="h-3.5 w-3.5" />}
                       {isGuidingFile ? (isAr ? 'جاري فهم الملف...' : 'Reading file...') : (isAr ? 'اسأل كوزمو عن الملف' : 'Ask Cosmo about file')}
@@ -3175,7 +3175,7 @@ A computer is a digital electronic machine...
                     <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400" dir="rtl">{fileGuidanceError}</p>
                   )}
                   {fileGuidance && (
-                    <div className="rounded-xl bg-violet-50/80 dark:bg-violet-950/20 p-3 text-[11px] leading-6 text-slate-700 dark:text-slate-200 whitespace-pre-wrap" dir="rtl">
+                    <div className="rounded-xl bg-[#007472]/5 dark:bg-[#007472]/20 dark:bg-[#007472]/10 p-3 text-[11px] leading-6 text-slate-700 dark:text-slate-200 whitespace-pre-wrap" dir="rtl">
                       {fileGuidance}
                     </div>
                   )}
@@ -3193,7 +3193,7 @@ A computer is a digital electronic machine...
 
                       type="button"
                       onClick={() => setFileCustomPrompt(sug)}
-                      className="text-[10px] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 border border-slate-200 dark:border-slate-700 hover:border-violet-300 dark:hover:border-violet-800 px-3 py-1.5 rounded-xl cursor-pointer transition-all active:scale-95" key={sug}
+                      className="text-[10px] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-[#007472] dark:hover:text-[#2AC3BB] border border-slate-200 dark:border-slate-700 hover:border-[#007472]/40 dark:hover:border-[#2AC3BB]/50 px-3 py-1.5 rounded-xl cursor-pointer transition-all active:scale-95" key={sug}
                     >
                       {sug}
                     </button>
@@ -3206,11 +3206,11 @@ A computer is a digital electronic machine...
             {isProcessingOcr && (
               <div className="p-5 rounded-2xl bg-amber-500/5 dark:bg-slate-900/30 border border-amber-500/15 dark:border-slate-800 space-y-5 shadow-xs">
                 {uploadedFile && (
-                  <div className="rounded-2xl border border-indigo-200/80 bg-indigo-50/70 px-4 py-3 text-right dark:border-indigo-900/60 dark:bg-indigo-950/20" dir="rtl">
-                    <p className="text-[10px] font-black uppercase tracking-wide text-indigo-500 dark:text-indigo-300">{isAr ? 'مصدر الاختبار الجاري' : 'Current quiz source'}</p>
+                  <div className="rounded-2xl border border-[#007472]/20 bg-[#007472]/5 px-4 py-3 text-right dark:border-[#2AC3BB]/20 dark:bg-[#007472]/15" dir="rtl">
+                    <p className="text-[10px] font-black uppercase tracking-wide text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'مصدر الاختبار الجاري' : 'Current quiz source'}</p>
                     <p className="mt-1 truncate text-sm font-extrabold text-slate-800 dark:text-slate-100" title={uploadedFile.name}>{uploadedFile.name}</p>
                     {!isGenericExtractionTitle(title) && (
-                      <p className="mt-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">{isAr ? 'الموضوع المستخلص:' : 'Extracted topic:'} {title}</p>
+                      <p className="mt-1 text-xs font-bold text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'الموضوع المستخلص:' : 'Extracted topic:'} {title}</p>
                     )}
                   </div>
                 )}
@@ -3226,7 +3226,7 @@ A computer is a digital electronic machine...
                       percentage={ocrProgress.percentage}
                     />
                     {postExtractionSolvePending && ocrProgress.stage === 'solving' && (
-                      <div className="rounded-xl border border-violet-200 bg-violet-50/80 px-3 py-2 text-right text-[11px] font-extrabold text-violet-700 dark:border-violet-900/60 dark:bg-violet-950/20 dark:text-violet-300" dir="rtl">
+                      <div className="rounded-xl border border-[#007472]/20 dark:border-[#2AC3BB]/20 bg-[#007472]/5 dark:bg-[#007472]/20 px-3 py-2 text-right text-[11px] font-extrabold text-[#007472] dark:border-[#2AC3BB]/20 dark:bg-[#007472]/10 dark:text-[#2AC3BB]" dir="rtl">
                         هذه مرحلة مستقلة بعد الاستخراج: لا يتم حفظ أي إجابة قبل مطابقتها مع الاختيارات ومحتوى الملف.
                       </div>
                     )}
@@ -3252,7 +3252,7 @@ A computer is a digital electronic machine...
                     {/* Progress bar */}
                     <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300 ease-out"
+                        className="h-full bg-gradient-to-r from-[#007472] to-[#2AC3BB] transition-all duration-300 ease-out"
                         style={{ width: `${Math.max(0, Math.min(100, ocrProgress.percentage ?? (ocrProgress.current / Math.max(ocrProgress.total, 1)) * 100))}%` }}
                       />
                     </div>
@@ -3280,7 +3280,7 @@ A computer is a digital electronic machine...
 
                             className={`flex items-center justify-between p-3 rounded-xl border text-xs transition-all ${
                               isActive
-                                ? 'bg-violet-500/5 border-violet-300 dark:border-violet-900/60 shadow-[0_2px_10px_rgba(139,92,246,0.06)]'
+                                ? 'bg-[#007472]/5 border-[#2AC3BB]/40 dark:border-[#2AC3BB]/20 shadow-[0_2px_10px_rgba(0,116,114,0.08)]'
                                 : batch.status === 'success'
                                 ? 'bg-emerald-500/5 border-emerald-200 dark:border-emerald-950/30'
                                 : batch.status === 'error'
@@ -3291,7 +3291,7 @@ A computer is a digital electronic machine...
                             <div className="flex items-center gap-2.5">
                               <div className={`w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[10px] ${
                                 isActive
-                                  ? 'bg-violet-500 text-white border-violet-500 animate-pulse'
+                                  ? 'bg-[#007472]/50 text-white border-[#007472] dark:border-[#2AC3BB] animate-pulse'
                                   : batch.status === 'success'
                                   ? 'bg-emerald-500 text-white border-emerald-500 text-[8px]'
                                   : batch.status === 'error'
@@ -3301,7 +3301,7 @@ A computer is a digital electronic machine...
                                 {batch.status === 'success' ? '' : index + 1}
                               </div>
                               <span className={`font-semibold ${
-                                isActive ? 'text-violet-700 dark:text-violet-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'
+                                isActive ? 'text-[#007472] dark:text-[#2AC3BB] font-extrabold' : 'text-slate-700 dark:text-slate-300'
                               }`}>
                                 {isAr ? batch.nameAr : batch.nameEn}
                               </span>
@@ -3324,9 +3324,9 @@ A computer is a digital electronic machine...
 
                               {/* Pulsing/bouncy waiting dots (نقاط تطلع وتنزل بتاعت الانتظار) */}
                               {isActive && (
-                                <div className="flex items-center gap-1 bg-violet-100 dark:bg-violet-950/65 px-2.5 py-1 rounded-full">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-violet-600 animate-bounce [animation-delay:-0.3s]" />
-                                  <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-600 animate-bounce [animation-delay:-0.15s]" />
+                                <div className="flex items-center gap-1 bg-[#007472]/10 dark:bg-[#007472]/20 px-2.5 py-1 rounded-full">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#007472] animate-bounce [animation-delay:-0.3s]" />
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#EE8361] animate-bounce [animation-delay:-0.15s]" />
                                   <span className="w-1.5 h-1.5 rounded-full bg-pink-600 animate-bounce" />
                                 </div>
                               )}
@@ -3351,7 +3351,7 @@ A computer is a digital electronic machine...
                 <label className="block text-xs font-black text-slate-600 dark:text-slate-350 border-b border-slate-200/50 dark:border-slate-800 pb-2">
                    اختار الوضع المناسب لك — وضعان مستقلان تماماً:
                 </label>
-                <div className="uipro-glass-surface backdrop-blur-xl border border-cyan-500/30 dark:border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-violet-500/5 to-transparent p-5 rounded-2xl shadow-sm text-right">
+                <div className="uipro-glass-surface backdrop-blur-xl border border-cyan-500/30 dark:border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-[#007472]/5 to-transparent p-5 rounded-2xl shadow-sm text-right">
                   <label htmlFor="file-question-count" className="block text-xs font-black text-cyan-800 dark:text-cyan-200">
                     {isAr ? 'عدد الأسئلة: تلقائي أو يدوي' : 'Question count: automatic or manual'}
                   </label>
@@ -3419,11 +3419,11 @@ A computer is a digital electronic machine...
                   {/* Mode 2: Generate — AI question generation from the file */}
                   <div className={`flex flex-col p-4 rounded-2xl border text-right transition-all ${
                     isProcessingOcr && extractionMode === 'generate'
-                      ? 'border-violet-500 bg-violet-500/[0.04] shadow-xs'
+                      ? 'border-[#007472] dark:border-[#2AC3BB] bg-[#007472]/50/[0.04] shadow-xs'
                       : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30'
                   }`}>
                     <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-lg bg-violet-500/10 text-base leading-none"></span>
+                      <span className="p-1.5 rounded-lg bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-base leading-none"></span>
                       <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">Generate — توليد بالذكاء الاصطناعي</span>
                     </div>
                     <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
@@ -3534,7 +3534,7 @@ A computer is a digital electronic machine...
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100/50 dark:border-slate-800/50 pb-5 relative z-10">
                 <div className="flex items-center gap-3" dir="rtl">
-                  <span className="p-3 bg-violet-500/10 text-violet-600 rounded-2xl shadow-sm border border-violet-100 dark:border-violet-900/30"></span>
+                  <span className="p-3 bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-[#007472] rounded-2xl shadow-sm border border-[#007472]/15 dark:border-[#2AC3BB]/15 dark:border-[#2AC3BB]/20"></span>
                   <div className="text-right">
                     <h3 className="font-display font-black text-xl text-slate-800 dark:text-slate-100 tracking-tight">بيانات وتفاصيل مسودة الاختبار الحالية</h3>
                     <p className="text-[10px] text-slate-450 mt-0.5 font-medium">تفاصيل الهوية والزمن الموصى لطلابك لحل هذا الاختبار</p>
@@ -3546,7 +3546,7 @@ A computer is a digital electronic machine...
                     type="button"
                     onClick={() => void handlePublishQuiz()}
                     disabled={isSaving}
-                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-violet-500/25 transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto hover:-translate-y-0.5"
+                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] hover:from-[#005e5c] hover:to-[#22a19b] text-[#FCF6EE] text-xs font-bold shadow-lg shadow-[#007472]/25 transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto hover:-translate-y-0.5"
                   >
                     {isSaving ? (
                       <>
@@ -3573,10 +3573,10 @@ A computer is a digital electronic machine...
                       placeholder="مثال: أسئلة مراجعة الجغرافيا للصف الثالث الثانوي"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner backdrop-blur-sm"
+                      className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-[#007472] dark:border-[#2AC3BB] focus:ring-4 focus:ring-[#007472]/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner backdrop-blur-sm"
                       dir="rtl"
                     />
-                    <FileText className="w-5 h-5 text-violet-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <FileText className="w-5 h-5 text-[#2AC3BB] absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
 
@@ -3588,10 +3588,10 @@ A computer is a digital electronic machine...
                       placeholder="وصف موجز يوضح محتوى هذا الاختبار وأهميته للطلاب..."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-medium text-right resize-none shadow-inner backdrop-blur-sm"
+                      className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-[#007472] dark:border-[#2AC3BB] focus:ring-4 focus:ring-[#007472]/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-medium text-right resize-none shadow-inner backdrop-blur-sm"
                       dir="rtl"
                     />
-                    <BookOpen className="w-5 h-5 text-violet-400 absolute right-4 top-6 pointer-events-none" />
+                    <BookOpen className="w-5 h-5 text-[#2AC3BB] absolute right-4 top-6 pointer-events-none" />
                   </div>
                 </div>
 
@@ -3603,10 +3603,10 @@ A computer is a digital electronic machine...
                       placeholder="اسم المعلم أو صانع المحتوى..."
                       value={creatorName}
                       onChange={(e) => setCreatorName(e.target.value)}
-                      className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner backdrop-blur-sm"
+                      className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-[#007472] dark:border-[#2AC3BB] focus:ring-4 focus:ring-[#007472]/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner backdrop-blur-sm"
                       dir="rtl"
                     />
-                    <User className="w-5 h-5 text-violet-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <User className="w-5 h-5 text-[#2AC3BB] absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
 
@@ -3619,10 +3619,10 @@ A computer is a digital electronic machine...
                       placeholder="0"
                       value={timeLimit || ''}
                       onChange={(e) => setTimeLimit(parseInt(e.target.value) || 0)}
-                      className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-mono font-bold text-right shadow-inner backdrop-blur-sm"
+                      className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-[#007472] dark:border-[#2AC3BB] focus:ring-4 focus:ring-[#007472]/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-mono font-bold text-right shadow-inner backdrop-blur-sm"
                       dir="rtl"
                     />
-                    <Clock className="w-5 h-5 text-violet-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Clock className="w-5 h-5 text-[#2AC3BB] absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
 
@@ -3671,7 +3671,7 @@ A computer is a digital electronic machine...
                             setNewCustomCategory(e.target.value);
                             setCategory(e.target.value.trim());
                           }}
-                          className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-violet-400 dark:border-violet-800/80 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner"
+                          className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-[#2AC3BB] dark:border-[#2AC3BB]/40 pr-12 pl-4 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-[#007472] dark:border-[#2AC3BB] focus:ring-4 focus:ring-[#007472]/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner"
                           dir="rtl"
                         />
                         <button
@@ -3687,7 +3687,7 @@ A computer is a digital electronic machine...
                               setShowCustomCategoryInput(false);
                             }
                           }}
-                          className="bg-violet-600 hover:bg-violet-700 text-white text-xs px-4 py-2 rounded-xl font-bold transition-all shrink-0 cursor-pointer"
+                          className="bg-[#007472] hover:bg-[#005e5c] text-white text-xs px-4 py-2 rounded-xl font-bold transition-all shrink-0 cursor-pointer"
                         >
                           إضافة
                         </button>
@@ -3762,7 +3762,7 @@ A computer is a digital electronic machine...
                 <details open className="sm:col-span-2 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-950/20 overflow-hidden">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-right font-black text-sm text-slate-700 dark:text-slate-200 marker:hidden">
                     <span className="flex items-center gap-2"><span className="text-lg"></span> إعدادات النشر والوصول المتقدمة</span>
-                    <span className="text-violet-500 text-lg transition-transform">⌄</span>
+                    <span className="text-[#007472] dark:text-[#2AC3BB] text-lg transition-transform">⌄</span>
                   </summary>
                   <div className="space-y-3 px-4 pb-4 pt-1 text-right">
                   <label className="text-xs font-black text-slate-700 dark:text-slate-300 block uppercase tracking-wide px-1">
@@ -3953,7 +3953,7 @@ A computer is a digital electronic machine...
               <div className="glass-card bg-slate-50/50 dark:bg-slate-900/30 p-5 rounded-[28px] border border-slate-200/50 dark:border-slate-700/50 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between shadow-sm backdrop-blur-sm">
                 <div className="flex flex-col gap-1.5 text-right">
                   <div className="flex items-center gap-2.5 justify-end sm:justify-start flex-row-reverse sm:flex-row">
-                    <div className="w-3 h-3 rounded-full bg-violet-500 animate-pulse shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+                    <div className="w-3 h-3 rounded-full bg-[#007472]/50 animate-pulse shadow-[0_0_8px_rgba(42,195,187,0.5)]" />
                     <h3 className="font-display font-black text-sm text-slate-800 dark:text-slate-100 uppercase tracking-wide">
                       الأسئلة المدرجة في مسودتك الآن ({questions.length})
                     </h3>
@@ -3975,7 +3975,7 @@ A computer is a digital electronic machine...
                   <button
                     type="button"
                     onClick={handleAddQuestion}
-                    className="flex items-center gap-2 text-xs text-violet-700 dark:text-violet-300 bg-violet-100/50 dark:bg-violet-500/10 hover:bg-violet-200/50 dark:hover:bg-violet-500/20 py-3 px-5 rounded-[18px] border border-violet-200/50 dark:border-violet-500/30 font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm"
+                    className="flex items-center gap-2 text-xs text-[#007472] dark:text-[#2AC3BB] bg-[#007472]/10 dark:bg-[#007472]/10 dark:bg-[#2AC3BB]/10 hover:bg-[#007472]/15 dark:hover:bg-[#007472]/50/20 py-3 px-5 rounded-[18px] border border-[#007472]/20 dark:border-[#2AC3BB]/20 dark:border-[#007472]/30 dark:border-[#2AC3BB]/30 font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm"
                   >
                     <Plus className="w-4 h-4 stroke-[3]" />
                     <span>إضافة سؤال يدوي جديد</span>
@@ -4006,7 +4006,7 @@ A computer is a digital electronic machine...
                     {/* Visual side accent border */}
                     <div
                       className={`absolute top-0 right-0 h-full w-[6px] rounded-r-full transition-all duration-300 shadow-md ${
-                        question.type === 'mcq' ? 'bg-indigo-500 shadow-indigo-500/30' :
+                        question.type === 'mcq' ? 'bg-[#007472] shadow-[#007472]/30' :
                         question.type === 'tf' ? 'bg-pink-500 shadow-pink-500/30' :
                         'bg-amber-500 shadow-amber-500/30'
                       }`}
@@ -4019,7 +4019,7 @@ A computer is a digital electronic machine...
                           {qIdx + 1}
                         </span>
                         <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-extrabold rounded-xl font-sans tracking-wide ${
-                          question.type === 'mcq' ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20' :
+                          question.type === 'mcq' ? 'bg-[#007472]/5 dark:bg-[#2AC3BB]/10 text-[#007472] dark:text-[#2AC3BB] border border-[#007472]/15 dark:border-[#2AC3BB]/20' :
                           question.type === 'tf' ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-500/20' :
                           'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20'
                         }`}>
@@ -4060,7 +4060,7 @@ A computer is a digital electronic machine...
                             onChange={(e) => handleQuestionChange(qIdx, { text: e.target.value })}
                             dir="auto"
                             style={{ unicodeBidi: 'plaintext' }}
-                            className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 px-5 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner backdrop-blur-sm"
+                            className="w-full bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 px-5 py-4 rounded-[20px] outline-none text-sm text-slate-800 dark:text-slate-100 focus:border-[#007472] dark:border-[#2AC3BB] focus:ring-4 focus:ring-[#007472]/10 focus:bg-white dark:focus:bg-slate-900 transition-all font-bold text-right shadow-inner backdrop-blur-sm"
                           />
                         </div>
 
@@ -4198,7 +4198,7 @@ A computer is a digital electronic machine...
                         <label className="text-xs font-bold text-slate-600 dark:text-slate-400 block text-right uppercase tracking-wide px-1">صورة توضيحية أو رسم بياني مرافق (اختياري):</label>
 
                         {question.imageUrl ? (
-                          <div className="relative group w-fit max-w-sm mx-auto border border-indigo-200 dark:border-indigo-500/30 p-2.5 rounded-[24px] bg-slate-50/80 dark:bg-slate-900/60 shadow-md">
+                          <div className="relative group w-fit max-w-sm mx-auto border border-[#007472]/20 dark:border-[#2AC3BB]/30 p-2.5 rounded-[24px] bg-slate-50/80 dark:bg-slate-900/60 shadow-md">
                               <QuestionMedia
                                 src={question.imageUrl}
                                 alt={isAr ? 'صورة توضيحية للسؤال' : 'Question illustration'}
@@ -4216,12 +4216,12 @@ A computer is a digital electronic machine...
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 p-6 rounded-[24px] bg-slate-50/50 hover:bg-slate-100 dark:bg-slate-800/30 dark:hover:bg-slate-800/80 transition-all duration-300 group hover:border-violet-400/50 dark:hover:border-violet-500/50 backdrop-blur-sm">
+                          <div className="flex items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 p-6 rounded-[24px] bg-slate-50/50 hover:bg-slate-100 dark:bg-slate-800/30 dark:hover:bg-slate-800/80 transition-all duration-300 group hover:border-[#2AC3BB]/50 dark:hover:border-[#007472]/50 dark:border-[#2AC3BB]/50 backdrop-blur-sm">
                             <label className="flex flex-col items-center gap-2 cursor-pointer w-full text-center">
-                              <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300 shadow-inner">
-                                <ImageIcon className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                              <div className="w-12 h-12 rounded-full bg-[#007472]/10 dark:bg-[#007472]/20 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                                <ImageIcon className="w-5 h-5 text-[#007472] dark:text-[#2AC3BB]" />
                               </div>
-                              <span className="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">اضغط لإدراج أو سحب صورة لهذا السؤال</span>
+                              <span className="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-[#007472] dark:group-hover:text-[#2AC3BB] transition-colors">اضغط لإدراج أو سحب صورة لهذا السؤال</span>
                               <span className="text-xs text-slate-500 dark:text-slate-500 font-medium tracking-wide border px-3 py-1 rounded-full border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50">PNG, JPG, GIF, AVIF</span>
                               <input
                                 type="file"
@@ -4256,7 +4256,7 @@ A computer is a digital electronic machine...
                           placeholder="مثال: يمثل المحيط الهادئ ثلث مساحة الكرة الأرضية الإجمالية..."
                           value={question.explanation || ''}
                           onChange={(e) => handleQuestionChange(qIdx, { explanation: e.target.value })}
-                          className="w-full bg-indigo-50/60 dark:bg-indigo-900/10 border border-indigo-200/80 dark:border-indigo-800/40 px-5 py-4 rounded-[20px] outline-none text-sm text-indigo-950 dark:text-indigo-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-semibold resize-none shadow-inner backdrop-blur-sm text-right leading-relaxed"
+                          className="w-full bg-[#007472]/5 dark:bg-[#007472]/15 border border-[#007472]/20 dark:border-[#2AC3BB]/20 px-5 py-4 rounded-[20px] outline-none text-sm text-slate-900 dark:text-[#FCF6EE] focus:border-[#007472] dark:focus:border-[#2AC3BB] focus:ring-4 focus:ring-[#007472]/10 transition-all font-semibold resize-none shadow-inner backdrop-blur-sm text-right leading-relaxed"
                         />
                       </div>
 

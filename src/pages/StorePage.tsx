@@ -26,7 +26,7 @@ export default function StorePage({ userId, userName, isPremium, planName, lang,
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 pb-14 pt-5 sm:px-6 lg:px-10" dir={isAr ? 'rtl' : 'ltr'}>
-      <header className="mb-6 overflow-hidden rounded-[2rem] border border-violet-300/40 bg-gradient-to-br from-violet-800 via-indigo-700 to-sky-700 p-6 text-white shadow-xl shadow-violet-500/10 sm:p-8">
+      <header className="mb-6 overflow-hidden rounded-[2rem] border border-[#2AC3BB]/30 bg-gradient-to-br from-[#007472] via-[#005e5c] to-[#2AC3BB] p-6 text-white shadow-xl shadow-[#007472]/15 sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-white/70"><Store className="h-4 w-4" /> QuizSpace Store</div>

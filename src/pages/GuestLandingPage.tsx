@@ -36,7 +36,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
       image: productAsset('/showcase/home-dashboard.webp'),
       imageAlt: isAr ? 'لقطة من الصفحة الرئيسية في QuizSpace' : 'QuizSpace home dashboard screenshot',
       icon: BookOpenCheck,
-      gradient: 'from-cyan-500/20 to-blue-500/20',
+      gradient: 'from-[#007472]/20 to-[#2AC3BB]/20',
     },
     {
       titleAr: 'إنشاء اختبارات منظمة',
@@ -46,7 +46,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
       image: productAsset('/showcase/quiz-creator.png'),
       imageAlt: isAr ? 'لقطة حقيقية من صفحة إنشاء الاختبارات في QuizSpace' : 'Real QuizSpace quiz creation screen screenshot',
       icon: CheckCircle2,
-      gradient: 'from-violet-500/20 to-purple-500/20',
+      gradient: 'from-[#2AC3BB]/20 to-[#007472]/20',
     },
     {
       titleAr: 'التحديات اليومية',
@@ -56,7 +56,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
       image: productAsset('/images/brain_challenge.webp'),
       imageAlt: isAr ? 'معاينة التحديات اليومية في QuizSpace' : 'QuizSpace daily challenges preview',
       icon: Trophy,
-      gradient: 'from-amber-500/20 to-orange-500/20',
+      gradient: 'from-[#EE8361]/20 to-amber-500/20',
     },
     {
       titleAr: 'الجوائز والتخصيص',
@@ -66,7 +66,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
       image: productAsset('/images/lucky_wheel.webp'),
       imageAlt: isAr ? 'معاينة الجوائز داخل QuizSpace' : 'QuizSpace rewards preview',
       icon: Gift,
-      gradient: 'from-emerald-500/20 to-teal-500/20',
+      gradient: 'from-[#007472]/20 to-[#EE8361]/20',
     },
   ];
 
@@ -78,16 +78,16 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
       {/* Hero Atmosphere — 100% Containerless & Directly on the Canvas ("على الأرض") */}
       <section className="relative px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-16 max-w-6xl mx-auto text-center">
         {/* Ambient Specular Light Aura */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[650px] h-[350px] sm:h-[450px] rounded-full bg-gradient-to-tr from-cyan-400/15 via-violet-600/15 to-amber-300/10 blur-[120px] pointer-events-none -z-10" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[650px] h-[350px] sm:h-[450px] rounded-full bg-gradient-to-tr from-[#007472]/20 via-[#2AC3BB]/15 to-[#EE8361]/15 blur-[120px] pointer-events-none -z-10" />
 
         {/* Eyebrow Pill */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 dark:bg-violet-400/15 text-violet-600 dark:text-violet-300 text-xs font-black tracking-wide mb-6 backdrop-blur-md border border-violet-500/10">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#007472]/15 text-[#007472] dark:text-[#2AC3BB] text-xs font-black tracking-wide mb-6 backdrop-blur-md border border-[#2AC3BB]/30">
+          <Sparkles className="w-3.5 h-3.5 text-[#EE8361] animate-pulse" />
           <span>{isAr ? 'مساحة منظمة للتعلم والاختبارات والتقدم' : 'A focused home for learning, quizzes, and progress'}</span>
         </div>
 
         {/* Hero Headline */}
-        <h1 className="guest-landing__title font-display font-black text-3xl sm:text-5xl lg:text-6xl text-slate-900 dark:text-white tracking-tight leading-[1.18] max-w-4xl mx-auto">
+        <h1 className="guest-landing__title font-display font-black text-3xl sm:text-5xl lg:text-6xl text-slate-900 dark:text-[#FCF6EE] tracking-tight leading-[1.18] max-w-4xl mx-auto">
           {isAr
             ? 'QuizSpace — كل ما تحتاجه لتجربة تعلم أكثر وضوحاً وتحفيزاً.'
             : 'QuizSpace — everything you need for a clearer, more motivating learning journey.'}
@@ -105,7 +105,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
           <button
             type="button"
             onClick={onLogin}
-            className="guest-landing__primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-black text-xs sm:text-sm px-7 py-3 shadow-lg shadow-violet-500/25 transition-all duration-200 active:scale-95 cursor-pointer"
+            className="guest-landing__primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-[#FCF6EE] font-black text-xs sm:text-sm px-7 py-3 shadow-lg shadow-[#007472]/30 transition-all duration-200 active:scale-95 cursor-pointer"
           >
             <span>{isAr ? 'أنشئ حسابك مجاناً' : 'Create a free account'}</span>
             <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
@@ -114,7 +114,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
           <button
             type="button"
             onClick={onExplore}
-            className="guest-landing__secondary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-slate-900 dark:text-white font-bold text-xs sm:text-sm px-6 py-3 backdrop-blur-md border border-black/5 dark:border-white/10 transition-all duration-200 active:scale-95 cursor-pointer"
+            className="guest-landing__secondary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-slate-900 dark:text-[#FCF6EE] font-bold text-xs sm:text-sm px-6 py-3 backdrop-blur-md border border-black/5 dark:border-white/10 transition-all duration-200 active:scale-95 cursor-pointer"
           >
             <span>{isAr ? 'استكشف الاختبارات' : 'Explore quizzes'}</span>
           </button>
@@ -146,10 +146,10 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
       {/* Feature Showcase Grid — Laid directly on the Floor ("على الأرض") */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
-          <span className="text-xs font-black tracking-widest uppercase text-violet-500 dark:text-violet-400">
+          <span className="text-xs font-black tracking-widest uppercase text-[#007472] dark:text-[#2AC3BB]">
             {isAr ? 'من داخل المنصة' : 'Inside the platform'}
           </span>
-          <h2 className="font-display font-black text-2xl sm:text-4xl text-slate-900 dark:text-white tracking-tight mt-2">
+          <h2 className="font-display font-black text-2xl sm:text-4xl text-slate-900 dark:text-[#FCF6EE] tracking-tight mt-2">
             {isAr ? 'شاهد ما ستجده بعد تسجيل الدخول' : 'See what awaits after sign-in'}
           </h2>
           <p className="mt-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
@@ -169,7 +169,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
                 className="group relative flex flex-col justify-between transition-all duration-300"
               >
                 {/* Subtle Ambient Hover Glow */}
-                <div className="absolute -inset-3 rounded-3xl bg-violet-500/0 group-hover:bg-violet-500/[0.04] dark:group-hover:bg-violet-400/[0.04] transition-colors duration-300 pointer-events-none -z-10" />
+                <div className="absolute -inset-3 rounded-3xl bg-[#007472]/0 group-hover:bg-[#007472]/[0.05] dark:group-hover:bg-[#2AC3BB]/[0.05] transition-colors duration-300 pointer-events-none -z-10" />
 
                 <div>
                   {/* Image showcase on canvas */}
@@ -183,13 +183,13 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
                   </div>
 
                   {/* Icon & Label */}
-                  <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-2">
+                  <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB] mb-2">
                     <Icon className="h-4 w-4" />
                     <span className="text-[11px] font-black">{isAr ? 'ميزة داخل المنصة' : 'In-product feature'}</span>
                   </div>
 
                   {/* Title & Description */}
-                  <h3 className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-white leading-snug">
+                  <h3 className="font-display font-black text-base sm:text-lg text-slate-900 dark:text-[#FCF6EE] leading-snug">
                     {isAr ? item.titleAr : item.titleEn}
                   </h3>
                   <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
@@ -206,11 +206,11 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 py-8 border-y border-black/5 dark:border-white/5">
           <div className="max-w-2xl text-center md:text-right">
-            <div className="inline-flex items-center gap-2 text-amber-500 font-black text-xs mb-2">
+            <div className="inline-flex items-center gap-2 text-[#EE8361] font-black text-xs mb-2">
               <Gift className="h-4 w-4" />
               <span>{isAr ? 'التقدم له قيمة' : 'Progress has value'}</span>
             </div>
-            <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 dark:text-white tracking-tight">
+            <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 dark:text-[#FCF6EE] tracking-tight">
               {isAr ? 'حوّل التعلم اليومي إلى إنجازات ملموسة.' : 'Turn everyday learning into measurable wins.'}
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
@@ -223,7 +223,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
           <button
             type="button"
             onClick={onLogin}
-            className="guest-landing__cta inline-flex min-h-12 items-center justify-center gap-2 rounded-full font-black text-xs sm:text-sm px-6 py-3 transition-all duration-200 active:scale-95 shadow-md cursor-pointer shrink-0"
+            className="guest-landing__cta inline-flex min-h-12 items-center justify-center gap-2 rounded-full font-black text-xs sm:text-sm px-7 py-3 transition-all duration-200 active:scale-95 shadow-lg shadow-[#007472]/20 cursor-pointer shrink-0 bg-[#007472] hover:bg-[#005e5c] text-[#FCF6EE]"
           >
             <span>{isAr ? 'الدخول إلى المنصة' : 'Enter the platform'}</span>
             <ChevronLeft className="h-4 w-4 rtl:rotate-180" />

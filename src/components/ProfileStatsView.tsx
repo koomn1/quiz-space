@@ -658,9 +658,9 @@ export default function ProfileStatsView({
                     )}
 
                     {/* Progress Bar Card */}
-                    <div className={`w-full bg-slate-900/90 border rounded-2xl p-3.5 text-white shadow-md transition-all ${isUrgent ? 'border-red-500/50 shadow-red-500/10' : 'border-indigo-500/30'}`}>
+                    <div className={`w-full bg-slate-900/90 border rounded-2xl p-3.5 text-white shadow-md transition-all ${isUrgent ? 'border-red-500/50 shadow-red-500/10' : 'border-[#2AC3BB]/30'}`}>
                       <div className="flex items-center justify-between text-xs font-black mb-2">
-                        <span className={`flex items-center gap-1.5 ${isUrgent ? 'text-red-400' : 'text-indigo-300'}`}>
+                        <span className={`flex items-center gap-1.5 ${isUrgent ? 'text-red-400' : 'text-[#2AC3BB]'}`}>
                           <Sparkles className={`w-3.5 h-3.5 ${isUrgent ? 'text-red-500 animate-bounce' : 'text-amber-400 animate-pulse'}`} />
                           <span>{isAr ? (isUrgent ? ` تنبيه: ينتهي العرض قريباً (${totalDays} يوم)` : `فترة تجريبية نشطة (${totalDays} يوم)`) : `Active Trial (${totalDays} Days)`}</span>
                         </span>
@@ -670,7 +670,7 @@ export default function ProfileStatsView({
                       </div>
                       <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/60">
                         <div
-                          className={`h-full rounded-full transition-all duration-500 ${isUrgent ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 animate-pulse' : 'bg-gradient-to-r from-indigo-500 via-primary to-emerald-400'}`}
+                          className={`h-full rounded-full transition-all duration-500 ${isUrgent ? 'bg-gradient-to-r from-red-600 via-rose-500 to-red-400 animate-pulse' : 'bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#FCF6EE]'}`}
                           style={{ width: `${percent}%` }}
                         />
                       </div>
@@ -1549,7 +1549,7 @@ export default function ProfileStatsView({
                         onClick={() => setInfoSelectedBgCode(bg.id)}
                         className={`p-1.5 rounded-lg border text-center transition-all flex flex-col justify-between items-center relative overflow-hidden group ${
                           infoSelectedBgCode === bg.id
-                            ? 'border-indigo-400 bg-slate-900 ring-2 ring-indigo-500/10 text-white'
+                            ? 'border-[#2AC3BB] bg-slate-900 ring-2 ring-[#2AC3BB]/20 text-white'
                             : 'border-slate-800 bg-slate-950 hover:bg-slate-900/60 text-slate-400'
                         }`}
                       >
@@ -1562,7 +1562,7 @@ export default function ProfileStatsView({
                           {isAr ? bg.nameAr.split(' ')[0] + ' ' + (bg.nameAr.split(' ')[1] || '') : bg.nameEn}
                         </span>
                         {infoSelectedBgCode === bg.id && (
-                          <div className="absolute top-1 left-1 bg-indigo-500 text-white rounded-full p-0.5 leading-none shadow-xs shrink-0 z-10">
+                          <div className="absolute top-1 left-1 bg-[#007472] text-[#FCF6EE] rounded-full p-0.5 leading-none shadow-xs shrink-0 z-10">
                             <Check className="w-2 h-2 stroke-[3]" />
                           </div>
                         )}
@@ -1582,7 +1582,7 @@ export default function ProfileStatsView({
                   <button
                     type="submit"
                     disabled={isSavingInfo}
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-650 hover:from-purple-500 hover:to-indigo-600 text-white text-xs font-black shadow-md shadow-purple-650/15 cursor-pointer disabled:opacity-50 transition-all flex items-center gap-1.5"
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] hover:from-[#005e5c] hover:to-[#22a19b] text-white text-xs font-black shadow-md shadow-purple-650/15 cursor-pointer disabled:opacity-50 transition-all flex items-center gap-1.5"
                   >
                     {isSavingInfo ? (
                       <>
