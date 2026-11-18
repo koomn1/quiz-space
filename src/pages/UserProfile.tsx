@@ -1210,7 +1210,7 @@ export default function UserProfile({
       style={{ direction: isAr ? "rtl" : "ltr" }}
     >
       {/* 1. Profile Banner Header */}
-      <section className="relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20">
+      <section className="relative z-20 overflow-visible rounded-[30px] border border-slate-200/80 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20">
         <div className="h-36 sm:h-44 md:h-56 relative rounded-t-3xl overflow-visible">
           <GsapCoverBackground mode={chosenBg || "cosmic"} customImage={customBgUrl} />
 
@@ -1227,7 +1227,7 @@ export default function UserProfile({
 
           {Boolean(isPremium) && showLanyard && (
             <div
-              className="absolute inset-x-0 top-0 z-30 mx-auto h-[520px] w-[320px] sm:h-[580px] sm:w-[350px] md:h-[420px] md:w-[270px]"
+              className="pointer-events-auto absolute left-1/2 top-0 z-[60] h-[50svh] min-h-[360px] max-h-[500px] w-screen -translate-x-1/2 sm:h-[55vh] md:left-auto md:right-0 md:h-[420px] md:w-[270px] md:translate-x-0"
               aria-label={isAr ? "بطاقة الملف الشخصية" : "Profile card"}
             >
               <Lanyard
@@ -1237,7 +1237,7 @@ export default function UserProfile({
                 cardColor="#e8edf5"
                 finish="matte"
                 metal="silver"
-                size={0.72}
+                size={0.66}
                 strapLength={0.92}
                 interactive
                 intro
@@ -1249,7 +1249,7 @@ export default function UserProfile({
         </div>
 
         <div className="px-4 pb-6 sm:px-6 md:px-10 md:pb-8 relative">
-          <div className={`flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20 ${Boolean(isPremium) && showLanyard ? 'pt-[430px] sm:pt-[490px] md:pt-[150px]' : ''}`}>
+          <div className={`flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20 ${Boolean(isPremium) && showLanyard ? 'pt-[360px] sm:pt-[400px] md:pt-[150px]' : ''}`}>
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
               {!(Boolean(isPremium) && showLanyard) && (
