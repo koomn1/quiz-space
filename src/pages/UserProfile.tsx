@@ -46,6 +46,7 @@ import {
   getRewardInventory,
   getRewardStoreItems,
   redeemCouponForUser,
+  getCouponByCode,
   isTrialSubscription,
 } from '../lib/db';
 import {
@@ -370,17 +371,18 @@ export default function UserProfile({
     if (!couponCode.trim() || !currentUserId || isRedeemingCoupon) return;
     setIsRedeemingCoupon(true);
     try {
-      // redeemCouponForUser(couponObj.id, currentUserId, 'diamond', requestId)
-      const result = await redeemCouponForUser(couponCode.trim(), currentUserId);
-      if (result.success) {
-        showToast('success', isAr ? 'تم تفعيل الكوبون بنجاح!' : 'Coupon redeemed successfully!');
-        setCouponCode('');
-        await loadProfile();
-        if (onPremiumStatusChange) {
-          onPremiumStatusChange(true, result.plan_name);
-        }
-      } else {
-        showToast('error', result.message || (isAr ? 'الكوبون غير صالح.' : 'Invalid coupon.'));
+      const couponObj = await getCouponByCode(couponCode.trim());
+      if (!couponObj) {
+        showToast('error', isAr ? 'الكوبون غير موجود أو غير صالح.' : 'Coupon not found or invalid.');
+        return;
+      }
+      const requestId = `coupon_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      await redeemCouponForUser(couponObj.id, currentUserId, 'diamond', requestId);
+      showToast('success', isAr ? 'تم تفعيل الكوبون بنجاح!' : 'Coupon redeemed successfully!');
+      setCouponCode('');
+      await loadProfile();
+      if (onPremiumStatusChange) {
+        onPremiumStatusChange(true, 'Diamond Elite VIP');
       }
     } catch (err: any) {
       showToast('error', err?.message || (isAr ? 'فشل تفعيل الكوبون.' : 'Redemption failed.'));
@@ -479,10 +481,7 @@ export default function UserProfile({
                       nameColor={profileData?.nameColor as any}
                       badgeTier={profileData?.badgeTier as any}
                       badgeColor={profileData?.badgeColor as any}
-                      isPremium={profileData?.isPremium}
-                      planName={profileData?.planName}
-                      isLifetime={profileData?.isLifetime}
-                      isFounder={profileData?.isFounder}
+                      isPremium={Boolean(profileData?.isPremium)}
                     />
                   </h1>
                 </div>
@@ -510,7 +509,7 @@ export default function UserProfile({
                   )}
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    {profileData?.created_at ? new Date(profileData.created_at).toLocaleDateString() : (isAr ? 'عضو نشط' : 'Active Member')}
+                    {(profileData?.joinedDate || (profileData as any)?.created_at) ? new Date(profileData?.joinedDate || (profileData as any)?.created_at).toLocaleDateString() : (isAr ? 'عضو نشط' : 'Active Member')}
                   </span>
                 </div>
               </div>

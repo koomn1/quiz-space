@@ -53,14 +53,18 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
   if (!isOpen || questions.length === 0) return null;
 
   const currentQ = questions[currentIndex];
-  const correctAnswerText =
-    currentQ?.type === 'multiple'
-      ? currentQ.options?.[currentQ.correctAnswer as number] || String(currentQ.correctAnswer)
-      : currentQ?.type === 'boolean'
-      ? currentQ.correctAnswer === 0 || currentQ.correctAnswer === 'true' || currentQ.correctAnswer === true
-        ? (isAr ? 'صح' : 'True')
-        : (isAr ? 'خطأ' : 'False')
-      : String(currentQ?.correctAnswer || '');
+  let correctAnswerText = '';
+  if (currentQ) {
+    if (currentQ.type === 'mcq') {
+      const idx = typeof currentQ.correctIndex === 'number' ? currentQ.correctIndex : (Number(currentQ.correctAnswer) || 0);
+      correctAnswerText = currentQ.options?.[idx] || String(currentQ.correctAnswer || '');
+    } else if (currentQ.type === 'tf') {
+      const isTrue = currentQ.correctIndex === 0 || String(currentQ.correctAnswer).toLowerCase() === 'true';
+      correctAnswerText = isTrue ? (isAr ? 'صح' : 'True') : (isAr ? 'خطأ' : 'False');
+    } else {
+      correctAnswerText = String(currentQ.correctAnswer || '');
+    }
+  }
 
   const handleNext = () => {
     setIsFlipped(false);
@@ -124,7 +128,7 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
 
               <div className="my-auto text-center py-4">
                 <p className="text-lg sm:text-xl font-black leading-relaxed text-[#FCF6EE]">
-                  {currentQ?.question}
+                  {currentQ?.text}
                 </p>
               </div>
 

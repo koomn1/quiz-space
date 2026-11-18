@@ -1,3 +1,4 @@
+import { claimDailyEngagementReward } from '../lib/db';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Award, Bell, BookOpenCheck, CheckCheck, ChevronLeft, GraduationCap, Loader2, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
