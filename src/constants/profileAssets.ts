@@ -257,41 +257,7 @@ export const FREE_PROFILE_FRAMES: ProfileFrame[] = [
   },
 ];
 
-export const FRAME_ASSET_OVERRIDES: Record<string, string> = {
-  frame_free_1: profileAssetUrl('images/animated-frames/frame-nature-leaf.gif'),
-  frame_free_2: profileAssetUrl('images/animated-frames/frame-aurora.gif'),
-  frame_neon_orbit: profileAssetUrl('images/animated-frames/frame-neon-orbit.gif'),
-  frame_aurora: profileAssetUrl('images/animated-frames/frame-aurora.gif'),
-  frame_fire: profileAssetUrl('images/animated-frames/frame-fire.gif'),
-  frame_crystal_luxe: profileAssetUrl('images/animated-frames/frame-crystal-luxe.gif'),
-  frame_star_crown: profileAssetUrl('images/animated-frames/frame-star-crown.gif'),
-  offer_vip_combo: profileAssetUrl('images/animated-frames/frame-star-crown.gif'),
-  frame_diamond_comet: profileAssetUrl('images/animated-frames/frame-galaxy.gif'),
-  frame_diamond_crown: profileAssetUrl('images/animated-frames/frame-neon-orbit.gif'),
-  frame_diamond_halo: profileAssetUrl('images/animated-frames/frame-galaxy.gif'),
-  frame_royal_gold: profileAssetUrl('images/animated-frames/frame-royal-gold.gif'),
-  frame_cyber_punk: profileAssetUrl('images/animated-frames/frame-neon-orbit.gif'),
-  frame_nature_leaf: profileAssetUrl('images/animated-frames/frame-nature-leaf.gif'),
-  frame_galaxy: profileAssetUrl('images/animated-frames/frame-galaxy.gif'),
-  frame_ramadan_gold: profileAssetUrl('images/animated-frames/frame-aurora.gif'),
-  frame_ramadan_green: profileAssetUrl('images/animated-frames/frame-aurora.gif'),
-  frame_ramadan_lantern: profileAssetUrl('images/animated-frames/frame-aurora.gif'),
-  frame_school_stationary: profileAssetUrl('images/animated-frames/frame-school-bus.gif'),
-  frame_school_bus: profileAssetUrl('images/animated-frames/frame-school-bus.gif'),
-  frame_matrix: profileAssetUrl('images/animated-frames/frame-neon-orbit.gif'),
-  frame_back_to_school: profileAssetUrl('images/animated-frames/frame-school-bus.gif'),
-  frame_dragon_spirit: profileAssetUrl('images/animated-frames/frame-fire.gif'),
-  frame_legendary_dragon: profileAssetUrl('images/animated-frames/frame-fire.gif'),
-  frame_stone_royal: profileAssetUrl('images/animated-frames/frame-crystal-luxe.gif'),
-  frame_stone_moon: profileAssetUrl('images/animated-frames/frame-crystal-luxe.gif'),
-  frame_ice_glacier: profileAssetUrl('images/animated-frames/frame-crystal-luxe.gif'),
-  frame_ice_frost: profileAssetUrl('images/animated-frames/frame-crystal-luxe.gif'),
-  frame_aurora_neon: profileAssetUrl('images/animated-frames/frame-neon-orbit.gif'),
-  frame_royal_ember: profileAssetUrl('images/animated-frames/frame-royal-gold.gif'),
-  frame_cosmic_pulse: profileAssetUrl('images/animated-frames/frame-crystal-luxe.gif'),
-  frame_waves_quiz: profileAssetUrl('clean-assets-replacement/frame-waves-quizspace-transparent.svg'),
-  frame_sun_quiz: profileAssetUrl('clean-assets-replacement/frame-sun-quizspace-transparent.svg'),
-};
+export const FRAME_ASSET_OVERRIDES: Record<string, string> = {};
 
 export function uniqueProfileFrames<T extends { id?: string | null; image_url?: string | null }>(frames: T[]): T[] {
   const seenIds = new Set<string>();
@@ -309,5 +275,5 @@ export function uniqueProfileFrames<T extends { id?: string | null; image_url?: 
 
 export function resolveFrameAsset(frame: { id?: string | null; image_url?: string | null }): string {
   const override = frame.id ? FRAME_ASSET_OVERRIDES[frame.id] : undefined;
-  return override || profileAssetUrl(String(frame.image_url || ''));
+  return override || (frame.image_url ? profileAssetUrl(String(frame.image_url)) : '');
 }

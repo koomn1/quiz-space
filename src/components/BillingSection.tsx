@@ -72,12 +72,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         'حل الاختبارات العامة ومسابقات المجتمع',
         'توليد 3 اختبارات بالذكاء الاصطناعي أسبوعياً',
         'طباعة وتصدير ورقة الأسئلة PDF بجودة عادية',
-        'عجلة الحظ ومركز التحفيز اليومي'
+        'تخصيص الملف الشخصي ومتجر النقاط'
       ] : [
         'Take public quizzes & community challenges',
         'Generate 3 AI quizzes per week',
         'Standard PDF export & question printing',
-        'Daily motivation center & lucky spin'
+        'Profile customization & points store'
       ]
     },
     {

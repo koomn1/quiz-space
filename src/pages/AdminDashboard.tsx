@@ -12,7 +12,6 @@ import { decryptMessage } from '../lib/encryption';
 import { EssayReviewModal } from '../components/EssayReviewModal';
 
 import AdminSubscriptions from '../components/AdminSubscriptions';
-import AdminMotivationUsagePanel from '../components/AdminMotivationUsagePanel';
 import OverlayPortal from '../components/OverlayPortal';
 import {showToast, showAppMessage} from '../components/Toast';
 
@@ -52,7 +51,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
   const isAr = lang === 'ar';
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards' | 'motivation_usage'>(() => {
+  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards'>(() => {
     if (typeof window !== 'undefined' && (window.location.hash.includes('subscriptions') || window.location.hash.includes('payments'))) {
       return 'subscriptions';
     }
@@ -379,8 +378,7 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
     { id: 'subscriptions', name: isAr ? 'الاشتراكات' : 'Subscriptions', icon: Crown, badge: pendingPaymentCount > 0 ? pendingPaymentCount : null },
     { id: 'coupons', name: isAr ? 'الكوبونات' : 'Coupons', icon: Ticket },
     { id: 'ai_monitoring', name: isAr ? 'مراقبة الذكاء الاصطناعي' : 'AI Monitoring', icon: Activity },
-    { id: 'rewards', name: isAr ? 'النقاط والمتجر' : 'Rewards & Store', icon: Gift },
-    { id: 'motivation_usage', name: isAr ? 'استخدام التحفيز' : 'Motivation usage', icon: BarChart3 },
+    { id: 'rewards', name: isAr ? 'التخصيص والمتجر' : 'Customization & Store', icon: Gift },
     { id: 'settings', name: isAr ? 'الإعدادات' : 'Settings', icon: Settings },
   ];
 
@@ -1068,7 +1066,6 @@ export default function AdminDashboard({ quizzes, lang, onViewProfile, onEditQui
                   </section>
                 </div>
               )}
-              {activeAdminTab === 'motivation_usage' && <AdminMotivationUsagePanel lang={lang} />}
               {activeAdminTab === 'ai_monitoring' && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">

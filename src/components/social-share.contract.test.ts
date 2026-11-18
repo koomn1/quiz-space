@@ -4,7 +4,6 @@ import { resolve } from 'node:path';
 
 const read = (file: string) => readFileSync(resolve(process.cwd(), file), 'utf8');
 const shareModal = read('src/components/ShareModal.tsx');
-const motivationHub = read('src/components/MotivationHub.tsx');
 const siteHtml = read('index.html');
 const quizHtml = read('public/share/quiz.html');
 const workerSource = read('worker/src/index.ts');
@@ -20,11 +19,10 @@ describe('social sharing preview contract', () => {
     expect(shareModal).toContain('quiz-share-card.jpg');
   });
 
-  it('shares the site using the active app base and both social targets', () => {
-    expect(motivationHub).toContain('getAppBaseUrl()');
-    expect(motivationHub).toContain('wa.me/?text=');
-    expect(motivationHub).toContain('facebook.com/sharer/sharer.php?u=');
-    expect(motivationHub).toContain('siteShareText');
+  it('shares using the active app base and social targets', () => {
+    expect(shareModal).toContain('getAppBaseUrl()');
+    expect(shareModal).toContain('api.whatsapp.com/send?text=');
+    expect(shareModal).toContain('facebook.com/sharer/sharer.php?u=');
   });
 
   it('keeps user-facing quiz links on the clean share host', () => {

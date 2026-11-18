@@ -3824,6 +3824,24 @@ export async function deactivateRewardFrame() {
   return data;
 }
 
+export async function activateRewardQuizFrame(itemId: string) {
+  const { data, error } = await supabase.rpc('activate_reward_quiz_frame', { p_item_id: itemId });
+  if (error) return { success: false, message: error.message };
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('quizspace-quiz-frame-updated'));
+  }
+  return data;
+}
+
+export async function deactivateRewardQuizFrame() {
+  const { data, error } = await supabase.rpc('deactivate_reward_quiz_frame');
+  if (error) return { success: false, message: error.message };
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('quizspace-quiz-frame-updated'));
+  }
+  return data;
+}
+
 export async function purchaseRewardItem(itemId: string) {
   const { data, error } = await supabase.rpc('purchase_reward_item', { p_item_id: itemId });
   if (error) return { success: false, message: error.message };

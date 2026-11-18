@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Award, Bell, BookOpenCheck, CheckCheck, ChevronLeft, GraduationCap, Loader2, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { getNotificationGroup, matchesNotificationFilter, NotificationGroup } from '../lib/notificationPresentation';
-import { claimDailyEngagementReward, getDailyBrainChallenge, getLearningStreakStatus, getMotivationStatus } from '../lib/db';
-import { hasUsedLuckySpinToday } from '../lib/motivationData';
+
 import { pushNotificationsManager, PushNotificationPayload } from '../lib/pushNotifications';
 
 
@@ -60,12 +59,13 @@ export function NotificationDropdown({ userId, lang = 'ar', onNavigate }: { user
     try {
       setLoading(true);
       const today = new Date().toISOString().slice(0, 10);
-      const [notificationResult, motivation, brain, streak] = await Promise.all([
-        supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
-        getMotivationStatus().catch(() => null),
-        getDailyBrainChallenge().catch(() => null),
-        getLearningStreakStatus().catch(() => null),
-      ]);
+      const notificationResult = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
       if (!notificationResult.error && notificationResult.data) {
         const databaseNotifications = notificationResult.data as Notification[];
         const pushNotifications = pushNotificationsManager.getRecent().map(toAppNotification);
@@ -79,16 +79,10 @@ export function NotificationDropdown({ userId, lang = 'ar', onNavigate }: { user
       const dismissedKey = `quizspace_daily_notifications:${userId}:${today}`;
       const dismissed = new Set(parseJsonArray(localStorage.getItem(dismissedKey)));
       const daily: Notification[] = [];
-      if (!hasUsedLuckySpinToday(motivation)) daily.push({ id: `daily-lucky-${today}`, title: isAr ? 'عجلة الحظ تجددت اليوم' : 'Lucky wheel refreshed today', body: isAr ? 'دورتك المجانية جاهزة. افتح العجلة وابدأ مباشرة.' : 'Your free spin is ready. Open the wheel and start now.', type: 'daily_reward', actionTab: 'motivation-lucky', actionLabel: isAr ? 'افتح العجلة' : 'Open wheel', is_read: false, created_at: new Date().toISOString() });
-      if (Number(brain?.attempts_remaining ?? 1) > 0) daily.push({ id: `daily-brain-${today}`, title: isAr ? 'الاختبار اليومي تجدد' : 'Daily quiz refreshed', body: isAr ? 'اختبار جديد جاهز لك. اضغط للانتقال إليه مباشرة.' : 'A fresh daily quiz is ready. Go straight to it now.', type: 'daily_learning', actionTab: 'motivation-brain', actionLabel: isAr ? 'ابدأ الاختبار' : 'Start quiz', is_read: false, created_at: new Date().toISOString() });
-      if (streak && !streak.checkedInToday) daily.push({ id: `daily-streak-${today}`, title: isAr ? 'سجّل حضورك اليومي' : 'Keep your daily streak', body: isAr ? 'سجّل دخولك اليوم للحفاظ على سلسلة التعلم.' : 'Check in today to keep your learning streak alive.', type: 'daily_learning', actionTab: 'motivation', actionLabel: isAr ? 'سجّل الحضور' : 'Check in', is_read: false, created_at: new Date().toISOString() });
       const seenFeatures = new Set(parseJsonArray(localStorage.getItem(`quizspace_seen_features:${userId}`)));
       RELEASE_FEATURES.filter((feature) => !seenFeatures.has(feature.id)).forEach((feature) => daily.push({ id: feature.id, title: isAr ? feature.arTitle : feature.enTitle, body: isAr ? feature.arBody : feature.enBody, type: 'feature', actionTab: feature.tab, actionLabel: isAr ? 'جرّب الآن' : 'Try it now', is_read: false, created_at: new Date().toISOString() }));
       const visibleDaily = daily.filter((notification) => !dismissed.has(notification.id));
       setDailyNotifications(visibleDaily);
-      if (visibleDaily.length > 0) {
-        void claimDailyEngagementReward('notifications_opened').catch(() => undefined);
-      }
     } catch (err) {
       console.warn('Error loading notifications:', err);
     } finally {

@@ -7,7 +7,7 @@ import { playNotificationSound } from '../lib/sound';
 import CosmicLoader from '../components/CosmicLoader';
 import {showToast, showAppMessage} from '../components/Toast';
 import PageSkeleton from '../components/PageSkeleton';
-import type { MotivationSection } from '../pages/MotivationHubPage';
+
 
 function lazyWithRetry<T extends React.ComponentType<any>>(loader: () => Promise<{ default: T }>, routeKey: string) {
   return React.lazy(async () => {
@@ -74,7 +74,6 @@ const LazySettingsSection = lazyWithRetry(() => import('../components/ExtraFeatu
 const LazyLeaderboardSection = lazyWithRetry(() => import('../components/ExtraFeatures').then(module => ({ default: module.LeaderboardSection })), 'leaderboard');
 const LazyAIChat = lazyWithRetry(() => import('../pages/AIChat'), 'ai-chat');
 const LazyClassrooms = lazyWithRetry(() => import('../components/Classrooms'), 'classrooms');
-const LazyMotivationHubPage = lazyWithRetry(() => import('../pages/MotivationHubPage'), 'motivation-hub');
 const LazyStorePage = lazyWithRetry(() => import('../pages/StorePage'), 'store');
 
 export interface AppRoutesProps {
@@ -91,8 +90,6 @@ export interface AppRoutesProps {
   isAdminUser: boolean;
   isGuestSandbox: boolean;
   isGuestCreateRoute: boolean;
-  isGuestMotivationRoute: boolean;
-  motivationTabs: string[];
   isCosmoTab: boolean;
   isNotFoundTab: boolean;
   usesSharedFrame: boolean;
@@ -132,7 +129,7 @@ export interface AppRoutesProps {
 export default function AppRoutes(props: AppRoutesProps) {
   const {
     mainContainerRef, activeQuizId, activeTab, userId, userName, quizToEdit, userEmail, userPhoto, userPlanName,
-    isUserPremium, isAdminUser, isGuestSandbox, isGuestCreateRoute, isGuestMotivationRoute, motivationTabs,
+    isUserPremium, isAdminUser, isGuestSandbox, isGuestCreateRoute,
     isCosmoTab, isNotFoundTab, usesSharedFrame, isLoadingQuizzes, navKey, quizzes, completions, userStats,
     urlProfileId, viewMode, lang, darkMode, colorTheme, hasActiveMembership, authIsAuthenticated, handleSetTab,
     handleStartQuiz, handleExitQuiz, handleShareQuiz, handleToggleViewMode, fetchQuizzesList, setIsQuizLocked,
@@ -176,24 +173,6 @@ export default function AppRoutes(props: AppRoutesProps) {
                   lang={lang}
                 />
               )}
-              {motivationTabs.includes(activeTab) && (isGuestMotivationRoute ? (
-                <section className="mx-auto flex min-h-[54vh] max-w-xl flex-col items-center justify-center px-6 text-center" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-500/15 text-violet-600 dark:text-violet-300"><Sparkles className="h-8 w-8" /></div>
-                  <h1 className="mt-5 text-2xl font-black text-slate-900 dark:text-white">{lang === 'ar' ? 'سجّل الدخول لفتح مركز التحفيز' : 'Sign in to open Motivation Hub'}</h1>
-                  <p className="mt-3 max-w-md text-sm leading-7 text-slate-600 dark:text-slate-300">{lang === 'ar' ? 'المراجعة الذكية، المواسم، والتحديات الخاصة تحفظ تقدمك ومكافآتك على حسابك بشكل آمن.' : 'Smart review, seasons, and private challenges securely save your progress and rewards to your account.'}</p>
-                  <button type="button" onClick={() => { setLoginRedirectTab(activeTab); setAuthModalMode('register'); setIsAuthModalOpen(true); }} className="mt-7 min-h-11 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-black text-white transition hover:bg-violet-500">{lang === 'ar' ? 'التسجيل أو الدخول' : 'Sign in or register'}</button>
-                </section>
-              ) : (
-                <LazyMotivationHubPage
-                  userId={userId}
-                  userName={userName}
-                  isPremium={isUserPremium}
-                  planName={userPlanName}
-                  lang={lang}
-                  section={activeTab as MotivationSection}
-                  onNavigate={(section) => handleSetTab(section)}
-                />
-              ))}
               {activeTab === 'store' && (
                 <LazyStorePage
                   userId={userId}

@@ -63,10 +63,8 @@ describe('profile asset catalog', () => {
     expect(FREE_PROFILE_FRAMES.every((frame) => frame.image_url.includes('/clean-assets-replacement/'))).toBe(true);
   });
 
-  it('uses real animated GIF assets for active frame overrides', () => {
-    expect(FRAME_ASSET_OVERRIDES.frame_diamond_comet).toContain('/images/animated-frames/frame-galaxy.gif');
-    expect(FRAME_ASSET_OVERRIDES.frame_fire).toContain('/images/animated-frames/frame-fire.gif');
-    expect(Object.values(FRAME_ASSET_OVERRIDES).filter((asset) => asset.endsWith('.gif')).length).toBeGreaterThan(20);
+  it('ensures clean asset overrides without legacy animated GIF assets', () => {
+    expect(Object.keys(FRAME_ASSET_OVERRIDES)).toHaveLength(0);
   });
 
   it('drops duplicate frame IDs and duplicate resolved image assets without mutating the source', () => {
@@ -83,11 +81,11 @@ describe('profile asset catalog', () => {
     expect(source).toHaveLength(4);
   });
 
-  it('deduplicates legacy store rows after applying their replacement override', () => {
+  it('deduplicates store rows sharing the same image asset', () => {
     const frames = uniqueProfileFrames([
-      { id: 'frame_diamond_comet', image_url: 'images/old-comet.webp' },
-      { id: 'frame_diamond_crown', image_url: 'images/old-crown.webp' },
-      { id: 'frame_diamond_comet_copy', image_url: 'images/animated-frames/frame-galaxy.gif' },
+      { id: 'frame_diamond_comet', image_url: 'clean-assets-replacement/galaxy-ring-transparent.webp' },
+      { id: 'frame_diamond_crown', image_url: 'clean-assets-replacement/cyber-orbit-transparent.webp' },
+      { id: 'frame_diamond_comet_copy', image_url: 'clean-assets-replacement/galaxy-ring-transparent.webp' },
     ]);
     expect(frames.map((frame) => frame.id)).toEqual(['frame_diamond_comet', 'frame_diamond_crown']);
   });

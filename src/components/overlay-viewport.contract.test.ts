@@ -11,12 +11,12 @@ const authModal = readSource('components/AuthModal.tsx');
 const welcomeAuth = readSource('components/WelcomeAuthOverlay.tsx');
 const profileStats = readSource('components/ProfileStatsView.tsx');
 const adminDashboard = readSource('pages/AdminDashboard.tsx');
-const motivationHub = readSource('pages/MotivationHubPage.tsx');
+const independentStore = readSource('components/IndependentStore.tsx');
 
 describe('full-screen overlay viewport contract', () => {
   it('mounts overlays outside transformed page containers', () => {
     expect(overlayPortal).toContain('createPortal(children, document.body)');
-    for (const source of [quizCreator, drivePicker, shareModal, authModal, welcomeAuth, profileStats, adminDashboard, motivationHub]) {
+    for (const source of [quizCreator, drivePicker, shareModal, authModal, welcomeAuth, profileStats, adminDashboard, independentStore]) {
       expect(source).toContain('OverlayPortal');
     }
   });
@@ -29,6 +29,6 @@ describe('full-screen overlay viewport contract', () => {
     expect(shareModal).toContain('max-h-[min(720px,90dvh)]');
     expect(profileStats).toContain('max-h-[90dvh]');
     expect(adminDashboard).toContain('max-h-[90dvh] overflow-y-auto');
-    expect(motivationHub).toContain('overflow-y-auto overscroll-contain');
+    expect(independentStore).toContain('overflow-y-auto overscroll-contain');
   });
 });

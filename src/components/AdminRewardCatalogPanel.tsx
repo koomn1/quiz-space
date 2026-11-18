@@ -56,21 +56,20 @@ const itemPrice = (item: CatalogItem, isAr: boolean) => {
 };
 
 const itemImage = (item: CatalogItem) => {
+  if (item.image_url) return profileAssetUrl(item.image_url);
   const id = item.id.toLowerCase();
   if (item.item_type === 'frame') {
-    if (id.includes('fire') || id.includes('dragon')) return '/images/animated-frames/frame-fire.gif';
-    if (id.includes('galaxy') || id.includes('comet')) return '/images/animated-frames/frame-galaxy.gif';
-    if (id.includes('gold') || id.includes('royal')) return '/images/animated-frames/frame-royal-gold.gif';
-    if (id.includes('school') || id.includes('bus')) return '/images/animated-frames/frame-school-bus.gif';
-    if (id.includes('neon') || id.includes('cyber') || id.includes('matrix')) return '/images/animated-frames/frame-neon-orbit.gif';
-    if (id.includes('crystal')) return '/images/animated-frames/frame-crystal-luxe.gif';
-    if (id.includes('star') || id.includes('crown')) return '/images/animated-frames/frame-star-crown.gif';
     if (id.includes('waves')) return profileAssetUrl('clean-assets-replacement/frame-waves-quizspace-transparent.svg');
     if (id.includes('sun')) return profileAssetUrl('clean-assets-replacement/frame-sun-quizspace-transparent.svg');
-    return '/images/animated-frames/frame-aurora.gif';
+    if (id.includes('aurora')) return profileAssetUrl('clean-assets-replacement/svg-avatars/frame-aurora-neon.svg');
+    if (id.includes('ember') || id.includes('royal')) return profileAssetUrl('clean-assets-replacement/svg-avatars/frame-royal-ember.svg');
+    if (id.includes('pulse') || id.includes('cosmic')) return profileAssetUrl('clean-assets-replacement/svg-avatars/frame-cosmic-pulse.svg');
+    return profileAssetUrl('clean-assets-replacement/nature-leaf-transparent.webp');
   }
-  if (item.image_url) return profileAssetUrl(item.image_url);
-  return item.item_type === 'points_bundle' ? '/images/mystery_box.webp' : '/images/weekly_achievement.webp';
+  if (item.item_type === 'points_bundle') {
+    return profileAssetUrl('images/pass-gold.webp');
+  }
+  return profileAssetUrl('images/weekly_achievement.webp');
 };
 
 export default function AdminRewardCatalogPanel({ lang }: { lang: 'ar' | 'en' }) {

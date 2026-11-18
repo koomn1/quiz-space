@@ -1872,7 +1872,7 @@ export default function UserProfile({
                     </div>
                     )}
                     {!isFramesLoading && filteredOwnedFrames.length === 0 && (
-                      <p className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs font-bold text-slate-400 dark:border-slate-800">{isAr ? "لا توجد إطارات مطابقة. يمكنك شراء المزيد من مركز التحفيز." : "No matching frames. Visit Motivation Hub to get more."}</p>
+                      <p className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs font-bold text-slate-400 dark:border-slate-800">{isAr ? "لا توجد إطارات مطابقة. يمكنك تصفح المتجر للحصول على المزيد." : "No matching frames. Visit the Store to get more."}</p>
                     )}
                     <p className="text-[9px] font-bold text-slate-400">
                       {isAr ? "الإطارات المميزة تظهر بتأثيرات نبض وحركة جذابة في ملفك الشخصي." : "Premium frames can show subtle pulse and glow effects on your profile."}

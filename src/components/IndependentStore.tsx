@@ -42,31 +42,29 @@ const fallbackStoreImage = (item: Pick<StoreItem, 'item_type'>) => item.item_typ
   ? storeImageUrl('mystery_box.webp')
   : item.item_type === 'cosmetic'
     ? storeImageUrl('weekly_achievement.webp')
-    : storeImageUrl('animated-frames/frame-aurora.gif');
+    : profileAssetUrl('clean-assets-replacement/nature-leaf-transparent.webp');
 function getStoreItemImage(item: Pick<StoreItem, 'id' | 'item_type' | 'image_url'>): string {
+  if (item.image_url) return profileAssetUrl(item.image_url);
   const id = item.id.toLowerCase();
   if (item.item_type === 'frame') {
-    if (id.includes('fire') || id.includes('dragon')) return storeImageUrl('animated-frames/frame-fire.gif');
-    if (id.includes('diamond') || id.includes('galaxy') || id.includes('halo')) return storeImageUrl('animated-frames/frame-galaxy.gif');
-    if (id.includes('royal') || id.includes('gold')) return storeImageUrl('animated-frames/frame-royal-gold.gif');
-    if (id.includes('school') || id.includes('bus')) return storeImageUrl('animated-frames/frame-school-bus.gif');
-    if (id.includes('neon') || id.includes('cyber') || id.includes('matrix')) return storeImageUrl('animated-frames/frame-neon-orbit.gif');
-    if (id.includes('crystal')) return storeImageUrl('animated-frames/frame-crystal-luxe.gif');
-    if (id.includes('star') || id.includes('crown')) return storeImageUrl('animated-frames/frame-star-crown.gif');
     if (id.includes('waves')) return profileAssetUrl('clean-assets-replacement/frame-waves-quizspace-transparent.svg');
     if (id.includes('sun')) return profileAssetUrl('clean-assets-replacement/frame-sun-quizspace-transparent.svg');
-    return storeImageUrl('animated-frames/frame-aurora.gif');
+    if (id.includes('aurora')) return profileAssetUrl('clean-assets-replacement/svg-avatars/frame-aurora-neon.svg');
+    if (id.includes('ember') || id.includes('royal')) return profileAssetUrl('clean-assets-replacement/svg-avatars/frame-royal-ember.svg');
+    if (id.includes('pulse') || id.includes('cosmic')) return profileAssetUrl('clean-assets-replacement/svg-avatars/frame-cosmic-pulse.svg');
+    return profileAssetUrl('clean-assets-replacement/nature-leaf-transparent.webp');
   }
-  if (item.image_url) return profileAssetUrl(item.image_url);
-  if (item.item_type === 'points_bundle') return storeImageUrl(id.includes('diamond') ? 'pass-diamond.webp' : id.includes('gold') ? 'pass-gold.webp' : 'mystery_box.webp');
-  return storeImageUrl(id.includes('brain') ? 'brain_challenge.webp' : 'weekly_achievement.webp');
+  if (item.item_type === 'points_bundle') {
+    return storeImageUrl(id.includes('diamond') ? 'pass-diamond.webp' : id.includes('gold') ? 'pass-gold.webp' : 'mystery_box.webp');
+  }
+  return storeImageUrl('weekly_achievement.webp');
 }
 
 const labels = {
   ar: { store: 'متجر النقاط', points: 'نقطة', coins: 'عملة', frames: 'إطارات الصورة', bundles: 'باقات النقاط', owned: 'مملوك', buy: 'شراء بالنقاط', diamond: 'متاح للماسي فقط', paymentTitle: 'إتمام شراء النقاط', paymentHint: 'حوّل المبلغ ثم أرسل رقم العملية أو صورة الإيصال للمراجعة.', vodafone: 'Vodafone Cash', instapay: 'InstaPay', reference: 'رقم العملية', receipt: 'صورة الإيصال', sendOrder: 'إرسال الطلب', sending: 'جاري الإرسال...', cancel: 'إلغاء', orderSent: 'تم إرسال طلبك للمراجعة. ستضاف النقاط بعد التأكيد.', purchased: 'تمت الإضافة إلى مخزونك.', notEnough: 'رصيد النقاط غير كافٍ.' },
   en: { store: 'Points Store', points: 'points', coins: 'coins', frames: 'Profile frames', bundles: 'Points bundles', owned: 'Owned', buy: 'Buy with points', diamond: 'Diamond members only', paymentTitle: 'Buy points', paymentHint: 'Transfer the amount, then send the transaction reference or receipt for review.', vodafone: 'Vodafone Cash', instapay: 'InstaPay', reference: 'Transaction reference', receipt: 'Receipt image', sendOrder: 'Send order', sending: 'Sending...', cancel: 'Cancel', orderSent: 'Your order was sent for review. Points will be added after confirmation.', purchased: 'Added to your inventory.', notEnough: 'Not enough points.' },
 } as const;
-function RewardPill({ rewards, lang }: { rewards: StoreRewards; lang: 'ar' | 'en' }) { const t = labels[lang]; return <div className="flex flex-wrap items-center gap-2"><div className="flex min-h-10 items-center gap-1.5 rounded-2xl border border-amber-200/80 bg-white/90 px-3 py-2 text-xs font-black text-amber-800 shadow-sm dark:border-amber-900/60 dark:bg-slate-950/45 dark:text-amber-200"><Sparkles className="h-4 w-4" /> {rewards.points.toLocaleString()} {t.points}</div>{rewards.coins > 0 && <div className="flex min-h-10 items-center gap-1.5 rounded-2xl border border-sky-200/80 bg-white/90 px-3 py-2 text-xs font-black text-sky-800 shadow-sm dark:border-sky-900/60 dark:bg-slate-950/45 dark:text-sky-200"><Coins className="h-4 w-4" /> {rewards.coins.toLocaleString()} {t.coins}</div>}</div>; }
+function RewardPill({ rewards, lang }: { rewards: StoreRewards; lang: 'ar' | 'en' }) { const t = labels[lang]; return <div className="flex flex-wrap items-center gap-2"><div className="flex min-h-10 items-center gap-1.5 rounded-2xl border border-amber-200/80 bg-white/90 px-3 py-2 text-xs font-black text-amber-800 shadow-sm dark:border-amber-900/60 dark:bg-slate-950/45 dark:text-amber-200"><Coins className="h-4 w-4" /> {rewards.points.toLocaleString()} {t.points}</div>{rewards.coins > 0 && <div className="flex min-h-10 items-center gap-1.5 rounded-2xl border border-sky-200/80 bg-white/90 px-3 py-2 text-xs font-black text-sky-800 shadow-sm dark:border-sky-900/60 dark:bg-slate-950/45 dark:text-sky-200"><WalletCards className="h-4 w-4" /> {rewards.coins.toLocaleString()} {t.coins}</div>}</div>; }
 
 export function IndependentStore({ userId, isPremium, planName, rewards, onRewardsChanged, lang }: { userId: string; isPremium?: boolean; planName?: string; rewards: StoreRewards; onRewardsChanged: () => void; lang: 'ar' | 'en' }) {
   const t = labels[lang];

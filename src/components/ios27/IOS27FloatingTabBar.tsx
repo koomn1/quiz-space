@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Sparkles, Plus, BookOpen, LayoutGrid, X, GraduationCap, Building2, Flame, CreditCard, HelpCircle, ShieldAlert } from 'lucide-react';
+import { Home, Sparkles, Plus, BookOpen, LayoutGrid, X, GraduationCap, Building2, ShoppingBag, CreditCard, HelpCircle, ShieldAlert } from 'lucide-react';
 import { Sheet } from '../../ios27/components/Sheet';
 
 export interface IOS27FloatingTabBarProps {
@@ -25,7 +25,7 @@ export default function IOS27FloatingTabBar({
 
   const secondaryTools = [
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms', desc: isAr ? 'الواجبات والتحديات الطلابية' : 'Student assignments & live tests', icon: GraduationCap, color: 'text-blue-500 bg-blue-500/10' },
-    { id: 'motivation', label: isAr ? 'مركز التحفيز' : 'Motivation Hub', desc: isAr ? 'الرتب والنقاط والمواسم' : 'XP, streaks, ranks & store', icon: Flame, color: 'text-amber-500 bg-amber-500/10' },
+    { id: 'store', label: isAr ? 'المتجر' : 'Store', desc: isAr ? 'باقات النقاط والإطارات المميزة' : 'Points packages & premium frames', icon: ShoppingBag, color: 'text-amber-500 bg-amber-500/10' },
     { id: 'institution', label: isAr ? 'مساحة المؤسسة' : 'Institution Workspace', desc: isAr ? 'إدارة المدارس والجامعات' : 'Schools & Universities enterprise', icon: Building2, color: 'text-indigo-500 bg-indigo-500/10' },
     { id: 'billing', label: isAr ? 'باقات الاشتراك' : 'Subscription Plans', desc: isAr ? 'ترقية الحساب والوصول غير المحدود' : 'Upgrade to Pro & VIP', icon: CreditCard, color: 'text-emerald-500 bg-emerald-500/10' },
     { id: 'support', label: isAr ? 'الدعم والمساعدة' : 'Support', desc: isAr ? 'تواصل مع فريق الدعم الفني' : 'Technical help & FAQs', icon: HelpCircle, color: 'text-purple-500 bg-purple-500/10' },
@@ -132,7 +132,7 @@ export default function IOS27FloatingTabBar({
                 {isAr ? 'أدوات QuizSpace' : 'QuizSpace Tools'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {isAr ? 'استكشف الفصول والتحفيز والاشتراكات' : 'Classrooms, motivation & settings'}
+                {isAr ? 'استكشف الفصول والمتجر والاشتراكات' : 'Classrooms, store & settings'}
               </p>
             </div>
             <button

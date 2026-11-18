@@ -734,15 +734,6 @@ export default function App() {
   // Direct links can bypass handleSetTab(), so protect the create route during initial render.
   // Rendering QuizCreator without an authenticated user previously left the app blank in this case.
   const isGuestCreateRoute = activeTab === 'create' && !authContext.loading && !authContext.isAuthenticated && !userId;
-  const motivationTabs: string[] = [];
-  const isGuestMotivationRoute = motivationTabs.includes(activeTab) && !authContext.loading && !authContext.isAuthenticated && (!userId || userId.startsWith('user-guest'));
-
-  React.useEffect(() => {
-    if (!isGuestMotivationRoute) return;
-    setLoginRedirectTab(activeTab);
-    setAuthModalMode('register');
-    setIsAuthModalOpen(true);
-  }, [activeTab, isGuestMotivationRoute]);
 
   // Core sections keep the shared content frame, while independent screens
   // use their own full-screen surface. The global Header remains available
@@ -878,8 +869,6 @@ export default function App() {
           isAdminUser={isAdminUser}
           isGuestSandbox={isGuestSandbox}
           isGuestCreateRoute={isGuestCreateRoute}
-          isGuestMotivationRoute={isGuestMotivationRoute}
-          motivationTabs={motivationTabs}
           isCosmoTab={isCosmoTab}
           isNotFoundTab={isNotFoundTab}
           usesSharedFrame={usesSharedFrame}
