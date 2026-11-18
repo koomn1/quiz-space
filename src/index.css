@@ -113,6 +113,21 @@ body {
 
 button {
   @apply transition-[color,background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98];
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure button text adapts and stays legible across wallpapers and canvases */
+button[class*="bg-[#007472]"],
+[role="button"][class*="bg-[#007472]"],
+button[class*="from-[#007472]"],
+[role="button"][class*="from-[#007472]"] {
+  color: #FCF6EE !important;
+}
+
+button[class*="backdrop-blur"],
+a[class*="backdrop-blur"] {
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
 }
 
 button:focus-visible,

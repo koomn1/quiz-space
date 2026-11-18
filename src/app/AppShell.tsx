@@ -121,13 +121,13 @@ export default function AppShell(props: AppShellProps) {
               style={{ position: 'absolute', inset: 0, opacity: darkMode ? 0.4 : 0.25, pointerEvents: 'none' }}
             />
             {/* Light mode background elements */}
-            <div className="absolute inset-0 dark:hidden opacity-30">
+            <div className="absolute inset-0 dark:hidden opacity-40">
               <div
-                className="absolute -top-40 -left-40 w-[600px] h-[500px] bg-gradient-to-tr from-primary/15 via-emerald-500/5 to-purple-600/10 rounded-full filter blur-[120px] transition-all duration-[20s]"
+                className="absolute -top-40 -left-40 w-[600px] h-[500px] bg-gradient-to-tr from-[#007472]/20 via-[#2AC3BB]/15 to-[#EE8361]/10 rounded-full filter blur-[120px] transition-all duration-[20s]"
                 style={{ animation: 'pulse 12s infinite ease-in-out alternate' }}
               />
               <div
-                className="absolute -bottom-40 -right-40 w-[700px] h-[600px] bg-gradient-to-br from-indigo-500/10 via-teal-400/10 to-rose-500/5 rounded-full filter blur-[140px] transition-all duration-[25s]"
+                className="absolute -bottom-40 -right-40 w-[700px] h-[600px] bg-gradient-to-br from-[#2AC3BB]/15 via-[#007472]/15 to-[#EE8361]/10 rounded-full filter blur-[140px] transition-all duration-[25s]"
                 style={{ animation: 'pulse 15s infinite ease-in-out alternate-reverse' }}
               />
             </div>
@@ -135,13 +135,13 @@ export default function AppShell(props: AppShellProps) {
             {/* Dark mode background elements */}
             <div className="absolute inset-0 hidden dark:block opacity-100">
               {/* Glowing Orbs */}
-              <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-sky-600/10 blur-[120px] mix-blend-screen" />
-              <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-cyan-400/5 blur-[120px] mix-blend-screen" />
-              <div className="absolute top-[30%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-cyan-500/10 blur-[120px] mix-blend-screen" />
+              <div className="absolute top-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#007472]/20 blur-[130px] mix-blend-screen" />
+              <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-[#2AC3BB]/15 blur-[120px] mix-blend-screen" />
+              <div className="absolute top-[30%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-[#EE8361]/10 blur-[120px] mix-blend-screen" />
             </div>
           </div>
 
-          <div className={`absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/10 to-transparent pointer-events-none ${isCosmoTab ? 'hidden' : ''}`} />
+          <div className={`absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-[#007472]/5 dark:from-[#007472]/15 to-transparent pointer-events-none ${isCosmoTab ? 'hidden' : ''}`} />
 
           {/* Padding applied here to clear the fixed header for all banners and main content */}
           <div className={`app-shell-content ${isCosmoTab ? 'app-shell-content--chat h-[calc(100dvh-4.5rem-env(safe-area-inset-top))] pt-[calc(env(safe-area-inset-top)+4.5rem)] sm:h-[calc(100dvh-5rem-env(safe-area-inset-top))] sm:pt-[calc(env(safe-area-inset-top)+5rem)] overflow-hidden flex-1 min-h-0' : (showAppHeader ? 'pt-[calc(env(safe-area-inset-top)+4.75rem)] sm:pt-[calc(env(safe-area-inset-top)+5rem)] md:pt-24' : 'pt-0')} flex flex-col w-full relative z-10`}>

@@ -120,28 +120,6 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
             <span>{isAr ? 'استكشف الاختبارات' : 'Explore quizzes'}</span>
           </button>
         </div>
-
-        {/* Fluid Hero Live Showcase Display — Containerless */}
-        <div className="mt-12 sm:mt-16 relative max-w-4xl mx-auto">
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
-            <img
-              src={productAsset('/showcase/home-dashboard.webp')}
-              alt={isAr ? 'لقطة حقيقية من الصفحة الرئيسية لمنصة QuizSpace' : 'Real QuizSpace home page screenshot'}
-              loading="eager"
-              className="w-full aspect-[16/10] object-cover object-top"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
-
-            <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6 left-4 sm:left-auto p-4 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 text-right text-white max-w-xs">
-              <p className="font-display font-black text-xs sm:text-sm">
-                {isAr ? 'لوحة واحدة لكل ما يهمك' : 'One dashboard for what matters'}
-              </p>
-              <p className="text-[11px] text-slate-300 mt-1 font-medium">
-                {isAr ? 'اختبارات، مهام، ومتابعة تقدمك' : 'Quizzes, tasks, and progress tracking'}
-              </p>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* Feature Showcase Grid — Laid directly on the Floor ("على الأرض") */}

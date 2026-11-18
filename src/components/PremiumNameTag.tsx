@@ -106,10 +106,10 @@ export function PremiumNameTag({
   const preset = NAME_COLOR_PRESETS[effectiveColor];
 
   return (
-    <span className={`inline-flex items-center gap-1 ${className || ''}`}>
+    <span className={`inline-flex items-center gap-1.5 font-['Alexandria','Cairo','IBM_Plex_Sans_Arabic',sans-serif] tracking-tight ${className || ''}`}>
       <span
         style={preset.style}
-        className={preset.animClass || ''}
+        className={`font-black ${preset.animClass || ''}`}
       >
         {name}
       </span>

@@ -483,7 +483,7 @@ export default function LandingPage({
                 key={prompt}
                 type="button"
                 onClick={() => setAiPromptInput(prompt)}
-                className="text-[11px] font-semibold px-3 py-1 rounded-full text-slate-700 dark:text-slate-300 hover:text-sky-500 dark:hover:text-sky-400 bg-black/5 dark:bg-white/5 hover:bg-sky-500/10 transition-colors cursor-pointer border border-black/5 dark:border-white/5"
+                className="text-[11px] font-semibold px-3 py-1 rounded-full text-slate-700 dark:text-slate-300 hover:text-[#2AC3BB] bg-black/5 dark:bg-white/5 hover:bg-[#2AC3BB]/10 transition-colors cursor-pointer border border-black/5 dark:border-white/5"
               >
                 {prompt}
               </button>
@@ -610,7 +610,7 @@ export default function LandingPage({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={isAr ? 'ابحث باسم الاختبار، الموضوع، أو اسم المعلم...' : 'Search quizzes by title, topic, or creator...'}
-            className="w-full pr-11 pl-10 py-3 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500/40 backdrop-blur-md transition-all shadow-xs"
+            className="w-full pr-11 pl-10 py-3 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold focus:outline-none focus:ring-2 focus:ring-[#2AC3BB]/40 backdrop-blur-md transition-all shadow-xs"
           />
           {searchQuery && (
             <button
@@ -680,7 +680,7 @@ export default function LandingPage({
             <button
               type="button"
               onClick={() => onCreateQuizTab()}
-              className="mt-5 min-h-[44px] px-6 rounded-full bg-sky-500 text-white font-bold text-xs shadow-md shadow-sky-500/20 cursor-pointer hover:bg-sky-400 transition-colors"
+              className="mt-5 min-h-[44px] px-6 rounded-full bg-[#007472] hover:bg-[#005e5c] text-[#FCF6EE] font-black text-xs shadow-md shadow-[#007472]/20 cursor-pointer transition-colors"
             >
               {isAr ? 'إنشاء اختبار الآن' : 'Create Quiz Now'}
             </button>
@@ -698,7 +698,7 @@ export default function LandingPage({
               return (
                 <div
                   key={quiz.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-[28px] border border-slate-200/90 bg-white/[0.78] p-4 text-right shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-sky-400/60 hover:bg-white/[0.96] hover:shadow-[0_20px_46px_rgba(14,165,233,0.14)] dark:border-white/10 dark:bg-slate-900/60 dark:hover:border-sky-400/40 dark:hover:bg-slate-900/85 sm:p-5"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-[28px] border border-slate-200/90 bg-white/[0.78] p-4 text-right shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#2AC3BB]/50 hover:bg-white/[0.96] hover:shadow-[0_20px_46px_rgba(0,116,114,0.14)] dark:border-white/10 dark:bg-[#072424]/70 dark:hover:border-[#2AC3BB]/40 dark:hover:bg-[#072424]/90 sm:p-5"
                 >
                   <div>
                     {/* Top Status Strip: Solvers count, Questions count & Owner Actions */}
@@ -715,7 +715,7 @@ export default function LandingPage({
                           </span>
                         </span>
 
-                        <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/15 bg-sky-500/10 px-2 py-1.5 text-[10px] font-bold text-sky-700 dark:text-sky-300">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-[#2AC3BB]/20 bg-[#2AC3BB]/10 px-2 py-1.5 text-[10px] font-bold text-[#007472] dark:text-[#2AC3BB]">
                           <span>{questionsCount} {isAr ? 'سؤالاً' : 'Q’s'}</span>
                         </span>
 
@@ -784,7 +784,7 @@ export default function LandingPage({
                     {/* Quiz Title */}
                     <h3
                       onClick={() => onStartQuiz(quiz.id)}
-                      className="line-clamp-2 cursor-pointer font-display text-lg font-black leading-[1.35] text-slate-950 transition-colors group-hover:text-sky-600 dark:text-white dark:group-hover:text-sky-300 sm:text-xl"
+                      className="line-clamp-2 cursor-pointer font-display text-lg font-black leading-[1.35] text-slate-950 transition-colors group-hover:text-[#2AC3BB] dark:text-[#FCF6EE] sm:text-xl"
                     >
                       {quiz.title}
                     </h3>
@@ -796,7 +796,7 @@ export default function LandingPage({
 
                     {/* Duration badge */}
                     <div className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                      <Clock className="w-3 h-3 text-sky-400" />
+                      <Clock className="w-3 h-3 text-[#2AC3BB]" />
                       <span>{isAr ? `الزمن المقدر: ~${estMinutes} دقائق` : `Est. time: ~${estMinutes} mins`}</span>
                     </div>
                   </div>
@@ -838,7 +838,7 @@ export default function LandingPage({
                           nameColor={quiz.creatorNameColor as any}
                           badgeColor={quiz.creatorBadgeColor as any}
                           badgeSize="sm"
-                          className="max-w-[130px] truncate text-[11px] font-black group-hover/creator:text-sky-400"
+                          className="max-w-[130px] truncate text-[11px] font-black group-hover/creator:text-[#2AC3BB]"
                         />
                         <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
                           {isAr ? 'صانع الاختبار' : 'Quiz Creator'}

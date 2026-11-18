@@ -1094,9 +1094,35 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
   }
 }
 
+export interface SaveUserProfileOptions {
+  userId: string;
+  name: string;
+  photoURL?: string;
+  email?: string;
+  bio?: string;
+  location?: string;
+  badgeSymbol?: string;
+  badgeColor?: string;
+  customId?: string;
+  planId?: string;
+  isPremium?: boolean;
+  planName?: string;
+  isLifetime?: boolean;
+  isFounder?: boolean;
+  isSuspended?: boolean;
+  categoryId?: string;
+  renewalDate?: string;
+  phone?: string;
+  gender?: 'male' | 'female';
+  birthdate?: string;
+  onboarded?: boolean;
+  activeFrameId?: string;
+  activeQuizFrameId?: string;
+}
+
 export async function saveUserProfile(
-  userId: string,
-  name: string,
+  userIdOrOptions: string | SaveUserProfileOptions,
+  name?: string,
   photoURL?: string,
   email?: string,
   bio?: string,
@@ -1119,6 +1145,35 @@ export async function saveUserProfile(
   activeFrameId?: string,
   activeQuizFrameId?: string,
 ): Promise<void> {
+  let userId = '';
+  if (typeof userIdOrOptions === 'object' && userIdOrOptions !== null) {
+    userId = userIdOrOptions.userId;
+    name = userIdOrOptions.name;
+    photoURL = userIdOrOptions.photoURL;
+    email = userIdOrOptions.email;
+    bio = userIdOrOptions.bio;
+    location = userIdOrOptions.location;
+    badgeSymbol = userIdOrOptions.badgeSymbol;
+    badgeColor = userIdOrOptions.badgeColor;
+    customId = userIdOrOptions.customId;
+    planId = userIdOrOptions.planId;
+    isPremium = userIdOrOptions.isPremium;
+    planName = userIdOrOptions.planName;
+    isLifetime = userIdOrOptions.isLifetime;
+    isFounder = userIdOrOptions.isFounder;
+    isSuspended = userIdOrOptions.isSuspended;
+    categoryId = userIdOrOptions.categoryId;
+    renewalDate = userIdOrOptions.renewalDate;
+    phone = userIdOrOptions.phone;
+    gender = userIdOrOptions.gender;
+    birthdate = userIdOrOptions.birthdate;
+    onboarded = userIdOrOptions.onboarded;
+    activeFrameId = userIdOrOptions.activeFrameId;
+    activeQuizFrameId = userIdOrOptions.activeQuizFrameId;
+  } else {
+    userId = String(userIdOrOptions || '');
+  }
+
   if (!userId) return;
   if (!isSupabaseConfigured) {
     throw new Error('Supabase is not configured; cannot save user profile.');
@@ -1128,26 +1183,18 @@ export async function saveUserProfile(
     uid: userId,
     id: userId,
     name,
-    // Guarded like custom_id: only touch these when the caller explicitly
-    // provides them, so an unrelated name/bio save can't wipe out the badge
-    // color that update_badge_and_name_color() set separately.
     badge_symbol: badgeSymbol !== undefined ? badgeSymbol : undefined,
     badge_color: badgeColor !== undefined ? badgeColor : undefined,
-    // Preserve existing username if caller doesn't provide one.
     custom_id: customId !== undefined ? customId : undefined,
     active_frame_id: activeFrameId !== undefined ? activeFrameId : undefined,
     active_quiz_frame_id: activeQuizFrameId !== undefined ? activeQuizFrameId : undefined,
     updated_at: new Date().toISOString(),
   };
 
-  // The sign-in synchronizer only knows identity fields. Leaving profile
-  // fields out of its partial update preserves a user's bio and custom cover.
   if (email !== undefined) updatedUser.email = email;
   if (bio !== undefined) updatedUser.bio = bio;
   if (location !== undefined) updatedUser.location = location;
 
-  // Keep a dedicated, recoverable copy of the custom cover in sync with the
-  // serialized profile settings. Explicit removal clears the fallback value.
   if (location !== undefined && location.includes('||customBg:')) {
     const match = location.match(/\|\|customBg:([^|]*)/);
     updatedUser.cover_url = match?.[1]?.trim() || null;

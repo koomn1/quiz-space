@@ -8,6 +8,7 @@ import {
   Camera,
   Check,
   CheckCircle2,
+  Coins,
   Copy,
   Crown,
   Edit3,
@@ -35,6 +36,7 @@ import {
 } from 'lucide-react';
 import {
   getUserProfileStats,
+  getRewardsSummary,
   saveUserProfile,
   uploadAvatar,
   uploadCoverImage,
@@ -154,20 +156,26 @@ export default function UserProfile({
     []
   );
 
+  const [userCoins, setUserCoins] = useState<number>(0);
+  const [userPoints, setUserPoints] = useState<number>(0);
+
   // Load profile data
   const loadProfile = useCallback(async () => {
     const targetId = profileId || currentUserId;
     if (!targetId) return;
     setIsLoading(true);
     try {
-      const stats = await getUserProfileStats(targetId);
-      setProfileData(stats);
-
-      // Load frames catalog and ownership
-      const [inventory, catalog] = await Promise.all([
+      const [stats, rewardsSummary, inventory, catalog] = await Promise.all([
+        getUserProfileStats(targetId),
+        getRewardsSummary(targetId).catch(() => null),
         getRewardInventory(targetId).catch(() => []),
         getRewardStoreItems().catch(() => []),
       ]);
+      setProfileData(stats);
+      if (rewardsSummary) {
+        setUserCoins(rewardsSummary.coins || 0);
+        setUserPoints(rewardsSummary.points || 0);
+      }
       const ownedIds = new Set((inventory || []).map((row: any) => row.item_id));
       const catalogFrames = [
         ...FREE_PROFILE_FRAMES,
@@ -297,17 +305,16 @@ export default function UserProfile({
         }
       }
 
-      await saveUserProfile(
-        currentUserId,
-        editName,
-        editPhoto || undefined,
-        currentUserEmail || undefined,
-        editBio,
-        editLocation,
-        undefined,
-        editCustomId || undefined,
-        editPhone || undefined
-      );
+      await saveUserProfile({
+        userId: currentUserId,
+        name: editName,
+        photoURL: editPhoto || undefined,
+        email: currentUserEmail || undefined,
+        bio: editBio,
+        location: editLocation,
+        customId: editCustomId || undefined,
+        phone: editPhone || undefined,
+      });
 
       onUpdateName?.(editName);
       if (editPhoto) onUpdatePhoto?.(editPhoto);
@@ -512,6 +519,29 @@ export default function UserProfile({
                     {(profileData?.joinedDate || (profileData as any)?.created_at) ? new Date(profileData?.joinedDate || (profileData as any)?.created_at).toLocaleDateString() : (isAr ? 'عضو نشط' : 'Active Member')}
                   </span>
                 </div>
+
+                {/* Coins & Rewards Pills */}
+                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                  <div
+                    onClick={() => onNavigate?.('store')}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/40 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 px-3 py-1 text-xs font-black text-amber-700 dark:text-amber-300 shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
+                    title={isAr ? 'العملات الذهبية - افتح المتجر' : 'Coins - Open store'}
+                  >
+                    <Coins className="h-3.5 w-3.5 text-amber-500" />
+                    <span>{(userCoins || 0).toLocaleString()}</span>
+                    <span className="text-[10px] font-bold text-amber-600/80 dark:text-amber-300/80">{isAr ? 'عملة' : 'Coins'}</span>
+                  </div>
+
+                  <div
+                    onClick={() => onNavigate?.('store')}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-3 py-1 text-xs font-black text-[#007472] dark:text-[#2AC3BB] shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
+                    title={isAr ? 'نقاط المكافآت' : 'Points'}
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-[#2AC3BB]" />
+                    <span>{(userPoints || 0).toLocaleString()}</span>
+                    <span className="text-[10px] font-bold text-[#007472]/70 dark:text-[#2AC3BB]/70">{isAr ? 'نقطة' : 'Pts'}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -529,7 +559,13 @@ export default function UserProfile({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onNavigate ? onNavigate('customization') : setActiveTab('edit')}
+                    onClick={() => {
+                      if (onNavigate) {
+                        onNavigate('customization');
+                      } else {
+                        window.location.hash = 'customization';
+                      }
+                    }}
                     className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-4 py-2.5 text-xs font-black text-[#007472] dark:text-[#2AC3BB] transition hover:bg-[#2AC3BB]/20"
                   >
                     <Palette className="h-4 w-4 text-[#2AC3BB]" />
@@ -548,12 +584,28 @@ export default function UserProfile({
             </div>
           </div>
 
-          {/* Bio statement */}
-          {profileData?.bio && (
-            <p className="mt-4 max-w-2xl text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
-              {profileData.bio}
-            </p>
-          )}
+          {/* Highlighted Bio Card */}
+          {profileData?.bio ? (
+            <div className="mt-5 max-w-2xl rounded-2xl border border-[#2AC3BB]/30 bg-white/70 dark:bg-[#072424]/80 p-4 shadow-sm backdrop-blur-md relative overflow-hidden">
+              <div className="flex items-center gap-2 mb-2 text-[#007472] dark:text-[#2AC3BB]">
+                <User className="h-4 w-4 text-[#EE8361]" />
+                <span className="text-[11px] font-black uppercase tracking-wider">{isAr ? 'النبذة الشخصية' : 'About Me'}</span>
+              </div>
+              <p className="text-xs sm:text-sm font-semibold leading-relaxed text-slate-800 dark:text-[#FCF6EE] whitespace-pre-wrap">
+                {profileData.bio}
+              </p>
+            </div>
+          ) : isOwnProfile ? (
+            <div
+              onClick={handleOpenEdit}
+              className="mt-4 max-w-2xl rounded-2xl border border-dashed border-[#2AC3BB]/35 bg-[#2AC3BB]/[0.03] p-3 text-center cursor-pointer hover:bg-[#2AC3BB]/[0.08] transition"
+            >
+              <p className="text-xs font-bold text-[#007472] dark:text-[#2AC3BB] flex items-center justify-center gap-1.5">
+                <Edit3 className="h-3.5 w-3.5 text-[#EE8361]" />
+                <span>{isAr ? 'أضف نبذة شخصية تعرّف بها عن نفسك في المنصة...' : 'Add a personal bio to introduce yourself...'}</span>
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
 

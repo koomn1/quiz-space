@@ -385,6 +385,7 @@ export default function AppRoutes(props: AppRoutesProps) {
                     }
                   }}
                   onOpenBilling={() => handleSetTab('billing')}
+                  onNavigate={handleSetTab}
                 />
               )}
 

@@ -1,4 +1,3 @@
-import PageWallpaper from './PageWallpaper';
 import { showAppMessage } from './Toast';
 /**
  * @license
@@ -1227,15 +1226,7 @@ export default function QuizResolver({
       className={`quiz-resolver-shell relative isolate mx-auto max-w-3xl space-y-4 overflow-hidden rounded-[2rem] pb-8 pb-28 sm:space-y-6 sm:pb-32 print:bg-white print:p-0 ${
         isZenMode ? '!fixed !inset-0 !z-[60] !max-w-none !h-[100dvh] !rounded-none !bg-[var(--color-theme-canvas,#031717)] !p-4 sm:!p-8 !overflow-y-auto' : ''
       }`}
-      style={{
-        '--quiz-wallpaper-pc': `url("${appBaseUrl}backgrounds/quiz-wallpaper-pc.webp")`,
-        '--quiz-wallpaper-phone': `url("${appBaseUrl}backgrounds/quiz-wallpaper-phone.webp")`,
-      } as React.CSSProperties}
     >
-      <PageWallpaper
-        src={`${appBaseUrl}images/quiz-resolver-bg.jpg`}
-        overlayClassName={isZenMode ? "bg-[#031717]/92 backdrop-blur-[1.5px]" : "bg-white/88 dark:bg-[#031717]/88 backdrop-blur-[1.5px]"}
-      />
 
       {/* Sleek top progress bar tracking percentage of completed questions */}
       {!isQuizCompleted && (
