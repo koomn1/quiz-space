@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Award, Bell, BookOpenCheck, CheckCheck, GraduationCap, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
+import { Award, Bell, BookOpenCheck, CheckCheck, ChevronLeft, GraduationCap, Loader2, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { getNotificationGroup, matchesNotificationFilter, NotificationGroup } from '../lib/notificationPresentation';
 import { claimDailyEngagementReward, getDailyBrainChallenge, getLearningStreakStatus, getMotivationStatus } from '../lib/db';
@@ -25,9 +25,16 @@ type Notification = {
   type: string;
   is_read: boolean;
   created_at: string;
+  actionTab?: string;
+  actionLabel?: string;
 };
 
-export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; lang?: 'ar' | 'en' }) {
+const RELEASE_FEATURES = [
+  { id: 'release-quiz-frames-20261118', tab: 'profile', arTitle: 'ميزة جديدة: إطارات بطاقات الاختبارات', enTitle: 'New: Premium quiz card frames', arBody: 'فعّل إطارًا متحركًا حول اختباراتك من إعدادات الملف الشخصي.', enBody: 'Enable an animated frame around your quizzes from Profile settings.' },
+  { id: 'release-cosmo-effort-20261118', tab: 'aichat', arTitle: 'جرّب مستويات التفكير في Cosmo', enTitle: 'Try Cosmo thinking levels', arBody: 'اختَر مستوى السرعة أو التوازن أو العمق قبل التوليد.', enBody: 'Choose Fast, Balanced, or Deep before generating.' },
+];
+
+export function NotificationDropdown({ userId, lang = 'ar', onNavigate }: { userId: string; lang?: 'ar' | 'en'; onNavigate?: (tab: string) => void }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -72,9 +79,11 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
       const dismissedKey = `quizspace_daily_notifications:${userId}:${today}`;
       const dismissed = new Set(parseJsonArray(localStorage.getItem(dismissedKey)));
       const daily: Notification[] = [];
-      if (!hasUsedLuckySpinToday(motivation)) daily.push({ id: `daily-lucky-${today}`, title: isAr ? 'عجلة الحظ متاحة اليوم' : 'Lucky wheel is ready today', body: isAr ? 'لديك دورة مجانية اليوم. افتح العجلة وجرب حظك.' : 'Your free daily spin is ready. Open the wheel and try your luck.', type: 'daily_reward', is_read: false, created_at: new Date().toISOString() });
-      if (Number(brain?.attempts_remaining ?? 1) > 0) daily.push({ id: `daily-brain-${today}`, title: isAr ? 'السؤال اليومي جاهز' : 'Daily question is ready', body: isAr ? 'أجب عن سؤال اليوم واحصل على مكافأتك.' : 'Answer today’s question and earn your reward.', type: 'daily_learning', is_read: false, created_at: new Date().toISOString() });
-      if (streak && !streak.checkedInToday) daily.push({ id: `daily-streak-${today}`, title: isAr ? 'سجّل حضورك اليومي' : 'Keep your daily streak', body: isAr ? 'سجّل دخولك اليوم للحفاظ على سلسلة التعلم.' : 'Check in today to keep your learning streak alive.', type: 'daily_learning', is_read: false, created_at: new Date().toISOString() });
+      if (!hasUsedLuckySpinToday(motivation)) daily.push({ id: `daily-lucky-${today}`, title: isAr ? 'عجلة الحظ تجددت اليوم' : 'Lucky wheel refreshed today', body: isAr ? 'دورتك المجانية جاهزة. افتح العجلة وابدأ مباشرة.' : 'Your free spin is ready. Open the wheel and start now.', type: 'daily_reward', actionTab: 'motivation-lucky', actionLabel: isAr ? 'افتح العجلة' : 'Open wheel', is_read: false, created_at: new Date().toISOString() });
+      if (Number(brain?.attempts_remaining ?? 1) > 0) daily.push({ id: `daily-brain-${today}`, title: isAr ? 'الاختبار اليومي تجدد' : 'Daily quiz refreshed', body: isAr ? 'اختبار جديد جاهز لك. اضغط للانتقال إليه مباشرة.' : 'A fresh daily quiz is ready. Go straight to it now.', type: 'daily_learning', actionTab: 'motivation-brain', actionLabel: isAr ? 'ابدأ الاختبار' : 'Start quiz', is_read: false, created_at: new Date().toISOString() });
+      if (streak && !streak.checkedInToday) daily.push({ id: `daily-streak-${today}`, title: isAr ? 'سجّل حضورك اليومي' : 'Keep your daily streak', body: isAr ? 'سجّل دخولك اليوم للحفاظ على سلسلة التعلم.' : 'Check in today to keep your learning streak alive.', type: 'daily_learning', actionTab: 'motivation', actionLabel: isAr ? 'سجّل الحضور' : 'Check in', is_read: false, created_at: new Date().toISOString() });
+      const seenFeatures = new Set(parseJsonArray(localStorage.getItem(`quizspace_seen_features:${userId}`)));
+      RELEASE_FEATURES.filter((feature) => !seenFeatures.has(feature.id)).forEach((feature) => daily.push({ id: feature.id, title: isAr ? feature.arTitle : feature.enTitle, body: isAr ? feature.arBody : feature.enBody, type: 'feature', actionTab: feature.tab, actionLabel: isAr ? 'جرّب الآن' : 'Try it now', is_read: false, created_at: new Date().toISOString() }));
       const visibleDaily = daily.filter((notification) => !dismissed.has(notification.id));
       setDailyNotifications(visibleDaily);
       if (visibleDaily.length > 0) {
@@ -185,6 +194,20 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
     }
   };
 
+  const openNotification = (notification: Notification) => {
+    void markNotificationAsRead(notification.id);
+    if (notification.id.startsWith('release-')) {
+      const seenKey = `quizspace_seen_features:${userId}`;
+      const seen = new Set(parseJsonArray(localStorage.getItem(seenKey)));
+      seen.add(notification.id);
+      localStorage.setItem(seenKey, JSON.stringify([...seen]));
+    }
+    if (notification.actionTab && onNavigate) {
+      onNavigate(notification.actionTab);
+      setIsOpen(false);
+    }
+  };
+
   const getGroupIcon = (type: string) => {
     const group = getNotificationGroup(type);
     if (group === 'rewards') return <Award className="h-4 w-4 text-amber-500" />;
@@ -270,10 +293,12 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
               </div>
             ) : (
               filteredNotifications.map((notif) => (
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   key={notif.id}
-                  onClick={() => void markNotificationAsRead(notif.id)}
+                  onClick={() => openNotification(notif)}
+                  onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') openNotification(notif); }}
                   className={`flex flex-col gap-1 rounded-2xl p-3 text-start transition hover:-translate-y-0.5 hover:shadow-xs ${
                     notif.id.startsWith('daily-')
                       ? 'border border-primary/25 bg-gradient-to-br from-primary/10 to-accent/10 shadow-xs dark:border-primary/30 dark:from-primary/15 dark:to-accent/15'
@@ -283,7 +308,7 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-2 text-xs font-black text-slate-900 dark:text-white">{getGroupIcon(notif.type)}<span className="truncate">{notif.title}</span>{notif.id.startsWith('daily-') && <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-black text-white">{isAr ? 'اليوم' : 'TODAY'}</span>}</span>
+                    <span className="flex min-w-0 items-center gap-2 text-xs font-black text-slate-900 dark:text-white">{notif.id.startsWith('release-') ? <Zap className="h-4 w-4 shrink-0 text-fuchsia-500" /> : getGroupIcon(notif.type)}<span className="truncate">{notif.title}</span>{notif.id.startsWith('daily-') && <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-black text-white">{isAr ? 'اليوم' : 'TODAY'}</span>}</span>
                     <span className="text-[10px] text-slate-400">
                       {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
@@ -291,7 +316,8 @@ export function NotificationDropdown({ userId, lang = 'ar' }: { userId: string; 
                   <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
                     {notif.body || notif.message || (isAr ? 'لا توجد تفاصيل إضافية.' : 'No additional details.')}
                   </p>
-                </button>
+                  {notif.actionTab && <button type="button" onClick={(event) => { event.stopPropagation(); openNotification(notif); }} className="mt-2 inline-flex min-h-9 w-fit items-center gap-1 rounded-xl bg-primary px-3 text-[10px] font-black text-white shadow-sm hover:brightness-110">{notif.actionLabel || (isAr ? 'فتح الآن' : 'Open now')}<ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" /></button>}
+                </div>
               ))
             )}
           </div>

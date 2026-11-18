@@ -1088,7 +1088,7 @@ export default function App() {
         />
 
         {/* Real-time Admin Payment Alert Toast */}
-        <AdminPaymentNotificationToast
+        {isAdminUser && <AdminPaymentNotificationToast
           alert={paymentAlert}
           alerts={paymentAlerts}
           pendingPaymentCount={pendingPaymentCount}
@@ -1104,7 +1104,7 @@ export default function App() {
             }
           }}
           lang={lang}
-        />
+        />}
         </>
       )}
     

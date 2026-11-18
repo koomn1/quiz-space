@@ -220,7 +220,7 @@ export default function Header({
               )}
 
               {/* Notification Dropdown */}
-              {!isGuest && <NotificationDropdown userId={userId} lang={lang} />}
+              {!isGuest && <NotificationDropdown userId={userId} lang={lang} onNavigate={setTab} />}
 
 
 
