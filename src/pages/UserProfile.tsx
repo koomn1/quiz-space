@@ -59,6 +59,10 @@ import {
   resolveProfileImageUrl,
   uniqueProfileFrames,
 } from '../constants/profileAssets';
+import { readLanyardVisibility, writeLanyardVisibility } from '../lib/profileLocation';
+import Lanyard from '../components/lanyard/Lanyard';
+import lanyardFrontImage from '../components/lanyard/card-front.webp';
+import lanyardStrapImage from '../components/lanyard/lanyard.png';
 import { PremiumNameTag } from '../components/PremiumNameTag';
 import { showToast } from '../components/Toast';
 import SpotlightCard from '../components/SpotlightCard';
@@ -158,6 +162,8 @@ export default function UserProfile({
 
   const [userCoins, setUserCoins] = useState<number>(0);
   const [userPoints, setUserPoints] = useState<number>(0);
+  const [showLanyard, setShowLanyard] = useState<boolean>(false);
+  const [isTogglingLanyard, setIsTogglingLanyard] = useState<boolean>(false);
 
   // Load profile data
   const loadProfile = useCallback(async () => {
@@ -172,6 +178,11 @@ export default function UserProfile({
         getRewardStoreItems().catch(() => []),
       ]);
       setProfileData(stats);
+      if (stats?.location) {
+        setShowLanyard(readLanyardVisibility(stats.location));
+      } else {
+        setShowLanyard(false);
+      }
       if (rewardsSummary) {
         setUserCoins(rewardsSummary.coins || 0);
         setUserPoints(rewardsSummary.points || 0);
@@ -279,6 +290,58 @@ export default function UserProfile({
                         setIsEditing(true);
   };
 
+  const isPremium = Boolean(profileData?.isPremium);
+
+  // Toggle 3D Lanyard ID Card (Exclusive for Subscription Members)
+  const handleToggleLanyard = async () => {
+    if (!isPremium) {
+      showToast(
+        'info',
+        isAr
+          ? 'قلادة الهوية ثلاثية الأبعاد (3D Lanyard) ميزة حصرية لأعضاء الاشتراكات المميزة.'
+          : '3D Lanyard ID card is an exclusive perk for subscription members.'
+      );
+      if (onOpenBilling) {
+        onOpenBilling();
+      } else {
+        setActiveTab('membership');
+      }
+      return;
+    }
+
+    setIsTogglingLanyard(true);
+    const nextState = !showLanyard;
+    setShowLanyard(nextState);
+
+    try {
+      const currentLocation = profileData?.location || '';
+      const updatedLocation = writeLanyardVisibility(currentLocation, nextState);
+      await saveUserProfile({
+        userId: currentUserId,
+        name: profileData?.name || currentUserName,
+        photoURL: profileData?.photoURL || undefined,
+        email: currentUserEmail || undefined,
+        bio: profileData?.bio,
+        location: updatedLocation,
+        customId: profileData?.customId || undefined,
+        phone: profileData?.phone || undefined,
+      });
+      setProfileData((prev) => (prev ? { ...prev, location: updatedLocation } : null));
+      showToast(
+        'success',
+        nextState
+          ? (isAr ? 'تم تفعيل وإظهار قلادة الهوية 3D بنجاح في ملفك!' : '3D Lanyard ID card enabled on your profile!')
+          : (isAr ? 'تم إخفاء قلادة الهوية 3D.' : '3D Lanyard ID card hidden.')
+      );
+    } catch (err: any) {
+      console.error('[UserProfile] Failed to toggle lanyard:', err);
+      setShowLanyard(!nextState);
+      showToast('error', isAr ? 'تعذر حفظ حالة القلادة.' : 'Failed to update lanyard setting.');
+    } finally {
+      setIsTogglingLanyard(false);
+    }
+  };
+
   // Save profile changes
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -305,13 +368,15 @@ export default function UserProfile({
         }
       }
 
+      const finalLocation = writeLanyardVisibility(editLocation, showLanyard);
+
       await saveUserProfile({
         userId: currentUserId,
         name: editName,
         photoURL: editPhoto || undefined,
         email: currentUserEmail || undefined,
         bio: editBio,
-        location: editLocation,
+        location: finalLocation,
         customId: editCustomId || undefined,
         phone: editPhone || undefined,
       });
@@ -420,6 +485,28 @@ export default function UserProfile({
     <div ref={containerRef} dir={isAr ? 'rtl' : 'ltr'} className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 space-y-6">
       {/* 1. HERO & IDENTITY BANNER */}
       <div className="gsap-hero relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
+        {/* 3D Lanyard Interactive Hanging ID Card (Subscribers Only) */}
+        {isPremium && showLanyard && (
+          <div
+            className="pointer-events-auto absolute end-3 sm:end-8 top-0 z-30 h-[340px] sm:h-[400px] md:h-[440px] w-44 sm:w-56 md:w-64"
+            aria-label={isAr ? 'قلادة الهوية ثلاثية الأبعاد' : '3D Lanyard ID Card'}
+          >
+            <Lanyard
+              frontImage={resolveProfileImageUrl(profileData?.photoURL) || lanyardFrontImage}
+              backImage={`${import.meta.env.BASE_URL}brand/quizspace-card-back.webp`}
+              strapImage={lanyardStrapImage}
+              cardColor="#031717"
+              finish="glossy"
+              metal="silver"
+              size={0.65}
+              strapLength={0.90}
+              interactive={true}
+              intro={true}
+              className="h-full w-full"
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
+        )}
         {/* Cover Photo / Graphic */}
         <div className="relative h-48 w-full overflow-hidden bg-gradient-to-r from-[#031717] via-[#007472] to-[#0a2f2e] sm:h-56">
           {profileData?.coverUrl ? (
@@ -549,6 +636,47 @@ export default function UserProfile({
             <div className="flex flex-wrap items-center gap-2.5">
               {isOwnProfile ? (
                 <>
+                  {/* 3D Lanyard ID Card Button - Subscriptions Only */}
+                  <button
+                    type="button"
+                    onClick={handleToggleLanyard}
+                    disabled={isTogglingLanyard}
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition-all active:scale-98 cursor-pointer ${
+                      isPremium
+                        ? showLanyard
+                          ? 'bg-gradient-to-r from-[#007472] to-[#2AC3BB] text-[#FCF6EE] shadow-md shadow-[#2AC3BB]/20 ring-2 ring-[#2AC3BB]/60'
+                          : 'border border-[#2AC3BB]/40 bg-[#007472]/15 text-[#007472] dark:text-[#2AC3BB] hover:bg-[#007472]/25'
+                        : 'border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/15'
+                    }`}
+                    title={
+                      isPremium
+                        ? (showLanyard
+                            ? (isAr ? 'إخفاء قلادة الهوية 3D' : 'Hide 3D Lanyard')
+                            : (isAr ? 'إظهار قلادة الهوية 3D' : 'Show 3D Lanyard'))
+                        : (isAr ? 'قلادة الهوية 3D - ميزة حصرية لمشتركي الباقات فقط' : '3D Lanyard - Exclusive for subscribers only')
+                    }
+                  >
+                    {isPremium ? (
+                      <>
+                        <Sparkles className={`h-4 w-4 ${showLanyard ? 'text-[#EE8361] animate-pulse' : 'text-[#2AC3BB]'}`} />
+                        <span>
+                          {showLanyard
+                            ? (isAr ? 'قلادة الـ ID: مفعّلة' : '3D Lanyard: ON')
+                            : (isAr ? 'تفعيل قلادة الـ ID' : 'Enable 3D Lanyard')}
+                        </span>
+                        {isTogglingLanyard && <Loader2 className="h-3 w-3 animate-spin ms-1" />}
+                      </>
+                    ) : (
+                      <>
+                        <Crown className="h-4 w-4 text-amber-500" />
+                        <span>{isAr ? 'قلادة الـ ID' : '3D Lanyard'}</span>
+                        <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-black text-amber-600 dark:text-amber-300 border border-amber-500/30">
+                          VIP
+                        </span>
+                      </>
+                    )}
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleOpenEdit}
@@ -1005,6 +1133,65 @@ export default function UserProfile({
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-cyan-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                   />
                 </div>
+              </div>
+
+              {/* 3D Lanyard ID Card Option (Subscribers Only) */}
+              <div className="rounded-2xl border border-[#2AC3BB]/30 bg-[#007472]/5 dark:bg-[#007472]/15 p-4 flex items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB] shrink-0 mt-0.5">
+                    {isPremium ? <Sparkles className="h-4 w-4 text-[#EE8361]" /> : <Crown className="h-4 w-4 text-amber-500" />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs font-black text-slate-900 dark:text-[#FCF6EE]">
+                        {isAr ? 'قلادة الهوية ثلاثية الأبعاد (3D Lanyard)' : '3D Lanyard ID Card'}
+                      </h4>
+                      {!isPremium && (
+                        <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-black text-amber-600 dark:text-amber-300 border border-amber-500/30">
+                          VIP
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-[#8BAEAD]">
+                      {isPremium
+                        ? (isAr
+                            ? 'إظهار بطاقة الهوية المعلقة التفاعلية ثلاثية الأبعاد في أعلى ملفك الشخصي.'
+                            : 'Display a draggable 3D physics ID card on your profile.')
+                        : (isAr
+                            ? 'ميزة حصرية متاحة فقط لأعضاء الاشتراكات المميزة.'
+                            : 'Exclusive feature available only to subscription members.')}
+                    </p>
+                  </div>
+                </div>
+
+                {isPremium ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowLanyard(!showLanyard)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      showLanyard ? 'bg-[#2AC3BB]' : 'bg-slate-300 dark:bg-slate-700'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        showLanyard ? (isAr ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      if (onOpenBilling) onOpenBilling();
+                      else setActiveTab('membership');
+                    }}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm hover:brightness-110"
+                  >
+                    <Crown className="h-3 w-3" />
+                    <span>{isAr ? 'ترقية' : 'Upgrade'}</span>
+                  </button>
+                )}
               </div>
 
               {/* Submit Buttons */}

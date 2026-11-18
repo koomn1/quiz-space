@@ -45,7 +45,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
     setIsExporting(true);
     try {
       const html2canvasModule = await import('html2canvas');
-      const html2canvas = html2canvasModule.default || html2canvasModule;
+      const html2canvas = (html2canvasModule.default || html2canvasModule) as any;
       const canvas = await html2canvas(cardRef.current, {
         scale: 2.5,
         useCORS: true,
