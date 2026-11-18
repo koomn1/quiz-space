@@ -16,6 +16,14 @@ import { EssayReviewModal } from './EssayReviewModal';
 gsap.registerPlugin(useGSAP);
 // Keep the modal and print window independent from transformed/overflow-hidden card ancestors.
 
+const QUIZ_FRAME_CLASSES: Record<string, string> = {
+  quiz_frame_electric: 'quiz-frame-electric',
+  quiz_frame_aurora: 'quiz-frame-aurora',
+  quiz_frame_cyber: 'quiz-frame-cyber',
+  quiz_frame_crystal: 'quiz-frame-crystal',
+  quiz_frame_solar: 'quiz-frame-solar',
+};
+
 interface InteractiveQuizCardProps {
   quiz: Quiz;
   idx?: number;
@@ -52,6 +60,7 @@ export function InteractiveQuizCard({
   isAdmin: isAdminProp = false
 }: InteractiveQuizCardProps) {
   const isAr = isArProp !== undefined ? isArProp : lang === 'ar';
+  const quizFrameClass = quiz.creatorIsPremium ? (QUIZ_FRAME_CLASSES[quiz.creatorQuizFrameId || ''] || '') : '';
   const isGuest = !currentUserId || currentUserId.startsWith('user-');
   const canEdit = !isGuest && (isAdminProp || quiz.creatorId === currentUserId);
   // Attempt details are available to the quiz creator and the super-admin;
@@ -417,7 +426,7 @@ export function InteractiveQuizCard({
       <ParallaxTiltCard
         idx={idx}
         onClick={handleCardClick}
-        className="glass-card hover:border-primary/45 dark:hover:border-primary/50 p-4 rounded-[20px] hover:shadow-[0_12px_24px_rgba(99,102,241,0.06)] hover:scale-[1.015] duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4 overflow-hidden relative"
+        className={`glass-card ${quizFrameClass} hover:border-primary/45 dark:hover:border-primary/50 p-4 rounded-[20px] hover:shadow-[0_12px_24px_rgba(99,102,241,0.06)] hover:scale-[1.015] duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4 overflow-hidden relative`}
       >
         <div className="absolute -inset-[1px] rounded-[20px] bg-gradient-to-r from-primary/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 pointer-events-none" />
         <div className="flex-1 flex flex-col md:flex-row md:items-center gap-4">
@@ -554,7 +563,7 @@ export function InteractiveQuizCard({
     <ParallaxTiltCard
       idx={idx}
       onClick={handleCardClick}
-      className="uipro-clay-card rounded-[28px] duration-300 ease-out flex flex-col justify-between overflow-hidden group relative cursor-pointer"
+      className={`uipro-clay-card ${quizFrameClass} rounded-[28px] duration-300 ease-out flex flex-col justify-between overflow-hidden group relative cursor-pointer`}
     >
       {/* Soft Specular Light Highlight on Hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-cyan-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none -z-10 rounded-[28px]"></div>

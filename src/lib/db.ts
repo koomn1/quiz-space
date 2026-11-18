@@ -365,6 +365,8 @@ function mapQuizRow(row: any): Quiz {
     creatorBadgeTier: row.creator_badge_tier || 'none',
     creatorBadgeColor: row.creator_badge_color || 'blue',
     creatorNameColor: row.creator_name_color || 'default',
+    creatorQuizFrameId: row.creator_quiz_frame_id || '',
+    creatorIsPremium: row.creator_is_premium === true,
     questions,
     totalPlays: row.total_plays,
     avgRating: row.avg_rating,
@@ -463,19 +465,19 @@ export async function getQuizzes(): Promise<Quiz[]> {
       // Keep creator branding current without reading the protected users table.
       const creatorIds = Array.from(new Set(dbQuizzes.map((quiz) => quiz.creatorId).filter(Boolean)));
       if (creatorIds.length > 0) {
-        const { data: profiles, error: profilesError } = await supabase
-          .from('public_profiles')
-          .select('uid, photo_url')
-          .in('uid', creatorIds);
+        const { data: allProfiles, error: profilesError } = await supabase.rpc('get_public_profiles');
+        const profiles = (allProfiles || []).filter((profile: any) => creatorIds.includes(profile.uid));
         if (profilesError) {
           console.warn('Could not enrich quiz creator avatars:', profilesError.message);
         } else {
-          const profileById = new Map(
-            (profiles || []).map((profile: any) => [profile.uid, resolveProfileImageUrl(profile.photo_url)]),
+          const profileById = new Map<string, any>(
+            (profiles || []).map((profile: any) => [profile.uid, profile]),
           );
           dbQuizzes = dbQuizzes.map((quiz) => ({
             ...quiz,
-            creatorPhotoURL: profileById.get(quiz.creatorId) || quiz.creatorPhotoURL || '',
+            creatorPhotoURL: resolveProfileImageUrl(profileById.get(quiz.creatorId)?.photo_url) || quiz.creatorPhotoURL || '',
+            creatorQuizFrameId: profileById.get(quiz.creatorId)?.active_quiz_frame_id || '',
+            creatorIsPremium: profileById.get(quiz.creatorId)?.is_premium === true,
           }));
         }
       }
@@ -1026,7 +1028,7 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
   try {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     const isOwnProfile = authUser?.id === userId;
-    const profileColumns = 'uid, custom_id, name, email, photo_url, is_premium, plan_name, plan_id, renewal_date, is_lifetime, is_founder, is_suspended, category_id, bio, location, cover_url, phone, active_frame_id, is_admin, badge_tier, name_color, badge_color, xp';
+    const profileColumns = 'uid, custom_id, name, email, photo_url, is_premium, plan_name, plan_id, renewal_date, is_lifetime, is_founder, is_suspended, category_id, bio, location, cover_url, phone, active_frame_id, active_quiz_frame_id, is_admin, badge_tier, name_color, badge_color, xp';
     let userRow: any = null;
     let userError: any = null;
     if (isOwnProfile) {
@@ -1075,6 +1077,7 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       coverUrl: userRow?.cover_url || '',
       phone: userRow?.phone || '',
       activeFrameId: userRow?.active_frame_id || '',
+      activeQuizFrameId: userRow?.active_quiz_frame_id || '',
       isAdmin: userRow?.is_admin || false,
       // Never surface a badge/color for a non-premium user, even if the row
       // still has a stale value from a lapsed subscription.
@@ -1082,7 +1085,7 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       nameColor: userRow?.is_premium ? normalizeNameColor(userRow?.name_color) : 'default',
       badgeColor: userRow?.is_premium ? normalizeBadgeColor(userRow?.badge_color) : 'blue',
       xp: userRow?.xp || 0,
-      createdQuizzes: (createdQuizzes || []).map(mapQuizRow),
+      createdQuizzes: (createdQuizzes || []).map((quiz: any) => ({ ...mapQuizRow(quiz), creatorQuizFrameId: userRow?.active_quiz_frame_id || '', creatorIsPremium: userRow?.is_premium === true })),
       completions: completions || [],
     } as UserStats;
   } catch (e) {
@@ -1114,6 +1117,7 @@ export async function saveUserProfile(
   birthdate?: string,
   onboarded?: boolean,
   activeFrameId?: string,
+  activeQuizFrameId?: string,
 ): Promise<void> {
   if (!userId) return;
   if (!isSupabaseConfigured) {
@@ -1132,6 +1136,7 @@ export async function saveUserProfile(
     // Preserve existing username if caller doesn't provide one.
     custom_id: customId !== undefined ? customId : undefined,
     active_frame_id: activeFrameId !== undefined ? activeFrameId : undefined,
+    active_quiz_frame_id: activeQuizFrameId !== undefined ? activeQuizFrameId : undefined,
     updated_at: new Date().toISOString(),
   };
 

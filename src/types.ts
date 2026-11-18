@@ -26,6 +26,8 @@ export interface Quiz {
   creatorBadgeTier?: string;
   creatorBadgeColor?: string;
   creatorNameColor?: string;
+  creatorQuizFrameId?: string;
+  creatorIsPremium?: boolean;
   questions: Question[];
   createdAt: string;
   totalPlays: number;
@@ -446,6 +448,7 @@ export interface UserStats {
   isFollowing?: boolean;
   phone?: string;
   activeFrameId?: string;
+  activeQuizFrameId?: string;
   isAdmin?: boolean;
   badgeTier?: 'none' | 'verified' | 'pro' | 'premium' | 'team' | 'enterprise' | 'lifetime' | 'founder' | 'royal';
   nameColor?: 'default' | 'gold' | 'neon_green' | 'neon_pink' | 'neon_blue' | 'silver' | 'diamond';

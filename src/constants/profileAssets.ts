@@ -127,6 +127,21 @@ export interface ProfileFrame {
   is_free?: boolean;
 }
 
+export interface QuizCardFrameOption {
+  id: string;
+  name: string;
+  nameAr: string;
+  previewClass: string;
+}
+
+export const PREMIUM_QUIZ_CARD_FRAMES: QuizCardFrameOption[] = [
+  { id: 'quiz_frame_electric', name: 'Electric Wave', nameAr: 'الموجة الكهربائية', previewClass: 'quiz-frame-electric' },
+  { id: 'quiz_frame_aurora', name: 'Aurora Flow', nameAr: 'انسياب الشفق', previewClass: 'quiz-frame-aurora' },
+  { id: 'quiz_frame_cyber', name: 'Cyber Circuit', nameAr: 'الدائرة السيبرانية', previewClass: 'quiz-frame-cyber' },
+  { id: 'quiz_frame_crystal', name: 'Crystal Prism', nameAr: 'منشور الكريستال', previewClass: 'quiz-frame-crystal' },
+  { id: 'quiz_frame_solar', name: 'Solar Pulse', nameAr: 'نبض شمسي', previewClass: 'quiz-frame-solar' },
+];
+
 export const FREE_PROFILE_FRAMES: ProfileFrame[] = [
   {
     id: 'frame_free_1',

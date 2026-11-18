@@ -47,7 +47,7 @@ import { SocialSupportLinks } from "../components/SocialSupportLinks";
 import { ProfileQuickBadgeRail } from "../components/ProfileQuickBadgeRail";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
-import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, resolveProfileImageUrl, uniqueProfileFrames } from "../constants/profileAssets";
+import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, PREMIUM_QUIZ_CARD_FRAMES, resolveFrameAsset, resolveProfileImageUrl, uniqueProfileFrames } from "../constants/profileAssets";
 import { readLanyardVisibility, writeLanyardVisibility } from "../lib/profileLocation";
 import Lanyard from "../components/lanyard/Lanyard";
 import lanyardFrontImage from "../components/lanyard/card-front.webp";
@@ -193,12 +193,16 @@ export default function UserProfile({
   const activeFrameIsAnimated = /\.gif(?:$|[?#])/i.test(activeFrameUrl);
   const [ownedFrames, setOwnedFrames] = React.useState<any[]>([]);
   const [editFrameId, setEditFrameId] = React.useState('');
+  const [editQuizFrameId, setEditQuizFrameId] = React.useState('');
   const [isFramesLoading, setIsFramesLoading] = React.useState(false);
   const [isAvatarUploading, setIsAvatarUploading] = React.useState(false);
   const [avatarCompressionPercent, setAvatarCompressionPercent] = React.useState<number | null>(null);
   const [avatarFilter, setAvatarFilter] = React.useState<'all' | 'boy' | 'girl'>('all');
   const [avatarSearch, setAvatarSearch] = React.useState('');
   const [frameSearch, setFrameSearch] = React.useState('');
+  React.useEffect(() => {
+    setEditQuizFrameId(profileData?.activeQuizFrameId || '');
+  }, [profileData?.activeQuizFrameId]);
   const profileCompletions = profileData?.completions || [];
   const profileAccuracy = profileCompletions.length > 0
     ? Math.round((profileCompletions.reduce((total, completion) => total + (completion.totalQuestions > 0 ? completion.score / completion.totalQuestions : 0), 0) / profileCompletions.length) * 100)
@@ -798,6 +802,7 @@ export default function UserProfile({
         // active_frame_id is intentionally NOT passed here: the users-table
         // policy rejects direct frame writes even for owned frames — activation
         // must go through activate_reward_frame() below.
+        editQuizFrameId,
       );
       if (!editPhotoURL && profileData?.photoURL) await clearAvatar(profileId);
 
@@ -855,6 +860,7 @@ export default function UserProfile({
               customId: editCustomId,
               location: serializedLocation,
               activeFrameId: editFrameId || null,
+              activeQuizFrameId: isPremium ? (editQuizFrameId || null) : null,
             } as any)
           : null,
       );
@@ -1862,6 +1868,30 @@ export default function UserProfile({
                     <p className="text-[9px] font-bold text-slate-400">
                       {isAr ? "الإطارات المميزة تظهر بتأثيرات نبض وحركة جذابة في ملفك الشخصي." : "Premium frames can show subtle pulse and glow effects on your profile."}
                     </p>
+
+                    <div className="border-t border-slate-100 pt-4 dark:border-slate-800/60">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div>
+                          <h5 className="text-xs font-black text-slate-700 dark:text-slate-200">{isAr ? 'إطار بطاقات الاختبارات' : 'Quiz card frame'}</h5>
+                          <p className="mt-1 text-[10px] font-bold text-slate-400">{isAr ? 'يظهر حول اختباراتك للطلاب عند تفعيله.' : 'Shown around your quizzes when enabled.'}</p>
+                        </div>
+                        {!isPremium && <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[9px] font-black text-amber-600">{isAr ? 'للمشتركين' : 'Premium only'}</span>}
+                      </div>
+                      {isPremium ? (
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                          <button type="button" onClick={() => setEditQuizFrameId('')} className={`quiz-frame-option ${!editQuizFrameId ? 'is-selected' : ''}`} aria-label={isAr ? 'بدون إطار للاختبارات' : 'No quiz frame'}>
+                            <span className="text-[10px] font-black text-slate-400">{isAr ? 'بدون' : 'None'}</span>
+                          </button>
+                          {PREMIUM_QUIZ_CARD_FRAMES.map((frame) => (
+                            <button key={frame.id} type="button" onClick={() => setEditQuizFrameId(frame.id)} className={`quiz-frame-option ${frame.previewClass} ${editQuizFrameId === frame.id ? 'is-selected' : ''}`} aria-label={isAr ? `اختيار ${frame.nameAr}` : `Choose ${frame.name}`} title={isAr ? frame.nameAr : frame.name}>
+                              <span className="relative z-10 text-center text-[10px] font-black text-white drop-shadow-md">{isAr ? frame.nameAr : frame.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="rounded-xl border border-dashed border-amber-300/60 bg-amber-50/60 p-3 text-[10px] font-bold text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/20 dark:text-amber-300">{isAr ? 'فعّل أي باقة مميزة لاستخدام إطارات بطاقات الاختبارات.' : 'Activate a premium plan to use quiz card frames.'}</p>
+                      )}
+                    </div>
                   </div>
 	              </div>
 	            </div>
