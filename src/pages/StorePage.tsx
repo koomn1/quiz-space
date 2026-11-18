@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ArrowLeft, Store } from 'lucide-react';
 import { getRewardsSummary } from '../lib/db';
-import { StorePanel, type Rewards } from './MotivationHubPage';
+import { IndependentStore, type StoreRewards } from '../components/IndependentStore';
 
 type StorePageProps = {
   userId: string;
@@ -14,7 +14,7 @@ type StorePageProps = {
 
 export default function StorePage({ userId, userName, isPremium, planName, lang, onNavigate }: StorePageProps) {
   const isAr = lang === 'ar';
-  const [rewards, setRewards] = React.useState<Rewards>({ points: 0, coins: 0, dailyStreak: 0 });
+  const [rewards, setRewards] = React.useState<StoreRewards>({ points: 0, coins: 0, dailyStreak: 0 });
 
   const refresh = React.useCallback(async () => {
     if (!userId || userId.startsWith('user-')) return;
@@ -36,7 +36,7 @@ export default function StorePage({ userId, userName, isPremium, planName, lang,
           <button type="button" onClick={() => onNavigate('customization')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-black transition hover:bg-white/20"><ArrowLeft className="h-4 w-4 rtl:rotate-180" />{isAr ? 'تخصيص الملف' : 'Profile customization'}</button>
         </div>
       </header>
-      <StorePanel userId={userId} isPremium={isPremium} planName={planName} rewards={rewards} onRewardsChanged={() => void refresh()} lang={lang} />
+      <IndependentStore userId={userId} isPremium={isPremium} planName={planName} rewards={rewards} onRewardsChanged={() => void refresh()} lang={lang} />
     </main>
   );
 }

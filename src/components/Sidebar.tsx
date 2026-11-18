@@ -204,7 +204,7 @@ export default function Sidebar({
       {/* Navigation items with micro-animations & layoutId glassmorphism active pill */}
       <nav aria-label={isAr ? 'أقسام المنصة' : 'Platform sections'} className="flex-1 space-y-0.5 py-1 pr-0.5 overflow-y-auto scrollbar-none">
         {menuItems.map((item) => {
-          const isActive = item.id === 'motivation' ? currentTab.startsWith('motivation') : currentTab === item.id;
+          const isActive = currentTab === item.id;
           const isLocked = (item.isPremiumOnly && activePlanId === 'free') || (item.id === 'aichat' && !hasActiveMembership);
 
           if (item.isLink) {
