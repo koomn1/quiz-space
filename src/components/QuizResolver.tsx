@@ -1,3 +1,4 @@
+import PageWallpaper from './PageWallpaper';
 import { showAppMessage } from './Toast';
 /**
  * @license
@@ -1231,6 +1232,10 @@ export default function QuizResolver({
         '--quiz-wallpaper-phone': `url("${appBaseUrl}backgrounds/quiz-wallpaper-phone.webp")`,
       } as React.CSSProperties}
     >
+      <PageWallpaper
+        src={`${appBaseUrl}images/quiz-resolver-bg.jpg`}
+        overlayClassName={isZenMode ? "bg-[#031717]/92 backdrop-blur-[1.5px]" : "bg-white/88 dark:bg-[#031717]/88 backdrop-blur-[1.5px]"}
+      />
 
       {/* Sleek top progress bar tracking percentage of completed questions */}
       {!isQuizCompleted && (

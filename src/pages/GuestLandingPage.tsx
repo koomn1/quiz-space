@@ -1,3 +1,4 @@
+import PageWallpaper from '../components/PageWallpaper';
 import React from 'react';
 import {
   ArrowLeft,

@@ -1,3 +1,4 @@
+import PageWallpaper from '../components/PageWallpaper';
 import { showAppMessage } from '../components/Toast';
 /**
  * @license
@@ -369,6 +370,10 @@ export default function LandingPage({
 
   return (
     <div className="w-full min-h-dvh pb-32 select-none" dir={isAr ? 'rtl' : 'ltr'}>
+      <PageWallpaper
+        src={`${(import.meta.env.BASE_URL || '/').replace(/\/?$/, '')}/images/quiz-cosmo-scholar.jpg`}
+        overlayClassName="bg-slate-50/92 dark:bg-[#031717]/90 backdrop-blur-[2px]"
+      />
       {quizToDelete && (
         <DeleteQuizConfirmDialog
           isAr={isAr}
