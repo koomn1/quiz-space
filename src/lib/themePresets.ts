@@ -42,12 +42,12 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
     gradientTo: '#EE8361',
     swatch: 'from-[#007472] via-[#2AC3BB] to-[#EE8361]',
     light: {
-      canvas: '#FCF6EE',
+      canvas: '#F8FAFC',
       surface: '#FFFFFF',
-      surfaceStrong: '#F7EDE1',
+      surfaceStrong: '#F1F5F9',
       border: 'rgba(0, 116, 114, 0.16)',
-      text: '#0D2726',
-      muted: '#4B6B69',
+      text: '#0F172A',
+      muted: '#475569',
       glow: 'rgba(42, 195, 187, 0.20)',
     },
     dark: {
@@ -78,12 +78,12 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
     gradientTo: '#EE8361',
     swatch: 'from-[#007472] via-[#2AC3BB] to-[#EE8361]',
     light: {
-      canvas: '#FCF6EE',
+      canvas: '#F8FAFC',
       surface: '#FFFFFF',
-      surfaceStrong: '#F7EDE1',
+      surfaceStrong: '#F1F5F9',
       border: 'rgba(0, 116, 114, 0.16)',
-      text: '#0D2726',
-      muted: '#4B6B69',
+      text: '#0F172A',
+      muted: '#475569',
       glow: 'rgba(42, 195, 187, 0.20)',
     },
     dark: {

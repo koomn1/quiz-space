@@ -72,7 +72,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
 
   return (
     <main
-      className="guest-landing bg-transparent min-h-screen w-full pb-20 select-none overflow-x-hidden"
+      className="guest-landing theme-page min-h-screen w-full pb-20 select-none overflow-x-hidden"
       dir={isAr ? 'rtl' : 'ltr'}
     >
       {/* Hero Atmosphere — 100% Containerless & Directly on the Canvas ("على الأرض") */}

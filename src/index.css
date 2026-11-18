@@ -99,16 +99,19 @@ html, body {
 }
 
 html.dark, body.dark {
-  background-color: var(--color-theme-canvas);
-  color: var(--color-theme-text);
+  background-color: var(--color-theme-canvas, #031717);
+  color: var(--color-theme-text, #FCF6EE);
 }
 
 body {
   min-height: 100vh;
-  background-image:
-    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 32%),
-    radial-gradient(circle at 92% 12%, color-mix(in srgb, var(--color-secondary) 11%, transparent), transparent 28%);
-  background-attachment: fixed;
+  background-color: var(--app-page-bg, var(--theme-canvas, #f8fafc));
+  color: var(--app-text, #0f172a);
+}
+
+html.dark body {
+  background-color: var(--app-page-bg, var(--theme-canvas, #031717));
+  color: var(--app-text, #FCF6EE);
 }
 
 button {
@@ -120,7 +123,18 @@ button {
 button[class*="bg-[#007472]"],
 [role="button"][class*="bg-[#007472]"],
 button[class*="from-[#007472]"],
-[role="button"][class*="from-[#007472]"] {
+[role="button"][class*="from-[#007472]"],
+button[class*="bg-primary"],
+[role="button"][class*="bg-primary"] {
+  color: #FCF6EE !important;
+}
+
+button[class*="bg-[#007472]"] *,
+[role="button"][class*="bg-[#007472]"] *,
+button[class*="from-[#007472]"] *,
+[role="button"][class*="from-[#007472]"] *,
+button[class*="bg-primary"] *,
+[role="button"][class*="bg-primary"] * {
   color: #FCF6EE !important;
 }
 
@@ -656,7 +670,7 @@ html {
 }
 
 html.dark {
-  background: var(--app-page-bg, var(--theme-canvas, #020617));
+  background: var(--app-page-bg, var(--theme-canvas, #031717));
   color-scheme: dark;
 }
 
@@ -972,8 +986,15 @@ html:not(.dark) .light-readable-ui [class~="bg-red-700"][class~="text-white"],
 html:not(.dark) .light-readable-ui [class~="bg-rose-600"][class~="text-white"],
 html:not(.dark) .light-readable-ui [class~="bg-amber-600"][class~="text-white"],
 html:not(.dark) .light-readable-ui button[class~="text-white"][class*="bg-"],
-html:not(.dark) .light-readable-ui [role="button"][class~="text-white"][class*="bg-"] {
-  color: #ffffff !important;
+html:not(.dark) .light-readable-ui [role="button"][class~="text-white"][class*="bg-"],
+html:not(.dark) .light-readable-ui [class*="bg-[#007472]"],
+html:not(.dark) .light-readable-ui [class*="bg-[#007472]"] *,
+html:not(.dark) .light-readable-ui [class*="from-[#007472]"],
+html:not(.dark) .light-readable-ui [class*="from-[#007472]"] *,
+html:not(.dark) .light-readable-ui button[class*="bg-[#007472]"],
+html:not(.dark) .light-readable-ui button[class*="bg-[#007472]"] *,
+html:not(.dark) .light-readable-ui [class*="text-[#FCF6EE]"] {
+  color: #FCF6EE !important;
 }
 
 html:not(.dark) .light-readable-ui [class~="bg-purple-950/20"],
@@ -1279,7 +1300,7 @@ html.dark {
   --lg-danger: #f43f5e;
   --lg-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
   --lg-shadow-soft: 0 10px 32px rgba(0, 0, 0, 0.22);
-  --app-page-bg: var(--theme-canvas, #090714);
+  --app-page-bg: var(--theme-canvas, #031717);
   --app-surface: var(--theme-surface, #12101f);
   --app-surface-strong: var(--theme-surface-strong, #1a162d);
   --app-surface-raised: var(--theme-surface-strong, #1a162d);

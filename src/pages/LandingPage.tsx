@@ -368,7 +368,7 @@ export default function LandingPage({
   };
 
   return (
-    <div className="w-full min-h-dvh pb-32 select-none bg-transparent" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="w-full min-h-dvh pb-32 select-none theme-page" dir={isAr ? 'rtl' : 'ltr'}>
       {quizToDelete && (
         <DeleteQuizConfirmDialog
           isAr={isAr}

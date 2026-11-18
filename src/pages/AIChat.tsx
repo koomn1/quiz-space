@@ -558,26 +558,26 @@ async function generateCosmoQuizInBatches(
 function usePalette(darkMode: boolean) {
   if (darkMode) {
     return {
-      BG: '#070B14',
-      SURFACE: '#111A2B',
-      CARD: '#162238',
-      SIDEBAR: '#0A1020',
-      FG: '#F8FAFC',
-      MUTED: '#C5D0DF',
-      BORDER: 'rgba(148, 163, 184, 0.28)',
-      BORDER_SOFT: 'rgba(148, 163, 184, 0.16)',
-      HOVER: 'rgba(99, 102, 241, 0.20)',
-      HOVER_SOFT: 'rgba(148, 163, 184, 0.10)',
-      SUBTLE_TEXT: '#9AA8BB',
-      OVERLAY_BG: '#131D30',
-      OVERLAY_BACKDROP: 'rgba(7, 11, 20, 0.90)',
-      SEND_IDLE: '#334155',
-      SEND_ACTIVE_FG: '#FFFFFF',
-      SCROLL_THUMB: 'rgba(99, 102, 241, 0.22)',
-      SCROLL_THUMB_HOVER: 'rgba(99, 102, 241, 0.42)',
-      INPUT_BG: '#18253A',
-      USER_BUBBLE_BG: 'linear-gradient(135deg, #1E293B 0%, #162032 100%)',
-      USER_BUBBLE_BORDER: 'rgba(99, 102, 241, 0.25)',
+      BG: '#031717',
+      SURFACE: '#072424',
+      CARD: '#0A2D2D',
+      SIDEBAR: '#051B1B',
+      FG: '#FCF6EE',
+      MUTED: '#8BAEAD',
+      BORDER: 'rgba(42, 195, 187, 0.22)',
+      BORDER_SOFT: 'rgba(42, 195, 187, 0.14)',
+      HOVER: 'rgba(0, 116, 114, 0.20)',
+      HOVER_SOFT: 'rgba(42, 195, 187, 0.08)',
+      SUBTLE_TEXT: '#709998',
+      OVERLAY_BG: '#072424',
+      OVERLAY_BACKDROP: 'rgba(3, 23, 23, 0.90)',
+      SEND_IDLE: '#0C3232',
+      SEND_ACTIVE_FG: '#FCF6EE',
+      SCROLL_THUMB: 'rgba(42, 195, 187, 0.25)',
+      SCROLL_THUMB_HOVER: 'rgba(42, 195, 187, 0.45)',
+      INPUT_BG: '#072424',
+      USER_BUBBLE_BG: 'linear-gradient(135deg, #007472 0%, #005E5C 100%)',
+      USER_BUBBLE_BORDER: 'rgba(42, 195, 187, 0.35)',
       IS_DARK: true,
     };
   }
@@ -588,20 +588,20 @@ function usePalette(darkMode: boolean) {
     SIDEBAR: '#F1F5F9',
     FG: '#0F172A',
     MUTED: '#475569',
-    BORDER: 'rgba(15, 23, 42, 0.14)',
-    BORDER_SOFT: 'rgba(15, 23, 42, 0.08)',
-    HOVER: 'rgba(99, 102, 241, 0.12)',
-    HOVER_SOFT: 'rgba(15, 23, 42, 0.06)',
-    SUBTLE_TEXT: '#52637A',
+    BORDER: 'rgba(0, 116, 114, 0.16)',
+    BORDER_SOFT: 'rgba(0, 116, 114, 0.08)',
+    HOVER: 'rgba(0, 116, 114, 0.08)',
+    HOVER_SOFT: 'rgba(0, 116, 114, 0.04)',
+    SUBTLE_TEXT: '#64748B',
     OVERLAY_BG: '#FFFFFF',
     OVERLAY_BACKDROP: 'rgba(248, 250, 252, 0.85)',
     SEND_IDLE: '#E2E8F0',
-    SEND_ACTIVE_FG: '#FFFFFF',
-    SCROLL_THUMB: 'rgba(99, 102, 241, 0.18)',
-    SCROLL_THUMB_HOVER: 'rgba(99, 102, 241, 0.35)',
-    INPUT_BG: '#F1F5F9',
-    USER_BUBBLE_BG: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)',
-    USER_BUBBLE_BORDER: 'rgba(99, 102, 241, 0.2)',
+    SEND_ACTIVE_FG: '#FCF6EE',
+    SCROLL_THUMB: 'rgba(0, 116, 114, 0.20)',
+    SCROLL_THUMB_HOVER: 'rgba(0, 116, 114, 0.40)',
+    INPUT_BG: '#FFFFFF',
+    USER_BUBBLE_BG: 'linear-gradient(135deg, #E6F4F3 0%, #D1EBE9 100%)',
+    USER_BUBBLE_BORDER: 'rgba(0, 116, 114, 0.22)',
     IS_DARK: false,
   };
 }
@@ -2363,7 +2363,7 @@ export default function AIChat({
         {/* Header Bar */}
         <header
           className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b backdrop-blur-md"
-          style={{ borderColor: theme.BORDER_SOFT, background: theme.IS_DARK ? 'rgba(8,12,20,0.85)' : 'rgba(248,250,252,0.85)' }}
+          style={{ borderColor: theme.BORDER_SOFT, background: theme.IS_DARK ? 'rgba(7, 36, 36, 0.88)' : 'rgba(248, 250, 252, 0.88)' }}
         >
           <div className="flex items-center gap-2.5">
             {!sidebarOpen && (
