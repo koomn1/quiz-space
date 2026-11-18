@@ -1205,7 +1205,7 @@ export default function UserProfile({
     >
       {/* 1. Profile Banner Header */}
       <section className="relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_18px_55px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-900/80 dark:shadow-black/20">
-        <div className="h-36 sm:h-44 md:h-56 relative rounded-t-3xl overflow-hidden">
+        <div className="h-36 sm:h-44 md:h-56 relative rounded-t-3xl overflow-visible">
           <GsapCoverBackground mode={chosenBg || "cosmic"} customImage={customBgUrl} />
 
           {/* If premium cover text exists, display it beautifully! */}
@@ -1218,33 +1218,35 @@ export default function UserProfile({
               </div>
             </div>
           )}
+
+          {Boolean(isPremium) && showLanyard && (
+            <div
+              className="absolute inset-x-0 top-0 z-30 mx-auto h-[360px] w-[230px] sm:h-[420px] sm:w-[270px]"
+              aria-label={isAr ? "بطاقة الملف الشخصية" : "Profile card"}
+            >
+              <Lanyard
+                frontImage={displayPhotoURL || lanyardFrontImage}
+                backImage={`${import.meta.env.BASE_URL}brand/quizspace-card-back.webp`}
+                strapImage={lanyardStrapImage}
+                cardColor="#e8edf5"
+                finish="matte"
+                metal="silver"
+                size={0.72}
+                strapLength={0.92}
+                interactive
+                intro
+                className="h-full w-full"
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="px-4 pb-6 sm:px-6 md:px-10 md:pb-8 relative">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20">
+          <div className={`flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20 ${Boolean(isPremium) && showLanyard ? 'pt-[230px] sm:pt-[250px] md:pt-[150px]' : ''}`}>
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
-              {Boolean(isPremium) && showLanyard ? (
-                <div
-                  className="relative -mt-5 h-80 w-48 shrink-0 overflow-visible"
-                  aria-label={isAr ? "بطاقة الملف الشخصية" : "Profile card"}
-                >
-                  <Lanyard
-                    frontImage={displayPhotoURL || lanyardFrontImage}
-                    backImage={`${import.meta.env.BASE_URL}brand/quizspace-card-back.webp`}
-                    strapImage={lanyardStrapImage}
-                    cardColor="#e8edf5"
-                    finish="matte"
-                    metal="silver"
-                    size={0.64}
-                    strapLength={0.9}
-                    interactive
-                    intro
-                    className="h-full w-full"
-                    style={{ width: '100%', height: '100%' }}
-                  />
-                </div>
-              ) : (
+              {!(Boolean(isPremium) && showLanyard) && (
                 <div
                   className={`w-28 h-28 md:w-36 md:h-36 rounded-full bg-slate-100 dark:bg-slate-800 shrink-0 relative flex items-center justify-center transition-all duration-500 ${!activeFrameClass ? 'border-4 border-white dark:border-slate-900 shadow-xl' : 'z-10'}`}
                   style={activeFrameClass && !activeFrameIsAnimated ? (ACTIVE_FRAME_STYLES[activeFrameClass] || {}) : {}}
