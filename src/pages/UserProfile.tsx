@@ -48,6 +48,7 @@ import { ProfileQuickBadgeRail } from "../components/ProfileQuickBadgeRail";
 import { LiquidGlassSwitch } from "../components/LiquidGlassSwitch";
 import { showToast } from "../components/Toast";
 import { AVATAR_PRESETS, FREE_PROFILE_FRAMES, resolveFrameAsset, resolveProfileImageUrl, uniqueProfileFrames } from "../constants/profileAssets";
+import { readLanyardVisibility, writeLanyardVisibility } from "../lib/profileLocation";
 import Lanyard from "../components/lanyard/Lanyard";
 import lanyardFrontImage from "../components/lanyard/card-front.webp";
 import lanyardStrapImage from "../components/lanyard/lanyard.png";
@@ -560,7 +561,7 @@ export default function UserProfile({
           let parsedFacebook = "";
           let parsedRole = "";
           let parsedCountry = "";
-          let parsedShowLanyard = false;
+          let parsedShowLanyard = readLanyardVisibility(locStr);
 
           if (locStr.includes("||bg:")) {
             const afterBg = locStr.split("||bg:")[1] || "";
@@ -585,7 +586,6 @@ export default function UserProfile({
               if (chunk.startsWith("role:")) parsedRole = chunk.substring(5);
               if (chunk.startsWith("country:"))
                 parsedCountry = chunk.substring(8);
-              if (chunk.startsWith("lanyard:")) parsedShowLanyard = chunk.substring(8) === 'on';
             });
           } else {
             // backward compatibility
@@ -768,7 +768,10 @@ export default function UserProfile({
       }
 
       // Serialize background, custom cover slogan, custom social urls and verification badge customization back into location field
-      const serializedLocation = `||bg:${chosenBg}||customBg:${customBgUrl}||coverText:${coverText.trim()}||lanyard:${showLanyard ? 'on' : 'off'}||github:${githubUrl.trim()}||instagram:${instagramUrl.trim()}||linkedin:${linkedinUrl.trim()}||facebook:${facebookUrl.trim()}||role:${editRole.trim()}||country:${editCountry.trim()}||bgSpeed:${bgSettings.speed}||bgBrightness:${bgSettings.brightness}||bgGlow:${bgSettings.glow}||bgDensity:${bgSettings.density}||bgWaveHeight:${bgSettings.waveHeight}||bgTheme:${bgSettings.theme}||bgBlur:${bgSettings.blur}`;
+      const serializedLocation = writeLanyardVisibility(
+        `||bg:${chosenBg}||customBg:${customBgUrl}||coverText:${coverText.trim()}||lanyard:${showLanyard ? 'on' : 'off'}||github:${githubUrl.trim()}||instagram:${instagramUrl.trim()}||linkedin:${linkedinUrl.trim()}||facebook:${facebookUrl.trim()}||role:${editRole.trim()}||country:${editCountry.trim()}||bgSpeed:${bgSettings.speed}||bgBrightness:${bgSettings.brightness}||bgGlow:${bgSettings.glow}||bgDensity:${bgSettings.density}||bgWaveHeight:${bgSettings.waveHeight}||bgTheme:${bgSettings.theme}||bgBlur:${bgSettings.blur}`,
+        showLanyard,
+      );
 
       await saveUserProfile(
         profileId,
