@@ -1227,7 +1227,7 @@ export default function UserProfile({
 
           {Boolean(isPremium) && showLanyard && (
             <div
-              className="absolute inset-x-0 top-0 z-30 mx-auto h-[360px] w-[230px] sm:h-[420px] sm:w-[270px]"
+              className="absolute inset-x-0 top-0 z-30 mx-auto h-[280px] w-[178px] sm:h-[360px] sm:w-[230px] md:h-[420px] md:w-[270px]"
               aria-label={isAr ? "بطاقة الملف الشخصية" : "Profile card"}
             >
               <Lanyard
@@ -1249,7 +1249,7 @@ export default function UserProfile({
         </div>
 
         <div className="px-4 pb-6 sm:px-6 md:px-10 md:pb-8 relative">
-          <div className={`flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20 ${Boolean(isPremium) && showLanyard ? 'pt-[230px] sm:pt-[250px] md:pt-[150px]' : ''}`}>
+          <div className={`flex flex-col md:flex-row md:items-end justify-between gap-6 -mt-16 md:-mt-20 ${Boolean(isPremium) && showLanyard ? 'pt-[190px] sm:pt-[220px] md:pt-[150px]' : ''}`}>
             {/* Profile Picture & Badges */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 md:gap-6 text-center sm:text-right">
               {!(Boolean(isPremium) && showLanyard) && (
