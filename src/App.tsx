@@ -173,7 +173,7 @@ export default function App() {
       return 'landing';
     }
     if (pathParts[0]) {
-      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'motivation', 'store', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store']);
+      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'customization', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'store']);
       return knownTabs.has(pathParts[0]) ? pathParts[0] : 'not-found';
     }
 
@@ -201,7 +201,7 @@ export default function App() {
         return 'landing';
       }
       if (parts[0]) {
-        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'motivation', 'store', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store']);
+        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'customization', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'store']);
         return knownTabs.has(parts[0]) ? parts[0] : 'not-found';
       }
     }
@@ -734,7 +734,7 @@ export default function App() {
   // Direct links can bypass handleSetTab(), so protect the create route during initial render.
   // Rendering QuizCreator without an authenticated user previously left the app blank in this case.
   const isGuestCreateRoute = activeTab === 'create' && !authContext.loading && !authContext.isAuthenticated && !userId;
-  const motivationTabs = ['motivation', 'motivation-lucky', 'motivation-brain', 'motivation-review', 'motivation-season', 'motivation-duel', 'motivation-store'];
+  const motivationTabs: string[] = [];
   const isGuestMotivationRoute = motivationTabs.includes(activeTab) && !authContext.loading && !authContext.isAuthenticated && (!userId || userId.startsWith('user-guest'));
 
   React.useEffect(() => {

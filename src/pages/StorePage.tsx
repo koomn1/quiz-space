@@ -33,7 +33,7 @@ export default function StorePage({ userId, userName, isPremium, planName, lang,
             <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{isAr ? 'المتجر' : 'Store'}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-white/80">{isAr ? `إطارات الملف الشخصي والباقات — أهلاً ${userName || ''}` : `Profile frames and reward bundles — welcome ${userName || ''}`}</p>
           </div>
-          <button type="button" onClick={() => onNavigate('motivation')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-black transition hover:bg-white/20"><ArrowLeft className="h-4 w-4 rtl:rotate-180" />{isAr ? 'مركز التحفيز' : 'Motivation hub'}</button>
+          <button type="button" onClick={() => onNavigate('customization')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-black transition hover:bg-white/20"><ArrowLeft className="h-4 w-4 rtl:rotate-180" />{isAr ? 'تخصيص الملف' : 'Profile customization'}</button>
         </div>
       </header>
       <StorePanel userId={userId} isPremium={isPremium} planName={planName} rewards={rewards} onRewardsChanged={() => void refresh()} lang={lang} />

@@ -58,6 +58,7 @@ const LazyQuizResolver = lazyWithRetry(() => import('../components/QuizResolver'
 const LazyNotificationCenter = lazyWithRetry(() => import('../components/NotificationCenter'), 'notifications');
 const LazyAdminGuard = lazyWithRetry(() => import('../components/AdminGuard'), 'admin-guard');
 const LazyUserProfile = lazyWithRetry(() => import('../pages/UserProfile'), 'user-profile');
+const LazyProfileCustomization = lazyWithRetry(() => import('../pages/ProfileCustomizationPage'), 'profile-customization');
 const LazySupport = lazyWithRetry(() => import('../pages/Support'), 'support');
 const LazyMyQuizzes = lazyWithRetry(() => import('../pages/MyQuizzes').then(module => ({ default: module.MyQuizzes })), 'my-quizzes');
 const LazyAdminDashboard = lazyWithRetry(() => import('../pages/AdminDashboard'), 'admin-dashboard');
@@ -405,6 +406,18 @@ export default function AppRoutes(props: AppRoutesProps) {
                     }
                   }}
                   onOpenBilling={() => handleSetTab('billing')}
+                />
+              )}
+
+              {activeTab === 'customization' && (
+                <LazyProfileCustomization
+                  userId={userId}
+                  userName={userName}
+                  userEmail={userEmail}
+                  currentPhoto={userPhoto}
+                  lang={lang}
+                  onUpdatePhoto={(photo) => setUserPhoto(normalizeUserPhoto(photo))}
+                  onNavigate={handleSetTab}
                 />
               )}
 

@@ -147,8 +147,8 @@
   align-items: center;
   justify-self: center;
   height: var(--cn-logo);
-  width: var(--cn-logo);
-  max-width: var(--cn-logo);
+  width: auto;
+  max-width: min(42vw, 220px);
   overflow: hidden;
   color: var(--cn-text);
   text-decoration: none;
@@ -166,10 +166,10 @@
 }
 
 .card-nav__logo > * {
-  width: var(--cn-logo) !important;
-  height: var(--cn-logo) !important;
-  max-width: var(--cn-logo);
-  max-height: var(--cn-logo);
+  width: auto !important;
+  height: auto !important;
+  max-width: 100%;
+  max-height: calc(var(--cn-bar) - 8px);
   overflow: hidden;
 }
 

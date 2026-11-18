@@ -78,7 +78,7 @@ export default function Sidebar({
     { id: 'my-quizzes', label: isAr ? 'اختباراتي' : 'My Quizzes' },
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms' },
     { id: 'institution', label: isAr ? 'مساحة المؤسسة' : 'Institution Workspace' },
-    { id: 'motivation', label: isAr ? 'مركز التحفيز' : 'Motivation Hub' },
+    { id: 'customization', label: isAr ? 'تخصيص الملف' : 'Profile Customization' },
     { id: 'store', label: isAr ? 'المتجر' : 'Store' },
     { id: 'aichat', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant' },
     { id: 'community', label: isAr ? 'المجتمع' : 'Community' },
@@ -114,8 +114,8 @@ export default function Sidebar({
         return <SugaryIcon name="graduation-cap" size={size} className={className} />;
       case 'institution':
         return <SugaryIcon name="layers" size={size} className={className} />;
-      case 'motivation':
-        return <SugaryIcon name="gift" size={size} className={className} />;
+      case 'customization':
+        return <SugaryIcon name="crown" size={size} className={className} />;
       case 'store':
         return <SugaryIcon name="coins" size={size} className={className} />;
       case 'aichat':

@@ -50,10 +50,10 @@ export default function IOS27Header({
     },
     {
       label: isAr ? 'الأدوات والمساحات' : 'Tools & spaces',
-      description: isAr ? 'الفصول، التحفيز، الاشتراكات والمساعدة.' : 'Classrooms, motivation, plans, and support.',
+      description: isAr ? 'الفصول، التخصيص، الاشتراكات والمساعدة.' : 'Classrooms, customization, plans, and support.',
       links: [
         { label: isAr ? 'الفصول الدراسية' : 'Classrooms', tab: 'classrooms' },
-        { label: isAr ? 'مركز التحفيز' : 'Motivation hub', tab: 'motivation' },
+        { label: isAr ? 'تخصيص الملف' : 'Profile customization', tab: 'customization' },
         { label: isAr ? 'المتجر' : 'Store', tab: 'store' },
         { label: isAr ? 'مساحة المؤسسة' : 'Institution workspace', tab: 'institution' },
         { label: isAr ? 'باقات الاشتراك' : 'Subscription plans', tab: 'billing' },
