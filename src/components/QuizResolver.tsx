@@ -7,7 +7,9 @@ import { showAppMessage } from './Toast';
 import React from 'react';
 import CosmicLoader from "./CosmicLoader";
 import { Quiz, Question, QuizCompletion } from '../types';
-import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, Loader2, ThumbsUp, ThumbsDown, Sparkles, Lock, LayoutGrid, X } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowLeft, ArrowRight, Star, RefreshCw, FileText, Share2, BadgeCheck, Printer, Heart, Download, Clock, Loader2, ThumbsUp, ThumbsDown, Sparkles, Lock, LayoutGrid, X, Maximize2, Minimize2, BookOpen } from 'lucide-react';
+import StoryCardModal from './StoryCardModal';
+import FlashcardsModal from './FlashcardsModal';
 import { getQuizById, submitQuizAttempt, submitGuestQuizAttempt, getQuizAnswerReview, getGuestQuizAnswerReview, updateCompletionReview, updateGuestQuizAttemptReview, rateQuestion, getUserRatedQuestions, getBestScoreByQuizId, getUserDailyQuizSlot, planNameToDailyQuizTier, savePdfExport, upsertQuizErrorBankItem, createCommunityPost } from '../lib/db';
 import { supabase } from '../lib/supabaseClient';
 import { explainQuestionWithAI } from '../services/openrouterService';
@@ -156,6 +158,11 @@ export default function QuizResolver({
   const [isSubmittingReview, setIsSubmittingReview] = React.useState(false);
   const [isReviewSubmitted, setIsReviewSubmitted] = React.useState(false);
   const [isReviewMode, setIsReviewMode] = React.useState(false);
+
+  // Zen Mode & Story Card & Flashcards states
+  const [isZenMode, setIsZenMode] = React.useState<boolean>(false);
+  const [isStoryModalOpen, setIsStoryModalOpen] = React.useState<boolean>(false);
+  const [isFlashcardsOpen, setIsFlashcardsOpen] = React.useState<boolean>(false);
 
   // Forced rating states
   const [savedCompletionId, setSavedCompletionId] = React.useState<string | null>(null);
@@ -1216,7 +1223,9 @@ export default function QuizResolver({
 
   return (
     <div
-      className="quiz-resolver-shell relative isolate mx-auto max-w-3xl space-y-4 overflow-hidden rounded-[2rem] pb-8 pb-28 sm:space-y-6 sm:pb-32 print:bg-white print:p-0"
+      className={`quiz-resolver-shell relative isolate mx-auto max-w-3xl space-y-4 overflow-hidden rounded-[2rem] pb-8 pb-28 sm:space-y-6 sm:pb-32 print:bg-white print:p-0 ${
+        isZenMode ? '!fixed !inset-0 !z-[60] !max-w-none !h-[100dvh] !rounded-none !bg-[var(--color-theme-canvas,#031717)] !p-4 sm:!p-8 !overflow-y-auto' : ''
+      }`}
       style={{
         '--quiz-wallpaper-pc': `url("${appBaseUrl}backgrounds/quiz-wallpaper-pc.webp")`,
         '--quiz-wallpaper-phone': `url("${appBaseUrl}backgrounds/quiz-wallpaper-phone.webp")`,
@@ -1225,10 +1234,10 @@ export default function QuizResolver({
 
       {/* Sleek top progress bar tracking percentage of completed questions */}
       {!isQuizCompleted && (
-        <div className="w-full bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden shadow-inner print:hidden relative">
+        <div className="w-full bg-slate-100 dark:bg-[#031717] h-2 rounded-full overflow-hidden shadow-inner print:hidden relative">
           <div
             style={{ width: `${progressPercent}%` }}
-            className="h-full bg-gradient-to-r from-primary to-primary-hover rounded-full transition-all duration-300 relative"
+            className="h-full bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] rounded-full transition-all duration-300 relative shadow-sm shadow-[#2AC3BB]/30"
           />
         </div>
       )}
@@ -1300,6 +1309,21 @@ export default function QuizResolver({
             >
               <LayoutGrid className="w-3.5 h-3.5 text-primary" />
               <span>{currentIdx + 1}/{quiz.questions.length}</span>
+            </button>
+
+            {/* Zen Mode Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsZenMode((prev) => !prev)}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                isZenMode
+                  ? 'bg-[#007472] text-[#FCF6EE] shadow-sm'
+                  : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800 shadow-2xs'
+              }`}
+              title={isAr ? 'وضع التركيز التام (Zen Mode)' : 'Focus Zen Mode'}
+            >
+              {isZenMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5 text-[#2AC3BB]" />}
+              <span className="hidden sm:inline">{isZenMode ? (isAr ? 'إنهاء التركيز' : 'Exit Zen') : (isAr ? 'تركيز' : 'Zen')}</span>
             </button>
           </div>
         )}
@@ -2100,6 +2124,17 @@ export default function QuizResolver({
                   <span>مشاركة الاختبار ونشره للعامة</span>
                 </button>
               )}
+
+              {/* Story Card Modal Trigger */}
+              <button
+                type="button"
+                onClick={() => setIsStoryModalOpen(true)}
+                className="flex items-center gap-1.5 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] text-[#FCF6EE] font-bold text-xs shadow-md shadow-[#007472]/20 transition-all hover:brightness-110 cursor-pointer active:scale-98"
+                title={isAr ? 'مشاركة النتيجة كـ Story' : 'Share as Story'}
+              >
+                <Sparkles className="w-4 h-4 text-[#FCF6EE]" />
+                <span>{isAr ? 'بطاقة الستوري (Story Card)' : 'Share as Story'}</span>
+              </button>
             </div>
 
           </div>
@@ -2637,6 +2672,31 @@ export default function QuizResolver({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Story Card Modal */}
+      {quiz && (
+        <StoryCardModal
+          isOpen={isStoryModalOpen}
+          onClose={() => setIsStoryModalOpen(false)}
+          quizTitle={quiz.title}
+          score={displayedScore}
+          totalQuestions={quiz.questions.length}
+          userName={takerName || userName}
+          lang={lang}
+          quizId={quiz.id}
+        />
+      )}
+
+      {/* Flashcards Review Modal */}
+      {quiz && (
+        <FlashcardsModal
+          isOpen={isFlashcardsOpen}
+          onClose={() => setIsFlashcardsOpen(false)}
+          questions={quiz.questions}
+          quizTitle={quiz.title}
+          lang={lang}
+        />
       )}
 
     </div>
