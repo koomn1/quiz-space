@@ -456,6 +456,23 @@ export interface UserStats {
   onboarded?: boolean;
 }
 
+export interface GlobalLeaderboardUser {
+  userId: string;
+  customId: string;
+  name: string;
+  photoUrl: string;
+  xp: number;
+  level: number;
+  accuracy: number;
+  quizzesSolved: number;
+  quizzesCreated: number;
+  isPremium: boolean;
+  badgeTier: string;
+  activeFrameId?: string;
+  coverUrl?: string;
+  rank: number;
+}
+
 export interface UserSession {
   id: string;
   userId: string;

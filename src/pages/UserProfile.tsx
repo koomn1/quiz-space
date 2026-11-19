@@ -82,6 +82,9 @@ import OverlayPortal from '../components/OverlayPortal';
 import SpotlightCard from '../components/SpotlightCard';
 import SplitText from '../components/reactbits/SplitText';
 import DecryptedText from '../components/reactbits/DecryptedText';
+import TitleAvatarBadge from '../components/TitleAvatarBadge';
+import LevelRoadmapModal from '../components/LevelRoadmapModal';
+import { getUserLevelInfo } from '../lib/levelingSystem';
 import type { UserStats, Quiz, QuizCompletion } from '../types';
 
 export interface UserProfileProps {
@@ -144,6 +147,7 @@ export default function UserProfile({
     return { parsedCustomBgUrl, parsedBg, path, isTrialActive };
   };
   const [isLoading, setIsLoading] = useState(true);
+  const [isRoadmapOpen, setIsRoadmapOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>('quizzes');
   const [activeFrameUrl, setActiveFrameUrl] = useState<string>('');
   const [ownedFrames, setOwnedFrames] = useState<any[]>([]);
@@ -565,11 +569,25 @@ export default function UserProfile({
 
   const createdQuizzes = profileData?.createdQuizzes || [];
   const completions = profileData?.completions || [];
-  const accuracy = completions.length > 0
-    ? Math.round((completions.reduce((acc, c) => acc + (c.totalQuestions > 0 ? c.score / c.totalQuestions : 0), 0) / completions.length) * 100)
-    : 0;
-  const level = Math.max(1, Math.floor(((profileData?.xp || 0) / 500) + 1));
-  const xpCurrentLevel = (profileData?.xp || 0) % 500;
+  const validCompletions = completions.filter(
+    (c) => (Number(c.totalQuestions) || Number((c as any).total_questions) || 0) > 0
+  );
+  const accuracy =
+    validCompletions.length > 0
+      ? Math.round(
+          (validCompletions.reduce((acc, c) => {
+            const total = Number(c.totalQuestions) || Number((c as any).total_questions) || 1;
+            const score = Number(c.score || 0);
+            return acc + Math.min(1, Math.max(0, score / total));
+          }, 0) /
+            validCompletions.length) *
+            100
+        )
+      : 0;
+
+  const userXp = Number(profileData?.xp || 0);
+  const levelInfo = getUserLevelInfo(userXp);
+  const level = levelInfo.level;
   const displayLocation = getDisplayLocation(profileData?.location);
 
   return (
@@ -656,9 +674,15 @@ export default function UserProfile({
               )}
 
               {/* Level badge */}
-              <div className="absolute -bottom-1 end-1 rounded-full border-2 border-white dark:border-[#031717] bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-black text-[#FCF6EE] shadow-md">
-                Lv.{level}
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsRoadmapOpen(true)}
+                title={isAr ? 'عرض خريطة المستويات ومكافآت الـ 100 ليفل' : 'View 100 Level Progression Roadmap'}
+                className="absolute -bottom-1 end-1 inline-flex items-center gap-1 rounded-full border-2 border-white dark:border-[#031717] bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-black text-[#FCF6EE] shadow-md transition hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <span>Lv.{level}</span>
+                {level >= 100 && <span>🏆</span>}
+              </button>
             </div>
 
             {/* Action Buttons */}
@@ -795,6 +819,16 @@ export default function UserProfile({
               )}
             </div>
 
+            {/* Title & Rank Avatar Badge */}
+            <div className="flex items-center gap-2">
+              <TitleAvatarBadge
+                level={level}
+                size="sm"
+                lang={lang}
+                onClick={() => setIsRoadmapOpen(true)}
+              />
+            </div>
+
             {/* Location, Joined Date & Followers/Following Clickable Row */}
             <div className="flex flex-wrap items-center gap-y-2 gap-x-3 sm:gap-x-4 text-xs font-bold text-slate-600 dark:text-slate-300">
               {displayLocation && (
@@ -809,7 +843,7 @@ export default function UserProfile({
                 <span>
                   {(profileData?.joinedDate || (profileData as any)?.created_at)
                     ? new Date(profileData?.joinedDate || (profileData as any)?.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { month: 'short', year: 'numeric' })
-                    : (isAr ? 'عضو نشط' : 'Active Member')}
+                    : (isAr ? 'عضو مميز' : 'Elite Member')}
                 </span>
               </span>
 
@@ -923,28 +957,50 @@ export default function UserProfile({
           className="gsap-stat-card !p-4 !rounded-2xl border border-[#007472]/20 bg-white/80 dark:bg-[#072424]/90 backdrop-blur-sm shadow-sm"
           spotlightColor="rgba(0, 116, 114, 0.28)"
         >
-          <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]">
-            <Target className="h-4 w-4" />
-            <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'معدل الدقة' : 'Accuracy'}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]">
+              <Target className="h-4 w-4" />
+              <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'معدل الدقة' : 'Accuracy'}</span>
+            </div>
+            <span className="rounded-md bg-[#2AC3BB]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#007472] dark:text-[#2AC3BB]">
+              {accuracy >= 90 ? (isAr ? 'قناص 🎯' : 'Sniper') : accuracy >= 75 ? (isAr ? 'متفوق ⭐' : 'High') : (isAr ? 'نشط' : 'Active')}
+            </span>
           </div>
           <p className="mt-2 text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{accuracy}%</p>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#031717]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#007472] to-[#2AC3BB] transition-all duration-500"
+              style={{ width: `${Math.min(100, Math.max(0, accuracy))}%` }}
+            />
+          </div>
         </SpotlightCard>
 
         <SpotlightCard
-          className="gsap-stat-card !p-4 !rounded-2xl border border-[#EE8361]/30 bg-white/80 dark:bg-[#072424]/90 backdrop-blur-sm shadow-sm"
+          className="gsap-stat-card !p-4 !rounded-2xl border border-[#EE8361]/30 bg-white/80 dark:bg-[#072424]/90 backdrop-blur-sm shadow-sm cursor-pointer transition hover:border-[#EE8361]/60"
           spotlightColor="rgba(238, 131, 97, 0.3)"
+          onClick={() => setIsRoadmapOpen(true)}
         >
-          <div className="flex items-center gap-2 text-[#EE8361]">
-            <Zap className="h-4 w-4" />
-            <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'نقاط الخبرة XP' : 'Total XP'}</span>
+          <div className="flex items-center justify-between text-[#EE8361]">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'المستوى و نقاط الـ XP' : 'Level & XP'}</span>
+            </div>
+            <span className="rounded-md bg-[#EE8361]/15 px-1.5 py-0.5 text-[9px] font-black text-[#EE8361]">
+              Lv.{level}/100 {level >= 100 && '🏆'}
+            </span>
           </div>
           <div className="mt-2 flex items-baseline justify-between">
-            <p className="text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{(profileData?.xp || 0).toLocaleString()}</p>
-            <span className="text-[10px] font-bold text-[#EE8361]">{xpCurrentLevel}/500</span>
+            <p className="text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{userXp.toLocaleString()}</p>
+            <span className="text-[10px] font-bold text-[#EE8361]">
+              {levelInfo.isMaxLevel ? (isAr ? 'الحد الأقصى (MAX)' : 'MAX') : `${levelInfo.progressPercent}%`}
+            </span>
           </div>
           {/* Progress bar */}
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#031717]">
-            <div className="h-full rounded-full bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] transition-all duration-500" style={{ width: `${(xpCurrentLevel / 500) * 100}%` }} />
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] transition-all duration-500"
+              style={{ width: `${levelInfo.progressPercent}%` }}
+            />
           </div>
         </SpotlightCard>
       </div>
@@ -1665,6 +1721,14 @@ export default function UserProfile({
           </div>
         </OverlayPortal>
       )}
+
+      {/* 1-100 Level Progression Roadmap Modal */}
+      <LevelRoadmapModal
+        isOpen={isRoadmapOpen}
+        onClose={() => setIsRoadmapOpen(false)}
+        userXp={userXp}
+        lang={lang}
+      />
     </div>
   );
 }

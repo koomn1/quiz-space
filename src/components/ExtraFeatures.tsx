@@ -12,7 +12,8 @@ import {
   Send, ThumbsUp, Trash2, PlusCircle, CheckCircle, Flame, Clock, Heart, Shield, Settings, Pencil,
   Volume2, VolumeX, Eye, BookOpen, Star, HelpCircle, User, Zap, Info, X, Bell, Globe
 } from 'lucide-react';
-import { Quiz, QuizCompletion } from '../types';
+import { Quiz, QuizCompletion, GlobalLeaderboardUser } from '../types';
+import TitleAvatarBadge from './TitleAvatarBadge';
 import { translations } from '../lib/i18n';
 import { THEME_PRESETS } from '../lib/themePresets';
 import {
@@ -25,6 +26,7 @@ import {
   ReactionType,
   getNotifications,
   getRecentCompletions,
+  getGlobalLeaderboard,
   getUserProfileStats,
   saveUserProfile,
   getBookmarkedQuizIds,
@@ -2168,27 +2170,20 @@ export function SettingsSection({
 // LEADERBOARD SECTION
 // ----------------------------------------------------
 export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizzes: Quiz[] }) {
-  const [boardItems, setBoardItems] = useState<any[]>([]);
+  const [boardUsers, setBoardUsers] = useState<GlobalLeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCriteria, setActiveCriteria] = useState<'xp' | 'accuracy' | 'solved'>('xp');
   const isAr = lang === 'ar';
 
   useEffect(() => {
     async function loadLeaderboard() {
+      setLoading(true);
       try {
-        const completionsList = await getRecentCompletions(15);
-        if (completionsList && completionsList.length > 0) {
-          const processedList = completionsList.map(c => ({
-            userName: c.takerName || (isAr ? 'طالب متميز' : 'Anonymous Student'),
-            quizTitle: c.quizTitle || (isAr ? 'اختبار مجهول' : 'Quiz'),
-            score: c.score,
-            elapsedSeconds: 0
-          }));
-          setBoardItems(processedList);
-        } else {
-          setBoardItems([]);
-        }
+        const users = await getGlobalLeaderboard(35);
+        setBoardUsers(users);
       } catch (e) {
-        setBoardItems([]);
+        console.error('Failed to load global leaderboard:', e);
+        setBoardUsers([]);
       } finally {
         setLoading(false);
       }
@@ -2196,16 +2191,29 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
     loadLeaderboard();
   }, [quizzes]);
 
+  // Sort based on active criteria
+  const sortedUsers = React.useMemo(() => {
+    const list = [...boardUsers];
+    if (activeCriteria === 'xp') {
+      list.sort((a, b) => b.xp - a.xp);
+    } else if (activeCriteria === 'accuracy') {
+      list.sort((a, b) => b.accuracy !== a.accuracy ? b.accuracy - a.accuracy : b.xp - a.xp);
+    } else {
+      list.sort((a, b) => b.quizzesSolved !== a.quizzesSolved ? b.quizzesSolved - a.quizzesSolved : b.xp - a.xp);
+    }
+    return list.map((u, i) => ({ ...u, rank: i + 1 }));
+  }, [boardUsers, activeCriteria]);
+
   // Extract top 3 for the visual podium
-  const podiumWinners = boardItems.slice(0, 3);
-  const listItems = boardItems.slice(3);
+  const podiumWinners = sortedUsers.slice(0, 3);
+  const listItems = sortedUsers.slice(3);
 
   // Map indices for visually organizing podium as: [2nd, 1st, 3rd]
   const renderPodiumOrder = () => {
     const arranged: any[] = [];
-    if (podiumWinners[1]) arranged.push({ ...podiumWinners[1], rank: 2 }); // 2nd Place on Left
-    if (podiumWinners[0]) arranged.push({ ...podiumWinners[0], rank: 1 }); // 1st Place in Center
-    if (podiumWinners[2]) arranged.push({ ...podiumWinners[2], rank: 3 }); // 3rd Place on Right
+    if (podiumWinners[1]) arranged.push(podiumWinners[1]); // 2nd Place on Left
+    if (podiumWinners[0]) arranged.push(podiumWinners[0]); // 1st Place in Center
+    if (podiumWinners[2]) arranged.push(podiumWinners[2]); // 3rd Place on Right
     return arranged;
   };
 
@@ -2214,41 +2222,81 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
       bgColor: 'bg-gradient-to-b from-amber-400/20 via-yellow-400/10 to-amber-500/5',
       borderColor: 'border-amber-400 dark:border-amber-400/80',
       textColor: 'text-amber-500 dark:text-amber-400',
-      badge: '',
       badgeBg: 'bg-amber-400 text-amber-950',
-      height: 'h-48 sm:h-56',
-      shimmer: 'uipro-gold-shimmer'
     };
     if (rank === 2) return {
       bgColor: 'bg-gradient-to-b from-slate-200/40 via-slate-100/20 to-slate-200/5 dark:from-slate-700/20 dark:to-transparent',
       borderColor: 'border-slate-300 dark:border-slate-600',
       textColor: 'text-slate-500 dark:text-slate-300',
-      badge: '',
       badgeBg: 'bg-slate-300 text-slate-800 dark:bg-slate-600 dark:text-white',
-      height: 'h-40 sm:h-46',
-      shimmer: 'uipro-silver-shimmer'
     };
     return {
       bgColor: 'bg-gradient-to-b from-orange-400/20 via-orange-300/10 to-orange-500/5',
       borderColor: 'border-orange-400/60 dark:border-orange-500/50',
       textColor: 'text-orange-500 dark:text-orange-400',
-      badge: '',
       badgeBg: 'bg-orange-400 text-orange-950',
-      height: 'h-36 sm:h-40',
-      shimmer: 'uipro-bronze-shimmer'
     };
+  };
+
+  const handleNavigateProfile = (user: GlobalLeaderboardUser) => {
+    const target = user.customId ? `#/profile/${user.customId}` : `#/profile/${user.userId}`;
+    window.location.hash = target;
   };
 
   return (
     <div className="space-y-8 animate-fade-in" style={{ textAlign: isAr ? 'right' : 'left' }}>
-      <div>
-        <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2.5">
-          <span className="p-2 rounded-2xl bg-amber-500/10 text-amber-500"></span>
-          <span>{isAr ? 'لوحة الشرف ومنصة التتويج' : 'Laureate Podium & Leaderboard'}</span>
-        </h2>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
-          {isAr ? 'منصة فخرية لتتويج أسرع عقول المنصة وأدقهم نتائج في حل التحديات العلمية.' : 'Honoring elite scholars with high-precision quiz scores.'}
-        </p>
+      {/* Header & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2.5">
+            <span className="p-2 rounded-2xl bg-amber-500/10 text-amber-500">
+              <Trophy className="h-6 w-6" />
+            </span>
+            <span>{isAr ? 'لوحة الشرف ومنصة التتويج' : 'Laureate Podium & Leaderboard'}</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            {isAr
+              ? 'تتويج أبطال المنصة بالأعلى خبرة، أدق النتائج، وأعظم الإنجازات الأكاديمية.'
+              : 'Honoring top scholars with highest XP, precision accuracy, and quiz milestones.'}
+          </p>
+        </div>
+
+        {/* Filter Criteria Tabs */}
+        <div className="flex items-center gap-1.5 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveCriteria('xp')}
+            className={`rounded-xl px-3 py-1.5 text-xs font-black transition cursor-pointer ${
+              activeCriteria === 'xp'
+                ? 'bg-[#007472] text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            {isAr ? '⚡ الأعلى نقاطاً' : '⚡ Top XP'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveCriteria('accuracy')}
+            className={`rounded-xl px-3 py-1.5 text-xs font-black transition cursor-pointer ${
+              activeCriteria === 'accuracy'
+                ? 'bg-[#007472] text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            {isAr ? '🎯 الأكثر دقة' : '🎯 Top Accuracy'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveCriteria('solved')}
+            className={`rounded-xl px-3 py-1.5 text-xs font-black transition cursor-pointer ${
+              activeCriteria === 'solved'
+                ? 'bg-[#007472] text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            {isAr ? '📚 الأكثر حلاً' : '📚 Most Solved'}
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -2259,42 +2307,69 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
         <>
           {/* Top 3 Visual Podium Display */}
           {podiumWinners.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-end justify-center gap-4 sm:gap-6 pt-8 pb-4 select-none">
-              {renderPodiumOrder().map((winner, index) => {
+            <div className="flex flex-col sm:flex-row items-end justify-center gap-4 sm:gap-6 pt-6 pb-2 select-none">
+              {renderPodiumOrder().map((winner) => {
                 const style = getRankStyle(winner.rank);
                 return (
                   <div
-                    key={winner.userId || index}
-                    className={`w-full sm:w-60 rounded-[32px] border-2 ${style.borderColor} ${style.bgColor} p-6 flex flex-col justify-end items-center relative space-y-4 shadow-xl shrink-0 uipro-clay-card`}
-                    style={{ minHeight: winner.rank === 1 ? '260px' : winner.rank === 2 ? '230px' : '210px' }}
+                    key={winner.userId}
+                    onClick={() => handleNavigateProfile(winner)}
+                    title={isAr ? `زيارة ملف ${winner.name}` : `View ${winner.name}'s profile`}
+                    className={`w-full sm:w-64 rounded-[32px] border-2 ${style.borderColor} ${style.bgColor} p-6 flex flex-col justify-end items-center relative space-y-3.5 shadow-xl shrink-0 uipro-clay-card cursor-pointer transition hover:scale-[1.02] active:scale-[0.98]`}
+                    style={{ minHeight: winner.rank === 1 ? '280px' : winner.rank === 2 ? '250px' : '230px' }}
                   >
-                    {/* Background badge identifier */}
-                    <div className="absolute top-4 right-4 text-3xl select-none">
-                      {style.badge}
+                    {/* Rank identifier crown/badge */}
+                    <div className="absolute top-3 end-3 flex items-center gap-1">
+                      {winner.rank === 1 && <span className="text-xl">👑</span>}
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-md ${style.badgeBg}`}>
+                        #{winner.rank}
+                      </span>
                     </div>
 
-                    <div className="flex flex-col items-center text-center space-y-2.5 w-full">
+                    <div className="flex flex-col items-center text-center space-y-2 w-full">
+                      {/* Avatar with level badge */}
                       <div className="relative">
-                        <div className={`w-16 h-16 rounded-full bg-slate-900 border-2 ${winner.rank === 1 ? 'border-yellow-400 ring-4 ring-yellow-400/20' : winner.rank === 2 ? 'border-slate-300' : 'border-orange-400'} flex items-center justify-center text-white font-extrabold text-base shadow-lg`}>
-                          {winner.userName ? winner.userName.substring(0, 1) : ''}
+                        <div className={`w-18 h-18 rounded-full bg-slate-900 border-2 ${winner.rank === 1 ? 'border-yellow-400 ring-4 ring-yellow-400/25' : winner.rank === 2 ? 'border-slate-300' : 'border-orange-400'} flex items-center justify-center text-white font-extrabold text-lg shadow-lg overflow-hidden`}>
+                          {winner.photoUrl ? (
+                            <img src={winner.photoUrl} alt={winner.name} className="h-full w-full object-cover" />
+                          ) : (
+                            winner.name.slice(0, 1).toUpperCase()
+                          )}
                         </div>
-                        <span className={`absolute -bottom-1 -right-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-md ${style.badgeBg}`}>
-                          #{winner.rank}
+                        <span className="absolute -bottom-1 -end-1 px-2 py-0.2 rounded-full text-[9px] font-mono font-black bg-[#007472] text-white border border-white dark:border-slate-900 shadow-sm">
+                          Lv.{winner.level}
                         </span>
                       </div>
 
                       <div className="space-y-1 w-full">
                         <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5 truncate">
-                          {winner.userName || (isAr ? 'طالب متميز' : 'Scholar')}
-                          <UserBadge tier={winner.userTier || 'free'} showLabel={false} />
+                          {winner.name}
+                          {winner.isPremium && <UserBadge tier={winner.badgeTier || 'premium'} showLabel={false} />}
                         </h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold truncate max-w-[160px] mx-auto">{winner.quizTitle}</p>
+                        {winner.customId && (
+                          <p className="text-[10px] font-mono text-[#2AC3BB] font-bold">@{winner.customId}</p>
+                        )}
                       </div>
+
+                      {/* Division Title Badge */}
+                      <TitleAvatarBadge level={winner.level} size="xs" lang={lang} />
                     </div>
 
-                    <div className="w-full bg-white/80 dark:bg-slate-950/70 py-3 px-4 rounded-2xl text-center border border-slate-200/80 dark:border-slate-800 shadow-xs">
-                      <span className={`text-base font-black font-mono block leading-none ${style.textColor}`}>{winner.score}%</span>
-                      <span className="text-[10px] text-slate-400 font-bold block mt-1">{winner.elapsedSeconds || 45} {isAr ? 'ثانية حل ⏱' : 'sec solve ⏱'}</span>
+                    {/* Stats pill */}
+                    <div className="w-full bg-white/85 dark:bg-slate-950/75 py-2.5 px-3 rounded-2xl flex items-center justify-around border border-slate-200/80 dark:border-slate-800 shadow-xs text-center">
+                      <div>
+                        <span className={`text-xs font-black font-mono block ${style.textColor}`}>
+                          {winner.xp.toLocaleString()} XP
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-bold block">{isAr ? 'نقاط خبرة' : 'XP Points'}</span>
+                      </div>
+                      <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
+                      <div>
+                        <span className="text-xs font-black font-mono block text-[#2AC3BB]">
+                          {winner.accuracy}%
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-bold block">{isAr ? 'الدقة' : 'Accuracy'}</span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -2303,51 +2378,76 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
           )}
 
           {/* Leaderboard Table/List representing rankings 4+ */}
-          <div className="uipro-clay-card rounded-[32px] overflow-hidden shadow-xl">
-            <div className="p-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-right" dir={isAr ? 'rtl' : 'ltr'}>
-              <h3 className="font-display font-black text-sm text-slate-800 dark:text-slate-200">{isAr ? 'قائمة الصدارة العامة:' : 'Complete Global Scoreboard:'}</h3>
+          <div className="uipro-clay-card rounded-[32px] overflow-hidden shadow-xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md">
+            <div className="p-5 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-right" dir={isAr ? 'rtl' : 'ltr'}>
+              <h3 className="font-display font-black text-sm text-slate-800 dark:text-slate-200">
+                {isAr ? 'قائمة الصدارة العامة (اضغط لزيارة البروفايل):' : 'Complete Global Scoreboard (Click to view profile):'}
+              </h3>
               <span className="uipro-pill-badge bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                <span>{isAr ? 'تحديث حي ومباشر' : 'Live Sync'}</span>
+                <span>{isAr ? 'تحديث حي' : 'Live Sync'}</span>
               </span>
             </div>
 
             <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {listItems.map((item, idx) => {
-                const displayRank = idx + 4;
-                return (
-                  <div
-                    key={idx}
-                    className="p-5 flex items-center justify-between gap-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
-                    dir={isAr ? 'rtl' : 'ltr'}
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <span className="text-xs font-black w-7 text-center select-none text-slate-400 block font-mono">
-                        #{displayRank}
+              {listItems.map((item) => (
+                <div
+                  key={item.userId}
+                  onClick={() => handleNavigateProfile(item)}
+                  title={isAr ? `زيارة ملف ${item.name}` : `View ${item.name}'s profile`}
+                  className="p-4 flex items-center justify-between gap-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                  dir={isAr ? 'rtl' : 'ltr'}
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className="text-xs font-black w-7 text-center select-none text-slate-400 block font-mono">
+                      #{item.rank}
+                    </span>
+
+                    {/* Avatar */}
+                    <div className="relative">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#007472]/15 to-[#2AC3BB]/15 border border-[#2AC3BB]/20 flex items-center justify-center text-xs text-[#007472] dark:text-[#2AC3BB] font-extrabold shadow-xs overflow-hidden">
+                        {item.photoUrl ? (
+                          <img src={item.photoUrl} alt={item.name} className="h-full w-full object-cover" />
+                        ) : (
+                          item.name.slice(0, 1).toUpperCase()
+                        )}
+                      </div>
+                      <span className="absolute -bottom-1 -end-1 px-1.5 py-0.2 rounded-full text-[8px] font-mono font-black bg-[#007472] text-white border border-white dark:border-slate-900 shadow-xs">
+                        Lv.{item.level}
                       </span>
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/15 to-violet-500/15 border border-primary/20 flex items-center justify-center text-xs text-primary dark:text-primary-light font-extrabold shadow-xs">
-                        {item.userName ? item.userName.substring(0,1) : ''}
-                      </div>
-                      <div className="space-y-0.5 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                        <h4 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                          {item.userName || (isAr ? 'طالب متميز' : 'Elite Student')}
-                          <UserBadge tier={item.userTier || 'free'} showLabel={false} />
-                        </h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold truncate max-w-xs">{isAr ? 'حلّ باقتدار:' : 'Solved:'} {item.quizTitle}</p>
-                      </div>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0 text-left" style={{ textAlign: isAr ? 'left' : 'right' }}>
-                      <div className="text-right">
-                        <span className="text-xs font-black text-primary font-mono block">{item.score}%</span>
-                        <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1 justify-end">{item.elapsedSeconds || 50} {isAr ? 'ثانية' : 'sec'} <Clock className="w-3 h-3 inline text-slate-400" /></span>
+                    <div className="space-y-0.5 text-right min-w-0" style={{ textAlign: isAr ? 'right' : 'left' }}>
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                          {item.name}
+                        </h4>
+                        {item.isPremium && <UserBadge tier={item.badgeTier || 'premium'} showLabel={false} />}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {item.customId && (
+                          <span className="text-[10px] text-[#2AC3BB] font-mono font-bold">@{item.customId}</span>
+                        )}
+                        <TitleAvatarBadge level={item.level} size="xs" lang={lang} showLabel={false} />
                       </div>
                     </div>
                   </div>
-                );
-              })}
 
-              {boardItems.length === 0 && (
+                  {/* Right side stats */}
+                  <div className="flex items-center gap-4 shrink-0 text-left" style={{ textAlign: isAr ? 'left' : 'right' }}>
+                    <div className="text-right">
+                      <span className="text-xs font-black text-[#007472] dark:text-[#2AC3BB] font-mono block">
+                        {activeCriteria === 'accuracy' ? `${item.accuracy}%` : `${item.xp.toLocaleString()} XP`}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1 justify-end">
+                        {isAr ? `${item.accuracy}% دقة` : `${item.accuracy}% Acc`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {sortedUsers.length === 0 && (
                 <div className="p-16 text-center text-xs text-slate-400 select-none space-y-2">
                   <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                     <Trophy className="w-7 h-7 text-amber-500 drop-shadow-[0_4px_12px_rgba(245,158,11,0.3)]" />
@@ -2360,5 +2460,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
         </>
       )}
     </div>
+  );
+}
   );
 }
