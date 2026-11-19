@@ -1819,7 +1819,7 @@ export function SettingsSection({
                   type="text"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all"
+                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-700 focus:border-[#007472] dark:focus:border-[#2AC3BB] rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all"
                   style={{ textAlign: isAr ? 'right' : 'left' }}
                   placeholder={isAr ? 'أدخل اسمك المعروض' : 'Enter your name'}
                 />
@@ -1833,7 +1833,7 @@ export function SettingsSection({
                   type="text"
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all"
+                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-700 focus:border-[#007472] dark:focus:border-[#2AC3BB] rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all"
                   style={{ textAlign: isAr ? 'right' : 'left' }}
                   placeholder={isAr ? 'مثال: ahmed_teacher' : 'e.g. ahmed_teacher'}
                 />
@@ -1847,7 +1847,7 @@ export function SettingsSection({
                   type="tel"
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all font-mono"
+                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-700 focus:border-[#007472] dark:focus:border-[#2AC3BB] rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all font-mono"
                   style={{ textAlign: isAr ? 'right' : 'left' }}
                   placeholder="+966 50 000 0000"
                 />
@@ -1874,7 +1874,7 @@ export function SettingsSection({
                   value={bioInput}
                   onChange={(e) => setBioInput(e.target.value)}
                   rows={3}
-                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all resize-none"
+                  className="w-full bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-700 focus:border-[#007472] dark:focus:border-[#2AC3BB] rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white outline-none transition-all resize-none"
                   style={{ textAlign: isAr ? 'right' : 'left' }}
                   placeholder={isAr ? 'اكتب نبذة قصيرة عن تخصصك أو اهتماماتك...' : 'Tell us about your background or subjects you teach...'}
                 />
@@ -2001,10 +2001,10 @@ export function SettingsSection({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-950/40 border border-slate-800">
+                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800">
                   <div>
-                    <h4 className="text-xs font-bold text-white">{isAr ? 'المؤثرات الصوتية التفاعلية' : 'Interactive UI Sound Effects'}</h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{isAr ? 'تشغيل المؤثرات والتعزيزات الصوتية الجذابة' : 'Enjoy interactive UI chime sounds'}</p>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">{isAr ? 'المؤثرات الصوتية التفاعلية' : 'Interactive UI Sound Effects'}</h4>
+                    <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">{isAr ? 'تشغيل المؤثرات والتعزيزات الصوتية الجذابة' : 'Enjoy interactive UI chime sounds'}</p>
                   </div>
                   <div className="shrink-0">
                     <LiquidGlassSwitch
@@ -2018,29 +2018,29 @@ export function SettingsSection({
             </div>
 
             {/* Specialized Branding Features */}
-            <div className="pt-6 border-t border-slate-800 space-y-4">
+            <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
               <div>
-                <h4 className="text-xs font-black text-white uppercase tracking-wider bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-md inline-block">
+                <h4 className="text-xs font-black text-[#007472] dark:text-[#2AC3BB] uppercase tracking-wider bg-[#007472]/10 dark:bg-[#007472]/25 border border-[#007472]/20 dark:border-[#2AC3BB]/30 px-3 py-1.5 rounded-xl inline-block">
                   {isAr ? 'خصائص الشعار والوسام المخصص' : 'Specialized Branding Options'}
                 </h4>
-                <p className="text-[10px] text-slate-400 mt-1">
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
                   {isAr ? 'شارة توثيق واسم ملون - متاحة للمشتركين فقط. الأشكال المتاحة تعتمد على باقتك.' : 'Verified badge and colored name - premium subscribers only. Available options depend on your plan.'}
                 </p>
               </div>
 
               {!isPremium ? (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-300 font-bold">
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-800 dark:text-amber-200 font-bold">
                   {isAr ? ' اشترك في إحدى الباقات المدفوعة عشان تقدر تفعّل شارة التوثيق واسم ملون.' : ' Subscribe to a paid plan to unlock a verified badge and colored name.'}
                 </div>
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-300 block">{isAr ? 'شكل شارة التوثيق:' : 'Verified Badge Style:'}</label>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">{isAr ? 'شكل شارة التوثيق:' : 'Verified Badge Style:'}</label>
                       <select
                         value={badgeTier}
                         onChange={(e) => setBadgeTier(e.target.value as BadgeTier)}
-                        className="w-full bg-slate-950 border border-[#3d1d6d]/30 focus:border-primary rounded-xl px-4 py-2 text-xs text-white outline-none"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-[#007472] dark:focus:border-[#2AC3BB] rounded-xl px-4 py-2 text-xs text-slate-900 dark:text-white outline-none"
                       >
                         {availableBadgeTiers(userPlanName).map(tier => (
                           <option key={tier} value={tier}>{isAr ? BADGE_LABELS[tier].labelAr : BADGE_LABELS[tier].labelEn}</option>
@@ -2054,14 +2054,14 @@ export function SettingsSection({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-300 block">{isAr ? 'لون الاسم:' : 'Name Color:'}</label>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">{isAr ? 'لون الاسم:' : 'Name Color:'}</label>
                       <div className="flex flex-wrap gap-2">
                         {availableNameColors(userPlanName).map(color => (
                           <button
                             key={color}
                             type="button"
                             onClick={() => setNameColor(color)}
-                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition ${nameColor === color ? 'border-primary ring-1 ring-primary' : 'border-slate-700'} bg-slate-950`}
+                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition ${nameColor === color ? 'border-[#007472] dark:border-[#2AC3BB] ring-1 ring-[#007472] dark:ring-[#2AC3BB]' : 'border-slate-200 dark:border-slate-700'} bg-white dark:bg-slate-950 text-slate-900 dark:text-white`}
                             style={NAME_COLOR_PRESETS[color].style}
                           >
                             {isAr ? NAME_COLOR_PRESETS[color].labelAr : NAME_COLOR_PRESETS[color].labelEn}
@@ -2072,14 +2072,14 @@ export function SettingsSection({
                   </div>
 
                   {badgeSaveError && (
-                    <p className="text-[11px] text-red-400 font-bold">{badgeSaveError}</p>
+                    <p className="text-[11px] text-red-500 font-bold">{badgeSaveError}</p>
                   )}
 
                   <div className="flex justify-end pt-2">
                     <button
                       onClick={handleSaveSpecializedBranding}
                       disabled={isSavingBadge}
-                      className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black rounded-xl cursor-pointer shadow disabled:opacity-50"
+                      className="px-5 py-2.5 bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 text-[11px] font-black rounded-xl cursor-pointer shadow transition-all disabled:opacity-50"
                     >
                       {isSavingBadge ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ خصائص الشعار' : 'Save Distinction Branding')}
                     </button>
@@ -2089,15 +2089,15 @@ export function SettingsSection({
             </div>
 
             {/* Google Drive connected accounts connection */}
-            <div className="pt-6 border-t border-slate-800 space-y-4">
+            <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
               <div>
                 <h4 className="text-sm font-black text-slate-900 dark:text-white">{isAr ? 'الحسابات السحابية المرتبطة' : 'Linked Cloud Accounts'}</h4>
-                <p className="text-[10px] text-slate-400 mt-1">
+                <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-1">
                   {isAr ? 'اربط حساب Google Drive لرفع مخرجات الاختبارات وملفات المراجعة مباشرة لسحابتك' : 'Authorize Google Drive integration to sync materials and student notes instantly'}
                 </p>
               </div>
 
-              <div className="p-4 bg-slate-950/60 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow">
                     <svg viewBox="0 0 1000 1000" className="w-6 h-6">
@@ -2107,8 +2107,8 @@ export function SettingsSection({
                     </svg>
                   </div>
                   <div className="text-right sm:text-left" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                    <h5 className="font-bold text-white text-xs">Google Drive</h5>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
+                    <h5 className="font-bold text-slate-900 dark:text-white text-xs">Google Drive</h5>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                       {gdriveAccount || (isAr ? 'لم يتم ربط حساب سحابي بعد' : 'Not authorized yet')}
                     </p>
                   </div>

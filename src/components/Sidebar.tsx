@@ -74,10 +74,15 @@ export default function Sidebar({
   ] : [
     { id: 'landing', label: isAr ? 'الرئيسية' : 'Home' },
     { id: 'explore', label: isAr ? 'استكشاف' : 'Explore' },
+    { id: 'categories', label: isAr ? 'التصنيفات' : 'Categories' },
     { id: 'create', label: isAr ? 'إنشاء اختبار' : 'Create Quiz' },
     { id: 'my-quizzes', label: isAr ? 'اختباراتي' : 'My Quizzes' },
     { id: 'classrooms', label: isAr ? 'الفصول الدراسية' : 'Classrooms' },
     { id: 'institution', label: isAr ? 'مساحة المؤسسة' : 'Institution Workspace' },
+    { id: 'analytics', label: isAr ? 'لوحة التحليلات' : 'Analytics' },
+    { id: 'leaderboard', label: isAr ? 'لوحة المتصدرين' : 'Leaderboard' },
+    { id: 'achievements', label: isAr ? 'سجل الإنجازات' : 'Achievements' },
+    { id: 'bookmarks', label: isAr ? 'المحفوظات' : 'Bookmarks' },
     { id: 'customization', label: isAr ? 'تخصيص الملف' : 'Profile Customization' },
     { id: 'store', label: isAr ? 'المتجر' : 'Store' },
     { id: 'aichat', label: isAr ? 'المساعد كوزمو' : 'Cosmo Assistant' },
@@ -106,6 +111,8 @@ export default function Sidebar({
         return <SugaryIcon name="home" size={size} className={className} />;
       case 'explore':
         return <SugaryIcon name="globe" size={size} className={className} />;
+      case 'categories':
+        return <SugaryIcon name="layers" size={size} className={className} />;
       case 'create':
         return <SugaryIcon name="sparkles" size={size} className={className} />;
       case 'my-quizzes':
@@ -114,6 +121,14 @@ export default function Sidebar({
         return <SugaryIcon name="graduation-cap" size={size} className={className} />;
       case 'institution':
         return <SugaryIcon name="layers" size={size} className={className} />;
+      case 'analytics':
+        return <SugaryIcon name="presentation" size={size} className={className} />;
+      case 'leaderboard':
+        return <SugaryIcon name="trophy" size={size} className={className} />;
+      case 'achievements':
+        return <SugaryIcon name="star" size={size} className={className} />;
+      case 'bookmarks':
+        return <SugaryIcon name="book" size={size} className={className} />;
       case 'customization':
         return <SugaryIcon name="crown" size={size} className={className} />;
       case 'store':
