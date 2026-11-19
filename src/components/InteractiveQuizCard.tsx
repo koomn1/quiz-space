@@ -575,13 +575,13 @@ export function InteractiveQuizCard({
         {/* Header: Badges & Rating */}
         <div className="flex items-center justify-between gap-3 flex-row-reverse" dir="ltr">
           <div className="flex items-center gap-1.5 flex-row-reverse flex-wrap">
-            <span className="uipro-pill-badge bg-primary/10 text-primary dark:text-primary-light border border-primary/15 font-black">
-              <Sparkles className="w-3.5 h-3.5" />
+            <span className="uipro-pill-badge bg-primary/10 text-primary dark:text-[#2AC3BB] border border-primary/20 dark:border-[#2AC3BB]/30 font-black">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span>{quiz.questions.length} {t?.questionsCount || (isAr ? 'أسئلة' : 'Questions')}</span>
             </span>
             {quiz.category && (
-              <span className="uipro-pill-badge text-[#007472] dark:text-[#2AC3BB] bg-[#007472]/10 dark:bg-[#2AC3BB]/10 dark:bg-violet-950/40 border border-violet-500/20">
-                <Tag className="w-3 h-3" />
+              <span className="uipro-pill-badge text-[#005f5d] dark:text-[#2AC3BB] bg-teal-500/10 dark:bg-[#2AC3BB]/10 border border-teal-500/20 dark:border-[#2AC3BB]/30">
+                <Tag className="w-3 h-3 text-[#007472] dark:text-[#2AC3BB]" />
                 <span>{quiz.category}</span>
               </span>
             )}
@@ -704,12 +704,12 @@ export function InteractiveQuizCard({
               e.stopPropagation();
               setExportMenuOpen((open) => !open);
             }}
-            className="flex shrink-0 whitespace-nowrap items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-light font-black text-xs transition-all hover:scale-105 cursor-pointer border border-primary/20"
+            className="flex shrink-0 whitespace-nowrap items-center justify-center gap-1.5 px-3 h-10 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-slate-100 font-bold text-xs transition-all hover:scale-102 cursor-pointer border border-slate-200/80 dark:border-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007472] dark:focus-visible:outline-[#2AC3BB]"
             title={isAr ? 'تحويل إلى PDF أو طباعة' : 'Export PDF or print'}
           >
-            <Printer className="w-4 h-4" />
+            <Printer className="w-4 h-4 text-[#007472] dark:text-[#2AC3BB]" />
             <span className="hidden sm:inline">{isAr ? 'PDF / طباعة' : 'PDF'}</span>
-            <ChevronDown className="h-3.5 w-3.5" />
+            <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
           </button>
           {exportMenuOpen && (
             <div ref={exportMenuRef} data-card-action="export" className="absolute end-0 bottom-full mb-2 z-[90] w-48 rounded-2xl border border-slate-200/80 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95" dir={isAr ? 'rtl' : 'ltr'}>
@@ -723,10 +723,10 @@ export function InteractiveQuizCard({
               e.stopPropagation();
               onStartQuiz(quiz.id);
             }}
-            className="uipro-btn-tactile group/play flex grow shrink-0 whitespace-nowrap items-center justify-center gap-2 px-5 h-10 rounded-xl bg-gradient-to-r from-primary to-primary-hover text-white font-black text-xs shadow-md shadow-primary/25 hover:shadow-primary/45 cursor-pointer relative overflow-hidden"
+            className="uipro-btn-tactile group/play flex grow shrink-0 whitespace-nowrap items-center justify-center gap-2 px-5 h-10 rounded-xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 font-black text-xs shadow-md shadow-[#007472]/20 dark:shadow-[#2AC3BB]/20 cursor-pointer relative overflow-hidden transition-all active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007472] dark:focus-visible:outline-[#2AC3BB]"
           >
             <span>{t?.startPlayBtn || (isAr ? 'ابدأ التحدي' : 'Start Play')}</span>
-            <Play className={`w-3.5 h-3.5 fill-white ${isAr ? '' : 'rotate-180'} group-hover/play:scale-115 transition-transform`} />
+            <Play className={`w-3.5 h-3.5 fill-current ${isAr ? '' : 'rotate-180'} group-hover/play:scale-110 transition-transform`} />
           </button>
         </div>
       </div>

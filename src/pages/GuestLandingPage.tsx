@@ -81,7 +81,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[650px] h-[350px] sm:h-[450px] rounded-full bg-gradient-to-tr from-[#007472]/20 via-[#2AC3BB]/15 to-[#EE8361]/15 blur-[120px] pointer-events-none -z-10" />
 
         {/* Eyebrow Pill */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#007472]/15 text-[#007472] dark:text-[#2AC3BB] text-xs font-black tracking-wide mb-6 backdrop-blur-md border border-[#2AC3BB]/30">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-500/10 dark:bg-[#007472]/20 text-[#005f5d] dark:text-[#2AC3BB] text-xs font-black tracking-wide mb-6 backdrop-blur-md border border-[#007472]/20 dark:border-[#2AC3BB]/30">
           <Sparkles className="w-3.5 h-3.5 text-[#EE8361] animate-pulse" />
           <span>{isAr ? 'مساحة منظمة للتعلم والاختبارات والتقدم' : 'A focused home for learning, quizzes, and progress'}</span>
         </div>
@@ -105,7 +105,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
           <button
             type="button"
             onClick={onLogin}
-            className="guest-landing__primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-[#FCF6EE] font-black text-xs sm:text-sm px-7 py-3 shadow-lg shadow-[#007472]/30 transition-all duration-200 active:scale-95 cursor-pointer"
+            className="guest-landing__primary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 font-black text-xs sm:text-sm px-7 py-3 shadow-lg shadow-[#007472]/25 dark:shadow-[#2AC3BB]/20 transition-all duration-200 active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007472] dark:focus-visible:outline-[#2AC3BB]"
           >
             <span>{isAr ? 'أنشئ حسابك مجاناً' : 'Create a free account'}</span>
             <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
@@ -114,7 +114,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
           <button
             type="button"
             onClick={onExplore}
-            className="guest-landing__secondary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-slate-900 dark:text-[#FCF6EE] font-bold text-xs sm:text-sm px-6 py-3 backdrop-blur-md border border-black/5 dark:border-white/10 transition-all duration-200 active:scale-95 cursor-pointer"
+            className="guest-landing__secondary inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-100 hover:bg-slate-200/80 dark:bg-white/10 dark:hover:bg-white/15 text-slate-900 dark:text-[#FCF6EE] font-bold text-xs sm:text-sm px-6 py-3 backdrop-blur-md border border-slate-200/80 dark:border-white/10 transition-all duration-200 active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:focus-visible:outline-white"
           >
             <span>{isAr ? 'استكشف الاختبارات' : 'Explore quizzes'}</span>
           </button>
@@ -201,7 +201,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
           <button
             type="button"
             onClick={onLogin}
-            className="guest-landing__cta inline-flex min-h-12 items-center justify-center gap-2 rounded-full font-black text-xs sm:text-sm px-7 py-3 transition-all duration-200 active:scale-95 shadow-lg shadow-[#007472]/20 cursor-pointer shrink-0 bg-[#007472] hover:bg-[#005e5c] text-[#FCF6EE]"
+            className="guest-landing__cta inline-flex min-h-12 items-center justify-center gap-2 rounded-full font-black text-xs sm:text-sm px-7 py-3 transition-all duration-200 active:scale-95 shadow-lg shadow-[#007472]/20 dark:shadow-[#2AC3BB]/20 cursor-pointer shrink-0 bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007472] dark:focus-visible:outline-[#2AC3BB]"
           >
             <span>{isAr ? 'الدخول إلى المنصة' : 'Enter the platform'}</span>
             <ChevronLeft className="h-4 w-4 rtl:rotate-180" />

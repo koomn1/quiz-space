@@ -150,23 +150,12 @@ button {
   text-rendering: optimizeLegibility;
 }
 
-/* Ensure button text adapts and stays legible across wallpapers and canvases */
-button[class*="bg-[#007472]"],
-[role="button"][class*="bg-[#007472]"],
-button[class*="from-[#007472]"],
-[role="button"][class*="from-[#007472]"],
-button[class*="bg-primary"],
-[role="button"][class*="bg-primary"] {
-  color: #FCF6EE !important;
-}
-
-button[class*="bg-[#007472]"] *,
-[role="button"][class*="bg-[#007472]"] *,
-button[class*="from-[#007472]"] *,
-[role="button"][class*="from-[#007472]"] *,
-button[class*="bg-primary"] *,
-[role="button"][class*="bg-primary"] * {
-  color: #FCF6EE !important;
+/* Ensure solid saturated primary buttons have high-contrast text */
+button[class~="bg-[#007472]"]:not([class*="/"]):not([class*="dark:"]),
+[role="button"][class~="bg-[#007472]"]:not([class*="/"]):not([class*="dark:"]),
+button[class~="bg-primary"]:not([class*="/"]):not([class*="dark:"]),
+[role="button"][class~="bg-primary"]:not([class*="/"]):not([class*="dark:"]) {
+  color: #FCF6EE;
 }
 
 button[class*="backdrop-blur"],
@@ -946,29 +935,35 @@ html:not(.dark) .light-readable-ui [class~="border-slate-700"] {
 html:not(.dark) [class*="text-white"]:not(
   button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-transparent"]):not([class*="bg-slate-50"]):not([class*="bg-slate-100"]):not([class*="bg-slate-200"]),
   button[class*="bg-"] *,
+  button[class*="from-"] *,
+  button[class*="from-"],
   a[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-transparent"]),
   a[class*="bg-"] *,
+  a[class*="from-"] *,
+  a[class*="from-"],
   [class*="bg-[#007472]"] *,
+  [class*="bg-[#031717]"] *,
   [class*="bg-primary"] *,
   [class*="bg-emerald-"] *,
   [class*="bg-violet-"] *,
   [class*="bg-indigo-"] *,
   [class*="bg-rose-"] *,
-  [class*="badge"] *
+  [class*="badge"] *,
+  .dark *
 ),
-html:not(.dark) [class*="text-[#FCF6EE]"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-primary"] *):not([class*="bg-emerald-"] *):not([class*="bg-violet-"] *):not([class*="bg-indigo-"] *),
-html:not(.dark) [class*="text-[#fcf6ee]"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-primary"] *):not([class*="bg-emerald-"] *):not([class*="bg-violet-"] *):not([class*="bg-indigo-"] *),
-html:not(.dark) [class~="text-slate-100"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-primary"] *),
-html:not(.dark) [class~="text-slate-200"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-primary"] *),
-html:not(.dark) [class~="text-slate-300"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-primary"] *),
-html:not(.dark) [class~="text-slate-400"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-primary"] *) {
+html:not(.dark) [class*="text-[#FCF6EE]"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not([class*="bg-emerald-"] *):not([class*="bg-violet-"] *):not([class*="bg-indigo-"] *):not(.dark *),
+html:not(.dark) [class*="text-[#fcf6ee]"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not([class*="bg-emerald-"] *):not([class*="bg-violet-"] *):not([class*="bg-indigo-"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-100"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-200"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-300"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-400"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not(.dark *) {
   color: #0f172a !important;
 }
 
-html:not(.dark) [class*="text-white/80"]:not(button *):not([class*="bg-[#007472]"] *),
-html:not(.dark) [class*="text-white/70"]:not(button *):not([class*="bg-[#007472]"] *),
-html:not(.dark) [class*="text-white/60"]:not(button *):not([class*="bg-[#007472]"] *),
-html:not(.dark) [class*="text-white/50"]:not(button *):not([class*="bg-[#007472]"] *) {
+html:not(.dark) [class*="text-white/80"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not(.dark *),
+html:not(.dark) [class*="text-white/70"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not(.dark *),
+html:not(.dark) [class*="text-white/60"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not(.dark *),
+html:not(.dark) [class*="text-white/50"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not(.dark *) {
   color: #334155 !important;
 }
 
@@ -1039,12 +1034,8 @@ html:not(.dark) .light-readable-ui [class~="bg-rose-600"][class~="text-white"],
 html:not(.dark) .light-readable-ui [class~="bg-amber-600"][class~="text-white"],
 html:not(.dark) .light-readable-ui button[class~="text-white"][class*="bg-"],
 html:not(.dark) .light-readable-ui [role="button"][class~="text-white"][class*="bg-"],
-html:not(.dark) .light-readable-ui [class*="bg-[#007472]"],
-html:not(.dark) .light-readable-ui [class*="bg-[#007472]"] *,
-html:not(.dark) .light-readable-ui [class*="from-[#007472]"],
-html:not(.dark) .light-readable-ui [class*="from-[#007472]"] *,
-html:not(.dark) .light-readable-ui button[class*="bg-[#007472]"],
-html:not(.dark) .light-readable-ui button[class*="bg-[#007472]"] * {
+html:not(.dark) .light-readable-ui button[class~="bg-[#007472]"][class~="text-white"],
+html:not(.dark) .light-readable-ui button[class~="bg-[#007472]"][class~="text-white"] * {
   color: #FCF6EE !important;
 }
 
@@ -2411,12 +2402,8 @@ html[dir="rtl"] .quizspace-sidebar-panel,
 .guest-landing__hero > div:first-of-type { background: color-mix(in srgb, var(--theme-gradient-to) 18%, transparent); }
 .guest-landing__hero > div:nth-of-type(2) { background: color-mix(in srgb, var(--theme-primary) 22%, transparent); }
 .guest-landing__login { background: var(--app-surface-strong); color: var(--app-text); }
-.guest-landing__eyebrow { border: 1px solid var(--app-border); background: color-mix(in srgb, var(--app-surface-strong) 72%, var(--theme-primary) 28%); color: var(--app-text); }
 .guest-landing__title { color: var(--app-text); }
 .guest-landing__copy { color: var(--app-text-muted); }
-.guest-landing__primary { color: #fff; background: linear-gradient(100deg, var(--theme-primary), var(--theme-gradient-to)); }
-.guest-landing__secondary { border: 1px solid var(--app-border-strong); background: color-mix(in srgb, var(--app-surface-strong) 72%, var(--theme-primary) 28%); color: var(--app-text); }
-.guest-landing__cta { color: var(--app-text-on-primary, #fff); background: var(--theme-primary); box-shadow: 0 10px 24px color-mix(in srgb, var(--theme-primary) 24%, transparent); }
 .guest-landing__cta:hover { background: var(--theme-primary-dark); }
 .guest-landing__preview { border: 1px solid var(--app-border); background: color-mix(in srgb, var(--app-surface-strong) 78%, var(--theme-primary) 22%); }
 .guest-landing__preview-note { border: 1px solid var(--app-border); background: color-mix(in srgb, var(--app-surface-strong) 88%, var(--theme-primary) 12%); color: var(--app-text); }

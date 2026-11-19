@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { playNotificationSound } from '../lib/sound';
 
@@ -42,6 +42,11 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [latestAlert, setLatestAlert] = useState<PaymentAlertInfo | null>(null);
   const [alerts, setAlerts] = useState<PaymentAlertInfo[]>([]);
+
+  const onNavigateRef = useRef(onNavigateToPayments);
+  useEffect(() => {
+    onNavigateRef.current = onNavigateToPayments;
+  }, [onNavigateToPayments]);
 
   const refreshPendingCount = useCallback(async () => {
     if (!isAdmin) return;
@@ -94,16 +99,14 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
         });
         notif.onclick = () => {
           window.focus();
-          if (onNavigateToPayments) {
-            onNavigateToPayments();
-          }
+          onNavigateRef.current?.();
         };
       } catch (error) { console.debug('Handled non-fatal exception:', error); }
     }
 
     // 4. Update count
     setPendingCount((prev) => prev + 1);
-  }, [onNavigateToPayments]);
+  }, []);
 
   const dismissAlert = useCallback(() => {
     setAlerts((current) => {
@@ -121,9 +124,9 @@ export function useAdminPaymentAlerts({ isAdmin, onNavigateToPayments }: UseAdmi
 
   useEffect(() => {
     if (!isAdmin) {
-      setPendingCount(0);
-      setLatestAlert(null);
-      setAlerts([]);
+      setPendingCount((prev) => (prev === 0 ? prev : 0));
+      setLatestAlert((prev) => (prev === null ? prev : null));
+      setAlerts((prev) => (prev.length === 0 ? prev : []));
       return;
     }
 

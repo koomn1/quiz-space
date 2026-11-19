@@ -694,7 +694,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
       {/* 2. DEDICATED "حالة الاشتراك" (SUBSCRIPTION STATUS) CARD */}
       <section
-        className="gsap-status-card rounded-3xl border border-indigo-500/25 bg-gradient-to-br from-slate-950 via-[#0c0926] to-slate-900 p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden"
+        className="dark gsap-status-card rounded-3xl border border-indigo-500/25 bg-gradient-to-br from-slate-950 via-[#0c0926] to-slate-900 p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden"
         aria-labelledby="subscription-status-heading"
       >
         {/* Cosmic Ambient Glow Behind */}

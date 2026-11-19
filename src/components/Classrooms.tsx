@@ -1158,14 +1158,14 @@ export default function Classrooms({
   };
 
   const renderSidebar = () => (
-    <div className="w-full md:w-80 bg-slate-900/60 backdrop-blur-md rounded-3xl border border-slate-800 p-6 flex flex-col gap-6">
+    <div className="w-full md:w-80 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md rounded-3xl border border-slate-200/80 dark:border-slate-800 p-6 flex flex-col gap-6">
       {/* Join Box */}
       <div className="space-y-3">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <GraduationCap className="w-4 h-4 text-purple-400" />
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <GraduationCap className="w-4 h-4 text-[#007472] dark:text-[#2AC3BB]" />
           <span>{isAr ? 'ولوج الفصول الذكية' : 'Enter Smart Classroom'}</span>
         </h3>
-        <p className="text-[11px] text-slate-400 leading-relaxed">
+        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
           {isAr
             ? 'أدخل الكود لمزامنة مسارك التعليمي، المذاكرة، وحل الكويزات المباشرة.'
             : 'Enter classroom code to synchronize homeworks, calendar events, and live quiz channels.'}
@@ -1176,12 +1176,12 @@ export default function Classrooms({
             value={classCodeInput}
             onChange={(e) => setClassCodeInput(e.target.value)}
             placeholder={isAr ? 'مثال: PHYS12' : 'e.g. PHYS12'}
-            className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono uppercase focus:outline-none focus:border-purple-500"
+            className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono uppercase focus:outline-none focus:border-[#007472] dark:focus:border-[#2AC3BB]"
           />
           <button
             onClick={() => handleJoinByCode()}
             disabled={isJoining}
-            className="bg-purple-600 hover:bg-purple-500 text-white rounded-xl px-4 text-xs font-black transition-all cursor-pointer flex items-center justify-center"
+            className="bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#23aba4] text-white dark:text-slate-950 rounded-xl px-4 text-xs font-black transition-all cursor-pointer flex items-center justify-center shadow-sm shadow-[#007472]/20"
           >
             {isJoining ? '...' : (isAr ? 'دخول' : 'Join')}
           </button>
@@ -1309,27 +1309,27 @@ export default function Classrooms({
           {renderSidebar()}
 
           {/* Welcome Screen Empty State */}
-          <div className="flex-1 bg-slate-900/20 border border-slate-800/40 rounded-3xl p-10 flex flex-col items-center justify-center text-center space-y-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-600/20 to-indigo-600/20 flex items-center justify-center text-purple-400 border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+          <div className="flex-1 bg-slate-100/60 dark:bg-slate-900/20 border border-slate-200/80 dark:border-slate-800/40 rounded-3xl p-10 flex flex-col items-center justify-center text-center space-y-6">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#007472]/20 to-[#2AC3BB]/20 flex items-center justify-center text-[#007472] dark:text-[#2AC3BB] border border-[#2AC3BB]/30 shadow-[0_0_30px_rgba(42,195,187,0.15)]">
               <GraduationCap className="w-12 h-12" />
             </div>
             <div className="space-y-2 max-w-lg">
-              <h2 className="text-2xl font-black text-white tracking-tight">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 {isAr ? 'مرحبا بك في استوديو الفصول الذكية ' : 'Welcome to Classroom Hub '}
               </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
                 {isAr
                   ? 'منصتك الموحدة للأكاديميين السحابيين. تواصل، وحل الاختبارات، وشارك الملفات والمشاريع، وتابع مستواك ودرجاتك بتنظيم فائق ونظيف.'
                   : 'Your cloud education cockpit. Collaborate on homeworks, track calendar milestones, and play interactive real-time quizzes under teacher guidance.'}
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-3">
-              <div className="px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-2xl text-[11px] text-slate-300 font-bold flex items-center gap-2">
-                <span className="text-purple-400"></span>
+              <div className="px-4 py-3 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-[11px] text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2 shadow-xs">
+                <span className="text-[#007472] dark:text-[#2AC3BB]">●</span>
                 <span>{isAr ? 'اتصالات مشفرة بالكامل E2EE' : 'End-to-End Cryptography'}</span>
               </div>
-              <div className="px-4 py-3 bg-slate-900/60 border border-slate-800 rounded-2xl text-[11px] text-slate-300 font-bold flex items-center gap-2">
-                <span className="text-emerald-400"></span>
+              <div className="px-4 py-3 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-[11px] text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2 shadow-xs">
+                <span className="text-emerald-500">●</span>
                 <span>{isAr ? 'لوحات تحليلات ذكية ومقاييس حية' : 'Engagement Metrics & Live Scores'}</span>
               </div>
             </div>

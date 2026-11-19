@@ -26,14 +26,14 @@ export default function StorePage({ userId, userName, isPremium, planName, lang,
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 pb-14 pt-5 sm:px-6 lg:px-10" dir={isAr ? 'rtl' : 'ltr'}>
-      <header className="mb-6 overflow-hidden rounded-[2rem] border border-[#2AC3BB]/30 bg-gradient-to-br from-[#007472] via-[#005e5c] to-[#2AC3BB] p-6 text-white shadow-xl shadow-[#007472]/15 sm:p-8">
+      <header className="dark mb-6 overflow-hidden rounded-[2rem] border border-[#2AC3BB]/30 bg-gradient-to-br from-[#007472] via-[#005e5c] to-[#2AC3BB] p-6 text-white shadow-xl shadow-[#007472]/15 sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-white/70"><Store className="h-4 w-4" /> QuizSpace Store</div>
-            <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{isAr ? 'المتجر' : 'Store'}</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-white/80">{isAr ? `إطارات الملف الشخصي والباقات — أهلاً ${userName || ''}` : `Profile frames and reward bundles — welcome ${userName || ''}`}</p>
+            <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-teal-100"><Store className="h-4 w-4 text-[#2AC3BB]" /> QuizSpace Store</div>
+            <h1 className="text-3xl font-black tracking-tight sm:text-4xl text-white">{isAr ? 'المتجر' : 'Store'}</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-7 text-teal-50/90">{isAr ? `إطارات الملف الشخصي والباقات — أهلاً ${userName || ''}` : `Profile frames and reward bundles — welcome ${userName || ''}`}</p>
           </div>
-          <button type="button" onClick={() => onNavigate('customization')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/10 px-4 py-2.5 text-xs font-black transition hover:bg-white/20"><ArrowLeft className="h-4 w-4 rtl:rotate-180" />{isAr ? 'تخصيص الملف' : 'Profile customization'}</button>
+          <button type="button" onClick={() => onNavigate('customization')} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/15 px-4 py-2.5 text-xs font-black text-white transition hover:bg-white/25"><ArrowLeft className="h-4 w-4 rtl:rotate-180" />{isAr ? 'تخصيص الملف' : 'Profile customization'}</button>
         </div>
       </header>
       <IndependentStore userId={userId} isPremium={isPremium} planName={planName} rewards={rewards} onRewardsChanged={() => void refresh()} lang={lang} />

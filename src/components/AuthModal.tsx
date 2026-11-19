@@ -226,7 +226,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
         className="uipro-glass-surface relative my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-white/60 dark:border-white/10 bg-white/85 dark:bg-slate-950/85 backdrop-blur-2xl shadow-[0_30px_100px_-35px_rgba(0,0,0,0.65)] motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200 sm:max-h-[calc(100dvh-3rem)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <section className="relative hidden w-[42%] shrink-0 overflow-hidden bg-[#031717] p-8 text-white lg:flex lg:flex-col lg:justify-between">
+        <section className="dark relative hidden w-[42%] shrink-0 overflow-hidden bg-[#031717] p-8 text-white lg:flex lg:flex-col lg:justify-between">
           <div className="pointer-events-none absolute -left-24 top-12 h-64 w-64 rounded-full border border-[#2AC3BB]/10" />
           <div className="pointer-events-none absolute -left-10 top-28 h-44 w-44 rounded-full border border-[#2AC3BB]/15" />
           <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-[#007472]/25 blur-[90px]" />
@@ -236,14 +236,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
           </div>
 
           <div className="relative z-10 py-10">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] font-black text-cyan-100/80">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#2AC3BB]" aria-hidden="true" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-3.5 py-1.5 text-xs font-black text-[#2AC3BB]">
+              <span className="h-2 w-2 rounded-full bg-[#2AC3BB] animate-pulse" aria-hidden="true" />
               مساحة تعلم شخصية
             </span>
-            <h3 className="mt-5 text-4xl font-black leading-[1.25] tracking-tight">
+            <h3 className="mt-5 text-3xl sm:text-4xl font-black leading-[1.25] tracking-tight text-white">
               كل سؤال يقرّبك من <span className="bg-gradient-to-l from-[#2AC3BB] via-[#FCF6EE] to-[#EE8361] bg-clip-text text-transparent">هدفك.</span>
             </h3>
-            <p className="mt-5 text-sm leading-7 text-slate-200/90">
+            <p className="mt-5 text-sm leading-7 text-slate-200">
               احفظ اختباراتك، تابع تقدمك، وخلي أدوات الذكاء الاصطناعي تساعدك تذاكر بوضوح أكبر.
             </p>
           </div>
@@ -254,9 +254,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               { icon: ShieldCheck, label: 'تقدم محفوظ' },
               { icon: Check, label: 'نتائج واضحة' },
             ].map(({ icon: Icon, label }) => (
-              <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.055] p-3">
-                <Icon className="h-4 w-4 text-cyan-200" aria-hidden="true" />
-                <p className="mt-2 text-[10px] font-bold text-white/90">{label}</p>
+              <div key={label} className="rounded-2xl border border-white/15 bg-white/[0.08] p-3">
+                <Icon className="h-4 w-4 text-[#2AC3BB]" aria-hidden="true" />
+                <p className="mt-2 text-xs font-black text-white">{label}</p>
               </div>
             ))}
           </div>
@@ -548,7 +548,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <button
                 type="submit"
                 disabled={isBusy}
-                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
+                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-5 py-3 text-sm font-black text-white dark:text-slate-950 shadow-lg shadow-[#007472]/20 dark:shadow-[#2AC3BB]/20 transition-all duration-200 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007472] dark:focus-visible:outline-[#2AC3BB] cursor-pointer"
               >
                 {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />}
                 {isRegister ? 'إنشاء الحساب' : 'تسجيل الدخول'}
@@ -556,7 +556,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
 
               <div className="flex items-center gap-3 py-1" aria-hidden="true">
                 <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-                <span className="text-[10px] font-black text-slate-400">أو</span>
+                <span className="text-xs font-bold text-slate-400">أو</span>
                 <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
               </div>
 
@@ -564,7 +564,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 type="button"
                 onClick={() => void handleGoogleSignIn()}
                 disabled={isBusy}
-                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-800 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/15 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
+                className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-300/80 bg-white px-4 py-3 text-sm font-bold text-slate-800 shadow-sm transition-all duration-200 hover:border-slate-400 hover:bg-slate-50 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800 cursor-pointer"
               >
                 {googleLoading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <Chrome className="h-5 w-5 text-red-500" aria-hidden="true" />}
                 {googleLoading ? 'جارٍ فتح Google...' : 'المتابعة باستخدام Google'}

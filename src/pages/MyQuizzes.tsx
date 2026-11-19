@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Quiz, QuizCompletion } from '../types';
-import { BookOpen, Clock, Download, Edit3, Play, Printer, RefreshCw, Share2, Star, Trash2, Users, X } from 'lucide-react';
+import { BookOpen, Clock, Download, Edit3, Play, Printer, RefreshCw, Share2, Sparkles, Star, Trash2, Users, X } from 'lucide-react';
 import { EssayReviewModal } from '../components/EssayReviewModal';
 import { PremiumNameTag } from '../components/PremiumNameTag';
 import { getCompletionsByQuizId, getPendingEssayReviews, getQuizTakersUnique } from '../lib/db';
@@ -160,17 +160,8 @@ export function MyQuizzes({
             <div className="w-8 h-8 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center shrink-0">
               <BookOpen className="w-4 h-4" />
             </div>
-            <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white">
-              <ShinyText
-                text={isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes'}
-                color={isAr ? '#0f172a' : '#e2e8f0'}
-                shineColor="#67e8f9"
-                speed={3.2}
-                shineWidth={34}
-                glow={0.24}
-                trigger="view"
-                className="dark:text-slate-100"
-              />
+            <h2 className="text-2xl font-black font-display text-slate-900 dark:text-[#FCF6EE] flex items-center gap-2">
+              <span>{isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes'}</span>
             </h2>
             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {myQuizzes.length}
@@ -234,6 +225,14 @@ export function MyQuizzes({
               {isAr ? 'ابدأ الآن بتأليف اختبار تفاعلي باستخدام كوزمو لتبدأ رحلتك العلمية!' : 'Author a smart quiz or prompt the AI companion right now to start your cosmic journey!'}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => { window.location.hash = '#/dashboard/create'; }}
+            className="mt-2 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 font-black text-xs transition-all duration-200 active:scale-95 shadow-md shadow-[#007472]/20 dark:shadow-[#2AC3BB]/20 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007472]"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{isAr ? 'أنشئ اختبارك الأول الآن' : 'Create your first quiz now'}</span>
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">

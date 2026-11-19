@@ -2483,17 +2483,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
       {/* Visual Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-slate-800 dark:text-slate-100">
-            <ShinyText
-              text={quizToEdit ? 'تعديل وتحديث الاختبار الحالي' : 'استوديو صياغة الأسئلة والاختبارات'}
-              color="#e2e8f0"
-              shineColor="#c4b5fd"
-              speed={3.6}
-              shineWidth={28}
-              glow={0.18}
-              trigger="view"
-              className="dark:text-slate-100"
-            />
+          <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900 dark:text-[#FCF6EE] tracking-tight">
+            {quizToEdit ? 'تعديل وتحديث الاختبار الحالي' : 'استوديو صياغة الأسئلة والاختبارات'}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {quizToEdit ? 'قم بتنقيح بيانات الأسئلة وخيارات الحل بدقة تامة ثم احفظ التعديلات.' : 'اختر طريقتك المفضلة لبدء صياغة اختبار حديث ومشاركته فوراً مع شبكتك العلمية.'}
