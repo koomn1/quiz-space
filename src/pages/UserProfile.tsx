@@ -20,6 +20,8 @@ import {
   Loader2,
   Lock,
   MapPin,
+  Monitor,
+  Moon,
   Palette,
   Phone,
   Plus,
@@ -27,6 +29,7 @@ import {
   ShieldCheck,
   Sparkles,
   Star,
+  Sun,
   Target,
   Ticket,
   Upload,
@@ -73,6 +76,7 @@ import lanyardFrontImage from '../components/lanyard/card-front.webp';
 import lanyardStrapImage from '../components/lanyard/lanyard.png';
 import { PremiumNameTag } from '../components/PremiumNameTag';
 import { THEME_PRESETS } from '../lib/themePresets';
+import { useTheme } from '../context/ThemeContext';
 import { showToast } from '../components/Toast';
 import OverlayPortal from '../components/OverlayPortal';
 import SpotlightCard from '../components/SpotlightCard';
@@ -122,6 +126,7 @@ export default function UserProfile({
   const containerRef = useRef<HTMLDivElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const { themePreference, setThemePreference, colorTheme: activeColorTheme, setColorTheme: setActiveColorTheme } = useTheme();
 
   // Profile data states
   const [profileData, setProfileData] = useState<UserStats | null>(null);
@@ -1437,20 +1442,67 @@ export default function UserProfile({
 
               {/* Scrollable Body */}
               <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-5">
+                {/* Mode Selector: Light / Dark / Auto (System) */}
+                <div>
+                  <label className="mb-2.5 block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    {isAr ? 'نمط العرض (Dark / Light Mode)' : 'Display Mode'}
+                  </label>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {[
+                      { id: 'dark' as const, label: isAr ? 'داكن' : 'Dark', icon: Moon },
+                      { id: 'light' as const, label: isAr ? 'فاتح' : 'Light', icon: Sun },
+                      { id: 'system' as const, label: isAr ? 'تلقائي' : 'System', icon: Monitor },
+                    ].map((item) => {
+                      const isSelected = themePreference === item.id;
+                      const IconComponent = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setThemePreference(item.id);
+                            showToast(
+                              'success',
+                              isAr
+                                ? `تم تفعيل النمط ال${item.label}.`
+                                : `Switched to ${item.label} mode.`
+                            );
+                          }}
+                          className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-black transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-[#2AC3BB] bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB] shadow-sm ring-2 ring-[#2AC3BB]/30'
+                              : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900 dark:text-slate-300'
+                          }`}
+                        >
+                          <IconComponent className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div>
                   <label className="mb-2.5 block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     {isAr ? 'لوحة ألوان المنصة (Color Palette)' : 'Platform Color Palette'}
                   </label>
                   <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                     {THEME_PRESETS.map((preset) => {
-                      const isSelected = (colorTheme || 'petrol') === preset.id;
+                      const currentActivePreset = colorTheme || activeColorTheme || 'petrol';
+                      const isSelected = currentActivePreset === preset.id;
                       return (
                         <button
                           key={preset.id}
                           type="button"
                           onClick={() => {
-                            setColorTheme?.(preset.id);
-                            localStorage.setItem('quiz_color_theme', preset.id);
+                            if (setColorTheme) {
+                              setColorTheme(preset.id);
+                            } else {
+                              setActiveColorTheme(preset.id);
+                            }
+                            try {
+                              localStorage.setItem('quiz_color_theme', preset.id);
+                            } catch (_) {}
                             window.dispatchEvent(new CustomEvent('quizspace-theme-updated', { detail: preset.id }));
                             showToast('success', isAr ? `تم تطبيق ثيم ${preset.id}.` : `Theme ${preset.id} applied.`);
                           }}

@@ -1,18 +1,42 @@
 <!doctype html>
-    <html lang="ar" dir="rtl" class="dark">
+<html lang="ar" dir="rtl">
   <head>
     <script>
       (function () {
         try {
+          var pref = localStorage.getItem('quiz_theme_preference');
           var theme = localStorage.getItem('quiz_theme');
-          if (theme === 'light') {
-            document.documentElement.classList.remove('dark');
+          var isDark = true;
+          if (pref === 'light') {
+            isDark = false;
+          } else if (pref === 'dark') {
+            isDark = true;
+          } else if (pref === 'system') {
+            isDark = !window.matchMedia || window.matchMedia('(prefers-color-scheme: dark)').matches;
+          } else if (theme === 'light') {
+            isDark = false;
+          } else if (theme === 'dark') {
+            isDark = true;
           } else {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('quiz_theme', 'dark');
+            isDark = true;
           }
+
+          var root = document.documentElement;
+          if (isDark) {
+            root.classList.add('dark');
+            root.dataset.theme = 'dark';
+            root.style.colorScheme = 'dark';
+          } else {
+            root.classList.remove('dark');
+            root.dataset.theme = 'light';
+            root.style.colorScheme = 'light';
+          }
+
+          var colorTheme = localStorage.getItem('quiz_color_theme') || 'petrol';
+          root.dataset.colorTheme = colorTheme;
         } catch (e) {
           document.documentElement.classList.add('dark');
+          document.documentElement.dataset.theme = 'dark';
         }
       })();
     </script>
