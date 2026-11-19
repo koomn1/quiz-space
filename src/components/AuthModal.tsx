@@ -548,7 +548,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <button
                 type="submit"
                 disabled={isBusy}
-                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-5 py-3 text-sm font-black text-white dark:text-slate-950 shadow-lg shadow-[#007472]/20 dark:shadow-[#2AC3BB]/20 transition-all duration-200 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007472] dark:focus-visible:outline-[#2AC3BB] cursor-pointer"
+                className="mt-1 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#EE8361]/25 transition-all duration-200 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EE8361] cursor-pointer"
               >
                 {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />}
                 {isRegister ? 'إنشاء الحساب' : 'تسجيل الدخول'}

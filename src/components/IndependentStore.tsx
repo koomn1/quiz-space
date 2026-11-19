@@ -352,7 +352,7 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
             type="button"
             disabled={!isActionAvailable || busy === item.id}
             onClick={() => isOwned ? useFrame(item) : buyFrame(item)}
-            className="min-h-10 rounded-xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-4 py-2 text-xs font-black text-white dark:text-slate-950 shadow-sm transition hover:-translate-y-0.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-45"
+            className="min-h-10 rounded-xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 px-4 py-2 text-xs font-black text-white shadow-sm shadow-[#EE8361]/25 transition hover:-translate-y-0.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-45"
           >
             {busy === item.id ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -449,7 +449,7 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
                 <button type="button" onClick={() => handleOpenEditItem(item)} className="p-1 text-slate-400 hover:text-[#EE8361]" title={lang === 'ar' ? 'تعديل المنتج' : 'Edit item'}><Edit3 className="h-4 w-4" /></button>
               </div>
               <p className="mt-1 text-xs font-semibold text-slate-700 dark:text-slate-300">{getStoreBundleBenefitLabel(item, lang)}</p>
-              <button type="button" disabled={!isPurchasable || busy === item.id} onClick={() => void handleStoreAction(item)} className="mt-5 w-full rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-3 py-2.5 text-xs font-black text-white dark:text-slate-950 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer">
+              <button type="button" disabled={!isPurchasable || busy === item.id} onClick={() => void handleStoreAction(item)} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 px-3 py-2.5 text-xs font-black text-white shadow-sm shadow-[#EE8361]/25 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer">
                 {paymentLabel}
               </button>
             </div>;
@@ -544,7 +544,7 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
               <input type="file" accept="image/*" className="hidden" onChange={(event) => uploadReceipt(event.target.files?.[0])} />
             </label>
 
-            <button type="button" onClick={sendOrder} disabled={busy === paymentItem.id} className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-4 py-3.5 text-sm font-black text-white dark:text-slate-950 shadow-lg shadow-[#007472]/20 transition disabled:opacity-60 cursor-pointer">
+            <button type="button" onClick={sendOrder} disabled={busy === paymentItem.id} className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 px-4 py-3.5 text-sm font-black text-white shadow-lg shadow-[#EE8361]/25 transition disabled:opacity-60 cursor-pointer">
               {busy === paymentItem.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <WalletCards className="h-4 w-4" />}
               {busy === paymentItem.id ? t.sending : t.sendOrder}
             </button>

@@ -267,11 +267,12 @@ export default function Sidebar({
               style={{ direction: isAr ? 'rtl' : 'ltr' }}
             >
               {isActive && (
-                <div
-
-                  className="absolute inset-0 bg-primary/10 border border-primary/30 shadow-lg shadow-primary/10 rounded-xl -z-10"
-
-                />
+                <>
+                  <div
+                    className="absolute inset-0 bg-[#007472]/10 border border-[#2AC3BB]/30 shadow-lg shadow-[#007472]/10 rounded-xl -z-10"
+                  />
+                  <span className="absolute start-0 top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-[#2AC3BB] to-[#EE8361] shadow-[0_0_8px_rgba(238,131,97,0.7)]" />
+                </>
               )}
               <div className="flex items-center gap-3 min-w-0 z-10">
                 <AnimatedSidebarIcon isActive={isActive}>
@@ -279,7 +280,7 @@ export default function Sidebar({
                 </AnimatedSidebarIcon>
                 <span className="truncate">{item.label}</span>
                 {isLocked && (
-                  <span className="ml-auto inline-flex items-center gap-1 rounded-md bg-amber-500/90 px-1.5 py-0.5 text-[9px] font-black text-white" style={{ marginRight: isAr ? 'auto' : 0, marginLeft: isAr ? 0 : 'auto' }}>
+                  <span className="ml-auto inline-flex items-center gap-1 rounded-md bg-gradient-to-r from-[#EE8361] to-amber-500 px-1.5 py-0.5 text-[9px] font-black text-white shadow-xs" style={{ marginRight: isAr ? 'auto' : 0, marginLeft: isAr ? 0 : 'auto' }}>
                     <Lock size={10} />
                     {item.id === 'aichat' ? (isAr ? 'عضوية' : 'MEMBERS') : (isAr ? 'برو' : 'PRO')}
                   </span>
@@ -365,7 +366,7 @@ export default function Sidebar({
                 </div>
                 <button
                   onClick={() => setTab('billing')}
-                  className="bg-primary hover:bg-primary-hover text-white text-[9px] font-black py-1 px-2 rounded-xl w-full hover:scale-102 transition-transform cursor-pointer shadow-md"
+                  className="bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-white text-[9px] font-black py-1 px-2 rounded-xl w-full hover:scale-102 transition-transform cursor-pointer shadow-md shadow-[#EE8361]/20"
                 >
                   {isAr ? 'ترقية للباقة الذهبية' : 'Upgrade to Gold'}
                   <Crown className="w-2 h-2 inline ml-1" />
@@ -388,7 +389,7 @@ export default function Sidebar({
                 </div>
                 <button
                   onClick={() => setTab('billing')}
-                  className="bg-primary hover:bg-primary-hover text-white text-[9px] font-black py-1.5 px-2 rounded-xl w-full hover:scale-102 transition-transform cursor-pointer shadow-md"
+                  className="bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-white text-[9px] font-black py-1.5 px-2 rounded-xl w-full hover:scale-102 transition-transform cursor-pointer shadow-md shadow-[#EE8361]/20"
                 >
                   {isAr ? 'ترقية وتفعيل الآن ' : 'Unlock Now '}
                 </button>

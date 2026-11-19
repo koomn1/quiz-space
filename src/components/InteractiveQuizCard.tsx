@@ -428,13 +428,13 @@ export function InteractiveQuizCard({
         onClick={handleCardClick}
         className={`glass-card ${quizFrameClass} hover:border-primary/45 dark:hover:border-primary/50 p-4 rounded-[20px] hover:shadow-[0_12px_24px_rgba(99,102,241,0.06)] hover:scale-[1.015] duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4 overflow-hidden relative`}
       >
-        <div className="absolute -inset-[1px] rounded-[20px] bg-gradient-to-r from-[#007472]/5 to-[#2AC3BB]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 pointer-events-none" />
+        <div className="absolute -inset-[1px] rounded-[20px] bg-gradient-to-r from-[#007472]/5 via-[#2AC3BB]/5 to-[#EE8361]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 pointer-events-none" />
         <div className="flex-1 flex flex-col md:flex-row md:items-center gap-4">
           {/* Left section: Rating & Category Badge */}
           <div className="flex md:flex-col items-center md:items-start gap-1.5 shrink-0 min-w-[120px]">
             {quiz.ratingsCount > 0 ? (
-              <div className="flex items-center gap-1 text-[11px] text-amber-500 bg-amber-500/5 dark:bg-amber-950/20 px-2 py-0.5 rounded-lg font-bold border border-amber-500/10">
-                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+              <div className="flex items-center gap-1 text-[11px] text-[#EE8361] bg-[#EE8361]/10 dark:bg-[#EE8361]/15 px-2 py-0.5 rounded-lg font-bold border border-[#EE8361]/25">
+                <Star className="w-3 h-3 fill-[#EE8361] text-[#EE8361]" />
                 <span>{quiz.avgRating} ({quiz.ratingsCount})</span>
               </div>
             ) : (
@@ -544,7 +544,7 @@ export function InteractiveQuizCard({
               e.stopPropagation();
               onStartQuiz(quiz.id);
             }}
-            className="flex items-center justify-center gap-1 px-4 py-2 text-xs font-black text-white bg-gradient-to-r from-primary to-primary-hover rounded-xl shadow-md shadow-primary/10 hover:scale-103 transition-transform cursor-pointer"
+            className="flex items-center justify-center gap-1.5 px-4.5 py-2 text-xs font-black text-white bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 rounded-xl shadow-md shadow-[#EE8361]/25 hover:scale-103 transition-transform cursor-pointer"
           >
             <span>{t?.startPlayBtn || (isAr ? 'ابدأ اللعب' : 'Start Play')}</span>
             <Play className={`w-3 h-3 fill-white ${isAr ? '' : 'rotate-180'}`} />
@@ -566,7 +566,7 @@ export function InteractiveQuizCard({
       className={`uipro-clay-card ${quizFrameClass} rounded-[28px] duration-300 ease-out flex flex-col justify-between overflow-hidden group relative cursor-pointer`}
     >
       {/* Soft Specular Light Highlight on Hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-cyan-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none -z-10 rounded-[28px]"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-[#007472]/15 via-[#2AC3BB]/10 to-[#EE8361]/15 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none -z-10 rounded-[28px]"></div>
 
       {/* Inner Card Content Wrapper */}
       <div className="h-full w-full p-6 sm:p-7 flex flex-col justify-between z-10 relative">
@@ -589,8 +589,8 @@ export function InteractiveQuizCard({
 
           {/* Rating Block */}
           {quiz.ratingsCount > 0 ? (
-            <div className="uipro-pill-badge text-amber-500 bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/20">
-              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+            <div className="uipro-pill-badge text-[#EE8361] bg-[#EE8361]/10 dark:bg-[#EE8361]/20 border border-[#EE8361]/30">
+              <Star className="w-3 h-3 fill-[#EE8361] text-[#EE8361]" />
               <span>{quiz.avgRating} ({quiz.ratingsCount})</span>
             </div>
           ) : (
@@ -723,7 +723,7 @@ export function InteractiveQuizCard({
               e.stopPropagation();
               onStartQuiz(quiz.id);
             }}
-            className="uipro-btn-tactile group/play flex grow shrink-0 whitespace-nowrap items-center justify-center gap-2 px-5 h-10 rounded-xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 font-black text-xs shadow-md shadow-[#007472]/20 dark:shadow-[#2AC3BB]/20 cursor-pointer relative overflow-hidden transition-all active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007472] dark:focus-visible:outline-[#2AC3BB]"
+            className="uipro-btn-tactile group/play flex grow shrink-0 whitespace-nowrap items-center justify-center gap-2 px-5 h-10 rounded-xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-white font-black text-xs shadow-md shadow-[#EE8361]/25 cursor-pointer relative overflow-hidden transition-all active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EE8361]"
           >
             <span>{t?.startPlayBtn || (isAr ? 'ابدأ التحدي' : 'Start Play')}</span>
             <Play className={`w-3.5 h-3.5 fill-current ${isAr ? '' : 'rotate-180'} group-hover/play:scale-110 transition-transform`} />

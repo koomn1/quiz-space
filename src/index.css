@@ -943,35 +943,45 @@ html:not(.dark) [class*="text-white"]:not(
   a[class*="from-"],
   [class*="bg-[#007472]"] *,
   [class*="bg-[#031717]"] *,
+  [class*="bg-[#072424]"] *,
+  [class*="bg-[#0C3232]"] *,
+  [class*="bg-[#0b1020]"] *,
+  [class*="bg-[#07171d]"] *,
+  [class*="bg-[#09111e]"] *,
+  [class*="bg-slate-950"] *,
+  [class*="bg-slate-900"] *,
+  [class*="bg-black"] *,
   [class*="bg-primary"] *,
   [class*="bg-emerald-"] *,
   [class*="bg-violet-"] *,
   [class*="bg-indigo-"] *,
   [class*="bg-rose-"] *,
   [class*="badge"] *,
+  [class*="dark"] *,
+  [data-theme="dark"] *,
   .dark *
 ),
-html:not(.dark) [class*="text-[#FCF6EE]"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not([class*="bg-emerald-"] *):not([class*="bg-violet-"] *):not([class*="bg-indigo-"] *):not(.dark *),
-html:not(.dark) [class*="text-[#fcf6ee]"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not([class*="bg-emerald-"] *):not([class*="bg-violet-"] *):not([class*="bg-indigo-"] *):not(.dark *),
-html:not(.dark) [class~="text-slate-100"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not(.dark *),
-html:not(.dark) [class~="text-slate-200"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not(.dark *),
-html:not(.dark) [class~="text-slate-300"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not(.dark *),
-html:not(.dark) [class~="text-slate-400"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-primary"] *):not(.dark *) {
+html:not(.dark) [class*="text-[#FCF6EE]"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="bg-primary"] *):not([class*="bg-emerald-"] *):not([class*="bg-violet-"] *):not([class*="bg-indigo-"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class*="text-[#fcf6ee]"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="bg-primary"] *):not([class*="bg-emerald-"] *):not([class*="bg-violet-"] *):not([class*="bg-indigo-"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-100"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="bg-primary"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-200"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="bg-primary"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-300"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="bg-primary"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-400"]:not(button):not(button *):not(a):not(a *):not([class*="from-"]):not([class*="from-"] *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="bg-primary"] *):not([class*="dark"] *):not(.dark *) {
   color: #0f172a !important;
 }
 
-html:not(.dark) [class*="text-white/80"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not(.dark *),
-html:not(.dark) [class*="text-white/70"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not(.dark *),
-html:not(.dark) [class*="text-white/60"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not(.dark *),
-html:not(.dark) [class*="text-white/50"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not(.dark *) {
+html:not(.dark) [class*="text-white/80"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class*="text-white/70"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class*="text-white/60"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class*="text-white/50"]:not(button *):not([class*="bg-[#007472]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-black"] *):not([class*="dark"] *):not(.dark *) {
   color: #334155 !important;
 }
 
-html:not(.dark) [class~="text-slate-500"]:not(button *),
-html:not(.dark) [class~="text-slate-600"]:not(button *),
-html:not(.dark) [class~="text-slate-700"]:not(button *),
-html:not(.dark) [class~="text-slate-800"]:not(button *),
-html:not(.dark) [class~="text-slate-900"]:not(button *) {
+html:not(.dark) [class~="text-slate-500"]:not(button *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-black"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-600"]:not(button *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-black"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-700"]:not(button *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-black"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-800"]:not(button *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-black"] *):not([class*="dark"] *):not(.dark *),
+html:not(.dark) [class~="text-slate-900"]:not(button *):not([class*="bg-slate-950"] *):not([class*="bg-slate-900"] *):not([class*="bg-[#0b1020]"] *):not([class*="bg-[#07171d]"] *):not([class*="bg-[#031717]"] *):not([class*="bg-[#072424]"] *):not([class*="bg-black"] *):not([class*="dark"] *):not(.dark *) {
   color: #0f172a !important;
 }
 

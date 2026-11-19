@@ -228,7 +228,7 @@ export function MyQuizzes({
           <button
             type="button"
             onClick={() => { window.location.hash = '#/dashboard/create'; }}
-            className="mt-2 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 font-black text-xs transition-all duration-200 active:scale-95 shadow-md shadow-[#007472]/20 dark:shadow-[#2AC3BB]/20 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007472]"
+            className="mt-2 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-white font-black text-xs transition-all duration-200 active:scale-95 shadow-md shadow-[#EE8361]/25 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EE8361]"
           >
             <Sparkles className="w-4 h-4" />
             <span>{isAr ? 'أنشئ اختبارك الأول الآن' : 'Create your first quiz now'}</span>
@@ -326,7 +326,7 @@ export function MyQuizzes({
                     </div>
                   </div>
 
-                  <button type="button" onClick={() => onStartQuiz(quiz.id)} className="min-h-[38px] px-4 rounded-full bg-gradient-to-r from-[#007472] to-[#2AC3BB] hover:from-[#005e5c] hover:to-[#22a19b] text-[#FCF6EE] font-black text-xs flex items-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer shadow-md shadow-[#007472]/20">
+                  <button type="button" onClick={() => onStartQuiz(quiz.id)} className="min-h-[38px] px-4.5 rounded-full bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-white font-black text-xs flex items-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer shadow-md shadow-[#EE8361]/25">
                     <Play className="w-3 h-3 fill-current" />
                     <span>{isAr ? 'ابدأ الحل' : 'Start'}</span>
                   </button>

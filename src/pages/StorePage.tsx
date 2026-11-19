@@ -26,10 +26,10 @@ export default function StorePage({ userId, userName, isPremium, planName, lang,
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 pb-14 pt-5 sm:px-6 lg:px-10" dir={isAr ? 'rtl' : 'ltr'}>
-      <header className="dark mb-6 overflow-hidden rounded-[2rem] border border-[#2AC3BB]/30 bg-gradient-to-br from-[#007472] via-[#005e5c] to-[#2AC3BB] p-6 text-white shadow-xl shadow-[#007472]/15 sm:p-8">
+      <header className="dark mb-6 overflow-hidden rounded-[2rem] border border-[#2AC3BB]/30 bg-gradient-to-br from-[#007472] via-[#005e5c] to-[#EE8361] p-6 text-white shadow-xl shadow-[#EE8361]/20 sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-teal-100"><Store className="h-4 w-4 text-[#2AC3BB]" /> QuizSpace Store</div>
+            <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#FBDFC7]"><Store className="h-4 w-4 text-[#EE8361]" /> QuizSpace Store</div>
             <h1 className="text-3xl font-black tracking-tight sm:text-4xl text-white">{isAr ? 'المتجر' : 'Store'}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-teal-50/90">{isAr ? `إطارات الملف الشخصي والباقات — أهلاً ${userName || ''}` : `Profile frames and reward bundles — welcome ${userName || ''}`}</p>
           </div>

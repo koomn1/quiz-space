@@ -248,7 +248,7 @@ export default function Login() {
               <div dir={isAr ? 'rtl' : 'ltr'}>
                 <div className="mb-7 flex items-start justify-between gap-4">
                   <div>
-                    <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#EE8361]/15 text-[#EE8361]">
                       <LogIn className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-3xl">
@@ -346,7 +346,7 @@ export default function Login() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-hover px-5 py-3 text-sm font-black text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:opacity-95 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 cursor-pointer"
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#EE8361]/25 transition-all duration-200 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#EE8361]/30 cursor-pointer"
                   >
                     {loading ? <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : <LogIn className="h-4 w-4" aria-hidden="true" />}
                     <span>{isRegister ? (isAr ? 'إنشاء الحساب' : 'Create account') : (isAr ? 'تسجيل الدخول' : 'Sign in')}</span>

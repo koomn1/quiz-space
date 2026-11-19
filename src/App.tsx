@@ -810,7 +810,7 @@ export default function App() {
           }}
         />
       ) : isBootstrapLoading ? (
-        <div className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center bg-slate-950/95 px-6 text-center backdrop-blur-xl" dir={lang === 'ar' ? 'rtl' : 'ltr'} role="status" aria-live="polite">
+        <div className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center bg-slate-50/95 dark:bg-[#031717]/95 px-6 text-center backdrop-blur-xl" dir={lang === 'ar' ? 'rtl' : 'ltr'} role="status" aria-live="polite">
           <CosmicLoader size="lg" message={bootstrapMessage} />
         </div>
       ) : (

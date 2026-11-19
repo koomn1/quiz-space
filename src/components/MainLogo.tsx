@@ -19,6 +19,14 @@ const sizeMap = {
 
 const logoLetters = 'QuizSpace'.split('');
 
+const spaceLetterColors = [
+  'text-[#2AC3BB]', // S
+  'text-[#1EB3AB]', // p
+  'text-[#009E9B]', // a
+  'text-[#E57B5A]', // c
+  'text-[#EE8361]', // e
+];
+
 /** Official QuizSpace mark with an animated, accessible wordmark. */
 export const MainLogo = ({ className = '', size = 'md', showText = true }: MainLogoProps) => {
   const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
@@ -101,12 +109,13 @@ export const MainLogo = ({ className = '', size = 'md', showText = true }: MainL
               }}
               className={index < 4
                 ? 'text-slate-900 transition-colors duration-300 dark:text-[#FCF6EE]'
-                : 'text-[#007472] transition-colors duration-300 dark:text-[#2AC3BB] group-hover:text-[#EE8361]'}
+                : `${spaceLetterColors[index - 4] || 'text-[#EE8361]'} transition-colors duration-300 group-hover:text-[#EE8361]`}
               style={{ display: 'inline-block', willChange: 'transform, opacity' }}
             >
               {letter}
             </span>
           ))}
+          <span className="ms-1 inline-block h-1.5 w-1.5 rounded-full bg-[#EE8361] shadow-[0_0_8px_rgba(238,131,97,0.8)] align-middle transition-transform duration-300 group-hover:scale-125" />
         </span>
       )}
     </div>

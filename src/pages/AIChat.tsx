@@ -155,7 +155,7 @@ const COSMO_MODES: CosmoModeConfig[] = [
   {
     id: 'creation', labelAr: 'إنشاء محتوى', labelEn: 'Create',
     descAr: 'اختبارات وملخصات وبطاقات وخطط', descEn: 'Quizzes, summaries, flashcards, plans',
-    icon: Sparkles, color: '#EC4899', bgTint: 'rgba(236,72,153,0.12)', borderTint: 'rgba(236,72,153,0.3)',
+    icon: Sparkles, color: '#EE8361', bgTint: 'rgba(238,131,97,0.14)', borderTint: 'rgba(238,131,97,0.35)',
     orbState: 'shaping', stateLabelsAr: ['ينشئ المحتوى التعليمي...', 'ينظم البنية...'], stateLabelsEn: ['Creating content...', 'Structuring output...'],
   },
   {
@@ -867,7 +867,7 @@ function QuizShowcaseCard({
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-tr from-[#007472] to-[#2AC3BB] text-white shadow-lg shadow-[#007472]/25">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-tr from-[#007472] via-[#2AC3BB] to-[#EE8361] text-white shadow-lg shadow-[#EE8361]/25">
             <Zap className="w-6 h-6" />
           </div>
           <div>
@@ -911,7 +911,7 @@ function QuizShowcaseCard({
           <Sparkles className="w-4 h-4 text-[#EE8361]" />
           <div>
             <span className="block text-[10px] text-slate-400">{isAr ? 'مكافأة الإنجاز' : 'Reward'}</span>
-            <span className="font-bold text-xs text-[#2AC3BB]">+{quiz.questionCount * 5} XP</span>
+            <span className="font-bold text-xs text-[#EE8361]">+{quiz.questionCount * 5} XP</span>
           </div>
         </div>
       </div>
@@ -920,8 +920,8 @@ function QuizShowcaseCard({
       <div className="flex flex-wrap items-center gap-2.5">
         <button
           onClick={() => onStartQuiz?.(quiz.id)}
-          className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs text-white shadow-lg shadow-[#007472]/25 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
-          style={{ background: 'linear-gradient(135deg, #007472 0%, #2AC3BB 100%)' }}
+          className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs text-white shadow-lg shadow-[#EE8361]/25 transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 cursor-pointer"
+          style={{ background: 'linear-gradient(135deg, #007472 0%, #2AC3BB 50%, #EE8361 100%)' }}
         >
           <Play className="w-4 h-4 fill-current" />
           <span>{isAr ? 'ابدأ الاختبار الآن في المنصة' : 'Start Quiz in Platform'}</span>
@@ -2602,7 +2602,7 @@ export default function AIChat({
                 >
                   <div className="flex items-start justify-between gap-3 mb-5">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-tr from-[#007472] to-[#2AC3BB] text-white shadow-lg shadow-[#007472]/25">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-tr from-[#007472] via-[#2AC3BB] to-[#EE8361] text-white shadow-lg shadow-[#EE8361]/25">
                         <Zap className="w-6 h-6" />
                       </div>
                       <div>

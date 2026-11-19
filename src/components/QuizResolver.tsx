@@ -1930,7 +1930,7 @@ export default function QuizResolver({
                 {isAnswersFrozen ? (
                   <button
                     onClick={handleNextQuestion}
-                    className="flex min-h-12 items-center gap-2 rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-6 sm:px-8 py-3 text-sm font-black text-white dark:text-slate-950 shadow-lg shadow-[#007472]/20 hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer"
+                    className="flex min-h-12 items-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 px-6 sm:px-8 py-3 text-sm font-black text-white shadow-lg shadow-[#EE8361]/25 hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <span>{currentIdx + 1 === quiz.questions.length ? (isAr ? 'إنهاء وحساب الدرجة' : 'Finish & Calculate Score') : (isAr ? 'السؤال التالي' : 'Next Question')}</span>
                     <ArrowLeft className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />
@@ -2151,8 +2151,8 @@ export default function QuizResolver({
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
 
             <div className="space-y-2">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary">
-                <Star className="w-6 h-6 fill-primary text-primary" />
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#EE8361]/15 text-[#EE8361]">
+                <Star className="w-6 h-6 fill-[#EE8361] text-[#EE8361]" />
               </div>
               <h4 className="font-display font-black text-lg text-[var(--app-text)] tracking-tight">
                 {isAr ? 'شاركنا رأيك في الاختبار (اختياري) ' : 'Share your quiz feedback (optional) '}

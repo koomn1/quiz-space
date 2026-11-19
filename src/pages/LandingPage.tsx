@@ -528,8 +528,8 @@ export default function LandingPage({
           <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950 dark:text-white sm:text-2xl">{isAr ? 'استكشف اختباراتك وابدأ من هنا' : 'Explore your quizzes and start here'}</h2>
         </div>
         <div className="flex w-full gap-2 sm:w-auto">
-          <button type="button" onClick={() => onCreateQuizTab()} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#007472] px-4 text-xs font-black text-[#FCF6EE] shadow-lg shadow-[#007472]/20 transition hover:-translate-y-0.5 hover:bg-[#005e5c] active:scale-98 sm:flex-none">
-            <Sparkles className="h-4 w-4 text-[#2AC3BB]" />
+          <button type="button" onClick={() => onCreateQuizTab()} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-5 text-xs font-black text-white shadow-lg shadow-[#EE8361]/25 transition hover:brightness-110 hover:-translate-y-0.5 active:scale-98 sm:flex-none">
+            <Sparkles className="h-4 w-4 text-white" />
             {isAr ? 'إنشاء اختبار' : 'Create quiz'}
           </button>
           <button type="button" onClick={() => document.getElementById('dashboard-quiz-search')?.focus()} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/70 px-4 text-xs font-black text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-[#2AC3BB] dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200 sm:flex-none">
@@ -630,7 +630,7 @@ export default function LandingPage({
                 onClick={() => setActiveCategory(cat.id)}
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold shrink-0 transition-all duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-[#007472] text-[#FCF6EE] shadow-sm scale-102'
+                    ? 'bg-gradient-to-r from-[#007472] to-[#005e5c] border-b-2 border-[#EE8361] text-[#FCF6EE] shadow-md shadow-[#007472]/20 scale-102'
                     : 'bg-white/40 dark:bg-slate-900/40 text-slate-600 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-white/10'
                 }`}
               >
@@ -675,7 +675,7 @@ export default function LandingPage({
             <button
               type="button"
               onClick={() => onCreateQuizTab()}
-              className="mt-5 min-h-[44px] px-6 rounded-full bg-[#007472] hover:bg-[#005e5c] text-[#FCF6EE] font-black text-xs shadow-md shadow-[#007472]/20 cursor-pointer transition-colors"
+              className="mt-5 min-h-[44px] px-6 rounded-full bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-white font-black text-xs shadow-md shadow-[#EE8361]/25 cursor-pointer transition-all"
             >
               {isAr ? 'إنشاء اختبار الآن' : 'Create Quiz Now'}
             </button>
@@ -693,7 +693,7 @@ export default function LandingPage({
               return (
                 <div
                   key={quiz.id}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-[28px] border border-slate-200/90 bg-white/[0.78] p-4 text-right shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#2AC3BB]/50 hover:bg-white/[0.96] hover:shadow-[0_20px_46px_rgba(0,116,114,0.14)] dark:border-white/10 dark:bg-[#072424]/70 dark:hover:border-[#2AC3BB]/40 dark:hover:bg-[#072424]/90 sm:p-5"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-[28px] border border-slate-200/90 bg-white/[0.78] p-4 text-right shadow-[0_12px_34px_rgba(15,23,42,0.06)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#EE8361]/50 hover:bg-white/[0.96] hover:shadow-[0_20px_46px_rgba(238,131,97,0.14)] dark:border-white/10 dark:bg-[#072424]/70 dark:hover:border-[#EE8361]/40 dark:hover:bg-[#072424]/90 sm:p-5"
                 >
                   <div>
                     {/* Top Status Strip: Solvers count, Questions count & Owner Actions */}
@@ -714,7 +714,7 @@ export default function LandingPage({
                           <span>{questionsCount} {isAr ? 'سؤالاً' : 'Q’s'}</span>
                         </span>
 
-                        <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-[#EE8361]/30 bg-[#EE8361]/10 px-2 py-1.5 text-[10px] font-bold text-[#EE8361]">
                           <Star className="w-2.5 h-2.5 fill-current" />
                           <span>{rating}</span>
                         </span>
@@ -845,7 +845,7 @@ export default function LandingPage({
                     <button
                       type="button"
                       onClick={() => onStartQuiz(quiz.id)}
-                      className="min-h-[38px] px-4 rounded-full bg-gradient-to-r from-[#007472] to-[#2AC3BB] hover:from-[#005e5c] hover:to-[#22a19b] text-[#FCF6EE] font-black text-xs flex items-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer shadow-md shadow-[#007472]/20"
+                      className="min-h-[38px] px-4.5 rounded-full bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-white font-black text-xs flex items-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer shadow-md shadow-[#EE8361]/25"
                     >
                       <Play className="w-3 h-3 fill-current" />
                       <span>{isAr ? 'ابدأ الحل' : 'Start'}</span>

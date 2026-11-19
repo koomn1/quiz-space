@@ -2298,41 +2298,59 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
     <>
       {previewDraft && (
         <OverlayPortal>
-          <div className="fixed inset-0 z-[10020] flex items-center justify-center overflow-y-auto bg-slate-950/85 p-3 backdrop-blur-xl sm:p-6" dir={isAr ? 'rtl' : 'ltr'}>
-            <div className="my-auto flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-[30px] border border-[#2AC3BB]/20 bg-[#0b1020] text-white shadow-[0_0_80px_rgba(0,116,114,0.3)]">
-              <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-gradient-to-l from-[#007472]/20 to-transparent px-5 py-4 sm:px-7">
+          <div className="dark fixed inset-0 z-[10020] flex items-center justify-center overflow-y-auto bg-slate-950/85 p-3 backdrop-blur-xl sm:p-6" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="my-auto flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-[32px] border border-[#2AC3BB]/35 bg-[#07171d] text-white shadow-[0_0_80px_rgba(0,116,114,0.35)]">
+              <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-gradient-to-l from-[#007472]/30 via-[#007472]/15 to-transparent px-5 py-4 sm:px-7">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#2AC3BB]">QuizSpace Preview</p>
-                  <h2 className="mt-1 text-xl font-black sm:text-2xl">معاينة الاختبار قبل الحفظ</h2>
-                  <p className="mt-1 text-xs text-slate-400">راجع الأسئلة والإجابات، ثم اعتمد الاختبار أو ارجع للتعديل.</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#2AC3BB]">QuizSpace Preview</p>
+                  <h2 className="mt-1 text-xl font-black text-white sm:text-2xl drop-shadow-sm">معاينة الاختبار قبل الحفظ</h2>
+                  <p className="mt-1 text-xs font-medium text-slate-300">راجع الأسئلة والإجابات، ثم اعتمد الاختبار أو ارجع للتعديل.</p>
                 </div>
-                <button type="button" onClick={() => setPreviewDraft(null)} className="rounded-2xl border border-white/10 px-3 py-2 text-xs font-black text-slate-300 transition hover:bg-white/10">إغلاق</button>
+                <button type="button" onClick={() => setPreviewDraft(null)} className="rounded-2xl border border-white/20 bg-white/5 px-4 py-2 text-xs font-black text-white transition hover:bg-white/15">إغلاق</button>
               </div>
-              <div className="grid shrink-0 grid-cols-2 gap-3 border-b border-white/10 p-4 sm:grid-cols-4 sm:px-7">
-                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">العنوان</span><BidiText as="strong" className="mt-1 block truncate text-right text-sm">{previewDraft.title}</BidiText></div>
-                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">عدد الأسئلة</span><strong className="mt-1 block text-lg text-[#2AC3BB]">{previewDraft.questions.length}</strong></div>
-                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">اختيار من متعدد</span><strong className="mt-1 block text-lg text-cyan-300">{previewDraft.questions.filter(q => q.type === 'mcq').length}</strong></div>
-                <div className="rounded-2xl bg-white/[0.05] p-3"><span className="block text-[10px] text-slate-400">مقالي / صح وخطأ</span><strong className="mt-1 block text-lg text-amber-300">{previewDraft.questions.filter(q => q.type !== 'mcq').length}</strong></div>
+              <div className="grid shrink-0 grid-cols-2 gap-3 border-b border-white/10 bg-black/20 p-4 sm:grid-cols-4 sm:px-7">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-[11px] font-bold text-slate-300">العنوان</span><BidiText as="strong" className="mt-1 block truncate text-right text-sm font-extrabold text-white">{previewDraft.title}</BidiText></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-[11px] font-bold text-slate-300">عدد الأسئلة</span><strong className="mt-1 block text-xl font-black text-[#2AC3BB]">{previewDraft.questions.length}</strong></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-[11px] font-bold text-slate-300">اختيار من متعدد</span><strong className="mt-1 block text-xl font-black text-cyan-300">{previewDraft.questions.filter(q => q.type === 'mcq').length}</strong></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-[11px] font-bold text-slate-300">مقالي / صح وخطأ</span><strong className="mt-1 block text-xl font-black text-amber-300">{previewDraft.questions.filter(q => q.type !== 'mcq').length}</strong></div>
               </div>
-              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-7">
+              <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto p-4 sm:p-7">
                 {previewDraft.questions.map((question, index) => {
                   const hasAnswer = question.type === 'essay'
                     ? Boolean(question.correctAnswer?.trim())
                     : (typeof question.correctIndex === 'number' && question.correctIndex >= 0 && (question.type !== 'mcq' || Boolean(question.options?.[question.correctIndex]?.trim())));
                   return (
-                    <article key={question.id || index} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 transition hover:border-[#2AC3BB]/40">
+                    <article key={question.id || index} className="rounded-2xl border border-white/15 bg-white/[0.05] p-5 shadow-lg transition hover:border-[#2AC3BB]/50 hover:bg-white/[0.07]">
                       <div className="flex items-start gap-3">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#007472]/20 dark:bg-[#2AC3BB]/20 text-xs font-black text-[#2AC3BB]">{index + 1}</span>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[#2AC3BB]/40 bg-[#2AC3BB]/20 text-xs font-black text-[#2AC3BB] shadow-[0_0_12px_rgba(42,195,187,0.25)]">{index + 1}</span>
                         <div className="min-w-0 flex-1">
-                          <div className="mb-2 flex flex-wrap items-center gap-2">
-                            <span className="rounded-full bg-white/[0.07] px-2.5 py-1 text-[10px] font-bold text-slate-300">{question.type === 'mcq' ? 'اختيار من متعدد' : question.type === 'tf' ? 'صح / خطأ' : 'مقالي'}</span>
-                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${hasAnswer ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'}`}>{hasAnswer ? 'إجابة مؤكدة' : 'يحتاج مراجعة'}</span>
+                          <div className="mb-2.5 flex flex-wrap items-center gap-2">
+                            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-extrabold text-slate-200">{question.type === 'mcq' ? 'اختيار من متعدد' : question.type === 'tf' ? 'صح / خطأ' : 'مقالي'}</span>
+                            <span className={`rounded-full border px-3 py-1 text-[11px] font-extrabold ${hasAnswer ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-300' : 'border-rose-400/40 bg-rose-500/20 text-rose-300'}`}>{hasAnswer ? 'إجابة مؤكدة' : 'يحتاج مراجعة'}</span>
                           </div>
-                          <BidiText as="p" className="whitespace-pre-wrap text-right text-sm font-bold leading-7 text-white">{cleanQuizText(question.text)}</BidiText>
-                          {question.type === 'mcq' && <div className="mt-3 grid gap-2 sm:grid-cols-2">{(question.options || []).map((option, optionIndex) => <div key={optionIndex} className={`rounded-xl border px-3 py-2 text-right text-xs ${optionIndex === question.correctIndex ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200' : 'border-white/10 bg-black/10 text-slate-300'}`}><span dir="ltr" className="mr-1 inline-block font-black">{String.fromCharCode(65 + optionIndex)}.</span><BidiText>{cleanQuizText(option) || 'خيار فارغ'}</BidiText></div>)}</div>}
+                          <BidiText as="p" className="whitespace-pre-wrap text-right text-base font-extrabold leading-8 text-white">{cleanQuizText(question.text)}</BidiText>
+                          {question.type === 'mcq' && (
+                            <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2">
+                              {(question.options || []).map((option, optionIndex) => (
+                                <div
+                                  key={optionIndex}
+                                  className={`rounded-xl border px-3.5 py-2.5 text-right text-xs transition ${
+                                    optionIndex === question.correctIndex
+                                      ? 'border-emerald-400/70 bg-emerald-500/20 text-emerald-100 font-bold shadow-[0_0_16px_rgba(16,185,129,0.2)]'
+                                      : 'border-white/15 bg-white/[0.05] text-slate-200 hover:bg-white/10'
+                                  }`}
+                                >
+                                  <span dir="ltr" className={`mr-1.5 inline-block font-black ${optionIndex === question.correctIndex ? 'text-emerald-300' : 'text-[#2AC3BB]'}`}>
+                                    {String.fromCharCode(65 + optionIndex)}.
+                                  </span>
+                                  <BidiText>{cleanQuizText(option) || 'خيار فارغ'}</BidiText>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                           {question.type === 'essay' && (
-                            <div className="mt-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.06] p-3">
-                              <label className="mb-2 block text-xs font-bold text-amber-200">الإجابة النموذجية (اختياريًا إذا لم تكن موجودة في الملف)</label>
+                            <div className="mt-3.5 rounded-2xl border border-amber-300/35 bg-amber-400/10 p-3.5">
+                              <label className="mb-2 block text-xs font-black text-amber-200">الإجابة النموذجية (اختياريًا إذا لم تكن موجودة في الملف)</label>
                               <textarea
                                 value={question.correctAnswer || ''}
                                 onChange={(event) => setPreviewDraft(previous => previous ? {
@@ -2345,20 +2363,20 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                                 placeholder="اكتب الإجابة النموذجية هنا، أو اتركها فارغة للتصحيح اليدوي..."
                                 aria-label={`الإجابة النموذجية للسؤال ${index + 1}`}
                                 dir="auto"
-                                className="w-full resize-y rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-right text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-amber-300/60 focus:ring-2 focus:ring-amber-300/20 [unicode-bidi:plaintext]"
+                                className="w-full resize-y rounded-xl border border-white/20 bg-black/40 px-3.5 py-2.5 text-right text-sm leading-6 text-white outline-none placeholder:text-slate-400 focus:border-amber-300/80 focus:ring-2 focus:ring-amber-300/30 [unicode-bidi:plaintext]"
                               />
                             </div>
                           )}
-                          {question.explanation && <p className="mt-3 border-t border-white/10 pt-3 text-xs leading-6 text-slate-400">الشرح: <BidiText>{question.explanation}</BidiText></p>}
+                          {question.explanation && <p className="mt-3.5 border-t border-white/10 pt-3 text-xs leading-6 text-slate-300 font-medium"><strong className="text-white font-bold">الشرح:</strong> <BidiText>{question.explanation}</BidiText></p>}
                         </div>
                       </div>
                     </article>
                   );
                 })}
               </div>
-              <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-white/10 bg-black/15 p-4 sm:flex-row sm:justify-between sm:px-7">
-                <button type="button" onClick={() => setPreviewDraft(null)} className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-black text-slate-200 transition hover:bg-white/10">العودة للتعديل</button>
-                <button type="button" onClick={async () => { const draft = previewDraft; const saved = await handlePublishQuiz(draft.questions, { title: draft.title, description: draft.description }, { skipPreview: true }); if (saved) setPreviewDraft(null); }} disabled={isSaving} className="rounded-2xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] px-6 py-3 text-sm font-black text-white shadow-lg shadow-[#007472]/25 transition hover:brightness-110 disabled:opacity-50">اعتماد وحفظ الاختبار</button>
+              <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-white/10 bg-black/30 p-4 sm:flex-row sm:justify-between sm:px-7">
+                <button type="button" onClick={() => setPreviewDraft(null)} className="rounded-2xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-black text-white transition hover:bg-white/15">العودة للتعديل</button>
+                <button type="button" onClick={async () => { const draft = previewDraft; const saved = await handlePublishQuiz(draft.questions, { title: draft.title, description: draft.description }, { skipPreview: true }); if (saved) setPreviewDraft(null); }} disabled={isSaving} className="rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-7 py-3.5 text-sm font-black text-white shadow-xl shadow-[#EE8361]/35 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50">اعتماد وحفظ الاختبار</button>
               </div>
             </div>
           </div>
@@ -2380,7 +2398,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                   : `${pendingExtractedDraft.questions.length} extracted questions from “${pendingExtractedDraft.fileName}” were found. You can continue reviewing them or clear them and start over.`}
               </p>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <button type="button" onClick={handleResumeExtractedDraft} className="min-h-11 rounded-xl bg-[#007472] px-4 py-3 text-sm font-black text-white transition hover:bg-[#005e5c] focus:outline-none focus:ring-2 focus:ring-[#2AC3BB]">
+                <button type="button" onClick={handleResumeExtractedDraft} className="min-h-11 rounded-xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-4 py-3 text-sm font-black text-white shadow-md shadow-[#EE8361]/25 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#EE8361]">
                   {isAr ? 'نعم، استكمال الاختبار' : 'Yes, continue'}
                 </button>
                 <button type="button" onClick={handleDiscardExtractedDraft} className="min-h-11 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-400 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
@@ -2451,7 +2469,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div
-                    className="bg-[#007472] dark:bg-[#2AC3BB] h-full transition-all duration-500 ease-out"
+                    className="bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] h-full transition-all duration-500 ease-out"
                     style={{
                       width: `${Math.min(100, Math.max(8, (overlayProgress ? (overlayProgress.current / (overlayProgress.total || 1)) * 100 : 0)))}%`
                     }}
@@ -2553,7 +2571,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                       setActiveMode(mode.id);
                       setIsModeMenuOpen(false);
                     }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-right transition-all ${selected ? 'bg-gradient-to-l from-[#007472] to-[#2AC3BB] text-white shadow-md shadow-[#007472]/20' : 'text-slate-700 hover:bg-[#007472]/5 dark:text-slate-200 dark:hover:bg-[#007472]/50/10'}`}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-right transition-all ${selected ? 'bg-gradient-to-l from-[#007472] via-[#2AC3BB] to-[#EE8361] text-white shadow-md shadow-[#EE8361]/25' : 'text-slate-700 hover:bg-[#007472]/5 dark:text-slate-200 dark:hover:bg-[#007472]/50/10'}`}
                   >
                     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selected ? 'bg-white/15 text-white' : 'bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-[#007472] dark:text-[#2AC3BB]'}`}>{mode.id === 'ai' ? <MainLogo size="sm" showText={false} className="!h-6 !w-6" /> : <ModeIcon className="h-4 w-4" />}</span>
                     <span className="min-w-0 flex-1">

@@ -165,15 +165,15 @@ export default function Header({
 	          {!isQuizLocked ? (
             <div className="liquid-header__actions flex items-center gap-1 sm:gap-2.5 min-w-0 flex-shrink-0">
 	              {!isGuest && (
-	                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 rounded-2xl border border-amber-200/60 bg-amber-50/40 px-2 py-1.5 dark:border-amber-900/30 dark:bg-amber-950/10 sm:px-3 sm:py-2 flex-shrink min-w-0" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
-		                  <div className="flex items-center gap-1 text-[10px] font-black text-amber-600 dark:text-amber-400 sm:text-xs whitespace-nowrap">
+	                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 rounded-2xl border border-[#EE8361]/30 bg-[#EE8361]/10 px-2 py-1.5 dark:border-[#EE8361]/30 dark:bg-[#EE8361]/15 sm:px-3 sm:py-2 flex-shrink min-w-0" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
+		                  <div className="flex items-center gap-1 text-[10px] font-black text-[#EE8361] dark:text-[#EE8361] sm:text-xs whitespace-nowrap">
                             <SugaryIcon name="trophy" size={18} className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
 		                    <span className="tabular-nums">{formatLargeNumber(rewardPoints)}</span>
 		                  </div>
 		                  {rewardCoins > 0 && (
 		                    <>
-		                      <span className="h-3 w-px bg-amber-200/80 dark:bg-amber-800/80" />
-		                      <div className="flex items-center gap-1 text-[10px] font-black text-sky-600 dark:text-sky-400 sm:text-xs whitespace-nowrap">
+		                      <span className="h-3 w-px bg-[#EE8361]/30 dark:bg-[#EE8361]/40" />
+		                      <div className="flex items-center gap-1 text-[10px] font-black text-[#2AC3BB] dark:text-[#2AC3BB] sm:text-xs whitespace-nowrap">
                                 <SugaryIcon name="coins" size={18} className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
 		                        <span className="tabular-nums">{formatLargeNumber(rewardCoins)}</span>
 		                      </div>
@@ -203,7 +203,7 @@ export default function Header({
               {isGuest ? (
                 <button
                   onClick={onLogin}
-                  className="flex h-11 w-11 items-center justify-center sm:w-auto sm:px-3 rounded-xl bg-gradient-to-r from-primary to-primary-hover hover:brightness-110 active:scale-95 text-white font-black text-[10px] sm:text-xs transition-all cursor-pointer shadow-md shadow-primary/20"
+                  className="flex h-11 w-11 items-center justify-center sm:w-auto sm:px-3.5 rounded-xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 active:scale-95 text-white font-black text-[10px] sm:text-xs transition-all cursor-pointer shadow-md shadow-[#EE8361]/25"
                   title={lang === 'ar' ? 'التسجيل / الدخول' : 'Register / Login'}
                 >
                   <LogIn className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
@@ -236,7 +236,7 @@ export default function Header({
 	              >
 	                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 	                <AnimatedThemeIcon className="w-4.5 h-4.5 sm:w-5 sm:h-5 relative z-10 transition-transform duration-500 group-hover:rotate-12" darkMode={darkMode} />
-	                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+	                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#EE8361]/30 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
 	              </button>
             </div>
           ) : (

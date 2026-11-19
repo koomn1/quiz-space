@@ -389,7 +389,7 @@ export default function AdminDashboard({
       <header className="admin-header-anim relative overflow-hidden rounded-[30px] border border-[#007472]/30 bg-gradient-to-r from-white via-teal-50/40 to-white dark:from-slate-950 dark:via-[#007472]/15 dark:to-slate-950 p-6 shadow-sm dark:shadow-[0_12px_36px_rgba(0,116,114,0.12)] dark:border-[#2AC3BB]/30">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#007472] to-[#2AC3BB] text-white shadow-md shadow-[#007472]/20">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#007472] via-[#2AC3BB] to-[#EE8361] text-white shadow-md shadow-[#EE8361]/25">
               <Shield className="h-7 w-7" />
             </div>
             <div>
@@ -458,9 +458,9 @@ export default function AdminDashboard({
       )}
 
       {pendingEssayCount > 0 && (
-        <aside className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl border border-[#007472]/40 bg-teal-50/90 dark:border-[#2AC3BB]/30 dark:bg-[#007472]/20 text-slate-950 dark:text-white shadow-sm animate-fade-in">
+        <aside className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl border border-[#EE8361]/40 bg-gradient-to-r from-amber-500/10 via-[#EE8361]/10 to-teal-50/50 dark:border-[#EE8361]/40 dark:bg-gradient-to-r dark:from-[#EE8361]/15 dark:to-[#072424] text-slate-950 dark:text-white shadow-sm animate-fade-in">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-[#007472]/15 text-[#007472] dark:text-[#2AC3BB] flex items-center justify-center shrink-0 border border-[#007472]/25 shadow-xs">
+            <div className="w-12 h-12 rounded-2xl bg-[#EE8361]/15 text-[#EE8361] flex items-center justify-center shrink-0 border border-[#EE8361]/25 shadow-xs">
               <BookOpen className="w-6 h-6" />
             </div>
             <div>
@@ -468,7 +468,7 @@ export default function AdminDashboard({
                 <h2 className="text-sm font-black text-slate-950 dark:text-white">
                   {isAr ? `يوجد ${pendingEssayCount} إجابة مقالية معلقة بانتظار التصحيح والتقييم` : `${pendingEssayCount} pending essay answer(s) awaiting grading`}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#007472] text-white animate-pulse">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#EE8361] text-white animate-pulse">
                   {isAr ? 'تصحيح مقالي' : 'Essay Review'}
                 </span>
               </div>
@@ -484,7 +484,7 @@ export default function AdminDashboard({
               setSelectedReviewQuizTitle(undefined);
               setAdminEssayModalOpen(true);
             }}
-            className="px-4 py-2.5 rounded-xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 font-black text-xs transition shadow-md flex items-center gap-2 cursor-pointer shrink-0"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] hover:brightness-110 text-white font-black text-xs transition shadow-md shadow-[#EE8361]/25 flex items-center gap-2 cursor-pointer shrink-0"
           >
             <span>{isAr ? 'تصحيح الإجابات الآن' : 'Grade Essays Now'}</span>
             <ArrowUpRight className="w-4 h-4" />
