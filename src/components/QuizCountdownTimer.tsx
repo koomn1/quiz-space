@@ -33,14 +33,14 @@ export default function QuizCountdownTimer({
   const isWarning = timeLeft > 15 && timeLeft <= 45;
 
   let trackColor = 'text-emerald-500 dark:text-emerald-400';
-  let badgeBg = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-55/35';
+  let badgeBg = 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25';
   
   if (isUrgent) {
     trackColor = 'text-rose-500 dark:text-rose-400';
-    badgeBg = 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 animate-pulse';
+    badgeBg = 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 animate-pulse';
   } else if (isWarning) {
     trackColor = 'text-amber-500 dark:text-amber-400';
-    badgeBg = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20';
+    badgeBg = 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25';
   }
 
   return (
@@ -87,20 +87,20 @@ export default function QuizCountdownTimer({
 
       {/* Countdown details text */}
       <div className="space-y-0.5 text-right font-sans">
-        <span className="text-[10px] text-slate-400 block font-semibold leading-none">
+        <span className="text-[11px] text-slate-700 dark:text-slate-300 block font-bold leading-none">
           {isAr ? 'الوقت المتبقي لإنهاء الاختبار:' : 'Time Left to Finish Quiz:'}
         </span>
         <div className="flex items-baseline gap-1">
-          <span className={`font-mono text-xl font-black tracking-tight leading-none ${isUrgent ? 'text-rose-600 dark:text-rose-400 animate-pulse' : 'text-slate-800 dark:text-slate-100'}`}>
+          <span className={`font-mono text-xl font-black tracking-tight leading-none ${isUrgent ? 'text-rose-600 dark:text-rose-400 animate-pulse' : 'text-slate-950 dark:text-white'}`}>
             {formattedTime}
           </span>
-          <span className="text-[9px] text-slate-400 dark:text-slate-500">
+          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
             {isAr ? 'د:ث' : 'm:s'}
           </span>
         </div>
         
         {isUrgent && (
-          <span className="text-[9px] text-rose-500 font-extrabold block animate-pulse">
+          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-extrabold block animate-pulse">
             {isAr ? '⏳ أسرع! الوقت ينفد بسرعة!' : '⏳ Hurry up! Time is running out!'}
           </span>
         )}

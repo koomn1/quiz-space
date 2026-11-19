@@ -1644,16 +1644,16 @@ export default function QuizResolver({
 
           {/* Active Question Panel with elegant minimalist design */}
             <div
-              className={`theme-surface relative p-4 sm:p-7 md:p-8 rounded-[2rem] backdrop-blur-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] space-y-5 sm:space-y-10 transition-all duration-500 overflow-hidden ${
+              className={`relative p-5 sm:p-8 md:p-10 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-[0_10px_35px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] space-y-6 sm:space-y-8 transition-all duration-300 overflow-hidden ${
                 hasShaken ? 'shake-question' : ''
               } ${
                 isAnswersFrozen
                   ? (isDailyQuiz
-                      ? 'border border-primary/30 dark:border-primary/20'
+                      ? 'border-2 border-primary/40 dark:border-primary/40'
                       : selectedIdx === currentQuestion.correctIndex
-                        ? 'border border-emerald-500/30 dark:border-emerald-500/20 shadow-[0_8px_40px_rgb(16,185,129,0.08)]'
-                        : 'border border-rose-500/30 dark:border-rose-500/20 shadow-[0_8px_40px_rgb(244,63,113,0.08)]')
-                  : 'border border-[var(--app-border)] hover:shadow-[0_20px_60px_rgb(0,0,0,0.08)] hover:-translate-y-1'
+                        ? 'border-2 border-emerald-500/50 dark:border-emerald-500/40 shadow-[0_8px_40px_rgba(16,185,129,0.12)]'
+                        : 'border-2 border-rose-500/50 dark:border-rose-500/40 shadow-[0_8px_40px_rgba(244,63,94,0.12)]')
+                  : 'hover:border-primary/40'
               }`}
             >
             {/* Live Countdowns or State Headers */}
@@ -1666,15 +1666,15 @@ export default function QuizResolver({
                     lang={lang}
                   />
                 ) : (
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full">
-                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 animate-pulse" />
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-3.5 py-2 rounded-full border border-slate-200 dark:border-slate-700">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>{isAr ? 'دراسة مستمرة (مفتوح)' : 'Study Mode (Open)'}</span>
                   </div>
                 )}
               </div>
 
               {currentQuestion.type === 'essay' ? (
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wide">
                   {!isAnswersFrozen
                     ? (isAr ? 'بانتظار إجابتك' : 'Waiting for your answer')
                     : essayGrading[currentIdx]
@@ -1688,19 +1688,19 @@ export default function QuizResolver({
                             : (isAr ? 'الإجابة خاطئة' : 'Incorrect answer')}
                 </span>
               ) : isAnswersFrozen ? (
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium tracking-wide">
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wide">
                   {isDailyQuiz
                     ? (isAr ? 'تم تسجيل إجابتك' : 'Answer recorded')
                     : (selectedIdx === currentQuestion.correctIndex ? 'الإجابة صحيحة' : 'الإجابة خاطئة')}
                 </span>
               ) : (
-                <span className="text-[11px] text-primary dark:text-primary-light font-medium tracking-wide">
-                  بانتظار إجابتك
+                <span className="text-xs font-bold text-[#007472] dark:text-[#2AC3BB] tracking-wide">
+                  {isAr ? 'بانتظار إجابتك' : 'Waiting for your answer'}
                 </span>
               )}
             </div>
 
-            <h3 className="font-display font-medium text-xl sm:text-3xl text-slate-800 dark:text-slate-100 leading-[1.35] sm:leading-[1.6] text-right md:text-center z-10 relative tracking-tight selection:bg-primary/20">
+            <h3 className="font-display font-black text-xl sm:text-3xl text-slate-950 dark:text-white leading-[1.4] sm:leading-[1.6] text-right md:text-center z-10 relative tracking-tight selection:bg-[#007472]/20">
               {currentQuestion.text}
             </h3>
 
@@ -1794,7 +1794,7 @@ export default function QuizResolver({
                   const isCorrect = oIdx === currentQuestion.correctIndex;
                   const showFeedback = isAnswersFrozen;
 
-                  let optClass = 'border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/50 backdrop-blur-md border hover:border-primary/40 dark:hover:border-primary/40 text-slate-700 dark:text-slate-200 hover:bg-white/90 dark:hover:bg-slate-800/60 shadow-2xs hover:shadow-sm';
+                  let optClass = 'border-2 border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/60 hover:bg-white dark:hover:bg-slate-800/80 text-slate-950 dark:text-white hover:border-[#007472] dark:hover:border-[#2AC3BB] shadow-xs';
 
                   if (showFeedback) {
                     if (isDailyQuiz && !isDailyResultVerified) {
@@ -1929,7 +1929,7 @@ export default function QuizResolver({
                 {isAnswersFrozen ? (
                   <button
                     onClick={handleNextQuestion}
-                    className="flex min-h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-hover px-6 sm:px-8 py-3 text-sm font-bold text-white shadow-lg shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer animate-pulse-subtle"
+                    className="flex min-h-12 items-center gap-2 rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-6 sm:px-8 py-3 text-sm font-black text-white dark:text-slate-950 shadow-lg shadow-[#007472]/20 hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <span>{currentIdx + 1 === quiz.questions.length ? (isAr ? 'إنهاء وحساب الدرجة' : 'Finish & Calculate Score') : (isAr ? 'السؤال التالي' : 'Next Question')}</span>
                     <ArrowLeft className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />

@@ -815,7 +815,7 @@ export default function App() {
         </div>
       ) : (
         <>
-          {platformMaintenanceActive && !isAdminUser && (
+          {platformMaintenanceActive && isStatsLoaded && !isAdminUser && (
             <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/95 px-6 text-center backdrop-blur-xl" role="alert" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
               <div className="max-w-md rounded-3xl border border-amber-400/30 bg-slate-900 p-8 shadow-2xl shadow-amber-500/10">
                 <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300"><AlertTriangle className="h-7 w-7" /></div>
