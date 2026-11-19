@@ -2462,5 +2462,3 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
     </div>
   );
 }
-  );
-}
