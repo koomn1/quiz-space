@@ -132,25 +132,25 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
     <section className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6 sm:px-6" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 text-violet-600 dark:text-violet-300"><Bell className="h-5 w-5" /><span className="text-xs font-black uppercase tracking-widest">{isAr ? 'مركز التنبيهات' : 'Notification center'}</span></div>
-          <h1 className="mt-2 text-2xl font-black text-slate-900 dark:text-white">{isAr ? 'إشعارات الدفع' : 'Push notifications'} {unread > 0 && <span className="text-violet-500">({unread})</span>}</h1>
+          <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]"><Bell className="h-5 w-5" /><span className="text-xs font-black uppercase tracking-widest">{isAr ? 'مركز التنبيهات' : 'Notification center'}</span></div>
+          <h1 className="mt-2 text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{isAr ? 'إشعارات الدفع' : 'Push notifications'} {unread > 0 && <span className="text-[#007472] dark:text-[#2AC3BB]">({unread})</span>}</h1>
         </div>
         <div className="flex gap-2">
-          <button type="button" onClick={() => void load()} className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300" aria-label={isAr ? 'تحديث الإشعارات' : 'Refresh notifications'}><RefreshCw className="h-4 w-4" /></button>
-          {unread > 0 && <button type="button" onClick={() => void markAllRead()} className="flex min-h-11 items-center gap-2 rounded-xl bg-violet-600 px-3 text-xs font-black text-white hover:bg-violet-500"><CheckCheck className="h-4 w-4" />{isAr ? 'قراءة الكل' : 'Mark all read'}</button>}
+          <button type="button" onClick={() => void load()} className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 cursor-pointer transition shadow-xs" aria-label={isAr ? 'تحديث الإشعارات' : 'Refresh notifications'}><RefreshCw className="h-4 w-4" /></button>
+          {unread > 0 && <button type="button" onClick={() => void markAllRead()} className="flex min-h-11 items-center gap-2 rounded-xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-3.5 text-xs font-black text-white dark:text-slate-950 transition cursor-pointer shadow-sm"><CheckCheck className="h-4 w-4" />{isAr ? 'قراءة الكل' : 'Mark all read'}</button>}
         </div>
       </div>
       {error && <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm font-bold text-amber-800 dark:bg-amber-950/20 dark:text-amber-200">{isAr ? 'تعذر تحديث الإشعارات. جرّب مرة أخرى.' : 'Notifications could not be refreshed. Try again.'}</div>}
-      <div className="rounded-[2rem] border border-violet-200/70 bg-gradient-to-b from-violet-50/80 to-white/80 p-3 shadow-xl shadow-violet-950/5 dark:border-violet-900/60 dark:from-slate-950/80 dark:to-slate-900/90 sm:p-5">
+      <div className="rounded-[2rem] border border-slate-200/80 bg-white/90 p-3 shadow-xl dark:border-[#2AC3BB]/20 dark:bg-slate-950/90 sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3 px-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-violet-500">{isAr ? 'اسحب للإجراءات' : 'Swipe for actions'}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'اسحب للإجراءات' : 'Swipe for actions'}</p>
             <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{isAr ? 'اسحب الإشعار لإخفائه أو تحديده كمقروء.' : 'Swipe a notification to dismiss it or mark it as read.'}</p>
           </div>
-          <ShieldCheck className="h-6 w-6 shrink-0 text-violet-500/70" />
+          <ShieldCheck className="h-6 w-6 shrink-0 text-[#007472]/70 dark:text-[#2AC3BB]/70" />
         </div>
         {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-violet-600" /></div>
+          <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-[#007472] dark:text-[#2AC3BB]" /></div>
         ) : items.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center text-sm font-bold text-slate-500 dark:border-slate-700">{isAr ? 'لا توجد إشعارات دفع حالياً.' : 'There are no push notifications yet.'}</div>
         ) : (
@@ -168,9 +168,7 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
                     if (action.id === 'dismiss') void dismissNotification(item);
                   }}
                   actionColor="#be123c"
-                  drawerColor="#4c1d95"
-                  rowColor="transparent"
-                  textColor="#0f172a"
+                  drawerColor="#007472"
                   height={108}
                   radius={18}
                   actionWidth={82}
@@ -187,13 +185,13 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
                   <button
                     type="button"
                     onClick={() => void markRead(item)}
-                    className={`flex h-full w-full items-start gap-3 rounded-2xl border p-3 text-start transition ${item.is_read ? 'border-slate-200 bg-white/80 opacity-75 dark:border-slate-800 dark:bg-slate-900/80' : 'border-violet-200 bg-violet-50/95 dark:border-violet-800/50 dark:bg-violet-950/50'}`}
+                    className={`flex h-full w-full items-start gap-3 rounded-2xl border p-3.5 text-start transition ${item.is_read ? 'border-slate-200 bg-white/95 opacity-80 dark:border-slate-800 dark:bg-slate-900/90' : 'border-[#2AC3BB]/40 bg-teal-50/80 dark:border-[#2AC3BB]/30 dark:bg-[#007472]/20'}`}
                   >
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300"><ShieldCheck className="h-5 w-5" /></span>
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/20 dark:text-[#2AC3BB]"><ShieldCheck className="h-5 w-5" /></span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center justify-between gap-2">
-                        <strong className="truncate text-sm text-slate-900 dark:text-white">{item.title}</strong>
-                        <time className="shrink-0 text-[10px] text-slate-400">{new Date(item.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}</time>
+                        <strong className="truncate text-sm font-bold text-slate-900 dark:text-white">{item.title}</strong>
+                        <time className="shrink-0 text-[11px] font-medium text-slate-500 dark:text-slate-400">{new Date(item.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}</time>
                       </span>
                       <span className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{item.body || item.message || (isAr ? 'إشعار جديد من QuizSpace.' : 'A new QuizSpace notification.')}</span>
                     </span>
