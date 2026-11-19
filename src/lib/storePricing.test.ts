@@ -22,6 +22,15 @@ describe('getStorePaymentMode', () => {
       .toEqual({ mode: 'unavailable', amount: 0 });
   });
 
+  it('marks items with is_free, subscriber_free, or min_plan as free mode', () => {
+    expect(getStorePaymentMode({ price_egp: 0, price_points: 0, price_coins: 0, is_free: true }))
+      .toEqual({ mode: 'free', amount: 0 });
+    expect(getStorePaymentMode({ price_egp: 0, price_points: 0, price_coins: 0, min_plan: 'silver', is_active: true }))
+      .toEqual({ mode: 'free', amount: 0 });
+    expect(isStoreItemActionAvailable({ isOwned: false, isLocked: false, paymentMode: 'free' }))
+      .toBe(true);
+  });
+
   it('keeps an owned frame activatable even when it has no purchase price', () => {
     expect(isStoreItemActionAvailable({ isOwned: true, isLocked: false, paymentMode: 'unavailable' }))
       .toBe(true);

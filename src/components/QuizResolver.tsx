@@ -29,6 +29,7 @@ import { getInstitutionExportBrandForQuiz } from '../lib/institutions';
 import QuestionMedia from './QuestionMedia';
 
 import { translations } from '../lib/i18n';
+import { CountUp, ShinyText } from './reactbits';
 
 function replaceOklchColors(value: string): string {
   if (typeof value !== 'string' || !value.includes('oklch')) {
@@ -1962,7 +1963,9 @@ export default function QuizResolver({
 
             <div className="space-y-2">
               <BadgeCheck className="w-12 h-12 text-primary mx-auto animate-bounce" />
-              <h3 className="font-display font-extrabold text-2xl text-slate-800 dark:text-slate-100">تهانينا! لقد أكملت الاختبار بنجاح</h3>
+              <h3 className="font-display font-extrabold text-2xl text-slate-800 dark:text-slate-100">
+                <ShinyText text={isAr ? "تهانينا! لقد أكملت الاختبار بنجاح" : "Congratulations! Quiz Completed"} speed={3} />
+              </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">"{quiz.title}"</p>
             </div>
 
@@ -1972,7 +1975,7 @@ export default function QuizResolver({
                 <div className="relative mx-auto w-32 h-32 flex items-center justify-center rounded-full bg-amber-500/10 dark:bg-amber-950/20 border-4 border-amber-500">
                   <div className="text-center">
                     <span className="font-display font-black text-2xl text-amber-500 block">
-                      {isDisplayedScoreReady ? displayedScore : '—'} / {quiz.questions.filter(q => q.type !== 'essay').length}
+                      {isDisplayedScoreReady ? <CountUp to={displayedScore} duration={1.2} /> : '—'} / {quiz.questions.filter(q => q.type !== 'essay').length}
                     </span>
                     <span className="text-[10px] text-slate-400 font-medium block">
                       {isAr ? 'درجة الموضوعي' : 'Objective Score'}
@@ -1997,10 +2000,14 @@ export default function QuizResolver({
                 <div className="relative mx-auto w-32 h-32 flex items-center justify-center rounded-full bg-primary-light/50 dark:bg-slate-900 border-4 border-primary">
                   <div className="text-center">
                     <span className="font-display font-black text-3xl text-primary block">
-                      {isDisplayedScoreReady ? `${Math.round((displayedScore / quiz.questions.length) * 100)}%` : '—'}
+                      {isDisplayedScoreReady ? <CountUp to={Math.round((displayedScore / quiz.questions.length) * 100)} suffix="%" duration={1.5} /> : '—'}
                     </span>
                     <span className="text-[10px] text-slate-400 font-medium">
-                      {isDisplayedScoreReady ? `${displayedScore} من أصل ${quiz.questions.length} صحيح` : (isAr ? 'جارٍ اعتماد الدرجة من الخادم' : 'Final score is being verified by the server')}
+                      {isDisplayedScoreReady ? (
+                        <>
+                          <CountUp to={displayedScore} duration={1} /> {isAr ? `من أصل ${quiz.questions.length} صحيح` : `of ${quiz.questions.length} correct`}
+                        </>
+                      ) : (isAr ? 'جارٍ اعتماد الدرجة من الخادم' : 'Final score is being verified by the server')}
                     </span>
                   </div>
                 </div>

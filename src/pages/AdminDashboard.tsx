@@ -25,6 +25,7 @@ import { EssayReviewModal } from '../components/EssayReviewModal';
 import AdminSubscriptions from '../components/AdminSubscriptions';
 import OverlayPortal from '../components/OverlayPortal';
 import { showToast, showAppMessage } from '../components/Toast';
+import { CountUp, ShinyText } from '../components/reactbits';
 
 function DecryptedMessageItem({ msg, classId, isAr, currentUserEmail }: { msg: any; classId: string; isAr: boolean; currentUserEmail?: string }) {
   const [decrypted, setDecrypted] = useState<string>('...');
@@ -538,10 +539,10 @@ export default function AdminDashboard({
               <div className="space-y-8">
                 <div>
                   <h3 className="text-xl font-black text-slate-900 dark:text-white">
-                    {isAr ? 'المؤشرات التشغيلية للمنصة' : 'Platform Operational Metrics'}
+                    <ShinyText text={isAr ? 'المؤشرات التشغيلية للمنصة' : 'Platform Operational Metrics'} speed={3.5} />
                   </h3>
                   <p className="mt-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {isAr ? 'بيانات حية وموثوقة لحركة المستخدمين والاختبارات والفصول الدراسية' : 'Live verified metrics for users, active quizzes, and classrooms'}
+                    {isAr ? 'بيانات حية وموثوقة لحركة المستخدمين والاختبارات والفصول الدراسية' : 'A trustworthy operating view of users, active quizzes, and classrooms'}
                   </p>
                 </div>
 
@@ -561,16 +562,18 @@ export default function AdminDashboard({
                 ) : (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {[
-                      { label: isAr ? 'إجمالي المستخدمين' : 'Total Users', value: allUsers.length.toLocaleString(), caption: isAr ? 'حساب مسجل بالمنصة' : 'Registered user accounts', icon: Users, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-950/30', border: 'border-sky-200 dark:border-sky-900/40' },
-                      { label: isAr ? 'الفصول النشطة' : 'Classrooms', value: adminClassrooms.length.toLocaleString(), caption: isAr ? `${adminStudents.length} عضوية طالب مسجل` : `${adminStudents.length} enrolled students`, icon: UserRoundCheck, color: 'text-[#007472] dark:text-[#2AC3BB]', bg: 'bg-teal-50 dark:bg-teal-950/30', border: 'border-teal-200 dark:border-teal-900/40' },
-                      { label: isAr ? 'الاختبارات المنشورة' : 'Published Quizzes', value: quizzes.length.toLocaleString(), caption: isAr ? `${averageAttemptsPerQuiz} متوسط الحل لكل اختبار` : `${averageAttemptsPerQuiz} avg plays per quiz`, icon: Database, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/30', border: 'border-indigo-200 dark:border-indigo-900/40' },
-                      { label: isAr ? 'نسبة الاشتراكات' : 'Premium Adoption', value: `${premiumAdoptionRate}%`, caption: isAr ? `${premiumUsersCount} مستخدمًا بباقات مدفوعة` : `${premiumUsersCount} paid members`, icon: Crown, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-900/40' },
+                      { label: isAr ? 'إجمالي المستخدمين' : 'Total Users', count: allUsers.length, caption: isAr ? 'حساب مسجل بالمنصة' : 'Registered user accounts', icon: Users, color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-950/30', border: 'border-sky-200 dark:border-sky-900/40' },
+                      { label: isAr ? 'الفصول النشطة' : 'Classrooms', count: adminClassrooms.length, caption: isAr ? `${adminStudents.length} عضوية طالب مسجل` : `${adminStudents.length} enrolled students`, icon: UserRoundCheck, color: 'text-[#007472] dark:text-[#2AC3BB]', bg: 'bg-teal-50 dark:bg-teal-950/30', border: 'border-teal-200 dark:border-teal-900/40' },
+                      { label: isAr ? 'الاختبارات المنشورة' : 'Published Quizzes', count: quizzes.length, caption: isAr ? `${averageAttemptsPerQuiz} متوسط الحل لكل اختبار` : `${averageAttemptsPerQuiz} avg plays per quiz`, icon: Database, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/30', border: 'border-indigo-200 dark:border-indigo-900/40' },
+                      { label: isAr ? 'نسبة الاشتراكات' : 'Premium adoption', count: premiumAdoptionRate, isSuffixPercent: true, caption: isAr ? `${premiumUsersCount} مستخدمًا بباقات مدفوعة` : `${premiumUsersCount} paid members`, icon: Crown, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-900/40' },
                     ].map((stat) => (
                       <div key={stat.label} className={`rounded-2xl border ${stat.border} ${stat.bg} p-5 shadow-xs`}>
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{stat.label}</p>
-                            <h4 className="mt-2 text-3xl font-black tracking-tight text-slate-900 dark:text-white tabular-nums">{stat.value}</h4>
+                            <h4 className="mt-2 text-3xl font-black tracking-tight text-slate-900 dark:text-white tabular-nums">
+                              <CountUp to={stat.count} duration={1.5} suffix={stat.isSuffixPercent ? '%' : ''} />
+                            </h4>
                           </div>
                           <div className={`rounded-2xl p-3 ${stat.color}`}><stat.icon className="h-6 w-6" /></div>
                         </div>

@@ -13,6 +13,7 @@ import {
   purchaseRewardItem,
 } from '../lib/db';
 import { getStoreBundleBenefitLabel, getStorePaymentMode, isStoreItemActionAvailable } from '../lib/storePricing';
+import { CountUp, MagneticButton, ShinyText } from './reactbits';
 
 export type StoreRewards = { points: number; coins: number; dailyStreak: number };
 
@@ -71,12 +72,12 @@ function RewardPill({ rewards, lang }: { rewards: StoreRewards; lang: 'ar' | 'en
     <div className="flex flex-wrap items-center gap-2.5">
       <div className="flex min-h-10 items-center gap-2 rounded-2xl border border-amber-300/80 bg-amber-50/90 dark:border-amber-900/60 dark:bg-amber-950/40 px-3.5 py-2 text-xs font-black text-amber-900 dark:text-amber-200 shadow-xs">
         <Coins className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-        <span>{rewards.points.toLocaleString()} {t.points}</span>
+        <span><CountUp to={rewards.points} duration={1.2} /> {t.points}</span>
       </div>
       {rewards.coins > 0 && (
         <div className="flex min-h-10 items-center gap-2 rounded-2xl border border-sky-300/80 bg-sky-50/90 dark:border-sky-900/60 dark:bg-sky-950/40 px-3.5 py-2 text-xs font-black text-sky-900 dark:text-sky-200 shadow-xs">
           <WalletCards className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-          <span>{rewards.coins.toLocaleString()} {t.coins}</span>
+          <span><CountUp to={rewards.coins} duration={1.2} /> {t.coins}</span>
         </div>
       )}
     </div>
@@ -319,11 +320,20 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
         <div className="mt-4 flex items-center justify-between gap-2 border-t border-slate-200/90 pt-4 dark:border-slate-800">
           <span className="text-xs font-black">
             {locked ? (
-              <span className="text-amber-700 dark:text-amber-400">{t.diamond}</span>
+              <span className="text-amber-700 dark:text-amber-400">
+                {item.min_plan === 'diamond' ? t.diamond : `باقة ${item.min_plan}`}
+              </span>
             ) : isOwned ? (
               <span className="text-emerald-700 dark:text-emerald-400">{t.owned}</span>
             ) : subscriberFree ? (
               <span className="text-emerald-700 dark:text-emerald-400">{lang === 'ar' ? 'مجاني للمشتركين' : 'Free for subscribers'}</span>
+            ) : payment.mode === 'free' ? (
+              <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-black">
+                <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
+                {item.min_plan && item.min_plan !== 'free'
+                  ? (lang === 'ar' ? `هدية باقة ${item.min_plan === 'silver' ? 'الفضية' : item.min_plan === 'gold' ? 'الذهبية' : 'الماسية'}` : `Free for ${item.min_plan}`)
+                  : (lang === 'ar' ? 'مجانًا' : 'Free')}
+              </span>
             ) : payment.mode === 'coins' ? (
               <span className="flex items-center gap-1.5 text-sky-700 dark:text-sky-300">
                 <Coins className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
@@ -338,15 +348,32 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
               <span className="text-slate-600 dark:text-slate-400">{lang === 'ar' ? 'غير متاح' : 'Unavailable'}</span>
             )}
           </span>
-          <button type="button" disabled={!isActionAvailable || busy === item.id} onClick={() => isOwned ? useFrame(item) : buyFrame(item)} className="min-h-10 rounded-xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-4 py-2 text-xs font-black text-white dark:text-slate-950 shadow-sm transition hover:-translate-y-0.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-45">
-            {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')) : subscriberFree ? (lang === 'ar' ? 'احصل عليه مجانًا' : 'Get free') : payment.mode === 'cash' ? (lang === 'ar' ? 'شراء بالمال' : 'Buy') : payment.mode === 'unavailable' ? (lang === 'ar' ? 'غير متاح' : 'Unavailable') : t.buy}
+          <button
+            type="button"
+            disabled={!isActionAvailable || busy === item.id}
+            onClick={() => isOwned ? useFrame(item) : buyFrame(item)}
+            className="min-h-10 rounded-xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-4 py-2 text-xs font-black text-white dark:text-slate-950 shadow-sm transition hover:-translate-y-0.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            {busy === item.id ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isOwned ? (
+              activeFrameId === item.id ? (lang === 'ar' ? 'مفعل' : 'Active') : (lang === 'ar' ? 'استخدام' : 'Use')
+            ) : payment.mode === 'free' || subscriberFree ? (
+              lang === 'ar' ? 'احصل عليه مجانًا' : 'Get free'
+            ) : payment.mode === 'cash' ? (
+              lang === 'ar' ? 'شراء بالمال' : 'Buy'
+            ) : payment.mode === 'unavailable' ? (
+              lang === 'ar' ? 'غير متاح' : 'Unavailable'
+            ) : (
+              t.buy
+            )}
           </button>
         </div>
       </div>
     );
   };
   return <div className="space-y-8">
-    <div className="relative flex flex-col gap-5 overflow-hidden rounded-[28px] border border-slate-200/80 bg-white dark:border-[#2AC3BB]/30 dark:bg-gradient-to-br dark:from-[#031717] dark:via-[#007472]/25 dark:to-[#072424] p-5 shadow-sm dark:shadow-[0_14px_38px_rgba(0,116,114,0.15)] sm:flex-row sm:items-center sm:justify-between sm:p-6"><div className="absolute -end-8 -top-12 h-32 w-32 rounded-full bg-[#2AC3BB]/15 blur-3xl pointer-events-none" /><div className="relative"><div className="flex items-center gap-2 text-xl font-black text-slate-900 dark:text-[#FCF6EE]"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#007472]/10 dark:bg-[#007472]/20 text-[#007472] dark:text-[#2AC3BB]"><Store className="h-5 w-5" /></span>{t.store}</div><p className="mt-2 max-w-xl text-xs font-semibold leading-6 text-slate-600 dark:text-[#8BAEAD]">{lang === 'ar' ? 'اجمع النقاط من الألعاب ثم استبدلها بإطاراتك المفضلة.' : 'Collect points from games and exchange them for your favorite frames.'}</p></div><div className="relative"><RewardPill rewards={rewards} lang={lang} /></div></div>
+    <div className="relative flex flex-col gap-5 overflow-hidden rounded-[28px] border border-slate-200/80 bg-white dark:border-[#2AC3BB]/30 dark:bg-gradient-to-br dark:from-[#031717] dark:via-[#007472]/25 dark:to-[#072424] p-5 shadow-sm dark:shadow-[0_14px_38px_rgba(0,116,114,0.15)] sm:flex-row sm:items-center sm:justify-between sm:p-6"><div className="absolute -end-8 -top-12 h-32 w-32 rounded-full bg-[#2AC3BB]/15 blur-3xl pointer-events-none" /><div className="relative"><div className="flex items-center gap-2 text-xl font-black text-slate-900 dark:text-[#FCF6EE]"><span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#007472]/10 dark:bg-[#007472]/20 text-[#007472] dark:text-[#2AC3BB]"><Store className="h-5 w-5" /></span><ShinyText text={t.store} speed={3.5} /></div><p className="mt-2 max-w-xl text-xs font-semibold leading-6 text-slate-600 dark:text-[#8BAEAD]">{lang === 'ar' ? 'اجمع النقاط من الألعاب ثم استبدلها بإطاراتك المفضلة.' : 'Collect points from games and exchange them for your favorite frames.'}</p></div><div className="relative"><RewardPill rewards={rewards} lang={lang} /></div></div>
     {loading ? <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-[#007472] dark:text-[#2AC3BB]" /></div> : <div className="space-y-10">
       {offers.length > 0 && (
         <section>
@@ -404,7 +431,7 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {bundles.map((item) => {
             const payment = getStorePaymentMode(item);
-            const isPurchasable = payment.mode === 'cash';
+            const isPurchasable = payment.mode === 'cash' || payment.mode === 'points' || payment.mode === 'coins' || payment.mode === 'free';
             const bundleImage = getStoreItemImage(item);
             const paymentLabel = payment.mode === 'cash'
               ? `${payment.amount.toLocaleString()} EGP · ${lang === 'ar' ? 'اطلب الآن' : 'Order now'}`
@@ -412,7 +439,9 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
                 ? `${payment.amount.toLocaleString()} ${t.coins} · ${t.buy}`
                 : payment.mode === 'points'
                   ? `${payment.amount.toLocaleString()} ${t.points} · ${t.buy}`
-                  : (lang === 'ar' ? 'غير متاح' : 'Unavailable');
+                  : payment.mode === 'free'
+                    ? (lang === 'ar' ? 'احصل عليه مجانًا' : 'Get free')
+                    : (lang === 'ar' ? 'غير متاح' : 'Unavailable');
             return <div key={item.id} data-testid="store-item-card" className="rounded-3xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <div className="relative flex h-20 items-center justify-center overflow-hidden rounded-2xl bg-teal-50/80 p-2 text-[#007472] dark:bg-[#007472]/20 dark:text-[#2AC3BB]"><Sparkles className="absolute h-6 w-6 opacity-70" />{bundleImage && <img src={bundleImage} alt="" loading="lazy" className="relative h-full w-full object-contain" onError={(event) => { event.currentTarget.style.opacity = '0'; }} />}</div>
               <div className="flex items-center justify-between gap-2 mt-4">
@@ -435,7 +464,7 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
           const itemImage = getStoreItemImage(item);
           const locked = planRank < rankFor(item.min_plan);
           const isOwned = owned(item.id);
-          const usable = !locked && (payment.mode === 'points' || payment.mode === 'coins' || isOwned);
+          const usable = !locked && (payment.mode === 'points' || payment.mode === 'coins' || payment.mode === 'free' || isOwned);
           return <article key={item.id} data-testid="store-item-card" className="flex min-h-48 flex-col rounded-3xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-start gap-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#007472]/10 p-2 shadow-sm dark:bg-[#007472]/25">
@@ -451,10 +480,10 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
             </div>
             <div className="mt-auto flex items-center justify-between gap-3 pt-5">
               <span className="text-xs font-black text-[#007472] dark:text-[#2AC3BB]">
-                {locked ? t.diamond : isOwned ? t.owned : payment.mode === 'coins' ? `${payment.amount.toLocaleString()} ${t.coins}` : payment.mode === 'points' ? `${payment.amount.toLocaleString()} ${t.points}` : (lang === 'ar' ? 'غير متاح' : 'Unavailable')}
+                {locked ? (item.min_plan === 'diamond' ? t.diamond : `باقة ${item.min_plan}`) : isOwned ? t.owned : payment.mode === 'free' ? (lang === 'ar' ? 'مجانًا' : 'Free') : payment.mode === 'coins' ? `${payment.amount.toLocaleString()} ${t.coins}` : payment.mode === 'points' ? `${payment.amount.toLocaleString()} ${t.points}` : (lang === 'ar' ? 'غير متاح' : 'Unavailable')}
               </span>
               <button type="button" disabled={!usable || busy === item.id} onClick={() => void handleStoreAction(item)} className="rounded-xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-4 py-2 text-xs font-black text-white dark:text-slate-950 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer">
-                {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (lang === 'ar' ? 'مملوك' : 'Owned') : (lang === 'ar' ? 'شراء' : 'Buy')}
+                {busy === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : isOwned ? (lang === 'ar' ? 'مملوك' : 'Owned') : payment.mode === 'free' ? (lang === 'ar' ? 'احصل عليه مجانًا' : 'Get free') : (lang === 'ar' ? 'شراء' : 'Buy')}
               </button>
             </div>
           </article>;
@@ -474,7 +503,7 @@ export function IndependentStore({ userId, isPremium, planName, rewards, onRewar
               <img src={getStoreItemImage(detailsItem)} alt="" className="h-full w-full object-contain" />
             </div>
           )}
-        </div></div><div className="p-5 sm:p-7"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#007472] dark:text-[#2AC3BB]">{detailsItem.item_type === 'frame' ? (lang === 'ar' ? 'إطار ملف شخصي' : 'Profile frame') : detailsItem.item_type === 'points_bundle' ? (lang === 'ar' ? 'باقة نقاط' : 'Points bundle') : (lang === 'ar' ? 'إضافة مميزة' : 'Premium extra')}</p><h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white">{lang === 'ar' ? detailsItem.name_ar : detailsItem.name}</h3><p className="mt-2 text-xs font-semibold leading-6 text-slate-700 dark:text-slate-300">{lang === 'ar' ? detailsItem.description_ar : detailsItem.description}</p></div><span className="shrink-0 rounded-full bg-amber-100 px-3 py-1.5 text-[10px] font-black text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">{detailsItem.min_plan === 'diamond' ? t.diamond : detailsItem.is_featured ? (lang === 'ar' ? 'مميز' : 'Featured') : (lang === 'ar' ? 'متاح الآن' : 'Available')}</span></div><div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3"><div className="rounded-2xl border border-[#007472]/20 bg-[#007472]/5 p-3 dark:border-[#2AC3BB]/25 dark:bg-[#007472]/20"><p className="text-[10px] font-bold text-[#007472] dark:text-[#2AC3BB]">{lang === 'ar' ? 'المظهر' : 'Experience'}</p><p className="mt-1 text-xs font-black text-slate-800 dark:text-white">{detailsItem.item_type === 'frame' ? (lang === 'ar' ? 'يظهر على ملفك' : 'Shown on your profile') : (lang === 'ar' ? 'مكافأة فورية' : 'Instant reward')}</p></div><div className="rounded-2xl border border-sky-200/80 bg-sky-50/70 p-3 dark:border-sky-900/50 dark:bg-sky-950/25"><p className="text-[10px] font-bold text-sky-700 dark:text-sky-300">{lang === 'ar' ? 'السعر' : 'Price'}</p><p className="mt-1 text-xs font-black text-slate-800 dark:text-white">{getStorePaymentMode(detailsItem).mode === 'cash' ? `${getStorePaymentMode(detailsItem).amount.toLocaleString()} EGP` : `${getStorePaymentMode(detailsItem).amount.toLocaleString()} ${getStorePaymentMode(detailsItem).mode === 'coins' ? t.coins : t.points}`}</p></div><div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/70 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/25"><p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{lang === 'ar' ? 'الحالة' : 'Status'}</p><p className="mt-1 text-xs font-black text-slate-800 dark:text-white">{owned(detailsItem.id) ? t.owned : (lang === 'ar' ? 'غير مملوك' : 'Not owned')}</p></div></div><div className="mt-5 rounded-2xl bg-slate-50 dark:bg-slate-950/45 p-4 border border-slate-200/80 dark:border-slate-800"><p className="mb-2 text-xs font-black text-slate-900 dark:text-white">{lang === 'ar' ? 'مميزات العنصر' : 'Item benefits'}</p><ul className="grid gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 sm:grid-cols-2"><li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" />{lang === 'ar' ? 'تصميم مميز داخل ملفك' : 'Distinctive profile styling'}</li><li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" />{lang === 'ar' ? 'يُضاف إلى مخزونك فوراً' : 'Added to your inventory'}</li><li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" />{lang === 'ar' ? 'تجربة آمنة وسهلة' : 'Simple and secure experience'}</li><li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" />{lang === 'ar' ? 'يمكن استخدامه لاحقاً' : 'Reusable whenever you want'}</li></ul></div><button type="button" disabled={busy === detailsItem.id} onClick={() => void handleStoreAction(detailsItem)} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-4 py-3 text-sm font-black text-white dark:text-slate-950 shadow-lg shadow-[#007472]/20 transition hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer">{busy === detailsItem.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Store className="h-4 w-4" />}{owned(detailsItem.id) ? (lang === 'ar' ? 'استخدام العنصر' : 'Use item') : (lang === 'ar' ? 'شراء الآن' : 'Buy now')}</button></div></div></div></OverlayPortal>}
+        </div></div><div className="p-5 sm:p-7"><div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#007472] dark:text-[#2AC3BB]">{detailsItem.item_type === 'frame' ? (lang === 'ar' ? 'إطار ملف شخصي' : 'Profile frame') : detailsItem.item_type === 'points_bundle' ? (lang === 'ar' ? 'باقة نقاط' : 'Points bundle') : (lang === 'ar' ? 'إضافة مميزة' : 'Premium extra')}</p><h3 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white">{lang === 'ar' ? detailsItem.name_ar : detailsItem.name}</h3><p className="mt-2 text-xs font-semibold leading-6 text-slate-700 dark:text-slate-300">{lang === 'ar' ? detailsItem.description_ar : detailsItem.description}</p></div><span className="shrink-0 rounded-full bg-amber-100 px-3 py-1.5 text-[10px] font-black text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">{detailsItem.min_plan === 'diamond' ? t.diamond : detailsItem.is_featured ? (lang === 'ar' ? 'مميز' : 'Featured') : (lang === 'ar' ? 'متاح الآن' : 'Available')}</span></div><div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-3"><div className="rounded-2xl border border-[#007472]/20 bg-[#007472]/5 p-3 dark:border-[#2AC3BB]/25 dark:bg-[#007472]/20"><p className="text-[10px] font-bold text-[#007472] dark:text-[#2AC3BB]">{lang === 'ar' ? 'المظهر' : 'Experience'}</p><p className="mt-1 text-xs font-black text-slate-800 dark:text-white">{detailsItem.item_type === 'frame' ? (lang === 'ar' ? 'يظهر على ملفك' : 'Shown on your profile') : (lang === 'ar' ? 'مكافأة فورية' : 'Instant reward')}</p></div><div className="rounded-2xl border border-sky-200/80 bg-sky-50/70 p-3 dark:border-sky-900/50 dark:bg-sky-950/25"><p className="text-[10px] font-bold text-sky-700 dark:text-sky-300">{lang === 'ar' ? 'السعر' : 'Price'}</p><p className="mt-1 text-xs font-black text-slate-800 dark:text-white">{getStorePaymentMode(detailsItem).mode === 'cash' ? `${getStorePaymentMode(detailsItem).amount.toLocaleString()} EGP` : getStorePaymentMode(detailsItem).mode === 'free' ? (lang === 'ar' ? 'مجانًا' : 'Free') : `${getStorePaymentMode(detailsItem).amount.toLocaleString()} ${getStorePaymentMode(detailsItem).mode === 'coins' ? t.coins : t.points}`}</p></div><div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/70 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/25"><p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{lang === 'ar' ? 'الحالة' : 'Status'}</p><p className="mt-1 text-xs font-black text-slate-800 dark:text-white">{owned(detailsItem.id) ? t.owned : (lang === 'ar' ? 'غير مملوك' : 'Not owned')}</p></div></div><div className="mt-5 rounded-2xl bg-slate-50 dark:bg-slate-950/45 p-4 border border-slate-200/80 dark:border-slate-800"><p className="mb-2 text-xs font-black text-slate-900 dark:text-white">{lang === 'ar' ? 'مميزات العنصر' : 'Item benefits'}</p><ul className="grid gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 sm:grid-cols-2"><li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" />{lang === 'ar' ? 'تصميم مميز داخل ملفك' : 'Distinctive profile styling'}</li><li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" />{lang === 'ar' ? 'يُضاف إلى مخزونك فوراً' : 'Added to your inventory'}</li><li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" />{lang === 'ar' ? 'تجربة آمنة وسهلة' : 'Simple and secure experience'}</li><li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" />{lang === 'ar' ? 'يمكن استخدامه لاحقاً' : 'Reusable whenever you want'}</li></ul></div><button type="button" disabled={busy === detailsItem.id} onClick={() => void handleStoreAction(detailsItem)} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] px-4 py-3 text-sm font-black text-white dark:text-slate-950 shadow-lg shadow-[#007472]/20 transition hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer">{busy === detailsItem.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Store className="h-4 w-4" />}{owned(detailsItem.id) ? (lang === 'ar' ? 'استخدام العنصر' : 'Use item') : getStorePaymentMode(detailsItem).mode === 'free' ? (lang === 'ar' ? 'احصل عليه مجانًا' : 'Get free') : (lang === 'ar' ? 'شراء الآن' : 'Buy now')}</button></div></div></div></OverlayPortal>}
     {paymentItem && (
       <OverlayPortal>
         <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/70 p-4 backdrop-blur-md" onClick={() => setPaymentItem(null)}>

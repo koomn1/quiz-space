@@ -2,9 +2,14 @@ export type StorePriceInput = {
   price_egp?: number | string | null;
   price_points?: number | null;
   price_coins?: number | null;
+  min_plan?: string | null;
+  subscriber_free?: boolean | null;
+  subscription_free?: boolean | null;
+  is_free?: boolean | null;
+  is_active?: boolean | null;
 };
 
-export type StorePaymentMode = 'cash' | 'points' | 'coins' | 'unavailable';
+export type StorePaymentMode = 'cash' | 'points' | 'coins' | 'free' | 'unavailable';
 
 export type StoreActionAvailabilityInput = {
   isOwned: boolean;
@@ -28,6 +33,17 @@ export function getStorePaymentMode(item: StorePriceInput): {
   if (cash > 0) return { mode: 'cash', amount: cash };
   if (coins > 0) return { mode: 'coins', amount: coins };
   if (points > 0) return { mode: 'points', amount: points };
+
+  if (
+    item.is_free ||
+    item.subscriber_free ||
+    item.subscription_free ||
+    item.is_active === true ||
+    (item.min_plan && item.min_plan !== 'none')
+  ) {
+    return { mode: 'free', amount: 0 };
+  }
+
   return { mode: 'unavailable', amount: 0 };
 }
 
