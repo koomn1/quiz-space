@@ -81,7 +81,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty('--theme-text', modeTokens.text);
     root.style.setProperty('--theme-muted', modeTokens.muted);
     root.style.setProperty('--theme-glow', modeTokens.glow);
+    root.style.setProperty('--app-page-bg', modeTokens.canvas);
+    root.style.setProperty('--app-surface', modeTokens.surface);
+    root.style.setProperty('--app-surface-strong', modeTokens.surfaceStrong);
+    root.style.setProperty('--app-border', modeTokens.border);
+    root.style.setProperty('--app-text', modeTokens.text);
+    root.style.setProperty('--app-text-muted', modeTokens.muted);
+    root.style.setProperty('--color-theme-canvas', modeTokens.canvas);
+    root.style.setProperty('--color-theme-surface', modeTokens.surface);
+    root.style.setProperty('--color-theme-text', modeTokens.text);
+    root.style.setProperty('--color-theme-muted', modeTokens.muted);
     root.style.colorScheme = darkMode ? 'dark' : 'light';
+    root.style.backgroundColor = modeTokens.canvas;
+    root.style.color = modeTokens.text;
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.style.backgroundColor = modeTokens.canvas;
+      document.body.style.color = modeTokens.text;
+    }
 
     window.localStorage.setItem('quiz_theme', darkMode ? 'dark' : 'light');
     window.localStorage.setItem('quiz_theme_preference', themePreference);

@@ -66,6 +66,7 @@ import lanyardStrapImage from '../components/lanyard/lanyard.png';
 import { PremiumNameTag } from '../components/PremiumNameTag';
 import { THEME_PRESETS } from '../lib/themePresets';
 import { showToast } from '../components/Toast';
+import OverlayPortal from '../components/OverlayPortal';
 import SpotlightCard from '../components/SpotlightCard';
 import SplitText from '../components/reactbits/SplitText';
 import DecryptedText from '../components/reactbits/DecryptedText';
@@ -1018,333 +1019,363 @@ export default function UserProfile({
 
       {/* 5. EDIT PROFILE MODAL */}
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="my-auto w-full max-w-xl rounded-[30px] border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                {isAr ? 'تعديل الملف الشخصي' : 'Edit Profile'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveProfile} className="mt-5 space-y-4">
-              {/* Avatar Selector */}
-              <div>
-                <label className="mb-2 block text-xs font-black text-slate-700 dark:text-slate-300">
-                  {isAr ? 'اختيار أفاتار أو صورة' : 'Avatar Selection'}
-                </label>
-                <div className="flex items-center gap-4">
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-cyan-400 bg-slate-100 dark:bg-slate-800">
-                    <img
-                      src={resolveProfileImageUrl(editPhoto)}
-                      alt="Avatar Preview"
-                      className="h-full w-full object-cover"
-                    />
+        <OverlayPortal>
+          <div
+            className="fixed inset-0 z-[120] flex flex-col justify-end sm:justify-center items-center bg-slate-950/75 backdrop-blur-md p-0 sm:p-4 overflow-hidden"
+            onClick={() => setIsEditing(false)}
+          >
+            <div
+              className="w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] border border-slate-200 dark:border-[#2AC3BB]/25 bg-white dark:bg-[#072424] text-slate-900 dark:text-[#FCF6EE] shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[88vh] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Sticky Header: ALWAYS visible at the top */}
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#2AC3BB]/20 px-6 py-4 bg-white/95 dark:bg-[#072424]/95 backdrop-blur-sm shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB]">
+                    <Edit3 className="h-4.5 w-4.5 text-[#EE8361]" />
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled={isUploadingAvatar}
-                      onClick={() => avatarInputRef.current?.click()}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200"
-                    >
-                      {isUploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                      <span>{isAr ? 'رفع صورة' : 'Upload photo'}</span>
-                    </button>
-                    <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-[#FCF6EE]">
+                    {isAr ? 'تعديل الملف الشخصي' : 'Edit Profile'}
+                  </h3>
                 </div>
-
-                <div className="mt-3 grid grid-cols-6 gap-2">
-                  {AVATAR_PRESETS.slice(0, 12).map((av) => (
-                    <button
-                      type="button"
-                      key={av.id}
-                      onClick={() => setEditPhoto(av.url)}
-                      className={`aspect-square overflow-hidden rounded-xl border-2 transition ${
-                        editPhoto === av.url ? 'border-cyan-500 scale-105' : 'border-transparent hover:border-slate-300'
-                      }`}
-                    >
-                      <img src={av.url} alt="" className="h-full w-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Name */}
-              <div>
-                <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
-                  {isAr ? 'الاسم المعروض' : 'Display Name'}
-                </label>
-                <input
-                  type="text"
-                  name="quiz_user_display_name"
-                  autoComplete="name"
-                  required
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-                />
-              </div>
-
-              {/* Custom Handle */}
-              <div>
-                <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
-                  {isAr ? 'اسم المستخدم / المعرف (@Username)' : 'Username / Custom Handle (@handle)'}
-                </label>
-                <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1 text-xs font-bold dark:border-slate-800 dark:bg-slate-900">
-                  <span className="text-[#2AC3BB] font-mono font-black">@</span>
-                  <input
-                    type="text"
-                    name="quiz_user_custom_handle"
-                    autoComplete="username"
-                    spellCheck={false}
-                    placeholder={isAr ? 'مثال: ahmed_dev' : 'e.g. ahmed_dev'}
-                    value={editCustomId}
-                    onChange={(e) => setEditCustomId(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    className="w-full bg-transparent px-1.5 py-1.5 outline-none dark:text-white font-mono"
-                  />
-                </div>
-                <p className="mt-1 text-[10px] text-slate-400">
-                  {isAr ? 'حروف إنجليزية صغيرة وأرقام و _ فقط (لا تكتب رقم الهاتف هنا).' : 'Lowercase English letters, numbers, and _ only (do not enter phone number here).'}
-                </p>
-              </div>
-
-              {/* Bio */}
-              <div>
-                <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
-                  {isAr ? 'النبذة الشخصية (Bio)' : 'Bio'}
-                </label>
-                <textarea
-                  rows={3}
-                  name="quiz_user_bio"
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value)}
-                  placeholder={isAr ? 'اكتب نبذة مميزة عنك واهتماماتك التعليمية...' : 'Write a short bio about yourself and your learning goals...'}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-medium outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-                />
-              </div>
-
-              {/* Location & Phone */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
-                    {isAr ? 'الموقع / المدينة' : 'Location'}
-                  </label>
-                  <input
-                    type="text"
-                    name="quiz_user_location"
-                    autoComplete="address-level2"
-                    value={editLocation}
-                    onChange={(e) => setEditLocation(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
-                    {isAr ? 'رقم الهاتف المتنقل' : 'Phone'}
-                  </label>
-                  <input
-                    type="tel"
-                    name="quiz_user_phone_number"
-                    autoComplete="tel"
-                    placeholder="01XXXXXXXXX"
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              {/* 3D Lanyard ID Card Option (Subscribers Only) */}
-              <div className="rounded-2xl border border-[#2AC3BB]/30 bg-[#007472]/5 dark:bg-[#007472]/15 p-4 flex items-center justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-xl bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB] shrink-0 mt-0.5">
-                    {isPremium ? <Sparkles className="h-4 w-4 text-[#EE8361]" /> : <Crown className="h-4 w-4 text-amber-500" />}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs font-black text-slate-900 dark:text-[#FCF6EE]">
-                        {isAr ? 'قلادة الهوية ثلاثية الأبعاد (3D Lanyard)' : '3D Lanyard ID Card'}
-                      </h4>
-                      {!isPremium && (
-                        <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-black text-amber-600 dark:text-amber-300 border border-amber-500/30">
-                          VIP
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-[#8BAEAD]">
-                      {isPremium
-                        ? (isAr
-                            ? 'إظهار بطاقة الهوية المعلقة التفاعلية ثلاثية الأبعاد في أعلى ملفك الشخصي.'
-                            : 'Display a draggable 3D physics ID card on your profile.')
-                        : (isAr
-                            ? 'ميزة حصرية متاحة فقط لأعضاء الاشتراكات المميزة.'
-                            : 'Exclusive feature available only to subscription members.')}
-                    </p>
-                  </div>
-                </div>
-
-                {isPremium ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowLanyard(!showLanyard)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      showLanyard ? 'bg-[#2AC3BB]' : 'bg-slate-300 dark:bg-slate-700'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                        showLanyard ? (isAr ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditing(false);
-                      if (onOpenBilling) onOpenBilling();
-                      else setActiveTab('membership');
-                    }}
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm hover:brightness-110"
-                  >
-                    <Crown className="h-3 w-3" />
-                    <span>{isAr ? 'ترقية' : 'Upgrade'}</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900"
+                  className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-700 dark:hover:text-white transition cursor-pointer"
+                  title={isAr ? 'إغلاق' : 'Close'}
                 >
-                  {isAr ? 'إلغاء' : 'Cancel'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#007472] px-5 py-2.5 text-xs font-black text-[#FCF6EE] transition hover:bg-[#005e5c] disabled:opacity-50"
-                >
-                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  <span>{isAr ? 'حفظ التغييرات' : 'Save Changes'}</span>
+                  <X className="h-5 w-5" />
                 </button>
               </div>
-            </form>
+
+              {/* Form with scrollable body and sticky footer */}
+              <form onSubmit={handleSaveProfile} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-4">
+                  {/* Avatar Selector */}
+                  <div>
+                    <label className="mb-2 block text-xs font-black text-slate-700 dark:text-slate-300">
+                      {isAr ? 'اختيار أفاتار أو صورة' : 'Avatar Selection'}
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-cyan-400 bg-slate-100 dark:bg-slate-800">
+                        <img
+                          src={resolveProfileImageUrl(editPhoto)}
+                          alt="Avatar Preview"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={isUploadingAvatar}
+                          onClick={() => avatarInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 cursor-pointer"
+                        >
+                          {isUploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                          <span>{isAr ? 'رفع صورة' : 'Upload photo'}</span>
+                        </button>
+                        <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-6 gap-2">
+                      {AVATAR_PRESETS.slice(0, 12).map((av) => (
+                        <button
+                          type="button"
+                          key={av.id}
+                          onClick={() => setEditPhoto(av.url)}
+                          className={`aspect-square overflow-hidden rounded-xl border-2 transition cursor-pointer ${
+                            editPhoto === av.url ? 'border-cyan-500 scale-105' : 'border-transparent hover:border-slate-300'
+                          }`}
+                        >
+                          <img src={av.url} alt="" className="h-full w-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Name */}
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
+                      {isAr ? 'الاسم المعروض' : 'Display Name'}
+                    </label>
+                    <input
+                      type="text"
+                      name="quiz_user_display_name"
+                      autoComplete="name"
+                      required
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Custom Handle */}
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
+                      {isAr ? 'اسم المستخدم / المعرف (@Username)' : 'Username / Custom Handle (@handle)'}
+                    </label>
+                    <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1 text-xs font-bold dark:border-slate-800 dark:bg-slate-900">
+                      <span className="text-[#2AC3BB] font-mono font-black">@</span>
+                      <input
+                        type="text"
+                        name="quiz_user_custom_handle"
+                        autoComplete="username"
+                        spellCheck={false}
+                        placeholder={isAr ? 'مثال: ahmed_dev' : 'e.g. ahmed_dev'}
+                        value={editCustomId}
+                        onChange={(e) => setEditCustomId(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                        className="w-full bg-transparent px-1.5 py-1.5 outline-none dark:text-white font-mono"
+                      />
+                    </div>
+                    <p className="mt-1 text-[10px] text-slate-400">
+                      {isAr ? 'حروف إنجليزية صغيرة وأرقام و _ فقط (لا تكتب رقم الهاتف هنا).' : 'Lowercase English letters, numbers, and _ only (do not enter phone number here).'}
+                    </p>
+                  </div>
+
+                  {/* Bio */}
+                  <div>
+                    <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
+                      {isAr ? 'النبذة الشخصية (Bio)' : 'Bio'}
+                    </label>
+                    <textarea
+                      rows={3}
+                      name="quiz_user_bio"
+                      value={editBio}
+                      onChange={(e) => setEditBio(e.target.value)}
+                      placeholder={isAr ? 'اكتب نبذة مميزة عنك واهتماماتك التعليمية...' : 'Write a short bio about yourself and your learning goals...'}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-medium outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Location & Phone */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
+                        {isAr ? 'الموقع / المدينة' : 'Location'}
+                      </label>
+                      <input
+                        type="text"
+                        name="quiz_user_location"
+                        autoComplete="address-level2"
+                        value={editLocation}
+                        onChange={(e) => setEditLocation(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-400">
+                        {isAr ? 'رقم الهاتف المتنقل' : 'Phone'}
+                      </label>
+                      <input
+                        type="tel"
+                        name="quiz_user_phone_number"
+                        autoComplete="tel"
+                        placeholder="01XXXXXXXXX"
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-[#2AC3BB] dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 3D Lanyard ID Card Option (Subscribers Only) */}
+                  <div className="rounded-2xl border border-[#2AC3BB]/30 bg-[#007472]/5 dark:bg-[#007472]/15 p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB] shrink-0 mt-0.5">
+                        {isPremium ? <Sparkles className="h-4 w-4 text-[#EE8361]" /> : <Crown className="h-4 w-4 text-amber-500" />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-[#FCF6EE]">
+                            {isAr ? 'قلادة الهوية ثلاثية الأبعاد (3D Lanyard)' : '3D Lanyard ID Card'}
+                          </h4>
+                          {!isPremium && (
+                            <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-black text-amber-600 dark:text-amber-300 border border-amber-500/30">
+                              VIP
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-[#8BAEAD]">
+                          {isPremium
+                            ? (isAr
+                                ? 'إظهار بطاقة الهوية المعلقة التفاعلية ثلاثية الأبعاد في أعلى ملفك الشخصي.'
+                                : 'Display a draggable 3D physics ID card on your profile.')
+                            : (isAr
+                                ? 'ميزة حصرية متاحة فقط لأعضاء الاشتراكات المميزة.'
+                                : 'Exclusive feature available only to subscription members.')}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isPremium ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowLanyard(!showLanyard)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          showLanyard ? 'bg-[#2AC3BB]' : 'bg-slate-300 dark:bg-slate-700'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                            showLanyard ? (isAr ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditing(false);
+                          if (onOpenBilling) onOpenBilling();
+                          else setActiveTab('membership');
+                        }}
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm hover:brightness-110 cursor-pointer"
+                      >
+                        <Crown className="h-3 w-3" />
+                        <span>{isAr ? 'ترقية' : 'Upgrade'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sticky Footer: ALWAYS visible at the bottom */}
+                <div className="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-[#2AC3BB]/20 px-6 py-3.5 bg-slate-50/95 dark:bg-[#031717]/95 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer"
+                  >
+                    {isAr ? 'إلغاء' : 'Cancel'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#007472] px-5 py-2.5 text-xs font-black text-[#FCF6EE] transition hover:bg-[#005e5c] active:scale-98 disabled:opacity-50 cursor-pointer shadow-sm shadow-[#007472]/30"
+                  >
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    <span>{isAr ? 'حفظ التغييرات' : 'Save Changes'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
+        </OverlayPortal>
       )}
 
       {/* 6. THEME & APPEARANCE CUSTOMIZER MODAL */}
       {isThemeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="my-auto w-full max-w-lg rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB]">
-                  <Palette className="h-5 w-5" />
+        <OverlayPortal>
+          <div
+            className="fixed inset-0 z-[120] flex flex-col justify-end sm:justify-center items-center bg-slate-950/75 backdrop-blur-md p-0 sm:p-4 overflow-hidden"
+            onClick={() => setIsThemeModalOpen(false)}
+          >
+            <div
+              className="w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] border border-slate-200 dark:border-[#2AC3BB]/25 bg-white dark:bg-[#072424] text-slate-900 dark:text-[#FCF6EE] shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[88vh] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Sticky Header */}
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#2AC3BB]/20 px-6 py-4 bg-white/95 dark:bg-[#072424]/95 backdrop-blur-sm shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB]">
+                    <Palette className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-[#FCF6EE]">
+                    {isAr ? 'تخصيص المظهر والثيم' : 'Customize Appearance & Theme'}
+                  </h3>
                 </div>
-                <h3 className="text-base font-black text-slate-900 dark:text-[#FCF6EE]">
-                  {isAr ? 'تخصيص المظهر والثيم' : 'Customize Appearance & Theme'}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsThemeModalOpen(false)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="mt-5 space-y-5">
-              <div>
-                <label className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  {isAr ? 'لوحة ألوان المنصة (Color Palette)' : 'Platform Color Palette'}
-                </label>
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                  {THEME_PRESETS.map((preset) => {
-                    const isSelected = (colorTheme || 'petrol') === preset.id;
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() => {
-                          setColorTheme?.(preset.id);
-                          localStorage.setItem('quiz_color_theme', preset.id);
-                          window.dispatchEvent(new CustomEvent('quizspace-theme-updated', { detail: preset.id }));
-                          showToast('success', isAr ? `تم تطبيق ثيم ${preset.id}.` : `Theme ${preset.id} applied.`);
-                        }}
-                        className={`flex flex-col items-start gap-2 rounded-2xl border p-3 text-start transition-all cursor-pointer ${
-                          isSelected
-                            ? 'border-[#2AC3BB] bg-[#2AC3BB]/10 shadow-sm ring-2 ring-[#2AC3BB]/40'
-                            : 'border-slate-200 bg-slate-50 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900'
-                        }`}
-                      >
-                        <div className="flex w-full items-center justify-between">
-                          <div
-                            className="h-5 w-5 rounded-full border border-white/50 shadow-sm"
-                            style={{ backgroundColor: preset.primary }}
-                          />
-                          {isSelected && <Check className="h-4 w-4 text-[#007472] dark:text-[#2AC3BB]" />}
-                        </div>
-                        <span className="text-xs font-black capitalize text-slate-900 dark:text-[#FCF6EE]">
-                          {preset.id === 'petrol'
-                            ? (isAr ? 'الفيروزي العميق' : 'Petrol (Brand)')
-                            : preset.id === 'indigo'
-                            ? (isAr ? 'النيلي الملكي' : 'Royal Indigo')
-                            : preset.id === 'emerald'
-                            ? (isAr ? 'الزمردي' : 'Emerald')
-                            : preset.id === 'sunset'
-                            ? (isAr ? 'المرجاني' : 'Sunset Coral')
-                            : preset.id}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Advanced Customization shortcut */}
-              <div className="rounded-2xl border border-[#2AC3BB]/25 bg-gradient-to-br from-[#007472]/10 via-[#2AC3BB]/5 to-transparent p-4">
-                <div className="flex items-center gap-2 mb-1.5 text-[#007472] dark:text-[#2AC3BB]">
-                  <Sparkles className="h-4 w-4 text-[#EE8361]" />
-                  <h4 className="text-xs font-black">
-                    {isAr ? 'تخصيص الأفاتار والإطارات المتقدمة' : 'Avatar & Frame Customization'}
-                  </h4>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-                  {isAr
-                    ? 'اختر من بين إطارات البروفايل وبطاقات الاختبارات والأفاتارات الحصرية في صفحة التخصيص.'
-                    : 'Choose from exclusive profile frames, quiz-card frames, and avatar presets.'}
-                </p>
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsThemeModalOpen(false);
-                    if (onNavigate) {
-                      onNavigate('customization');
-                    } else {
-                      window.location.hash = 'customization';
-                    }
-                  }}
-                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] px-4 py-2 text-xs font-black text-[#FCF6EE] shadow-sm transition hover:brightness-110 active:scale-98 cursor-pointer"
+                  onClick={() => setIsThemeModalOpen(false)}
+                  className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-700 dark:hover:text-white transition cursor-pointer"
+                  title={isAr ? 'إغلاق' : 'Close'}
                 >
-                  <Palette className="h-3.5 w-3.5" />
-                  <span>{isAr ? 'فتح استوديو التخصيص الكامل' : 'Open Full Customization Studio'}</span>
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="flex justify-end pt-2">
+              {/* Scrollable Body */}
+              <div className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-5">
+                <div>
+                  <label className="mb-2.5 block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    {isAr ? 'لوحة ألوان المنصة (Color Palette)' : 'Platform Color Palette'}
+                  </label>
+                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                    {THEME_PRESETS.map((preset) => {
+                      const isSelected = (colorTheme || 'petrol') === preset.id;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            setColorTheme?.(preset.id);
+                            localStorage.setItem('quiz_color_theme', preset.id);
+                            window.dispatchEvent(new CustomEvent('quizspace-theme-updated', { detail: preset.id }));
+                            showToast('success', isAr ? `تم تطبيق ثيم ${preset.id}.` : `Theme ${preset.id} applied.`);
+                          }}
+                          className={`flex flex-col items-start gap-2 rounded-2xl border p-3 text-start transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-[#2AC3BB] bg-[#2AC3BB]/10 shadow-sm ring-2 ring-[#2AC3BB]/40'
+                              : 'border-slate-200 bg-slate-50 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900'
+                          }`}
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <div
+                              className="h-5 w-5 rounded-full border border-white/50 shadow-sm"
+                              style={{ backgroundColor: preset.primary }}
+                            />
+                            {isSelected && <Check className="h-4 w-4 text-[#007472] dark:text-[#2AC3BB]" />}
+                          </div>
+                          <span className="text-xs font-black capitalize text-slate-900 dark:text-[#FCF6EE]">
+                            {preset.id === 'petrol'
+                              ? (isAr ? 'الفيروزي العميق' : 'Petrol (Brand)')
+                              : preset.id === 'indigo'
+                              ? (isAr ? 'النيلي الملكي' : 'Royal Indigo')
+                              : preset.id === 'emerald'
+                              ? (isAr ? 'الزمردي' : 'Emerald')
+                              : preset.id === 'sunset'
+                              ? (isAr ? 'المرجاني' : 'Sunset Coral')
+                              : preset.id}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Advanced Customization shortcut */}
+                <div className="rounded-2xl border border-[#2AC3BB]/25 bg-gradient-to-br from-[#007472]/10 via-[#2AC3BB]/5 to-transparent p-4">
+                  <div className="flex items-center gap-2 mb-1.5 text-[#007472] dark:text-[#2AC3BB]">
+                    <Sparkles className="h-4 w-4 text-[#EE8361]" />
+                    <h4 className="text-xs font-black">
+                      {isAr ? 'تخصيص الأفاتار والإطارات المتقدمة' : 'Avatar & Frame Customization'}
+                    </h4>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
+                    {isAr
+                      ? 'اختر من بين إطارات البروفايل وبطاقات الاختبارات والأفاتارات الحصرية في صفحة التخصيص.'
+                      : 'Choose from exclusive profile frames, quiz-card frames, and avatar presets.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsThemeModalOpen(false);
+                      if (onNavigate) {
+                        onNavigate('customization');
+                      } else {
+                        window.location.hash = 'customization';
+                      }
+                    }}
+                    className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] px-4 py-2 text-xs font-black text-[#FCF6EE] shadow-sm transition hover:brightness-110 active:scale-98 cursor-pointer"
+                  >
+                    <Palette className="h-3.5 w-3.5" />
+                    <span>{isAr ? 'فتح استوديو التخصيص الكامل' : 'Open Full Customization Studio'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Sticky Footer */}
+              <div className="flex items-center justify-end border-t border-slate-100 dark:border-[#2AC3BB]/20 px-6 py-3.5 bg-slate-50/95 dark:bg-[#031717]/95 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsThemeModalOpen(false)}
@@ -1355,7 +1386,7 @@ export default function UserProfile({
               </div>
             </div>
           </div>
-        </div>
+        </OverlayPortal>
       )}
     </div>
   );
