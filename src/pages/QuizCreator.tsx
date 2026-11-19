@@ -3722,7 +3722,7 @@ A computer is a digital electronic machine...
                     >
                       <div className="flex items-center justify-between w-full">
                         <span className="font-black text-sm flex items-center gap-2">
-                          <span></span>
+                          <User className="w-4 h-4 text-[#007472] dark:text-[#2AC3BB]" />
                           <span>{isAr ? 'تصحيح يدوي من منشئ الاختبار (موصى به)' : 'Manual Review by Creator'}</span>
                         </span>
                         {essayGradingMode === 'manual' && (
@@ -3749,7 +3749,7 @@ A computer is a digital electronic machine...
                     >
                       <div className="flex items-center justify-between w-full">
                         <span className="font-black text-sm flex items-center gap-2">
-                          <span></span>
+                          <Sparkles className="w-4 h-4 text-[#EE8361]" />
                           <span>{isAr ? 'تصحيح فوري بالذكاء الاصطناعي (AI)' : 'Instant AI Grading'}</span>
                         </span>
                         {essayGradingMode === 'ai' && (

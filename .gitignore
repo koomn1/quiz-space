@@ -68,3 +68,8 @@ mobile_flutter/.dart_tool/
 mobile_flutter/build/
 mobile_flutter/android/
 mobile_flutter/config/google-services.json
+
+# Graphify Knowledge Graph artifacts
+graphify-out/
+graphify-out.zip
+

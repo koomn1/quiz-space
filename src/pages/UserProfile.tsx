@@ -31,6 +31,9 @@ import {
   Ticket,
   Upload,
   User,
+  Users,
+  UserPlus,
+  UserCheck,
   X,
   Zap,
 } from 'lucide-react';
@@ -50,6 +53,10 @@ import {
   redeemCouponForUser,
   getCouponByCode,
   isTrialSubscription,
+  isFollowingUser,
+  toggleFollowUser,
+  getFollowersList,
+  getFollowingList,
 } from '../lib/db';
 import {
   AVATAR_PRESETS,
@@ -59,7 +66,8 @@ import {
   resolveProfileImageUrl,
   uniqueProfileFrames,
 } from '../constants/profileAssets';
-import { readLanyardVisibility, writeLanyardVisibility } from '../lib/profileLocation';
+import { readLanyardVisibility, writeLanyardVisibility, getDisplayLocation } from '../lib/profileLocation';
+import { playChimeSound } from '../lib/chime';
 import Lanyard from '../components/lanyard/Lanyard';
 import lanyardFrontImage from '../components/lanyard/card-front.webp';
 import lanyardStrapImage from '../components/lanyard/lanyard.png';
@@ -170,6 +178,15 @@ export default function UserProfile({
   const [showLanyard, setShowLanyard] = useState<boolean>(false);
   const [isTogglingLanyard, setIsTogglingLanyard] = useState<boolean>(false);
 
+  // Social Followers State
+  const [followersCount, setFollowersCount] = useState<number>(0);
+  const [followingCount, setFollowingCount] = useState<number>(0);
+  const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  const [isFollowLoading, setIsFollowLoading] = useState<boolean>(false);
+  const [followModalType, setFollowModalType] = useState<'followers' | 'following' | null>(null);
+  const [followModalUsers, setFollowModalUsers] = useState<Array<{ id: string; name: string; photoURL: string; customId?: string }>>([]);
+  const [isFollowModalLoading, setIsFollowModalLoading] = useState<boolean>(false);
+
   // Load profile data
   const loadProfile = useCallback(async () => {
     const targetId = profileId || currentUserId;
@@ -183,6 +200,11 @@ export default function UserProfile({
         getRewardStoreItems().catch(() => []),
       ]);
       setProfileData(stats);
+      setFollowersCount(stats?.followersCount || 0);
+      setFollowingCount(stats?.followingCount || 0);
+      if (currentUserId && targetId !== currentUserId) {
+        isFollowingUser(currentUserId, targetId).then(setIsFollowing).catch(() => setIsFollowing(false));
+      }
       if (stats?.location) {
         setShowLanyard(readLanyardVisibility(stats.location));
       } else {
@@ -420,10 +442,15 @@ export default function UserProfile({
     setIsUploadingCover(true);
     try {
       const publicUrl = await uploadCoverImage(currentUserId, file);
-      setProfileData((prev) => (prev ? { ...prev, coverUrl: publicUrl } : null));
-      showToast('success', isAr ? 'تم تحديث صورة الغلاف.' : 'Cover photo updated.');
+      if (publicUrl) {
+        setProfileData((prev) => (prev ? { ...prev, coverUrl: publicUrl } : null));
+        await saveUserProfile({ userId: currentUserId, coverUrl: publicUrl });
+        showToast('success', isAr ? 'تم تحديث وحفظ صورة الغلاف بنجاح!' : 'Cover photo updated & saved successfully!');
+      } else {
+        throw new Error(isAr ? 'فشل رفع صورة الغلاف إلى السيرفر.' : 'Failed to upload cover image.');
+      }
     } catch (err: any) {
-      showToast('error', err?.message || (isAr ? 'تعذر رفع صورة الغلاف.' : 'Failed to upload cover.'));
+      showToast('error', err?.message || (isAr ? 'تعذر رفع وحفظ صورة الغلاف.' : 'Failed to upload cover.'));
     } finally {
       setIsUploadingCover(false);
       if (coverInputRef.current) coverInputRef.current.value = '';
@@ -453,6 +480,47 @@ export default function UserProfile({
     const url = `${window.location.origin}${window.location.pathname}?profile=${profileId || currentUserId}`;
     navigator.clipboard.writeText(url);
     showToast('success', isAr ? 'تم نسخ رابط الملف الشخصي.' : 'Profile link copied to clipboard.');
+  };
+
+  // Follow / Unfollow User
+  const handleToggleFollow = async () => {
+    const targetId = profileId || currentUserId;
+    if (!currentUserId || !targetId || targetId === currentUserId || isFollowLoading) return;
+    setIsFollowLoading(true);
+    try {
+      const res = await toggleFollowUser(currentUserId, targetId);
+      setIsFollowing(res.isFollowing);
+      setFollowersCount(res.newFollowersCount);
+      playChimeSound();
+      showToast(
+        'success',
+        res.isFollowing
+          ? (isAr ? 'تمت متابعة الحساب بنجاح! ستصلك إشعارات باختباراته الجديدة.' : 'Followed! You will receive notifications for new quizzes.')
+          : (isAr ? 'تم إلغاء المتابعة.' : 'Unfollowed account.')
+      );
+    } catch {
+      showToast('error', isAr ? 'تعذر تحديث المتابعة.' : 'Failed to update follow.');
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
+  // Open Followers/Following Modal
+  const openFollowModal = async (type: 'followers' | 'following') => {
+    const targetId = profileId || currentUserId;
+    if (!targetId) return;
+    setFollowModalType(type);
+    setIsFollowModalLoading(true);
+    try {
+      const list = type === 'followers'
+        ? await getFollowersList(targetId)
+        : await getFollowingList(targetId);
+      setFollowModalUsers(list);
+    } catch {
+      setFollowModalUsers([]);
+    } finally {
+      setIsFollowModalLoading(false);
+    }
   };
 
   // Redeem Coupon
@@ -497,6 +565,7 @@ export default function UserProfile({
     : 0;
   const level = Math.max(1, Math.floor(((profileData?.xp || 0) / 500) + 1));
   const xpCurrentLevel = (profileData?.xp || 0) % 500;
+  const displayLocation = getDisplayLocation(profileData?.location);
 
   return (
     <div ref={containerRef} dir={isAr ? 'rtl' : 'ltr'} className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 space-y-6">
@@ -525,11 +594,15 @@ export default function UserProfile({
           </div>
         )}
         {/* Cover Photo / Graphic */}
-        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-r from-[#031717] via-[#007472] to-[#0a2f2e] sm:h-56">
+        <div className="relative h-44 sm:h-56 md:h-64 w-full overflow-hidden bg-gradient-to-r from-[#031717] via-[#007472] to-[#0a2f2e]">
           {profileData?.coverUrl ? (
             <img src={profileData.coverUrl} alt="Cover" className="h-full w-full object-cover" />
           ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_75%_20%,rgba(238,131,97,0.25),transparent)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_70%_at_75%_20%,rgba(238,131,97,0.25),transparent)] flex items-center justify-center">
+              <span className="text-white/10 text-5xl sm:text-6xl font-black select-none tracking-widest uppercase font-display">
+                QuizSpace
+              </span>
+            </div>
           )}
 
           {/* Change cover button for own profile */}
@@ -538,9 +611,9 @@ export default function UserProfile({
               type="button"
               disabled={isUploadingCover}
               onClick={() => coverInputRef.current?.click()}
-              className="absolute end-4 top-4 flex items-center gap-2 rounded-2xl bg-black/40 px-3.5 py-2 text-xs font-black text-[#FCF6EE] backdrop-blur-md transition hover:bg-black/60"
+              className="absolute end-4 top-4 z-10 flex items-center gap-2 rounded-2xl bg-black/50 px-4 py-2 text-xs font-black text-white backdrop-blur-md transition hover:bg-black/75 shadow-lg active:scale-95 cursor-pointer"
             >
-              {isUploadingCover ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+              {isUploadingCover ? <Loader2 className="h-4 w-4 animate-spin text-[#2AC3BB]" /> : <Camera className="h-4 w-4 text-[#EE8361]" />}
               <span>{isAr ? 'تغيير الغلاف' : 'Change Cover'}</span>
             </button>
           )}
@@ -548,120 +621,73 @@ export default function UserProfile({
         </div>
 
         {/* Profile Card Body */}
-        <div className="relative px-6 pb-6 pt-0 sm:px-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="relative px-5 pb-6 pt-0 sm:px-8">
+          {/* Top row: Avatar on start, action buttons on end */}
+          <div className="flex flex-wrap items-end justify-between gap-4">
             {/* Avatar with Frame */}
-            <div className="relative -mt-20 sm:-mt-24 flex items-end gap-4">
-              <div className="gsap-avatar relative flex h-36 w-36 items-center justify-center sm:h-44 sm:w-44">
-                <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-xl dark:border-[#031717] dark:bg-[#072424] sm:h-36 sm:w-36">
-                  {profileData?.photoURL ? (
-                    <img
-                      src={resolveProfileImageUrl(profileData.photoURL)}
-                      alt={profileData.name}
-                      onError={handleProfileImageError}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[#007472]/15 text-4xl font-black text-[#007472] dark:text-[#2AC3BB] sm:text-5xl">
-                      {profileData?.name?.[0]?.toUpperCase() || 'U'}
-                    </div>
-                  )}
-                </div>
-
-                {/* Overlaid Active Frame */}
-                {activeFrameUrl && (
+            <div className="gsap-avatar relative -mt-14 sm:-mt-20 flex h-28 w-28 sm:h-36 sm:w-36 items-center justify-center shrink-0">
+              <div className="relative h-24 w-24 sm:h-32 sm:w-32 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-xl dark:border-[#031717] dark:bg-[#072424]">
+                {profileData?.photoURL ? (
                   <img
-                    src={activeFrameUrl}
-                    alt="Active Frame"
-                    className="pointer-events-none absolute inset-0 h-full w-full object-contain scale-125"
+                    src={resolveProfileImageUrl(profileData.photoURL)}
+                    alt={profileData.name}
+                    onError={handleProfileImageError}
+                    className="h-full w-full object-cover"
                   />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-[#007472]/15 text-3xl sm:text-4xl font-black text-[#007472] dark:text-[#2AC3BB]">
+                    {profileData?.name?.[0]?.toUpperCase() || 'U'}
+                  </div>
                 )}
-
-                {/* Level badge */}
-                <div className="absolute -bottom-1 end-2 rounded-full border-2 border-white dark:border-[#031717] bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-2.5 py-0.5 text-[11px] font-black text-[#FCF6EE] shadow-md">
-                  Lv.{level}
-                </div>
               </div>
 
-              {/* Quick Info next to Avatar */}
-              <div className="gsap-profile-info mb-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-black text-slate-900 dark:text-[#FCF6EE] sm:text-3xl">
-                    <PremiumNameTag
-                      name={profileData?.name || currentUserName}
-                      nameColor={profileData?.nameColor as any}
-                      badgeTier={profileData?.badgeTier as any}
-                      badgeColor={profileData?.badgeColor as any}
-                      isPremium={Boolean(profileData?.isPremium)}
-                    />
-                  </h1>
-                </div>
+              {/* Overlaid Active Frame */}
+              {activeFrameUrl && (
+                <img
+                  src={activeFrameUrl}
+                  alt="Active Frame"
+                  className="pointer-events-none absolute inset-0 h-full w-full object-contain scale-125"
+                />
+              )}
 
-                {profileData?.customId && (
-                  <div className="mt-0.5 flex items-center gap-1 text-xs font-bold text-[#2AC3BB]">
-                    <span>@</span>
-                    <DecryptedText
-                      text={profileData.customId}
-                      speed={40}
-                      maxIterations={6}
-                      className="font-mono font-bold tracking-wide"
-                      encryptedClassName="text-[#EE8361] opacity-80"
-                      animateOn="both"
-                    />
-                  </div>
-                )}
-
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-[#8BAEAD]">
-                  {profileData?.location && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {profileData.location}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {(profileData?.joinedDate || (profileData as any)?.created_at) ? new Date(profileData?.joinedDate || (profileData as any)?.created_at).toLocaleDateString() : (isAr ? 'عضو نشط' : 'Active Member')}
-                  </span>
-                </div>
-
-                {/* Coins & Rewards Pills */}
-                <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                  <div
-                    onClick={() => onNavigate?.('store')}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/40 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 px-3 py-1 text-xs font-black text-amber-700 dark:text-amber-300 shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
-                    title={isAr ? 'العملات الذهبية - افتح المتجر' : 'Coins - Open store'}
-                  >
-                    <Coins className="h-3.5 w-3.5 text-amber-500" />
-                    <span>{(userCoins || 0).toLocaleString()}</span>
-                    <span className="text-[10px] font-bold text-amber-600/80 dark:text-amber-300/80">{isAr ? 'عملة' : 'Coins'}</span>
-                  </div>
-
-                  <div
-                    onClick={() => onNavigate?.('store')}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-3 py-1 text-xs font-black text-[#007472] dark:text-[#2AC3BB] shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
-                    title={isAr ? 'نقاط المكافآت' : 'Points'}
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-[#2AC3BB]" />
-                    <span>{(userPoints || 0).toLocaleString()}</span>
-                    <span className="text-[10px] font-bold text-[#007472]/70 dark:text-[#2AC3BB]/70">{isAr ? 'نقطة' : 'Pts'}</span>
-                  </div>
-                </div>
+              {/* Level badge */}
+              <div className="absolute -bottom-1 end-1 rounded-full border-2 border-white dark:border-[#031717] bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-black text-[#FCF6EE] shadow-md">
+                Lv.{level}
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-0">
               {isOwnProfile ? (
                 <>
+                  <button
+                    type="button"
+                    onClick={handleOpenEdit}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-2xl bg-[#007472] px-4 py-2 text-xs font-black text-white shadow-md shadow-[#007472]/25 transition hover:bg-[#005e5c] active:scale-98 cursor-pointer"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>{isAr ? 'تعديل الملف' : 'Edit Profile'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsThemeModalOpen(true)}
+                    className="inline-flex min-h-10 items-center gap-1.5 rounded-2xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-3.5 py-2 text-xs font-black text-[#007472] dark:text-[#2AC3BB] transition hover:bg-[#2AC3BB]/20 active:scale-98 cursor-pointer"
+                    title={isAr ? 'تخصيص ألوان وثيم المظهر' : 'Customize appearance & theme'}
+                  >
+                    <Palette className="h-4 w-4 text-[#2AC3BB]" />
+                    <span>{isAr ? 'المظهر' : 'Theme'}</span>
+                  </button>
+
                   {/* 3D Lanyard ID Card Button - Subscriptions Only */}
                   <button
                     type="button"
                     onClick={handleToggleLanyard}
                     disabled={isTogglingLanyard}
-                    className={`inline-flex min-h-11 items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition-all active:scale-98 cursor-pointer ${
+                    className={`inline-flex min-h-10 items-center gap-1.5 rounded-2xl px-3.5 py-2 text-xs font-black transition-all active:scale-98 cursor-pointer ${
                       isPremium
                         ? showLanyard
-                          ? 'bg-gradient-to-r from-[#007472] to-[#2AC3BB] text-[#FCF6EE] shadow-md shadow-[#2AC3BB]/20 ring-2 ring-[#2AC3BB]/60'
+                          ? 'bg-gradient-to-r from-[#007472] to-[#2AC3BB] text-white shadow-md shadow-[#2AC3BB]/20 ring-2 ring-[#2AC3BB]/60'
                           : 'border border-[#2AC3BB]/40 bg-[#007472]/15 text-[#007472] dark:text-[#2AC3BB] hover:bg-[#007472]/25'
                         : 'border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/15'
                     }`}
@@ -678,8 +704,8 @@ export default function UserProfile({
                         <Sparkles className={`h-4 w-4 ${showLanyard ? 'text-[#EE8361] animate-pulse' : 'text-[#2AC3BB]'}`} />
                         <span>
                           {showLanyard
-                            ? (isAr ? 'قلادة الـ ID: مفعّلة' : '3D Lanyard: ON')
-                            : (isAr ? 'تفعيل قلادة الـ ID' : 'Enable 3D Lanyard')}
+                            ? (isAr ? 'القلادة: مفعّلة' : 'Lanyard: ON')
+                            : (isAr ? 'قلادة الـ ID' : '3D Lanyard')}
                         </span>
                         {isTogglingLanyard && <Loader2 className="h-3 w-3 animate-spin ms-1" />}
                       </>
@@ -693,30 +719,42 @@ export default function UserProfile({
                       </>
                     )}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={handleOpenEdit}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl bg-[#007472] px-4 py-2.5 text-xs font-black text-[#FCF6EE] shadow-md shadow-[#007472]/25 transition hover:bg-[#005e5c] active:scale-98"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    <span>{isAr ? 'تعديل الملف' : 'Edit Profile'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsThemeModalOpen(true)}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-4 py-2.5 text-xs font-black text-[#007472] dark:text-[#2AC3BB] transition hover:bg-[#2AC3BB]/20 active:scale-98 cursor-pointer"
-                    title={isAr ? 'تخصيص ألوان وثيم المظهر' : 'Customize appearance & theme'}
-                  >
-                    <Palette className="h-4 w-4 text-[#2AC3BB]" />
-                    <span>{isAr ? 'تخصيص المظهر' : 'Customize'}</span>
-                  </button>
                 </>
-              ) : null}
+              ) : (
+                <>
+                  {currentUserId && (
+                    <button
+                      type="button"
+                      onClick={handleToggleFollow}
+                      disabled={isFollowLoading}
+                      className={`inline-flex min-h-10 items-center gap-2 rounded-2xl px-5 py-2 text-xs font-black transition-all active:scale-95 shadow-md cursor-pointer ${
+                        isFollowing
+                          ? 'border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-rose-500/10 hover:text-rose-600 hover:border-rose-500/30'
+                          : 'bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] text-white shadow-[#007472]/25 hover:shadow-lg'
+                      }`}
+                    >
+                      {isFollowLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : isFollowing ? (
+                        <>
+                          <UserCheck className="h-4 w-4 text-[#2AC3BB]" />
+                          <span>{isAr ? 'تتابعه' : 'Following'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="h-4 w-4" />
+                          <span>{isAr ? 'متابعة' : 'Follow'}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </>
+              )}
+
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-black text-slate-700 transition hover:bg-slate-50 dark:border-[#2AC3BB]/20 dark:bg-[#072424] dark:text-[#FCF6EE]"
+                className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white p-2.5 text-xs font-black text-slate-700 transition hover:bg-slate-50 dark:border-[#2AC3BB]/20 dark:bg-[#072424] dark:text-[#FCF6EE] cursor-pointer"
                 title={isAr ? 'مشاركة الملف' : 'Share profile'}
               >
                 <Share2 className="h-4 w-4" />
@@ -724,9 +762,112 @@ export default function UserProfile({
             </div>
           </div>
 
+          {/* Profile Identity Details (Placed completely below avatar and actions) */}
+          <div className="gsap-profile-info mt-4 space-y-3">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+                <PremiumNameTag
+                  name={profileData?.name || currentUserName}
+                  nameColor={profileData?.nameColor as any}
+                  badgeTier={profileData?.badgeTier as any}
+                  badgeColor={profileData?.badgeColor as any}
+                  isPremium={Boolean(profileData?.isPremium)}
+                />
+              </h1>
+
+              {profileData?.customId && (
+                <div className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold font-mono text-[#007472] dark:text-[#2AC3BB] bg-slate-100 dark:bg-slate-900/80 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-[#2AC3BB]/20" dir="ltr">
+                  <span className="text-[#EE8361] font-black">@</span>
+                  <DecryptedText
+                    text={profileData.customId}
+                    speed={40}
+                    maxIterations={6}
+                    className="font-bold tracking-wide"
+                    encryptedClassName="text-[#EE8361] opacity-80"
+                    animateOn="both"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Location, Joined Date & Followers/Following Clickable Row */}
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-3 sm:gap-x-4 text-xs font-bold text-slate-600 dark:text-slate-300">
+              {displayLocation && (
+                <span className="flex items-center gap-1.5 text-slate-600 dark:text-[#8BAEAD]">
+                  <MapPin className="h-3.5 w-3.5 text-[#EE8361]" />
+                  <span>{displayLocation}</span>
+                </span>
+              )}
+
+              <span className="flex items-center gap-1.5 text-slate-600 dark:text-[#8BAEAD]">
+                <Calendar className="h-3.5 w-3.5 text-[#2AC3BB]" />
+                <span>
+                  {(profileData?.joinedDate || (profileData as any)?.created_at)
+                    ? new Date(profileData?.joinedDate || (profileData as any)?.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { month: 'short', year: 'numeric' })
+                    : (isAr ? 'عضو نشط' : 'Active Member')}
+                </span>
+              </span>
+
+              {/* Followers Counter */}
+              <button
+                type="button"
+                onClick={() => openFollowModal('followers')}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition cursor-pointer border border-slate-200/60 dark:border-slate-800"
+                title={isAr ? 'عرض قائمة المتابعين' : 'View followers'}
+              >
+                <Users className="h-3.5 w-3.5 text-[#007472] dark:text-[#2AC3BB]" />
+                <span className="font-mono font-black text-slate-900 dark:text-white">
+                  {followersCount.toLocaleString()}
+                </span>
+                <span className="text-slate-500 dark:text-slate-400">
+                  {isAr ? 'متابع' : 'Followers'}
+                </span>
+              </button>
+
+              {/* Following Counter */}
+              <button
+                type="button"
+                onClick={() => openFollowModal('following')}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition cursor-pointer border border-slate-200/60 dark:border-slate-800"
+                title={isAr ? 'عرض قائمة الذين يتابعهم' : 'View following'}
+              >
+                <UserCheck className="h-3.5 w-3.5 text-[#2AC3BB]" />
+                <span className="font-mono font-black text-slate-900 dark:text-white">
+                  {followingCount.toLocaleString()}
+                </span>
+                <span className="text-slate-500 dark:text-slate-400">
+                  {isAr ? 'يتابعهم' : 'Following'}
+                </span>
+              </button>
+            </div>
+
+            {/* Coins & Rewards Pills */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <div
+                onClick={() => onNavigate?.('store')}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/40 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 px-3 py-1.5 text-xs font-black text-amber-700 dark:text-amber-300 shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
+                title={isAr ? 'العملات الذهبية - افتح المتجر' : 'Coins - Open store'}
+              >
+                <Coins className="h-4 w-4 text-amber-500" />
+                <span className="font-mono">{userCoins.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-amber-600/80 dark:text-amber-300/80">{isAr ? 'عملة' : 'Coins'}</span>
+              </div>
+
+              <div
+                onClick={() => onNavigate?.('store')}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-3 py-1.5 text-xs font-black text-[#007472] dark:text-[#2AC3BB] shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
+                title={isAr ? 'نقاط المكافآت' : 'Points'}
+              >
+                <Sparkles className="h-4 w-4 text-[#2AC3BB]" />
+                <span className="font-mono">{userPoints.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-[#007472]/70 dark:text-[#2AC3BB]/70">{isAr ? 'نقطة' : 'Pts'}</span>
+              </div>
+            </div>
+          </div>
+
           {/* Highlighted Bio Card */}
           {profileData?.bio ? (
-            <div className="mt-5 max-w-2xl rounded-2xl border border-[#2AC3BB]/30 bg-white/70 dark:bg-[#072424]/80 p-4 shadow-sm backdrop-blur-md relative overflow-hidden">
+            <div className="mt-5 rounded-2xl border border-[#2AC3BB]/30 bg-white/70 dark:bg-[#072424]/80 p-4 shadow-sm backdrop-blur-md relative overflow-hidden">
               <div className="flex items-center gap-2 mb-2 text-[#007472] dark:text-[#2AC3BB]">
                 <User className="h-4 w-4 text-[#EE8361]" />
                 <span className="text-[11px] font-black uppercase tracking-wider">{isAr ? 'النبذة الشخصية' : 'About Me'}</span>
@@ -738,7 +879,7 @@ export default function UserProfile({
           ) : isOwnProfile ? (
             <div
               onClick={handleOpenEdit}
-              className="mt-4 max-w-2xl rounded-2xl border border-dashed border-[#2AC3BB]/35 bg-[#2AC3BB]/[0.03] p-3 text-center cursor-pointer hover:bg-[#2AC3BB]/[0.08] transition"
+              className="mt-4 rounded-2xl border border-dashed border-[#2AC3BB]/35 bg-[#2AC3BB]/[0.03] p-3 text-center cursor-pointer hover:bg-[#2AC3BB]/[0.08] transition"
             >
               <p className="text-xs font-bold text-[#007472] dark:text-[#2AC3BB] flex items-center justify-center gap-1.5">
                 <Edit3 className="h-3.5 w-3.5 text-[#EE8361]" />
@@ -1383,6 +1524,90 @@ export default function UserProfile({
                 >
                   {isAr ? 'إغلاق' : 'Close'}
                 </button>
+              </div>
+            </div>
+          </div>
+        </OverlayPortal>
+      )}
+
+      {/* Followers / Following List Modal */}
+      {followModalType && (
+        <OverlayPortal>
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm animate-fade-in"
+            onClick={() => setFollowModalType(null)}
+            dir={isAr ? 'rtl' : 'ltr'}
+          >
+            <div
+              className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+                <div className="flex items-center gap-2 font-display font-black text-slate-900 dark:text-white">
+                  <Users className="h-5 w-5 text-[#007472] dark:text-[#2AC3BB]" />
+                  <h3 className="text-base">
+                    {followModalType === 'followers'
+                      ? (isAr ? `قائمة المتابعين (${followersCount})` : `Followers (${followersCount})`)
+                      : (isAr ? `الذين يتابعهم (${followingCount})` : `Following (${followingCount})`)}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFollowModalType(null)}
+                  className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="mt-4 max-h-[60vh] overflow-y-auto space-y-2.5">
+                {isFollowModalLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-400 text-xs font-bold gap-2">
+                    <Loader2 className="h-6 w-6 animate-spin text-[#2AC3BB]" />
+                    <span>{isAr ? 'جاري التحميل...' : 'Loading...'}</span>
+                  </div>
+                ) : followModalUsers.length === 0 ? (
+                  <div className="py-12 text-center text-xs font-bold text-slate-400">
+                    <Users className="h-10 w-10 mx-auto mb-2 opacity-40 text-slate-400" />
+                    <span>
+                      {followModalType === 'followers'
+                        ? (isAr ? 'لا يوجد متابعون بعد.' : 'No followers yet.')
+                        : (isAr ? 'لا يتابع أي مستخدم بعد.' : 'Not following anyone yet.')}
+                    </span>
+                  </div>
+                ) : (
+                  followModalUsers.map((u) => (
+                    <div
+                      key={u.id}
+                      onClick={() => {
+                        setFollowModalType(null);
+                        if (onNavigate) {
+                          onNavigate(`profile?id=${u.id}`);
+                        } else {
+                          window.location.hash = `#/profile?id=${u.id}`;
+                        }
+                      }}
+                      className="flex items-center justify-between rounded-2xl border border-slate-200/70 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/50 hover:border-[#2AC3BB]/40 transition cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full overflow-hidden bg-[#007472]/15 text-[#007472] dark:text-[#2AC3BB] flex items-center justify-center font-black text-sm shrink-0 border border-slate-200 dark:border-slate-700">
+                          {u.photoURL ? (
+                            <img src={resolveProfileImageUrl(u.photoURL)} alt={u.name} className="h-full w-full object-cover" />
+                          ) : (
+                            u.name.slice(0, 1).toUpperCase()
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs text-slate-900 dark:text-white">{u.name}</p>
+                          {u.customId && <p className="text-[10px] text-[#2AC3BB] font-mono">@{u.customId}</p>}
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#007472] dark:text-[#2AC3BB] bg-[#007472]/10 dark:bg-[#2AC3BB]/10 px-2.5 py-1 rounded-lg">
+                        {isAr ? 'عرض' : 'View'}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

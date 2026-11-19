@@ -1290,7 +1290,9 @@ export default function Classrooms({
             <AlertCircle className="w-4 h-4" />
             <span>{errorText}</span>
           </div>
-          <button onClick={() => setErrorText(null)} className="text-red-400 font-bold hover:text-white"></button>
+          <button type="button" onClick={() => setErrorText(null)} className="p-1 rounded-lg text-red-400 hover:text-white hover:bg-red-500/20 transition-colors" aria-label={isAr ? 'إغلاق' : 'Close'}>
+            <CircleX className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -1300,7 +1302,9 @@ export default function Classrooms({
             <CheckCircle className="w-4 h-4" />
             <span>{successText}</span>
           </div>
-          <button onClick={() => setSuccessText(null)} className="text-emerald-400 font-bold hover:text-white"></button>
+          <button type="button" onClick={() => setSuccessText(null)} className="p-1 rounded-lg text-emerald-400 hover:text-white hover:bg-emerald-500/20 transition-colors" aria-label={isAr ? 'إغلاق' : 'Close'}>
+            <CircleX className="w-4 h-4" />
+          </button>
         </div>
       )}
 

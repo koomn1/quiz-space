@@ -10,7 +10,7 @@ import Notifications from '../pages/settings/Notifications';
 import {
   Compass, Layers, Users, Bookmark, Trophy, Award, Sparkles, Search, MessageSquare,
   Send, ThumbsUp, Trash2, PlusCircle, CheckCircle, Flame, Clock, Heart, Shield, Settings, Pencil,
-  Volume2, VolumeX, Eye, BookOpen, Star, HelpCircle, User, Zap, Info, X, Bell
+  Volume2, VolumeX, Eye, BookOpen, Star, HelpCircle, User, Zap, Info, X, Bell, Globe
 } from 'lucide-react';
 import { Quiz, QuizCompletion } from '../types';
 import { translations } from '../lib/i18n';
@@ -285,7 +285,7 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
       <div className="space-y-6 pt-2">
         <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-4">
           <h3 className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
-            <span></span>
+            <Sparkles className="w-4 h-4 text-[#EE8361]" />
             <span>{isAr ? 'الاختبارات المتوفرة:' : 'Quizzes in this track:'}</span>
             {activeCategoryObj && (
               <span className="uipro-pill-badge bg-primary/15 text-primary dark:text-primary-light border border-primary/25">
@@ -318,9 +318,17 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
             />
           ))}
           {activeCategoryQuizzes.length === 0 && (
-            <p className="text-xs text-slate-400 col-span-full py-12 select-none bg-slate-50/60 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-center font-bold">
-              {isAr ? 'لا توجد اختبارات مضافة في هذه الفئة حالياً. كن أول من ينشئ اختباراً فيها!' : 'No quizzes in this category found yet. Create one now!'}
-            </p>
+            <div className="col-span-full flex flex-col items-center justify-center py-12 px-4 bg-slate-50/60 dark:bg-slate-900/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl text-center">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#007472]/15 via-[#2AC3BB]/20 to-[#EE8361]/15 border border-[#2AC3BB]/30 flex items-center justify-center mb-3 shadow-inner">
+                <Compass className="w-7 h-7 text-[#007472] dark:text-[#2AC3BB]" />
+              </div>
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                {isAr ? 'لا توجد اختبارات مضافة في هذه الفئة حالياً' : 'No quizzes in this track yet'}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
+                {isAr ? 'كن أول من ينشئ اختباراً في هذا المسار ويشارك علمه مع مجتمع كويز سبيس!' : 'Be the first to create a quiz in this track and share your knowledge!'}
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -981,8 +989,8 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                 style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
               />
               <div className="flex items-center justify-between">
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
-                  <span></span>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-[#2AC3BB]" />
                   <span>{isAr ? 'منشورك سيظهر لجميع أعضاء مجتمع الفضاء الأكاديمي.' : 'Your post will be visible to all academic community members.'}</span>
                 </p>
                 <button
@@ -1196,7 +1204,7 @@ export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile, us
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white flex items-center gap-2">
-            <span></span>
+            <Bookmark className="w-6 h-6 text-[#EE8361] fill-[#EE8361]/20" />
             <span>{isAr ? 'مسابقاتك المفضلة والمحفوظة' : 'My Pinned Bookmarks'}</span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -1205,7 +1213,7 @@ export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile, us
         </div>
         {savedQuizzes.length > 0 && (
           <div className="uipro-pill-badge bg-primary/10 text-primary border-primary/20 text-xs px-3.5 py-1.5 self-start sm:self-auto font-black">
-            <span>⭐ {savedQuizzes.length} {isAr ? 'اختبار محفوظ' : 'Saved Quizzes'}</span>
+            <span className="inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-[#EE8361]" /> {savedQuizzes.length} {isAr ? 'اختبار محفوظ' : 'Saved Quizzes'}</span>
           </div>
         )}
       </div>
@@ -1224,8 +1232,8 @@ export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile, us
 
         {savedQuizzes.length === 0 && (
           <div className="col-span-full py-16 uipro-clay-card border-dashed border-2 border-slate-200 dark:border-slate-800 rounded-[32px] text-center space-y-4 max-w-lg mx-auto w-full p-8">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary shadow-inner">
-              <Bookmark className="w-8 h-8" />
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#007472]/15 via-[#2AC3BB]/20 to-[#EE8361]/15 border border-[#EE8361]/30 flex items-center justify-center text-[#EE8361] shadow-inner">
+              <Bookmark className="w-8 h-8 fill-[#EE8361]/20 text-[#EE8361]" />
             </div>
             <h4 className="font-display font-black text-base text-slate-800 dark:text-white">
               {isAr ? 'قائمتك المفضلة خالية تماماً' : 'No Bookmarked Quizzes'}
@@ -1342,7 +1350,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black font-display text-slate-900 dark:text-white flex items-center gap-2">
-            <span></span>
+            <Award className="w-6 h-6 text-amber-500 fill-amber-500/20" />
             <span>{isAr ? 'شارات التوثيق المستحقة' : 'My Accomplishments & Trophies'}</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
@@ -1363,7 +1371,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
       {/* Interactive Suggestion Ticker */}
       <div className="uipro-glass-panel bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent border border-indigo-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5">
-          <span className="text-lg animate-bounce"></span>
+          <Sparkles className="w-5 h-5 text-indigo-500 animate-bounce shrink-0" />
           <span className="text-slate-700 dark:text-slate-300 font-extrabold leading-relaxed">
             {isAr ? 'تم دمج حركات غامرة مستقلة! اضغط على أي بطاقة شارة بالأسفل لتجربة لوحة الاحتفال ثلاثية الأبعاد.' : 'Immersive motion integrated! Click any badge below to launch details and celebratory playback.'}
           </span>
@@ -2332,7 +2340,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                     <div className="flex items-center gap-3 shrink-0 text-left" style={{ textAlign: isAr ? 'left' : 'right' }}>
                       <div className="text-right">
                         <span className="text-xs font-black text-primary font-mono block">{item.score}%</span>
-                        <span className="text-[10px] text-slate-400 font-bold block">{item.elapsedSeconds || 50} {isAr ? 'ثانية ⏱' : 'sec ⏱'}</span>
+                        <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1 justify-end">{item.elapsedSeconds || 50} {isAr ? 'ثانية' : 'sec'} <Clock className="w-3 h-3 inline text-slate-400" /></span>
                       </div>
                     </div>
                   </div>
@@ -2341,7 +2349,9 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
 
               {boardItems.length === 0 && (
                 <div className="p-16 text-center text-xs text-slate-400 select-none space-y-2">
-                  <span className="text-3xl block"></span>
+                  <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                    <Trophy className="w-7 h-7 text-amber-500 drop-shadow-[0_4px_12px_rgba(245,158,11,0.3)]" />
+                  </div>
                   <span>{isAr ? 'لا توجد نتائج مسجلة في لوحة الشرف اليوم بعد.' : 'No entries on the podium today yet.'}</span>
                 </div>
               )}

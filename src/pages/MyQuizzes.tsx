@@ -206,7 +206,7 @@ export function MyQuizzes({
             onClick={() => setEssayModalOpen(true)}
             className="uipro-btn-tactile inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2.5 text-xs font-black shadow-sm cursor-pointer active:scale-95 transition-all"
           >
-            <span></span>
+            <Edit3 className="w-4 h-4 text-slate-950" />
             <span>{isAr ? 'مراجعة وتصحيح الإجابات الآن' : 'Review & Grade Essays Now'}</span>
           </button>
         </div>
@@ -214,7 +214,7 @@ export function MyQuizzes({
 
       {myQuizzes.length === 0 ? (
         <div className="uipro-clay-card text-center py-20 rounded-[32px] border-dashed border-2 border-slate-200 dark:border-slate-800 max-w-xl mx-auto flex flex-col items-center justify-center space-y-4 p-8">
-          <div className="p-4 rounded-2xl bg-primary/10 dark:bg-primary/20 text-primary shadow-inner">
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-[#007472]/15 via-[#2AC3BB]/20 to-[#EE8361]/15 border border-[#EE8361]/25 text-[#007472] dark:text-[#2AC3BB] shadow-inner">
             <BookOpen className="w-10 h-10" />
           </div>
           <div className="space-y-1.5">

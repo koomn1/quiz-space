@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Quiz } from '../types';
-import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet, Printer, ChevronDown, Eye, CheckCircle2, Settings2 } from 'lucide-react';
+import { Star, Play, Share2, Trash2, Tag, Sparkles, Users, X, Loader2, Download, FileSpreadsheet, Printer, ChevronDown, Eye, CheckCircle2, Settings2, PenTool } from 'lucide-react';
 import { UserBadge } from './UserBadge';
 import { PremiumNameTag } from './PremiumNameTag';
 import ParallaxTiltCard from './ParallaxTiltCard';
@@ -275,7 +275,7 @@ export function InteractiveQuizCard({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 px-6 py-4.5 dark:border-slate-800/80 bg-gradient-to-r from-[#007472]/5 via-[#2AC3BB]/5 to-transparent">
           <div>
             <h3 id={`attempts-title-${quiz.id}`} className="font-display font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
-              <span></span>
+              <Users className="w-4 h-4 text-[#007472] dark:text-[#2AC3BB]" />
               <span>{isAr ? 'الأعضاء الذين حلوا الاختبار' : 'Members who solved this quiz'}</span>
             </h3>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 font-bold truncate max-w-xs">{quiz.title}</p>
@@ -288,7 +288,7 @@ export function InteractiveQuizCard({
                 className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/10 px-3 py-2 text-[11px] font-black text-amber-600 transition-all hover:bg-amber-500/20 dark:text-amber-400 cursor-pointer border border-amber-500/20"
                 title={isAr ? 'مراجعة وتصحيح المقالي' : 'Grade Essays'}
               >
-                <span></span>
+                <PenTool className="w-3.5 h-3.5 text-amber-500" />
                 <span>{isAr ? 'تصحيح المقالي' : 'Grade Essays'}</span>
               </button>
             )}
@@ -305,7 +305,7 @@ export function InteractiveQuizCard({
             </div>
           ) : attempts.length === 0 ? (
             <div className="py-16 text-center text-xs font-bold text-slate-400">
-              <span className="text-3xl block mb-2"></span>
+              <Users className="w-10 h-10 mx-auto mb-2 text-slate-400 opacity-60" />
               <span>{isAr ? 'لا توجد محاولات مسجلة بعد — كُن أول من يحل هذا الاختبار!' : 'No recorded attempts yet — be the first to solve it!'}</span>
             </div>
           ) : (
@@ -344,7 +344,7 @@ export function InteractiveQuizCard({
                           className="inline-flex items-center gap-1 rounded-xl bg-amber-500/10 px-2.5 py-1 text-xs font-black text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all cursor-pointer"
                           title={isAr ? 'مراجعة وتصحيح المقالي' : 'Review & Grade'}
                         >
-                          <span></span>
+                          <PenTool className="w-3 h-3 text-amber-500" />
                           <span>{isAr ? 'تصحيح' : 'Grade'}</span>
                         </button>
                       )}
@@ -639,7 +639,7 @@ export function InteractiveQuizCard({
                 className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-2 text-xs font-black text-amber-700 dark:text-amber-300 shadow-xs transition-all active:scale-95 cursor-pointer"
                 title={isAr ? 'تصحيح الإجابات المقالية' : 'Grade essay answers'}
               >
-                <span></span>
+                <PenTool className="w-3.5 h-3.5 text-amber-500" />
                 <span>{isAr ? 'تصحيح المقالي' : 'Grade Essays'}</span>
               </button>
             )}

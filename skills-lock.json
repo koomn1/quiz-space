@@ -8,6 +8,13 @@
       "skillPath": "SKILL.md",
       "computedHash": "f59e02a5892a0cd5fa22b3704026c3096408d3d68197da29c663a075dbd430d7"
     },
+    "better-icons": {
+      "source": "better-auth/better-icons",
+      "commit": "033316ecb8f4982235af4111a2257e80231f5ab1",
+      "sourceType": "github",
+      "skillPath": "skills/SKILL.md",
+      "computedHash": "3a2fcd05ef1f2d88ecd94578718c2dec6b98f5f0b660e52e713266eb0fc32962"
+    },
     "brainstorming": {
       "source": "obra/superpowers",
       "commit": "22f0b463e7a5e579904dd6211a520321035526f7",
@@ -77,6 +84,20 @@
       "sourceType": "github",
       "skillPath": "graphify/SKILL.md",
       "computedHash": "35f227f0fb75a764d8bd852e74c8cd3358b24aad9b5ca81156ba92029beb79bb"
+    },
+    "icon-set-generator": {
+      "source": "jezweb/claude-skills",
+      "commit": "1260fa7439b36b18dbf16648ccc7fb44783f6c23",
+      "sourceType": "github",
+      "skillPath": "plugins/design-assets/skills/icon-set-generator/SKILL.md",
+      "computedHash": "de8de16df8fd40eeceec6eab0de18c257e4dc86de7cbbc3ad755225fc00b1cf8"
+    },
+    "imagegen": {
+      "source": "openai/skills",
+      "commit": "49f948faa9258a0c61caceaf225e179651397431",
+      "sourceType": "github",
+      "skillPath": "skills/.system/imagegen/SKILL.md",
+      "computedHash": "350968bf5dda3bf1261fe5c6af570ca79cf25252cbb3ddd0d5dfe91cd516885d"
     },
     "img2threejs": {
       "source": "img2threejs/img2threejs",

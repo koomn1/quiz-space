@@ -285,7 +285,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
     <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div>
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-          <span></span>
+          <MessageSquare className="w-6 h-6 text-[#2AC3BB]" />
           <span>{isAr ? 'صندوق الرسائل والمحادثات المباشرة' : 'Direct Messages & Inbox'}</span>
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">

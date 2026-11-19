@@ -988,7 +988,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         </div>
         {promoDiscount > 0 && (
           <p className="text-[11px] text-emerald-500 font-black mt-2.5 bg-emerald-500/10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/20">
-            <span></span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
             <span>{isAr ? `كود خصم فعال! تم تطبيق خصم ${promoDiscount}% على الباقات.` : `Discount of ${promoDiscount}% applied!`}</span>
           </p>
         )}

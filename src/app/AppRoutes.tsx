@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Sparkles } from 'lucide-react';
+import { AlertTriangle, Bot, PenTool, Sparkles } from 'lucide-react';
 import { AVATAR_PRESETS } from '../constants/profileAssets';
 import { getUserProfileStats, deleteQuiz } from '../lib/db';
 import { getUserRoleAndPlan } from '../types';
@@ -299,7 +299,9 @@ export default function AppRoutes(props: AppRoutesProps) {
                 isGuestCreateRoute ? (
                   <section className="min-h-[60vh] flex items-center justify-center py-12" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                     <div className="w-full max-w-xl rounded-[28px] border border-slate-200/70 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-8 sm:p-10 text-center shadow-xl backdrop-blur-xl">
-                      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 text-3xl"></div>
+                      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#007472]/15 via-[#2AC3BB]/20 to-[#EE8361]/15 border border-[#EE8361]/25 text-3xl shadow-lg shadow-[#EE8361]/10">
+                        <PenTool className="w-8 h-8 text-[#EE8361]" />
+                      </div>
                       <h2 className="text-xl font-black text-slate-900 dark:text-white">
                         {lang === 'ar' ? 'سجّل الدخول لإنشاء اختبار' : 'Sign in to create a quiz'}
                       </h2>
@@ -312,9 +314,10 @@ export default function AppRoutes(props: AppRoutesProps) {
                           setAuthModalMode('register');
                           setIsAuthModalOpen(true);
                         }}
-                        className="mt-7 rounded-2xl bg-violet-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
+                        className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-6 py-3 text-sm font-black text-white shadow-lg shadow-[#007472]/20 transition hover:shadow-xl hover:shadow-[#EE8361]/25 hover:scale-[1.02]"
                       >
-                        {lang === 'ar' ? 'التسجيل أو تسجيل الدخول' : 'Sign up or sign in'}
+                        <Sparkles className="w-4 h-4 text-white" />
+                        <span>{lang === 'ar' ? 'التسجيل أو تسجيل الدخول' : 'Sign up or sign in'}</span>
                       </button>
                     </div>
                   </section>
@@ -433,10 +436,15 @@ export default function AppRoutes(props: AppRoutesProps) {
               {activeTab === 'aichat' && !hasActiveMembership && (
                 <section className="flex min-h-[65vh] w-full items-center justify-center px-4 py-16 sm:px-6">
                   <div className="w-full max-w-xl rounded-3xl border border-violet-200/70 bg-white/90 p-8 text-center shadow-xl shadow-violet-500/10 backdrop-blur-xl dark:border-violet-500/20 dark:bg-slate-950/90 sm:p-12">
-                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-3xl shadow-lg shadow-violet-500/25"></div>
+                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#007472] via-[#2AC3BB] to-[#EE8361] text-3xl shadow-lg shadow-[#007472]/25">
+                      <Bot className="w-8 h-8 text-white animate-pulse" />
+                    </div>
                     <h2 className="text-2xl font-black text-slate-900 dark:text-white">{lang === 'ar' ? 'كوزمو متاح للأعضاء فقط' : 'Cosmo is for members only'}</h2>
                     <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-slate-600 dark:text-slate-300">{lang === 'ar' ? 'فعّل أي عضوية للوصول إلى المحادثة الذكية وأدوات كوزمو.' : 'Activate any membership to unlock Cosmo AI chat and its tools.'}</p>
-                    <button type="button" onClick={() => handleSetTab('billing')} className="mt-7 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-500 px-6 py-3 text-sm font-black text-white shadow-lg shadow-violet-500/20 transition hover:-translate-y-0.5">{lang === 'ar' ? 'عرض الباقات وتفعيل العضوية' : 'View plans and activate membership'}</button>
+                    <button type="button" onClick={() => handleSetTab('billing')} className="mt-7 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-6 py-3 text-sm font-black text-white shadow-lg shadow-[#007472]/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#EE8361]/25">
+                      <Sparkles className="w-4 h-4 text-white" />
+                      <span>{lang === 'ar' ? 'عرض الباقات وتفعيل العضوية' : 'View plans and activate membership'}</span>
+                    </button>
                   </div>
                 </section>
               )}

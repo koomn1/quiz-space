@@ -12,7 +12,8 @@ import {
   BookOpen,
   Send,
   HelpCircle,
-  FileText
+  FileText,
+  User
 } from 'lucide-react';
 
 interface EssayReviewModalProps {
@@ -233,7 +234,7 @@ export function EssayReviewModal({
                   <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
                     <div>
                       <h4 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                        <span></span>
+                        <User className="w-4 h-4 text-[#007472] dark:text-[#2AC3BB]" />
                         <span>{activeReview.takerName}</span>
                         {activeReview.isGuest && (
                           <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-full font-normal">

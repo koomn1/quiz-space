@@ -27,6 +27,7 @@ import {
   ArrowUpRight,
   CheckCircle2,
   ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 import { UserBadge } from "./UserBadge";
 import {showToast, showAppMessage} from "./Toast";
@@ -888,7 +889,7 @@ export default function AdminSubscriptions({
                 {expiringSoon.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-xs font-black text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
-                      <span></span>
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
                       <span>{isAr ? "حسابات تجريبية تقترب من انتهاء الصلاحية:" : "Trials expiring in 3 days or less:"}</span>
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">

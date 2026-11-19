@@ -103,6 +103,19 @@ export async function uploadCoverImage(userId: string, file: File): Promise<stri
       return null;
     }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    if (publicUrl) {
+      try {
+        const { error: dbError } = await supabase
+          .from('users')
+          .update({ cover_url: publicUrl, updated_at: new Date().toISOString() })
+          .eq('uid', userId);
+        if (dbError) {
+          console.warn('Cover db update warning:', dbError.message);
+        }
+      } catch (dbEx) {
+        console.warn('Cover db update exception:', dbEx);
+      }
+    }
     return publicUrl;
   } catch (e) {
     console.error('Cover upload exception:', e);
@@ -324,6 +337,144 @@ export async function removeBookmark(userId: string, quizId: string): Promise<vo
   if (error) {
     console.error('Error removing bookmark:', error.message);
     throw error;
+  }
+}
+
+// ---------------- SOCIAL FOLLOWS HANDLERS ----------------
+
+export async function getFollowersCount(userId: string): Promise<number> {
+  if (!userId || !isSupabaseConfigured) return 0;
+  try {
+    const { count, error } = await supabase
+      .from('follows')
+      .select('id', { count: 'exact', head: true })
+      .eq('following_id', userId);
+    if (error) {
+      console.warn('getFollowersCount error:', error.message);
+      return 0;
+    }
+    return count || 0;
+  } catch {
+    return 0;
+  }
+}
+
+export async function getFollowingCount(userId: string): Promise<number> {
+  if (!userId || !isSupabaseConfigured) return 0;
+  try {
+    const { count, error } = await supabase
+      .from('follows')
+      .select('id', { count: 'exact', head: true })
+      .eq('follower_id', userId);
+    if (error) {
+      console.warn('getFollowingCount error:', error.message);
+      return 0;
+    }
+    return count || 0;
+  } catch {
+    return 0;
+  }
+}
+
+export async function isFollowingUser(followerId: string, followingId: string): Promise<boolean> {
+  if (!isSupabaseConfigured || !followerId || !followingId || followerId === followingId) return false;
+  try {
+    const { data, error } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId)
+      .maybeSingle();
+    if (error) return false;
+    return Boolean(data);
+  } catch {
+    return false;
+  }
+}
+
+export async function toggleFollowUser(
+  followerId: string,
+  followingId: string
+): Promise<{ isFollowing: boolean; newFollowersCount: number }> {
+  if (!isSupabaseConfigured || !followerId || !followingId || followerId === followingId) {
+    return { isFollowing: false, newFollowersCount: 0 };
+  }
+  try {
+    const already = await isFollowingUser(followerId, followingId);
+    if (already) {
+      const { error } = await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', followerId)
+        .eq('following_id', followingId);
+      if (error) console.warn('unfollow error:', error.message);
+      const count = await getFollowersCount(followingId);
+      return { isFollowing: false, newFollowersCount: count };
+    } else {
+      const id = `flw_${followerId.slice(0, 10)}_${followingId.slice(0, 10)}_${Date.now()}`;
+      const { error } = await supabase
+        .from('follows')
+        .insert({ id, follower_id: followerId, following_id: followingId });
+      if (error && error.code !== '23505') console.warn('follow error:', error.message);
+      const count = await getFollowersCount(followingId);
+      return { isFollowing: true, newFollowersCount: count };
+    }
+  } catch (e) {
+    console.error('toggleFollowUser error:', e);
+    const count = await getFollowersCount(followingId);
+    return { isFollowing: false, newFollowersCount: count };
+  }
+}
+
+export async function getFollowersList(userId: string): Promise<Array<{ id: string; name: string; photoURL: string; customId?: string }>> {
+  if (!isSupabaseConfigured || !userId) return [];
+  try {
+    const { data: followRows, error } = await supabase
+      .from('follows')
+      .select('follower_id')
+      .eq('following_id', userId)
+      .limit(60);
+    if (error || !followRows || followRows.length === 0) return [];
+    const ids = followRows.map((r: any) => r.follower_id);
+    const { data: users, error: uErr } = await supabase
+      .from('users')
+      .select('uid, name, photo_url, custom_id')
+      .in('uid', ids);
+    if (uErr || !users) return [];
+    return users.map((u: any) => ({
+      id: u.uid,
+      name: u.name || 'Member',
+      photoURL: u.photo_url || '',
+      customId: u.custom_id,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getFollowingList(userId: string): Promise<Array<{ id: string; name: string; photoURL: string; customId?: string }>> {
+  if (!isSupabaseConfigured || !userId) return [];
+  try {
+    const { data: followRows, error } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', userId)
+      .limit(60);
+    if (error || !followRows || followRows.length === 0) return [];
+    const ids = followRows.map((r: any) => r.following_id);
+    const { data: users, error: uErr } = await supabase
+      .from('users')
+      .select('uid, name, photo_url, custom_id')
+      .in('uid', ids);
+    if (uErr || !users) return [];
+    return users.map((u: any) => ({
+      id: u.uid,
+      name: u.name || 'Member',
+      photoURL: u.photo_url || '',
+      customId: u.custom_id,
+    }));
+  } catch {
+    return [];
   }
 }
 
@@ -1058,6 +1209,19 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       completions = (publicCompletions.data as any[]) || [];
     }
 
+    let followersCount = 0;
+    let followingCount = 0;
+    try {
+      const [followersRes, followingRes] = await Promise.all([
+        supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', userId),
+        supabase.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', userId),
+      ]);
+      followersCount = followersRes.count || 0;
+      followingCount = followingRes.count || 0;
+    } catch {
+      // safe fallback if follows query fails
+    }
+
     return {
       userId,
       customId: userRow?.custom_id || '',
@@ -1075,6 +1239,8 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       bio: userRow?.bio || '',
       location: userRow?.location || '',
       coverUrl: userRow?.cover_url || '',
+      followersCount,
+      followingCount,
       phone: userRow?.phone || '',
       activeFrameId: userRow?.active_frame_id || '',
       activeQuizFrameId: userRow?.active_quiz_frame_id || '',
@@ -1096,11 +1262,12 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
 
 export interface SaveUserProfileOptions {
   userId: string;
-  name: string;
+  name?: string;
   photoURL?: string;
   email?: string;
   bio?: string;
   location?: string;
+  coverUrl?: string;
   badgeSymbol?: string;
   badgeColor?: string;
   customId?: string;
@@ -1146,13 +1313,15 @@ export async function saveUserProfile(
   activeQuizFrameId?: string,
 ): Promise<void> {
   let userId = '';
+  let coverUrl: string | undefined = undefined;
   if (typeof userIdOrOptions === 'object' && userIdOrOptions !== null) {
     userId = userIdOrOptions.userId;
-    name = userIdOrOptions.name;
+    name = userIdOrOptions.name ?? name;
     photoURL = userIdOrOptions.photoURL;
     email = userIdOrOptions.email;
     bio = userIdOrOptions.bio;
     location = userIdOrOptions.location;
+    coverUrl = userIdOrOptions.coverUrl;
     badgeSymbol = userIdOrOptions.badgeSymbol;
     badgeColor = userIdOrOptions.badgeColor;
     customId = userIdOrOptions.customId;
@@ -1195,7 +1364,9 @@ export async function saveUserProfile(
   if (bio !== undefined) updatedUser.bio = bio;
   if (location !== undefined) updatedUser.location = location;
 
-  if (location !== undefined && location.includes('||customBg:')) {
+  if (coverUrl !== undefined) {
+    updatedUser.cover_url = coverUrl || null;
+  } else if (location !== undefined && location.includes('||customBg:')) {
     const match = location.match(/\|\|customBg:([^|]*)/);
     updatedUser.cover_url = match?.[1]?.trim() || null;
   }
