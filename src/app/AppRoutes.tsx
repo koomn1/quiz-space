@@ -75,6 +75,7 @@ const LazyLeaderboardSection = lazyWithRetry(() => import('../components/ExtraFe
 const LazyAIChat = lazyWithRetry(() => import('../pages/AIChat'), 'ai-chat');
 const LazyClassrooms = lazyWithRetry(() => import('../components/Classrooms'), 'classrooms');
 const LazyStorePage = lazyWithRetry(() => import('../pages/StorePage'), 'store');
+const LazyRewardsSection = lazyWithRetry(() => import('../components/RewardsSection'), 'rewards-section');
 
 export interface AppRoutesProps {
   mainContainerRef: React.RefObject<HTMLElement | null>;
@@ -497,6 +498,10 @@ export default function AppRoutes(props: AppRoutesProps) {
 
               {activeTab === 'achievements' && (
                 <LazyAchievementsSection lang={lang} completions={completions} quizzes={quizzes} userId={userId} isPremium={isUserPremium} />
+              )}
+
+              {activeTab === 'rewards' && (
+                <LazyRewardsSection userId={userId} lang={lang} />
               )}
 
               {activeTab === 'leaderboard' && (

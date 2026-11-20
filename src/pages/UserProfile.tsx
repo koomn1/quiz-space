@@ -84,6 +84,7 @@ import SplitText from '../components/reactbits/SplitText';
 import DecryptedText from '../components/reactbits/DecryptedText';
 import TitleAvatarBadge from '../components/TitleAvatarBadge';
 import LevelRoadmapModal from '../components/LevelRoadmapModal';
+import RewardsSection from '../components/RewardsSection';
 import { getUserLevelInfo } from '../lib/levelingSystem';
 import type { UserStats, Quiz, QuizCompletion } from '../types';
 
@@ -105,7 +106,7 @@ export interface UserProfileProps {
   onNavigate?: (tab: string) => void;
 }
 
-type ProfileTab = 'quizzes' | 'activity' | 'membership' | 'edit';
+type ProfileTab = 'quizzes' | 'activity' | 'membership' | 'edit' | 'rewards';
 
 export default function UserProfile({
   profileId,
@@ -883,9 +884,9 @@ export default function UserProfile({
             {/* Coins & Rewards Pills */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <div
-                onClick={() => onNavigate?.('store')}
+                onClick={() => setActiveTab('rewards')}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/40 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 px-3 py-1.5 text-xs font-black text-amber-700 dark:text-amber-300 shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
-                title={isAr ? 'العملات الذهبية - افتح المتجر' : 'Coins - Open store'}
+                title={isAr ? 'العملات الذهبية - افتح مركز المكافآت والألعاب' : 'Coins - Open rewards & arcade'}
               >
                 <Coins className="h-4 w-4 text-amber-500" />
                 <span className="font-mono">{userCoins.toLocaleString()}</span>
@@ -893,9 +894,9 @@ export default function UserProfile({
               </div>
 
               <div
-                onClick={() => onNavigate?.('store')}
+                onClick={() => setActiveTab('rewards')}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-3 py-1.5 text-xs font-black text-[#007472] dark:text-[#2AC3BB] shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
-                title={isAr ? 'نقاط المكافآت' : 'Points'}
+                title={isAr ? 'نقاط المكافآت - افتح مركز المكافآت والألعاب' : 'Points - Open rewards & arcade'}
               >
                 <Sparkles className="h-4 w-4 text-[#2AC3BB]" />
                 <span className="font-mono">{userPoints.toLocaleString()}</span>
@@ -1042,6 +1043,21 @@ export default function UserProfile({
             }`}
           >
             {isAr ? 'الاشتراك والعضوية' : 'Membership'}
+          </button>
+        )}
+
+        {isOwnProfile && (
+          <button
+            type="button"
+            data-testid="profile-rewards-tab-btn"
+            onClick={() => setActiveTab('rewards')}
+            className={`flex-1 rounded-xl py-2.5 text-xs font-black transition-all ${
+              activeTab === 'rewards'
+                ? 'bg-[#007472] text-[#FCF6EE] shadow-sm'
+                : 'text-slate-600 hover:bg-slate-100 dark:text-[#8BAEAD] dark:hover:bg-[#0C3232]'
+            }`}
+          >
+            {isAr ? 'المكافآت والألعاب' : 'Rewards & Arcade'}
           </button>
         )}
       </div>
@@ -1215,6 +1231,13 @@ export default function UserProfile({
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Tab: Rewards & Arcade */}
+        {activeTab === 'rewards' && isOwnProfile && (
+          <div className="pt-2">
+            <RewardsSection userId={targetId} lang={lang} />
           </div>
         )}
       </div>

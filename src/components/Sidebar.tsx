@@ -82,6 +82,7 @@ export default function Sidebar({
     { id: 'analytics', label: isAr ? 'لوحة التحليلات' : 'Analytics' },
     { id: 'leaderboard', label: isAr ? 'لوحة المتصدرين' : 'Leaderboard' },
     { id: 'achievements', label: isAr ? 'سجل الإنجازات' : 'Achievements' },
+    { id: 'rewards', label: isAr ? 'المكافآت والألعاب' : 'Rewards & Arcade' },
     { id: 'bookmarks', label: isAr ? 'المحفوظات' : 'Bookmarks' },
     { id: 'customization', label: isAr ? 'تخصيص الملف' : 'Profile Customization' },
     { id: 'store', label: isAr ? 'المتجر' : 'Store' },
@@ -127,6 +128,8 @@ export default function Sidebar({
         return <SugaryIcon name="trophy" size={size} className={className} />;
       case 'achievements':
         return <SugaryIcon name="star" size={size} className={className} />;
+      case 'rewards':
+        return <SugaryIcon name="gift" size={size} className={className} />;
       case 'bookmarks':
         return <SugaryIcon name="book" size={size} className={className} />;
       case 'customization':

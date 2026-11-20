@@ -173,7 +173,7 @@ export default function App() {
       return 'landing';
     }
     if (pathParts[0]) {
-      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'customization', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'store']);
+      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'customization', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'store', 'rewards']);
       return knownTabs.has(pathParts[0]) ? pathParts[0] : 'not-found';
     }
 
@@ -201,7 +201,7 @@ export default function App() {
         return 'landing';
       }
       if (parts[0]) {
-        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'customization', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'store']);
+        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'customization', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'store', 'rewards']);
         return knownTabs.has(parts[0]) ? parts[0] : 'not-found';
       }
     }
