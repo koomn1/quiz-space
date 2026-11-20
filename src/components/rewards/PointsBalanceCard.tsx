@@ -135,6 +135,7 @@ export const PointsBalanceCard: React.FC<PointsBalanceCardProps> = ({
           {/* Avatar Store Button */}
           <button
             type="button"
+            data-testid="avatar-store-trigger"
             onClick={onOpenStore}
             className="flex items-center gap-1.5 rounded-xl border border-[#EE8361]/40 bg-[#EE8361]/10 px-3.5 py-2 text-xs font-bold text-[#FBDFC7] transition-all hover:bg-[#EE8361]/20 active:scale-95"
           >
@@ -145,6 +146,7 @@ export const PointsBalanceCard: React.FC<PointsBalanceCardProps> = ({
           {/* Reward Ledger Button */}
           <button
             type="button"
+            data-testid="reward-ledger-trigger"
             onClick={onOpenLedger}
             className="flex items-center gap-1.5 rounded-xl border border-[#2AC3BB]/30 bg-[#007472]/20 px-3.5 py-2 text-xs font-bold text-[#2AC3BB] transition-all hover:bg-[#007472]/35 active:scale-95"
           >
