@@ -85,39 +85,39 @@ export default function CosmoOrb({ size = 32, state = 'idle', className = '' }: 
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="AI"
+      aria-label="Cosmo AI"
     >
       <defs>
         <radialGradient id="aiCoreGrad" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stopColor="#f5e8ff" />
-          <stop offset="35%" stopColor="#c4b5fd" />
-          <stop offset="70%" stopColor="#8b5cf6" />
-          <stop offset="100%" stopColor="#6d28d9" />
+          <stop offset="0%" stopColor="#FCF6EE" />
+          <stop offset="35%" stopColor="#55E2DB" />
+          <stop offset="70%" stopColor="#2AC3BB" />
+          <stop offset="100%" stopColor="#007472" />
         </radialGradient>
         <linearGradient id="aiRingGradOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="50%" stopColor="#ec4899" />
-          <stop offset="100%" stopColor="#818cf8" />
+          <stop offset="0%" stopColor="#2AC3BB" />
+          <stop offset="50%" stopColor="#EE8361" />
+          <stop offset="100%" stopColor="#007472" />
         </linearGradient>
         <linearGradient id="aiRingGradInner" x1="100%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#a78bfa" />
+          <stop offset="0%" stopColor="#55E2DB" />
+          <stop offset="100%" stopColor="#FCF6EE" />
         </linearGradient>
       </defs>
 
       {/* Ambient breathing glow behind everything */}
-      <circle ref={glowRef} cx="24" cy="24" r="13" fill="#8b5cf6" opacity="0.55" style={{ filter: 'blur(6px)' }} />
+      <circle ref={glowRef} cx="24" cy="24" r="13" fill="#2AC3BB" opacity="0.45" style={{ filter: 'blur(6px)' }} />
 
       {/* Outer tilted orbit ring */}
       <g ref={outerRingRef}>
         <ellipse cx="24" cy="24" rx="21" ry="8" fill="none" stroke="url(#aiRingGradOuter)" strokeWidth="1.6" opacity="0.85" transform="rotate(-24 24 24)" />
-        <circle cx="45" cy="21.5" r="1.6" fill="#f5d0fe" transform="rotate(-24 24 24)" />
+        <circle cx="45" cy="21.5" r="1.6" fill="#EE8361" transform="rotate(-24 24 24)" />
       </g>
 
       {/* Inner tilted orbit ring, opposite direction */}
       <g ref={innerRingRef}>
         <ellipse cx="24" cy="24" rx="16" ry="6" fill="none" stroke="url(#aiRingGradInner)" strokeWidth="1.4" opacity="0.8" transform="rotate(35 24 24)" />
-        <circle cx="8.4" cy="24.9" r="1.3" fill="#bae6fd" transform="rotate(35 24 24)" />
+        <circle cx="8.4" cy="24.9" r="1.3" fill="#2AC3BB" transform="rotate(35 24 24)" />
       </g>
 
       {/* Glowing core */}

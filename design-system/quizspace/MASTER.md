@@ -19,30 +19,31 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#7C3AED` | `--color-primary` |
+| Primary | `#007472` | `--color-primary` (Royal Petrol) |
 | On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#A78BFA` | `--color-secondary` |
-| On Secondary | `#0F172A` | `--color-on-secondary` |
-| Accent/CTA | `#0891B2` | `--color-accent` |
-| On Accent/CTA | `#000000` | `--color-on-accent` |
-| Background | `#FAF5FF` | `--color-background` |
-| Foreground | `#1E1B4B` | `--color-foreground` |
-| Card | `#FFFFFF` | `--color-card` |
-| Card Foreground | `#1E1B4B` | `--color-card-foreground` |
-| Muted | `#ECEEF9` | `--color-muted` |
-| Muted Foreground | `#475569` | `--color-muted-foreground` |
-| Border | `#DDD6FE` | `--color-border` |
+| Secondary | `#2AC3BB` | `--color-secondary` (Bright Teal) |
+| On Secondary | `#031717` | `--color-on-secondary` |
+| Accent/Coral | `#EE8361` | `--color-coral` (Warm Coral) |
+| On Accent/CTA | `#FFFFFF` | `--color-on-accent` |
+| Canvas/BG Dark | `#031717` | `--color-theme-canvas` |
+| Surface Dark | `#072424` | `--color-theme-surface` |
+| Surface Strong | `#0C3232` | `--color-theme-surface-strong` |
+| Foreground/Text | `#FCF6EE` | `--color-theme-text` (Ivory) |
+| Muted | `#8BAEAD` | `--color-theme-muted` |
+| Border | `rgba(42, 195, 187, 0.22)` | `--color-theme-border` |
+| Glow | `rgba(42, 195, 187, 0.28)` | `--color-theme-glow` |
 | Destructive | `#DC2626` | `--color-destructive` |
 | On Destructive | `#FFFFFF` | `--color-on-destructive` |
-| Ring | `#7C3AED` | `--color-ring` |
+| Ring | `#2AC3BB` | `--color-ring` |
 
-**Color Notes:** AI purple + cyan interactions [Accent adjusted from #06B6D4]
+**Color Notes:** QuizSpace Luxury Brand: Royal Petrol (`#007472`) + Bright Teal (`#2AC3BB`) + Warm Coral (`#EE8361`) + Ivory (`#FCF6EE`)
 
 ### Typography
 
-- **Heading Font:** Inter
-- **Body Font:** Inter
-- **Mood:** flat, clean, system, bold, geometric, cross-platform, icon, poster, minimal, functional, responsive
+- **Heading Font:** Space Grotesk / Cairo
+- **Body Font:** Inter / Cairo / Tajawal
+- **Mono Font:** JetBrains Mono
+- **Mood:** luxury academic, sleek, cosmic, modern, high-contrast, responsive
 - **Google Fonts:** [Inter + Inter](https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap)
 
 **CSS Import:**
