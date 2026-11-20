@@ -1486,6 +1486,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
         ) : (
           <div className="space-y-3.5">
             {userRequests.map((req, index) => {
+              const isAdminActivation = req.paymentMethod === 'admin_activation' || req.paymentScreenshot === 'ADMIN_ACTIVATED';
               const statusColor =
                 req.status === 'approved'
                   ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
@@ -1495,24 +1496,31 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
               const statusLabel =
                 req.status === 'approved'
-                  ? (isAr ? 'تم القبول والتفعيل ' : 'Approved & Active ')
+                  ? (isAdminActivation
+                      ? (isAr ? 'تم تفعيل الباقة من الإدارة بنجاح ✅' : 'Activated by Admin ✅')
+                      : (isAr ? 'تم القبول والتفعيل ✅' : 'Approved & Active ✅'))
                   : req.status === 'rejected'
-                    ? (isAr ? 'تم الرفض ' : 'Rejected ')
+                    ? (isAr ? 'تم الرفض ❌' : 'Rejected ❌')
                     : (isAr ? 'قيد المراجعة الفنية...' : 'Pending Review...');
 
               return (
                 <div
                   key={req.id || index}
-                  className="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/70 flex flex-col gap-3.5 transition-all hover:border-slate-300 dark:hover:border-slate-700"
+                  className="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/70 flex flex-col gap-3.5 transition-all hover:border-slate-300 dark:hover:border-slate-700 shadow-xs"
                 >
                   <div className="flex flex-wrap justify-between items-center gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
+                      <div className="w-10 h-10 rounded-xl bg-[#007472]/10 border border-[#2AC3BB]/30 flex items-center justify-center shrink-0 text-[#2AC3BB]">
                         <Crown className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                          {req.planName}
+                        <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>{req.planName}</span>
+                          {isAdminActivation && (
+                            <span className="px-2 py-0.5 rounded-md bg-[#007472]/15 text-[#2AC3BB] text-[10px] font-extrabold border border-[#2AC3BB]/30">
+                              {isAr ? 'إداري' : 'Admin'}
+                            </span>
+                          )}
                         </h4>
                         <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-bold font-mono">
                           <Clock className="w-3 h-3 text-slate-400" />
@@ -1520,7 +1528,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                           {req.planPrice && (
                             <>
                               <span className="text-slate-300 dark:text-slate-700">•</span>
-                              <span className="text-primary font-bold">{req.planPrice}</span>
+                              <span className="text-[#2AC3BB] font-bold">{req.planPrice}</span>
                             </>
                           )}
                         </div>
@@ -1528,11 +1536,11 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
-                      {req.paymentScreenshot && req.paymentScreenshot !== 'PROMO_100_FREE' && !req.paymentScreenshot.startsWith('TRIAL_OFFER_') && (
+                      {req.paymentScreenshot && req.paymentScreenshot !== 'PROMO_100_FREE' && !req.paymentScreenshot.startsWith('TRIAL_OFFER_') && !isAdminActivation && (
                         <button
                           type="button"
                           onClick={() => setPreviewScreenshotUrl(req.paymentScreenshot)}
-                          className="text-[10px] text-primary font-black bg-primary/10 hover:bg-primary/20 px-2.5 py-1.5 rounded-lg border border-primary/20 transition-colors flex items-center gap-1 cursor-pointer"
+                          className="text-[10px] text-[#2AC3BB] font-black bg-[#007472]/10 hover:bg-[#007472]/20 px-2.5 py-1.5 rounded-lg border border-[#2AC3BB]/20 transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           <Eye className="w-3 h-3" />
                           <span>{isAr ? 'معاينة الإيصال' : 'View Receipt'}</span>
@@ -1544,17 +1552,29 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 p-3.5 text-xs">
                     <div>
-                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'المبلغ المطلوب' : 'Amount due'}</span>
-                      <strong className="mt-1 block text-base font-black text-emerald-600">
-                        {typeof req.amount === 'number' ? req.amount.toLocaleString(isAr ? 'ar-EG' : 'en-US') : req.amount || (isAr ? 'غير مسجل في الطلب القديم' : 'Not recorded on legacy request')} {isAr ? 'ج.م' : 'EGP'}
+                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'المبلغ المسدد / القيمة' : 'Amount Paid'}</span>
+                      <strong className="mt-1 block text-sm font-black text-emerald-600 dark:text-emerald-400">
+                        {isAdminActivation
+                          ? (isAr ? 'تفعيل إداري مباشر (مجاناً)' : 'Direct Admin Activation (Free)')
+                          : `${typeof req.amount === 'number' ? req.amount.toLocaleString(isAr ? 'ar-EG' : 'en-US') : req.amount || 0} ${isAr ? 'ج.م' : 'EGP'}`}
                       </strong>
                     </div>
                     <div>
-                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'طريقة الدفع' : 'Payment method'}</span>
+                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'طريقة وقناة التفعيل' : 'Activation Method'}</span>
                       <strong className="mt-1 block text-sm font-black text-slate-800 dark:text-slate-100">
-                        {req.paymentMethod === 'instapay' ? 'InstaPay' : req.paymentMethod === 'vodafone' || req.paymentMethod === 'vodafone_cash' ? 'Vodafone Cash' : req.paymentMethod === 'bank_transfer' ? (isAr ? 'تحويل بنكي' : 'Bank Transfer') : (isAr ? 'غير محددة في الطلب القديم' : 'Not recorded on legacy request')}
+                        {isAdminActivation
+                          ? (isAr ? 'تفعيل مباشر من لوحة الإدارة 🛡️' : 'Direct Admin Panel Activation 🛡️')
+                          : req.paymentMethod === 'instapay'
+                            ? 'InstaPay'
+                            : req.paymentMethod === 'vodafone' || req.paymentMethod === 'vodafone_cash'
+                              ? 'Vodafone Cash'
+                              : req.paymentMethod === 'bank_transfer'
+                                ? (isAr ? 'تحويل بنكي' : 'Bank Transfer')
+                                : req.paymentMethod === 'coupon'
+                                  ? (isAr ? 'كود خصم / ترويجي' : 'Coupon / Promo')
+                                  : (isAr ? 'طلب اشتراك' : 'Direct Request')}
                       </strong>
                     </div>
                   </div>
@@ -1574,13 +1594,26 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                     </div>
                   )}
 
-                  {/* Approved Info feedback */}
+                  {/* Approved Info feedback & Admin Note */}
                   {req.status === 'approved' && (
-                    <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-500/20 rounded-xl flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
-                      <span className="font-black">
-                        {isAr ? 'تم تفعيل باقتك بنجاح! جميع صلاحيات الحساب متاحة الآن.' : 'Your subscription is successfully activated!'}
-                      </span>
+                    <div className="space-y-2.5">
+                      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-500/20 rounded-xl flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
+                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                        <span className="font-black">
+                          {isAdminActivation
+                            ? (isAr ? 'تم تفعيل باقتك من الإدارة بنجاح! جميع صلاحيات الحساب متاحة الآن.' : 'Plan activated by Admin successfully! Full access granted.')
+                            : (isAr ? 'تم تفعيل باقتك بنجاح! جميع صلاحيات الحساب متاحة الآن.' : 'Your subscription is successfully activated!')}
+                        </span>
+                      </div>
+                      {req.rejectReason && (
+                        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-900 dark:text-emerald-200 text-xs">
+                          <div className="flex items-center gap-1.5 font-black text-emerald-700 dark:text-emerald-400 mb-1">
+                            <ShieldCheck className="w-4 h-4" />
+                            <span>{isAr ? 'ملاحظة وتوجيهات فريق الإدارة:' : 'Admin Note & Instructions:'}</span>
+                          </div>
+                          <p className="leading-relaxed font-semibold">{req.rejectReason}</p>
+                        </div>
+                      )}
                     </div>
                   )}
 

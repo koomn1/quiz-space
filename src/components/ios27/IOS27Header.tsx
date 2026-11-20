@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, LogIn } from 'lucide-react';
 import CardNav from '../CardNav';
 import { MainLogo } from '../MainLogo';
+import { supabase } from '../../lib/supabaseClient';
 
 export interface IOS27HeaderProps {
   currentTab: string;
@@ -36,6 +37,59 @@ export default function IOS27Header({
   const isAr = lang === 'ar';
   const isAuthenticated = Boolean(userId && !userId.startsWith('user-guest'));
   const accountName = userName || (isAr ? 'حسابي' : 'My account');
+
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      setUnreadCount(0);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchCount = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_unread_notifications_count', {
+          p_user_id: userId,
+        });
+        if (!error && typeof data === 'number' && isMounted) {
+          setUnreadCount(data);
+        }
+      } catch (err) {
+        console.debug('Error fetching unread count:', err);
+      }
+    };
+
+    void fetchCount();
+
+    // Listen to realtime notifications
+    const notifChannel = supabase
+      .channel(`header-notif-count-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+        },
+        () => {
+          void fetchCount();
+        }
+      )
+      .subscribe();
+
+    const handleNotifUpdate = () => {
+      void fetchCount();
+    };
+    window.addEventListener('quizspace-notifications-updated', handleNotifUpdate);
+
+    return () => {
+      isMounted = false;
+      void supabase.removeChannel(notifChannel);
+      window.removeEventListener('quizspace-notifications-updated', handleNotifUpdate);
+    };
+  }, [userId, isAuthenticated]);
 
   const items: any[] = [
     {
@@ -78,7 +132,12 @@ export default function IOS27Header({
       links: [
         ...(isAuthenticated
           ? [
-              { label: isAr ? 'الإشعارات' : 'Notifications', tab: 'notifications' },
+              {
+                label: isAr
+                  ? (unreadCount > 0 ? `الإشعارات (${unreadCount})` : 'الإشعارات')
+                  : (unreadCount > 0 ? `Notifications (${unreadCount})` : 'Notifications'),
+                tab: 'notifications',
+              },
               { label: isAr ? 'الملف الشخصي' : 'Profile', tab: 'profile' },
               { label: isAr ? 'الإعدادات' : 'Settings', tab: 'settings' },
             ]
@@ -100,9 +159,22 @@ export default function IOS27Header({
 
   const cta = isAuthenticated
     ? {
-        label: isAr ? 'الإشعارات' : 'Notifications',
-        ariaLabel: isAr ? 'فتح الإشعارات' : 'Open notifications',
-        icon: <Bell aria-hidden="true" />,
+        label: isAr
+          ? (unreadCount > 0 ? `الإشعارات (${unreadCount})` : 'الإشعارات')
+          : (unreadCount > 0 ? `Notifications (${unreadCount})` : 'Notifications'),
+        ariaLabel: isAr
+          ? (unreadCount > 0 ? `فتح الإشعارات، لديك ${unreadCount} غير مقروء` : 'فتح الإشعارات')
+          : (unreadCount > 0 ? `Open notifications, ${unreadCount} unread` : 'Open notifications'),
+        icon: (
+          <span className="relative inline-flex items-center justify-center">
+            <Bell aria-hidden="true" className="w-4 h-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white shadow-md ring-2 ring-white dark:ring-slate-900 animate-pulse">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </span>
+        ),
         onClick: () => setTab('notifications'),
       }
     : {

@@ -306,11 +306,11 @@ export function MyQuizzes({
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 text-right max-w-[190px] truncate">
+                  <div className="flex items-center gap-2 text-right max-w-[210px]">
                     <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-[#007472] to-[#2AC3BB] text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs ring-2 ring-white/70 dark:ring-slate-800 overflow-hidden">
                       {quiz.creatorPhotoURL ? <img src={quiz.creatorPhotoURL} alt="" className="h-full w-full object-cover" loading="lazy" /> : (quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q')}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <PremiumNameTag
                         name={quiz.creatorName || (isAr ? 'QuizSpace AI' : 'QuizSpace')}
                         isPremium={!!quiz.creatorBadgeTier && quiz.creatorBadgeTier !== 'none'}
@@ -318,7 +318,7 @@ export function MyQuizzes({
                         nameColor={quiz.creatorNameColor as any}
                         badgeColor={quiz.creatorBadgeColor as any}
                         badgeSize="sm"
-                        className="max-w-[150px] truncate text-[11px] font-black"
+                        className="max-w-[160px] text-[11px] font-black"
                       />
                       <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
                         {isAr ? 'صانع الاختبار' : 'Quiz Creator'}

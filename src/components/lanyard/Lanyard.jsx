@@ -1199,7 +1199,16 @@ const Lanyard = ({
       if (!settingsRef.current.interactive || event.button > 0) return;
       toPointer(event);
       const hit = pickCard();
-      if (!hit) return;
+      if (!hit) {
+        canvas.style.pointerEvents = 'none';
+        const el = document.elementFromPoint(event.clientX, event.clientY);
+        if (el && el !== canvas) {
+          if (typeof el.click === 'function') el.click();
+          el.focus?.();
+        }
+        setTimeout(() => { canvas.style.pointerEvents = 'auto'; }, 60);
+        return;
+      }
       sim.grab = {
         local: hit.point.clone().sub(sim.body.position).applyQuaternion(sim.body.quaternion.clone().invert()),
         rotation: sim.body.quaternion.clone(),

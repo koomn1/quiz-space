@@ -28,7 +28,7 @@ const TIER_META: Record<SubscriptionTier, { labelAr: string; labelEn: string }> 
 function VerifiedSeal({ size, color }: { size: number; color?: BadgeColorKey }) {
   const gradId = `seal-v-${color || 'blue'}`;
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs">
+    <svg width={size} height={size} viewBox="-1 -1 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs overflow-visible">
       <defs>
         <linearGradient id={gradId} x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#2AC3BB" />
@@ -59,7 +59,7 @@ function VerifiedSeal({ size, color }: { size: number; color?: BadgeColorKey }) 
  */
 function ProSeal({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs">
+    <svg width={size} height={size} viewBox="-1 -1 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs overflow-visible">
       <defs>
         <linearGradient id="pro-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#2AC3BB" />
@@ -91,7 +91,7 @@ function ProSeal({ size }: { size: number }) {
  */
 function PremiumSeal({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs">
+    <svg width={size} height={size} viewBox="-1 -1 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs overflow-visible">
       <defs>
         <linearGradient id="prem-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#c084fc" />
@@ -122,7 +122,7 @@ function PremiumSeal({ size }: { size: number }) {
  */
 function TeamSeal({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs">
+    <svg width={size} height={size} viewBox="-1 -1 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs overflow-visible">
       <defs>
         <linearGradient id="team-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#38bdf8" />
@@ -148,7 +148,7 @@ function TeamSeal({ size }: { size: number }) {
  */
 function EnterpriseSeal({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs">
+    <svg width={size} height={size} viewBox="-1 -1 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs overflow-visible">
       <defs>
         <linearGradient id="ent-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#fef08a" />
@@ -177,7 +177,7 @@ function EnterpriseSeal({ size }: { size: number }) {
  */
 function LifetimeSeal({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs">
+    <svg width={size} height={size} viewBox="-1 -1 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs overflow-visible">
       <defs>
         <linearGradient id="life-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#e0f2fe" />
@@ -208,7 +208,7 @@ function LifetimeSeal({ size }: { size: number }) {
  */
 function FounderSeal({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs">
+    <svg width={size} height={size} viewBox="-1 -1 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs overflow-visible">
       <defs>
         <linearGradient id="found-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#fdba74" />
@@ -231,7 +231,7 @@ function FounderSeal({ size }: { size: number }) {
  */
 function RoyalSeal({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs">
+    <svg width={size} height={size} viewBox="-1 -1 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 drop-shadow-xs overflow-visible">
       <defs>
         <linearGradient id="roy-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#fef08a" />
@@ -286,7 +286,7 @@ export function UserBadge({
 
   return (
     <span
-      className={`group relative inline-flex items-center justify-center align-middle cursor-default select-none ${className}`}
+      className={`group relative inline-flex items-center justify-center align-middle shrink-0 flex-shrink-0 cursor-default select-none ${className}`}
       title={meta.labelAr}
     >
       {safeTier === 'verified' && <VerifiedSeal size={px} color={badgeColor} />}

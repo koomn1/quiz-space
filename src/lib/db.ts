@@ -1010,6 +1010,35 @@ export async function submitQuizAttempt(
     // The v2 scoring RPC records the completion and reward ledger atomically.
     if (completionRow?.id && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('quizspace-rewards-updated'));
+
+      // Asynchronously notify the quiz creator about the completion
+      void (async () => {
+        try {
+          const { data: quizRow } = await supabase
+            .from('quizzes')
+            .select('title, creator_id')
+            .eq('id', quizId)
+            .maybeSingle();
+
+          if (quizRow && quizRow.creator_id && quizRow.creator_id !== authenticatedTakerId) {
+            const takerName = data.takerName || 'أحد الطلاب';
+            const scorePercent = typeof completionRow.percentage === 'number'
+              ? Math.round(completionRow.percentage)
+              : null;
+            const scoreMsg = scorePercent !== null ? ` بنتيجة ${scorePercent}%` : '';
+
+            await supabase.rpc('send_app_notification', {
+              p_user_id: quizRow.creator_id,
+              p_type: 'quiz',
+              p_title: `حل جديد لاختبارك: ${quizRow.title}`,
+              p_body: `قام ${takerName} بحل الاختبار "${quizRow.title}"${scoreMsg}. يمكنك الاطلاع على تفاصيل النتيجة الآن.`,
+              p_sender_name: takerName,
+            });
+          }
+        } catch (notifErr) {
+          console.debug('Handled non-fatal completion notification error:', notifErr);
+        }
+      })();
     }
     return result;
   }
@@ -2122,19 +2151,39 @@ export async function createPremiumRequest(requestId: string, reqData: any): Pro
 export async function getPremiumRequests(userId?: string, options: { adminQueue?: boolean; adminLedger?: boolean; allAdmin?: boolean } = {}): Promise<any[]> {
   if (!isSupabaseConfigured) return [];
 
-  let targetUid = userId;
-  if (!targetUid || targetUid.startsWith('user-guest')) {
+  const resolvedIds: string[] = [];
+  if (userId && !userId.startsWith('user-guest')) {
+    resolvedIds.push(userId);
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      targetUid = authData?.user?.id;
-    } catch (error) { console.debug('Handled non-fatal exception:', error); }
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('uid, custom_id')
+        .or(`uid.eq.${userId},custom_id.eq.${userId}`)
+        .limit(1)
+        .maybeSingle();
+      if (userRow) {
+        if (userRow.uid && !resolvedIds.includes(userRow.uid)) resolvedIds.push(userRow.uid);
+        if (userRow.custom_id && !resolvedIds.includes(userRow.custom_id)) resolvedIds.push(userRow.custom_id);
+      }
+    } catch (_) {}
   }
+
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData?.user?.id && !resolvedIds.includes(authData.user.id)) {
+      resolvedIds.push(authData.user.id);
+    }
+  } catch (error) { console.debug('Handled non-fatal exception:', error); }
 
   let query = supabase.from('premium_requests').select('*');
   // Admin review must not inherit the default current-user filter. RLS still
   // limits this unscoped query to administrators at the database layer.
-  if (!options.adminQueue && !options.adminLedger && !options.allAdmin && targetUid && !targetUid.startsWith('user-guest')) {
-    query = query.eq('user_id', targetUid);
+  if (!options.adminQueue && !options.adminLedger && !options.allAdmin && resolvedIds.length > 0) {
+    if (resolvedIds.length === 1) {
+      query = query.eq('user_id', resolvedIds[0]);
+    } else {
+      query = query.in('user_id', resolvedIds);
+    }
   }
   query = query.order('created_at', { ascending: false });
   if (options.adminQueue) query = query.in('status', ['pending', 'Pending', 'PENDING']).range(0, 99);
@@ -2147,6 +2196,10 @@ export async function getPremiumRequests(userId?: string, options: { adminQueue?
         .from('premium_requests')
         .select('id, user_id, name, email, plan_id, plan_name, plan_price, amount, payment_method, payment_screenshot, status, reject_reason, created_at, updated_at')
         .order('created_at', { ascending: false });
+      if (!options.adminQueue && !options.adminLedger && !options.allAdmin && resolvedIds.length > 0) {
+        if (resolvedIds.length === 1) fallback = fallback.eq('user_id', resolvedIds[0]);
+        else fallback = fallback.in('user_id', resolvedIds);
+      }
       if (options.adminQueue) fallback = fallback.in('status', ['pending', 'Pending', 'PENDING']).range(0, 99);
       else if (options.adminLedger || options.allAdmin) fallback = fallback.range(0, 499);
       const fallbackResult = await fallback;
@@ -3021,8 +3074,36 @@ export async function getMyClassroomsSnapshot() {
   };
 }
 
-export async function sendPushEvent(payload: { title: string; body: string; url?: string; category: 'classroom' | 'community' | 'quiz' | 'system'; classId?: string; postId?: string }): Promise<number> {
+export async function sendPushEvent(payload: {
+  title: string;
+  body: string;
+  url?: string;
+  category: 'classroom' | 'community' | 'quiz' | 'system';
+  classId?: string;
+  postId?: string;
+  senderId?: string;
+  senderName?: string;
+}): Promise<number> {
   if (!isSupabaseConfigured) return 0;
+
+  // Deliver in-app notification to classroom members
+  if (payload.category === 'classroom' && payload.classId) {
+    void (async () => {
+      try {
+        await supabase.rpc('notify_classroom_members', {
+          p_class_id: payload.classId,
+          p_sender_id: payload.senderId || null,
+          p_type: 'classroom',
+          p_title: payload.title,
+          p_body: payload.body,
+          p_sender_name: payload.senderName || 'فصلك الدراسي',
+        });
+      } catch (err) {
+        console.debug('Handled non-fatal classroom notification error:', err);
+      }
+    })();
+  }
+
   try {
     const { data, error } = await supabase.functions.invoke('send-promotion-push', { body: { ...payload, url: payload.url || '/' } });
     if (error) {

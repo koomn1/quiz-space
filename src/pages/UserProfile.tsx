@@ -704,11 +704,11 @@ export default function UserProfile({
   return (
     <div ref={containerRef} dir={isAr ? 'rtl' : 'ltr'} className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 space-y-6">
       {/* 1. HERO & IDENTITY BANNER */}
-      <div className="gsap-hero relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
+      <div className="gsap-hero relative rounded-[32px] border border-slate-200/80 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950 overflow-visible">
         {/* 3D Lanyard Interactive Hanging ID Card */}
         {showLanyard && (
           <div
-            className="pointer-events-auto absolute end-3 sm:end-8 top-0 z-30 h-[340px] sm:h-[400px] md:h-[440px] w-44 sm:w-56 md:w-64"
+            className="pointer-events-auto absolute inset-0 z-30 h-full w-full min-h-[380px] sm:min-h-[460px] overflow-visible"
             aria-label={isAr ? 'قلادة الهوية ثلاثية الأبعاد' : '3D Lanyard ID Card'}
           >
             <Lanyard
@@ -719,16 +719,17 @@ export default function UserProfile({
               finish="glossy"
               metal="silver"
               size={0.65}
+              anchor={isAr ? 'left' : 'right'}
               strapLength={0.90}
               interactive={true}
               intro={true}
-              className="h-full w-full"
+              className="h-full w-full overflow-visible"
               style={{ width: '100%', height: '100%' }}
             />
           </div>
         )}
         {/* Cover Photo / Graphic */}
-        <div className="relative h-44 sm:h-56 md:h-64 w-full overflow-hidden bg-gradient-to-r from-[#031717] via-[#007472] to-[#0a2f2e]">
+        <div className="relative h-44 sm:h-56 md:h-64 w-full overflow-hidden rounded-t-[32px] bg-gradient-to-r from-[#031717] via-[#007472] to-[#0a2f2e]">
           {profileData?.coverUrl ? (
             <img src={profileData.coverUrl} alt="Cover" className="h-full w-full object-cover" />
           ) : (

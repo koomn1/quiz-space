@@ -52,12 +52,27 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
     setLoading(true);
     setError(false);
     try {
-      const { data, error: queryError } = await supabase
+      const userIds = [userId];
+      try {
+        const authRes = await supabase.auth.getUser();
+        if (authRes.data.user?.id && !userIds.includes(authRes.data.user.id)) {
+          userIds.push(authRes.data.user.id);
+        }
+      } catch (_) {}
+
+      let query = supabase
         .from('notifications')
         .select('id,title,body,type,is_read,created_at')
-        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
+
+      if (userIds.length === 1) {
+        query = query.eq('user_id', userIds[0]);
+      } else {
+        query = query.in('user_id', userIds);
+      }
+
+      const { data, error: queryError } = await query;
       if (queryError) throw queryError;
       const databaseItems = (data || []) as AppNotification[];
       const pushItems = pushNotificationsManager.getRecent().map(fromPush);
@@ -77,12 +92,14 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
     const listenerId = `notification-center-${userId}`;
     pushNotificationsManager.subscribe(listenerId, (payload) => {
       setItems((previous) => [fromPush(payload), ...previous.filter((item) => item.id !== payload.id)]);
+      window.dispatchEvent(new CustomEvent('quizspace-notifications-updated'));
     });
     const channel = userId && !userId.startsWith('user-')
       ? supabase
         .channel(`notification-center-${userId}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, (payload) => {
-          setItems((previous) => [payload.new as AppNotification, ...previous.filter((item) => item.id !== payload.new.id)]);
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+          void load();
+          window.dispatchEvent(new CustomEvent('quizspace-notifications-updated'));
         })
         .subscribe()
       : null;
@@ -94,36 +111,51 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
 
   const markAllRead = async () => {
     pushNotificationsManager.markRead(items.filter((item) => item.id.startsWith('push-')).map((item) => item.id));
-    await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
+    const userIds = [userId];
+    try {
+      const authRes = await supabase.auth.getUser();
+      if (authRes.data.user?.id && !userIds.includes(authRes.data.user.id)) {
+        userIds.push(authRes.data.user.id);
+      }
+    } catch (_) {}
+
+    if (userIds.length === 1) {
+      await supabase.from('notifications').update({ is_read: true }).eq('user_id', userIds[0]).eq('is_read', false);
+    } else {
+      await supabase.from('notifications').update({ is_read: true }).in('user_id', userIds).eq('is_read', false);
+    }
     setItems((previous) => previous.map((item) => ({ ...item, is_read: true })));
+    window.dispatchEvent(new CustomEvent('quizspace-notifications-updated'));
   };
 
   const markRead = async (item: AppNotification) => {
     if (item.id.startsWith('push-')) {
       pushNotificationsManager.markRead([item.id]);
       setItems((previous) => previous.filter((current) => current.id !== item.id));
+      window.dispatchEvent(new CustomEvent('quizspace-notifications-updated'));
       return;
     }
-    await supabase.from('notifications').update({ is_read: true }).eq('id', item.id).eq('user_id', userId);
+    await supabase.from('notifications').update({ is_read: true }).eq('id', item.id);
     setItems((previous) => previous.map((current) => current.id === item.id ? { ...current, is_read: true } : current));
+    window.dispatchEvent(new CustomEvent('quizspace-notifications-updated'));
   };
 
   const dismissNotification = async (item: AppNotification) => {
     if (item.id.startsWith('push-')) {
       pushNotificationsManager.markRead([item.id]);
       setItems((previous) => previous.filter((current) => current.id !== item.id));
+      window.dispatchEvent(new CustomEvent('quizspace-notifications-updated'));
       return;
     }
     const { error: updateError } = await supabase
       .from('notifications')
       .update({ is_read: true })
-      .eq('id', item.id)
-      .eq('user_id', userId);
+      .eq('id', item.id);
     if (updateError) {
-      console.warn('[QuizSpace] notification could not be dismissed', updateError);
-      return;
+      console.warn('[QuizSpace] notification dismiss failed', updateError);
     }
     setItems((previous) => previous.filter((current) => current.id !== item.id));
+    window.dispatchEvent(new CustomEvent('quizspace-notifications-updated'));
   };
 
   const unread = items.filter((item) => !item.is_read).length;

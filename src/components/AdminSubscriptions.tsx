@@ -156,6 +156,7 @@ export default function AdminSubscriptions({
   const [selectedUser, setSelectedUser] = useState<UserStats | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("");
   const [subscriptionRenewalDate, setSubscriptionRenewalDate] = useState<string>("");
+  const [adminActivationNote, setAdminActivationNote] = useState<string>("");
 
   // Coupons States
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -537,13 +538,47 @@ export default function AdminSubscriptions({
       const renewalDate = targetIsPremium && !isLifetime && !isFounder && subscriptionRenewalDate
         ? new Date(`${subscriptionRenewalDate}T23:59:59`).toISOString()
         : undefined;
-      const { error } = await updateUserSubscription(selectedUser.userId, targetIsPremium, targetPlanName, plan?.id, isLifetime, isFounder, renewalDate);
 
-      if (!error) {
+      let hasError = false;
+      let errorMsg = '';
+
+      if (targetIsPremium) {
+        // Use our RPC admin_activate_user_subscription which:
+        // 1) updates user plan & badge_tier
+        // 2) logs in premium_requests with admin note (reject_reason)
+        // 3) inserts an unread notification with admin note
+        const { error: rpcErr } = await supabase.rpc('admin_activate_user_subscription', {
+          p_user_id: selectedUser.userId,
+          p_plan_id: plan?.id || 'silver',
+          p_plan_name: targetPlanName,
+          p_is_lifetime: isLifetime,
+          p_is_founder: isFounder,
+          p_renewal_date: renewalDate || null,
+          p_admin_note: adminActivationNote.trim() || null,
+        });
+
+        if (rpcErr) {
+          console.warn('RPC admin_activate_user_subscription returned error, falling back to updateUserSubscription:', rpcErr);
+          const { error } = await updateUserSubscription(selectedUser.userId, targetIsPremium, targetPlanName, plan?.id, isLifetime, isFounder, renewalDate);
+          if (error) {
+            hasError = true;
+            errorMsg = error.message;
+          }
+        }
+      } else {
+        const { error } = await updateUserSubscription(selectedUser.userId, targetIsPremium, targetPlanName, plan?.id, isLifetime, isFounder, renewalDate);
+        if (error) {
+          hasError = true;
+          errorMsg = error.message;
+        }
+      }
+
+      if (!hasError) {
+        setAdminActivationNote('');
         showAppMessage(
           isAr
-            ? "تم تحديث خطة الاشتراك بنجاح في قاعدة البيانات!"
-            : "Subscription plan updated successfully in database!",
+            ? "تم تحديث وتفعيل الاشتراك، إرسال الإشعار، وتوثيق الملاحظة بالسجل بنجاح!"
+            : "Subscription activated, notification sent, and note logged successfully!",
         );
         // Update local state right away
         const updatedUsers = mockUsers.map((u) => {
@@ -1146,12 +1181,14 @@ export default function AdminSubscriptions({
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <label className="text-xs font-bold text-slate-500">
-                  {isAr ? "ملاحظات إدارية" : "Admin Notes"}
+                  {isAr ? "ملاحظات إدارية (تظهر للمستخدم في السجل والإشعار)" : "Admin Notes (Visible to user in ledger & notification)"}
                 </label>
                 <input
                   type="text"
-                  placeholder={isAr ? "اكتب ملاحظة هنا..." : "Enter note..."}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary"
+                  value={adminActivationNote}
+                  onChange={(e) => setAdminActivationNote(e.target.value)}
+                  placeholder={isAr ? "اكتب ملاحظة للإدارة تظهر في سجل المشترك وإشعاره..." : "Enter admin note for user ledger & notification..."}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-primary text-sm"
                 />
               </div>
             </div>

@@ -105,16 +105,22 @@ export function PremiumNameTag({
 
   const preset = NAME_COLOR_PRESETS[effectiveColor];
 
+  const containerClass = (className || '')
+    .replace(/\btruncate\b/g, '')
+    .trim();
+
   return (
-    <span className={`inline-flex items-center gap-1.5 font-['Alexandria','Cairo',system-ui,sans-serif] tracking-normal antialiased ${className || ''}`}>
+    <span className={`inline-flex items-center gap-1.5 font-['Alexandria','Cairo',system-ui,sans-serif] tracking-normal antialiased min-w-0 overflow-visible ${containerClass}`}>
       <span
         style={preset.style}
-        className={`font-black leading-tight tracking-tight ${preset.animClass || ''}`}
+        className={`font-black leading-tight tracking-tight truncate ${preset.animClass || ''}`}
       >
         {name}
       </span>
       {effectiveTier !== 'none' && (
-        <UserBadge tier={effectiveTier as SubscriptionTier} size={badgeSize} showTooltip={true} badgeColor={effectiveBadgeColor} />
+        <span className="shrink-0 flex items-center">
+          <UserBadge tier={effectiveTier as SubscriptionTier} size={badgeSize} showTooltip={true} badgeColor={effectiveBadgeColor} />
+        </span>
       )}
     </span>
   );
