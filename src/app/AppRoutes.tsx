@@ -182,6 +182,7 @@ export default function AppRoutes(props: AppRoutesProps) {
                   planName={userPlanName}
                   lang={lang}
                   onNavigate={handleSetTab}
+                  initialView="store"
                 />
               )}
               {activeTab === 'landing' && (
@@ -501,7 +502,15 @@ export default function AppRoutes(props: AppRoutesProps) {
               )}
 
               {activeTab === 'rewards' && (
-                <LazyRewardsSection userId={userId} lang={lang} />
+                <LazyStorePage
+                  userId={userId}
+                  userName={userName}
+                  isPremium={isUserPremium}
+                  planName={userPlanName}
+                  lang={lang}
+                  onNavigate={handleSetTab}
+                  initialView="games"
+                />
               )}
 
               {activeTab === 'leaderboard' && (
