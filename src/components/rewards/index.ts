@@ -24,6 +24,9 @@ export type { VipLeaderboardPodiumProps } from './VipLeaderboardPodium';
 export { RewardLedgerSheet } from './RewardLedgerSheet';
 export type { RewardLedgerSheetProps } from './RewardLedgerSheet';
 
+export { AvatarCustomizerModal } from './AvatarCustomizerModal';
+export type { AvatarCustomizerModalProps } from './AvatarCustomizerModal';
+
 export { RewardsDashboard };
 export type { RewardsDashboardProps } from './RewardsDashboard';
 export default RewardsDashboard;

@@ -18,6 +18,7 @@ import { WeeklyTasksBoard } from './WeeklyTasksBoard';
 import { BadgesTrophyHall } from './BadgesTrophyHall';
 import { VipLeaderboardPodium } from './VipLeaderboardPodium';
 import { RewardLedgerSheet } from './RewardLedgerSheet';
+import { AvatarCustomizerModal } from './AvatarCustomizerModal';
 import { CosmoGuideCanvas } from '../mascot/CosmoGuideCanvas';
 import { CosmoDialogueBubble } from '../mascot/CosmoDialogueBubble';
 import { CosmoTourSpotlight } from '../mascot/CosmoTourSpotlight';
@@ -68,6 +69,7 @@ export const RewardsDashboard: React.FC<RewardsDashboardProps> = ({
 
   // Modals & Interactive Guides
   const [isArcadeOpen, setIsArcadeOpen] = useState(false);
+  const [isAvatarStoreOpen, setIsAvatarStoreOpen] = useState(false);
   const [showCosmoDialogue, setShowCosmoDialogue] = useState(true);
   const [showSpotlight, setShowSpotlight] = useState(false);
 
@@ -229,10 +231,7 @@ export const RewardsDashboard: React.FC<RewardsDashboardProps> = ({
         coins={summary.coins}
         onOpenLedger={() => setIsLedgerOpen(true)}
         onOpenArcade={() => setIsArcadeOpen(true)}
-        onOpenStore={() => {
-          // Open store or show notification
-          setActionMessage(isAr ? 'متجر الإطارات جاهز للاستكشاف!' : 'Avatar Store is ready to explore!');
-        }}
+        onOpenStore={() => setIsAvatarStoreOpen(true)}
         lang={lang}
       />
 
@@ -313,6 +312,19 @@ export const RewardsDashboard: React.FC<RewardsDashboardProps> = ({
           void loadSummary();
           void loadLedger(0);
         }}
+      />
+
+      {/* Avatar Frame Customizer & Store Modal */}
+      <AvatarCustomizerModal
+        isOpen={isAvatarStoreOpen}
+        onClose={() => setIsAvatarStoreOpen(false)}
+        userId={userId}
+        userCoins={summary.coins}
+        onCoinsUpdated={(newCoins) => {
+          setSummary((prev) => ({ ...prev, coins: newCoins }));
+          void loadLedger(0);
+        }}
+        lang={lang}
       />
 
       {/* Cosmo Mascot Guide Section (Bottom corner floating widget) */}
