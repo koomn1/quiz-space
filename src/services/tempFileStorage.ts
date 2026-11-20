@@ -138,6 +138,42 @@ export async function getTempAttachment(id: string): Promise<TempAttachment | nu
 }
 
 /**
+ * Retrieve the latest active temporary attachment for a conversation.
+ */
+export async function getLatestTempAttachmentForConversation(conversationId: string): Promise<TempAttachment | null> {
+  if (!conversationId) return null;
+  try {
+    const db = await getDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const index = store.index('conversationId');
+      const req = index.openCursor(IDBKeyRange.only(conversationId), 'prev');
+
+      req.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null;
+        if (cursor) {
+          const record = cursor.value as TempFileRecord;
+          resolve({
+            id: record.id,
+            data: record.data,
+            mimeType: record.mimeType,
+            name: record.name,
+            kind: record.kind,
+            sizeBytes: record.size,
+          });
+        } else {
+          resolve(null);
+        }
+      };
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Delete a specific temporary file from device storage.
  */
 export async function deleteTempAttachment(id: string): Promise<void> {

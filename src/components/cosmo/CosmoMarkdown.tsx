@@ -26,9 +26,30 @@ export function renderInlineMd(line: string, keyPrefix: string, theme: CosmoPale
       );
       return;
     }
-    const boldItalicSplit = chunk.split(/(\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_)/g);
-    boldItalicSplit.forEach((piece, pi) => {
-      if (/^\*\*[^*]+\*\*$/.test(piece)) {
+    const tokenSplit = chunk.split(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_)/g);
+    tokenSplit.forEach((piece, pi) => {
+      const linkMatch = piece.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (linkMatch) {
+        const [, label, href] = linkMatch;
+        const isInternal = href.startsWith('/');
+        parts.push(
+          <a
+            key={`${keyPrefix}-link-${ci}-${pi}`}
+            href={href}
+            target={isInternal ? undefined : '_blank'}
+            rel={isInternal ? undefined : 'noreferrer noopener'}
+            className="inline-flex items-center gap-1 mx-1 px-2.5 py-0.5 rounded-full text-xs font-bold border transition-all duration-200 hover:scale-105"
+            style={{
+              background: theme.IS_DARK ? 'rgba(42,195,187,0.15)' : 'rgba(0,116,114,0.1)',
+              borderColor: 'rgba(42,195,187,0.4)',
+              color: theme.IS_DARK ? '#2AC3BB' : '#007472',
+            }}
+          >
+            <span>{label}</span>
+            <span className="text-[10px]">↗</span>
+          </a>
+        );
+      } else if (/^\*\*[^*]+\*\*$/.test(piece)) {
         parts.push(
           <strong key={`${keyPrefix}-b-${ci}-${pi}`} className="font-bold text-[#007472] dark:text-[#2AC3BB]">
             {piece.slice(2, -2)}

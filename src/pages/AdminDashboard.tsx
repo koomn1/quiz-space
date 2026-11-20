@@ -1235,6 +1235,19 @@ export default function AdminDashboard({
                   </button>
                 </div>
 
+                {aiMonitoringError && (
+                  <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/80 dark:bg-rose-950/20 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center justify-between">
+                    <span>{aiMonitoringError}</span>
+                    <button
+                      type="button"
+                      onClick={() => void loadAiMonitoringLogs()}
+                      className="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold hover:bg-rose-700 transition cursor-pointer"
+                    >
+                      {isAr ? 'إعادة المحاولة' : 'Retry'}
+                    </button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60">
                     <p className="text-xs font-bold text-slate-600 dark:text-slate-400">{isAr ? 'إجمالي الطلبات (آخر 100)' : 'Total Requests'}</p>
