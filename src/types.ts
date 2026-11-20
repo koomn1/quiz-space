@@ -217,6 +217,7 @@ export interface CosmoTourState {
   currentStep: string;
   dismissedSteps: string[];
   hasSeenArcadeIntro: boolean;
+  seenFeatures?: string[];
 }
 
 export type MiniGameId = 'cosmic_match' | 'word_matrix' | 'spin_wheel';
