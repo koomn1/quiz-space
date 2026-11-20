@@ -72,4 +72,6 @@ mobile_flutter/config/google-services.json
 # Graphify Knowledge Graph artifacts
 graphify-out/
 graphify-out.zip
+__pycache__/
+*.pyc
 
