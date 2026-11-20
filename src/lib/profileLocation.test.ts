@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { readLanyardVisibility, writeLanyardVisibility, getDisplayLocation } from './profileLocation';
+import {
+  readLanyardVisibility,
+  writeLanyardVisibility,
+  readSocialVisibility,
+  writeSocialVisibility,
+  getDisplayLocation,
+} from './profileLocation';
 
 describe('profile lanyard persistence', () => {
   it('writes the enabled state into the serialized location payload', () => {
@@ -31,3 +37,29 @@ describe('profile lanyard persistence', () => {
     expect(getDisplayLocation('Alexandria')).toBe('Alexandria');
   });
 });
+
+describe('profile social visibility persistence', () => {
+  it('defaults to visible when token is not present', () => {
+    expect(readSocialVisibility(null)).toBe(true);
+    expect(readSocialVisibility('')).toBe(true);
+    expect(readSocialVisibility('Cairo||lanyard:on')).toBe(true);
+  });
+
+  it('writes hidden and restores as false', () => {
+    const saved = writeSocialVisibility('Cairo||lanyard:on', false);
+    expect(saved).toContain('social:hidden');
+    expect(readSocialVisibility(saved)).toBe(false);
+  });
+
+  it('writes visible and restores as true', () => {
+    const saved = writeSocialVisibility('Cairo||social:hidden||lanyard:on', true);
+    expect(saved).toContain('social:visible');
+    expect(readSocialVisibility(saved)).toBe(true);
+  });
+
+  it('strips social tokens from getDisplayLocation', () => {
+    expect(getDisplayLocation('Alexandria||social:hidden||lanyard:on')).toBe('Alexandria');
+    expect(getDisplayLocation('||social:hidden')).toBeNull();
+  });
+});
+

@@ -13,6 +13,8 @@ import {
   Crown,
   Edit3,
   ExternalLink,
+  Eye,
+  EyeOff,
   Globe,
   Image as ImageIcon,
   Layers,
@@ -63,13 +65,21 @@ import {
 } from '../lib/db';
 import {
   AVATAR_PRESETS,
+  FRAME_ASSET_OVERRIDES,
   FREE_PROFILE_FRAMES,
   PREMIUM_QUIZ_CARD_FRAMES,
+  profileAssetUrl,
   resolveFrameAsset,
   resolveProfileImageUrl,
   uniqueProfileFrames,
 } from '../constants/profileAssets';
-import { readLanyardVisibility, writeLanyardVisibility, getDisplayLocation } from '../lib/profileLocation';
+import {
+  readLanyardVisibility,
+  writeLanyardVisibility,
+  readSocialVisibility,
+  writeSocialVisibility,
+  getDisplayLocation,
+} from '../lib/profileLocation';
 import { playChimeSound } from '../lib/chime';
 import Lanyard from '../components/lanyard/Lanyard';
 import lanyardFrontImage from '../components/lanyard/card-front.webp';
@@ -188,9 +198,11 @@ export default function UserProfile({
   const [showLanyard, setShowLanyard] = useState<boolean>(false);
   const [isTogglingLanyard, setIsTogglingLanyard] = useState<boolean>(false);
 
-  // Social Followers State
+  // Social Followers & Privacy State
   const [followersCount, setFollowersCount] = useState<number>(0);
   const [followingCount, setFollowingCount] = useState<number>(0);
+  const [showSocialStats, setShowSocialStats] = useState<boolean>(true);
+  const [isTogglingSocial, setIsTogglingSocial] = useState<boolean>(false);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
   const [isFollowLoading, setIsFollowLoading] = useState<boolean>(false);
   const [followModalType, setFollowModalType] = useState<'followers' | 'following' | null>(null);
@@ -217,28 +229,49 @@ export default function UserProfile({
       }
       if (stats?.location) {
         setShowLanyard(readLanyardVisibility(stats.location));
+        setShowSocialStats(readSocialVisibility(stats.location));
       } else {
         setShowLanyard(false);
+        setShowSocialStats(true);
       }
       if (rewardsSummary) {
         setUserCoins(rewardsSummary.coins || 0);
         setUserPoints(rewardsSummary.points || 0);
       }
-      const ownedIds = new Set((inventory || []).map((row: any) => row.item_id));
-      const catalogFrames = [
+      // System & store frames catalog used to resolve equipped frames for any visitor
+      const allCatalogFrames = uniqueProfileFrames([
         ...FREE_PROFILE_FRAMES,
-        ...(catalog || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)),
-      ];
-      const availableFrames = uniqueProfileFrames(catalogFrames);
+        ...(catalog || []).filter((item: any) => item.item_type === 'frame'),
+      ]);
+
+      const isCurrentOwner = !profileId || profileId === currentUserId;
+      const ownedIds = new Set((inventory || []).map((row: any) => row.item_id));
+      const availableFrames = uniqueProfileFrames(
+        isCurrentOwner
+          ? [
+              ...FREE_PROFILE_FRAMES,
+              ...(catalog || []).filter((item: any) => item.item_type === 'frame' && ownedIds.has(item.id)),
+            ]
+          : allCatalogFrames
+      );
       setOwnedFrames(availableFrames);
 
-      const activeId = stats?.activeFrameId || '';
-      const matchedFrame = availableFrames.find((f: any) => f.id === activeId);
-      if (matchedFrame) {
-        setActiveFrameUrl(resolveFrameAsset(matchedFrame as any));
-      } else {
-        setActiveFrameUrl('');
+      // Frame display resolution: resolve active frame ID against all system frames and overrides
+      const activeId = String(stats?.activeFrameId || '').trim();
+      let resolvedFrameUrl = '';
+      if (activeId) {
+        const matchedFrame = allCatalogFrames.find((f: any) => f.id === activeId || f.item_id === activeId);
+        if (matchedFrame) {
+          resolvedFrameUrl = resolveFrameAsset(matchedFrame as any);
+        } else if (FRAME_ASSET_OVERRIDES[activeId]) {
+          resolvedFrameUrl = FRAME_ASSET_OVERRIDES[activeId];
+        } else if (/^(https?:|\/|clean-assets|data:)/i.test(activeId)) {
+          resolvedFrameUrl = profileAssetUrl(activeId);
+        } else {
+          resolvedFrameUrl = resolveFrameAsset({ id: activeId });
+        }
       }
+      setActiveFrameUrl(resolvedFrameUrl);
     } catch (err) {
       console.error('[UserProfile] Failed to load profile stats:', err);
       showToast('error', isAr ? 'تعذر تحميل بيانات الملف الشخصي.' : 'Failed to load profile data.');
@@ -327,7 +360,51 @@ export default function UserProfile({
                         setIsEditing(true);
   };
 
-  const isPremium = Boolean(profileData?.isPremium);
+  const isPremium =
+    Boolean(profileData?.isPremium) ||
+    Boolean(profileData?.isAdmin) ||
+    Boolean(profileData?.isLifetime) ||
+    Boolean(profileData?.isFounder) ||
+    ['gold', 'diamond', 'premium', 'founder', 'lifetime', 'vip'].some((p) =>
+      String(profileData?.planName || '').trim().toLowerCase().includes(p)
+    );
+
+  // Toggle Social Followers Visibility (Show or Hide for Visitors)
+  const handleToggleSocialVisibility = async () => {
+    if (!isOwnProfile || isTogglingSocial) return;
+    setIsTogglingSocial(true);
+    const nextState = !showSocialStats;
+    setShowSocialStats(nextState);
+
+    try {
+      const currentLocation = profileData?.location || '';
+      const updatedLocation = writeSocialVisibility(currentLocation, nextState);
+      await saveUserProfile({
+        userId: currentUserId,
+        name: profileData?.name || currentUserName,
+        photoURL: profileData?.photoURL || undefined,
+        email: currentUserEmail || undefined,
+        bio: profileData?.bio,
+        location: updatedLocation,
+        customId: profileData?.customId || undefined,
+        phone: profileData?.phone || undefined,
+      });
+      setProfileData((prev) => (prev ? { ...prev, location: updatedLocation } : null));
+      playChimeSound();
+      showToast(
+        'success',
+        nextState
+          ? (isAr ? 'تم إظهار المتابعين والذين تتابعهم للزوار بنجاح!' : 'Followers and following are now visible to visitors!')
+          : (isAr ? 'تم إخفاء المتابعين والذين تتابعهم عن الزوار بنجاح!' : 'Followers and following are now hidden from visitors!')
+      );
+    } catch (err: any) {
+      console.error('[UserProfile] Failed to toggle social visibility:', err);
+      setShowSocialStats(!nextState);
+      showToast('error', isAr ? 'تعذر حفظ إعداد خصوصية المتابعين.' : 'Failed to save social privacy setting.');
+    } finally {
+      setIsTogglingSocial(false);
+    }
+  };
 
   // Toggle 3D Lanyard ID Card (Exclusive for Subscription Members)
   const handleToggleLanyard = async () => {
@@ -405,7 +482,8 @@ export default function UserProfile({
         }
       }
 
-      const finalLocation = writeLanyardVisibility(editLocation, showLanyard);
+      const locationWithLanyard = writeLanyardVisibility(editLocation, showLanyard);
+      const finalLocation = writeSocialVisibility(locationWithLanyard, showSocialStats);
 
       const rawCustomId = editCustomId.trim().toLowerCase();
       if (/^\+?\d{8,}$/.test(rawCustomId)) {
@@ -519,6 +597,7 @@ export default function UserProfile({
   const openFollowModal = async (type: 'followers' | 'following') => {
     const targetId = profileId || currentUserId;
     if (!targetId) return;
+    if (!isOwnProfile && !showSocialStats) return;
     setFollowModalType(type);
     setIsFollowModalLoading(true);
     try {
@@ -586,17 +665,33 @@ export default function UserProfile({
         )
       : 0;
 
-  const userXp = Number(profileData?.xp || 0);
+  // Robust activity XP fallback calculated from completions & created quizzes
+  const completionsList = profileData?.completions || [];
+  const createdList = profileData?.createdQuizzes || [];
+  const completionsCalculatedXp = completionsList.reduce(
+    (acc, c) => acc + (Number(c.pointsEarned) || Number(c.score) || 0),
+    0
+  );
+  const createdCalculatedXp = createdList.length * 50;
+  const estimatedTotalActivityXp = completionsCalculatedXp + createdCalculatedXp;
+  const userXp = Math.max(Number(profileData?.xp || 0), estimatedTotalActivityXp);
   const levelInfo = getUserLevelInfo(userXp);
   const level = levelInfo.level;
   const displayLocation = getDisplayLocation(profileData?.location);
+
+  // Fallbacks for Points & Coins if zero or restricted by visitor RLS
+  const effectivePoints = userPoints > 0 ? userPoints : userXp;
+  const effectiveCoins =
+    userCoins > 0
+      ? userCoins
+      : Math.max(0, completionsList.length * 8 + createdList.length * 15);
 
   return (
     <div ref={containerRef} dir={isAr ? 'rtl' : 'ltr'} className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 space-y-6">
       {/* 1. HERO & IDENTITY BANNER */}
       <div className="gsap-hero relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
-        {/* 3D Lanyard Interactive Hanging ID Card (Subscribers Only) */}
-        {isPremium && showLanyard && (
+        {/* 3D Lanyard Interactive Hanging ID Card */}
+        {showLanyard && (
           <div
             className="pointer-events-auto absolute end-3 sm:end-8 top-0 z-30 h-[340px] sm:h-[400px] md:h-[440px] w-44 sm:w-56 md:w-64"
             aria-label={isAr ? 'قلادة الهوية ثلاثية الأبعاد' : '3D Lanyard ID Card'}
@@ -848,58 +943,95 @@ export default function UserProfile({
                 </span>
               </span>
 
-              {/* Followers Counter */}
-              <button
-                type="button"
-                onClick={() => openFollowModal('followers')}
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition cursor-pointer border border-slate-200/60 dark:border-slate-800"
-                title={isAr ? 'عرض قائمة المتابعين' : 'View followers'}
-              >
-                <Users className="h-3.5 w-3.5 text-[#007472] dark:text-[#2AC3BB]" />
-                <span className="font-mono font-black text-slate-900 dark:text-white">
-                  {followersCount.toLocaleString()}
-                </span>
-                <span className="text-slate-500 dark:text-slate-400">
-                  {isAr ? 'متابع' : 'Followers'}
-                </span>
-              </button>
+              {/* Followers & Following Counters (Shown if public or viewing own profile) */}
+              {(isOwnProfile || showSocialStats) && (
+                <>
+                  {/* Followers Counter */}
+                  <button
+                    type="button"
+                    onClick={() => openFollowModal('followers')}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition cursor-pointer border border-slate-200/60 dark:border-slate-800"
+                    title={isAr ? 'عرض قائمة المتابعين' : 'View followers'}
+                  >
+                    <Users className="h-3.5 w-3.5 text-[#007472] dark:text-[#2AC3BB]" />
+                    <span className="font-mono font-black text-slate-900 dark:text-white">
+                      {followersCount.toLocaleString()}
+                    </span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {isAr ? 'متابع' : 'Followers'}
+                    </span>
+                  </button>
 
-              {/* Following Counter */}
-              <button
-                type="button"
-                onClick={() => openFollowModal('following')}
-                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition cursor-pointer border border-slate-200/60 dark:border-slate-800"
-                title={isAr ? 'عرض قائمة الذين يتابعهم' : 'View following'}
-              >
-                <UserCheck className="h-3.5 w-3.5 text-[#2AC3BB]" />
-                <span className="font-mono font-black text-slate-900 dark:text-white">
-                  {followingCount.toLocaleString()}
-                </span>
-                <span className="text-slate-500 dark:text-slate-400">
-                  {isAr ? 'يتابعهم' : 'Following'}
-                </span>
-              </button>
+                  {/* Following Counter */}
+                  <button
+                    type="button"
+                    onClick={() => openFollowModal('following')}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition cursor-pointer border border-slate-200/60 dark:border-slate-800"
+                    title={isAr ? 'عرض قائمة الذين يتابعهم' : 'View following'}
+                  >
+                    <UserCheck className="h-3.5 w-3.5 text-[#2AC3BB]" />
+                    <span className="font-mono font-black text-slate-900 dark:text-white">
+                      {followingCount.toLocaleString()}
+                    </span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {isAr ? 'يتابعهم' : 'Following'}
+                    </span>
+                  </button>
+                </>
+              )}
+
+              {/* Quick Privacy Toggle Button for Profile Owner */}
+              {isOwnProfile && (
+                <button
+                  type="button"
+                  onClick={handleToggleSocialVisibility}
+                  disabled={isTogglingSocial}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
+                    showSocialStats
+                      ? 'border-[#2AC3BB]/30 bg-[#2AC3BB]/10 text-[#007472] dark:text-[#2AC3BB] hover:bg-[#2AC3BB]/20'
+                      : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20'
+                  }`}
+                  title={
+                    showSocialStats
+                      ? (isAr ? 'المتابعين معروضين للزوار - انقر للإخفاء' : 'Followers are visible to visitors - Click to hide')
+                      : (isAr ? 'المتابعين مخفيين عن الزوار - انقر للعرض' : 'Followers are hidden from visitors - Click to show')
+                  }
+                >
+                  {isTogglingSocial ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : showSocialStats ? (
+                    <Eye className="h-3.5 w-3.5 text-[#007472] dark:text-[#2AC3BB]" />
+                  ) : (
+                    <EyeOff className="h-3.5 w-3.5 text-amber-500" />
+                  )}
+                  <span>
+                    {showSocialStats
+                      ? (isAr ? 'المتابعين: معروض' : 'Followers: Visible')
+                      : (isAr ? 'المتابعين: مخفي' : 'Followers: Hidden')}
+                  </span>
+                </button>
+              )}
             </div>
 
             {/* Coins & Rewards Pills */}
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <div
-                onClick={() => setActiveTab('rewards')}
+                onClick={() => (isOwnProfile ? setActiveTab('rewards') : setIsRoadmapOpen(true))}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/40 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 px-3 py-1.5 text-xs font-black text-amber-700 dark:text-amber-300 shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
                 title={isAr ? 'العملات الذهبية - افتح مركز المكافآت والألعاب' : 'Coins - Open rewards & arcade'}
               >
                 <Coins className="h-4 w-4 text-amber-500" />
-                <span className="font-mono">{userCoins.toLocaleString()}</span>
+                <span className="font-mono">{effectiveCoins.toLocaleString()}</span>
                 <span className="text-[10px] font-bold text-amber-600/80 dark:text-amber-300/80">{isAr ? 'عملة' : 'Coins'}</span>
               </div>
 
               <div
-                onClick={() => setActiveTab('rewards')}
+                onClick={() => (isOwnProfile ? setActiveTab('rewards') : setIsRoadmapOpen(true))}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-3 py-1.5 text-xs font-black text-[#007472] dark:text-[#2AC3BB] shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
                 title={isAr ? 'نقاط المكافآت - افتح مركز المكافآت والألعاب' : 'Points - Open rewards & arcade'}
               >
                 <Sparkles className="h-4 w-4 text-[#2AC3BB]" />
-                <span className="font-mono">{userPoints.toLocaleString()}</span>
+                <span className="font-mono">{effectivePoints.toLocaleString()}</span>
                 <span className="text-[10px] font-bold text-[#007472]/70 dark:text-[#2AC3BB]/70">{isAr ? 'نقطة' : 'Pts'}</span>
               </div>
             </div>
@@ -1461,6 +1593,50 @@ export default function UserProfile({
                         <span>{isAr ? 'ترقية' : 'Upgrade'}</span>
                       </button>
                     )}
+                  </div>
+
+                  {/* Social Followers & Following Visibility Option */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-[#007472]/10 text-[#007472] dark:text-[#2AC3BB] shrink-0 mt-0.5">
+                        <Users className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-[#FCF6EE]">
+                            {isAr ? 'إظهار المتابعين والذين أتابعهم للزوار' : 'Show Followers & Following to Visitors'}
+                          </h4>
+                          <span
+                            className={`rounded-full px-1.5 py-0.5 text-[9px] font-black border ${
+                              showSocialStats
+                                ? 'bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB] border-[#2AC3BB]/30'
+                                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                            }`}
+                          >
+                            {showSocialStats ? (isAr ? 'عام' : 'Public') : (isAr ? 'مخفي' : 'Hidden')}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-[#8BAEAD]">
+                          {isAr
+                            ? 'التحكم في عرض عدد وقوائم المتابعين والذين تتابعهم للزوار في ملفك الشخصي.'
+                            : 'Allow or prevent profile visitors from seeing your followers and following counters and lists.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowSocialStats(!showSocialStats)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        showSocialStats ? 'bg-[#2AC3BB]' : 'bg-slate-300 dark:bg-slate-700'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                          showSocialStats ? (isAr ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
                   </div>
                 </div>
 

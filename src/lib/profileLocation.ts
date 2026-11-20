@@ -21,6 +21,33 @@ export function writeLanyardVisibility(location: string | null | undefined, visi
   return `${serialized}${serialized && !serialized.endsWith('||') ? '||' : ''}${nextValue}`;
 }
 
+export function readSocialVisibility(location: string | null | undefined): boolean {
+  const value = String(location || '')
+    .split('||')
+    .find((chunk) => chunk.startsWith('social:'))
+    ?.slice('social:'.length)
+    .trim()
+    .toLowerCase();
+
+  // Visible by default unless explicitly hidden/off/private
+  if (value === 'hidden' || value === 'off' || value === 'private') {
+    return false;
+  }
+  return true;
+}
+
+export function writeSocialVisibility(location: string | null | undefined, visible: boolean): string {
+  const serialized = String(location || '');
+  const nextValue = `social:${visible ? 'visible' : 'hidden'}`;
+  const marker = /(^|\|\|)social:(?:visible|hidden|on|off|private)(?=\|\||$)/;
+
+  if (marker.test(serialized)) {
+    return serialized.replace(marker, (_match, prefix: string) => `${prefix}${nextValue}`);
+  }
+
+  return `${serialized}${serialized && !serialized.endsWith('||') ? '||' : ''}${nextValue}`;
+}
+
 export function getDisplayLocation(location: string | null | undefined): string | null {
   if (!location) return null;
   const raw = String(location).trim();
@@ -32,6 +59,7 @@ export function getDisplayLocation(location: string | null | undefined): string 
       const lower = c.toLowerCase();
       return (
         !lower.startsWith('lanyard:') &&
+        !lower.startsWith('social:') &&
         !lower.startsWith('bg:') &&
         !lower.startsWith('custombg:') &&
         !lower.startsWith('covertext:') &&
