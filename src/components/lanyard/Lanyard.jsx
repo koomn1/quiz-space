@@ -1203,10 +1203,13 @@ const Lanyard = ({
         canvas.style.pointerEvents = 'none';
         const el = document.elementFromPoint(event.clientX, event.clientY);
         if (el && el !== canvas) {
-          if (typeof el.click === 'function') el.click();
-          el.focus?.();
+          const clickable = el.closest('button, a, input, select, textarea, [role="button"]') || el;
+          if (typeof clickable.click === 'function') clickable.click();
+          clickable.focus?.();
         }
-        setTimeout(() => { canvas.style.pointerEvents = 'auto'; }, 60);
+        setTimeout(() => {
+          if (!sim.grab && !pickCard()) canvas.style.pointerEvents = 'none';
+        }, 60);
         return;
       }
       sim.grab = {
@@ -1223,6 +1226,20 @@ const Lanyard = ({
       start();
     };
 
+    const updatePointerHover = event => {
+      if (!settingsRef.current.interactive || sim.grab) return;
+      toPointer(event);
+      const hit = pickCard();
+      hovering = Boolean(hit);
+      if (hovering) {
+        if (canvas.style.pointerEvents !== 'auto') canvas.style.pointerEvents = 'auto';
+        setCursor('grab');
+      } else {
+        if (canvas.style.pointerEvents !== 'none') canvas.style.pointerEvents = 'none';
+        setCursor('');
+      }
+    };
+
     const onPointerMove = event => {
       if (!settingsRef.current.interactive) return;
       toPointer(event);
@@ -1233,8 +1250,23 @@ const Lanyard = ({
         return;
       }
       if (event.pointerType === 'touch') return;
-      hovering = !!pickCard();
-      setCursor(hovering ? 'grab' : '');
+      updatePointerHover(event);
+    };
+
+    const onWindowPointerMove = event => {
+      if (!settingsRef.current.interactive || sim.grab) return;
+      const rect = canvas.getBoundingClientRect();
+      if (
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom
+      ) {
+        updatePointerHover(event);
+      } else {
+        if (canvas.style.pointerEvents !== 'none') canvas.style.pointerEvents = 'none';
+        setCursor('');
+      }
     };
 
     const onPointerUp = event => {
@@ -1243,22 +1275,56 @@ const Lanyard = ({
       if (press && event.type === 'pointerup' && performance.now() - press.time < 450) flip(press.point);
       press = null;
       canvas.releasePointerCapture?.(event.pointerId);
-      setCursor(hovering && event.pointerType !== 'touch' ? 'grab' : '');
+      toPointer(event);
+      hovering = Boolean(pickCard());
+      if (hovering) {
+        setCursor(event.pointerType !== 'touch' ? 'grab' : '');
+      } else {
+        canvas.style.pointerEvents = 'none';
+        setCursor('');
+      }
       start();
     };
 
     const onTouchStart = event => {
       if (!settingsRef.current.interactive || event.touches.length !== 1) return;
       toPointer(event.touches[0]);
-      if (pickCard()) event.preventDefault();
+      if (pickCard()) {
+        canvas.style.pointerEvents = 'auto';
+        event.preventDefault();
+      } else {
+        canvas.style.pointerEvents = 'none';
+      }
     };
 
+    const onWindowTouchStart = event => {
+      if (!settingsRef.current.interactive || event.touches.length !== 1 || sim.grab) return;
+      const touch = event.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      if (
+        touch.clientX >= rect.left &&
+        touch.clientX <= rect.right &&
+        touch.clientY >= rect.top &&
+        touch.clientY <= rect.bottom
+      ) {
+        toPointer(touch);
+        if (pickCard()) {
+          canvas.style.pointerEvents = 'auto';
+        } else {
+          canvas.style.pointerEvents = 'none';
+        }
+      }
+    };
+
+    canvas.style.pointerEvents = 'none';
     canvas.addEventListener('pointerdown', onPointerDown);
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerUp);
     canvas.addEventListener('pointercancel', onPointerUp);
     canvas.addEventListener('lostpointercapture', onPointerUp);
     canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    window.addEventListener('pointermove', onWindowPointerMove, { passive: true });
+    window.addEventListener('touchstart', onWindowTouchStart, { passive: true });
 
     const resize = () => {
       view.width = Math.max(1, container.clientWidth);
@@ -1293,6 +1359,8 @@ const Lanyard = ({
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pointermove', onWindowPointerMove);
+      window.removeEventListener('touchstart', onWindowTouchStart);
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', onPointerUp);

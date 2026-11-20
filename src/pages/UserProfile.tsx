@@ -708,7 +708,7 @@ export default function UserProfile({
         {/* 3D Lanyard Interactive Hanging ID Card */}
         {showLanyard && (
           <div
-            className="pointer-events-auto absolute inset-0 z-30 h-full w-full min-h-[380px] sm:min-h-[460px] overflow-visible"
+            className="pointer-events-none absolute inset-0 z-20 h-full w-full min-h-[380px] sm:min-h-[460px] overflow-visible"
             aria-label={isAr ? 'قلادة الهوية ثلاثية الأبعاد' : '3D Lanyard ID Card'}
           >
             <Lanyard
@@ -718,9 +718,9 @@ export default function UserProfile({
               cardColor="#031717"
               finish="glossy"
               metal="silver"
-              size={0.65}
+              size={0.44}
               anchor={isAr ? 'left' : 'right'}
-              strapLength={0.90}
+              strapLength={0.72}
               interactive={true}
               intro={true}
               className="h-full w-full overflow-visible"
@@ -746,7 +746,7 @@ export default function UserProfile({
               type="button"
               disabled={isUploadingCover}
               onClick={() => coverInputRef.current?.click()}
-              className="absolute end-4 top-4 z-10 flex items-center gap-2 rounded-2xl bg-black/50 px-4 py-2 text-xs font-black text-white backdrop-blur-md transition hover:bg-black/75 shadow-lg active:scale-95 cursor-pointer"
+              className="absolute end-4 top-4 z-40 flex items-center gap-2 rounded-2xl bg-black/50 px-4 py-2 text-xs font-black text-white backdrop-blur-md transition hover:bg-black/75 shadow-lg active:scale-95 cursor-pointer"
             >
               {isUploadingCover ? <Loader2 className="h-4 w-4 animate-spin text-[#2AC3BB]" /> : <Camera className="h-4 w-4 text-[#EE8361]" />}
               <span>{isAr ? 'تغيير الغلاف' : 'Change Cover'}</span>
@@ -756,9 +756,9 @@ export default function UserProfile({
         </div>
 
         {/* Profile Card Body */}
-        <div className="relative px-5 pb-6 pt-0 sm:px-8">
+        <div className="relative z-30 px-5 pb-6 pt-0 sm:px-8">
           {/* Top row: Avatar on start, action buttons on end */}
-          <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="relative z-30 flex flex-wrap items-end justify-between gap-4">
             {/* Avatar with Frame */}
             <div className="gsap-avatar relative -mt-14 sm:-mt-20 flex h-28 w-28 sm:h-36 sm:w-36 items-center justify-center shrink-0">
               <div className="relative h-24 w-24 sm:h-32 sm:w-32 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-xl dark:border-[#031717] dark:bg-[#072424]">
@@ -790,7 +790,7 @@ export default function UserProfile({
                 type="button"
                 onClick={() => setIsRoadmapOpen(true)}
                 title={isAr ? 'عرض خريطة المستويات ومكافآت الـ 100 ليفل' : 'View 100 Level Progression Roadmap'}
-                className="absolute -bottom-1 end-1 inline-flex items-center gap-1 rounded-full border-2 border-white dark:border-[#031717] bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-black text-[#FCF6EE] shadow-md transition hover:scale-105 active:scale-95 cursor-pointer"
+                className="absolute -bottom-1 end-1 z-30 inline-flex items-center gap-1 rounded-full border-2 border-white dark:border-[#031717] bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-black text-[#FCF6EE] shadow-md transition hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <span>Lv.{level}</span>
                 {level >= 100 && <span>🏆</span>}
@@ -798,7 +798,7 @@ export default function UserProfile({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-0">
+            <div className="relative z-30 flex flex-wrap items-center gap-2 pt-2 sm:pt-0">
               {isOwnProfile ? (
                 <>
                   <button
