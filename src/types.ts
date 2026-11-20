@@ -500,6 +500,9 @@ export interface UserStats {
   badgeTier?: 'none' | 'verified' | 'pro' | 'premium' | 'team' | 'enterprise' | 'lifetime' | 'founder' | 'royal';
   nameColor?: 'default' | 'gold' | 'neon_green' | 'neon_pink' | 'neon_blue' | 'silver' | 'diamond';
   xp?: number;
+  points?: number;
+  coins?: number;
+  rewardLevel?: number;
   onboarded?: boolean;
 }
 

@@ -255,9 +255,73 @@ export const FREE_PROFILE_FRAMES: ProfileFrame[] = [
     css_class: 'frame-rose-thorn',
     is_free: true,
   },
+  {
+    id: 'frame_ice_frost',
+    name: 'Ice Frost',
+    name_ar: 'الصقيع الجليدي',
+    image_url: profileAssetUrl('clean-assets-replacement/frame-ice-frost-transparent.webp'),
+    css_class: 'frame-ice-frost',
+    is_free: false,
+  },
+  {
+    id: 'frame_ice_glacier',
+    name: 'Ice Glacier',
+    name_ar: 'الجبل الجليدي',
+    image_url: profileAssetUrl('clean-assets-replacement/frame-ice-glacier-transparent.webp'),
+    css_class: 'frame-ice-glacier',
+    is_free: false,
+  },
+  {
+    id: 'frame_stone_moon',
+    name: 'Moon Stone',
+    name_ar: 'حجر القمر',
+    image_url: profileAssetUrl('clean-assets-replacement/frame-stone-moon-transparent.webp'),
+    css_class: 'frame-stone-moon',
+    is_free: false,
+  },
+  {
+    id: 'frame_stone_royal',
+    name: 'Royal Stone',
+    name_ar: 'الحجر الملكي',
+    image_url: profileAssetUrl('clean-assets-replacement/frame-stone-royal-transparent.webp'),
+    css_class: 'frame-stone-royal',
+    is_free: false,
+  },
+  {
+    id: 'frame_sun_quizspace',
+    name: 'QuizSpace Sun',
+    name_ar: 'شمس كويز سبيس',
+    image_url: profileAssetUrl('clean-assets-replacement/frame-sun-quizspace-transparent.svg'),
+    css_class: 'frame-sun-quizspace',
+    is_free: false,
+  },
+  {
+    id: 'frame_waves_quizspace',
+    name: 'QuizSpace Waves',
+    name_ar: 'أمواج كويز سبيس',
+    image_url: profileAssetUrl('clean-assets-replacement/frame-waves-quizspace-transparent.svg'),
+    css_class: 'frame-waves-quizspace',
+    is_free: false,
+  },
 ];
 
-export const FRAME_ASSET_OVERRIDES: Record<string, string> = {};
+export const FRAME_ASSET_OVERRIDES: Record<string, string> = {
+  frame_ice_frost: profileAssetUrl('clean-assets-replacement/frame-ice-frost-transparent.webp'),
+  frame_ice_glacier: profileAssetUrl('clean-assets-replacement/frame-ice-glacier-transparent.webp'),
+  frame_cyber_eagle: profileAssetUrl('clean-assets-replacement/frame-cyber-eagle-transparent.webp'),
+  frame_ice_dragon: profileAssetUrl('clean-assets-replacement/frame-ice-dragon-transparent.webp'),
+  frame_dual_dragon: profileAssetUrl('clean-assets-replacement/frame-dual-dragon-transparent.webp'),
+  frame_sea_crown: profileAssetUrl('clean-assets-replacement/frame-sea-crown-transparent.webp'),
+  frame_cyber_ice_ring: profileAssetUrl('clean-assets-replacement/frame-cyber-ice-ring-transparent.webp'),
+  frame_inferno_spike: profileAssetUrl('clean-assets-replacement/frame-inferno-spike-transparent.webp'),
+  frame_royal_emerald: profileAssetUrl('clean-assets-replacement/frame-royal-emerald-transparent.webp'),
+  frame_wolf_guardian: profileAssetUrl('clean-assets-replacement/frame-wolf-guardian-transparent.webp'),
+  frame_rose_thorn: profileAssetUrl('clean-assets-replacement/frame-rose-thorn-transparent.webp'),
+  frame_stone_moon: profileAssetUrl('clean-assets-replacement/frame-stone-moon-transparent.webp'),
+  frame_stone_royal: profileAssetUrl('clean-assets-replacement/frame-stone-royal-transparent.webp'),
+  frame_sun_quizspace: profileAssetUrl('clean-assets-replacement/frame-sun-quizspace-transparent.svg'),
+  frame_waves_quizspace: profileAssetUrl('clean-assets-replacement/frame-waves-quizspace-transparent.svg'),
+};
 
 export function uniqueProfileFrames<T extends { id?: string | null; image_url?: string | null }>(frames: T[]): T[] {
   const seenIds = new Set<string>();
@@ -273,7 +337,19 @@ export function uniqueProfileFrames<T extends { id?: string | null; image_url?: 
   });
 }
 
-export function resolveFrameAsset(frame: { id?: string | null; image_url?: string | null }): string {
-  const override = frame.id ? FRAME_ASSET_OVERRIDES[frame.id] : undefined;
-  return override || (frame.image_url ? profileAssetUrl(String(frame.image_url)) : '');
+export function resolveFrameAsset(frame: { id?: string | null; image_url?: string | null } | string): string {
+  if (typeof frame === 'string') {
+    const id = frame.trim();
+    if (FRAME_ASSET_OVERRIDES[id]) return FRAME_ASSET_OVERRIDES[id];
+    if (id.startsWith('clean-assets-') || id.startsWith('images/')) return profileAssetUrl(id);
+    return profileAssetUrl(`clean-assets-replacement/${id.replace(/_/g, '-')}-transparent.webp`);
+  }
+  const id = String(frame.id || '').trim();
+  const override = id ? FRAME_ASSET_OVERRIDES[id] : undefined;
+  if (override) return override;
+  if (frame.image_url) return profileAssetUrl(String(frame.image_url));
+  if (id) {
+    return profileAssetUrl(`clean-assets-replacement/${id.replace(/_/g, '-')}-transparent.webp`);
+  }
+  return '';
 }

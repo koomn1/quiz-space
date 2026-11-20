@@ -13,6 +13,7 @@ import { AnimatedThemeIcon } from './AnimatedThemeIcon';
 import { SugaryIcon } from './SugaryIcon';
 import { UserBadge } from './UserBadge';
 import { NotificationDropdown } from './NotificationDropdown';
+import { QuizSpacePointsToken, QuizSpaceCoinsToken } from './brand/QuizSpaceTokens';
 import { getRewardsSummary } from '../lib/db';
 
 interface HeaderProps {
@@ -167,14 +168,14 @@ export default function Header({
 	              {!isGuest && (
 	                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 rounded-2xl border border-[#EE8361]/30 bg-[#EE8361]/10 px-2 py-1.5 dark:border-[#EE8361]/30 dark:bg-[#EE8361]/15 sm:px-3 sm:py-2 flex-shrink min-w-0" title={lang === 'ar' ? 'رصيد المكافآت' : 'Rewards balance'}>
 		                  <div className="flex items-center gap-1 text-[10px] font-black text-[#EE8361] dark:text-[#EE8361] sm:text-xs whitespace-nowrap">
-                            <SugaryIcon name="trophy" size={18} className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                            <QuizSpacePointsToken className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
 		                    <span className="tabular-nums">{formatLargeNumber(rewardPoints)}</span>
 		                  </div>
 		                  {rewardCoins > 0 && (
 		                    <>
 		                      <span className="h-3 w-px bg-[#EE8361]/30 dark:bg-[#EE8361]/40" />
 		                      <div className="flex items-center gap-1 text-[10px] font-black text-[#2AC3BB] dark:text-[#2AC3BB] sm:text-xs whitespace-nowrap">
-                                <SugaryIcon name="coins" size={18} className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                                <QuizSpaceCoinsToken className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
 		                        <span className="tabular-nums">{formatLargeNumber(rewardCoins)}</span>
 		                      </div>
 		                    </>

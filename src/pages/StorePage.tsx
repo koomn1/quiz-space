@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { ArrowLeft, Gamepad2, Sparkles, Store, Trophy } from 'lucide-react';
+import { ArrowLeft, Gamepad2, Store, Trophy } from 'lucide-react';
 import { getRewardsSummary } from '../lib/db';
 import { IndependentStore, type StoreRewards } from '../components/IndependentStore';
-import RewardsSection from '../components/RewardsSection';
+import { ArcadeHub } from '../components/rewards/ArcadeHub';
+import { QuizSpacePointsToken, QuizSpaceCoinsToken } from '../components/brand/QuizSpaceTokens';
 
 type StorePageProps = {
   userId: string;
@@ -48,7 +49,7 @@ export default function StorePage({
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#FBDFC7]">
-              <Sparkles className="h-4 w-4 text-[#EE8361]" /> QuizSpace Arcade & Store
+              <QuizSpacePointsToken className="h-4 w-4" /> QuizSpace Arcade & Store
             </div>
             <h1 className="text-3xl font-black tracking-tight sm:text-4xl text-white">
               {viewMode === 'games'
@@ -113,7 +114,7 @@ export default function StorePage({
       {/* Content Area */}
       {viewMode === 'games' ? (
         <section className="space-y-6">
-          <RewardsSection userId={userId} lang={lang} />
+          <ArcadeHub userId={userId} onOpenStore={() => setViewMode('store')} />
         </section>
       ) : (
         <section className="space-y-6">

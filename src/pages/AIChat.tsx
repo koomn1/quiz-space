@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { QuizSpacePointsToken, QuizSpaceCoinsToken } from '../components/brand/QuizSpaceTokens';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { askAI, askAIStream, searchCosmoWeb, createExtractionJob, getExtractionJob, generateQuizFromFileStreaming, generateQuizFromFileWithFallback } from '../services/aiWorkerClient';
@@ -2516,8 +2517,8 @@ export default function AIChat({
                     color: ACCENT,
                   }}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-[#EE8361]" />
-                  <span>{isAr ? 'المساعد الفضائي الذكي • الجيل الأحدث' : 'Next-Gen Educational AI'}</span>
+                  <QuizSpacePointsToken className="w-3.5 h-3.5" />
+                  <span>{isAr ? 'كوزمو 2.5 فلاش • الذكاء الأكاديمي' : 'Cosmo 2.5 Flash • Academic AI'}</span>
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-3" style={{ color: theme.FG }}>

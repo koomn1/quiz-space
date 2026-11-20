@@ -43,6 +43,11 @@ import {
   Zap,
 } from 'lucide-react';
 import {
+  QuizSpacePointsToken,
+  QuizSpaceCoinsToken,
+  QuizSpaceXpToken,
+} from '../components/brand/QuizSpaceTokens';
+import {
   getUserProfileStats,
   getRewardsSummary,
   saveUserProfile,
@@ -234,9 +239,12 @@ export default function UserProfile({
         setShowLanyard(false);
         setShowSocialStats(true);
       }
-      if (rewardsSummary) {
+      if (rewardsSummary && (Number(rewardsSummary.coins) > 0 || Number(rewardsSummary.points) > 0)) {
         setUserCoins(rewardsSummary.coins || 0);
         setUserPoints(rewardsSummary.points || 0);
+      } else if (stats?.points || stats?.coins) {
+        setUserCoins(Number(stats.coins) || 0);
+        setUserPoints(Number(stats.points) || 0);
       }
       // System & store frames catalog used to resolve equipped frames for any visitor
       const allCatalogFrames = uniqueProfileFrames([
@@ -679,11 +687,18 @@ export default function UserProfile({
   const level = levelInfo.level;
   const displayLocation = getDisplayLocation(profileData?.location);
 
-  // Fallbacks for Points & Coins if zero or restricted by visitor RLS
-  const effectivePoints = userPoints > 0 ? userPoints : userXp;
+  // Points & Coins: prioritize loaded userPoints/Coins, then profileData.points/coins, then calculated
+  const effectivePoints =
+    userPoints > 0
+      ? userPoints
+      : Number(profileData?.points) > 0
+      ? Number(profileData.points)
+      : userXp;
   const effectiveCoins =
     userCoins > 0
       ? userCoins
+      : Number(profileData?.coins) > 0
+      ? Number(profileData.coins)
       : Math.max(0, completionsList.length * 8 + createdList.length * 15);
 
   return (
@@ -1020,7 +1035,7 @@ export default function UserProfile({
                 className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/40 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 px-3 py-1.5 text-xs font-black text-amber-700 dark:text-amber-300 shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
                 title={isAr ? 'العملات الذهبية - افتح مركز المكافآت والألعاب' : 'Coins - Open rewards & arcade'}
               >
-                <Coins className="h-4 w-4 text-amber-500" />
+                <QuizSpaceCoinsToken className="h-4 w-4" />
                 <span className="font-mono">{effectiveCoins.toLocaleString()}</span>
                 <span className="text-[10px] font-bold text-amber-600/80 dark:text-amber-300/80">{isAr ? 'عملة' : 'Coins'}</span>
               </div>
@@ -1030,7 +1045,7 @@ export default function UserProfile({
                 className="inline-flex items-center gap-1.5 rounded-xl border border-[#2AC3BB]/30 bg-[#2AC3BB]/10 px-3 py-1.5 text-xs font-black text-[#007472] dark:text-[#2AC3BB] shadow-xs cursor-pointer hover:scale-102 transition backdrop-blur-xs"
                 title={isAr ? 'نقاط المكافآت - افتح مركز المكافآت والألعاب' : 'Points - Open rewards & arcade'}
               >
-                <Sparkles className="h-4 w-4 text-[#2AC3BB]" />
+                <QuizSpacePointsToken className="h-4 w-4" />
                 <span className="font-mono">{effectivePoints.toLocaleString()}</span>
                 <span className="text-[10px] font-bold text-[#007472]/70 dark:text-[#2AC3BB]/70">{isAr ? 'نقطة' : 'Pts'}</span>
               </div>
@@ -1115,7 +1130,7 @@ export default function UserProfile({
         >
           <div className="flex items-center justify-between text-[#EE8361]">
             <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
+              <QuizSpaceXpToken className="h-4 w-4" />
               <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'المستوى و نقاط الـ XP' : 'Level & XP'}</span>
             </div>
             <span className="rounded-md bg-[#EE8361]/15 px-1.5 py-0.5 text-[9px] font-black text-[#EE8361]">

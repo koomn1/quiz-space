@@ -1045,8 +1045,24 @@ export async function getRewardsSummary(userId: string): Promise<RewardsSummary>
       supabase.from('daily_gift_claims').select('claim_date, day_number, points_reward, coins_reward').eq('user_id', userId).eq('claim_date', today).maybeSingle(),
     ]);
     if (balanceRes.error && balanceRes.error.code !== 'PGRST205') throw balanceRes.error;
-    const points = Number(balanceRes.data?.points || 0);
-    const level = Number(balanceRes.data?.level || 1);
+    let points = Number(balanceRes.data?.points || 0);
+    let coins = Number(balanceRes.data?.coins || 0);
+    let level = Number(balanceRes.data?.level || 1);
+
+    // If balances returned 0 or null due to visitor RLS, fallback to get_enhanced_public_profile
+    if (points === 0 && coins === 0) {
+      try {
+        const { data: enh } = await supabase.rpc('get_enhanced_public_profile', { p_user_id: userId });
+        const row = Array.isArray(enh) ? enh[0] : enh;
+        if (row && (row.points || row.coins)) {
+          points = Number(row.points || 0);
+          coins = Number(row.coins || 0);
+          level = Number(row.reward_level || 1);
+        }
+      } catch {
+        // ignore fallback errors
+      }
+    }
     const levels: RewardLevel[] = (levelsRes.data || []).map((r: any) => ({ level: r.level, name: r.name, nameAr: r.name_ar, minPoints: r.min_points }));
     const vipTiers: VipTier[] = (vipRes.data || []).map((r: any) => ({ id: r.id, name: r.name, nameAr: r.name_ar, minPoints: Number(r.min_points), pointsMultiplier: Number(r.points_multiplier), dailyCoinBonus: Number(r.daily_coin_bonus), challengeSlots: Number(r.challenge_slots), color: r.color, sortOrder: Number(r.sort_order) }));
     const currentVip = vipTiers.find((v) => v.id === (balanceRes.data?.vip_tier || 'none')) || vipTiers.filter((v) => v.minPoints <= points).at(-1);
@@ -1183,27 +1199,39 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
     let userRow: any = null;
     let userError: any = null;
 
-    // 1. If current session matches requested userId (by uid or handle), load from direct users table
-    if (authUser && (authUser.id === userId || authUser.id)) {
+    // 1. First priority: Call get_enhanced_public_profile which has SECURITY DEFINER and returns true stats, xp, points, coins, frame for any user
+    try {
+      const { data: enhancedData, error: enhancedErr } = await supabase.rpc('get_enhanced_public_profile', { p_user_id: userId });
+      if (enhancedData) {
+        userRow = Array.isArray(enhancedData) ? enhancedData[0] : enhancedData;
+      } else if (enhancedErr) {
+        userError = enhancedErr;
+      }
+    } catch (e) {
+      // fallback if enhanced rpc is unavailable
+    }
+
+    // 2. If current session matches requested userId, merge with direct users table (for private fields like email/phone)
+    if (authUser && (authUser.id === userId || (userRow && authUser.id === userRow.uid))) {
       const ownProfile = await supabase
         .from('users')
         .select(profileColumns)
         .or(`uid.eq.${userId},custom_id.eq.${userId}`)
         .maybeSingle();
       if (ownProfile.data) {
-        userRow = ownProfile.data;
-        userError = ownProfile.error;
+        userRow = { ...userRow, ...ownProfile.data };
+        userError = ownProfile.error || userError;
       }
     }
 
-    // 2. If not found or visitor, call public profile RPC (supports lookup by uid or custom_id)
+    // 3. Fallback: call get_public_profile RPC if still not found
     if (!userRow) {
       const publicProfile = await supabase.rpc('get_public_profile', { p_user_id: userId });
       userRow = Array.isArray(publicProfile.data) ? publicProfile.data[0] : publicProfile.data;
       userError = publicProfile.error;
     }
 
-    // 3. Fallback: direct public columns read
+    // 4. Fallback: direct public columns read
     if (!userRow) {
       const directPublic = await supabase
         .from('users')
@@ -1299,6 +1327,9 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       nameColor: userRow?.is_premium ? normalizeNameColor(userRow?.name_color) : 'default',
       badgeColor: userRow?.is_premium ? normalizeBadgeColor(userRow?.badge_color) : 'blue',
       xp: Number(userRow?.xp || 0),
+      points: Number(userRow?.points || 0),
+      coins: Number(userRow?.coins || 0),
+      rewardLevel: Number(userRow?.reward_level || 1),
       joinedDate: userRow?.created_at ? new Date(userRow.created_at).toISOString() : undefined,
       createdQuizzes: (createdQuizzes || []).map((quiz: any) => ({ ...mapQuizRow(quiz), creatorQuizFrameId: userRow?.active_quiz_frame_id || '', creatorIsPremium: userRow?.is_premium === true })),
       completions: completions || [],
