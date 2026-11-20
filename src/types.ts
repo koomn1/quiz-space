@@ -199,6 +199,8 @@ export interface RewardLevel {
   minPoints: number;
 }
 
+export type BadgeRarity = 'common' | 'rare' | 'legendary';
+
 export interface RewardBadge {
   id: string;
   name: string;
@@ -208,6 +210,50 @@ export interface RewardBadge {
   icon: string;
   sortOrder: number;
   earnedAt?: string;
+  rarity?: BadgeRarity;
+}
+
+export interface CosmoTourState {
+  currentStep: string;
+  dismissedSteps: string[];
+  hasSeenArcadeIntro: boolean;
+}
+
+export type MiniGameId = 'cosmic_match' | 'word_matrix' | 'spin_wheel';
+
+export interface MiniGameSession {
+  id: string;
+  gameId: MiniGameId;
+  score: number;
+  completed: boolean;
+  rewardCoins: number;
+  rewardXp: number;
+}
+
+export interface MiniGameResult {
+  score: number;
+  rewardCoins: number;
+  rewardXp: number;
+  completed: boolean;
+  accuracy?: number;
+  timeSpentSeconds?: number;
+}
+
+export interface WordMatrixPuzzleData {
+  id: string;
+  topic: string;
+  topicAr: string;
+  letters: string[];
+  targetWords: string[];
+}
+
+export interface AvatarFrameItem {
+  id: string;
+  name: string;
+  nameAr: string;
+  priceCoins: number;
+  frameClass: string;
+  unlocked?: boolean;
 }
 
 export interface RewardLedgerEntry {
