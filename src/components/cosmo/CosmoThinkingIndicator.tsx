@@ -4,6 +4,7 @@ import { ThinkingOrb as LibraryThinkingOrb, type OrbState } from 'thinking-orbs'
 import { CosmoPalette } from './CosmoPalette';
 import { AssistantAvatar } from './CosmoAvatar';
 import { FormattedText } from './CosmoMarkdown';
+import { CosmoTypewriter } from './CosmoTypewriter';
 
 const ASSISTANT_NAME_AR = 'كوزمو AI';
 const ACCENT = '#007472';
@@ -35,8 +36,7 @@ export function StreamingRow({ text, theme }: { text: string; theme: CosmoPalett
           </span>
         </p>
         <div className="p-5 rounded-2xl border shadow-sm" style={{ background: theme.SURFACE, borderColor: theme.BORDER }}>
-          <FormattedText text={text} fg={theme.FG} theme={theme} />
-          <span className="inline-block w-2 h-4 bg-[#2AC3BB] animate-pulse ml-1 align-middle rounded-xs" />
+          <CosmoTypewriter fullText={text} theme={theme} isStreaming={true} />
         </div>
       </div>
     </div>
