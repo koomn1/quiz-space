@@ -1,4 +1,5 @@
 import { MiniGameId, MiniGameSession, WordMatrixPuzzleData } from '../types';
+export type { MiniGameId, MiniGameSession, WordMatrixPuzzleData };
 
 export const WORD_MATRIX_TOPICS = ['علوم', 'لغة', 'تقنية', 'فضاء', 'ثقافة عامة'] as const;
 export type WordMatrixTopic = (typeof WORD_MATRIX_TOPICS)[number];
@@ -316,61 +317,74 @@ export function recordGamePlay(
 // Future Compatibility / Task 4 Helpers (Cosmic Match & Daily Spin Wheel)
 // ---------------------------------------------------------------------------
 
+export type MemoryCardIcon = 'Star' | 'Trophy' | 'Sparkles' | 'BookOpen' | 'Crown' | 'Flame';
+
 export interface MemoryCard {
   id: string;
   pairId: string;
   label: string;
-  icon?: string;
+  icon: MemoryCardIcon;
   matched: boolean;
 }
 
-const MEMORY_CARD_PAIRS = [
-  { pairId: 'pair_1', label: 'ذرة' },
-  { pairId: 'pair_2', label: 'خلية' },
-  { pairId: 'pair_3', label: 'كوكب' },
-  { pairId: 'pair_4', label: 'مجرة' },
-  { pairId: 'pair_5', label: 'كود' },
-  { pairId: 'pair_6', label: 'سحابة' },
+export const MEMORY_CARD_PAIRS: {
+  pairId: string;
+  label: string;
+  icon: MemoryCardIcon;
+}[] = [
+  { pairId: 'star', label: 'نجم التميز', icon: 'Star' },
+  { pairId: 'trophy', label: 'كأس البطولة', icon: 'Trophy' },
+  { pairId: 'sparkles', label: 'بريق المعرفة', icon: 'Sparkles' },
+  { pairId: 'book', label: 'كتاب الحكمة', icon: 'BookOpen' },
+  { pairId: 'crown', label: 'تاج الصدارة', icon: 'Crown' },
+  { pairId: 'flame', label: 'شعلة النشاط', icon: 'Flame' },
 ];
 
 /**
- * Generates 12 memory cards containing 6 matching pairs.
+ * Generates 12 memory cards containing 6 matching pairs with QuizSpace educational icons.
  */
-export function generateMemoryCards(): MemoryCard[] {
+export function generateMemoryCards(seed?: number): MemoryCard[] {
   const cards: MemoryCard[] = [];
   MEMORY_CARD_PAIRS.forEach((item, index) => {
     cards.push({
       id: `card_${item.pairId}_a_${index}`,
       pairId: item.pairId,
       label: item.label,
+      icon: item.icon,
       matched: false,
     });
     cards.push({
       id: `card_${item.pairId}_b_${index}`,
       pairId: item.pairId,
       label: item.label,
+      icon: item.icon,
       matched: false,
     });
   });
 
-  return seededShuffle(cards, Date.now());
+  const shuffleSeed = seed !== undefined ? seed : Date.now();
+  return seededShuffle(cards, shuffleSeed);
 }
 
+export type SpinPrizeType = 'coins' | 'xp' | 'streak_freeze' | 'mystery' | 'multiplier' | 'badge';
+
 export interface SpinPrize {
+  id?: string;
   label: string;
-  type: 'coins' | 'xp' | 'badge' | 'mystery';
+  type: SpinPrizeType;
   amount: number;
+  description?: string;
 }
 
 export const SPIN_WHEEL_SEGMENTS: SpinPrize[] = [
-  { label: '+10 عملة', type: 'coins', amount: 10 },
-  { label: '+25 XP', type: 'xp', amount: 25 },
-  { label: '+20 عملة', type: 'coins', amount: 20 },
-  { label: '+50 XP', type: 'xp', amount: 50 },
-  { label: '+30 عملة', type: 'coins', amount: 30 },
-  { label: '+75 XP', type: 'xp', amount: 75 },
-  { label: '+50 عملة', type: 'coins', amount: 50 },
-  { label: 'صندوق مفاجآت', type: 'mystery', amount: 100 },
+  { id: 'prize_1', label: '+10 عملات', type: 'coins', amount: 10, description: '10 عملات كويز سبيس' },
+  { id: 'prize_2', label: '+25 XP', type: 'xp', amount: 25, description: '25 نقطة خبرة' },
+  { id: 'prize_3', label: '+50 عملة', type: 'coins', amount: 50, description: '50 عملة كويز سبيس' },
+  { id: 'prize_4', label: 'تجميد الستريك', type: 'streak_freeze', amount: 1, description: 'درع حماية الستريك ليوم كامل' },
+  { id: 'prize_5', label: '+100 XP', type: 'xp', amount: 100, description: '100 نقطة خبرة ممتازة' },
+  { id: 'prize_6', label: 'صندوق مفاجأة', type: 'mystery', amount: 75, description: 'صندوق غامض يحمل مفاجآت رائعة' },
+  { id: 'prize_7', label: '+15 عملة', type: 'coins', amount: 15, description: '15 عملة كويز سبيس' },
+  { id: 'prize_8', label: 'مضاعف 2x', type: 'multiplier', amount: 2, description: 'مضاعفة نقاط الاختبار القادم' },
 ];
 
 /**
