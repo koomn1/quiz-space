@@ -43,13 +43,11 @@ export function CosmoWelcomeHero({
   theme,
   isAr,
   onSelectStarter,
-  onOpenQuizStudio: _onOpenQuizStudio,
 }: {
   userName?: string;
   theme: CosmoPalette;
   isAr: boolean;
   onSelectStarter: (title: string) => void;
-  onOpenQuizStudio: (topic?: string) => void;
 }) {
   return (
     <div className="flex min-h-full flex-col justify-center px-3 py-8 sm:px-8 sm:py-12">

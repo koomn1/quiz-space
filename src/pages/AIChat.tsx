@@ -35,7 +35,6 @@ import {
   ArrowDown,
   RotateCcw,
   Sparkles,
-  ChevronDown,
   Check,
   Copy,
 } from 'lucide-react';
@@ -53,7 +52,6 @@ import { formatChatCode } from '../utils/chatCode';
 // Cosmo Modular Subcomponents
 import {
   CosmoMode,
-  COSMO_MODES,
   getModeConfig,
   detectCosmoMode,
   buildModeInstruction,
@@ -281,7 +279,6 @@ export default function AIChat({
   // 8-Mode Engine State
   const [selectedMode, setSelectedMode] = useState<CosmoMode>('instant');
   const [autoMode, setAutoMode] = useState(true);
-  const [showModeSelector, setShowModeSelector] = useState(false);
   const [modeStageLabel, setModeStageLabel] = useState('');
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
@@ -306,8 +303,6 @@ export default function AIChat({
   const updateAgentStep = useCallback((id: string, status: AgentStepStatus, detailAr?: string, detailEn?: string) => {
     setAgentSteps(prev => prev.map(step => step.id === id ? { ...step, status, ...(detailAr ? { detailAr } : {}), ...(detailEn ? { detailEn } : {}) } : step));
   }, []);
-
-  const activeMode = getModeConfig(selectedMode);
 
   // Sidebar & Conversations
   const [conversations, setConversations] = useState<AIChatConversation[]>([]);
@@ -1188,7 +1183,7 @@ export default function AIChat({
           {/* Active Chat Code & Quick Actions */}
           <div className="flex items-center gap-2">
             <div
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs text-xs font-mono"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs text-xs font-mono"
               style={{
                 background: theme.IS_DARK ? 'rgba(0,116,114,0.1)' : 'rgba(0,116,114,0.06)',
                 borderColor: 'rgba(0,116,114,0.25)',
@@ -1209,7 +1204,7 @@ export default function AIChat({
 
             <button
               onClick={() => setIsIncognito(v => !v)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
+              className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
               style={{
                 background: isIncognito ? 'rgba(245,158,11,0.2)' : theme.HOVER_SOFT,
                 borderColor: isIncognito ? '#f59e0b' : 'transparent',
@@ -1219,12 +1214,12 @@ export default function AIChat({
               aria-label="تبديل وضع المحادثة المؤقتة"
             >
               <EyeOff className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden md:inline">{isAr ? (isIncognito ? 'مؤقتة نشطة' : 'محادثة مؤقتة') : (isIncognito ? 'Incognito ON' : 'Incognito')}</span>
+              <span className="hidden sm:inline">{isAr ? (isIncognito ? 'مؤقتة نشطة' : 'محادثة مؤقتة') : (isIncognito ? 'Incognito ON' : 'Incognito')}</span>
             </button>
 
             <button
               onClick={startNewChat}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
+              className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
               style={{
                 background: theme.IS_DARK ? 'rgba(0,116,114,0.15)' : 'rgba(0,116,114,0.08)',
                 borderColor: 'rgba(0,116,114,0.3)',
@@ -1294,7 +1289,6 @@ export default function AIChat({
               theme={theme}
               isAr={isAr}
               onSelectStarter={title => sendMessage(title)}
-              onOpenQuizStudio={openQuizStudio}
             />
           ) : (
             <div className="max-w-3xl mx-auto w-full px-3 py-5 sm:px-5 sm:py-8 space-y-7">
@@ -1395,12 +1389,12 @@ export default function AIChat({
         )}
 
         {/* ─── Floating Composer Pill ─── */}
-        <div className="shrink-0 px-3 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-1 sm:px-4 lg:pb-4">
+        <div className="shrink-0 px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-1 sm:px-4 lg:pb-4">
           <div className="mx-auto max-w-3xl min-w-0">
             {/* Attachment preview chip */}
             {selectedAttachment && (
               <div
-                className="relative inline-flex items-center gap-2.5 mb-2.5 p-2 rounded-xl border shadow-md"
+                className="relative flex w-full max-w-3xl items-center gap-2.5 mb-2 rounded-2xl border px-2.5 py-2 shadow-sm"
                 style={{ background: theme.SURFACE, borderColor: 'rgba(42,195,187,0.3)' }}
               >
                 {selectedAttachment.kind === 'image' ? (
@@ -1431,7 +1425,7 @@ export default function AIChat({
             {/* Persistent Active Session File Chip */}
             {!selectedAttachment && activeFileAttachment && (
               <div
-                className="relative inline-flex items-center gap-2.5 mb-2.5 px-3 py-2 rounded-xl border shadow-sm animate-in fade-in"
+                className="relative flex w-full max-w-3xl items-center gap-2.5 mb-2 rounded-2xl border px-2.5 py-2 shadow-sm animate-in fade-in"
                 style={{ background: theme.SURFACE, borderColor: 'rgba(42,195,187,0.3)' }}
               >
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB]">
@@ -1440,7 +1434,7 @@ export default function AIChat({
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-semibold text-[#007472] dark:text-[#2AC3BB]">
-                      {isAr ? 'الملف النشط في المحادثة:' : 'Active File:'}
+                      {isAr ? 'ملف المحادثة' : 'Chat file'}
                     </span>
                     <span className="max-w-[200px] truncate text-xs font-bold" style={{ color: theme.FG }}>
                       {activeFileAttachment.name}
@@ -1473,7 +1467,7 @@ export default function AIChat({
             {/* React Bits PromptBar */}
             <div className="relative z-20 mx-auto w-full max-w-3xl" dir={isAr ? 'rtl' : 'ltr'}>
               <PromptBar
-                placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي سؤال دراسي، أو اطلب تلخيص ملف، أو كويز فوري...` : `Ask ${ASSISTANT_NAME_EN} anything, or request a summary or quiz...`}
+                placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي سؤال دراسي، أو اطلب تلخيص ملف، أو إنشاء اختبار...` : `Ask ${ASSISTANT_NAME_EN} anything, request a summary, or create a quiz...`}
                 sources={[
                   { key: 'files', name: isAr ? 'ملفات وصور' : 'Photos & files', description: isAr ? 'ارفع من جهازك' : 'Upload from this device', icon: Attachment01Icon, attach: true },
                   { key: 'web', name: isAr ? 'بحث في الويب' : 'Web search', description: isAr ? 'نتائج مباشرة' : 'Live results', icon: Globe02Icon },
@@ -1514,36 +1508,6 @@ export default function AIChat({
               <input type="file" ref={imageInputRef} accept="image/*" className="hidden" onChange={e => { void handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
               <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,text/markdown,text/plain" className="hidden" onChange={e => { void handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
 
-              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowModeSelector(v => !v)}
-                    className="flex min-h-9 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-bold transition-all cursor-pointer"
-                    style={{ background: activeMode.bgTint, borderColor: activeMode.borderTint, color: activeMode.color }}
-                    aria-label="اختيار وضع كوزمو الذكي"
-                  >
-                    {React.createElement(activeMode.icon, { className: 'h-3.5 w-3.5' })}
-                    <span>{isAr ? activeMode.labelAr : activeMode.labelEn}</span>
-                    <ChevronDown className="h-3 w-3 opacity-60" />
-                  </button>
-                  {showModeSelector && (
-                    <div className="uipro-glass-surface absolute bottom-full right-0 z-50 mb-2 w-72 rounded-2xl border p-2.5 shadow-2xl backdrop-blur-2xl" style={{ background: theme.IS_DARK ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.98)', borderColor: theme.BORDER }}>
-                      <div className="mb-2 flex items-center justify-between border-b px-2 pb-2" style={{ borderColor: theme.BORDER }}>
-                        <span className="text-[11px] font-extrabold uppercase tracking-wider" style={{ color: theme.MUTED }}>{isAr ? 'أوضاع كوزمو الذكية' : 'Cosmo AI Modes'}</span>
-                        <button type="button" onClick={() => setAutoMode(v => !v)} className="rounded-full border px-2 py-0.5 text-[10px] font-bold cursor-pointer" style={{ background: autoMode ? 'rgba(0,116,114,0.2)' : 'transparent', borderColor: autoMode ? ACCENT : theme.BORDER, color: autoMode ? ACCENT : theme.MUTED }}>{isAr ? (autoMode ? 'توجيه تلقائي' : 'توجيه يدوي') : (autoMode ? 'Auto' : 'Manual')}</button>
-                      </div>
-                      <div className="grid max-h-64 grid-cols-2 gap-1.5 overflow-y-auto">
-                        {COSMO_MODES.map((mode) => {
-                          const isSelected = selectedMode === mode.id;
-                          const ModeIcon = mode.icon as React.ComponentType<{ className?: string }>;
-                          return <button key={mode.id} type="button" onClick={() => { setSelectedMode(mode.id); setAutoMode(false); setShowModeSelector(false); }} className="flex items-start gap-2 rounded-xl border p-2 text-start transition-all cursor-pointer" style={{ background: isSelected ? mode.bgTint : 'transparent', borderColor: isSelected ? mode.borderTint : 'transparent' }}><div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg" style={{ background: mode.bgTint, color: mode.color }}><ModeIcon className="h-3.5 w-3.5" /></div><div className="min-w-0"><p className="truncate text-xs font-bold" style={{ color: isSelected ? mode.color : theme.FG }}>{isAr ? mode.labelAr : mode.labelEn}</p><p className="truncate text-[10px] leading-tight" style={{ color: theme.MUTED }}>{isAr ? mode.descAr : mode.descEn}</p></div></button>;
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* Privacy & Security Guarantee Note */}

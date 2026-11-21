@@ -7,7 +7,6 @@ import {
   Sparkles,
   Check,
   Copy,
-  FileQuestion,
   RotateCcw,
   ThumbsUp,
   ThumbsDown,
@@ -17,7 +16,7 @@ import { CosmoPalette } from './CosmoPalette';
 import { AssistantAvatar } from './CosmoAvatar';
 import { FormattedText } from './CosmoMarkdown';
 import { QuizShowcaseCard, CreatedQuizMeta } from './CosmoQuizShowcase';
-import { CosmoMode, getModeConfig } from './CosmoModes';
+import { CosmoMode } from './CosmoModes';
 
 const ASSISTANT_NAME_AR = 'كوزمو AI';
 const ACCENT = '#007472';
@@ -39,7 +38,6 @@ export function MessageRow({
   index,
   copiedMsgId,
   onCopy,
-  onCreateQuizFromReply,
   onStartQuiz,
   onRegenerate,
   onEditMessage,
@@ -52,7 +50,6 @@ export function MessageRow({
   index: number;
   copiedMsgId: string | null;
   onCopy: (m: Message) => void;
-  onCreateQuizFromReply?: (text: string) => void;
   onStartQuiz?: (quizId: string) => void;
   onRegenerate?: (msg: Message) => void;
   onEditMessage?: (msg: Message) => void;
@@ -182,18 +179,6 @@ export function MessageRow({
                 {copiedMsgId === msg.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedMsgId === msg.id ? 'تم النسخ' : 'نسخ'}</span>
               </button>
-              {onCreateQuizFromReply && !msg.createdQuiz && (
-                <button
-                  onClick={() => onCreateQuizFromReply(msg.text)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer border"
-                  style={{ background: 'rgba(0,116,114,0.08)', borderColor: 'rgba(0,116,114,0.25)', color: ACCENT }}
-                  title="أنشئ كويز تفاعلي من هذا الشرح"
-                  aria-label="أنشئ كويز تفاعلي"
-                >
-                  <FileQuestion className="w-3.5 h-3.5" />
-                  <span>{isAr ? 'كويز' : 'Quiz'}</span>
-                </button>
-              )}
               {onRegenerate && (
                 <button
                   onClick={() => onRegenerate(msg)}
@@ -208,22 +193,6 @@ export function MessageRow({
                   <span>{isAr ? 'إعادة توليد' : 'Retry'}</span>
                 </button>
               )}
-              {/* Mode badge */}
-              {msg.mode &&
-                msg.mode !== 'instant' &&
-                (() => {
-                  const mc = getModeConfig(msg.mode);
-                  const ModeIcon = mc.icon as React.ComponentType<{ className?: string }>;
-                  return (
-                    <span
-                      className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border"
-                      style={{ background: mc.bgTint, borderColor: mc.borderTint, color: mc.color }}
-                    >
-                      <ModeIcon className="w-3 h-3" />
-                      {isAr ? mc.labelAr : mc.labelEn}
-                    </span>
-                  );
-                })()}
               <button
                 onClick={() => setFeedback(f => (f === 'liked' ? null : 'liked'))}
                 className="p-1.5 rounded-lg transition-colors cursor-pointer"
