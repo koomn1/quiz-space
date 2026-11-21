@@ -19,6 +19,7 @@ import {
 } from './questionMedia';
 import { formatChatCode } from '../utils/chatCode';
 import { normalizeArabicText } from './arabicText';
+import type { VerificationBadgeData } from '../components/VerificationBadge';
 
 // System/bot pseudo-accounts (AI AI, admin broadcasts). Every row in
 // `users` is required to have a valid UUID `uid` — a trigger
@@ -155,6 +156,54 @@ export async function clearAvatar(userId: string): Promise<void> {
   if (!isSupabaseConfigured || !userId) return;
   await supabase.storage.from('avatars').remove([`avatars/${userId}/profile.webp`]);
   const { error } = await supabase.from('users').update({ photo_url: '' }).eq('uid', userId);
+  if (error) throw error;
+}
+
+export async function uploadVerificationBadgeImage(adminId: string, file: File): Promise<string | null> {
+  if (!isSupabaseConfigured || !adminId || !file.type.startsWith('image/')) return null;
+  const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+  const path = `verification-badges/${adminId}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from('avatars').upload(path, file, {
+    cacheControl: '31536000', upsert: false, contentType: file.type,
+  });
+  if (error) throw error;
+  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl || null;
+}
+
+function mapVerificationBadge(row: any): VerificationBadgeData {
+  return { id: String(row.id), name: String(row.name || ''), nameAr: String(row.name_ar || row.name || ''), imageUrl: String(row.image_url || ''), description: String(row.description || ''), descriptionAr: String(row.description_ar || '') };
+}
+
+export async function getVerificationBadges(includeInactive = false): Promise<VerificationBadgeData[]> {
+  if (!isSupabaseConfigured) return [];
+  let query = supabase.from('verification_badges').select('id, name, name_ar, image_url, description, description_ar, is_active, sort_order').order('sort_order', { ascending: true }).order('created_at', { ascending: true });
+  if (!includeInactive) query = query.eq('is_active', true);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []).map(mapVerificationBadge);
+}
+
+export async function getPublicVerificationBadge(userId: string): Promise<VerificationBadgeData | null> {
+  if (!isSupabaseConfigured || !userId) return null;
+  const { data, error } = await supabase.rpc('get_public_verification_badge', { p_user_id: userId });
+  if (error) return null;
+  const row = Array.isArray(data) ? data[0] : data;
+  return row ? mapVerificationBadge(row) : null;
+}
+
+export async function setActiveVerificationBadge(badgeId: string | null): Promise<void> {
+  const { error } = await supabase.rpc('set_active_verification_badge', { p_badge_id: badgeId || null });
+  if (error) throw error;
+}
+
+export async function createVerificationBadge(payload: { name: string; nameAr: string; imageUrl: string; description?: string; descriptionAr?: string }): Promise<VerificationBadgeData> {
+  const { data, error } = await supabase.from('verification_badges').insert({ name: payload.name.trim(), name_ar: payload.nameAr.trim(), image_url: payload.imageUrl, description: payload.description?.trim() || '', description_ar: payload.descriptionAr?.trim() || '' }).select('id, name, name_ar, image_url, description, description_ar').single();
+  if (error) throw error;
+  return mapVerificationBadge(data);
+}
+
+export async function deleteVerificationBadge(id: string): Promise<void> {
+  const { error } = await supabase.from('verification_badges').delete().eq('id', id);
   if (error) throw error;
 }
 
@@ -1276,6 +1325,7 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
 
     const resolvedUserId = userRow?.uid || userId;
     const isOwnProfile = authUser?.id === resolvedUserId;
+    const verificationBadge = await getPublicVerificationBadge(resolvedUserId);
 
     if (isOwnProfile && !userError) {
       const { data: membershipData } = await supabase.rpc('get_my_membership_status');
@@ -1355,6 +1405,7 @@ export async function getUserProfileStats(userId: string): Promise<UserStats> {
       badgeTier: userRow?.is_premium ? normalizeBadgeTier(userRow?.badge_tier) : 'none',
       nameColor: userRow?.is_premium ? normalizeNameColor(userRow?.name_color) : 'default',
       badgeColor: userRow?.is_premium ? normalizeBadgeColor(userRow?.badge_color) : 'blue',
+      verificationBadge,
       xp: Number(userRow?.xp || 0),
       points: Number(userRow?.points || 0),
       coins: Number(userRow?.coins || 0),

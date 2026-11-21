@@ -12,11 +12,13 @@ import {
   CartesianGrid, Tooltip
 } from 'recharts';
 import { Quiz, QuizCompletion, UserStats } from '../types';
-import { getLearningStreakStatus, isTrialSubscription, saveUserProfile, updateBadgeAndNameColor } from '../lib/db';
+import { getLearningStreakStatus, isTrialSubscription, saveUserProfile, updateBadgeAndNameColor, getVerificationBadges, setActiveVerificationBadge } from '../lib/db';
 import RewardsSection from './RewardsSection';
 import { UserBadge } from './UserBadge';
 import OverlayPortal from './OverlayPortal';
 import { ProfileQuickBadgeRail } from './ProfileQuickBadgeRail';
+import { VerificationBadge } from './VerificationBadge';
+import type { VerificationBadgeData } from './VerificationBadge';
 import {
   availableBadgeTiers, availableNameColors, availableBadgeColors,
   BADGE_COLOR_PRESETS, NAME_COLOR_PRESETS, BADGE_LABELS,
@@ -298,6 +300,13 @@ export default function ProfileStatsView({
   const [isSavingBadge, setIsSavingBadge] = React.useState(false);
   const [badgeSaveError, setBadgeSaveError] = React.useState('');
   const [isSavingInfo, setIsSavingInfo] = React.useState(false);
+  const [verificationBadges, setVerificationBadges] = React.useState<VerificationBadgeData[]>([]);
+  const [selectedVerificationBadgeId, setSelectedVerificationBadgeId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!isOwnProfile) return;
+    getVerificationBadges().then(setVerificationBadges).catch(() => setVerificationBadges([]));
+  }, [isOwnProfile]);
 
   React.useEffect(() => {
     let active = true;
@@ -358,6 +367,7 @@ export default function ProfileStatsView({
     setInfoBadgeTier((profileData?.badgeTier as BadgeTier) || 'none');
     setInfoNameColor((profileData?.nameColor as NameColorKey) || 'default');
     setInfoSelectedBadgeColor((profileData?.badgeColor as BadgeColorKey) || 'blue');
+    setSelectedVerificationBadgeId(profileData?.verificationBadge?.id || null);
     setBadgeSaveError('');
     setIsEditingInfo(true);
   };
@@ -419,6 +429,8 @@ export default function ProfileStatsView({
           );
         }
       }
+
+      await setActiveVerificationBadge(selectedVerificationBadgeId);
 
       setIsEditingInfo(false);
       if (onRefresh) {
@@ -706,6 +718,7 @@ export default function ProfileStatsView({
               <div className="flex flex-col sm:flex-row sm:items-center justify-center md:justify-start gap-3">
                 <h3 className="font-display font-black text-2xl sm:text-3xl tracking-tight flex items-center gap-2 flex-wrap">
                   <span>{profileData?.name || (isAr ? "طالب متميز" : "Star Student")}</span>
+                  <VerificationBadge badge={profileData?.verificationBadge} size="md" lang={lang} />
 
                   <ProfileQuickBadgeRail
                     isAr={isAr}
@@ -1435,7 +1448,28 @@ export default function ProfileStatsView({
                   />
                 </div>
 
-                {/* 5. Real Verification Badge Selection — writes to badge_tier/name_color/badge_color
+                {/* 5. Admin-managed Telegram-style verification badge picker */}
+                {verificationBadges.length > 0 && (
+                  <div className="space-y-2 border-t border-slate-850 pt-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold text-slate-500">{isAr ? 'اختر العلامة التي تظهر بجوار اسمك' : 'Choose the mark shown beside your name'}</span>
+                      <label className="text-xs font-black text-white">{isAr ? 'علامة التوثيق' : 'Verification Mark'}</label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      <button type="button" onClick={() => setSelectedVerificationBadgeId(null)} className={`flex items-center gap-2 rounded-xl border p-2 text-[10px] font-bold transition ${selectedVerificationBadgeId === null ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
+                        <X className="h-4 w-4" />{isAr ? 'بدون علامة' : 'No mark'}
+                      </button>
+                      {verificationBadges.map((badge) => (
+                        <button type="button" key={badge.id} onClick={() => setSelectedVerificationBadgeId(badge.id)} className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 text-start transition ${selectedVerificationBadgeId === badge.id ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
+                          <VerificationBadge badge={badge} size="sm" lang={lang} />
+                          <span className="truncate text-[10px] font-bold">{isAr ? badge.nameAr : badge.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. Real Verification Badge Selection — writes to badge_tier/name_color/badge_color
                      via the plan-validated update_badge_and_name_color RPC (see PremiumNameTag.tsx) */}
                 <div className="pt-2 border-t border-slate-850 space-y-2">
                   <div className="flex items-center justify-between">

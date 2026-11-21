@@ -23,6 +23,7 @@ import { getApiUrl } from '../lib/origin';
 import { decryptMessage } from '../lib/encryption';
 import { EssayReviewModal } from '../components/EssayReviewModal';
 import AdminSubscriptions from '../components/AdminSubscriptions';
+import AdminVerificationBadgesPanel from '../components/AdminVerificationBadgesPanel';
 import OverlayPortal from '../components/OverlayPortal';
 import { showToast, showAppMessage } from '../components/Toast';
 import { CountUp, ShinyText } from '../components/reactbits';
@@ -71,7 +72,7 @@ export default function AdminDashboard({
   const isAr = lang === 'ar';
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards'>(() => {
+  const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'users' | 'quizzes' | 'subscriptions' | 'coupons' | 'settings' | 'classrooms' | 'ai_monitoring' | 'rewards' | 'verification_badges'>(() => {
     if (typeof window !== 'undefined' && (window.location.hash.includes('subscriptions') || window.location.hash.includes('payments'))) {
       return 'subscriptions';
     }
@@ -379,6 +380,7 @@ export default function AdminDashboard({
     { id: 'coupons', name: isAr ? 'الكوبونات' : 'Coupons', icon: Ticket },
     { id: 'classrooms', name: isAr ? 'الفصول (التخفي)' : 'Classrooms (Stealth)', icon: EyeOff },
     { id: 'rewards', name: isAr ? 'النقاط والمتجر' : 'Points & Store', icon: Gift },
+    { id: 'verification_badges', name: isAr ? 'علامات التوثيق' : 'Verification Badges', icon: ShieldCheck },
     { id: 'ai_monitoring', name: isAr ? 'مراقبة AI' : 'AI Monitoring', icon: Activity },
     { id: 'settings', name: isAr ? 'الإعدادات' : 'Settings', icon: Settings },
   ];
@@ -1214,6 +1216,10 @@ export default function AdminDashboard({
                   </div>
                 </section>
               </div>
+            )}
+
+            {activeAdminTab === 'verification_badges' && (
+              <AdminVerificationBadgesPanel lang={lang} adminId={currentUserId} />
             )}
 
             {/* 8. AI MONITORING TAB */}
