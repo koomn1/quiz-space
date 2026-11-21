@@ -60,6 +60,8 @@ export default function AppShell(props: AppShellProps) {
         <IOS27Header
           currentTab={activeTab}
           setTab={handleSetTab}
+          toggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+          isSidebarOpen={isSidebarOpen}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
           userName={userName}

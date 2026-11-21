@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, LogIn } from 'lucide-react';
-import CardNav from '../CardNav';
+import React, { useEffect, useState } from 'react';
+import { Bell, Globe2, LogIn, Menu, Moon, Sun, UserRound, X } from 'lucide-react';
 import { MainLogo } from '../MainLogo';
 import { supabase } from '../../lib/supabaseClient';
 
 export interface IOS27HeaderProps {
   currentTab: string;
   setTab: (tab: string) => void;
+  toggleSidebar: () => void;
+  isSidebarOpen?: boolean;
   darkMode: boolean;
   setDarkMode: (dark: boolean) => void;
   userName: string;
@@ -21,223 +22,65 @@ export interface IOS27HeaderProps {
 }
 
 export default function IOS27Header({
-  currentTab,
   setTab,
+  toggleSidebar,
+  isSidebarOpen = false,
   darkMode,
   setDarkMode,
   userName,
   userId,
   onLogin,
-  onLogout,
-  lang,
   setLang,
-  isPremium = false,
-  isAdmin = false,
+  lang,
 }: IOS27HeaderProps) {
   const isAr = lang === 'ar';
   const isAuthenticated = Boolean(userId && !userId.startsWith('user-guest'));
   const accountName = userName || (isAr ? 'حسابي' : 'My account');
-
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated || !userId) {
       setUnreadCount(0);
       return;
     }
-
     let isMounted = true;
-
     const fetchCount = async () => {
       try {
-        const { data, error } = await supabase.rpc('get_unread_notifications_count', {
-          p_user_id: userId,
-        });
-        if (!error && typeof data === 'number' && isMounted) {
-          setUnreadCount(data);
-        }
-      } catch (err) {
-        console.debug('Error fetching unread count:', err);
+        const { data, error } = await supabase.rpc('get_unread_notifications_count', { p_user_id: userId });
+        if (!error && typeof data === 'number' && isMounted) setUnreadCount(data);
+      } catch (error) {
+        console.debug('Error fetching unread count:', error);
       }
     };
-
     void fetchCount();
-
-    // Listen to realtime notifications
-    const notifChannel = supabase
-      .channel(`header-notif-count-${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-        },
-        () => {
-          void fetchCount();
-        }
-      )
-      .subscribe();
-
-    const handleNotifUpdate = () => {
-      void fetchCount();
-    };
-    window.addEventListener('quizspace-notifications-updated', handleNotifUpdate);
-
+    const channel = supabase.channel(`header-notif-count-${userId}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => void fetchCount()).subscribe();
+    const handleUpdate = () => void fetchCount();
+    window.addEventListener('quizspace-notifications-updated', handleUpdate);
     return () => {
       isMounted = false;
-      void supabase.removeChannel(notifChannel);
-      window.removeEventListener('quizspace-notifications-updated', handleNotifUpdate);
+      void supabase.removeChannel(channel);
+      window.removeEventListener('quizspace-notifications-updated', handleUpdate);
     };
   }, [userId, isAuthenticated]);
 
-  const items: any[] = [
-    {
-      label: isAr ? 'التنقل' : 'Navigate',
-      description: isAr ? 'انتقل إلى أقسام QuizSpace الرئيسية.' : 'Jump to the main QuizSpace sections.',
-      links: [
-        { label: isAr ? 'الرئيسية' : 'Home', tab: 'landing' },
-        { label: isAr ? 'استكشاف الكويزات' : 'Explore quizzes', tab: 'explore' },
-        { label: isAr ? 'التصنيفات' : 'Categories', tab: 'categories' },
-        { label: isAr ? 'كوزمو AI' : 'Cosmo AI', tab: 'aichat' },
-        { label: isAr ? 'مركز المكافآت والألعاب 🎮' : 'Rewards & Games 🎮', tab: 'rewards' },
-        { label: isAr ? 'إنشاء اختبار' : 'Create a quiz', tab: 'create' },
-        { label: isAr ? 'مكتبتي واختباراتي' : 'My quizzes', tab: 'my-quizzes' },
-      ],
-    },
-    {
-      label: isAr ? 'الأدوات والمساحات' : 'Tools & spaces',
-      description: isAr ? 'المجتمع، الفصول، التحليلات، المتجر والمزيد.' : 'Community, classrooms, analytics, store, and more.',
-      links: [
-        { label: isAr ? 'المجتمع الأكاديمي' : 'Academic community', tab: 'community' },
-        { label: isAr ? 'الفصول الدراسية' : 'Classrooms', tab: 'classrooms' },
-        { label: isAr ? 'لوحة التحليلات' : 'Analytics dashboard', tab: 'analytics' },
-        { label: isAr ? 'لوحة المتصدرين' : 'Leaderboard', tab: 'leaderboard' },
-        { label: isAr ? 'سجل الإنجازات' : 'Achievements', tab: 'achievements' },
-        { label: isAr ? 'المحفوظات' : 'Bookmarks', tab: 'bookmarks' },
-        { label: isAr ? 'مركز المكافآت والألعاب 🎮' : 'Rewards & Games Arcade 🎮', tab: 'rewards' },
-        { label: isAr ? 'متجر الإطارات والباقات 🛍️' : 'Store & Frames 🛍️', tab: 'store' },
-        { label: isAr ? 'تخصيص الملف' : 'Profile customization', tab: 'customization' },
-        { label: isAr ? 'مساحة المؤسسة' : 'Institution workspace', tab: 'institution' },
-        { label: isAr ? 'باقات الاشتراك' : 'Subscription plans', tab: 'billing' },
-        { label: isAr ? 'الدعم والمساعدة' : 'Support', tab: 'support' },
-        ...(isAdmin ? [{ label: isAr ? 'لوحة الإدارة' : 'Admin panel', tab: 'admin' }] : []),
-      ],
-    },
-    {
-      label: isAr ? 'الحساب والتفضيلات' : 'Account & preferences',
-      description: isAuthenticated
-        ? `${accountName}${isPremium ? ' · PRO' : ''}`
-        : (isAr ? 'تسجيل الدخول وإعدادات العرض واللغة.' : 'Sign in and manage display and language settings.'),
-      links: [
-        ...(isAuthenticated
-          ? [
-              {
-                label: isAr
-                  ? (unreadCount > 0 ? `الإشعارات (${unreadCount})` : 'الإشعارات')
-                  : (unreadCount > 0 ? `Notifications (${unreadCount})` : 'Notifications'),
-                tab: 'notifications',
-              },
-              { label: isAr ? 'الملف الشخصي' : 'Profile', tab: 'profile' },
-              { label: isAr ? 'الإعدادات' : 'Settings', tab: 'settings' },
-            ]
-          : [{ label: isAr ? 'تسجيل الدخول' : 'Sign in', action: 'login' as const }]),
-        {
-          label: isAr
-            ? (darkMode ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الداكن')
-            : (darkMode ? 'Switch to light mode' : 'Switch to dark mode'),
-          action: 'toggle-theme',
-        },
-        {
-          label: isAr ? 'التبديل إلى الإنجليزية' : 'Switch to Arabic',
-          action: 'toggle-language',
-        },
-        ...(isAuthenticated ? [{ label: isAr ? 'تسجيل الخروج' : 'Sign out', action: 'logout' as const }] : []),
-      ],
-    },
-  ];
-
-  const cta = isAuthenticated
-    ? {
-        label: isAr
-          ? (unreadCount > 0 ? `الإشعارات (${unreadCount})` : 'الإشعارات')
-          : (unreadCount > 0 ? `Notifications (${unreadCount})` : 'Notifications'),
-        ariaLabel: isAr
-          ? (unreadCount > 0 ? `فتح الإشعارات، لديك ${unreadCount} غير مقروء` : 'فتح الإشعارات')
-          : (unreadCount > 0 ? `Open notifications, ${unreadCount} unread` : 'Open notifications'),
-        icon: (
-          <span className="relative inline-flex items-center justify-center">
-            <Bell aria-hidden="true" className="w-4 h-4" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-black text-white shadow-md ring-2 ring-white dark:ring-slate-900 animate-pulse">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
-          </span>
-        ),
-        onClick: () => setTab('notifications'),
-      }
-    : {
-        label: isAr ? 'تسجيل الدخول' : 'Sign in',
-        ariaLabel: isAr ? 'تسجيل الدخول' : 'Sign in',
-        icon: <LogIn aria-hidden="true" />,
-        onClick: onLogin,
-      };
-
-  const handleLinkClick = (link: any) => {
-    if (link.action === 'toggle-language') {
-      setLang(isAr ? 'en' : 'ar');
-      return;
-    }
-    if (link.action === 'toggle-theme') {
-      setDarkMode(!darkMode);
-      return;
-    }
-    if (link.action === 'login') {
-      onLogin();
-      return;
-    }
-    if (link.action === 'logout') {
-      onLogout();
-      return;
-    }
-    if (link.tab) setTab(link.tab);
-  };
-
+  const label = (ar: string, en: string) => (isAr ? ar : en);
   return (
-    <header
-      className="fixed top-0 left-0 right-0 z-40 pointer-events-auto select-none"
-      style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 8px))' }}
-      dir={isAr ? 'rtl' : 'ltr'}
-    >
-      <div className="max-w-7xl mx-auto px-3 sm:px-6">
-        <CardNav
-          logo={<MainLogo size="sm" showText />}
-          logoAlt="QuizSpace"
-          logoHref="#"
-          onLogoClick={() => setTab('landing')}
-          items={items}
-          cta={cta}
-          theme={darkMode ? 'dark' : 'light'}
-          surface="glass"
-          openOn="click"
-          cardEffect="rise"
-          stagger={0.1}
-          bounce={0.14}
-          speed={1}
-          cardHeight={136}
-          maxWidth={1120}
-          accentColor="#4f46e5"
-          menuLabel
-          menuText={isAr ? 'القائمة' : 'Menu'}
-          closeText={isAr ? 'إغلاق' : 'Close'}
-          menuOpenLabel={isAr ? 'فتح القائمة' : 'Open menu'}
-          menuCloseLabel={isAr ? 'إغلاق القائمة' : 'Close menu'}
-          intro
-          activeTab={currentTab}
-          ariaLabel={isAr ? 'التنقل الرئيسي' : 'Main navigation'}
-          onLinkClick={(link: any) => handleLinkClick(link)}
-        />
+    <header className="quizspace-app-header fixed inset-x-0 top-0 z-40 select-none" dir={isAr ? 'rtl' : 'ltr'}>
+      <div className="quizspace-header-shell mx-auto w-full max-w-[1440px] px-3 sm:px-5 lg:px-8">
+        <div className="quizspace-header-bar flex min-h-14 items-center gap-2 rounded-2xl border px-2.5 py-2 sm:min-h-16 sm:px-3 lg:px-4">
+          <button type="button" onClick={toggleSidebar} aria-expanded={isSidebarOpen} aria-controls="quizspace-primary-sidebar" aria-label={label(isSidebarOpen ? 'إغلاق القائمة' : 'فتح القائمة', isSidebarOpen ? 'Close navigation' : 'Open navigation')} className="quizspace-header-icon shrink-0">
+            {isSidebarOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+          </button>
+          <button type="button" onClick={() => setTab('landing')} aria-label={label('العودة للرئيسية', 'Go to home')} className="quizspace-header-logo min-w-0 flex-1 justify-center sm:justify-start">
+            <MainLogo size="sm" showText />
+          </button>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+            {isAuthenticated && <button type="button" onClick={() => setTab('notifications')} aria-label={label('فتح الإشعارات', 'Open notifications')} className="quizspace-header-icon relative"><Bell aria-hidden="true" />{unreadCount > 0 && <span className="quizspace-header-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}</button>}
+            <button type="button" onClick={() => setDarkMode(!darkMode)} aria-label={label(darkMode ? 'الوضع الفاتح' : 'الوضع الداكن', darkMode ? 'Light mode' : 'Dark mode')} className="quizspace-header-icon">{darkMode ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}</button>
+            <button type="button" onClick={() => setLang(isAr ? 'en' : 'ar')} aria-label={label('التبديل للإنجليزية', 'Switch to Arabic')} className="quizspace-header-language"><Globe2 aria-hidden="true" /><span>{isAr ? 'EN' : 'ع'}</span></button>
+            {isAuthenticated ? <button type="button" onClick={() => setTab('profile')} aria-label={label(`فتح ${accountName}`, `Open ${accountName}`)} className="quizspace-header-account"><UserRound aria-hidden="true" /><span className="hidden max-w-28 truncate md:inline">{accountName}</span></button> : <button type="button" onClick={onLogin} className="quizspace-header-login"><LogIn aria-hidden="true" /><span className="hidden sm:inline">{label('دخول', 'Sign in')}</span></button>}
+          </div>
+        </div>
       </div>
     </header>
   );

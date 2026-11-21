@@ -1011,7 +1011,7 @@ export default function App() {
       />
 
       
-        {false && isSidebarMounted && !isQuizLocked && (
+        {isSidebarMounted && !isQuizLocked && (
           <OverlayPortal>
             {/* Backdrop */}
             <div 
@@ -1053,7 +1053,8 @@ export default function App() {
                 badgeTier={(userStats as any)?.badgeTier}
                 nameColor={(userStats as any)?.nameColor}
                 badgeColor={(userStats as any)?.badgeColor}
-              />                
+                onClose={() => setIsSidebarOpen(false)}
+              />
             </div>
           </OverlayPortal>
         )}

@@ -2627,3 +2627,23 @@ html[dir="rtl"] .quizspace-sidebar-panel,
     background: transparent !important;
   }
 }
+
+/* QuizSpace layout pass: calm chrome, predictable spacing, RTL-safe controls. */
+.quizspace-app-header { padding-top: max(.5rem, env(safe-area-inset-top)); padding-inline: .75rem; pointer-events: none; }
+.quizspace-header-shell { pointer-events: auto; }
+.quizspace-header-bar { pointer-events: auto; background: color-mix(in srgb, var(--app-surface-strong) 92%, transparent); border-color: var(--app-border); box-shadow: 0 10px 30px color-mix(in srgb, var(--app-page-bg) 22%, transparent), inset 0 1px 0 color-mix(in srgb, white 24%, transparent); backdrop-filter: blur(18px) saturate(145%); -webkit-backdrop-filter: blur(18px) saturate(145%); }
+.quizspace-header-icon, .quizspace-header-language, .quizspace-header-account, .quizspace-header-login { display: inline-flex; min-height: 2.75rem; min-width: 2.75rem; align-items: center; justify-content: center; gap: .4rem; border: 1px solid transparent; border-radius: .85rem; color: var(--app-text); background: transparent; font-size: .75rem; font-weight: 800; transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease; }
+.quizspace-header-icon svg, .quizspace-header-language svg, .quizspace-header-account svg, .quizspace-header-login svg { width: 1.05rem; height: 1.05rem; flex: none; }
+.quizspace-header-icon:hover, .quizspace-header-language:hover, .quizspace-header-account:hover { background: color-mix(in srgb, var(--theme-primary) 10%, transparent); border-color: var(--app-border); }
+.quizspace-header-icon:active, .quizspace-header-language:active, .quizspace-header-account:active, .quizspace-header-login:active { transform: scale(.96); }
+.quizspace-header-logo { display: inline-flex; align-items: center; background: transparent; border: 0; color: var(--app-text); }
+.quizspace-header-logo .main-logo-wordmark { max-width: min(12rem, 42vw); }
+.quizspace-header-language { padding-inline: .65rem; }
+.quizspace-header-login { padding-inline: .8rem; color: #fff; background: linear-gradient(100deg, var(--theme-primary), var(--theme-gradient-to)); box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-primary) 22%, transparent); }
+.quizspace-header-badge { position: absolute; inset-inline-end: -.15rem; inset-block-start: -.2rem; display: inline-flex; min-width: 1rem; height: 1rem; align-items: center; justify-content: center; padding-inline: .2rem; border: 2px solid var(--app-surface-strong); border-radius: 999px; background: #e11d48; color: #fff; font-size: .55rem; line-height: 1; }
+.quizspace-sidebar-panel { width: min(19rem, calc(100vw - 1rem)) !important; border-inline-end: 1px solid var(--app-border); box-shadow: 0 20px 60px rgba(2, 6, 23, .18); }
+.quizspace-sidebar-panel .liquid-sidebar { padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)); }
+.sidebar-close-button { display: inline-flex; }
+@media (min-width: 769px) { .quizspace-app-header { padding-inline: 1rem; } .quizspace-header-bar { border-radius: 1.1rem; } }
+@media (max-width: 640px) { .quizspace-app-header { padding-inline: 0; } .quizspace-header-bar { border-inline: 0; border-radius: 0 0 1rem 1rem; padding-inline: .65rem; } .quizspace-header-logo .main-logo-wordmark { max-width: 7.5rem; } .quizspace-header-icon, .quizspace-header-language, .quizspace-header-account, .quizspace-header-login { min-height: 2.65rem; min-width: 2.65rem; border-radius: .75rem; } .quizspace-header-language { padding-inline: .5rem; } .quizspace-sidebar-panel { width: min(19rem, calc(100vw - .5rem)) !important; } }
+@media (prefers-reduced-motion: reduce) { .quizspace-header-icon, .quizspace-header-language, .quizspace-header-account, .quizspace-header-login { transition: none; } }

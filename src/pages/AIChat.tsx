@@ -1103,8 +1103,16 @@ export default function AIChat({
   return (
     <div
       ref={containerRef}
-      className="chat-container relative w-full h-full flex overflow-hidden select-none"
-      style={{ fontFamily: 'var(--font-sans)', background: theme.BG, color: theme.FG }}
+      className="chat-container relative flex h-full w-full overflow-hidden select-none"
+      style={{
+        fontFamily: 'var(--font-sans)',
+        background: theme.BG,
+        color: theme.FG,
+        backgroundImage: theme.IS_DARK
+          ? 'radial-gradient(circle at 50% -15%, rgba(42,195,187,0.11), transparent 34%), radial-gradient(circle at 100% 100%, rgba(238,131,97,0.05), transparent 26%)'
+          : 'radial-gradient(circle at 50% -15%, rgba(0,116,114,0.06), transparent 34%)',
+      }}
+      dir={isAr ? 'rtl' : 'ltr'}
     >
       {/* ─── Collapsible Sidebar ─── */}
       <CosmoSidebar
@@ -1149,8 +1157,8 @@ export default function AIChat({
       <div className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10">
         {/* Header Bar */}
         <header
-          className="flex items-center justify-between px-3 py-2.5 sm:px-5 sm:py-3 flex-shrink-0 border-b backdrop-blur-xl"
-          style={{ borderColor: theme.BORDER_SOFT, background: theme.IS_DARK ? 'rgba(7, 18, 30, 0.92)' : 'rgba(248, 250, 252, 0.94)' }}
+          className="flex flex-shrink-0 items-center justify-between border-b px-3 py-3 backdrop-blur-xl sm:px-6"
+          style={{ borderColor: theme.BORDER_SOFT, background: theme.IS_DARK ? 'rgba(3, 23, 23, 0.72)' : 'rgba(248, 250, 252, 0.72)' }}
         >
           <div className="flex items-center gap-2.5">
             {!sidebarOpen && (
@@ -1165,12 +1173,12 @@ export default function AIChat({
               </button>
             )}
             <div className="flex items-center gap-2">
-              <div className="relative w-8 h-8 rounded-xl overflow-hidden p-0.5 border border-[#2AC3BB]/30 shadow-sm" style={{ background: theme.CARD }}>
+              <div className="relative h-9 w-9 overflow-hidden rounded-[14px] border border-[#2AC3BB]/30 p-0.5" style={{ background: theme.CARD }}>
                 <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover rounded-lg" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-sm tracking-tight" style={{ color: theme.FG }}>{ASSISTANT_NAME_AR}</span>
+                  <span className="text-sm font-bold tracking-tight" style={{ color: theme.FG }}>{isAr ? ASSISTANT_NAME_AR : ASSISTANT_NAME_EN}</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="متصل" aria-label="متصل" />
                 </div>
                 <p className="text-[10px] text-slate-400 flex items-center gap-1">
@@ -1264,8 +1272,8 @@ export default function AIChat({
         <div
           ref={scrollAreaRef}
           onScroll={handleScroll}
-          className="relative flex-1 overflow-y-auto min-h-0 overscroll-contain scroll-smooth"
-          dir="rtl"
+          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth"
+          dir={isAr ? 'rtl' : 'ltr'}
         >
           {/* React Bits Reactive Waves Thinking Background */}
           <div
@@ -1291,7 +1299,7 @@ export default function AIChat({
               onSelectStarter={title => sendMessage(title)}
             />
           ) : (
-            <div className="max-w-3xl mx-auto w-full px-3 py-5 sm:px-5 sm:py-8 space-y-7">
+            <div className="mx-auto w-full max-w-3xl space-y-7 px-3 py-5 sm:px-6 sm:py-8">
               {messages.map((msg, i) => (
                 <MessageRow
                   key={msg.id}
@@ -1389,7 +1397,7 @@ export default function AIChat({
         )}
 
         {/* ─── Floating Composer Pill ─── */}
-        <div className="mt-auto shrink-0 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-1 sm:px-4 lg:pb-4">
+        <div className="mt-auto shrink-0 px-3 pb-[calc(0.65rem+env(safe-area-inset-bottom))] pt-2 sm:px-6 lg:pb-5">
           <div className="mx-auto max-w-3xl min-w-0">
             {/* Attachment preview chip */}
             {selectedAttachment && (
@@ -1465,7 +1473,7 @@ export default function AIChat({
             )}
 
             {/* React Bits PromptBar */}
-            <div className="relative z-20 mx-auto w-full max-w-3xl" dir={isAr ? 'rtl' : 'ltr'}>
+              <div className="relative z-20 mx-auto w-full max-w-3xl" dir={isAr ? 'rtl' : 'ltr'}>
               <PromptBar
                 placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي سؤال دراسي، أو اطلب تلخيص ملف، أو إنشاء اختبار...` : `Ask ${ASSISTANT_NAME_EN} anything, request a summary, or create a quiz...`}
                 sources={[
@@ -1503,7 +1511,7 @@ export default function AIChat({
                 width={900}
                 radius={24}
                 maxRows={5}
-                className="mx-auto shadow-2xl cosmo-prompt-bar"
+                className="mx-auto shadow-[0_12px_36px_rgba(0,0,0,0.12)] cosmo-prompt-bar"
               />
               <input type="file" ref={imageInputRef} accept="image/*" className="hidden" onChange={e => { void handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
               <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,text/markdown,text/plain" className="hidden" onChange={e => { void handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />

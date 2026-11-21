@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Crown, Gem, Medal, Sparkles, LogOut, Lock
+  Crown, Gem, Medal, Sparkles, LogOut, Lock, X
 } from 'lucide-react';
 import { translations } from '../lib/i18n';
 import { AnimatedSidebarIcon } from './AnimatedSidebarIcon';
@@ -29,6 +29,7 @@ interface SidebarProps {
   badgeTier?: BadgeTier;
   nameColor?: NameColorKey;
   badgeColor?: BadgeColorKey;
+  onClose?: () => void;
 }
 
 export default function Sidebar({
@@ -48,6 +49,7 @@ export default function Sidebar({
   badgeTier = 'none',
   nameColor = 'default',
   badgeColor = 'blue',
+  onClose,
 }: SidebarProps) {
   const t = translations[lang] as any;
   const isAr = lang === 'ar';
@@ -158,11 +160,14 @@ export default function Sidebar({
   return (
     <aside aria-label={isAr ? 'التنقل الرئيسي' : 'Primary navigation'} className="liquid-sidebar w-full h-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-3xl border-none text-slate-700 dark:text-slate-200 p-3 sm:p-4 flex flex-col justify-between overflow-y-auto overscroll-contain z-50 scrollbar-none max-h-[100dvh]">
       {/* One official brand treatment; keep its Latin wordmark LTR in Arabic UI. */}
-      <div className="mb-1 shrink-0 py-1" dir="ltr">
-        <MainLogo size="sm" showText />
-        <span className="mt-0.5 block text-[8px] font-black uppercase tracking-widest text-[#2AC3BB]" dir={isAr ? 'rtl' : 'ltr'}>
-          {isAr ? 'الذكاء الاصطناعي السحابي' : 'COSMIC AI PLATFORM'}
-        </span>
+      <div className="mb-2 flex shrink-0 items-start justify-between gap-2 py-1" dir="ltr">
+        <div className="min-w-0">
+          <MainLogo size="sm" showText />
+          <span className="mt-0.5 block text-[8px] font-black uppercase tracking-widest text-[#2AC3BB]" dir={isAr ? 'rtl' : 'ltr'}>
+            {isAr ? 'الذكاء الاصطناعي السحابي' : 'COSMIC AI PLATFORM'}
+          </span>
+        </div>
+        {onClose && <button type="button" onClick={onClose} aria-label={isAr ? 'إغلاق القائمة' : 'Close navigation'} className="sidebar-close-button inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"><X aria-hidden="true" size={18} /></button>}
       </div>
 
       {/* User profile card with subtle border ring and hover glow */}
