@@ -1389,7 +1389,7 @@ export default function AIChat({
         )}
 
         {/* ─── Floating Composer Pill ─── */}
-        <div className="shrink-0 px-3 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-1 sm:px-4 lg:pb-4">
+        <div className="mt-auto shrink-0 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-1 sm:px-4 lg:pb-4">
           <div className="mx-auto max-w-3xl min-w-0">
             {/* Attachment preview chip */}
             {selectedAttachment && (
