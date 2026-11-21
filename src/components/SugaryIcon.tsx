@@ -18,7 +18,17 @@ export type SugaryIconName =
   | 'coins'
   | 'arrow-right'
   | 'search'
-  | 'rocket';
+  | 'rocket'
+  | 'community'
+  | 'settings'
+  | 'admin'
+  | 'chatbot'
+  | 'bookmark'
+  | 'chart'
+  | 'billing'
+  | 'cloud'
+  | 'support'
+  | 'classroom';
 
 const UPLOADED_ICON_FILES: Record<SugaryIconName, string> = {
   home: 'icons8-browser-window-50.png',
@@ -39,6 +49,16 @@ const UPLOADED_ICON_FILES: Record<SugaryIconName, string> = {
   'arrow-right': 'icons8-chevron-right-50.png',
   search: 'icons8-cursor-100.png',
   rocket: 'icons8-blue-rocket-with-flames,-startup-launch,-innovation-and-discovery-50.png',
+  community: 'icons8-team-leadership-and-community-membership-50.png',
+  settings: 'icons8-gear-50.png',
+  admin: 'icons8-developer-50.png',
+  chatbot: 'icons8-chatbot-50.png',
+  bookmark: 'icons8-purple-chain-50.png',
+  chart: 'icons8-3d-grey-processor-50.png',
+  billing: 'icons8-guarantee-50.png',
+  cloud: 'icons8-cloud-100.png',
+  support: 'icons8-headset-50.png',
+  classroom: 'icons8-3d-calendar-with-clock-100.png',
 };
 
 interface SugaryIconProps extends React.ImgHTMLAttributes<HTMLImageElement> {

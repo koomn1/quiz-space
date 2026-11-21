@@ -121,11 +121,11 @@ export default function Sidebar({
       case 'my-quizzes':
         return <SugaryIcon name="book" size={size} className={className} />;
       case 'classrooms':
-        return <SugaryIcon name="graduation-cap" size={size} className={className} />;
+        return <SugaryIcon name="classroom" size={size} className={className} />;
       case 'institution':
-        return <SugaryIcon name="layers" size={size} className={className} />;
+        return <SugaryIcon name="cloud" size={size} className={className} />;
       case 'analytics':
-        return <SugaryIcon name="presentation" size={size} className={className} />;
+        return <SugaryIcon name="chart" size={size} className={className} />;
       case 'leaderboard':
         return <SugaryIcon name="trophy" size={size} className={className} />;
       case 'achievements':
@@ -133,23 +133,23 @@ export default function Sidebar({
       case 'rewards':
         return <SugaryIcon name="gift" size={size} className={className} />;
       case 'bookmarks':
-        return <SugaryIcon name="book" size={size} className={className} />;
+        return <SugaryIcon name="bookmark" size={size} className={className} />;
       case 'customization':
         return <SugaryIcon name="crown" size={size} className={className} />;
       case 'store':
         return <SugaryIcon name="coins" size={size} className={className} />;
       case 'aichat':
-        return <SugaryIcon name="sparkles" size={size} className={className} />;
+        return <SugaryIcon name="chatbot" size={size} className={className} />;
       case 'support':
-        return <SugaryIcon name="document" size={size} className={className} />;
+        return <SugaryIcon name="support" size={size} className={className} />;
       case 'community':
-        return <SugaryIcon name="layers" size={size} className={className} />;
+        return <SugaryIcon name="community" size={size} className={className} />;
       case 'billing':
-        return <SugaryIcon name="coins" size={size} className={className} />;
+        return <SugaryIcon name="billing" size={size} className={className} />;
       case 'settings':
-        return <SugaryIcon name="star" size={size} className={className} />;
+        return <SugaryIcon name="settings" size={size} className={className} />;
       case 'admin':
-        return <SugaryIcon name="trophy" size={size} className={className} />;
+        return <SugaryIcon name="admin" size={size} className={className} />;
       case 'profile':
         return <SugaryIcon name="crown" size={size} className={className} />;
       default:
