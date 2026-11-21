@@ -23,14 +23,12 @@ import {
   CosmoSearchResult,
 } from '../lib/db';
 import PromptBar from '../components/PromptBar';
-import StarBorder from '../components/StarBorder';
 import { Attachment01Icon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { parseExplicitQuestionCount } from '../lib/cosmoQuizCount';
 import {
   FileText,
   Plus,
   PanelLeftOpen,
-  Zap,
   ShieldCheck,
   ShieldAlert,
   EyeOff,
@@ -78,7 +76,7 @@ import { generateCosmoQuizInBatches } from '../lib/cosmo/cosmoPedagogy';
 import Waves from '../components/cosmo/backgrounds/Waves';
 
 /* ═══════════════════════════════════════════════════════════
-    Cosmo AI — Advanced Educational Assistant & Quiz Studio
+    Cosmo AI — Advanced Educational Assistant
    Design: AI-Native Cosmic Interface, Floating Composer Pill,
    Collapsible Grouped Sidebar, Unique Chat Codes & Local File Privacy
    ═══════════════════════════════════════════════════════════ */
@@ -530,7 +528,7 @@ export default function AIChat({
           ? isExtractMode
             ? `سأقوم باستقراء واستخراج كل الأسئلة الموجودة في ملف **${attachmentForQuiz.name}** كما هي حرفياً دون أي تغيير. اضغط تأكيد البدء.`
             : `هحوّل الملف المرفق إلى كويز حقيقي داخل المنصة (بدون رفعه في الداتابيز): **${requestedQuiz.amount} سؤال** بمستوى **${requestedQuiz.difficulty}**. اضبط الإعدادات بالأسفل واضغط تأكيد البدء.`
-          : `أقدر أجهز لك اختبارًا متقنًا في **${requestedQuiz.topic}** من **${requestedQuiz.amount} أسئلة** بمستوى **${requestedQuiz.difficulty}**. راجع إعدادات استوديو الكويزات بالأسفل للتوليد الفوري.`
+          : `أقدر أجهز لك اختبارًا متقنًا في **${requestedQuiz.topic}** من **${requestedQuiz.amount} أسئلة** بمستوى **${requestedQuiz.difficulty}**. راجع الإعدادات بالأسفل ثم أكد البدء.`
         : requestedFileQuiz
           ? isExtractMode
             ? `I will extract all questions from **${attachmentForQuiz.name}** verbatim without alteration. Confirm to start.`
@@ -1156,8 +1154,8 @@ export default function AIChat({
       <div className="flex-1 flex flex-col min-w-0 min-h-0 relative z-10">
         {/* Header Bar */}
         <header
-          className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b backdrop-blur-md"
-          style={{ borderColor: theme.BORDER_SOFT, background: theme.IS_DARK ? 'rgba(7, 36, 36, 0.88)' : 'rgba(248, 250, 252, 0.88)' }}
+          className="flex items-center justify-between px-3 py-2.5 sm:px-5 sm:py-3 flex-shrink-0 border-b backdrop-blur-xl"
+          style={{ borderColor: theme.BORDER_SOFT, background: theme.IS_DARK ? 'rgba(7, 18, 30, 0.92)' : 'rgba(248, 250, 252, 0.94)' }}
         >
           <div className="flex items-center gap-2.5">
             {!sidebarOpen && (
@@ -1181,9 +1179,7 @@ export default function AIChat({
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="متصل" aria-label="متصل" />
                 </div>
                 <p className="text-[10px] text-slate-400 flex items-center gap-1">
-                  <span>Cosmo 2.5 Flash</span>
-                  <span>•</span>
-                  <span>مساعد وكويز ستوديو</span>
+                  <span>{isAr ? 'مساعدك الدراسي داخل QuizSpace' : 'Your study assistant in QuizSpace'}</span>
                 </p>
               </div>
             </div>
@@ -1210,21 +1206,6 @@ export default function AIChat({
                 {copiedCodeBanner ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
-
-            <button
-              onClick={() => openQuizStudio()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
-              style={{
-                background: 'rgba(245,158,11,0.12)',
-                borderColor: 'rgba(245,158,11,0.3)',
-                color: '#f59e0b',
-              }}
-              title="فتح استوديو توليد الكويزات"
-              aria-label="فتح استوديو توليد الكويزات"
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isAr ? 'استوديو الكويزات' : 'Quiz Studio'}</span>
-            </button>
 
             <button
               onClick={() => setIsIncognito(v => !v)}
@@ -1316,7 +1297,7 @@ export default function AIChat({
               onOpenQuizStudio={openQuizStudio}
             />
           ) : (
-            <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">
+            <div className="max-w-3xl mx-auto w-full px-3 py-5 sm:px-5 sm:py-8 space-y-7">
               {messages.map((msg, i) => (
                 <MessageRow
                   key={msg.id}
@@ -1324,7 +1305,6 @@ export default function AIChat({
                   index={i}
                   copiedMsgId={copiedMsgId}
                   onCopy={copyMessage}
-                  onCreateQuizFromReply={text => openQuizStudio(text.slice(0, 150))}
                   onStartQuiz={id => onOpenGeneratedQuiz?.(id)}
                   onRegenerate={handleRegenerateMessage}
                   onEditMessage={handleEditMessage}
@@ -1335,7 +1315,7 @@ export default function AIChat({
                 />
               ))}
 
-              {/* ─── Ultra-Modern Cosmo Quiz Studio Modal Card ─── */}
+              {/* Quiz settings remain conversational and appear only after Cosmo detects a quiz request. */}
               {pendingQuiz && (
                 <CosmoQuizStudioModal
                   pendingQuiz={pendingQuiz}
@@ -1410,14 +1390,6 @@ export default function AIChat({
                   {suggestion.label}
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => openQuizStudio()}
-                className="min-h-9 shrink-0 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-black transition-all active:scale-95 cursor-pointer border"
-                style={{ color: '#07111f', background: '#CDFC8A', borderColor: '#CDFC8A' }}
-              >
-                {isAr ? 'إنشاء اختبار' : 'Create quiz'}
-              </button>
             </div>
           </div>
         )}
@@ -1508,10 +1480,9 @@ export default function AIChat({
                 ]}
                 commands={[
                   { key: 'summarize', name: '/summarize', description: isAr ? 'لخّص المحادثة الحالية' : 'Digest the thread so far' },
-                  { key: 'quiz', name: '/quiz', description: isAr ? 'افتح استوديو الكويز الذكي' : 'Open the smart quiz studio' },
                 ]}
-                models={[{ key: 'cosmo', name: 'Cosmo 2.5 Flash', tag: isAr ? 'تعليمي' : 'Education' }]}
-                defaultModel="cosmo"
+                models={[]}
+                defaultModel=""
                 efforts={isAr ? ['منخفض', 'متوسط', 'عالٍ'] : ['Low', 'Medium', 'High']}
                 defaultEffort={accountEffortLabel}
                 effortValue={accountEffortLabel}
@@ -1544,31 +1515,6 @@ export default function AIChat({
               <input type="file" ref={fileInputRef} accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.md,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,text/markdown,text/plain" className="hidden" onChange={e => { void handleAttachmentFile(e.target.files?.[0]); e.currentTarget.value = ''; }} />
 
               <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                <StarBorder
-                  type="button"
-                  onClick={() => openQuizStudio()}
-                  color={theme.IS_DARK ? '#fde68a' : '#f59e0b'}
-                  trailColor="#f59e0b"
-                  duration={4}
-                  direction="clockwise"
-                  stars={1}
-                  trailLength={0.3}
-                  thickness={1}
-                  radius={12}
-                  glow={0.6}
-                  hover="lap"
-                  sparkle={false}
-                  clickPulse
-                  theme={theme.IS_DARK ? 'dark' : 'light'}
-                  backgroundColor={theme.IS_DARK ? 'rgba(245,158,11,0.14)' : 'rgba(245,158,11,0.12)'}
-                  textColor="#f59e0b"
-                  borderColor="rgba(245,158,11,0.3)"
-                  style={{}}
-                  className="min-h-9 px-3 py-1.5 text-[11px] font-bold"
-                >
-                  <Zap className="h-3.5 w-3.5" />
-                  <span>{isAr ? 'كويز ذكي' : 'Smart quiz'}</span>
-                </StarBorder>
                 <div className="relative">
                   <button
                     type="button"

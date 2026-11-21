@@ -57,7 +57,7 @@ export function CosmoQuizStudioModal({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-black text-base sm:text-lg" style={{ color: theme.FG }}>
-                {isAr ? 'استوديو كوزمو لإنشاء الكويزات الذكية ' : 'Cosmo Smart Quiz Studio '}
+                {isAr ? 'تأكيد إعدادات الاختبار' : 'Confirm quiz settings'}
               </h3>
             </div>
             <p className="text-xs text-slate-400">
@@ -71,7 +71,7 @@ export function CosmoQuizStudioModal({
           onClick={onCancel}
           disabled={isGeneratingQuiz}
           className="p-1.5 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
-          aria-label="إغلاق الاستوديو"
+          aria-label="إغلاق إعدادات الاختبار"
         >
           <X className="w-5 h-5" />
         </button>
@@ -254,7 +254,7 @@ export function CosmoQuizStudioModal({
                 : `توليد الاختبار الآن (${pendingQuiz.amount} أسئلة)`
               : pendingQuiz.amount === 0
               ? 'Generate an auto-sized quiz'
-              : `Generate Quiz Now (${pendingQuiz.amount} questions)`}
+                : `Start generating (${pendingQuiz.amount} questions)`}
           </span>
         </button>
       </div>

@@ -1,10 +1,7 @@
 import React from 'react';
-import { BookOpen, BrainCircuit, Zap, GraduationCap } from 'lucide-react';
-import { QuizSpacePointsToken } from '../brand/QuizSpaceTokens';
+import { BookOpen, BrainCircuit, FileText, GraduationCap } from 'lucide-react';
 import { COSMO_AVATAR } from './CosmoAvatar';
 import { CosmoPalette } from './CosmoPalette';
-
-const ACCENT = '#007472';
 
 export const STARTERS = [
   {
@@ -24,12 +21,12 @@ export const STARTERS = [
     border: 'rgba(6,182,212,0.25)',
   },
   {
-    icon: Zap,
-    title: 'اختبرني فوراً في مادة محددة',
-    sub: 'توليد كويز تفاعلي فوري لقياس الفهم',
-    color: '#F59E0B',
-    bg: 'rgba(245,158,11,0.08)',
-    border: 'rgba(245,158,11,0.25)',
+    icon: FileText,
+    title: 'استخرج كل الأسئلة من ملف',
+    sub: 'أرفق الملف واطلب استخراج الأسئلة حرفيًا',
+    color: '#EE8361',
+    bg: 'rgba(238,131,97,0.08)',
+    border: 'rgba(238,131,97,0.25)',
   },
   {
     icon: GraduationCap,
@@ -46,7 +43,7 @@ export function CosmoWelcomeHero({
   theme,
   isAr,
   onSelectStarter,
-  onOpenQuizStudio,
+  onOpenQuizStudio: _onOpenQuizStudio,
 }: {
   userName?: string;
   theme: CosmoPalette;
@@ -55,56 +52,30 @@ export function CosmoWelcomeHero({
   onOpenQuizStudio: (topic?: string) => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-full px-4 py-12 max-w-2xl mx-auto">
-      <div className="welcome-title flex flex-col items-center text-center mb-10">
-        <div className="relative mb-6">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-[#007472]/30 to-[#2AC3BB]/20 blur-2xl scale-150 animate-pulse" />
-          <div
-            className="relative w-24 h-24 rounded-3xl overflow-hidden p-1.5 border-2 border-[#2AC3BB]/40 shadow-2xl shadow-[#007472]/30"
-            style={{ background: theme.CARD }}
-          >
-            <img src={COSMO_AVATAR} alt="Cosmo AI" className="w-full h-full object-cover rounded-2xl" />
+    <div className="flex min-h-full flex-col justify-center px-3 py-8 sm:px-8 sm:py-12">
+      <div className="mx-auto w-full max-w-2xl">
+        <div className="mb-8 flex items-center gap-3 border-b pb-5" style={{ borderColor: theme.BORDER_SOFT }}>
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-[#2AC3BB]/40 p-0.5 shadow-lg shadow-[#007472]/20" style={{ background: theme.CARD }}>
+            <img src={COSMO_AVATAR} alt="Cosmo AI" className="h-full w-full rounded-[14px] object-cover" />
+            <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
           </div>
-          <span className="absolute -bottom-1 -right-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500 text-white shadow-md">
-            جاهز للمذاكرة والاختبار
-          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#2AC3BB]">QuizSpace assistant</p>
+            <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl" style={{ color: theme.FG }}>
+              {isAr ? `إزاي أساعدك يا ${userName || 'صديقي'}؟` : `How can I help, ${userName || 'Scholar'}?`}
+            </h1>
+          </div>
         </div>
-
-        <div
-          className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold mb-3 border"
-          style={{
-            background: theme.IS_DARK ? 'rgba(0,116,114,0.15)' : 'rgba(0,116,114,0.08)',
-            borderColor: 'rgba(0,116,114,0.3)',
-            color: ACCENT,
-          }}
-        >
-          <QuizSpacePointsToken className="w-3.5 h-3.5" />
-          <span>{isAr ? 'كوزمو 2.5 فلاش • الذكاء الأكاديمي' : 'Cosmo 2.5 Flash • Academic AI'}</span>
-        </div>
-
-        <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-3" style={{ color: theme.FG }}>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361]">
-            {isAr ? `أهلاً بك يا ${userName || 'صديقي'} ` : `Welcome, ${userName || 'Scholar'} `}
-          </span>
-        </h1>
-        <p className="text-sm leading-relaxed max-w-lg text-slate-400">
-          {isAr
-            ? 'اسألني في أي مادة، أو ارفع ملفك لتلخيصه وتوليد كويز تفاعلي فوري. أسئلتك وشروحاتك تُصاغ بأعلى دقة أكاديمية.'
-            : 'Ask any question or attach files for instant summaries and high-quality quizzes.'}
+        <p className="mb-6 max-w-xl text-sm leading-7 text-slate-400">
+          {isAr ? 'اسأل براحتك. ارفع ملفًا، اطلب شرحًا، أو قل لكوزمو أن ينشئ اختبارًا—وهو سيتولى اختيار الخطوة المناسبة.' : 'Ask naturally. Attach a file, request an explanation, or ask Cosmo to create a quiz—the right next step is handled for you.'}
         </p>
-      </div>
 
-      {/* Quick Starter Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full">
+      <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
         {STARTERS.map(({ icon: Icon, title, sub, color, bg, border }) => (
           <button
             key={title}
             onClick={() => {
-              if (title.includes('اختبرني')) {
-                onOpenQuizStudio('معلومات عامة وتفكير نقدي');
-              } else {
-                onSelectStarter(title);
-              }
+              onSelectStarter(title);
             }}
             className="group text-right p-4 rounded-2xl transition-all duration-200 border cursor-pointer hover:-translate-y-1 shadow-sm hover:shadow-lg"
             style={{ background: theme.CARD, borderColor: theme.BORDER }}
@@ -133,6 +104,7 @@ export function CosmoWelcomeHero({
             </div>
           </button>
         ))}
+      </div>
       </div>
     </div>
   );

@@ -137,12 +137,12 @@ export function MessageRow({
         <div className="flex items-start gap-3.5 max-w-3xl">
           <AssistantAvatar />
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="mb-2 flex items-center gap-2">
               <span className="text-sm font-bold tracking-wide" style={{ color: theme.FG }}>
                 {ASSISTANT_NAME_AR}
               </span>
               <span
-                className="text-[10px] px-2 py-0.5 rounded-full font-semibold border flex items-center gap-1 shadow-sm"
+                className="flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold shadow-sm"
                 style={{
                   background: theme.IS_DARK ? 'rgba(0,116,114,0.15)' : 'rgba(0,116,114,0.08)',
                   borderColor: theme.IS_DARK ? 'rgba(0,116,114,0.3)' : 'rgba(0,116,114,0.2)',
@@ -150,7 +150,7 @@ export function MessageRow({
                 }}
               >
                 <Sparkles className="w-2.5 h-2.5" />
-                Cosmo 2.5 Flash
+                {isAr ? 'مساعد دراسي' : 'Study assistant'}
               </span>
             </div>
             <div
