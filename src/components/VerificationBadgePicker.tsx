@@ -21,6 +21,7 @@ export default function VerificationBadgePicker({
   onClose?: () => void;
 }) {
   const isAr = lang === 'ar';
+  const visibleBadges = badges.filter((badge) => badge.imageUrl.replace(/\?.*$/, '') === '/verification-badges/verified-violet.png');
   const choose = (badge: VerificationBadgeData) => {
     if (!isPremium) {
       showToast('info', isAr ? 'علامات التوثيق متاحة للباقات المدفوعة فقط.' : 'Verification marks are available on paid plans only.');
@@ -37,7 +38,7 @@ export default function VerificationBadgePicker({
           {onClose && <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900" aria-label={isAr ? 'إغلاق' : 'Close'}><X className="h-5 w-5" /></button>}
         </div>
         <div className="grid grid-cols-3 gap-3">
-          {badges.map((badge) => {
+          {visibleBadges.map((badge) => {
             const active = selectedId === badge.id;
             const locked = !isPremium;
             return (
