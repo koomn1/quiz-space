@@ -10,7 +10,7 @@ import Notifications from '../pages/settings/Notifications';
 import {
   Compass, Layers, Users, Bookmark, Trophy, Award, Sparkles, Search, MessageSquare,
   Send, ThumbsUp, Trash2, PlusCircle, CheckCircle, Flame, Clock, Heart, Shield, Settings, Pencil,
-  Volume2, VolumeX, Eye, BookOpen, Star, HelpCircle, User, Zap, Info, X, Bell, Globe
+  Volume2, VolumeX, Eye, BookOpen, Star, HelpCircle, User, Zap, Info, X, Bell, Globe, LockKeyhole
 } from 'lucide-react';
 import { Quiz, QuizCompletion, GlobalLeaderboardUser } from '../types';
 import TitleAvatarBadge from './TitleAvatarBadge';
@@ -33,6 +33,8 @@ import {
   addBookmark,
   removeBookmark,
   updateBadgeAndNameColor,
+  getVerificationBadges,
+  setActiveVerificationBadge,
   COSMO_ADMIN_UID,
   updateCommunityPost
 } from '../lib/db';
@@ -45,6 +47,8 @@ import { playChimeSound } from '../lib/chime';
 import { useTheme } from '../context/ThemeContext';
 import { InteractiveQuizCard } from './InteractiveQuizCard';
 import {showToast, showAppMessage} from './Toast';
+import VerificationBadge from './VerificationBadge';
+import type { VerificationBadgeData } from './VerificationBadge';
 
 export { playChimeSound } from '../lib/chime';
 
@@ -1577,6 +1581,8 @@ export function SettingsSection({
   const [nameColor, setNameColor] = useState<NameColorKey>('default');
   const [isSavingBadge, setIsSavingBadge] = useState(false);
   const [badgeSaveError, setBadgeSaveError] = useState('');
+  const [verificationBadges, setVerificationBadges] = useState<VerificationBadgeData[]>([]);
+  const [selectedVerificationBadgeId, setSelectedVerificationBadgeId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   useGSAP(() => {
     gsap.fromTo(containerRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" });
@@ -1596,11 +1602,16 @@ export function SettingsSection({
           if (stats.bio) setBioInput(stats.bio);
           if (stats.badgeTier) setBadgeTier(stats.badgeTier);
           if (stats.nameColor) setNameColor(stats.nameColor);
+          if (stats.verificationBadge?.id) setSelectedVerificationBadgeId(stats.verificationBadge.id);
           if (stats.phone) setPhoneInput(stats.phone);
         }
       });
     }
   }, [currentUserId]);
+
+  useEffect(() => {
+    getVerificationBadges().then(setVerificationBadges).catch(() => setVerificationBadges([]));
+  }, []);
 
   const handleConnectDrive = async () => {
     setIsDriveLoading(true);
@@ -1738,6 +1749,7 @@ export function SettingsSection({
     setBadgeSaveError('');
     try {
       await updateBadgeAndNameColor(currentUserId, badgeTier, nameColor);
+      await setActiveVerificationBadge(selectedVerificationBadgeId);
       showAppMessage(isAr ? 'تم حفظ تفضيلات الشعار والتخصيص بنجاح!' : 'Branding customization saved successfully!');
     } catch (err: any) {
       console.error(err);
@@ -2036,6 +2048,31 @@ export function SettingsSection({
                 <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
                   {isAr ? 'شارة توثيق واسم ملون - متاحة للمشتركين فقط. الأشكال المتاحة تعتمد على باقتك.' : 'Verified badge and colored name - premium subscribers only. Available options depend on your plan.'}
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <label className="text-xs font-black text-slate-700 dark:text-slate-300">{isAr ? 'علامة التوثيق:' : 'Verification mark:'}</label>
+                  {!isPremium && <span className="text-[10px] font-black text-amber-600 dark:text-amber-300">{isAr ? 'للمشتركين فقط' : 'Paid plans only'}</span>}
+                </div>
+                <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                  {verificationBadges.map((badge) => {
+                    const locked = !isPremium;
+                    const active = selectedVerificationBadgeId === badge.id;
+                    return (
+                      <button key={badge.id} type="button" onClick={() => {
+                        if (locked) {
+                          showToast('info', isAr ? 'هذه العلامة مقيدة بالاشتراك.' : 'This mark requires a paid subscription.');
+                          return;
+                        }
+                        setSelectedVerificationBadgeId(badge.id);
+                      }} className={`relative flex aspect-square items-center justify-center rounded-2xl border transition ${active ? 'border-sky-400 bg-sky-500/10 ring-2 ring-sky-400/30' : 'border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/60'} ${locked ? 'cursor-not-allowed opacity-40 grayscale' : 'hover:scale-105 hover:border-sky-300'}`} aria-label={locked ? (isAr ? 'علامة مقفلة' : 'Locked verification mark') : (isAr ? 'اختيار علامة التوثيق' : 'Select verification mark')}>
+                        <VerificationBadge badge={badge} size="lg" lang={lang} showLabel={false} />
+                        {locked && <span className="absolute inset-0 flex items-center justify-center"><LockKeyhole className="h-5 w-5 animate-[verification-shake_0.7s_ease-in-out_infinite] text-rose-500 drop-shadow-lg" /></span>}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {!isPremium ? (

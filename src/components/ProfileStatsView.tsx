@@ -19,6 +19,7 @@ import OverlayPortal from './OverlayPortal';
 import { ProfileQuickBadgeRail } from './ProfileQuickBadgeRail';
 import { VerificationBadge } from './VerificationBadge';
 import type { VerificationBadgeData } from './VerificationBadge';
+import VerificationBadgePicker from './VerificationBadgePicker';
 import {
   availableBadgeTiers, availableNameColors, availableBadgeColors,
   BADGE_COLOR_PRESETS, NAME_COLOR_PRESETS, BADGE_LABELS,
@@ -302,11 +303,24 @@ export default function ProfileStatsView({
   const [isSavingInfo, setIsSavingInfo] = React.useState(false);
   const [verificationBadges, setVerificationBadges] = React.useState<VerificationBadgeData[]>([]);
   const [selectedVerificationBadgeId, setSelectedVerificationBadgeId] = React.useState<string | null>(null);
+  const [isVerificationPickerOpen, setIsVerificationPickerOpen] = React.useState(false);
 
   React.useEffect(() => {
-    if (!isOwnProfile) return;
+    if (!profileData?.userId) return;
     getVerificationBadges().then(setVerificationBadges).catch(() => setVerificationBadges([]));
-  }, [isOwnProfile]);
+  }, [profileData?.userId]);
+
+  const handleVerificationBadgeSelect = async (badgeId: string | null) => {
+    if (!isOwnProfile) return;
+    try {
+      await setActiveVerificationBadge(badgeId);
+      setSelectedVerificationBadgeId(badgeId);
+      setIsVerificationPickerOpen(false);
+      onRefresh?.();
+    } catch (error: any) {
+      setBadgeSaveError(error?.message || (isAr ? 'تعذر حفظ علامة التوثيق.' : 'Could not save verification mark.'));
+    }
+  };
 
   React.useEffect(() => {
     let active = true;
@@ -571,6 +585,7 @@ export default function ProfileStatsView({
 
   return (
     <div className="space-y-8 animate-fade-in text-right" dir={isAr ? "rtl" : "ltr"}>
+      {isVerificationPickerOpen && <VerificationBadgePicker badges={verificationBadges} selectedId={profileData?.verificationBadge?.id || selectedVerificationBadgeId} isPremium={isUserPremium} canSelect={isOwnProfile} lang={lang} onSelect={(id) => void handleVerificationBadgeSelect(id)} onClose={() => setIsVerificationPickerOpen(false)} />}
 
       {/* 1. Header identity Cosmic Space banner with custom user-selected background */}
       <div className={`relative overflow-hidden rounded-3xl text-white shadow-[0_24px_60px_rgba(0,0,0,0.85)] p-6 md:p-8 border transition-all duration-500 ${customBg.classes}`}>
@@ -718,7 +733,10 @@ export default function ProfileStatsView({
               <div className="flex flex-col sm:flex-row sm:items-center justify-center md:justify-start gap-3">
                 <h3 className="font-display font-black text-2xl sm:text-3xl tracking-tight flex items-center gap-2 flex-wrap">
                   <span>{profileData?.name || (isAr ? "طالب متميز" : "Star Student")}</span>
-                  <VerificationBadge badge={profileData?.verificationBadge} size="md" lang={lang} />
+                  <button type="button" onClick={() => setIsVerificationPickerOpen(true)} className="rounded-full transition hover:scale-110" aria-label={isAr ? 'عرض علامات التوثيق' : 'Show verification marks'}>
+                    <VerificationBadge badge={profileData?.verificationBadge} size="md" lang={lang} />
+                    {!profileData?.verificationBadge && <BadgeCheck className="h-6 w-6 text-sky-400" />}
+                  </button>
 
                   <ProfileQuickBadgeRail
                     isAr={isAr}
