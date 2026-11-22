@@ -67,6 +67,8 @@ import {
   toggleFollowUser,
   getFollowersList,
   getFollowingList,
+  getVerificationBadges,
+  setActiveVerificationBadge,
 } from '../lib/db';
 import {
   AVATAR_PRESETS,
@@ -93,6 +95,9 @@ import { PremiumNameTag } from '../components/PremiumNameTag';
 import { THEME_PRESETS } from '../lib/themePresets';
 import { useTheme } from '../context/ThemeContext';
 import { showToast } from '../components/Toast';
+import VerificationBadge from '../components/VerificationBadge';
+import type { VerificationBadgeData } from '../components/VerificationBadge';
+import VerificationBadgePicker from '../components/VerificationBadgePicker';
 import OverlayPortal from '../components/OverlayPortal';
 import SpotlightCard from '../components/SpotlightCard';
 import SplitText from '../components/reactbits/SplitText';
@@ -149,6 +154,8 @@ export default function UserProfile({
 
   // Profile data states
   const [profileData, setProfileData] = useState<UserStats | null>(null);
+  const [verificationBadges, setVerificationBadges] = useState<VerificationBadgeData[]>([]);
+  const [isVerificationPickerOpen, setIsVerificationPickerOpen] = useState(false);
 
   // Contract verification compatibility:
   const hasTrialSubscription = isTrialSubscription(profileData?.planName, profileData?.planId);
@@ -182,6 +189,22 @@ export default function UserProfile({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+
+  useEffect(() => {
+    getVerificationBadges().then(setVerificationBadges).catch(() => setVerificationBadges([]));
+  }, []);
+
+  const handleVerificationBadgeSelect = async (badgeId: string | null) => {
+    if (!isOwnProfile || !isPremium) return;
+    try {
+      await setActiveVerificationBadge(badgeId);
+      setIsVerificationPickerOpen(false);
+      await loadProfile();
+      showToast('success', isAr ? 'تم تحديث علامة التوثيق.' : 'Verification mark updated.');
+    } catch (error: any) {
+      showToast('error', error?.message || (isAr ? 'تعذر تحديث علامة التوثيق.' : 'Could not update verification mark.'));
+    }
+  };
 
   // Coupon state
   const [couponCode, setCouponCode] = useState('');
@@ -703,6 +726,7 @@ export default function UserProfile({
 
   return (
     <div ref={containerRef} dir={isAr ? 'rtl' : 'ltr'} className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 space-y-6">
+      {isVerificationPickerOpen && <VerificationBadgePicker badges={verificationBadges} selectedId={profileData?.verificationBadge?.id} isPremium={isPremium} canSelect={isOwnProfile} lang={lang} onSelect={(id) => void handleVerificationBadgeSelect(id)} onClose={() => setIsVerificationPickerOpen(false)} />}
       {/* 1. HERO & IDENTITY BANNER */}
       <div className="gsap-hero relative rounded-[32px] border border-slate-200/80 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950 overflow-visible">
         {/* 3D Lanyard Interactive Hanging ID Card */}
@@ -914,6 +938,10 @@ export default function UserProfile({
                   badgeColor={profileData?.badgeColor as any}
                   isPremium={Boolean(profileData?.isPremium)}
                 />
+                <button type="button" onClick={() => setIsVerificationPickerOpen(true)} className="rounded-full transition hover:scale-110" aria-label={isAr ? 'عرض علامات التوثيق' : 'Show verification marks'}>
+                  <VerificationBadge badge={profileData?.verificationBadge} size="md" lang={lang} showLabel={false} />
+                  {!profileData?.verificationBadge && <ShieldCheck className="h-6 w-6 text-sky-400" />}
+                </button>
               </h1>
 
               {profileData?.customId && (
