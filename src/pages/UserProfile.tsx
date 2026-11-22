@@ -128,6 +128,14 @@ export interface UserProfileProps {
 
 type ProfileTab = 'quizzes' | 'activity' | 'membership' | 'edit' | 'rewards';
 
+const DEFAULT_VERIFICATION_BADGES: VerificationBadgeData[] = [
+  { id: 'default-blue-check-3d', name: '3D Blue Check', nameAr: 'علامة التوثيق الزرقاء ثلاثية الأبعاد', imageUrl: '/verification-badges/blue-check-3d.png' },
+  { id: 'default-verified-sky', name: 'Sky Verified', nameAr: 'التوثيق السماوي', imageUrl: '/verification-badges/verified-sky.png' },
+  { id: 'default-verified-gold', name: 'Gold Verified', nameAr: 'التوثيق الذهبي', imageUrl: '/verification-badges/verified-gold.png' },
+  { id: 'default-verified-violet', name: 'Violet Verified', nameAr: 'التوثيق البنفسجي', imageUrl: '/verification-badges/verified-violet.png' },
+  { id: 'default-verified-ai', name: 'AI Verified', nameAr: 'توثيق الذكاء الاصطناعي', imageUrl: '/verification-badges/verified-ai.png' },
+];
+
 export default function UserProfile({
   profileId,
   currentUserId,
@@ -191,7 +199,7 @@ export default function UserProfile({
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
   useEffect(() => {
-    getVerificationBadges().then(setVerificationBadges).catch(() => setVerificationBadges([]));
+    getVerificationBadges().then((badges) => setVerificationBadges(badges.length ? badges : DEFAULT_VERIFICATION_BADGES)).catch(() => setVerificationBadges(DEFAULT_VERIFICATION_BADGES));
   }, []);
 
   const handleVerificationBadgeSelect = async (badgeId: string | null) => {
