@@ -21,7 +21,6 @@ export default function VerificationBadgePicker({
   onClose?: () => void;
 }) {
   const isAr = lang === 'ar';
-  const visibleBadges = badges.filter((badge) => badge.imageUrl.replace(/\?.*$/, '') === '/verification-badges/verified-violet.png');
   const legacyGallery: VerificationBadgeData[] = [
     { id: 'gallery-blue-check-3d', name: 'Blue Check 3D', nameAr: 'العلامة الزرقاء ثلاثية الأبعاد', imageUrl: '/verification-badges/blue-check-3d.png' },
     { id: 'gallery-verified-sky', name: 'Sky Verified', nameAr: 'التوثيق السماوي', imageUrl: '/verification-badges/verified-sky.png' },
@@ -29,8 +28,7 @@ export default function VerificationBadgePicker({
     { id: 'gallery-verified-violet', name: 'Violet Verified', nameAr: 'التوثيق البنفسجي', imageUrl: '/verification-badges/verified-violet.png' },
     { id: 'gallery-verified-ai', name: 'AI Verified', nameAr: 'توثيق الذكاء الاصطناعي', imageUrl: '/verification-badges/verified-ai.png' },
   ];
-  const selectedViolet = visibleBadges[0] || legacyGallery[3];
-  const galleryBadges = legacyGallery.map((badge) => badge.imageUrl === selectedViolet.imageUrl ? selectedViolet : badge);
+  const galleryBadges = badges.length > 0 ? badges : legacyGallery;
   const choose = (badge: VerificationBadgeData) => {
     if (!isPremium) {
       showToast('info', isAr ? 'علامات التوثيق متاحة للباقات المدفوعة فقط.' : 'Verification marks are available on paid plans only.');
@@ -51,33 +49,27 @@ export default function VerificationBadgePicker({
             <span className="h-1.5 w-1.5 rounded-full bg-violet-500 shadow-[0_0_10px_currentColor]" />
             <span>{isAr ? 'مجموعة علامات التوثيق' : 'Verification badge collection'}</span>
           </div>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
             {galleryBadges.map((badge) => {
-              const isViolet = badge.imageUrl.replace(/\?.*$/, '') === '/verification-badges/verified-violet.png';
-              const active = isViolet && selectedId === badge.id;
-              const locked = isViolet && !isPremium;
+              const active = selectedId === badge.id;
+              const locked = !isPremium;
               const badgeCard = (
-                <div className={`relative flex aspect-square items-center justify-center rounded-xl border p-2 transition ${active ? 'border-violet-400 bg-violet-500/15 ring-2 ring-violet-400/35' : isViolet ? 'border-violet-300/70 bg-violet-500/10 hover:border-violet-400' : 'border-slate-200/80 bg-white/70 opacity-75 dark:border-slate-700 dark:bg-slate-900/60'}`}>
+                <div className={`relative flex aspect-square items-center justify-center rounded-xl border p-2 transition ${active ? 'border-violet-400 bg-violet-500/15 ring-2 ring-violet-400/35' : 'border-slate-200/80 bg-white/70 hover:border-violet-300 dark:border-slate-700 dark:bg-slate-900/60'}`}>
                   <VerificationBadge badge={badge} size="lg" lang={lang} showLabel={false} />
-                  {isViolet && <span className="absolute -end-1 -top-1 rounded-full bg-violet-600 p-1 text-white shadow-md"><Check className="h-3 w-3" /></span>}
+                  {active && <span className="absolute -end-1 -top-1 rounded-full bg-violet-600 p-1 text-white shadow-md"><Check className="h-3 w-3" /></span>}
                   {locked && <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-950/10"><LockKeyhole className="h-5 w-5 text-rose-500 drop-shadow-lg" /></span>}
                 </div>
               );
-              return isViolet ? (
-                <button key={badge.id} type="button" onClick={() => choose(badge)} className="min-w-0 text-center" aria-label={locked ? (isAr ? 'مقيدة للباقات المدفوعة' : 'Paid plan only') : (isAr ? 'اختيار العلامة البنفسجية' : 'Select violet verification mark')}>
+              return (
+                <button key={badge.id} type="button" onClick={() => choose(badge)} className="min-w-0 text-center transition hover:-translate-y-0.5" aria-label={locked ? (isAr ? 'مقيدة للباقات المدفوعة' : 'Paid plan only') : (isAr ? `اختيار ${badge.nameAr}` : `Select ${badge.name}`)}>
                   {badgeCard}
-                  <span className="mt-1 block truncate text-[8px] font-black text-violet-700 dark:text-violet-200">{isAr ? 'بنفسجي' : 'Violet'}</span>
+                  <span className={`mt-1 block truncate text-[8px] font-black ${active ? 'text-violet-700 dark:text-violet-200' : 'text-slate-600 dark:text-slate-300'}`}>{isAr ? badge.nameAr : badge.name}</span>
                 </button>
-              ) : (
-                <div key={badge.id} className="min-w-0 text-center" aria-label={isAr ? `${badge.nameAr} — للعرض فقط` : `${badge.name} — display only`}>
-                  {badgeCard}
-                  <span className="mt-1 block truncate text-[8px] font-bold text-slate-500 dark:text-slate-400">{isAr ? 'أرشيف' : 'Archive'}</span>
-                </div>
               );
             })}
           </div>
           <p className="mt-3 text-center text-[9px] font-bold leading-relaxed text-slate-500 dark:text-slate-400">
-            {isAr ? 'العلامات القديمة ظاهرة داخل الإطار كأرشيف فقط، ويمكن اختيار التيك البنفسجي وحده.' : 'Legacy marks are shown inside the frame as an archive; only the violet check can be selected.'}
+            {isAr ? 'كل العلامات داخل الإطار فعلية ويمكن اختيارها، ومنها التيك البنفسجي.' : 'Every badge in the frame is a real selectable badge, including the violet check.'}
           </p>
         </div>
         {canSelect && <button type="button" onClick={() => onSelect?.(null)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"><X className="h-4 w-4" />{isAr ? 'إزالة العلامة' : 'Remove mark'}</button>}

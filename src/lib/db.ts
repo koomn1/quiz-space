@@ -181,11 +181,8 @@ export async function getVerificationBadges(includeInactive = false): Promise<Ve
   const { data, error } = await query;
   if (error) throw error;
   const badges = (data || []).map(mapVerificationBadge);
-  // Keep the public/profile picker focused on the retained purple check.
-  // Admin callers can pass includeInactive=true to manage the legacy catalog.
-  return includeInactive
-    ? badges
-    : badges.filter((badge) => badge.imageUrl.replace(/\?.*$/, '') === '/verification-badges/verified-violet.png');
+  // The profile picker uses the complete active catalog, including the violet check.
+  return badges;
 }
 
 export async function getPublicVerificationBadge(userId: string): Promise<VerificationBadgeData | null> {

@@ -1610,7 +1610,7 @@ export function SettingsSection({
   }, [currentUserId]);
 
   useEffect(() => {
-    getVerificationBadges().then(setVerificationBadges).catch(() => setVerificationBadges([]));
+    getVerificationBadges(true).then(setVerificationBadges).catch(() => setVerificationBadges([]));
   }, []);
 
   const handleConnectDrive = async () => {

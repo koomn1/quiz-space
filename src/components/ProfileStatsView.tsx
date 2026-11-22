@@ -307,7 +307,7 @@ export default function ProfileStatsView({
 
   React.useEffect(() => {
     if (!profileData?.userId) return;
-    getVerificationBadges().then(setVerificationBadges).catch(() => setVerificationBadges([]));
+    getVerificationBadges(true).then(setVerificationBadges).catch(() => setVerificationBadges([]));
   }, [profileData?.userId]);
 
   const handleVerificationBadgeSelect = async (badgeId: string | null) => {
