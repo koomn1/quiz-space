@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  availableBadgeTiers,
   normalizeBadgeColor,
   normalizeBadgeTier,
   normalizeNameColor,
@@ -16,6 +17,14 @@ describe('profile decoration runtime normalization', () => {
     expect(normalizeBadgeTier('premium')).toBe('premium');
     expect(normalizeBadgeTier('legacy-tier')).toBe('none');
     expect(normalizeBadgeTier(undefined)).toBe('none');
+  });
+
+  it('only keeps the purple check from the old tier badges', () => {
+    expect(normalizeBadgeTier('enterprise')).toBe('none');
+    expect(normalizeBadgeTier('pro')).toBe('none');
+    expect(availableBadgeTiers('Free')).toEqual(['none']);
+    expect(availableBadgeTiers('Silver')).toEqual(['none', 'premium']);
+    expect(availableBadgeTiers('Diamond')).toEqual(['none', 'premium']);
   });
 
   it('keeps supported badge colors and falls back to blue', () => {

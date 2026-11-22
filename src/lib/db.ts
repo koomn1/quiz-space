@@ -193,9 +193,35 @@ export async function getPublicVerificationBadge(userId: string): Promise<Verifi
   return row ? mapVerificationBadge(row) : null;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function setActiveVerificationBadge(badgeId: string | null): Promise<void> {
+  // Guard: the column/RPC are UUID-typed; never send a non-UUID id to Postgres.
+  if (badgeId && !UUID_RE.test(badgeId)) throw new Error('Verification mark is not available right now.');
   const { error } = await supabase.rpc('set_active_verification_badge', { p_badge_id: badgeId || null });
   if (error) throw error;
+}
+
+/**
+ * Telegram-style single mark: a user shows either the purple check (badge_tier
+ * 'premium') OR one image badge from the catalog, never both. Only the parts
+ * that actually change are written.
+ */
+export async function setProfileMark(
+  userId: string,
+  next: { tier: BadgeTier; badgeId: string | null },
+  current: { tier: BadgeTier; badgeId: string | null },
+  nameColor: NameColorKey,
+  badgeColor: BadgeColorKey
+): Promise<void> {
+  const nextTier: BadgeTier = next.badgeId ? 'none' : next.tier;
+  const nextBadgeId = nextTier === 'premium' ? null : next.badgeId;
+  if (nextTier !== current.tier) {
+    await updateBadgeAndNameColor(userId, nextTier, nameColor, nextTier === 'premium' ? 'purple' : badgeColor);
+  }
+  if (nextBadgeId !== (current.badgeId || null)) {
+    await setActiveVerificationBadge(nextBadgeId);
+  }
 }
 
 export async function createVerificationBadge(payload: { name: string; nameAr: string; imageUrl: string; description?: string; descriptionAr?: string }): Promise<VerificationBadgeData> {

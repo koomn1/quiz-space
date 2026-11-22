@@ -12,7 +12,7 @@ import {
   CartesianGrid, Tooltip
 } from 'recharts';
 import { Quiz, QuizCompletion, UserStats } from '../types';
-import { getLearningStreakStatus, isTrialSubscription, saveUserProfile, updateBadgeAndNameColor, getVerificationBadges, setActiveVerificationBadge } from '../lib/db';
+import { getLearningStreakStatus, isTrialSubscription, saveUserProfile, updateBadgeAndNameColor, getVerificationBadges, setActiveVerificationBadge, setProfileMark } from '../lib/db';
 import RewardsSection from './RewardsSection';
 import { UserBadge } from './UserBadge';
 import OverlayPortal from './OverlayPortal';
@@ -20,8 +20,10 @@ import { ProfileQuickBadgeRail } from './ProfileQuickBadgeRail';
 import { VerificationBadge } from './VerificationBadge';
 import type { VerificationBadgeData } from './VerificationBadge';
 import VerificationBadgePicker from './VerificationBadgePicker';
+import type { ProfileMarkChoice } from './VerificationBadgePicker';
 import {
   availableBadgeTiers, availableNameColors, availableBadgeColors,
+  normalizeBadgeTier, normalizeBadgeColor, normalizeNameColor,
   BADGE_COLOR_PRESETS, NAME_COLOR_PRESETS, BADGE_LABELS,
   BadgeTier, NameColorKey, BadgeColorKey
 } from './PremiumNameTag';
@@ -310,11 +312,18 @@ export default function ProfileStatsView({
     getVerificationBadges(true).then(setVerificationBadges).catch(() => setVerificationBadges([]));
   }, [profileData?.userId]);
 
-  const handleVerificationBadgeSelect = async (badgeId: string | null) => {
-    if (!isOwnProfile) return;
+  const handleVerificationBadgeSelect = async (choice: ProfileMarkChoice) => {
+    if (!isOwnProfile || !profileData?.userId) return;
     try {
-      await setActiveVerificationBadge(badgeId);
-      setSelectedVerificationBadgeId(badgeId);
+      await setProfileMark(
+        profileData.userId,
+        choice,
+        { tier: normalizeBadgeTier(profileData.badgeTier), badgeId: profileData.verificationBadge?.id || null },
+        normalizeNameColor(profileData.nameColor),
+        normalizeBadgeColor(profileData.badgeColor)
+      );
+      setSelectedVerificationBadgeId(choice.badgeId);
+      setInfoBadgeTier(choice.badgeId ? 'none' : choice.tier);
       setIsVerificationPickerOpen(false);
       onRefresh?.();
     } catch (error: any) {
@@ -585,7 +594,6 @@ export default function ProfileStatsView({
 
   return (
     <div className="space-y-8 animate-fade-in text-right" dir={isAr ? "rtl" : "ltr"}>
-      {isVerificationPickerOpen && <VerificationBadgePicker badges={verificationBadges} selectedId={profileData?.verificationBadge?.id || selectedVerificationBadgeId} isPremium={isUserPremium} canSelect={isOwnProfile} lang={lang} onSelect={(id) => void handleVerificationBadgeSelect(id)} onClose={() => setIsVerificationPickerOpen(false)} />}
 
       {/* 1. Header identity Cosmic Space banner with custom user-selected background */}
       <div className={`relative overflow-hidden rounded-3xl text-white shadow-[0_24px_60px_rgba(0,0,0,0.85)] p-6 md:p-8 border transition-all duration-500 ${customBg.classes}`}>
@@ -733,10 +741,35 @@ export default function ProfileStatsView({
               <div className="flex flex-col sm:flex-row sm:items-center justify-center md:justify-start gap-3">
                 <h3 className="font-display font-black text-2xl sm:text-3xl tracking-tight flex items-center gap-2 flex-wrap">
                   <span>{profileData?.name || (isAr ? "طالب متميز" : "Star Student")}</span>
-                  <button type="button" onClick={() => setIsVerificationPickerOpen(true)} className="rounded-full transition hover:scale-110" aria-label={isAr ? 'عرض علامات التوثيق' : 'Show verification marks'}>
-                    <VerificationBadge badge={profileData?.verificationBadge} size="md" lang={lang} />
-                    {!profileData?.verificationBadge && <BadgeCheck className="h-6 w-6 text-sky-400" />}
-                  </button>
+                  {(() => {
+                    const markTier = isUserPremium ? normalizeBadgeTier(profileData?.badgeTier) : 'none';
+                    const currentMark = profileData?.verificationBadge ? (
+                      <VerificationBadge badge={profileData.verificationBadge} size="md" lang={lang} showLabel={false} />
+                    ) : markTier === 'premium' ? (
+                      <UserBadge tier="premium" size="md" showTooltip={false} badgeColor="purple" />
+                    ) : null;
+                    // Visitors just see the mark; the owner gets the Telegram-style side panel.
+                    if (!isOwnProfile) return currentMark;
+                    return (
+                      <span className="relative inline-flex items-center">
+                        <button type="button" onClick={() => setIsVerificationPickerOpen((open) => !open)} className="rounded-full transition hover:scale-110" aria-haspopup="dialog" aria-expanded={isVerificationPickerOpen} aria-label={isAr ? 'علامات التوثيق' : 'Verification marks'}>
+                          {currentMark || <BadgeCheck className="h-6 w-6 text-sky-400" />}
+                        </button>
+                        {isVerificationPickerOpen && (
+                          <VerificationBadgePicker
+                            badges={verificationBadges}
+                            selectedId={profileData?.verificationBadge?.id}
+                            selectedTier={markTier}
+                            isPremium={isUserPremium}
+                            canSelect={isOwnProfile}
+                            lang={lang}
+                            onSelect={(choice) => void handleVerificationBadgeSelect(choice)}
+                            onClose={() => setIsVerificationPickerOpen(false)}
+                          />
+                        )}
+                      </span>
+                    );
+                  })()}
 
                   <ProfileQuickBadgeRail
                     isAr={isAr}
@@ -1474,11 +1507,11 @@ export default function ProfileStatsView({
                       <label className="text-xs font-black text-white">{isAr ? 'علامة التوثيق' : 'Verification Mark'}</label>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      <button type="button" onClick={() => setSelectedVerificationBadgeId(null)} className={`flex items-center gap-2 rounded-xl border p-2 text-[10px] font-bold transition ${selectedVerificationBadgeId === null ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
+                      <button type="button" onClick={() => { setSelectedVerificationBadgeId(null); setInfoBadgeTier('none'); }} className={`flex items-center gap-2 rounded-xl border p-2 text-[10px] font-bold transition ${selectedVerificationBadgeId === null ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
                         <X className="h-4 w-4" />{isAr ? 'بدون علامة' : 'No mark'}
                       </button>
                       {verificationBadges.map((badge) => (
-                        <button type="button" key={badge.id} onClick={() => setSelectedVerificationBadgeId(badge.id)} className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 text-start transition ${selectedVerificationBadgeId === badge.id ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
+                        <button type="button" key={badge.id} onClick={() => { setSelectedVerificationBadgeId(badge.id); setInfoBadgeTier('none'); }} className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 text-start transition ${selectedVerificationBadgeId === badge.id ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
                           <VerificationBadge badge={badge} size="sm" lang={lang} />
                           <span className="truncate text-[10px] font-bold">{isAr ? badge.nameAr : badge.name}</span>
                         </button>
@@ -1515,7 +1548,7 @@ export default function ProfileStatsView({
                           <button
                             key={tier}
                             type="button"
-                            onClick={() => setInfoBadgeTier(tier)}
+                            onClick={() => { setInfoBadgeTier(tier); if (tier !== 'none') setSelectedVerificationBadgeId(null); }}
                             className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all border text-center gap-1 ${
                               infoBadgeTier === tier
                                 ? 'bg-purple-500/10 border-purple-500 text-white'

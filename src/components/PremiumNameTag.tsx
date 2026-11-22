@@ -26,13 +26,12 @@ export function availableNameColors(plan: 'Free' | 'Silver' | 'Gold' | 'Diamond'
 // access to the fancier animated badges (team/enterprise/lifetime/founder),
 // same spirit as Telegram Premium letting subscribers pick among several
 // badge styles rather than being stuck with one.
+// Only the purple check ('premium') is kept from the old tier badges; every
+// other mark is an image badge from the verification_badges catalog.
+export const SELECTABLE_BADGE_TIERS: BadgeTier[] = ['none', 'premium'];
+
 export function availableBadgeTiers(plan: 'Free' | 'Silver' | 'Gold' | 'Diamond'): BadgeTier[] {
-  switch (plan) {
-    case 'Diamond': return ['none', 'verified', 'pro', 'premium', 'team', 'enterprise', 'lifetime', 'founder', 'royal'];
-    case 'Gold':    return ['none', 'verified', 'pro', 'premium', 'team'];
-    case 'Silver':  return ['none', 'verified', 'pro'];
-    default:        return ['none'];
-  }
+  return plan === 'Free' ? ['none'] : [...SELECTABLE_BADGE_TIERS];
 }
 
 export function availableBadgeColors(plan: 'Free' | 'Silver' | 'Gold' | 'Diamond'): BadgeColorKey[] {
@@ -64,7 +63,7 @@ export function normalizeNameColor(value: unknown): NameColorKey {
 }
 
 export function normalizeBadgeTier(value: unknown): BadgeTier {
-  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(BADGE_LABELS, value)
+  return typeof value === 'string' && (SELECTABLE_BADGE_TIERS as string[]).includes(value)
     ? value as BadgeTier
     : 'none';
 }

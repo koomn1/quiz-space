@@ -68,7 +68,7 @@ import {
   getFollowersList,
   getFollowingList,
   getVerificationBadges,
-  setActiveVerificationBadge,
+  setProfileMark,
 } from '../lib/db';
 import {
   AVATAR_PRESETS,
@@ -91,13 +91,15 @@ import { playChimeSound } from '../lib/chime';
 import Lanyard from '../components/lanyard/Lanyard';
 import lanyardFrontImage from '../components/lanyard/card-front.webp';
 import lanyardStrapImage from '../components/lanyard/lanyard.png';
-import { PremiumNameTag } from '../components/PremiumNameTag';
+import { PremiumNameTag, normalizeBadgeTier, normalizeBadgeColor, normalizeNameColor } from '../components/PremiumNameTag';
+import { UserBadge } from '../components/UserBadge';
 import { THEME_PRESETS } from '../lib/themePresets';
 import { useTheme } from '../context/ThemeContext';
 import { showToast } from '../components/Toast';
 import VerificationBadge from '../components/VerificationBadge';
 import type { VerificationBadgeData } from '../components/VerificationBadge';
 import VerificationBadgePicker from '../components/VerificationBadgePicker';
+import type { ProfileMarkChoice } from '../components/VerificationBadgePicker';
 import OverlayPortal from '../components/OverlayPortal';
 import SpotlightCard from '../components/SpotlightCard';
 import SplitText from '../components/reactbits/SplitText';
@@ -127,14 +129,6 @@ export interface UserProfileProps {
 }
 
 type ProfileTab = 'quizzes' | 'activity' | 'membership' | 'edit' | 'rewards';
-
-const DEFAULT_VERIFICATION_BADGES: VerificationBadgeData[] = [
-  { id: 'default-blue-check-3d', name: 'Blue Check 3D', nameAr: 'العلامة الزرقاء ثلاثية الأبعاد', imageUrl: '/verification-badges/blue-check-3d.png' },
-  { id: 'default-verified-sky', name: 'Sky Verified', nameAr: 'التوثيق السماوي', imageUrl: '/verification-badges/verified-sky.png' },
-  { id: 'default-verified-gold', name: 'Gold Verified', nameAr: 'التوثيق الذهبي', imageUrl: '/verification-badges/verified-gold.png' },
-  { id: 'default-verified-violet', name: 'Violet Verified', nameAr: 'التوثيق البنفسجي', imageUrl: '/verification-badges/verified-violet.png' },
-  { id: 'default-verified-ai', name: 'AI Verified', nameAr: 'توثيق الذكاء الاصطناعي', imageUrl: '/verification-badges/verified-ai.png' },
-];
 
 export default function UserProfile({
   profileId,
@@ -199,13 +193,20 @@ export default function UserProfile({
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
   useEffect(() => {
-    getVerificationBadges(true).then((badges) => setVerificationBadges(badges.length ? badges : DEFAULT_VERIFICATION_BADGES)).catch(() => setVerificationBadges(DEFAULT_VERIFICATION_BADGES));
+    // No hard-coded fallback: catalog ids are UUIDs, so fake ids can never be saved.
+    getVerificationBadges(false).then(setVerificationBadges).catch(() => setVerificationBadges([]));
   }, []);
 
-  const handleVerificationBadgeSelect = async (badgeId: string | null) => {
-    if (!isOwnProfile || !isPremium) return;
+  const handleVerificationBadgeSelect = async (choice: ProfileMarkChoice) => {
+    if (!isOwnProfile || !isPremium || !profileData?.userId) return;
     try {
-      await setActiveVerificationBadge(badgeId);
+      await setProfileMark(
+        profileData.userId,
+        choice,
+        { tier: normalizeBadgeTier(profileData.badgeTier), badgeId: profileData.verificationBadge?.id || null },
+        normalizeNameColor(profileData.nameColor),
+        normalizeBadgeColor(profileData.badgeColor)
+      );
       setIsVerificationPickerOpen(false);
       await loadProfile();
       showToast('success', isAr ? 'تم تحديث علامة التوثيق.' : 'Verification mark updated.');
@@ -734,7 +735,6 @@ export default function UserProfile({
 
   return (
     <div ref={containerRef} dir={isAr ? 'rtl' : 'ltr'} className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 space-y-6">
-      {isVerificationPickerOpen && <VerificationBadgePicker badges={verificationBadges} selectedId={profileData?.verificationBadge?.id} isPremium={isPremium} canSelect={isOwnProfile} lang={lang} onSelect={(id) => void handleVerificationBadgeSelect(id)} onClose={() => setIsVerificationPickerOpen(false)} />}
       {/* 1. HERO & IDENTITY BANNER */}
       <div className="gsap-hero relative rounded-[32px] border border-slate-200/80 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950 overflow-visible">
         {/* 3D Lanyard Interactive Hanging ID Card */}
@@ -942,14 +942,39 @@ export default function UserProfile({
                 <PremiumNameTag
                   name={profileData?.name || currentUserName}
                   nameColor={profileData?.nameColor as any}
-                  badgeTier={profileData?.badgeTier as any}
+                  badgeTier="none"
                   badgeColor={profileData?.badgeColor as any}
                   isPremium={Boolean(profileData?.isPremium)}
                 />
-                <button type="button" onClick={() => setIsVerificationPickerOpen(true)} className="rounded-full transition hover:scale-110" aria-label={isAr ? 'عرض علامات التوثيق' : 'Show verification marks'}>
-                  <VerificationBadge badge={profileData?.verificationBadge} size="md" lang={lang} showLabel={false} />
-                  {!profileData?.verificationBadge && <ShieldCheck className="h-6 w-6 text-sky-400" />}
-                </button>
+                {(() => {
+                  const markTier = profileData?.isPremium ? normalizeBadgeTier(profileData?.badgeTier) : 'none';
+                  const currentMark = profileData?.verificationBadge ? (
+                    <VerificationBadge badge={profileData.verificationBadge} size="md" lang={lang} showLabel={false} />
+                  ) : markTier === 'premium' ? (
+                    <UserBadge tier="premium" size="md" showTooltip={false} badgeColor="purple" />
+                  ) : null;
+                  // Visitors just see the mark; the owner gets the Telegram-style side panel.
+                  if (!isOwnProfile) return currentMark;
+                  return (
+                    <span className="relative inline-flex items-center">
+                      <button type="button" onClick={() => setIsVerificationPickerOpen((open) => !open)} className="rounded-full transition hover:scale-110" aria-haspopup="dialog" aria-expanded={isVerificationPickerOpen} aria-label={isAr ? 'علامات التوثيق' : 'Verification marks'}>
+                        {currentMark || <ShieldCheck className="h-6 w-6 text-sky-400" />}
+                      </button>
+                      {isVerificationPickerOpen && (
+                        <VerificationBadgePicker
+                          badges={verificationBadges}
+                          selectedId={profileData?.verificationBadge?.id}
+                          selectedTier={markTier}
+                          isPremium={isPremium}
+                          canSelect={isOwnProfile}
+                          lang={lang}
+                          onSelect={(choice) => void handleVerificationBadgeSelect(choice)}
+                          onClose={() => setIsVerificationPickerOpen(false)}
+                        />
+                      )}
+                    </span>
+                  );
+                })()}
               </h1>
 
               {profileData?.customId && (
