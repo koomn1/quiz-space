@@ -45,11 +45,7 @@ export default function VerificationBadgePicker({
           {onClose && <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900" aria-label={isAr ? 'إغلاق' : 'Close'}><X className="h-5 w-5" /></button>}
         </div>
         <div className="rounded-[1.35rem] border border-violet-300/50 bg-gradient-to-br from-violet-50 via-white to-sky-50 p-3 shadow-inner dark:border-violet-400/25 dark:from-violet-950/35 dark:via-slate-950 dark:to-sky-950/30">
-          <div className="mb-3 flex items-center gap-2 text-[10px] font-black text-violet-700 dark:text-violet-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-500 shadow-[0_0_10px_currentColor]" />
-            <span>{isAr ? 'مجموعة علامات التوثيق' : 'Verification badge collection'}</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {galleryBadges.map((badge) => {
               const active = selectedId === badge.id;
               const locked = !isPremium;
@@ -63,16 +59,12 @@ export default function VerificationBadgePicker({
               return (
                 <button key={badge.id} type="button" onClick={() => choose(badge)} className="min-w-0 text-center transition hover:-translate-y-0.5" aria-label={locked ? (isAr ? 'مقيدة للباقات المدفوعة' : 'Paid plan only') : (isAr ? `اختيار ${badge.nameAr}` : `Select ${badge.name}`)}>
                   {badgeCard}
-                  <span className={`mt-1 block truncate text-[8px] font-black ${active ? 'text-violet-700 dark:text-violet-200' : 'text-slate-600 dark:text-slate-300'}`}>{isAr ? badge.nameAr : badge.name}</span>
                 </button>
               );
             })}
           </div>
-          <p className="mt-3 text-center text-[9px] font-bold leading-relaxed text-slate-500 dark:text-slate-400">
-            {isAr ? 'كل العلامات داخل الإطار فعلية ويمكن اختيارها، ومنها التيك البنفسجي.' : 'Every badge in the frame is a real selectable badge, including the violet check.'}
-          </p>
         </div>
-        {canSelect && <button type="button" onClick={() => onSelect?.(null)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"><X className="h-4 w-4" />{isAr ? 'إزالة العلامة' : 'Remove mark'}</button>}
+        {canSelect && <button type="button" onClick={() => onSelect?.(null)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"><X className="h-4 w-4" />{isAr ? 'إزالة العلامة' : 'Remove mark'}</button>}
       </div>
     </div>
   );
