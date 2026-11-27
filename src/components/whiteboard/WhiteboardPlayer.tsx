@@ -2,7 +2,10 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, Captions, Info } from 'lucide-react';
 import type { NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
-import { cancelNarration, getNarrationSupport, speak } from '../../lib/whiteboard/narration';
+import {
+  defaultNarrationEngine as engine, genderForStep, getNarrationSupport, loadVoicePreference, saveVoicePreference,
+  sentenceAtProgress, splitSentences, type VoiceOption, type VoicePreference,
+} from '../../lib/whiteboard/narration';
 
 const COLORS: Record<NodeColor, string> = {
   ink: '#1e293b',
@@ -125,6 +128,10 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
   const [captions, setCaptions] = useState(true);
   const [voiceInfo, setVoiceInfo] = useState(() => getNarrationSupport(lesson.lang));
   const reduced = useMemo(prefersReducedMotion, []);
+  const [voicePref, setVoicePref] = useState<VoicePreference>(() => { try { return loadVoicePreference(); } catch { return 'female'; } });
+  const [voiceId, setVoiceId] = useState<string>('');
+  const [voiceList, setVoiceList] = useState<VoiceOption[]>([]);
+  const resumeFromRef = useRef(0);
   const speechDoneRef = useRef(true);
   const stopSpeechRef = useRef<() => void>(() => undefined);
 
@@ -137,20 +144,24 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
   useEffect(() => {
     const s = typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
     if (!s) return;
-    const update = () => setVoiceInfo(getNarrationSupport(lesson.lang));
+    const update = () => { setVoiceInfo(getNarrationSupport(lesson.lang)); setVoiceList(engine.voices(lesson.lang)); };
     update();
     s.addEventListener?.('voiceschanged', update);
     return () => s.removeEventListener?.('voiceschanged', update);
   }, [lesson.lang]);
 
-  const stopSpeech = useCallback(() => { stopSpeechRef.current(); stopSpeechRef.current = () => undefined; cancelNarration(); }, []);
+  const stopSpeech = useCallback(() => { stopSpeechRef.current(); stopSpeechRef.current = () => undefined; engine.cancel(); }, []);
 
-  const startSpeech = useCallback((index: number) => {
+  const startSpeech = useCallback((index: number, fromSentence = 0) => {
     stopSpeech();
     if (muted || !voiceInfo.hasVoiceForLang) { speechDoneRef.current = true; return; }
     speechDoneRef.current = false;
-    stopSpeechRef.current = speak(lesson.steps[index].narration, lesson.lang, rate, () => { speechDoneRef.current = true; });
-  }, [lesson.steps, lesson.lang, muted, rate, stopSpeech, voiceInfo.hasVoiceForLang]);
+    stopSpeechRef.current = engine.speak({
+      text: lesson.steps[index].narration, lang: lesson.lang, rate,
+      gender: genderForStep(voicePref, index), voiceId: voiceId || null, fromSentence,
+      onEnd: () => { speechDoneRef.current = true; },
+    });
+  }, [lesson.steps, lesson.lang, muted, rate, stopSpeech, voiceInfo.hasVoiceForLang, voicePref, voiceId]);
 
   // Animation clock. The step advances once both the drawing time and the narration are finished.
   useEffect(() => {
@@ -179,7 +190,7 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
   const spokenStepRef = useRef<number | null>(null);
   useEffect(() => {
     if (!playing) { spokenStepRef.current = null; return; }
-    if (spokenStepRef.current !== stepIndex) { spokenStepRef.current = stepIndex; startSpeech(stepIndex); }
+    if (spokenStepRef.current !== stepIndex) { spokenStepRef.current = stepIndex; startSpeech(stepIndex, resumeFromRef.current); resumeFromRef.current = 0; }
   }, [playing, stepIndex, startSpeech]);
 
   useEffect(() => () => stopSpeech(), [stopSpeech]);
@@ -189,15 +200,21 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
     const clamped = Math.min(lesson.steps.length - 1, Math.max(0, index));
     stopSpeech();
     spokenStepRef.current = null;
+    resumeFromRef.current = 0;
     setStepIndex(clamped);
     setTInStep(playing ? 0 : durations.steps[clamped]?.durationMs ?? 0);
   };
 
   const togglePlay = () => {
-    if (playing) { setPlaying(false); stopSpeech(); return; }
-    // Replay from the start of the step (or from the beginning when the lesson already finished).
-    if (isLast && tInStep >= duration) { setStepIndex(0); }
-    setTInStep(0);
+    if (playing) {
+      // Pausing stops the voice too. Remember the sentence so resuming restarts from its beginning.
+      resumeFromRef.current = sentenceAtProgress(splitSentences(step.narration), duration > 0 ? tInStep / duration : 0);
+      setPlaying(false); stopSpeech(); spokenStepRef.current = null;
+      return;
+    }
+    const finished = isLast && tInStep >= duration;
+    if (finished) { setStepIndex(0); setTInStep(0); resumeFromRef.current = 0; }
+    else if (tInStep >= duration) { resumeFromRef.current = 0; setTInStep(0); }
     spokenStepRef.current = null;
     setPlaying(true);
   };
@@ -272,6 +289,23 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
         <button type="button" onClick={() => setCaptions(c => !c)} aria-pressed={captions} aria-label={t.captions} className={`p-2.5 rounded-xl border ${captions ? 'border-primary text-primary' : 'border-slate-200 dark:border-slate-700'}`}>
           <Captions className="w-4 h-4" />
         </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs" data-testid="whiteboard-voice-controls">
+        <label className="font-black text-slate-500">{isAr ? 'المعلّم' : 'Narrator'}</label>
+        <select value={voicePref} onChange={e => { const v = e.target.value as VoicePreference; setVoicePref(v); saveVoicePreference(v); }} aria-label={isAr ? 'صوت المعلّم' : 'Narrator voice'}
+          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent font-black px-2 py-2">
+          <option value="female">{isAr ? 'معلّمة (صوت أنثوي)' : 'Teacher (female voice)'}</option>
+          <option value="male">{isAr ? 'معلّم (صوت ذكوري)' : 'Teacher (male voice)'}</option>
+          <option value="alternate">{isAr ? 'تبادل بين الاثنين' : 'Alternate both'}</option>
+        </select>
+        {voiceList.length > 1 && voicePref !== 'alternate' && (
+          <select value={voiceId} onChange={e => setVoiceId(e.target.value)} aria-label={isAr ? 'اختيار صوت محدد' : 'Pick a specific voice'}
+            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-2 py-2 max-w-[220px]">
+            <option value="">{isAr ? 'تلقائي' : 'Automatic'}</option>
+            {voiceList.map(v => <option key={v.id} value={v.id}>{v.name}{v.gender !== 'unknown' ? (v.gender === 'female' ? ' ♀' : ' ♂') : ''}</option>)}
+          </select>
+        )}
       </div>
 
       {!voiceInfo.supported && (
