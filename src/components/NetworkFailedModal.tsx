@@ -36,7 +36,7 @@ export default function NetworkFailedModal({
           <button
             aria-label={isAr ? 'إغلاق' : 'Close'}
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:text-slate-350 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer"
           >
             <XCircle className="w-5 h-5" />
           </button>
@@ -69,7 +69,7 @@ export default function NetworkFailedModal({
             </span>
           </div>
 
-          <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed font-medium">
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
             {isAr
               ? 'يمكنك تفعيل "الوضع المحلي الذكي" (Sandbox Mode) لتخطي عوائق الشبكة تماماً ومتابعة استخدام التطبيق بكافة ميزاته والوصول الفوري للعضوية الذهبية الفائقة مع حفظ بياناتك محلياً!'
               : 'You can activate the "Local Sandbox Mode" to bypass network requirements completely. This instantly unlocks all premium student features, saving your progression and scores locally!'}

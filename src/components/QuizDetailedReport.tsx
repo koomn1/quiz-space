@@ -115,7 +115,7 @@ export default function QuizDetailedReport({
         </div>
 
         {/* Filter controls */}
-        <div className="flex items-center gap-1.5 self-start sm:self-center bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-850 p-1.5 rounded-2xl">
+        <div className="flex items-center gap-1.5 self-start sm:self-center bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-1.5 rounded-2xl">
           <button
             onClick={() => setActiveFilter('all')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${

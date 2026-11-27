@@ -200,7 +200,7 @@ export default function Notifications({ lang }: NotificationsProps) {
         </div>
 
         {/* Live Leaderboard Push activation */}
-        <div className="pt-6 border-t border-slate-150 dark:border-slate-800/80">
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80">
           <div className="rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-indigo-500/5 to-purple-500/10 p-5 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex gap-4">
@@ -236,7 +236,7 @@ export default function Notifications({ lang }: NotificationsProps) {
         </div>
 
         {/* Browser Push Notifications */}
-        <div className="pt-6 border-t border-slate-150 dark:border-slate-800/80 flex items-start justify-between gap-6">
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80 flex items-start justify-between gap-6">
           <div className="flex gap-4">
             <div className="p-2.5 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-xl text-indigo-500 shrink-0">
               <ShieldAlert className="w-5 h-5" />
@@ -261,7 +261,7 @@ export default function Notifications({ lang }: NotificationsProps) {
         </div>
 
         {/* Feedbacks and Save Action button */}
-        <div className="pt-6 border-t border-slate-150 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="w-full sm:w-auto">
             {saveSuccess && (
               <div className="flex items-center gap-1.5 text-emerald-500 text-xs font-bold animate-fade-in bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20">

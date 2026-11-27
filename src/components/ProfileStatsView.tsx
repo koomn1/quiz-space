@@ -183,7 +183,7 @@ export const backgroundOptions: BackgroundOption[] = [
     id: 'total_eclipse',
     nameAr: 'الكسوف والظل الأبدي',
     nameEn: 'Total Eclipse',
-    classes: 'bg-zinc-950 border-zinc-850',
+    classes: 'bg-zinc-950 border-zinc-800',
     glowingSphere1: 'bg-gradient-to-br from-zinc-700/10 to-transparent',
     glowingSphere2: 'bg-gradient-to-tr from-slate-800/15 to-transparent',
     iconBg: 'from-zinc-700 to-slate-900'
@@ -246,7 +246,7 @@ export const backgroundOptions: BackgroundOption[] = [
     id: 'lost_dimension',
     nameAr: 'أبعاد الفضاء المفقودة',
     nameEn: 'Lost Dimension',
-    classes: 'bg-gradient-to-br from-[#0e0e11] via-[#121215] to-black border-slate-850',
+    classes: 'bg-gradient-to-br from-[#0e0e11] via-[#121215] to-black border-slate-800',
     glowingSphere1: 'bg-gradient-to-br from-slate-600/10 to-transparent',
     glowingSphere2: 'bg-gradient-to-tr from-stone-700/10 to-transparent',
     iconBg: 'from-slate-700 to-stone-900'
@@ -643,7 +643,7 @@ export default function ProfileStatsView({
               </div>
 
               {/* Thick Polygon Badge computed dynamically from real XP */}
-              <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r ${customBg.iconBg} text-white border border-slate-850 text-xs font-black px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 transition-all duration-500`}>
+              <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r ${customBg.iconBg} text-white border border-slate-800 text-xs font-black px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 transition-all duration-500`}>
                 <span>LVL</span>
                 <span className="text-amber-300 font-mono text-xs">{calculatedLevel}</span>
               </div>
@@ -799,7 +799,7 @@ export default function ProfileStatsView({
                 {/* Copyable Account ID to send to teacher */}
                 <div
                   onClick={() => handleCopyIdPopup(profileData?.userId || '')}
-                  className="inline-flex items-center gap-1 bg-slate-900/80 border border-slate-800/80 hover:bg-slate-850 hover:border-slate-700 hover:text-white transition-all text-xs font-bold text-slate-350 px-2 py-0.5 rounded-lg cursor-pointer pb-1 w-fit mx-auto md:mx-0"
+                  className="inline-flex items-center gap-1 bg-slate-900/80 border border-slate-800/80 hover:bg-slate-800 hover:border-slate-700 hover:text-white transition-all text-xs font-bold text-slate-300 px-2 py-0.5 rounded-lg cursor-pointer pb-1 w-fit mx-auto md:mx-0"
                   title={isAr ? "معرّف التفعيل السريع - اضغط للنسخ والإرسال للمعلم" : "Activation ID - Click to Copy"}
                 >
                   <Copy className="w-2.5 h-2.5 text-purple-400" />
@@ -817,19 +817,19 @@ export default function ProfileStatsView({
 
               {/* Dynamic Location, Email and Joined Date block */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2 text-xs text-slate-400 font-bold">
-                <span className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-850 px-2 py-0.5 rounded-lg">
+                <span className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800 px-2 py-0.5 rounded-lg">
                   <MapPin className="w-3.5 h-3.5 text-purple-400" />
                   <span>{actualLocationDisplay || (isAr ? 'القاهرة، مصر' : 'Cairo, Egypt')}</span>
                 </span>
 
                 {profileData?.email && (
-                  <span className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-850 px-2 py-0.5 rounded-lg">
+                  <span className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800 px-2 py-0.5 rounded-lg">
                     <Mail className="w-3.5 h-3.5 text-purple-400" />
                     <span className="font-mono">{profileData.email}</span>
                   </span>
                 )}
 
-                <span className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-850 px-2 py-0.5 rounded-lg">
+                <span className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800 px-2 py-0.5 rounded-lg">
                   <Calendar className="w-3.5 h-3.5 text-purple-400" />
                   <span>
                     {profileData?.joinedDate
@@ -850,7 +850,7 @@ export default function ProfileStatsView({
           </div>
 
           {/* Right aligned current space rank block computed dynamically */}
-          <div className="bg-white dark:bg-slate-950/80 border border-slate-150 dark:border-slate-800 backdrop-blur-md p-4.5 rounded-2xl flex items-center gap-3 w-full sm:w-auto max-w-sm self-stretch lg:self-auto shadow-sm">
+          <div className="bg-white dark:bg-slate-950/80 border border-slate-100 dark:border-slate-800 backdrop-blur-md p-4.5 rounded-2xl flex items-center gap-3 w-full sm:w-auto max-w-sm self-stretch lg:self-auto shadow-sm">
             <div className="p-3 rounded-xl bg-purple-550/10 text-purple-605 dark:text-purple-400 shrink-0">
               <Sparkles className="w-6 h-6 animate-pulse" />
             </div>
@@ -858,7 +858,7 @@ export default function ProfileStatsView({
               <div className="flex items-center gap-1 justify-end">
                 <span className="text-xs text-purple-600 dark:text-purple-300 font-extrabold block">{isAr ? 'الترتيب الحالي في الفضاء' : 'Star Rank In Galaxies'}</span>
               </div>
-              <strong className="text-xl font-black text-slate-850 dark:text-white block font-display">
+              <strong className="text-xl font-black text-slate-800 dark:text-white block font-display">
                 {completions.length > 0 ? (completions.length > 5 ? 'Top 1%' : 'Top 5%') : 'Top 100%'}
               </strong>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{isAr ? 'من بين جميع رواد الفضاء على مستوى المنصة' : 'ranked across all active cosmic players'}</p>
@@ -871,7 +871,7 @@ export default function ProfileStatsView({
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
 
         {/* Card 1: Quizzes Taken */}
-        <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-850 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-purple-500/40 transition-colors shadow-lg">
+        <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-purple-500/40 transition-colors shadow-lg">
           <div className="p-2 bg-purple-500/10 rounded-xl text-purple-400 mb-1">
             <Trophy className="w-5 h-5" />
           </div>
@@ -883,7 +883,7 @@ export default function ProfileStatsView({
         </div>
 
         {/* Card 2: Correct Answers / Accuracy */}
-        <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-850 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-cyan-500/40 transition-colors shadow-lg">
+        <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-cyan-500/40 transition-colors shadow-lg">
           <div className="p-2 bg-cyan-500/10 rounded-xl text-cyan-400 mb-1">
             <CheckCircle className="w-5 h-5" />
           </div>
@@ -895,7 +895,7 @@ export default function ProfileStatsView({
         </div>
 
         {/* Card 3: Streak of days */}
-        <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-850 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-orange-500/40 transition-colors shadow-lg">
+        <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-orange-500/40 transition-colors shadow-lg">
           <div className="p-2 bg-orange-500/10 rounded-xl text-orange-400 mb-1">
             <Flame className="w-5 h-5 animate-bounce" />
           </div>
@@ -907,7 +907,7 @@ export default function ProfileStatsView({
         </div>
 
         {/* Card 4: Points */}
-        <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-850 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-amber-500/40 transition-colors shadow-lg">
+        <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-amber-500/40 transition-colors shadow-lg">
           <div className="p-2 bg-amber-500/10 rounded-xl text-amber-400 mb-1">
             <Star className="w-5 h-5" />
           </div>
@@ -919,7 +919,7 @@ export default function ProfileStatsView({
         </div>
 
         {/* Card 5: Ranking Position */}
-        <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-850 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-emerald-500/40 transition-colors shadow-lg">
+        <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-white rounded-2xl p-4.5 flex flex-col items-center text-center space-y-1 relative group hover:border-emerald-500/40 transition-colors shadow-lg">
           <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400 mb-1">
             <BadgeCheck className="w-5 h-5" />
           </div>
@@ -950,7 +950,7 @@ export default function ProfileStatsView({
             className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-purple-600 text-white shadow-md shadow-purple-600/15'
-                : 'text-slate-500 hover:text-slate-850 dark:text-slate-400 dark:hover:text-slate-200 bg-white/5 border border-transparent hover:bg-white/10 dark:hover:bg-slate-850'
+                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 bg-white/5 border border-transparent hover:bg-white/10 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
@@ -974,12 +974,12 @@ export default function ProfileStatsView({
             <div className="lg:col-span-5 space-y-6">
 
               {/* About Me Card */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
-                <div className="flex items-center gap-2 border-b border-slate-150 dark:border-slate-850 pb-3 justify-end text-right">
-                  <span className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'عنّي وتخصصاتي' : 'About Me'}</span>
+              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
+                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 justify-end text-right">
+                  <span className="font-extrabold text-sm text-slate-800 dark:text-white">{isAr ? 'عنّي وتخصصاتي' : 'About Me'}</span>
                   <UserCheck className="w-4 h-4 text-purple-400" />
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed text-right">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-right">
                   {profileData?.bio || (isAr
                     ? 'أنا شغوف جداً بالتعلم الذاتي وتحدي نفسي بالاختبارات المتنوعة. أجد متعتي الكبرى في استكشاف العلوم، التاريخ، والتقنيات الحديثة.'
                     : "I'm passionate about learning new things and challenging myself with quizzes. Science, History and Technology are my favorite categories.")}
@@ -1012,10 +1012,10 @@ export default function ProfileStatsView({
               </div>
 
               {/* Glowing Badges Card with 6 circles */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
-                <div className="flex items-center justify-between border-b border-slate-150 dark:border-slate-850 pb-3 flex-row-reverse text-right">
+              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-row-reverse text-right">
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'شارات التوثيق المفعلة' : 'My Verification Badges'}</span>
+                    <span className="font-extrabold text-sm text-slate-800 dark:text-white">{isAr ? 'شارات التوثيق المفعلة' : 'My Verification Badges'}</span>
                     <BadgeCheck className="w-4 h-4 text-purple-400" />
                   </div>
                 </div>
@@ -1041,7 +1041,7 @@ export default function ProfileStatsView({
                   </div>
                 )}
 
-                <div className="pt-2 border-t border-slate-850 flex justify-between items-center text-xs text-slate-400 flex-row-reverse">
+                <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400 flex-row-reverse">
                   <span>{isAr ? 'مستواك الحالي:' : 'Your level rank:'} <strong className="text-white">LVL {calculatedLevel}</strong></span>
                   <span className="bg-sky-950/40 border border-sky-550/25 text-sky-400 px-2 py-0.5 rounded font-black text-xs">
                     {isUserPremium ? (isAr ? 'عضو بريميوم' : 'Premium Scholar') : (isAr ? 'شبل المعرفة' : 'Knowledge Apprentice')}
@@ -1055,10 +1055,10 @@ export default function ProfileStatsView({
             <div className="lg:col-span-7 space-y-6">
 
               {/* Recent Activity Timeline Block */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
-                <div className="flex items-center justify-between border-b border-slate-150 dark:border-slate-850 pb-3 flex-row-reverse text-right">
+              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-row-reverse text-right">
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'النشاط الفعلي والحلول' : 'Recent Activity'}</span>
+                    <span className="font-extrabold text-sm text-slate-800 dark:text-white">{isAr ? 'النشاط الفعلي والحلول' : 'Recent Activity'}</span>
                     <RefreshCw className="w-4 h-4 text-purple-400" />
                   </div>
                   <span onClick={() => setActiveTab('activity')} className="text-xs text-purple-400 font-bold hover:underline cursor-pointer">{isAr ? 'عرض السجل الكامل' : 'View all'}</span>
@@ -1084,10 +1084,10 @@ export default function ProfileStatsView({
               </div>
 
               {/* Top Categories Card with beautiful progress bars and a dynamic circle accuracy gauge */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-150 dark:border-slate-850 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
-                <div className="flex items-center justify-between border-b border-slate-150 dark:border-slate-850 pb-3 flex-row-reverse text-right">
+              <div className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-slate-805 dark:text-white p-5 rounded-2xl space-y-4 shadow-xl">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-row-reverse text-right">
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'أعلى فئات ومستويات الدقة' : 'Top Categories'}</span>
+                    <span className="font-extrabold text-sm text-slate-800 dark:text-white">{isAr ? 'أعلى فئات ومستويات الدقة' : 'Top Categories'}</span>
                     <Layers className="w-4 h-4 text-purple-400" />
                   </div>
                 </div>
@@ -1105,7 +1105,7 @@ export default function ProfileStatsView({
                       <div  className="space-y-1">
                         <div className="flex justify-between items-center text-xs flex-row-reverse">
                           <span className="font-bold text-white">{cat.category}</span>
-                          <span className="font-mono text-slate-350">{completions.length > 0 ? `${cat.accuracy}% Accuracy` : (isAr ? 'غير مجرب بعد' : 'No attempt yet')}</span>
+                          <span className="font-mono text-slate-300">{completions.length > 0 ? `${cat.accuracy}% Accuracy` : (isAr ? 'غير مجرب بعد' : 'No attempt yet')}</span>
                         </div>
                         <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                           <div className={`h-full ${cat.color} rounded-full`} style={{ width: completions.length > 0 ? `${cat.accuracy}%` : '0%' }} />
@@ -1115,7 +1115,7 @@ export default function ProfileStatsView({
                   </div>
 
                   {/* Right component: Circle overall accuracy gauge donut chart */}
-                  <div className="flex flex-col items-center justify-center p-3 border-r border-slate-850 order-1 md:order-2">
+                  <div className="flex flex-col items-center justify-center p-3 border-r border-slate-800 order-1 md:order-2">
                     <div className="relative w-28 h-28 flex items-center justify-center">
                       {/* SVG circular donut loop representing dynamic overall accuracy percent */}
                       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
@@ -1199,7 +1199,7 @@ export default function ProfileStatsView({
                 {creations.map((quiz) => (
                   <div
 
-                     className="p-5 rounded-2xl bg-white dark:bg-[#0f1225]/50 border border-slate-150 dark:border-[#1f2648]/65 space-y-3 relative overflow-hidden flex flex-col justify-between shadow-xs hover:border-primary/55 transition-colors"
+                     className="p-5 rounded-2xl bg-white dark:bg-[#0f1225]/50 border border-slate-100 dark:border-[#1f2648]/65 space-y-3 relative overflow-hidden flex flex-col justify-between shadow-xs hover:border-primary/55 transition-colors"
                   >
                     <div className="space-y-1.5">
                       <div className="flex items-start justify-between gap-3">
@@ -1255,23 +1255,23 @@ export default function ProfileStatsView({
             className="space-y-4 text-right"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-white dark:bg-[#101424]/40 border border-slate-150 dark:border-[#1f2648]/80 text-slate-805 dark:text-white p-5 rounded-2xl flex items-start gap-4 flex-row-reverse text-right shadow-xs">
+              <div className="bg-white dark:bg-[#101424]/40 border border-slate-100 dark:border-[#1f2648]/80 text-slate-805 dark:text-white p-5 rounded-2xl flex items-start gap-4 flex-row-reverse text-right shadow-xs">
                 <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl">
                   <BadgeCheck className="w-6 h-6" />
                 </div>
                 <div className="space-y-1 flex-1 text-right">
-                  <h5 className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'رائد الفضاء الصاعد' : 'Rising Space Cadet'}</h5>
+                  <h5 className="font-extrabold text-sm text-slate-800 dark:text-white">{isAr ? 'رائد الفضاء الصاعد' : 'Rising Space Cadet'}</h5>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'أنهيت بنجاح ما يزيد عن 10 اختبارات بمستويات دقة فوق الـ 90%.' : 'Passed 10 or more quizzes with a score of 90% or higher.'}</p>
                   <span className="inline-block text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ' : 'Verified Achievement '}</span>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-[#101424]/40 border border-slate-150 dark:border-[#1f2648]/80 text-slate-805 dark:text-white p-5 rounded-2xl flex items-start gap-4 flex-row-reverse text-right shadow-xs">
+              <div className="bg-white dark:bg-[#101424]/40 border border-slate-100 dark:border-[#1f2648]/80 text-slate-805 dark:text-white p-5 rounded-2xl flex items-start gap-4 flex-row-reverse text-right shadow-xs">
                 <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
                   <Sparkles className="w-6 h-6" />
                 </div>
                 <div className="space-y-1 flex-1 text-right">
-                  <h5 className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'الأستاذ البارز' : 'Knowledge Maestro'}</h5>
+                  <h5 className="font-extrabold text-sm text-slate-800 dark:text-white">{isAr ? 'الأستاذ البارز' : 'Knowledge Maestro'}</h5>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'قمت بصناعة ونشر 5 اختبارات متميزة حصدت تفاعلاً يزيد عن 100 محاولة.' : 'Created 5 quizzes with above 100 plays cumulative.'}</p>
                   <span className="inline-block text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ' : 'Verified Achievement '}</span>
                 </div>
@@ -1302,7 +1302,7 @@ export default function ProfileStatsView({
                   return (
                     <div
 
-                      className="p-4 rounded-xl bg-white dark:bg-[#0f1225]/40 border border-slate-150 dark:border-[#1f2648]/80 space-y-2 text-right hover:shadow-2xs transition-shadow"
+                      className="p-4 rounded-xl bg-white dark:bg-[#0f1225]/40 border border-slate-100 dark:border-[#1f2648]/80 space-y-2 text-right hover:shadow-2xs transition-shadow"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <p className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
@@ -1352,7 +1352,7 @@ export default function ProfileStatsView({
                   return (
                     <div
 
-                      className="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-[#0f1225]/40 border border-slate-150 dark:border-[#1f2648]/80 shadow-2xs hover:shadow-xs transition-shadow"
+                      className="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-[#0f1225]/40 border border-slate-100 dark:border-[#1f2648]/80 shadow-2xs hover:shadow-xs transition-shadow"
                     >
                       <div className="space-y-1 text-right">
                         <h5 className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-1">{comp.quizTitle}</h5>
@@ -1395,7 +1395,7 @@ export default function ProfileStatsView({
             >
               <button
                 onClick={() => setIsEditingInfo(false)}
-                className="absolute top-4 left-4 p-2 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-850 cursor-pointer transition-colors"
+                className="absolute top-4 left-4 p-2 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer transition-colors"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -1501,17 +1501,17 @@ export default function ProfileStatsView({
 
                 {/* 5. Admin-managed Telegram-style verification badge picker */}
                 {verificationBadges.length > 0 && (
-                  <div className="space-y-2 border-t border-slate-850 pt-3">
+                  <div className="space-y-2 border-t border-slate-800 pt-3">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold text-slate-500">{isAr ? 'اختر العلامة التي تظهر بجوار اسمك' : 'Choose the mark shown beside your name'}</span>
                       <label className="text-xs font-black text-white">{isAr ? 'علامة التوثيق' : 'Verification Mark'}</label>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      <button type="button" onClick={() => { setSelectedVerificationBadgeId(null); setInfoBadgeTier('none'); }} className={`flex items-center gap-2 rounded-xl border p-2 text-xs font-bold transition ${selectedVerificationBadgeId === null ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
+                      <button type="button" onClick={() => { setSelectedVerificationBadgeId(null); setInfoBadgeTier('none'); }} className={`flex items-center gap-2 rounded-xl border p-2 text-xs font-bold transition ${selectedVerificationBadgeId === null ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-800 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
                         <X className="h-4 w-4" />{isAr ? 'بدون علامة' : 'No mark'}
                       </button>
                       {verificationBadges.map((badge) => (
-                        <button type="button" key={badge.id} onClick={() => { setSelectedVerificationBadgeId(badge.id); setInfoBadgeTier('none'); }} className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 text-start transition ${selectedVerificationBadgeId === badge.id ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
+                        <button type="button" key={badge.id} onClick={() => { setSelectedVerificationBadgeId(badge.id); setInfoBadgeTier('none'); }} className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 text-start transition ${selectedVerificationBadgeId === badge.id ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-800 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
                           <VerificationBadge badge={badge} size="sm" lang={lang} />
                           <span className="truncate text-xs font-bold">{isAr ? badge.nameAr : badge.name}</span>
                         </button>
@@ -1522,7 +1522,7 @@ export default function ProfileStatsView({
 
                 {/* 6. Real Verification Badge Selection — writes to badge_tier/name_color/badge_color
                      via the plan-validated update_badge_and_name_color RPC (see PremiumNameTag.tsx) */}
-                <div className="pt-2 border-t border-slate-850 space-y-2">
+                <div className="pt-2 border-t border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
                     {isUserPremium ? (
                       <span className="text-xs bg-amber-500/15 border border-amber-500/25 px-2 py-0.5 rounded-md text-amber-400 font-extrabold">
@@ -1552,7 +1552,7 @@ export default function ProfileStatsView({
                             className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all border text-center gap-1 ${
                               infoBadgeTier === tier
                                 ? 'bg-purple-500/10 border-purple-500 text-white'
-                                : 'bg-slate-950/40 border-slate-850 hover:bg-slate-900 text-slate-400'
+                                : 'bg-slate-950/40 border-slate-800 hover:bg-slate-900 text-slate-400'
                             }`}
                           >
                             <div className="h-6 flex items-center justify-center">
@@ -1616,7 +1616,7 @@ export default function ProfileStatsView({
                 </div>
 
                 {/* 6. Profile Custom Background theme selections */}
-                <div className="pt-2 border-t border-slate-850 space-y-2 text-right">
+                <div className="pt-2 border-t border-slate-800 space-y-2 text-right">
                   <label className="text-xs font-black text-white block">
                     {isAr ? 'تصميم خلفية الغلاف الكوني (16 نموذج مميز)' : 'Cosmic Shield Wallpaper (16 Themes)'}
                   </label>
@@ -1626,7 +1626,7 @@ export default function ProfileStatsView({
                       : 'Choose your desired space theme/color wallpaper style to make your profile stand out:'}
                   </p>
 
-                  <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-y-auto p-1 border border-slate-850 rounded-xl bg-slate-950/60 text-right">
+                  <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-y-auto p-1 border border-slate-800 rounded-xl bg-slate-950/60 text-right">
                     {backgroundOptions.map((bg) => (
                       <button
                         type="button"
@@ -1656,11 +1656,11 @@ export default function ProfileStatsView({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-850">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
                   <button
                     type="button"
                     onClick={() => setIsEditingInfo(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white border border-slate-800 text-xs font-black cursor-pointer transition-colors"
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-black cursor-pointer transition-colors"
                   >
                     {isAr ? 'إلغاء' : 'Cancel'}
                   </button>

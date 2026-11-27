@@ -1415,7 +1415,7 @@ export default function QuizResolver({
             ) : (
               <div className="space-y-8 animate-fade-in py-4">
               {/* Interactive Flashcard instructions & progress indicator */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 p-4.5 rounded-2.5xl shadow-sm">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4.5 rounded-2.5xl shadow-sm">
                 <div className="space-y-1 text-center sm:text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                   <h4 className="text-xs font-black text-slate-805 dark:text-white flex items-center justify-center sm:justify-start gap-1.5 leading-normal">
                     <BadgeCheck className="w-4 h-4 text-amber-500 animate-pulse" />
@@ -1478,7 +1478,7 @@ export default function QuizResolver({
                       </h3>
                     </div>
 
-                    <div className="flex flex-col items-center gap-1 text-xs text-slate-400 font-bold border-t border-dashed border-slate-150 dark:border-slate-800 pt-4">
+                    <div className="flex flex-col items-center gap-1 text-xs text-slate-400 font-bold border-t border-dashed border-slate-100 dark:border-slate-800 pt-4">
                       <span className="flex items-center gap-1 text-purple-500 animate-pulse">
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '4s' }} />
                         <span>{isAr ? 'انقر لقلب الكارت وكشف السر الأكاديمي ' : 'Click to flip and reveal the academic secret '}</span>
@@ -1533,7 +1533,7 @@ export default function QuizResolver({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-slate-150 dark:border-slate-800/80 pt-3 mt-1 gap-2">
+                    <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-1 gap-2">
                       <button
                         type="button"
                         onClick={(e) => {

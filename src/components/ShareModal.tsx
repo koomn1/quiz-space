@@ -205,7 +205,7 @@ export default function ShareModal({
           <div className="space-y-1">
             <div className={`flex items-center gap-1.5 ${isAr ? 'justify-start' : 'justify-start'}`}>
               <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <h5 className="font-bold text-xs text-slate-850 dark:text-slate-200">{textDict.challengeLabel}</h5>
+              <h5 className="font-bold text-xs text-slate-800 dark:text-slate-200">{textDict.challengeLabel}</h5>
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-400 leading-relaxed">
               {textDict.challengeSub}

@@ -469,7 +469,7 @@ export function InteractiveQuizCard({
                   nameColor={quiz.creatorNameColor as any}
                   badgeColor={quiz.creatorBadgeColor as any}
                   badgeSize="sm"
-                  className="font-black text-slate-500 dark:text-slate-350"
+                  className="font-black text-slate-500 dark:text-slate-300"
                 />
               </span>
               <span>•</span>

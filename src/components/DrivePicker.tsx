@@ -262,7 +262,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                 </div>
 
                 {/* Progress bar */}
-                <div className="w-full max-w-xs bg-slate-850 h-2 rounded-full overflow-hidden">
+                <div className="w-full max-w-xs bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div className="bg-gradient-to-r from-primary to-violet-500 h-full rounded-full transition-all duration-300" style={{ width: `${downloadProgress}%` }} />
                 </div>
               </div>
@@ -380,7 +380,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                   )}
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-850">
+                <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-800">
                   <span>Quiz Space Enterprise v1.5</span>
                   <button
                     onClick={() => {

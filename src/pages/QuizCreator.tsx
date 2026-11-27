@@ -2622,7 +2622,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
 
             <div className="space-y-4 pt-2 relative z-10">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-350 tracking-wide uppercase px-1">الموضوع التعليمي المستهدف:</label>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wide uppercase px-1">الموضوع التعليمي المستهدف:</label>
                 <input
                   type="text"
                   placeholder="مثال: لغات البرمجة الحديثة، أساسيات الكيمياء، الحرب العالمية الثانية..."
@@ -2791,7 +2791,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
             </div>
 
             <div className="space-y-1.5 pt-2 relative z-10">
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-350 tracking-wide uppercase px-1">الصق محتوى الفقرات أو نصوص ملف الـ PDF هنا:</label>
+              <label className="text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wide uppercase px-1">الصق محتوى الفقرات أو نصوص ملف الـ PDF هنا:</label>
               <textarea
                 rows={8}
                 placeholder="مثال:
@@ -2981,7 +2981,7 @@ A computer is a digital electronic machine...
                 >
                   <div className="absolute inset-0 bg-radial-gradient from-[#007472]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[24px]" />
 
-                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 shadow-md flex items-center justify-center shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300 border border-slate-150 dark:border-slate-800">
+                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 shadow-md flex items-center justify-center shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300 border border-slate-100 dark:border-slate-800">
                     <svg className="w-8 h-8" viewBox="0 0 1000 866" xmlns="http://www.w3.org/2000/svg">
                       <path d="M333.333 0L500 288.675L166.667 866.025L0 577.35Z" fill="#0F9D58" />
                       <path d="M166.667 866.025L833.333 866.025L666.667 577.35L333.333 577.35Z" fill="#4285F4" />
@@ -3357,7 +3357,7 @@ A computer is a digital electronic machine...
 
             {uploadedFile && (
               <div className="space-y-3" dir="rtl">
-                <label className="block text-xs font-black text-slate-600 dark:text-slate-350 border-b border-slate-200/50 dark:border-slate-800 pb-2">
+                <label className="block text-xs font-black text-slate-600 dark:text-slate-300 border-b border-slate-200/50 dark:border-slate-800 pb-2">
                    اختار الوضع المناسب لك — وضعان مستقلان تماماً:
                 </label>
                 <div className="uipro-glass-surface backdrop-blur-xl border border-cyan-500/30 dark:border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-[#007472]/5 to-transparent p-5 rounded-2xl shadow-sm text-right">
@@ -3546,7 +3546,7 @@ A computer is a digital electronic machine...
                   <span className="p-3 bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-[#007472] rounded-2xl shadow-sm border border-[#007472]/15 dark:border-[#2AC3BB]/15 dark:border-[#2AC3BB]/20"></span>
                   <div className="text-right">
                     <h3 className="font-display font-black text-xl text-slate-800 dark:text-slate-100 tracking-tight">بيانات وتفاصيل مسودة الاختبار الحالية</h3>
-                    <p className="text-xs text-slate-450 mt-0.5 font-medium">تفاصيل الهوية والزمن الموصى لطلابك لحل هذا الاختبار</p>
+                    <p className="text-xs text-slate-400 mt-0.5 font-medium">تفاصيل الهوية والزمن الموصى لطلابك لحل هذا الاختبار</p>
                   </div>
                 </div>
 
@@ -4122,7 +4122,7 @@ A computer is a digital electronic machine...
                                     type="button"
                                     onClick={() => handleQuestionChange(qIdx, { correctIndex: optIdx })}
                                     className={`w-6 h-6 rounded-full border-[2.5px] flex items-center justify-center cursor-pointer transition-all shrink-0 ${
-                                      isCorrect ? 'border-emerald-500 bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400 bg-white dark:bg-slate-850'
+                                      isCorrect ? 'border-emerald-500 bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400 bg-white dark:bg-slate-800'
                                     }`}
                                     title="تحديد كإجابة صحيحة"
                                   >

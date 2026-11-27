@@ -253,7 +253,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
             {/* CHARTS CONTAINER */}
             {totalQuizzesSolved === 0 ? (
-              <div className="uipro-glass-surface text-center py-20 rounded-[32px] border border-slate-250/60 dark:border-slate-850 flex flex-col items-center justify-center space-y-4">
+              <div className="uipro-glass-surface text-center py-20 rounded-[32px] border border-slate-200/60 dark:border-slate-800 flex flex-col items-center justify-center space-y-4">
                 <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300">
                   <GraduationCap className="w-8 h-8" />
                 </div>
@@ -268,7 +268,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 {/* Score progress over time Line Chart */}
-                <div className="uipro-glass-surface lg:col-span-8 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
+                <div className="uipro-glass-surface lg:col-span-8 border border-slate-200/80 dark:border-slate-800 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
                     <TrendingUp className="w-4.5 h-4.5 text-primary" />
                     <span>{isAr ? 'منحنى التطور المعرفي الأكاديمي' : 'Cognitive Growth Curve'}</span>
@@ -308,7 +308,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 </div>
 
                 {/* Score Range Distribution Bar Chart */}
-                <div className="uipro-glass-surface lg:col-span-4 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
+                <div className="uipro-glass-surface lg:col-span-4 border border-slate-200/80 dark:border-slate-800 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
                     <Activity className="w-4.5 h-4.5 text-[#007472] dark:text-[#2AC3BB]" />
                     <span>{isAr ? 'توزيع درجات الإجابات' : 'Result Category Ratios'}</span>
@@ -335,7 +335,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
             {/* SOLVING LOG TABLE */}
             {totalQuizzesSolved > 0 && (
-              <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
+              <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-800 rounded-[28px] overflow-hidden shadow-xs">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'سجل المحاولات والأداء التفصيلي ' : 'Study Attempt History '}</h3>
                   <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{totalQuizzesSolved} {isAr ? 'محاولات' : 'Attempts'}</span>
@@ -344,7 +344,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 <div className="overflow-x-auto">
                   <table className="w-full text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <thead>
-                      <tr className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-400 font-black text-xs uppercase border-b border-slate-100 dark:border-slate-850">
+                      <tr className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-400 font-black text-xs uppercase border-b border-slate-100 dark:border-slate-800">
                         <th className="px-6 py-4">{isAr ? 'الاختبار' : 'Quiz Title'}</th>
                         <th className="px-6 py-4">{isAr ? 'الدرجة' : 'Score'}</th>
                         <th className="px-6 py-4">{isAr ? 'نسبة الدقة' : 'Accuracy'}</th>
@@ -353,7 +353,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                         <th className="px-6 py-4 text-center">{isAr ? 'إعادة التحدي' : 'Action'}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-850/80 text-xs text-slate-650 dark:text-slate-300 font-medium">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs text-slate-650 dark:text-slate-300 font-medium">
                       {[...mySolvingCompletions].reverse().map((completion) => {
                         const scoreRatio = completion.totalQuestions > 0 ? (completion.score / completion.totalQuestions) : 0;
                         const accuracyStr = `${Math.round(scoreRatio * 100)}%`;
@@ -459,7 +459,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
             </div>
 
               {myCreatedQuizzes.length === 0 ? (
-              <div className="uipro-glass-surface text-center py-20 rounded-[32px] border border-slate-250/60 dark:border-slate-850 flex flex-col items-center justify-center space-y-4">
+              <div className="uipro-glass-surface text-center py-20 rounded-[32px] border border-slate-200/60 dark:border-slate-800 flex flex-col items-center justify-center space-y-4">
                 <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300">
                   <BookOpen className="w-8 h-8" />
                 </div>
@@ -474,7 +474,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 {/* Creator Quiz Performance Plays (Bar) */}
-                <div className="uipro-glass-surface lg:col-span-7 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
+                <div className="uipro-glass-surface lg:col-span-7 border border-slate-200/80 dark:border-slate-800 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
                     <Users className="w-4.5 h-4.5 text-primary" />
                     <span>{isAr ? 'معدل لعب الطلاب لكل اختبار' : 'Quiz Interactive Engagement'}</span>
@@ -496,7 +496,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 </div>
 
                 {/* Creator Category Breakdown (Pie) */}
-                <div className="uipro-glass-surface lg:col-span-5 border border-slate-200/80 dark:border-slate-850 p-6 rounded-[28px] shadow-xs">
+                <div className="uipro-glass-surface lg:col-span-5 border border-slate-200/80 dark:border-slate-800 p-6 rounded-[28px] shadow-xs">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-200 mb-6 flex items-center gap-2">
                     <BarChart3 className="w-4.5 h-4.5 text-purple-500" />
                     <span>{isAr ? 'توزيع الاختبارات حسب الفئات' : 'Category Authored Ratios'}</span>
@@ -562,7 +562,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
 
             {/* AUTHORING QUIZZES LOG */}
             {myCreatedQuizzes.length > 0 && (
-              <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
+              <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-800 rounded-[28px] overflow-hidden shadow-xs">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'تحليلات الاختبارات المؤلّفة ' : 'Authoring Performance Index '}</h3>
                   <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{myCreatedQuizzes.length} {isAr ? 'اختبار' : 'Quizzes'}</span>
@@ -571,7 +571,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                 <div className="overflow-x-auto">
                   <table className="w-full text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <thead>
-                      <tr className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-400 font-black text-xs uppercase border-b border-slate-100 dark:border-slate-850">
+                      <tr className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-400 font-black text-xs uppercase border-b border-slate-100 dark:border-slate-800">
                         <th className="px-6 py-4">{isAr ? 'اسم الاختبار' : 'Quiz Title'}</th>
                         <th className="px-6 py-4">{isAr ? 'الأسئلة' : 'Questions'}</th>
                         <th className="px-6 py-4">{isAr ? 'مرات لعب الطلاب' : 'Total Plays'}</th>
@@ -580,7 +580,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                         <th className="px-6 py-4">{isAr ? 'صلاحية التوزيع' : 'Routing'}</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-850/80 text-xs text-slate-650 dark:text-slate-300 font-medium">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs text-slate-650 dark:text-slate-300 font-medium">
                       {myCreatedQuizzes.map((q) => (
                         <tr  className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                           <td className="px-6 py-4.5 font-bold text-slate-800 dark:text-slate-200 max-w-[200px] truncate">{q.title}</td>

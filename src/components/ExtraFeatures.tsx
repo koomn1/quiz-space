@@ -1009,7 +1009,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                           ? 'bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
                           : index === 2
                           ? 'bg-amber-700 text-white'
-                          : 'bg-slate-150 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                       }`}>
                         {index < 3 ? '' : `#${index + 1}`}
                       </div>

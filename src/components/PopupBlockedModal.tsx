@@ -33,7 +33,7 @@ export default function PopupBlockedModal({
           <button
             aria-label={isAr ? 'إغلاق' : 'Close'}
             onClick={onClose}
-            className="p-1 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:text-slate-350 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer"
           >
             <XCircle className="w-5 h-5" />
           </button>
@@ -55,7 +55,7 @@ export default function PopupBlockedModal({
           </p>
         </div>
 
-        <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/50 dark:border-amber-950/40 p-4 rounded-2xl space-y-2 text-xs text-slate-600 dark:text-slate-350">
+        <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/50 dark:border-amber-950/40 p-4 rounded-2xl space-y-2 text-xs text-slate-600 dark:text-slate-300">
           <p className="font-bold text-amber-600 dark:text-amber-400">
             {isAr ? 'الحل الفعّال والسريع:' : 'Quick & Easy Solution:'}
           </p>

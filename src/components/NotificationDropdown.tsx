@@ -225,7 +225,7 @@ export function NotificationDropdown({ userId, lang = 'ar', onNavigate }: { user
         aria-label={isAr ? 'فتح مركز الإشعارات' : 'Open notification centre'}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        className="relative flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/70 dark:border-slate-700/60 dark:bg-slate-900/50 backdrop-blur-md p-2.5 text-slate-700 shadow-xs transition-all hover:bg-white/95 dark:hover:bg-slate-850 dark:text-slate-200 hover:border-primary/40 active:scale-95"
+        className="relative flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/70 dark:border-slate-700/60 dark:bg-slate-900/50 backdrop-blur-md p-2.5 text-slate-700 shadow-xs transition-all hover:bg-white/95 dark:hover:bg-slate-800 dark:text-slate-200 hover:border-primary/40 active:scale-95"
         title={isAr ? 'الإشعارات' : 'Notifications'}
       >
         <Bell className="h-5 w-5" />

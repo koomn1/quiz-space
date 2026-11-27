@@ -449,7 +449,7 @@ export default function Security({ lang }: SecurityProps) {
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   {isAr ? 'مفتاح التهيئة اليدوي:' : 'Manual Setup Secret:'}
                 </p>
-                <code className="block text-xs font-mono font-bold text-violet-500 bg-slate-50 dark:bg-slate-900/80 px-2.5 py-1 rounded border border-slate-150 dark:border-slate-800 select-all">
+                <code className="block text-xs font-mono font-bold text-violet-500 bg-slate-50 dark:bg-slate-900/80 px-2.5 py-1 rounded border border-slate-100 dark:border-slate-800 select-all">
                   {enrollmentSecret || 'GENERATING...'}
                 </code>
               </div>

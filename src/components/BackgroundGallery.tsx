@@ -263,7 +263,7 @@ export function BackgroundGallery({
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
                 selectedCategory === cat.id
                   ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-900/40 border border-violet-500/30'
-                  : 'bg-slate-900/60 hover:bg-slate-800 text-slate-400 border border-slate-850'
+                  : 'bg-slate-900/60 hover:bg-slate-800 text-slate-400 border border-slate-800'
               }`}
             >
               {isAr ? cat.labelAr : cat.labelEn}
@@ -278,7 +278,7 @@ export function BackgroundGallery({
             placeholder={isAr ? 'ابحث عن خلفية...' : 'Search backgrounds...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-900/60 border border-slate-850 rounded-full py-2 pl-9 pr-4 text-xs text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            className="w-full bg-slate-900/60 border border-slate-800 rounded-full py-2 pl-9 pr-4 text-xs text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
           />
           <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
         </div>
@@ -296,7 +296,7 @@ export function BackgroundGallery({
               className={`group relative h-64 rounded-3xl overflow-hidden border cursor-pointer transition-all duration-300 hover:scale-[1.02] flex flex-col justify-end p-5 ${
                 isActive
                   ? 'border-violet-500 shadow-2xl shadow-violet-900/30 ring-2 ring-violet-500/20'
-                  : 'border-slate-850 hover:border-slate-700'
+                  : 'border-slate-800 hover:border-slate-700'
               }`}
             >
               {/* Premium Background Component Live Preview Card */}
@@ -528,7 +528,7 @@ export function BackgroundGallery({
                     className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition-all select-none ${
                       theme === th.id
                         ? 'border-violet-500 bg-violet-500/10 text-violet-400 font-black'
-                        : 'border-slate-850 hover:bg-slate-900 bg-slate-900/40 text-slate-400'
+                        : 'border-slate-800 hover:bg-slate-900 bg-slate-900/40 text-slate-400'
                     }`}
                   >
                     <span>{th.label}</span>
@@ -547,7 +547,7 @@ export function BackgroundGallery({
           <div className="flex justify-end gap-2 border-t border-slate-900 pt-4">
             <button
               onClick={handleResetSettings}
-              className="px-4 py-2 rounded-full text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-900 border border-slate-850 transition-all flex items-center gap-1.5"
+              className="px-4 py-2 rounded-full text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-900 border border-slate-800 transition-all flex items-center gap-1.5"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               {isAr ? 'إعادة ضبط المصنع للفيزياء' : 'Reset Physics'}

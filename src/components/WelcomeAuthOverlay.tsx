@@ -111,7 +111,7 @@ export default function WelcomeAuthOverlay({
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
             placeholder={isAr ? 'مثال: أحمد الدوسري، طالب متميز...' : 'e.g., Jane Doe, Star Scholar...'}
-            className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-650 outline-none focus:border-primary dark:focus:border-primary-hover transition-all"
+            className="w-full px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-650 outline-none focus:border-primary dark:focus:border-primary-hover transition-all"
             style={{ textAlign: isAr ? 'right' : 'left' }}
           />
         </div>
@@ -120,7 +120,7 @@ export default function WelcomeAuthOverlay({
           <h4 className="text-xs font-black text-amber-600 dark:text-amber-400 border-b border-amber-100/40 dark:border-amber-905/30 pb-1" style={{ textAlign: isAr ? 'right' : 'left' }}>
             {isAr ? 'لماذا ينصح بتفعيل تسجيل الدخول؟ ' : 'Why connect your Google account? '}
           </h4>
-          <ul className="space-y-2 text-xs sm:text-xs text-slate-600 dark:text-slate-350">
+          <ul className="space-y-2 text-xs sm:text-xs text-slate-600 dark:text-slate-300">
             <li className="flex items-start gap-2.5">
               <span className="text-indigo-500 font-bold text-xs"></span>
               <span><strong>{isAr ? 'حفظ وحماية تقدمك الفردي:' : 'Preserve Progress:'}</strong> {isAr ? 'أرشفة شاملة وسجل أكاديمي كامل لجميع حلولك وتفاصيل محاولاتك.' : 'Keep a full academic transcript of all your interactive quiz attempts.'}</span>
