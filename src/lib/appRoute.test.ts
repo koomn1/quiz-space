@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveActiveQuizId, resolveActiveTab, resolveUrlProfileId } from './appRoute';
+import { resolveActiveQuizId, resolveActiveTab, resolveUrlProfileId, usesSharedFrameTab, readLocationParams } from './appRoute';
 
 const sp = (q = '') => new URLSearchParams(q);
 
@@ -84,5 +84,18 @@ describe('unknown dashboard routes', () => {
     expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/bookmarks' })).toBe('bookmarks');
     expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/legal-privacy' })).toBe('legal-privacy');
     expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/solving' })).toBe('solving');
+  });
+});
+
+describe('shared frame and location params', () => {
+  it('flags shared-frame tabs only without an active quiz', () => {
+    expect(usesSharedFrameTab('billing', false)).toBe(true);
+    expect(usesSharedFrameTab('billing', true)).toBe(false);
+    expect(usesSharedFrameTab('explore', false)).toBe(false);
+  });
+  it('reads params from search first, then from the hash', () => {
+    expect(readLocationParams({ search: '?tab=x', hash: '#/a?tab=y' }).get('tab')).toBe('x');
+    expect(readLocationParams({ search: '', hash: '#/dashboard/a?tab=y' }).get('tab')).toBe('y');
+    expect(readLocationParams({ search: '', hash: '#/dashboard/a' }).get('tab')).toBeNull();
   });
 });

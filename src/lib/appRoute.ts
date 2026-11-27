@@ -149,3 +149,16 @@ export function shouldShowSplash(loc: { hostname: string; pathname: string; hash
   const hasInnerRoute = Boolean(loc.hash && loc.hash !== '#/' && loc.hash !== '#');
   return isPrimaryHost && isRootPath && !hasInnerRoute;
 }
+
+const SHARED_FRAME_TABS = new Set(['landing', 'profile', 'create', 'community', 'settings', 'my-quizzes', 'billing', 'institution']);
+
+/** Tabs that render inside the shared content frame (other screens use their own surface). */
+export function usesSharedFrameTab(tab: string, hasActiveQuiz: boolean): boolean {
+  return SHARED_FRAME_TABS.has(tab) && !hasActiveQuiz;
+}
+
+/** Query params from the real search string, or from the part of the hash after '?'. */
+export function readLocationParams(loc: { search?: string; hash?: string }): URLSearchParams {
+  const hash = loc.hash || '';
+  return new URLSearchParams(loc.search || (hash.includes('?') ? hash.split('?')[1] : ''));
+}

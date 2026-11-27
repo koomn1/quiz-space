@@ -54,7 +54,7 @@ import AppShell from './app/AppShell';
 import SEO from './components/SEO';
 import { decideTabAccess } from './lib/tabAccess';
 import { useDelayedUnmount } from './hooks/useDelayedUnmount';
-import { resolveAppBasePath, shouldShowSplash, resolveActiveTab, resolveActiveQuizId, resolveUrlProfileId } from './lib/appRoute';
+import { resolveAppBasePath, shouldShowSplash, resolveActiveTab, resolveActiveQuizId, resolveUrlProfileId, usesSharedFrameTab, readLocationParams } from './lib/appRoute';
 
 function normalizeUserPhoto(value: unknown): string | null {
   const raw = String(value || '').trim();
@@ -165,7 +165,7 @@ export default function App() {
 
   const setActiveTab = React.useCallback((tab: string) => {
     const basePath = getAppBasePath();
-    const nextParams = new URLSearchParams(window.location.search || (window.location.hash.includes('?') ? window.location.hash.split('?')[1] : ''));
+    const nextParams = readLocationParams(window.location);
 
     if (tab === 'landing') {
       nextParams.delete('tab');
@@ -193,7 +193,7 @@ export default function App() {
   }, [userId, getAppBasePath, setSearchParams]);
 
   const setActiveQuizId = React.useCallback((quizId: string | null) => {
-    const nextParams = new URLSearchParams(window.location.search || (window.location.hash.includes('?') ? window.location.hash.split('?')[1] : ''));
+    const nextParams = readLocationParams(window.location);
     const basePath = getAppBasePath();
     if (quizId) {
       nextParams.set('quizId', quizId);
@@ -210,7 +210,7 @@ export default function App() {
   }, [getAppBasePath]);
 
   const setUrlProfileId = React.useCallback((profileId: string | null) => {
-    const nextParams = new URLSearchParams(window.location.search || (window.location.hash.includes('?') ? window.location.hash.split('?')[1] : ''));
+    const nextParams = readLocationParams(window.location);
     const basePath = getAppBasePath();
     if (profileId) {
       nextParams.set('profileId', profileId);
@@ -511,7 +511,7 @@ export default function App() {
       return;
     }
 
-    const currentParams = new URLSearchParams(window.location.search || (window.location.hash.includes('?') ? window.location.hash.split('?')[1] : ''));
+    const currentParams = readLocationParams(window.location);
     const basePath = getAppBasePath();
 
     setNavKey(prev => prev + 1);
@@ -595,19 +595,7 @@ export default function App() {
   // on every non-quiz screen so users never lose navigation context.
   const showAppHeader = !activeQuizId;
   const isNotFoundTab = activeTab === 'not-found' && !activeQuizId;
-  const usesSharedFrame = React.useMemo(() => {
-    const sharedTabs = new Set([
-      'landing',
-      'profile',
-      'create',
-      'community',
-      'settings',
-      'my-quizzes',
-      'billing',
-      'institution',
-    ]);
-    return sharedTabs.has(activeTab) && !activeQuizId;
-  }, [activeTab, activeQuizId]);
+  const usesSharedFrame = usesSharedFrameTab(activeTab, !!activeQuizId);
 
   React.useEffect(() => {
     if (!isGuestCreateRoute) return;
