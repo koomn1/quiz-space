@@ -6,6 +6,7 @@ import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboar
 import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
 import { appendPoint, boardPoint, pointsToPath, type FreehandPoint, type FreehandStroke } from '../../lib/whiteboard/freehand';
 import { captureBoardPng } from '../../lib/whiteboard/boardSnapshot';
+import { loadStickerInner } from '../../lib/whiteboard/stickers';
 import { ICONS, type IconName } from '../../lib/whiteboard/icons';
 import {
   defaultNarrationEngine as engine, genderForStep, getNarrationSupport, loadVoicePreference, saveVoicePreference,
@@ -171,6 +172,28 @@ function IconNode({ node, progress, rtl }: { node: WhiteboardNode; progress: num
   );
 }
 
+/** A catalog pictogram, stamped in with an overshoot bounce. OpenMoji art is 72x72. */
+function StickerNode({ node, progress }: { node: WhiteboardNode; progress: number }) {
+  const [inner, setInner] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    if (node.name) void loadStickerInner(node.name).then(m => { if (live) setInner(m); });
+    return () => { live = false; };
+  }, [node.name]);
+  const w = node.w ?? 160; const h = node.h ?? 160;
+  const t = Math.min(1, Math.max(0, progress));
+  const c1 = 1.70158; const c3 = c1 + 1;
+  const ease = 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); // easeOutBack
+  const s = Math.max(0.001, ease);
+  const cx = node.x + w / 2; const cy = node.y + h / 2;
+  if (!inner) return null;
+  return (
+    <g transform={`translate(${cx} ${cy}) scale(${s}) translate(${-cx} ${-cy})`} opacity={Math.min(1, t * 2)}>
+      <g transform={`translate(${node.x} ${node.y}) scale(${w / 72} ${h / 72})`} dangerouslySetInnerHTML={{ __html: inner }} />
+    </g>
+  );
+}
+
 function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: number; rtl: boolean }) {
   if (progress <= 0) return null;
   const color = COLORS[node.color];
@@ -229,6 +252,8 @@ function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: nu
       return <PathNode node={node} progress={progress} color={color} />;
     case 'icon':
       return <IconNode node={node} progress={progress} rtl={rtl} />;
+    case 'sticker':
+      return <StickerNode node={node} progress={progress} />;
     default:
       return null;
   }

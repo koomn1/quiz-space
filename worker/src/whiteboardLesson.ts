@@ -1,5 +1,11 @@
 /** Prompt and request validation for AI whiteboard lessons. The client validates the model output strictly before playing it. */
+import { STICKER_NAMES_BY_TOPIC } from './stickerNames';
+
 export const LESSON_TOPIC_MAX = 400;
+
+const STICKER_CATALOG = Object.entries(STICKER_NAMES_BY_TOPIC)
+  .map(([topic, names]) => `${topic}: ${names.join(' ')}`)
+  .join('\n');
 
 export interface LessonRequest {
   topic: string;
@@ -37,9 +43,12 @@ export function buildLessonPrompt({ topic, lang, steps, feedback }: LessonReques
 - كل خطوة تحتوي رسمًا أو مخططًا توضيحيًا واحدًا على الأقل بجانب النقاط (icon من المكتبة، أو أشكال rectangle/ellipse/curve/path مع أسهم تربطها). لا تكتفِ بالنصوص وحدها في أي خطوة: ضع النقاط المختصرة على جهة والرسم التوضيحي على الجهة الأخرى، واربط بينهما بسهم عند الحاجة.
 - لا تخترع مراجع أو إحصاءات. اذكر معلومات صحيحة فقط، وإن لم تكن متأكدًا فبسّط.
 - أضف دائمًا "tryIt":"مهمة قصيرة من جملة واحدة" في خطوة المثال الثاني أو الخطأ الشائع (أي خطوة تطبيق يفيد أن يحاولها الطالب بنفسه قبل كشف الحل)، ولا تضفها في أكثر من خطوتين. المهمة شيء يرسمه أو يكتبه الطالب على السبورة، مثل «احسب مساحة المثلث بنفسك قبل أن أريك الحل». لا تضع tryIt في خطوة تمهيدية أو ختامية. ولا تذكر كلمة tryIt إطلاقًا داخل narration أو title؛ المهمة تظهر للطالب تلقائيًا من الحقل نفسه.
+- استخدم ملصقًا (sticker) واحدًا أو اثنين على الأكثر في الخطوة عندما يجعلان الفكرة أوضح وأمتع (مثل تفاحة في درس الكسور، كوكب في درس الفضاء)؛ الملصق الجاهز أوضح من رسم معقد بالأشكال، لكن لا تضعه في كل خطوة بالقوة.
+مكتبة الملصقات المتاحة (اكتب الاسم في name حرفيًا كما يظهر):
+${STICKER_CATALOG}
 قواعد السبورة (صارمة، تُفحص آليًا وتُرفض المخالفات):
 - السبورة 1280 عرضًا × 720 ارتفاعًا. y في text هو خط الأساس للنص.
-- أنواع العناصر فقط: text, rectangle, ellipse, line, arrow, highlight, path, curve, icon. text يحتاج x,y,text,fontSize(24-64),color,align. rectangle/ellipse/highlight تحتاج x,y,w,h. line/arrow تحتاج x,y,x2,y2. curve تحتاج x,y,cx,cy,x2,y2 (منحنى تربيعي). path يحتاج d (بيانات مسار SVG بإحداثيات السبورة، أوامر M L C Q Z فقط). icon يحتاج x,y,w,h وname من المكتبة فقط: heart, cell, atom, plant, earth, brain، ويمكن إضافة labels مثل {"anchor":"nucleus","text":"النواة","teaser":true} حيث teaser=true يعرض «؟» أولاً ثم يكشف الاسم عند نهاية الرسم. الروابط المتاحة: heart(top,bottom,left,right)، cell(membrane,nucleus,cytoplasm)، atom(nucleus,electron,orbit)، plant(flower,leaf,stem,root)، earth(pole,equator,continent,ocean)، brain(left,right,fissure,top).
+- أنواع العناصر فقط: text, rectangle, ellipse, line, arrow, highlight, path, curve, icon, sticker. text يحتاج x,y,text,fontSize(24-64),color,align. rectangle/ellipse/highlight تحتاج x,y,w,h. line/arrow تحتاج x,y,x2,y2. curve تحتاج x,y,cx,cy,x2,y2 (منحنى تربيعي). path يحتاج d (بيانات مسار SVG بإحداثيات السبورة، أوامر M L C Q Z فقط). sticker يحتاج x,y,w,h (كل من w وh بين 60 و220) وname من مكتبة الملصقات في نهاية هذا النص حرفيًا. icon يحتاج x,y,w,h وname من المكتبة فقط: heart, cell, atom, plant, earth, brain، ويمكن إضافة labels مثل {"anchor":"nucleus","text":"النواة","teaser":true} حيث teaser=true يعرض «؟» أولاً ثم يكشف الاسم عند نهاية الرسم. الروابط المتاحة: heart(top,bottom,left,right)، cell(membrane,nucleus,cytoplasm)، atom(nucleus,electron,orbit)، plant(flower,leaf,stem,root)، earth(pole,equator,continent,ocean)، brain(left,right,fissure,top).
 - الألوان فقط: ink, primary, accent, success, danger, muted.
 - من 4 إلى 9 عناصر لكل خطوة، بترتيب الكتابة. ids فريدة داخل الخطوة.
 - عنوان الخطوة في الأعلى: y بين 70 و110، align="center"، fontSize 44-52.

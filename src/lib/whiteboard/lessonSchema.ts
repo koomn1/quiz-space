@@ -7,7 +7,7 @@ export const LESSON_SCHEMA_VERSION = 1 as const;
 export const CANVAS_WIDTH = 1280;
 export const CANVAS_HEIGHT = 720;
 
-export const NODE_TYPES = ['text', 'rectangle', 'ellipse', 'line', 'arrow', 'highlight', 'path', 'curve', 'icon'] as const;
+export const NODE_TYPES = ['text', 'rectangle', 'ellipse', 'line', 'arrow', 'highlight', 'path', 'curve', 'icon', 'sticker'] as const;
 export type NodeType = (typeof NODE_TYPES)[number];
 
 export const NODE_COLORS = ['ink', 'primary', 'accent', 'success', 'danger', 'muted'] as const;
@@ -39,7 +39,7 @@ export interface WhiteboardNode {
   cy?: number;
   /** Raw SVG path data for path nodes, in board coordinates. */
   d?: string;
-  /** Illustration name for icon nodes. */
+  /** Illustration name for icon nodes; sticker id from the sticker catalog for sticker nodes. */
   name?: string;
   /** Labels pinned to an icon's named anchors. */
   labels?: { anchor: string; text: string; teaser?: boolean }[];
@@ -87,6 +87,7 @@ export interface ValidationResult {
 }
 
 import { ICON_NAMES, ICONS, isSafePathData, MAX_ICON_LABEL_LENGTH, MAX_ICON_LABELS, type IconName } from './icons';
+import { stickerSet } from './stickers';
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -190,6 +191,14 @@ export function validateLesson(input: unknown): ValidationResult {
           if (!text) { errors.push(`${nw}, label ${li + 1}: text is required.`); return; }
           node.labels!.push({ anchor, text, ...(rawLabel.teaser === true ? { teaser: true } : {}) });
         });
+      }
+      if (type === 'sticker') {
+        const name = typeof rawNode.name === 'string' ? rawNode.name : '';
+        if (!stickerSet.has(name)) { errors.push(`${nw}: unknown sticker "${name.slice(0, 60)}".`); return; }
+        node.name = name;
+        if (!finite(rawNode.w) || !finite(rawNode.h) || rawNode.w <= 0 || rawNode.h <= 0) { errors.push(`${nw}: w and h must be positive numbers.`); return; }
+        node.w = clamp(rawNode.w, 24, Math.min(400, CANVAS_WIDTH - node.x));
+        node.h = clamp(rawNode.h, 24, Math.min(400, CANVAS_HEIGHT - node.y));
       }
       if (type === 'text' || type === 'rectangle' || type === 'ellipse') {
         const text = cleanText(rawNode.text, LIMITS.maxTextLength);
