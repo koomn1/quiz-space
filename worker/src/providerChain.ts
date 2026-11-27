@@ -57,7 +57,11 @@ async function requestJson(url: string, init: RequestInit, provider: string, mod
     if (!text.trim()) {
       const finish = payload?.choices?.[0]?.finish_reason;
       const used = payload?.usage?.completion_tokens;
-      throw new Error(`${provider} ${model} returned an empty response${finish || used ? ` (finish: ${finish ?? 'n/a'}, completion tokens: ${used ?? 'n/a'})` : ''}`);
+      const msg = payload?.choices?.[0]?.message;
+      const shape = msg && typeof msg === 'object'
+        ? Object.entries(msg).map(([k, v]) => `${k}:${typeof v === 'string' ? `str${v.length}` : Array.isArray(v) ? `arr${v.length}` : v === null ? 'null' : typeof v}`).join(',')
+        : 'no-message';
+      throw new Error(`${provider} ${model} returned an empty response${finish || used ? ` (finish: ${finish ?? 'n/a'}, completion tokens: ${used ?? 'n/a'}, message: ${shape})` : ''}`);
     }
     return text.trim();
   } finally {
