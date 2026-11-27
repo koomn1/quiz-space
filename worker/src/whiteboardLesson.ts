@@ -50,7 +50,8 @@ ${STICKER_CATALOG}
 - السبورة 1280 عرضًا × 720 ارتفاعًا. y في text هو خط الأساس للنص.
 - أنواع العناصر فقط: text, rectangle, ellipse, line, arrow, highlight, path, curve, icon, sticker. text يحتاج x,y,text,fontSize(24-64),color,align. rectangle/ellipse/highlight تحتاج x,y,w,h. line/arrow تحتاج x,y,x2,y2. curve تحتاج x,y,cx,cy,x2,y2 (منحنى تربيعي). path يحتاج d (بيانات مسار SVG بإحداثيات السبورة، أوامر M L C Q Z فقط). sticker يحتاج x,y,w,h (كل من w وh بين 60 و220) وname من مكتبة الملصقات في نهاية هذا النص حرفيًا. icon يحتاج x,y,w,h وname من المكتبة فقط: heart, cell, atom, plant, earth, brain، ويمكن إضافة labels مثل {"anchor":"nucleus","text":"النواة","teaser":true} حيث teaser=true يعرض «؟» أولاً ثم يكشف الاسم عند نهاية الرسم. الروابط المتاحة: heart(top,bottom,left,right)، cell(membrane,nucleus,cytoplasm)، atom(nucleus,electron,orbit)، plant(flower,leaf,stem,root)، earth(pole,equator,continent,ocean)، brain(left,right,fissure,top).
 - الألوان فقط: ink, primary, accent, success, danger, muted.
-- من 4 إلى 9 عناصر لكل خطوة، بترتيب الكتابة. ids فريدة داخل الخطوة.
+- من 4 إلى 7 عناصر فقط لكل خطوة، بترتيب الكتابة. ids فريدة داخل الخطوة. اللوح المزدحم يُرفض آليًا، فاجعل العناصر متباعدة.
+- لا يجوز أبدًا أن يتقاطع نص حر مع rectangle أو ellipse أو ملصق: إما أن يكون النص label قصيرًا متمركزًا بالكامل داخل الشكل، أو يكون خارج كل الأشكال والملصقات مع فراغ 40px على الأقل حوله.
 - عنوان الخطوة في الأعلى: y بين 70 و110، align="center"، fontSize 44-52.
 - منطقة المحتوى: y بين 180 و660 و x بين 60 و1220. لا شيء خارجها.
 - عرض النص التقريبي = عدد الحروف × fontSize × 0.5. يجب أن يبقى النص داخل 60..1220 أفقيًا. النص الواحد أقل من 32 حرفًا، وfontSize بين 28 و48 للنصوص العادية.

@@ -87,7 +87,7 @@ function RevealText({ node, progress, rtl }: { node: WhiteboardNode; progress: n
         textAnchor={anchor}
         direction={rtl ? 'rtl' : 'ltr'}
         clipPath={`url(#${clipId})`}
-        style={{ fontFamily: 'inherit' }}
+        style={{ fontFamily: size >= 44 ? "'Aref Ruqaa', 'Molhim', 'Cairo', serif" : "'Molhim', 'Aref Ruqaa', 'Cairo', serif" }}
       >
         {node.text}
       </text>
@@ -503,7 +503,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     <div className="space-y-3" dir={isAr ? 'rtl' : 'ltr'} onKeyDown={onKeyDown} tabIndex={0} aria-label={lesson.title} data-testid="whiteboard-player">
       {step.title && <div className="text-xs font-black text-teal-600" data-testid="whiteboard-step-title">{`${step.branch ? (isAr ? 'سؤالك: ' : 'Your question: ') : `${stepIndex + 1}. `}${step.title}`}</div>}
       <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-[#fdfcf8]">
-        <svg ref={svgRef} viewBox={`0 0 ${lesson.canvas.width} ${lesson.canvas.height}`} className={`w-full h-auto block${drawMode ? ' cursor-crosshair touch-none' : ''}`} role="img" aria-label={step.title || lesson.title}
+        <svg ref={svgRef} viewBox={`0 0 ${lesson.canvas.width} ${lesson.canvas.height}`} className={`w-full h-auto block${drawMode ? ' cursor-crosshair touch-none' : ''}`} role="img" aria-label={step.title || lesson.title} style={{ fontFamily: "'Molhim', 'Aref Ruqaa', 'Cairo', serif" }}
           onPointerDown={onDrawStart} onPointerMove={onDrawMove} onPointerUp={onDrawEnd} onPointerCancel={onDrawEnd}>
           <defs>
             <pattern id="wb-grid" width="40" height="40" patternUnits="userSpaceOnUse">
