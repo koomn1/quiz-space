@@ -66,10 +66,10 @@ export const BadgesTrophyHall: React.FC<BadgesTrophyHallProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#2AC3BB]">
+              <span className="text-xs font-black uppercase tracking-wider text-[#2AC3BB]">
                 {isAr ? 'قاعة الإنجازات' : 'Hall of Fame'}
               </span>
-              <span className="rounded-full bg-[#2AC3BB]/20 px-2 py-0.5 text-[10px] font-black text-[#2AC3BB]">
+              <span className="rounded-full bg-[#2AC3BB]/20 px-2 py-0.5 text-xs font-black text-[#2AC3BB]">
                 {earnedCount}/{badges.length} {isAr ? 'مكتسبة' : 'Earned'}
               </span>
             </div>
@@ -187,7 +187,7 @@ export const BadgesTrophyHall: React.FC<BadgesTrophyHallProps> = ({
                   <h4 className="truncate text-xs font-black text-[#FCF6EE]">
                     {isAr ? badge.nameAr : badge.name}
                   </h4>
-                  <p className="mt-1 line-clamp-2 min-h-6 text-[10px] text-[#8BAEAD]">
+                  <p className="mt-1 line-clamp-2 min-h-6 text-xs text-[#8BAEAD]">
                     {isAr ? badge.descriptionAr : badge.description}
                   </p>
                 </div>

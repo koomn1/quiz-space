@@ -273,7 +273,7 @@ export function UserBadge({
     <div
       className="
         absolute -top-8 left-1/2 -translate-x-1/2 z-50
-        px-2 py-0.5 rounded-md text-[10px] font-bold text-white whitespace-nowrap
+        px-2 py-0.5 rounded-md text-xs font-bold text-white whitespace-nowrap
         pointer-events-none opacity-0 group-hover:opacity-100
         transition-opacity duration-150 shadow-md
       "

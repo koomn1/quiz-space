@@ -31,7 +31,7 @@ export function StreamingRow({ text, theme }: { text: string; theme: CosmoPalett
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold mb-2 flex items-center gap-2" style={{ color: theme.FG }}>
           <span>{ASSISTANT_NAME_AR}</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB] border border-[#2AC3BB]/30 animate-pulse">
+          <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB] border border-[#2AC3BB]/30 animate-pulse">
             جاري الكتابة...
           </span>
         </p>
@@ -117,7 +117,7 @@ export function AgentPlanRow({ steps, isAr, theme }: { steps: AgentStep[]; isAr:
             {isAr ? 'خطة التنفيذ والأدوات' : 'Execution plan & tools'}
           </span>
         </div>
-        <span className="text-[10px] font-bold" style={{ color: theme.SUBTLE_TEXT }}>
+        <span className="text-xs font-bold" style={{ color: theme.SUBTLE_TEXT }}>
           {isAr ? 'نتيجة قابلة للتتبع' : 'Traceable result'}
         </span>
       </div>
@@ -159,7 +159,7 @@ export function AgentPlanRow({ steps, isAr, theme }: { steps: AgentStep[]; isAr:
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] font-extrabold" style={{ color: theme.FG }}>
+                  <p className="text-xs font-extrabold" style={{ color: theme.FG }}>
                     {title}
                   </p>
                   <span className="text-[9px] font-black" style={{ color: step.color }}>
@@ -167,7 +167,7 @@ export function AgentPlanRow({ steps, isAr, theme }: { steps: AgentStep[]; isAr:
                   </span>
                 </div>
                 {detail && (
-                  <p className="mt-0.5 text-[10px] leading-5" style={{ color: theme.SUBTLE_TEXT }}>
+                  <p className="mt-0.5 text-xs leading-5" style={{ color: theme.SUBTLE_TEXT }}>
                     {detail}
                   </p>
                 )}

@@ -82,7 +82,7 @@ export const VipLeaderboardPodium: React.FC<VipLeaderboardPodiumProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#2AC3BB]">
+              <span className="text-xs font-black uppercase tracking-wider text-[#2AC3BB]">
                 {isAr ? 'منصة التتويج الأسبوعية' : 'VIP Weekly Stage'}
               </span>
             </div>
@@ -136,14 +136,14 @@ export const VipLeaderboardPodium: React.FC<VipLeaderboardPodiumProps> = ({
                       <User className="h-6 w-6 text-slate-300" />
                     )}
                   </div>
-                  <span className="absolute -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-300 text-[10px] font-black text-[#072424] shadow">
+                  <span className="absolute -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-300 text-xs font-black text-[#072424] shadow">
                     2
                   </span>
                 </div>
                 <p className="w-full truncate text-center text-xs font-black text-[#FCF6EE]">
                   {top2.displayName}
                 </p>
-                <p className="text-[10px] font-bold text-[#2AC3BB]">
+                <p className="text-xs font-bold text-[#2AC3BB]">
                   {top2.weeklyPoints.toLocaleString()} XP
                 </p>
                 {/* Pedestal */}
@@ -193,14 +193,14 @@ export const VipLeaderboardPodium: React.FC<VipLeaderboardPodiumProps> = ({
                       <User className="h-6 w-6 text-amber-600" />
                     )}
                   </div>
-                  <span className="absolute -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-700 text-[10px] font-black text-[#FCF6EE] shadow">
+                  <span className="absolute -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-700 text-xs font-black text-[#FCF6EE] shadow">
                     3
                   </span>
                 </div>
                 <p className="w-full truncate text-center text-xs font-black text-[#FCF6EE]">
                   {top3.displayName}
                 </p>
-                <p className="text-[10px] font-bold text-[#2AC3BB]">
+                <p className="text-xs font-bold text-[#2AC3BB]">
                   {top3.weeklyPoints.toLocaleString()} XP
                 </p>
                 {/* Pedestal */}
@@ -214,7 +214,7 @@ export const VipLeaderboardPodium: React.FC<VipLeaderboardPodiumProps> = ({
           {/* List of Other Ranks */}
           {restEntries.length > 0 && (
             <div className="space-y-2 border-t border-[#2AC3BB]/15 pt-3">
-              <h4 className="text-[11px] font-bold text-[#8BAEAD] mb-1">
+              <h4 className="text-xs font-bold text-[#8BAEAD] mb-1">
                 {isAr ? 'باقي المنافسين' : 'Other Challengers'}
               </h4>
               {restEntries.slice(0, 7).map((entry) => {
@@ -236,10 +236,10 @@ export const VipLeaderboardPodium: React.FC<VipLeaderboardPodiumProps> = ({
                         <p className="truncate text-xs font-black text-[#FCF6EE]">
                           {entry.displayName}
                           {entry.isMe && (
-                            <span className="mx-1 text-[10px] text-[#2AC3BB]">({isAr ? 'أنت' : 'You'})</span>
+                            <span className="mx-1 text-xs text-[#2AC3BB]">({isAr ? 'أنت' : 'You'})</span>
                           )}
                         </p>
-                        <p className="text-[10px] text-[#8BAEAD]">
+                        <p className="text-xs text-[#8BAEAD]">
                           VIP {isAr ? tier.ar : tier.en}
                         </p>
                       </div>
@@ -268,7 +268,7 @@ export const VipLeaderboardPodium: React.FC<VipLeaderboardPodiumProps> = ({
                     <p className="text-xs font-black">
                       {isAr ? 'ترتيبك الأسبوعي المباشر' : 'Your Live Weekly Rank'}
                     </p>
-                    <p className="text-[10px] text-[#FBDFC7]">
+                    <p className="text-xs text-[#FBDFC7]">
                       {isAr
                         ? `أنت متقدم برصيد ${currentUserEntry.weeklyPoints.toLocaleString()} نقطة`
                         : `Current score: ${currentUserEntry.weeklyPoints.toLocaleString()} XP`}

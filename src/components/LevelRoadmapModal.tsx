@@ -109,7 +109,7 @@ export default function LevelRoadmapModal({
                 <h3 className="text-base font-black text-slate-900 dark:text-[#FCF6EE]">
                   {isAr ? 'خريطة المستويات ومكافآت الـ 100 ليفل' : '1-100 Level Progression Roadmap'}
                 </h3>
-                <p className="text-[11px] font-bold text-slate-500 dark:text-[#8BAEAD]">
+                <p className="text-xs font-bold text-slate-500 dark:text-[#8BAEAD]">
                   {isAr
                     ? 'افتح إطارات وألقاباً وهالات مميزة مع كل مستوى تحققه'
                     : 'Unlock frames, titles, and perks with each milestone'}
@@ -148,7 +148,7 @@ export default function LevelRoadmapModal({
 
               {/* Progress to next level */}
               <div className="w-full sm:w-56 space-y-1.5 text-end">
-                <div className="flex justify-between text-[11px] font-black text-slate-600 dark:text-[#8BAEAD]">
+                <div className="flex justify-between text-xs font-black text-slate-600 dark:text-[#8BAEAD]">
                   <span>{isAr ? 'التقدم للمستوى القادم:' : 'Next Level:'}</span>
                   <span className="font-mono text-[#007472] dark:text-[#2AC3BB]">
                     {levelInfo.isMaxLevel
@@ -165,7 +165,7 @@ export default function LevelRoadmapModal({
                   />
                 </div>
                 {!levelInfo.isMaxLevel && (
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 text-start">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 text-start">
                     {isAr
                       ? `متبقي ${(levelInfo.nextLevelXp - levelInfo.currentXp).toLocaleString()} XP للمستوى ${levelInfo.level + 1}`
                       : `${(levelInfo.nextLevelXp - levelInfo.currentXp).toLocaleString()} XP needed for Lv.${levelInfo.level + 1}`}
@@ -231,7 +231,7 @@ export default function LevelRoadmapModal({
                   <button
                     type="button"
                     onClick={() => setSelectedDivision('all')}
-                    className={`rounded-lg px-2.5 py-1 text-[11px] font-black transition shrink-0 cursor-pointer ${
+                    className={`rounded-lg px-2.5 py-1 text-xs font-black transition shrink-0 cursor-pointer ${
                       selectedDivision === 'all'
                         ? 'bg-[#007472] text-white shadow-xs'
                         : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
@@ -246,7 +246,7 @@ export default function LevelRoadmapModal({
                         key={div.division}
                         type="button"
                         onClick={() => setSelectedDivision(div.division)}
-                        className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-black transition shrink-0 cursor-pointer ${
+                        className={`flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-black transition shrink-0 cursor-pointer ${
                           isSelected
                             ? 'bg-[#007472] text-white shadow-xs'
                             : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:border-slate-300'
@@ -303,7 +303,7 @@ export default function LevelRoadmapModal({
                               <span className="capitalize">{lvl.category}</span>
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2">
+                          <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
                             {isAr ? lvl.descAr : lvl.descEn}
                           </p>
                         </div>
@@ -312,17 +312,17 @@ export default function LevelRoadmapModal({
                       {/* Status Indicator */}
                       <div className="shrink-0 flex items-center pt-1">
                         {isCurrent ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#2AC3BB]/20 px-2.5 py-1 text-[10px] font-black text-[#007472] dark:text-[#2AC3BB]">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#2AC3BB]/20 px-2.5 py-1 text-xs font-black text-[#007472] dark:text-[#2AC3BB]">
                             <Sparkles className="h-3 w-3 animate-pulse" />
                             <span>{isAr ? 'المستوى الحالي' : 'Current'}</span>
                           </span>
                         ) : isUnlocked ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                             <CheckCircle2 className="h-3 w-3" />
                             <span>{isAr ? 'مكتمل' : 'Unlocked'}</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-200/80 dark:bg-slate-800/80 px-2 py-0.5 text-[10px] font-bold text-slate-400">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-200/80 dark:bg-slate-800/80 px-2 py-0.5 text-xs font-bold text-slate-400">
                             <Lock className="h-3 w-3" />
                             <span>{isAr ? 'مغلق' : 'Locked'}</span>
                           </span>

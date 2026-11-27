@@ -94,7 +94,7 @@ export default function VerificationBadgePicker({
       <div className="mb-2 flex items-center justify-between gap-2">
         <div>
           <h3 className="text-xs font-black text-slate-900 dark:text-white">{isAr ? 'علامات التوثيق' : 'Verification Marks'}</h3>
-          <p className="mt-0.5 text-[10px] font-bold text-slate-500">{isAr ? 'اضغط على العلامة لاختيارها' : 'Tap a mark to select it'}</p>
+          <p className="mt-0.5 text-xs font-bold text-slate-500">{isAr ? 'اضغط على العلامة لاختيارها' : 'Tap a mark to select it'}</p>
         </div>
         {onClose && (
           <button type="button" onClick={onClose} className="rounded-lg p-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900" aria-label={isAr ? 'إغلاق' : 'Close'}>
@@ -138,7 +138,7 @@ export default function VerificationBadgePicker({
       </div>
 
       {badges.length === 0 && (
-        <p className="mt-2 text-center text-[10px] font-bold text-slate-500">
+        <p className="mt-2 text-center text-xs font-bold text-slate-500">
           {isAr ? 'تعذر تحميل بقية العلامات حالياً.' : 'Other marks could not be loaded right now.'}
         </p>
       )}
@@ -147,7 +147,7 @@ export default function VerificationBadgePicker({
         <button
           type="button"
           onClick={() => choose({ tier: 'none', badgeId: null })}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-[11px] font-black text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
         >
           <X className="h-3.5 w-3.5" />
           {isAr ? 'إزالة العلامة' : 'Remove mark'}

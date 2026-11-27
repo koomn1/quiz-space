@@ -225,7 +225,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                   <h4 className="font-display font-black text-sm text-white">
                     {isAr ? 'مستندات Google Drive السحابية' : 'Google Drive Cloud Documents'}
                   </h4>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-xs text-slate-400">
                     {accessToken
                       ? (isAr ? 'متصل ومؤمن بالكامل بالبروتوكول السحابي' : 'Fully connected via secure cloud protocol')
                       : (isAr ? 'الوصول آمن عبر OAuth 2.0' : 'Authorized securely via OAuth 2.0')}
@@ -311,7 +311,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                 </button>
 
                 {window.self !== window.top && (
-                  <p className="text-[10px] text-amber-400/80 max-w-xs mx-auto leading-relaxed border border-amber-500/15 bg-amber-500/5 p-2.5 rounded-xl text-center">
+                  <p className="text-xs text-amber-400/80 max-w-xs mx-auto leading-relaxed border border-amber-500/15 bg-amber-500/5 p-2.5 rounded-xl text-center">
                      {isAr
                       ? 'تنبيه المعاينة: يرجى فتح التطبيق في نافذة مستقلة (زر "فتح في علامة تبويب جديدة" أعلى اليمين) لتتمكن من ربط Google Drive بنجاح، حيث يحظر المتصفح النوافذ المنبثقة داخل الإطارات.'
                       : 'Developer Preview Note: Please open the app in a new tab using the top-right button to connect Google Drive successfully, as browsers block popups inside iframes.'}
@@ -365,7 +365,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                           </div>
                           <div className="text-start overflow-hidden">
                             <p className="text-xs font-black text-slate-200 group-hover:text-white transition-colors truncate">{f.name}</p>
-                            <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">
                               {formatSize(f.size)} • {new Date(f.modifiedTime).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}
                             </p>
                           </div>
@@ -380,7 +380,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
                   )}
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-2 border-t border-slate-850">
+                <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-850">
                   <span>Quiz Space Enterprise v1.5</span>
                   <button
                     onClick={() => {

@@ -92,7 +92,7 @@ function DeleteQuizConfirmDialog({ isAr, onCancel, onConfirm }: DeleteQuizConfir
             <h4 id="delete-quiz-dialog-title" className="font-display font-black text-sm text-red-800 dark:text-red-300">
               {isAr ? 'تأكيد حذف الاختبار نهائياً' : 'Confirm Delete Quiz'}
             </h4>
-            <p className="text-[10px] text-red-600 dark:text-red-400 font-bold mt-0.5">
+            <p className="text-xs text-red-600 dark:text-red-400 font-bold mt-0.5">
               {isAr ? 'إجراء خطير ومستديم وقاطع' : 'This action is permanent and cannot be undone'}
             </p>
           </div>
@@ -389,7 +389,7 @@ export default function LandingPage({
             </div>
             <div className="max-h-[65vh] overflow-y-auto p-5">
               {attemptsLoading ? <p className="py-10 text-center text-sm font-bold text-slate-500">{isAr ? 'جاري تحميل النتائج...' : 'Loading results...'}</p> : attempts.length === 0 ? <p className="py-10 text-center text-sm font-bold text-slate-500">{isAr ? 'لم يحل أحد هذا الاختبار بعد.' : 'No completed attempts yet.'}</p> : (
-                <div className="space-y-2">{attempts.map((attempt, index) => <div key={attempt.id || `${attempt.takerId || 'solver'}-${index}`} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="min-w-0"><p className="truncate text-sm font-black text-slate-900 dark:text-white">{attempt.takerName || (isAr ? 'طالب' : 'Student')}</p><p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p></div><span className="shrink-0 rounded-xl bg-cyan-100 px-2.5 py-1 text-xs font-black text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-200">{attempt.score} / {attempt.totalQuestions}</span></div>)}</div>
+                <div className="space-y-2">{attempts.map((attempt, index) => <div key={attempt.id || `${attempt.takerId || 'solver'}-${index}`} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40"><div className="min-w-0"><p className="truncate text-sm font-black text-slate-900 dark:text-white">{attempt.takerName || (isAr ? 'طالب' : 'Student')}</p><p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p></div><span className="shrink-0 rounded-xl bg-cyan-100 px-2.5 py-1 text-xs font-black text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-200">{attempt.score} / {attempt.totalQuestions}</span></div>)}</div>
               )}
             </div>
           </div>
@@ -470,7 +470,7 @@ export default function LandingPage({
 
           {/* Quick Trending Topics Pills */}
           <div className="flex items-center justify-center gap-2 flex-wrap mt-3.5">
-            <span className="text-[11px] text-slate-400 font-bold">
+            <span className="text-xs text-slate-400 font-bold">
               {isAr ? 'مواضيع مقترحة:' : 'Popular:'}
             </span>
             {quickPrompts.map((prompt) => (
@@ -478,7 +478,7 @@ export default function LandingPage({
                 key={prompt}
                 type="button"
                 onClick={() => setAiPromptInput(prompt)}
-                className="text-[11px] font-semibold px-3 py-1 rounded-full text-slate-700 dark:text-slate-300 hover:text-[#2AC3BB] bg-black/5 dark:bg-white/5 hover:bg-[#2AC3BB]/10 transition-colors cursor-pointer border border-black/5 dark:border-white/5"
+                className="text-xs font-semibold px-3 py-1 rounded-full text-slate-700 dark:text-slate-300 hover:text-[#2AC3BB] bg-black/5 dark:bg-white/5 hover:bg-[#2AC3BB]/10 transition-colors cursor-pointer border border-black/5 dark:border-white/5"
               >
                 {prompt}
               </button>
@@ -488,7 +488,7 @@ export default function LandingPage({
                 key={`recent-${prompt}`}
                 type="button"
                 onClick={() => setAiPromptInput(prompt)}
-                className="text-[11px] font-semibold px-3 py-1 rounded-full text-[#007472] dark:text-[#2AC3BB] bg-[#007472]/10 hover:bg-[#007472]/20 transition-colors cursor-pointer border border-[#007472]/15 dark:border-[#2AC3BB]/15"
+                className="text-xs font-semibold px-3 py-1 rounded-full text-[#007472] dark:text-[#2AC3BB] bg-[#007472]/10 hover:bg-[#007472]/20 transition-colors cursor-pointer border border-[#007472]/15 dark:border-[#2AC3BB]/15"
               >
                 {prompt}
               </button>
@@ -514,17 +514,17 @@ export default function LandingPage({
             <div className="relative flex items-start justify-between gap-2">
               <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${iconClass}`}><Icon className="h-4 w-4" /></div>
               <div className="text-end">
-                <p className="text-[10px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+                <p className="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
                 <p className="mt-1 text-xl font-black tracking-tight text-slate-950 dark:text-white sm:text-2xl">{typeof value === 'number' ? value.toLocaleString(isAr ? 'ar-EG' : 'en-US') : value}</p>
               </div>
             </div>
-            <p className="relative mt-2 truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">{detail}</p>
+            <p className="relative mt-2 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{detail}</p>
           </SpotlightCard>
         ))}
       </section>
       <section className="mx-auto mb-9 flex max-w-5xl flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div className="text-end">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'مساحتك التعليمية' : 'Your learning space'}</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'مساحتك التعليمية' : 'Your learning space'}</p>
           <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950 dark:text-white sm:text-2xl">{isAr ? 'استكشف اختباراتك وابدأ من هنا' : 'Explore your quizzes and start here'}</h2>
         </div>
         <div className="flex w-full gap-2 sm:w-auto">
@@ -701,7 +701,7 @@ export default function LandingPage({
                       {/* Solvers & Questions Pills */}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Solvers Counter — Clearly highlighting who solved it! */}
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-black text-emerald-700 shadow-sm dark:text-emerald-300">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-black text-emerald-700 shadow-sm dark:text-emerald-300">
                           <Users className="w-3 h-3" />
                           <span>
                             {plays > 0
@@ -710,11 +710,11 @@ export default function LandingPage({
                           </span>
                         </span>
 
-                        <span className="inline-flex items-center gap-1 rounded-full border border-[#2AC3BB]/20 bg-[#2AC3BB]/10 px-2 py-1.5 text-[10px] font-bold text-[#007472] dark:text-[#2AC3BB]">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-[#2AC3BB]/20 bg-[#2AC3BB]/10 px-2 py-1.5 text-xs font-bold text-[#007472] dark:text-[#2AC3BB]">
                           <span>{questionsCount} {isAr ? 'سؤالاً' : 'Q’s'}</span>
                         </span>
 
-                        <span className="inline-flex items-center gap-1 rounded-full border border-[#EE8361]/30 bg-[#EE8361]/10 px-2 py-1.5 text-[10px] font-bold text-[#EE8361]">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-[#EE8361]/30 bg-[#EE8361]/10 px-2 py-1.5 text-xs font-bold text-[#EE8361]">
                           <Star className="w-2.5 h-2.5 fill-current" />
                           <span>{rating}</span>
                         </span>
@@ -790,7 +790,7 @@ export default function LandingPage({
                     </p>
 
                     {/* Duration badge */}
-                    <div className="mt-4 flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                       <Clock className="w-3 h-3 text-[#2AC3BB]" />
                       <span>{isAr ? `الزمن المقدر: ~${estMinutes} دقائق` : `Est. time: ~${estMinutes} mins`}</span>
                     </div>
@@ -800,14 +800,14 @@ export default function LandingPage({
                   <div className="mt-5 space-y-3 border-t border-slate-200/80 pt-4 dark:border-white/10">
                     {canManageQuiz && (
                       <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
-                        <button type="button" onClick={() => void exportQuizPdf(quiz)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-[#007472]/20 bg-[#007472]/5 px-3.5 py-2 text-[11px] font-black text-[#007472] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#007472]/10 dark:border-[#2AC3BB]/30 dark:bg-[#007472]/20 dark:text-[#2AC3BB]" title={isAr ? 'تصدير الاختبار PDF' : 'Export quiz as PDF'}>
+                        <button type="button" onClick={() => void exportQuizPdf(quiz)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-[#007472]/20 bg-[#007472]/5 px-3.5 py-2 text-xs font-black text-[#007472] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#007472]/10 dark:border-[#2AC3BB]/30 dark:bg-[#007472]/20 dark:text-[#2AC3BB]" title={isAr ? 'تصدير الاختبار PDF' : 'Export quiz as PDF'}>
                           <Download className="h-3.5 w-3.5" />
                           <span>PDF</span>
                         </button>
-                        <button type="button" onClick={() => void openAttempts(quiz)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-[11px] font-black text-cyan-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلّوا الاختبار' : 'View quiz solvers'}>
+                        <button type="button" onClick={() => void openAttempts(quiz)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3.5 py-2 text-xs font-black text-cyan-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلّوا الاختبار' : 'View quiz solvers'}>
                           <Users className="h-3.5 w-3.5" />
                           <span>{isAr ? 'من حلّه' : 'Solvers'}</span>
-                          <span className="rounded-full bg-cyan-200/70 px-1.5 py-0.5 text-[10px] dark:bg-cyan-900/70">{plays}</span>
+                          <span className="rounded-full bg-cyan-200/70 px-1.5 py-0.5 text-xs dark:bg-cyan-900/70">{plays}</span>
                         </button>
                       </div>
                     )}
@@ -822,7 +822,7 @@ export default function LandingPage({
                       }}
                       className="flex items-center gap-2 group/creator text-right max-w-[200px] cursor-pointer"
                     >
-                      <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-[#007472] to-[#2AC3BB] text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs ring-2 ring-white/70 dark:ring-slate-800 overflow-hidden">
+                      <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-[#007472] to-[#2AC3BB] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs ring-2 ring-white/70 dark:ring-slate-800 overflow-hidden">
                         {quiz.creatorPhotoURL ? <img src={quiz.creatorPhotoURL} alt="" className="h-full w-full object-cover" loading="lazy" /> : (quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q')}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -833,7 +833,7 @@ export default function LandingPage({
                           nameColor={quiz.creatorNameColor as any}
                           badgeColor={quiz.creatorBadgeColor as any}
                           badgeSize="sm"
-                          className="max-w-[150px] text-[11px] font-black group-hover/creator:text-[#2AC3BB]"
+                          className="max-w-[150px] text-xs font-black group-hover/creator:text-[#2AC3BB]"
                         />
                         <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
                           {isAr ? 'صانع الاختبار' : 'Quiz Creator'}

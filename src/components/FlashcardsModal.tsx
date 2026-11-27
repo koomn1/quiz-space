@@ -90,7 +90,7 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
             </span>
             <div>
               <h3 className="text-sm font-black line-clamp-1">{quizTitle || (isAr ? 'البطاقات التعليمية' : 'Flashcards')}</h3>
-              <p className="text-[11px] text-[#8BAEAD]">
+              <p className="text-xs text-[#8BAEAD]">
                 {currentIndex + 1} / {questions.length}
               </p>
             </div>
@@ -118,10 +118,10 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
             {/* FRONT SIDE (Question) */}
             <div className="absolute inset-0 flex flex-col justify-between rounded-[28px] bg-gradient-to-b from-[#072424] to-[#031717] p-7 text-[#FCF6EE] [backface-visibility:hidden]">
               <div className="flex items-center justify-between text-xs text-[#8BAEAD]">
-                <span className="rounded-lg bg-[#007472]/30 px-2.5 py-1 text-[11px] font-black text-[#2AC3BB]">
+                <span className="rounded-lg bg-[#007472]/30 px-2.5 py-1 text-xs font-black text-[#2AC3BB]">
                   {isAr ? 'السؤال' : 'QUESTION'}
                 </span>
-                <span className="flex items-center gap-1 text-[11px]">
+                <span className="flex items-center gap-1 text-xs">
                   <RotateCw className="h-3 w-3" />
                   {isAr ? 'اضغط للقلب' : 'Click to flip'}
                 </span>
@@ -133,7 +133,7 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
                 </p>
               </div>
 
-              <div className="text-center text-[11px] text-[#8BAEAD]">
+              <div className="text-center text-xs text-[#8BAEAD]">
                 {isAr ? 'مسافة (Space) لقلب البطاقة' : 'Press Space to flip'}
               </div>
             </div>
@@ -141,10 +141,10 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
             {/* BACK SIDE (Answer + Explanation) */}
             <div className="absolute inset-0 flex flex-col justify-between rounded-[28px] bg-gradient-to-b from-[#004847] to-[#031717] p-7 text-[#FCF6EE] [backface-visibility:hidden] [transform:rotateY(180deg)] border border-[#EE8361]/40">
               <div className="flex items-center justify-between text-xs text-[#8BAEAD]">
-                <span className="rounded-lg bg-[#EE8361]/25 px-2.5 py-1 text-[11px] font-black text-[#EE8361]">
+                <span className="rounded-lg bg-[#EE8361]/25 px-2.5 py-1 text-xs font-black text-[#EE8361]">
                   {isAr ? 'الإجابة الصحيحة' : 'CORRECT ANSWER'}
                 </span>
-                <span className="flex items-center gap-1 text-[11px]">
+                <span className="flex items-center gap-1 text-xs">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#2AC3BB]" />
                   {isAr ? 'تم التحقق' : 'Verified'}
                 </span>
@@ -161,7 +161,7 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
                 )}
               </div>
 
-              <div className="text-center text-[11px] text-[#8BAEAD]">
+              <div className="text-center text-xs text-[#8BAEAD]">
                 {isAr ? 'انقر للعودة للسؤال' : 'Click to flip back'}
               </div>
             </div>

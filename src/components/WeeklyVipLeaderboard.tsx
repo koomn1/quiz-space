@@ -47,12 +47,12 @@ export default function WeeklyVipLeaderboard({ lang }: WeeklyVipLeaderboardProps
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-500"><Trophy className="h-6 w-6" /></div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-500">{isAr ? 'منافسة VIP' : 'VIP Competition'}</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-500">{isAr ? 'منافسة VIP' : 'VIP Competition'}</p>
             <h3 className="text-base font-black text-slate-900 dark:text-white">{isAr ? 'لوحة الصدارة الأسبوعية' : 'Weekly Leaderboard'}</h3>
-            <p className="text-[10px] font-bold text-slate-500">{isAr ? 'أفضل لاعبي VIP هذا الأسبوع' : 'Top VIP players this week'}</p>
+            <p className="text-xs font-bold text-slate-500">{isAr ? 'أفضل لاعبي VIP هذا الأسبوع' : 'Top VIP players this week'}</p>
           </div>
         </div>
-        <button type="button" onClick={() => void load()} disabled={loading} className="flex items-center gap-1 rounded-lg border border-indigo-400/30 px-2.5 py-1.5 text-[10px] font-black text-indigo-600 disabled:opacity-50 dark:text-indigo-300">
+        <button type="button" onClick={() => void load()} disabled={loading} className="flex items-center gap-1 rounded-lg border border-indigo-400/30 px-2.5 py-1.5 text-xs font-black text-indigo-600 disabled:opacity-50 dark:text-indigo-300">
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           {isAr ? 'تحديث' : 'Refresh'}
         </button>
@@ -73,8 +73,8 @@ export default function WeeklyVipLeaderboard({ lang }: WeeklyVipLeaderboardProps
                 </div>
                 {entry.photoUrl ? <img src={entry.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" /> : <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/15 text-indigo-500"><Crown className="h-4 w-4" /></div>}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-black text-slate-900 dark:text-white">{entry.displayName}{entry.isMe && <span className="mx-1 text-[10px] font-bold text-indigo-500">({isAr ? 'أنت' : 'You'})</span>}</p>
-                  <p className="text-[10px] font-bold text-slate-500">VIP {isAr ? tier.ar : tier.en}</p>
+                  <p className="truncate text-xs font-black text-slate-900 dark:text-white">{entry.displayName}{entry.isMe && <span className="mx-1 text-xs font-bold text-indigo-500">({isAr ? 'أنت' : 'You'})</span>}</p>
+                  <p className="text-xs font-bold text-slate-500">VIP {isAr ? tier.ar : tier.en}</p>
                 </div>
                 <div className="text-end"><p className="text-sm font-black text-indigo-600 dark:text-indigo-300">{entry.weeklyPoints.toLocaleString()}</p><p className="text-[9px] font-bold text-slate-500">{isAr ? 'نقطة هذا الأسبوع' : 'weekly points'}</p></div>
               </div>

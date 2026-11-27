@@ -149,7 +149,7 @@ export function CosmoQuizStudioModal({
                     </span>
                     <span>{tier.icon}</span>
                   </div>
-                  <p className="text-[10px] text-slate-400">{tier.sub}</p>
+                  <p className="text-xs text-slate-400">{tier.sub}</p>
                 </button>
               );
             })}
@@ -159,7 +159,7 @@ export function CosmoQuizStudioModal({
         {/* Question Types & Focus Mode */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           <div className="rounded-2xl p-3 border uipro-glass-surface backdrop-blur-xl" style={{ borderColor: theme.BORDER }}>
-            <label className="block text-[11px] font-bold text-slate-400 mb-1.5">
+            <label className="block text-xs font-bold text-slate-400 mb-1.5">
               {isAr ? 'نوعية الأسئلة' : 'Question Types'}
             </label>
             <LiquidGlassSelect
@@ -176,7 +176,7 @@ export function CosmoQuizStudioModal({
           </div>
 
           <div className="rounded-2xl p-3 border uipro-glass-surface backdrop-blur-xl" style={{ borderColor: theme.BORDER }}>
-            <label className="block text-[11px] font-bold text-slate-400 mb-1.5">
+            <label className="block text-xs font-bold text-slate-400 mb-1.5">
               {isAr ? 'وضع التركيز' : 'Focus Mode'}
             </label>
             <LiquidGlassSelect

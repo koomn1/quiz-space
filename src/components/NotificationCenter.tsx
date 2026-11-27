@@ -176,7 +176,7 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
       <div className="rounded-[2rem] border border-slate-200/80 bg-white/90 p-3 shadow-xl dark:border-[#2AC3BB]/20 dark:bg-slate-950/90 sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-3 px-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'اسحب للإجراءات' : 'Swipe for actions'}</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'اسحب للإجراءات' : 'Swipe for actions'}</p>
             <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{isAr ? 'اسحب الإشعار لإخفائه أو تحديده كمقروء.' : 'Swipe a notification to dismiss it or mark it as read.'}</p>
           </div>
           <ShieldCheck className="h-6 w-6 shrink-0 text-[#007472]/70 dark:text-[#2AC3BB]/70" />
@@ -223,7 +223,7 @@ export default function NotificationCenter({ userId, lang }: NotificationCenterP
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center justify-between gap-2">
                         <strong className="truncate text-sm font-bold text-slate-900 dark:text-white">{item.title}</strong>
-                        <time className="shrink-0 text-[11px] font-medium text-slate-500 dark:text-slate-400">{new Date(item.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}</time>
+                        <time className="shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">{new Date(item.created_at).toLocaleString(isAr ? 'ar-EG' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}</time>
                       </span>
                       <span className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{item.body || item.message || (isAr ? 'إشعار جديد من QuizSpace.' : 'A new QuizSpace notification.')}</span>
                     </span>

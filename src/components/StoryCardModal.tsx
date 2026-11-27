@@ -102,7 +102,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
           {/* Top Brand Bar */}
           <div className="relative z-10 flex items-center justify-between border-b border-[#2AC3BB]/15 pb-4">
             <MainLogo size="sm" showText />
-            <span className="rounded-full bg-[#EE8361]/20 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#EE8361] border border-[#EE8361]/30">
+            <span className="rounded-full bg-[#EE8361]/20 px-3 py-1 text-xs font-black uppercase tracking-wider text-[#EE8361] border border-[#EE8361]/30">
               {isAr ? 'إنجاز جديد' : 'ACHIEVEMENT'}
             </span>
           </div>
@@ -153,7 +153,7 @@ export const StoryCardModal: React.FC<StoryCardModalProps> = ({
           </div>
 
           {/* Footer with QuizSpace Verification */}
-          <div className="relative z-10 flex items-center justify-between border-t border-[#2AC3BB]/15 pt-3 text-[10px] text-[#8BAEAD]">
+          <div className="relative z-10 flex items-center justify-between border-t border-[#2AC3BB]/15 pt-3 text-xs text-[#8BAEAD]">
             <div className="flex items-center gap-1.5 font-bold">
               <Sparkles className="h-3.5 w-3.5 text-[#2AC3BB]" />
               <span>{isAr ? 'تم الاختبار عبر كوزمو الذكي' : 'Verified on QuizSpace AI'}</span>

@@ -41,7 +41,7 @@ function DecryptedMessageItem({ msg, classId, isAr, currentUserEmail }: { msg: a
 
   return (
     <div className="p-3 bg-slate-50 dark:bg-slate-900/80 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-1">
-      <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
+      <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
         <span className="font-bold text-slate-800 dark:text-slate-200">{msg.senderName}</span>
         <span>{new Date(msg.createdAt).toLocaleTimeString()}</span>
       </div>
@@ -399,7 +399,7 @@ export default function AdminDashboard({
                 <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-[#FCF6EE] tracking-tight">
                   {isAr ? 'مركز قيادة المنصة' : 'Platform Command Center'}
                 </h1>
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   {isAr ? 'الأنظمة نشطة 100%' : 'All Systems Operational'}
                 </span>
@@ -436,7 +436,7 @@ export default function AdminDashboard({
                 <h2 className="text-sm font-black text-slate-950 dark:text-white">
                   {isAr ? `يوجد ${pendingPaymentCount} طلب اشتراك ودفع معلق بحاجة لاعتمادك` : `${pendingPaymentCount} pending subscription payment request(s) awaiting review`}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-600 text-white animate-pulse">
+                <span className="px-2 py-0.5 rounded-full text-xs font-black bg-amber-600 text-white animate-pulse">
                   {isAr ? 'عاجل' : 'Urgent'}
                 </span>
               </div>
@@ -470,7 +470,7 @@ export default function AdminDashboard({
                 <h2 className="text-sm font-black text-slate-950 dark:text-white">
                   {isAr ? `يوجد ${pendingEssayCount} إجابة مقالية معلقة بانتظار التصحيح والتقييم` : `${pendingEssayCount} pending essay answer(s) awaiting grading`}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#EE8361] text-white animate-pulse">
+                <span className="px-2 py-0.5 rounded-full text-xs font-black bg-[#EE8361] text-white animate-pulse">
                   {isAr ? 'تصحيح مقالي' : 'Essay Review'}
                 </span>
               </div>
@@ -518,7 +518,7 @@ export default function AdminDashboard({
                   <span>{tab.name}</span>
                 </div>
                 {tab.badge ? (
-                  <span className={`inline-flex items-center justify-center px-2 py-0.5 text-[11px] font-black rounded-full shadow-xs ${
+                  <span className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-black rounded-full shadow-xs ${
                     isActive
                       ? 'bg-white/25 text-white dark:text-slate-950'
                       : tab.urgent
@@ -579,7 +579,7 @@ export default function AdminDashboard({
                           </div>
                           <div className={`rounded-2xl p-3 ${stat.color}`}><stat.icon className="h-6 w-6" /></div>
                         </div>
-                        <p className="mt-3 text-[11px] font-semibold text-slate-600 dark:text-slate-400">{stat.caption}</p>
+                        <p className="mt-3 text-xs font-semibold text-slate-600 dark:text-slate-400">{stat.caption}</p>
                       </div>
                     ))}
                   </div>
@@ -641,7 +641,7 @@ export default function AdminDashboard({
                 <div className="overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-xs">
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs text-start" dir={isAr ? 'rtl' : 'ltr'}>
-                      <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-black uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
+                      <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-black uppercase text-xs border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="px-5 py-3.5 text-start">{isAr ? 'المستخدم' : 'User'}</th>
                           <th className="px-5 py-3.5 text-start">{isAr ? 'البريد / المعرف' : 'Email / ID'}</th>
@@ -669,7 +669,7 @@ export default function AdminDashboard({
                               </td>
                               <td className="px-5 py-3.5 font-mono text-slate-600 dark:text-slate-400">{u.email || u.uid}</td>
                               <td className="px-5 py-3.5">
-                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${u.is_premium ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'}`}>
+                                <span className={`px-2.5 py-1 rounded-lg text-xs font-black ${u.is_premium ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'}`}>
                                   {u.is_premium ? (u.plan_name || 'Premium') : (isAr ? 'عضو نشط' : 'Active')}
                                 </span>
                               </td>
@@ -714,7 +714,7 @@ export default function AdminDashboard({
                       <BookOpen className="h-4 w-4" />
                       <span>{isAr ? 'تصحيح الأسئلة المقالية' : 'Grade Essays'}</span>
                       {pendingEssayCount > 0 && (
-                        <span className="rounded-full bg-white/20 dark:bg-slate-900/30 px-2 py-0.5 text-[10px] font-black">
+                        <span className="rounded-full bg-white/20 dark:bg-slate-900/30 px-2 py-0.5 text-xs font-black">
                           {pendingEssayCount}
                         </span>
                       )}
@@ -728,7 +728,7 @@ export default function AdminDashboard({
                       <div>
                         <div className="flex items-start justify-between gap-2">
                           <h4 className="font-black text-sm text-slate-900 dark:text-white line-clamp-1">{quiz.title}</h4>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#007472]/10 text-[#007472] dark:bg-[#2AC3BB]/20 dark:text-[#2AC3BB] shrink-0">
+                          <span className="px-2 py-0.5 rounded-md text-xs font-black bg-[#007472]/10 text-[#007472] dark:bg-[#2AC3BB]/20 dark:text-[#2AC3BB] shrink-0">
                             {quiz.questions?.length || 0} {isAr ? 'سؤال' : 'Q'}
                           </span>
                         </div>
@@ -738,7 +738,7 @@ export default function AdminDashboard({
                       </div>
 
                       <div className="mt-5 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3.5">
-                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                           {quiz.totalPlays || 0} {isAr ? 'محاولة' : 'plays'}
                         </span>
                         <div className="flex items-center gap-1.5">
@@ -924,7 +924,7 @@ export default function AdminDashboard({
                           <div key={coupon.id} className="p-3.5 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 flex items-center justify-between">
                             <div>
                               <div className="font-black font-mono text-sm text-emerald-700 dark:text-emerald-400">{coupon.code}</div>
-                              <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                              <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                                 {isAr ? `خصم %${coupon.discountPercent} على الاشتراكات` : `${coupon.discountPercent}% off`}
                               </div>
                             </div>
@@ -981,7 +981,7 @@ export default function AdminDashboard({
                             <span className="px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-[#007472] dark:text-[#2AC3BB] text-xs font-mono font-bold">
                               {c.code}
                             </span>
-                            <span className="text-[10px] font-medium text-slate-500">
+                            <span className="text-xs font-medium text-slate-500">
                               {new Date(c.createdAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -1078,7 +1078,7 @@ export default function AdminDashboard({
                                     className="w-full text-start px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
                                   >
                                     <span className="block text-slate-900 dark:text-white">{u.name}</span>
-                                    <span className="text-[10px] text-slate-400 font-mono">{u.email || id}</span>
+                                    <span className="text-xs text-slate-400 font-mono">{u.email || id}</span>
                                   </button>
                                 );
                               })}
@@ -1162,10 +1162,10 @@ export default function AdminDashboard({
                         <div key={order.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 rounded-xl border border-slate-200/80 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-950/50">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="rounded-lg bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-800 dark:text-emerald-300">
+                              <span className="rounded-lg bg-emerald-500/15 px-2 py-0.5 text-xs font-black text-emerald-800 dark:text-emerald-300">
                                 {order.payment_method === 'vodafone_cash' ? 'Vodafone Cash' : 'InstaPay'}
                               </span>
-                              <span className={`rounded-lg px-2 py-0.5 text-[10px] font-black ${order.status === 'pending' ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300' : order.status === 'approved' ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-800 dark:text-rose-300'}`}>
+                              <span className={`rounded-lg px-2 py-0.5 text-xs font-black ${order.status === 'pending' ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300' : order.status === 'approved' ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-800 dark:text-rose-300'}`}>
                                 {order.status}
                               </span>
                             </div>
@@ -1276,7 +1276,7 @@ export default function AdminDashboard({
                 <div className="overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60">
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs text-start" dir={isAr ? 'rtl' : 'ltr'}>
-                      <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-black uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
+                      <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-black uppercase text-xs border-b border-slate-200 dark:border-slate-800">
                         <tr>
                           <th className="px-4 py-3 text-start">{isAr ? 'العملية' : 'Operation'}</th>
                           <th className="px-4 py-3 text-start">{isAr ? 'المزود' : 'Provider'}</th>
@@ -1294,7 +1294,7 @@ export default function AdminDashboard({
                               <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{log.operation}</td>
                               <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{log.provider}</td>
                               <td className="px-4 py-3">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-black ${log.status === 'success' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'}`}>
+                                <span className={`px-2 py-0.5 rounded text-xs font-black ${log.status === 'success' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'}`}>
                                   {log.status === 'success' ? 'OK' : 'ERR'}
                                 </span>
                               </td>
@@ -1373,7 +1373,7 @@ export default function AdminDashboard({
                   <div>
                     <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                       <span>{activeAdminClassroom.name}</span>
-                      <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
+                      <span className="px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
                         {isAr ? 'بث تجسسي نشط' : 'Active Ghost Stream'}
                       </span>
                     </h3>
@@ -1402,12 +1402,12 @@ export default function AdminDashboard({
                     {adminStudents.filter(s => s.classCode === activeAdminClassroom.code).map((s, idx) => (
                       <div key={s.id || idx} className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs font-bold">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200 overflow-hidden text-[10px]">
+                          <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-700 dark:text-slate-200 overflow-hidden text-xs">
                             {s.studentPhoto ? <img src={s.studentPhoto} alt={s.studentName} className="w-full h-full object-cover" /> : s.studentName.charAt(0)}
                           </div>
                           <span className="text-slate-900 dark:text-white">{s.studentName}</span>
                         </div>
-                        <span className="font-mono text-[10px] text-slate-500">Avg: {s.avgScore}%</span>
+                        <span className="font-mono text-xs text-slate-500">Avg: {s.avgScore}%</span>
                       </div>
                     ))}
                     {adminStudents.filter(s => s.classCode === activeAdminClassroom.code).length === 0 && (
@@ -1423,7 +1423,7 @@ export default function AdminDashboard({
                       <Lock className="w-4 h-4 text-[#007472] dark:text-[#2AC3BB]" />
                       <span>{isAr ? 'مراقبة محادثات الفصول' : 'Classroom Chat Monitor'}</span>
                     </span>
-                    <span className="px-2 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-lg flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-lg flex items-center gap-1">
                       <ShieldCheck className="w-3 h-3" />
                       <span>{isAr ? 'محلول التشفير' : 'Decrypted'}</span>
                     </span>

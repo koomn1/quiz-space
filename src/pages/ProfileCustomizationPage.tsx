@@ -192,14 +192,14 @@ export default function ProfileCustomizationPage({
 
             <p className="mt-4 text-center text-base font-black text-slate-900 dark:text-white">{userName}</p>
             <div className="mt-1 flex justify-center">
-              <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-bold text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300">
+              <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2.5 py-0.5 text-xs font-bold text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300">
                 {activeFrameObj ? (isAr ? activeFrameObj.name_ar || activeFrameObj.name : activeFrameObj.name || activeFrameObj.name_ar) : (isAr ? 'بدون إطار' : 'No frame')}
               </span>
             </div>
 
             {/* Quiz Card Preview */}
             <div className="mt-6 border-t border-slate-100 pt-4 dark:border-slate-800/80">
-              <h4 className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-400">
+              <h4 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-400">
                 {isAr ? 'معاينة بطاقة الاختبار' : 'Quiz-card preview'}
               </h4>
               <div
@@ -209,9 +209,9 @@ export default function ProfileCustomizationPage({
               >
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-slate-700 dark:text-slate-200">{isAr ? 'نموذج اختبار تجريبي' : 'Sample Quiz Title'}</span>
-                  <span className="text-[10px] text-slate-400">10 {isAr ? 'أسئلة' : 'Q'}</span>
+                  <span className="text-xs text-slate-400">10 {isAr ? 'أسئلة' : 'Q'}</span>
                 </div>
-                <p className="mt-1 text-[11px] text-slate-500">
+                <p className="mt-1 text-xs text-slate-500">
                   {activeQuizFrameObj ? (isAr ? activeQuizFrameObj.nameAr : activeQuizFrameObj.name) : (isAr ? 'إطار عادي' : 'Default frame')}
                 </p>
               </div>
@@ -401,7 +401,7 @@ export default function ProfileCustomizationPage({
                         : 'border-slate-200 bg-slate-50 hover:border-[#007472]/40 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-[#2AC3BB]/40'
                     }`}
                   >
-                    <div className={`aspect-video w-full rounded-xl border p-2 flex items-center justify-center text-[10px] font-bold ${qFrame.previewClass}`}>
+                    <div className={`aspect-video w-full rounded-xl border p-2 flex items-center justify-center text-xs font-bold ${qFrame.previewClass}`}>
                       {name}
                     </div>
                     {isSelected && (

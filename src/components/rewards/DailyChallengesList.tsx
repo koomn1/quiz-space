@@ -31,7 +31,7 @@ export const DailyChallengesList: React.FC<DailyChallengesListProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#2AC3BB]">
+              <span className="text-xs font-black uppercase tracking-wider text-[#2AC3BB]">
                 {isAr ? 'المهام اليومية' : 'Daily Quests'}
               </span>
             </div>
@@ -78,7 +78,7 @@ export const DailyChallengesList: React.FC<DailyChallengesListProps> = ({
                       <h4 className="truncate text-xs font-black text-[#FCF6EE]">
                         {isAr ? challenge.nameAr : challenge.name}
                       </h4>
-                      <p className="mt-1 line-clamp-2 text-[10px] text-[#8BAEAD]">
+                      <p className="mt-1 line-clamp-2 text-xs text-[#8BAEAD]">
                         {isAr ? challenge.descriptionAr : challenge.description}
                       </p>
                     </div>
@@ -91,7 +91,7 @@ export const DailyChallengesList: React.FC<DailyChallengesListProps> = ({
 
                   {/* Progress Bar */}
                   <div className="mt-3">
-                    <div className="flex items-center justify-between text-[10px] font-bold text-[#8BAEAD] mb-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-[#8BAEAD] mb-1">
                       <span>{isAr ? 'الإنجاز' : 'Progress'}</span>
                       <span className="font-mono text-[#FCF6EE]">
                         {currentProgress}/{target}
@@ -108,7 +108,7 @@ export const DailyChallengesList: React.FC<DailyChallengesListProps> = ({
 
                 {/* Rewards & Claim Button Footer */}
                 <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#2AC3BB]/10 pt-2.5">
-                  <div className="flex items-center gap-1.5 text-[10px] font-black">
+                  <div className="flex items-center gap-1.5 text-xs font-black">
                     <span className="flex items-center gap-0.5 text-[#2AC3BB]">
                       <Sparkles className="h-3 w-3" />
                       +{challenge.pointsReward} XP
@@ -124,7 +124,7 @@ export const DailyChallengesList: React.FC<DailyChallengesListProps> = ({
                     type="button"
                     onClick={() => onClaim(challenge.id)}
                     disabled={!isCompleted || isClaimed || isLoading}
-                    className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-[10px] font-black transition-all ${
+                    className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-black transition-all ${
                       isClaimed
                         ? 'border border-[#2AC3BB]/30 bg-transparent text-[#8BAEAD] cursor-default'
                         : isCompleted

@@ -247,7 +247,7 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
             >
               <Coins className="h-5 w-5 text-[#EE8361] animate-bounce-subtle" />
               <div>
-                <span className="block text-[10px] font-bold text-[#FBDFC7]/80 uppercase tracking-wider">
+                <span className="block text-xs font-bold text-[#FBDFC7]/80 uppercase tracking-wider">
                   {isAr ? 'رصيد العملات' : 'Quiz Coins'}
                 </span>
                 <span className="font-mono text-base font-black text-[#FBDFC7]">
@@ -344,7 +344,7 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="inline-block h-2 w-2 rounded-full bg-[#2AC3BB] animate-ping" />
-                    <span className="text-[11px] font-black uppercase tracking-widest text-[#2AC3BB]">
+                    <span className="text-xs font-black uppercase tracking-widest text-[#2AC3BB]">
                       {isAr ? 'المعاينة التفاعلية' : 'Live Preview'}
                     </span>
                   </div>
@@ -372,18 +372,18 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
                   <div className="mt-2 flex items-center gap-2">
                     {selectedPreviewFrame &&
                     activeFrame === selectedPreviewFrame.id ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-[#2AC3BB]/40 bg-[#2AC3BB]/20 px-3 py-1 text-[11px] font-black text-[#2AC3BB]">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#2AC3BB]/40 bg-[#2AC3BB]/20 px-3 py-1 text-xs font-black text-[#2AC3BB]">
                         <ShieldCheck className="h-3.5 w-3.5" />
                         {isAr ? 'مجهز حالياً' : 'Currently Equipped'}
                       </span>
                     ) : selectedPreviewFrame &&
                       unlockedFrames.includes(selectedPreviewFrame.id) ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-[#FBDFC7]/40 bg-[#FBDFC7]/15 px-3 py-1 text-[11px] font-black text-[#FBDFC7]">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#FBDFC7]/40 bg-[#FBDFC7]/15 px-3 py-1 text-xs font-black text-[#FBDFC7]">
                         <Zap className="h-3.5 w-3.5 text-[#EE8361]" />
                         {isAr ? 'مملوك لديك' : 'Unlocked & Ready'}
                       </span>
                     ) : selectedPreviewFrame ? (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-[#EE8361]/40 bg-[#EE8361]/15 px-3 py-1 text-[11px] font-black text-[#FBDFC7]">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[#EE8361]/40 bg-[#EE8361]/15 px-3 py-1 text-xs font-black text-[#FBDFC7]">
                         <Coins className="h-3.5 w-3.5 text-[#EE8361]" />
                         {selectedPreviewFrame.priceCoins.toLocaleString()}{' '}
                         {isAr ? 'عملة' : 'Coins'}
@@ -518,10 +518,10 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
                         <h4 className="text-sm font-black text-[#FCF6EE] truncate">
                           {isAr ? frame.nameAr : frame.name}
                         </h4>
-                        <p className="text-[11px] text-[#8BAEAD] truncate">
+                        <p className="text-xs text-[#8BAEAD] truncate">
                           {isAr ? frame.name : frame.nameAr}
                         </p>
-                        <p className="mt-1 text-[11px] leading-tight text-[#FBDFC7]/80 line-clamp-2">
+                        <p className="mt-1 text-xs leading-tight text-[#FBDFC7]/80 line-clamp-2">
                           {isAr ? frame.descriptionAr : frame.description}
                         </p>
                       </div>
@@ -533,7 +533,7 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
                       <div className="flex items-center gap-1.5 text-xs font-mono font-black text-[#FBDFC7]">
                         <Coins className="h-4 w-4 text-[#EE8361]" />
                         <span>{frame.priceCoins.toLocaleString()}</span>
-                        <span className="text-[10px] text-[#8BAEAD]">
+                        <span className="text-xs text-[#8BAEAD]">
                           {isAr ? 'عملة' : 'Coins'}
                         </span>
                       </div>

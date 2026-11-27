@@ -81,7 +81,7 @@ export default function SmartReviewPanel({ lang }: SmartReviewPanelProps) {
     <section className="space-y-5 rounded-[2rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-500/10 via-white/75 to-violet-500/10 p-5 shadow-xl shadow-cyan-950/5 dark:from-cyan-950/25 dark:via-slate-950 dark:to-violet-950/25 sm:p-6" aria-labelledby="smart-review-heading">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-2xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-700 dark:text-cyan-300">{t.eyebrow}</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-700 dark:text-cyan-300">{t.eyebrow}</p>
           <h2 id="smart-review-heading" className="mt-1 flex items-center gap-2 text-xl font-black text-slate-900 dark:text-white"><Brain className="h-5 w-5 text-cyan-600" aria-hidden="true" />{t.title}</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{t.subtitle}</p>
         </div>
@@ -94,7 +94,7 @@ export default function SmartReviewPanel({ lang }: SmartReviewPanelProps) {
         <div className="grid gap-3 md:grid-cols-3">
           {cards.length === 0 ? <div className="rounded-2xl border border-dashed border-cyan-400/40 bg-white/55 p-5 text-sm font-bold leading-7 text-slate-600 dark:bg-slate-950/35 dark:text-slate-300 md:col-span-3">{t.empty}</div> : cards.map((card) => (
             <article key={card.topic} className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
-              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-black text-slate-900 dark:text-white">{card.topic}</p><p className="mt-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">{card.attempts} {t.attempts}</p></div><span className="shrink-0 rounded-xl bg-amber-400/15 px-2.5 py-1 text-xs font-black text-amber-700 dark:text-amber-300">{card.accuracy}% {t.accuracy}</span></div>
+              <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-black text-slate-900 dark:text-white">{card.topic}</p><p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{card.attempts} {t.attempts}</p></div><span className="shrink-0 rounded-xl bg-amber-400/15 px-2.5 py-1 text-xs font-black text-amber-700 dark:text-amber-300">{card.accuracy}% {t.accuracy}</span></div>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"><div className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 transition-[width] duration-200" style={{ width: `${Math.max(4, Math.min(100, card.accuracy))}%` }} /></div>
               <p className="mt-4 flex gap-2 text-xs leading-6 text-slate-600 dark:text-slate-300"><Compass className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" aria-hidden="true" />{t.reviewHint}</p>
             </article>
@@ -103,7 +103,7 @@ export default function SmartReviewPanel({ lang }: SmartReviewPanelProps) {
 
         <div className="rounded-2xl border border-violet-300/30 bg-violet-500/5 p-4 dark:border-violet-700/40 dark:bg-violet-950/20">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="text-sm font-black text-slate-900 dark:text-white">{t.progressTitle}</h3><p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{t.progressHint}</p></div>{periodHasHistory ? <Delta value={Number(improvement?.accuracyChange || 0)} suffix="%" positiveLabel={t.accuracyChange} negativeLabel={t.accuracyChange} /> : <span className="text-xs font-bold text-slate-500">{t.noChange}</span>}</div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-white/75 p-3 dark:bg-slate-950/40"><p className="text-[10px] font-bold text-slate-500">{t.completed}</p><p className="mt-1 text-xl font-black text-slate-900 dark:text-white">{improvement?.currentPeriod.completed ?? 0}</p></div><div className="rounded-xl bg-white/75 p-3 dark:bg-slate-950/40"><p className="text-[10px] font-bold text-slate-500">{t.accuracy}</p><p className="mt-1 text-xl font-black text-slate-900 dark:text-white">{improvement?.currentPeriod.accuracy ?? 0}%</p></div></div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2"><div className="rounded-xl bg-white/75 p-3 dark:bg-slate-950/40"><p className="text-xs font-bold text-slate-500">{t.completed}</p><p className="mt-1 text-xl font-black text-slate-900 dark:text-white">{improvement?.currentPeriod.completed ?? 0}</p></div><div className="rounded-xl bg-white/75 p-3 dark:bg-slate-950/40"><p className="text-xs font-bold text-slate-500">{t.accuracy}</p><p className="mt-1 text-xl font-black text-slate-900 dark:text-white">{improvement?.currentPeriod.accuracy ?? 0}%</p></div></div>
         </div>
       </>}
     </section>

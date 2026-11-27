@@ -142,7 +142,7 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
           <p className="text-xs sm:text-sm text-cyan-300/80 font-bold max-w-xs mx-auto">
             {greetingText}
           </p>
-          <p className="text-[11px] text-slate-400 font-medium max-w-sm mx-auto">
+          <p className="text-xs text-slate-400 font-medium max-w-sm mx-auto">
             {EDUCATIONAL_TIPS[lang][tipIndex]}
           </p>
         </div>

@@ -309,7 +309,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
             <Search className="w-3.5 h-3.5 text-slate-500 absolute top-3 right-3" />
           </div>
 
-          <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right pr-1">
+          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest text-right pr-1">
             {isAr ? 'الزملاء والمعلمون المتاحون' : 'AVAILABLE CONTACTS'}
           </h4>
 
@@ -320,7 +320,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                 <span>{isAr ? 'جاري تحميل قائمة الأعضاء...' : 'Loading portal members...'}</span>
               </div>
             ) : filteredMembers.length === 0 ? (
-              <p className="text-[11px] text-slate-500 text-center py-12 font-medium">
+              <p className="text-xs text-slate-500 text-center py-12 font-medium">
                 {isAr ? 'لم يتم العثور على أعضاء.' : 'No active members found.'}
               </p>
             ) : (
@@ -406,7 +406,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
 
                 <div className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
-                  <span className="text-[10px] text-slate-400">{isAr ? 'نشط الآن' : 'Active'}</span>
+                  <span className="text-xs text-slate-400">{isAr ? 'نشط الآن' : 'Active'}</span>
                 </div>
               </header>
 
@@ -424,7 +424,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs font-bold text-slate-400">{isAr ? 'اكتب أول رسالة!' : 'Say hello!'}</p>
-                      <p className="text-[10px] text-slate-500">{isAr ? 'أرسل رسالة للبدء في تبادل النصائح والأفكار.' : 'Send a message to start sharing hints.'}</p>
+                      <p className="text-xs text-slate-500">{isAr ? 'أرسل رسالة للبدء في تبادل النصائح والأفكار.' : 'Send a message to start sharing hints.'}</p>
                     </div>
                   </div>
                 ) : (
@@ -549,7 +549,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
               </div>
               <div className="space-y-1 max-w-xs">
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">{isAr ? 'المحادثات المباشرة الآمنة' : 'Secure Direct Conversations'}</h3>
-                <p className="text-[10px] text-slate-500 leading-relaxed">
+                <p className="text-xs text-slate-500 leading-relaxed">
                   {isAr ? 'حدد أي مستخدم من القائمة الجانبية لبدء التراسل المباشر ومناقشة تفاصيل الاختبارات والواجبات.' : 'Select any active scholar from the left sidebar to start exchanging direct answers, hints or questions.'}
                 </p>
               </div>

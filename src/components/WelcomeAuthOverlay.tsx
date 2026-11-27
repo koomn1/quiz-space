@@ -103,7 +103,7 @@ export default function WelcomeAuthOverlay({
 
         {/* Inline Guest Nickname Personalization */}
         <div className="bg-slate-50/70 dark:bg-slate-900/40 p-3 sm:p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80 space-y-2 text-right">
-          <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 block" style={{ textAlign: isAr ? 'right' : 'left' }}>
+          <label className="text-xs font-black text-slate-500 dark:text-slate-400 block" style={{ textAlign: isAr ? 'right' : 'left' }}>
             {isAr ? ' تخصيص اسمك كطالب زائر (لتسجيل درجاتك المؤقتة):' : ' Customize your guest name (for temporary scores):'}
           </label>
           <input
@@ -120,7 +120,7 @@ export default function WelcomeAuthOverlay({
           <h4 className="text-xs font-black text-amber-600 dark:text-amber-400 border-b border-amber-100/40 dark:border-amber-905/30 pb-1" style={{ textAlign: isAr ? 'right' : 'left' }}>
             {isAr ? 'لماذا ينصح بتفعيل تسجيل الدخول؟ ' : 'Why connect your Google account? '}
           </h4>
-          <ul className="space-y-2 text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-350">
+          <ul className="space-y-2 text-[10.5px] sm:text-xs text-slate-600 dark:text-slate-350">
             <li className="flex items-start gap-2.5">
               <span className="text-indigo-500 font-bold text-xs"></span>
               <span><strong>{isAr ? 'حفظ وحماية تقدمك الفردي:' : 'Preserve Progress:'}</strong> {isAr ? 'أرشفة شاملة وسجل أكاديمي كامل لجميع حلولك وتفاصيل محاولاتك.' : 'Keep a full academic transcript of all your interactive quiz attempts.'}</span>
@@ -160,7 +160,7 @@ export default function WelcomeAuthOverlay({
           )}
 
           {/* Iframe tip with instant link */}
-          <div className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-extrabold leading-normal pt-1">
+          <div className="text-center text-xs text-slate-400 dark:text-slate-500 font-extrabold leading-normal pt-1">
             {isAr
               ? ' تواجه مشكلة في تسجيل الدخول؟ إذا تم حظر النوافذ المنبثقة من متصفحك لوجود التطبيق في وضع المعاينة،'
               : ' Having trouble? If popups are blocked inside the preview iframe, you can'}

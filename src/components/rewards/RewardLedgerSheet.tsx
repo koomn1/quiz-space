@@ -126,7 +126,7 @@ export const RewardLedgerSheet: React.FC<RewardLedgerSheetProps> = ({
               <h3 className="text-base font-black text-[#FCF6EE]">
                 {isAr ? 'سجل العمليات والمكافآت' : 'Reward Ledger'}
               </h3>
-              <p className="text-[11px] text-[#8BAEAD]">
+              <p className="text-xs text-[#8BAEAD]">
                 {isAr ? 'تفاصيل كل حركة نقاط وعملات' : 'Detailed history of points & coins'}
               </p>
             </div>
@@ -212,7 +212,7 @@ export const RewardLedgerSheet: React.FC<RewardLedgerSheetProps> = ({
                       {getRewardEventLabel(entry.eventType, isAr)}
                     </p>
                     {detail && (
-                      <p className="mt-0.5 truncate text-[10px] text-[#8BAEAD]">{detail}</p>
+                      <p className="mt-0.5 truncate text-xs text-[#8BAEAD]">{detail}</p>
                     )}
                     <p className="mt-1 font-mono text-[9px] text-[#8BAEAD]/70">
                       {new Date(entry.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US', {
@@ -232,7 +232,7 @@ export const RewardLedgerSheet: React.FC<RewardLedgerSheetProps> = ({
                       {entry.points.toLocaleString()} {isAr ? 'XP' : 'XP'}
                     </p>
                     {entry.coins ? (
-                      <p className="mt-0.5 flex items-center justify-end gap-1 font-mono text-[11px] font-black text-[#FBDFC7]">
+                      <p className="mt-0.5 flex items-center justify-end gap-1 font-mono text-xs font-black text-[#FBDFC7]">
                         <Coins className="h-3 w-3 text-[#EE8361]" />
                         +{entry.coins.toLocaleString()}
                       </p>
@@ -255,7 +255,7 @@ export const RewardLedgerSheet: React.FC<RewardLedgerSheetProps> = ({
             <span>{isAr ? 'الأحدث' : 'Newer'}</span>
           </button>
 
-          <span className="font-mono text-[11px] text-[#8BAEAD]">
+          <span className="font-mono text-xs text-[#8BAEAD]">
             {entries.length > 0 ? `${offset + 1}–${offset + entries.length}` : ''}
           </span>
 

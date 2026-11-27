@@ -165,7 +165,7 @@ export default function ShareModal({
               <h4 className="font-display font-black text-lg text-slate-800 dark:text-slate-100">
                 {textDict.modalTitle}
               </h4>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 {textDict.modalSub}
               </p>
             </div>
@@ -182,7 +182,7 @@ export default function ShareModal({
 
         {/* Quiz Info Brief */}
         <div className={`p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 space-y-1 ${isAr ? 'text-right' : 'text-left'}`}>
-          <span className="text-[10px] font-bold text-primary">{textDict.quizNameLabel}</span>
+          <span className="text-xs font-bold text-primary">{textDict.quizNameLabel}</span>
           <h5 className="font-bold text-sm text-slate-805 dark:text-slate-200 line-clamp-1">{quizTitle}</h5>
           {quizDescription && (
             <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
@@ -207,7 +207,7 @@ export default function ShareModal({
               <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
               <h5 className="font-bold text-xs text-slate-850 dark:text-slate-200">{textDict.challengeLabel}</h5>
             </div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-400 dark:text-slate-400 leading-relaxed">
               {textDict.challengeSub}
             </p>
           </div>
@@ -277,7 +277,7 @@ export default function ShareModal({
         </div>
 
         {/* Note info */}
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center">
+        <p className="text-xs text-slate-400 dark:text-slate-500 text-center">
           {textDict.disclaimer}
         </p>
       </div>

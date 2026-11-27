@@ -715,7 +715,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-cyan-300">
+                <span className="text-xs font-black uppercase tracking-wider text-cyan-300">
                   {isAr ? 'لوحة العضوية الرسمية' : 'OFFICIAL MEMBERSHIP PANEL'}
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
@@ -791,7 +791,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             {/* Box 1: Plan Tier */}
             <div className="uipro-glass-surface rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">
+                <span className="text-xs font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">
                   {isAr ? 'الباقة النشطة' : 'Active Plan'}
                 </span>
                 <p className="mt-1 text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-1.5">
@@ -799,7 +799,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                   <span>{currentPlanLabel}</span>
                 </p>
               </div>
-              <p className="mt-2 text-[11px] text-cyan-800 dark:text-cyan-300 font-bold">
+              <p className="mt-2 text-xs text-cyan-800 dark:text-cyan-300 font-bold">
                 {currentIsPremium ? (isAr ? 'مزايا متقدمة مفعّلة' : 'Premium features unlocked') : (isAr ? 'باقة البداية المجانية' : 'Starter tier')}
               </p>
             </div>
@@ -807,7 +807,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             {/* Box 2: Expiration / Renewal */}
             <div className="uipro-glass-surface rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">
+                <span className="text-xs font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">
                   {isAr ? 'صلاحية الاشتراك' : 'Validity & Renewal'}
                 </span>
                 <p className="mt-1 text-base sm:text-lg font-black text-slate-900 dark:text-white">
@@ -816,7 +816,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                     : formattedRenewalDate || (isAr ? 'غير محدد' : 'Active / Rolling')}
                 </p>
               </div>
-              <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300 font-bold">
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 font-bold">
                 {currentIsPremium
                   ? (isAr ? 'تجديد شهري عند الدفع' : 'Renews via receipt confirmation')
                   : (isAr ? 'حساب دائم بدون انتهاء' : 'Permanent free access')}
@@ -826,7 +826,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             {/* Box 3: AI Quota & Capabilities */}
             <div className="uipro-glass-surface rounded-2xl border border-slate-200/80 dark:border-white/10 p-4 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">
+                <span className="text-xs font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">
                   {isAr ? 'الذكاء الاصطناعي وكوزمو' : 'AI Capabilities'}
                 </span>
                 <p className="mt-1 text-sm sm:text-base font-black text-emerald-700 dark:text-emerald-300">
@@ -835,7 +835,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                     : (isAr ? '3 اختبارات بالـ AI أسبوعياً' : '3 AI Quizzes / Week')}
                 </p>
               </div>
-              <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300 font-bold">
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 font-bold">
                 {currentIsPremium
                   ? (isAr ? 'تصدير PDF مفصل وتقارير' : 'Detailed PDF solutions')
                   : (isAr ? 'تصدير PDF عادي' : 'Standard exports')}
@@ -845,7 +845,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             {/* Box 4: Quick Action */}
             <div className="uipro-glass-surface rounded-2xl border border-primary/30 p-4 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-black uppercase text-primary tracking-wider">
+                <span className="text-xs font-black uppercase text-primary tracking-wider">
                   {isAr ? 'الترقية والتجديد' : 'Plan Upgrade'}
                 </span>
                 <p className="mt-1 text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-relaxed">
@@ -903,7 +903,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 return (
                   <div key={days} className="uipro-glass-surface border border-indigo-200/80 dark:border-indigo-800/70 rounded-2xl p-4 flex flex-col justify-between hover:border-indigo-500/50 transition-all">
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 border border-indigo-500/30">
+                      <span className="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-800 dark:text-indigo-200 border border-indigo-500/30">
                         {isAr ? `عرض ${days} يوم` : `${days}-Day Trial`}
                       </span>
                       <h4 className="font-black text-sm text-slate-900 dark:text-white mt-3">{isAr ? meta.titleAr : meta.titleEn}</h4>
@@ -987,7 +987,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
           </button>
         </div>
         {promoDiscount > 0 && (
-          <p className="text-[11px] text-emerald-500 font-black mt-2.5 bg-emerald-500/10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+          <p className="text-xs text-emerald-500 font-black mt-2.5 bg-emerald-500/10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/20">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
             <span>{isAr ? `كود خصم فعال! تم تطبيق خصم ${promoDiscount}% على الباقات.` : `Discount of ${promoDiscount}% applied!`}</span>
           </p>
@@ -1024,7 +1024,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 <div>
                   {/* Badge */}
                   <div className="flex justify-between items-center mb-3">
-                    <span className={`text-[10px] font-black tracking-wider px-3 py-1 rounded-full border ${p.badgeColor}`}>
+                    <span className={`text-xs font-black tracking-wider px-3 py-1 rounded-full border ${p.badgeColor}`}>
                       {p.badge}
                     </span>
                     {isCurrentPlan && (
@@ -1041,7 +1041,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                     <span>{p.name}</span>
                   </h4>
 
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 min-h-[34px] leading-relaxed mb-4">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 min-h-[34px] leading-relaxed mb-4">
                     {p.description}
                   </p>
 
@@ -1049,7 +1049,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                   <div className="flex items-baseline gap-1 mb-5 flex-wrap">
                     {promoDiscount > 0 && p.priceNum > 0 ? (
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 line-through decoration-rose-500/70">
+                        <span className="text-xs font-extrabold text-slate-400 dark:text-slate-500 line-through decoration-rose-500/70">
                           {p.price}
                         </span>
                         <span className="text-3xl sm:text-4xl font-black font-mono text-emerald-500 dark:text-emerald-400">
@@ -1152,7 +1152,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                         <>
                           <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/20 border border-purple-200/50 dark:border-purple-900/30 flex items-center justify-between gap-2">
                             <div>
-                              <span className="text-[10px] text-purple-700 dark:text-purple-300 font-bold block">
+                              <span className="text-xs text-purple-700 dark:text-purple-300 font-bold block">
                                 {isAr ? 'عنوان إنستاباي للدفع (IPA):' : 'InstaPay IPA Address:'}
                               </span>
                               <span className="font-mono font-black text-purple-950 dark:text-purple-100 text-xs sm:text-sm select-all">
@@ -1162,14 +1162,14 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); handleCopy(m.details.address, 'ipa'); }}
-                              className="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                              className="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-black transition-all cursor-pointer flex items-center gap-1 shrink-0"
                             >
                               <Copy className="w-3 h-3" />
                               <span>{copiedText === 'ipa' ? (isAr ? 'تم النسخ!' : 'Copied!') : (isAr ? 'نسخ' : 'Copy')}</span>
                             </button>
                           </div>
 
-                          <div className="flex items-center justify-between text-[11px] px-1 text-slate-600 dark:text-slate-300">
+                          <div className="flex items-center justify-between text-xs px-1 text-slate-600 dark:text-slate-300">
                             <span>{isAr ? 'رقم الهاتف المرتبط:' : 'Linked Mobile:'}</span>
                             <span className="font-mono font-bold">{m.details.mobile}</span>
                           </div>
@@ -1191,7 +1191,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                         <>
                           <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200/50 dark:border-rose-900/30 flex items-center justify-between gap-2">
                             <div>
-                              <span className="text-[10px] text-rose-700 dark:text-rose-300 font-bold block">
+                              <span className="text-xs text-rose-700 dark:text-rose-300 font-bold block">
                                 {isAr ? 'رقم محفظة فودافون كاش:' : 'Vodafone Cash Wallet:'}
                               </span>
                               <span className="font-mono font-black text-rose-950 dark:text-rose-100 text-xs sm:text-sm select-all">
@@ -1201,13 +1201,13 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); handleCopy(m.details.mobile, 'vodafone'); }}
-                              className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                              className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-black transition-all cursor-pointer flex items-center gap-1 shrink-0"
                             >
                               <Copy className="w-3 h-3" />
                               <span>{copiedText === 'vodafone' ? (isAr ? 'تم النسخ!' : 'Copied!') : (isAr ? 'نسخ' : 'Copy')}</span>
                             </button>
                           </div>
-                          <p className="text-[10px] text-slate-500 leading-relaxed">
+                          <p className="text-xs text-slate-500 leading-relaxed">
                             {m.details.instructions}
                           </p>
                           {m.details.link && (
@@ -1234,7 +1234,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
               <Info className="w-4 h-4 text-primary shrink-0" />
               <span>{isAr ? 'سرعة التفعيل والدعم:' : 'Fast Activation Guarantee:'}</span>
             </p>
-            <p className="text-[11px] leading-relaxed">
+            <p className="text-xs leading-relaxed">
               {isAr
                 ? 'يتم فحص وتفعيل الإيصالات عادة خلال 5 إلى 15 دقيقة فقط من الإرسال.'
                 : 'Receipts are reviewed and accounts upgraded within 5 to 15 minutes.'}
@@ -1294,7 +1294,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             {/* Target Package selection review */}
             <div className="bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex justify-between items-center">
               <div>
-                <span className="text-[10px] text-slate-400 font-bold block">{isAr ? 'الباقة المحددة للتفعيل:' : 'Target Plan:'}</span>
+                <span className="text-xs text-slate-400 font-bold block">{isAr ? 'الباقة المحددة للتفعيل:' : 'Target Plan:'}</span>
                 <span className="font-black text-slate-900 dark:text-white text-sm">
                   {plans.find(p => p.id === selectedPlan)?.name || selectedPlan}
                 </span>
@@ -1315,7 +1315,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                       {plans.find(p => p.id === selectedPlan)?.price}
                     </span>
                   )}
-                  <span className="text-[10px] text-slate-400 font-bold">
+                  <span className="text-xs text-slate-400 font-bold">
                     / {isAr ? 'شهرياً' : 'mo'}
                   </span>
                 </span>
@@ -1324,14 +1324,14 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/20">
-                <span className="block text-[10px] font-black text-emerald-700 dark:text-emerald-300">{isAr ? 'المبلغ المطلوب تحويله:' : 'Amount to transfer:'}</span>
+                <span className="block text-xs font-black text-emerald-700 dark:text-emerald-300">{isAr ? 'المبلغ المطلوب تحويله:' : 'Amount to transfer:'}</span>
                 <strong className="mt-1 block text-xl font-black text-emerald-700 dark:text-emerald-200">
                   {payableAmount.toLocaleString(isAr ? 'ar-EG' : 'en-US')} {isAr ? 'ج.م' : 'EGP'}
-                  <span className="ml-1 text-[10px] font-bold text-emerald-600/70 dark:text-emerald-300/70">/ {isAr ? 'شهرياً' : 'month'}</span>
+                  <span className="ml-1 text-xs font-bold text-emerald-600/70 dark:text-emerald-300/70">/ {isAr ? 'شهرياً' : 'month'}</span>
                 </strong>
               </div>
               <div className="rounded-xl border border-primary/25 bg-primary/5 p-4 dark:bg-primary/10">
-                <span className="block text-[10px] font-black text-primary">{isAr ? 'طريقة الدفع المحددة:' : 'Selected payment method:'}</span>
+                <span className="block text-xs font-black text-primary">{isAr ? 'طريقة الدفع المحددة:' : 'Selected payment method:'}</span>
                 <strong className="mt-1 block text-sm font-black text-slate-900 dark:text-white">
                   {selectedPaymentMethodDetails?.title || selectedMethod}
                 </strong>
@@ -1390,7 +1390,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                     <p className="text-xs font-black text-slate-700 dark:text-slate-300">
                       {isAr ? 'اسحب صورة الإيصال وأفلتها هنا، أو اضغط للتصفح' : 'Drag & drop payment receipt here, or click to browse'}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-bold">
+                    <p className="text-xs text-slate-400 font-bold">
                       {isAr ? 'الأنواع المتاحة: PNG, JPG, JPEG (أقصى حد: 3.5 ميجابايت)' : 'PNG, JPG, JPEG (up to 3.5MB)'}
                     </p>
                   </div>
@@ -1517,12 +1517,12 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                         <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                           <span>{req.planName}</span>
                           {isAdminActivation && (
-                            <span className="px-2 py-0.5 rounded-md bg-[#007472]/15 text-[#2AC3BB] text-[10px] font-extrabold border border-[#2AC3BB]/30">
+                            <span className="px-2 py-0.5 rounded-md bg-[#007472]/15 text-[#2AC3BB] text-xs font-extrabold border border-[#2AC3BB]/30">
                               {isAr ? 'إداري' : 'Admin'}
                             </span>
                           )}
                         </h4>
-                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-bold font-mono">
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400 font-bold font-mono">
                           <Clock className="w-3 h-3 text-slate-400" />
                           <span>{req.createdAt ? new Date(req.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</span>
                           {req.planPrice && (
@@ -1540,13 +1540,13 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                         <button
                           type="button"
                           onClick={() => setPreviewScreenshotUrl(req.paymentScreenshot)}
-                          className="text-[10px] text-[#2AC3BB] font-black bg-[#007472]/10 hover:bg-[#007472]/20 px-2.5 py-1.5 rounded-lg border border-[#2AC3BB]/20 transition-colors flex items-center gap-1 cursor-pointer"
+                          className="text-xs text-[#2AC3BB] font-black bg-[#007472]/10 hover:bg-[#007472]/20 px-2.5 py-1.5 rounded-lg border border-[#2AC3BB]/20 transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           <Eye className="w-3 h-3" />
                           <span>{isAr ? 'معاينة الإيصال' : 'View Receipt'}</span>
                         </button>
                       )}
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black border shadow-xs ${statusColor}`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-black border shadow-xs ${statusColor}`}>
                         {statusLabel}
                       </span>
                     </div>
@@ -1554,7 +1554,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 p-3.5 text-xs">
                     <div>
-                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'المبلغ المسدد / القيمة' : 'Amount Paid'}</span>
+                      <span className="block text-xs font-bold text-slate-500">{isAr ? 'المبلغ المسدد / القيمة' : 'Amount Paid'}</span>
                       <strong className="mt-1 block text-sm font-black text-emerald-600 dark:text-emerald-400">
                         {isAdminActivation
                           ? (isAr ? 'تفعيل إداري مباشر (مجاناً)' : 'Direct Admin Activation (Free)')
@@ -1562,7 +1562,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                       </strong>
                     </div>
                     <div>
-                      <span className="block text-[10px] font-bold text-slate-500">{isAr ? 'طريقة وقناة التفعيل' : 'Activation Method'}</span>
+                      <span className="block text-xs font-bold text-slate-500">{isAr ? 'طريقة وقناة التفعيل' : 'Activation Method'}</span>
                       <strong className="mt-1 block text-sm font-black text-slate-800 dark:text-slate-100">
                         {isAdminActivation
                           ? (isAr ? 'تفعيل مباشر من لوحة الإدارة 🛡️' : 'Direct Admin Panel Activation 🛡️')

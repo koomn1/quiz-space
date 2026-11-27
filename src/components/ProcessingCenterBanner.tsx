@@ -190,7 +190,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
                 {statusText(job.status, ar)}
               </span>
             </div>
-            <p className="mt-1 truncate text-[11px] font-bold text-slate-600 dark:text-slate-300">
+            <p className="mt-1 truncate text-xs font-bold text-slate-600 dark:text-slate-300">
               {job.sourceFileName || (ar ? 'ملف مرفوع' : 'Uploaded document')} · {percentage}%
             </p>
             <div
@@ -233,10 +233,10 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
           aria-hidden={!expanded}
         >
           <div className="min-h-0 overflow-hidden border-t border-violet-100/80 px-3 pb-3 pt-2 dark:border-violet-900/50">
-            <p className="truncate text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+            <p className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
               {job.progressMessage || (ar ? 'تتم المعالجة في الخلفية.' : 'Processing in the background.')}
             </p>
-            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold text-slate-500 dark:text-slate-400">
               <span>{ar ? `الأجزاء: ${job.processedChunks}/${job.totalChunks || '?'}` : `Chunks: ${job.processedChunks}/${job.totalChunks || '?'}`}</span>
               <span>{ar ? `أسئلة: ${questions}` : `Questions: ${questions}`}</span>
               <span>{ar ? `مراجعة: ${job.reviewRequiredQuestions || 0}` : `Review: ${job.reviewRequiredQuestions || 0}`}</span>
@@ -247,7 +247,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
                   type="button"
                   onClick={() => void act(job, 'pause')}
                   disabled={Boolean(busy)}
-                  className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-amber-200 px-2.5 text-[10px] font-black text-amber-800 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-60 dark:border-amber-900/60 dark:text-amber-300 dark:hover:bg-amber-950/30"
+                  className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-amber-200 px-2.5 text-xs font-black text-amber-800 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-60 dark:border-amber-900/60 dark:text-amber-300 dark:hover:bg-amber-950/30"
                 >
                   <Pause className="h-3 w-3" />
                   {isBusy('pause') ? (ar ? 'جارٍ...' : 'Working...') : (ar ? 'إيقاف' : 'Pause')}
@@ -258,7 +258,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
                   type="button"
                   onClick={() => void act(job, 'resume')}
                   disabled={Boolean(busy)}
-                  className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-emerald-600 px-2.5 text-[10px] font-black text-white transition hover:bg-emerald-500 disabled:opacity-60"
+                  className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-emerald-600 px-2.5 text-xs font-black text-white transition hover:bg-emerald-500 disabled:opacity-60"
                 >
                   <Play className="h-3 w-3" />
                   {isBusy('resume') ? (ar ? 'جارٍ...' : 'Working...') : (ar ? 'استئناف' : 'Resume')}
@@ -269,7 +269,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
                   type="button"
                   onClick={() => void act(job, 'retry-failed')}
                   disabled={Boolean(busy)}
-                  className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-rose-200 px-2.5 text-[10px] font-black text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-900/60 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                  className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-rose-200 px-2.5 text-xs font-black text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-900/60 dark:text-rose-300 dark:hover:bg-rose-950/30"
                 >
                   <RotateCcw className="h-3 w-3" />
                   {ar ? 'إعادة الفاشل' : 'Retry failed'}
@@ -280,7 +280,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
                 type="button"
                 onClick={() => void act(job, 'cancel')}
                 disabled={Boolean(busy)}
-                className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2.5 text-[10px] font-black text-rose-600 transition hover:bg-rose-100 disabled:opacity-60 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-900/40"
+                className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2.5 text-xs font-black text-rose-600 transition hover:bg-rose-100 disabled:opacity-60 dark:border-rose-900/40 dark:bg-rose-950/20 dark:text-rose-300 dark:hover:bg-rose-900/40"
               >
                 <Trash2 className="h-3 w-3" />
                 {ar ? 'إلغاء المهمة' : 'Cancel task'}
@@ -289,7 +289,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
                 type="button"
                 onClick={() => dismissJob(job)}
                 disabled={Boolean(busy)}
-                className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 px-2.5 text-[10px] font-black text-slate-600 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-slate-200 px-2.5 text-xs font-black text-slate-600 transition hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 <X className="h-3 w-3" />
                 {ar ? 'تجاهل' : 'Dismiss'}
@@ -305,12 +305,12 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
               <button
                 type="button"
                 onClick={onOpenCreator}
-                className="ms-auto inline-flex min-h-9 items-center gap-1 rounded-lg bg-violet-600 px-3 text-[10px] font-black text-white transition hover:bg-violet-500"
+                className="ms-auto inline-flex min-h-9 items-center gap-1 rounded-lg bg-violet-600 px-3 text-xs font-black text-white transition hover:bg-violet-500"
               >
                 {ar ? 'فتح المهمة' : 'Open job'}
               </button>
             </div>
-            <p className="mt-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
               {loadError ? (
                 <span className="text-rose-500">
                   <AlertTriangle className="mr-1 inline h-3 w-3" />

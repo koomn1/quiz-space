@@ -227,10 +227,10 @@ export default function Notifications({ lang }: NotificationsProps) {
               </button>
             </div>
             {pushMessage === 'success' && (
-              <div className="mt-3 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{isAr ? 'تم تفعيل إشعارات لوحة المتصدرين بنجاح.' : 'Live leaderboard notifications are now enabled.'}</div>
+              <div className="mt-3 text-xs font-bold text-emerald-600 dark:text-emerald-400">{isAr ? 'تم تفعيل إشعارات لوحة المتصدرين بنجاح.' : 'Live leaderboard notifications are now enabled.'}</div>
             )}
             {pushMessage === 'error' && (
-              <div className="mt-3 text-[11px] font-bold text-red-500">{isAr ? 'لم يتم تفعيل الإشعارات. اسمح بها من إعدادات المتصفح ثم حاول مرة أخرى.' : 'Notifications were not enabled. Allow them in your browser settings and try again.'}</div>
+              <div className="mt-3 text-xs font-bold text-red-500">{isAr ? 'لم يتم تفعيل الإشعارات. اسمح بها من إعدادات المتصفح ثم حاول مرة أخرى.' : 'Notifications were not enabled. Allow them in your browser settings and try again.'}</div>
             )}
           </div>
         </div>

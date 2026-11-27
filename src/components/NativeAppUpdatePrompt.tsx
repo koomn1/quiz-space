@@ -150,14 +150,14 @@ export function NativeAppUpdatePrompt() {
             <h2 className="text-lg font-black">تحديث إجباري متاح</h2>
             <p className="mt-1 text-sm leading-6 text-slate-300">الإصدار الجديد سيضم كل وظائف QuizSpace داخل التطبيق. نزّله الآن، ويمكنك قفل التطبيق أثناء التنزيل.</p>
           </div>
-          <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] font-black text-violet-200">{release.version}</span>
+          <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-black text-violet-200">{release.version}</span>
         </div>
 
         {downloading && (
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
             <div className="flex items-center justify-between text-xs font-bold"><span>التنزيل شغال في الخلفية</span><span>{progress}%</span></div>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-l from-cyan-300 to-violet-400 transition-[width] duration-300" style={{ width: `${progress}%` }} /></div>
-            <p className="mt-2 text-[11px] leading-5 text-slate-400">اقفل التطبيق عادي. Android هيكمل التنزيل، ولما ترجع هتلاقي الحالة محفوظة.</p>
+            <p className="mt-2 text-xs leading-5 text-slate-400">اقفل التطبيق عادي. Android هيكمل التنزيل، ولما ترجع هتلاقي الحالة محفوظة.</p>
           </div>
         )}
 

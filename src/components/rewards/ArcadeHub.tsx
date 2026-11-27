@@ -132,14 +132,14 @@ export const ArcadeHub: React.FC<ArcadeHubProps> = ({
           <div className="inline-flex items-center gap-1.5 rounded-xl border border-[#2AC3BB]/40 bg-[#2AC3BB]/15 px-3 py-1 text-xs font-black text-[#2AC3BB]">
             <QuizSpacePointsToken className="h-3.5 w-3.5" />
             <span className="font-mono">{userPoints.toLocaleString()}</span>
-            <span className="text-[10px] text-[#2AC3BB]/70">نقطة</span>
+            <span className="text-xs text-[#2AC3BB]/70">نقطة</span>
           </div>
 
           {/* Coins Pill */}
           <div className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-300">
             <QuizSpaceCoinsToken className="h-3.5 w-3.5" />
             <span className="font-mono">{userCoins.toLocaleString()}</span>
-            <span className="text-[10px] text-amber-300/70">عملة</span>
+            <span className="text-xs text-amber-300/70">عملة</span>
           </div>
 
           {/* Store button */}
@@ -179,7 +179,7 @@ export const ArcadeHub: React.FC<ArcadeHubProps> = ({
                     <Gift className="h-7 w-7 text-[#2AC3BB]" />
                   </div>
                   <span
-                    className={`rounded-full px-3 py-1 text-[11px] font-black ${
+                    className={`rounded-full px-3 py-1 text-xs font-black ${
                       isDailyClaimed
                         ? 'bg-slate-800 text-slate-400'
                         : 'bg-[#2AC3BB]/20 text-[#2AC3BB] animate-pulse'
@@ -216,7 +216,7 @@ export const ArcadeHub: React.FC<ArcadeHubProps> = ({
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#EE8361]/30 to-[#007472]/40 text-[#EE8361] group-hover:rotate-45 transition-transform duration-500">
                     <RotateCw className="h-7 w-7 text-[#EE8361]" />
                   </div>
-                  <span className="rounded-full bg-[#EE8361]/20 px-3 py-1 text-[11px] font-black text-[#EE8361]">
+                  <span className="rounded-full bg-[#EE8361]/20 px-3 py-1 text-xs font-black text-[#EE8361]">
                     عجلة الحظ 🎡
                   </span>
                 </div>
@@ -248,7 +248,7 @@ export const ArcadeHub: React.FC<ArcadeHubProps> = ({
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2AC3BB]/30 to-[#007472]/40 text-[#2AC3BB] group-hover:scale-110 transition-transform">
                     <Grid className="h-7 w-7 text-[#2AC3BB]" />
                   </div>
-                  <span className="rounded-full bg-[#2AC3BB]/20 px-3 py-1 text-[11px] font-black text-[#2AC3BB]">
+                  <span className="rounded-full bg-[#2AC3BB]/20 px-3 py-1 text-xs font-black text-[#2AC3BB]">
                     لعبة ذكاء 🧩
                   </span>
                 </div>
@@ -280,7 +280,7 @@ export const ArcadeHub: React.FC<ArcadeHubProps> = ({
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/30 to-[#007472]/40 text-amber-300 group-hover:scale-110 transition-transform">
                     <Brain className="h-7 w-7 text-amber-300" />
                   </div>
-                  <span className="rounded-full bg-amber-500/20 px-3 py-1 text-[11px] font-black text-amber-300">
+                  <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs font-black text-amber-300">
                     تحدي الذاكرة 🧠
                   </span>
                 </div>
@@ -312,7 +312,7 @@ export const ArcadeHub: React.FC<ArcadeHubProps> = ({
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/30 to-[#007472]/40 text-purple-300 group-hover:scale-110 transition-transform">
                     <Trophy className="h-7 w-7 text-purple-300" />
                   </div>
-                  <span className="rounded-full bg-purple-500/20 px-3 py-1 text-[11px] font-black text-purple-300">
+                  <span className="rounded-full bg-purple-500/20 px-3 py-1 text-xs font-black text-purple-300">
                     رتب VIP ومسار 100 ليفل 🏆
                   </span>
                 </div>

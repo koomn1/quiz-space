@@ -263,7 +263,7 @@ export const CosmicMatchGame: React.FC<CosmicMatchGameProps> = ({
         >
           <Clock className="w-4 h-4 shrink-0 text-[#2AC3BB]" />
           <div>
-            <div className="text-[10px] text-white/60">الوقت المتبقي</div>
+            <div className="text-xs text-white/60">الوقت المتبقي</div>
             <div className="text-sm md:text-base font-bold font-mono">{timeLeft} ثانية</div>
           </div>
         </div>
@@ -272,7 +272,7 @@ export const CosmicMatchGame: React.FC<CosmicMatchGameProps> = ({
         <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-[#007472]/40 border border-[#2AC3BB]/30">
           <CheckCircle2 className="w-4 h-4 shrink-0 text-[#2AC3BB]" />
           <div>
-            <div className="text-[10px] text-white/60">الأزواج المكتملة</div>
+            <div className="text-xs text-white/60">الأزواج المكتملة</div>
             <div className="text-sm md:text-base font-bold font-mono">
               {matchedPairIds.size} / 6
             </div>
@@ -283,7 +283,7 @@ export const CosmicMatchGame: React.FC<CosmicMatchGameProps> = ({
         <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-[#007472]/40 border border-[#2AC3BB]/30">
           <Zap className="w-4 h-4 shrink-0 text-[#EE8361]" />
           <div>
-            <div className="text-[10px] text-white/60">مضاعف الكومبو</div>
+            <div className="text-xs text-white/60">مضاعف الكومبو</div>
             <div className="text-sm md:text-base font-bold font-mono text-[#EE8361]">
               x{combo} {combo > 1 ? '🔥' : ''}
             </div>
@@ -294,7 +294,7 @@ export const CosmicMatchGame: React.FC<CosmicMatchGameProps> = ({
         <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-[#007472]/40 border border-[#2AC3BB]/30">
           <Award className="w-4 h-4 shrink-0 text-[#FBDFC7]" />
           <div>
-            <div className="text-[10px] text-white/60">المحاولات اليومية</div>
+            <div className="text-xs text-white/60">المحاولات اليومية</div>
             <div className="text-sm md:text-base font-bold font-mono text-[#FBDFC7]">
               {allowance.remainingPlays} / {allowance.maxDailyPlays}
             </div>
@@ -332,7 +332,7 @@ export const CosmicMatchGame: React.FC<CosmicMatchGameProps> = ({
                   <div className="w-10 h-10 rounded-xl bg-[#072424]/40 border border-[#2AC3BB]/30 flex items-center justify-center text-[#2AC3BB]">
                     <Sparkles className="w-5 h-5 text-[#2AC3BB]/80" />
                   </div>
-                  <span className="text-[10px] text-[#FBDFC7] font-medium mt-1">كويز سبيس</span>
+                  <span className="text-xs text-[#FBDFC7] font-medium mt-1">كويز سبيس</span>
                 </div>
 
                 {/* Card Front (Ivory #FCF6EE front with Bright Teal #2AC3BB border) */}

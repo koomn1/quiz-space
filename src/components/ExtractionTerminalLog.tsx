@@ -177,7 +177,7 @@ export default function ExtractionTerminalLog({
             <span className="h-2 w-2 rounded-full bg-amber-300/80" />
             <span className="h-2 w-2 rounded-full bg-emerald-400/80" />
           </div>
-          <span className="truncate font-mono text-[10px] font-bold tracking-wide text-slate-300 sm:text-[11px]">
+          <span className="truncate font-mono text-xs font-bold tracking-wide text-slate-300 sm:text-xs">
             cosmo / extraction.log
           </span>
         </div>
@@ -186,7 +186,7 @@ export default function ExtractionTerminalLog({
         </span>
       </header>
 
-      <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-3 py-2 font-mono text-[10px] sm:px-4">
+      <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-3 py-2 font-mono text-xs sm:px-4">
         <span className="min-w-0 truncate text-cyan-200">{stageTags[currentStage]} <span className="text-slate-400">·</span> {title}</span>
         <span className="shrink-0 text-violet-300">{mode === 'literal' ? 'LITERAL' : 'GENERATE'} <span className="text-slate-500">/</span> {progressLabel}</span>
       </div>
@@ -200,7 +200,7 @@ export default function ExtractionTerminalLog({
           aria-atomic="false"
           aria-relevant="additions text"
           aria-label={isArabic ? 'تحديثات المعالجة الفعلية' : 'Live processing updates'}
-          className="max-h-48 min-h-28 space-y-2 overflow-y-auto px-3 py-3 font-mono text-[10px] leading-relaxed sm:max-h-56 sm:px-4 sm:text-[11px]"
+          className="max-h-48 min-h-28 space-y-2 overflow-y-auto px-3 py-3 font-mono text-xs leading-relaxed sm:max-h-56 sm:px-4 sm:text-xs"
         >
           {entries.length === 0 ? (
             <p className="text-slate-500">{isArabic ? 'بانتظار أول تحديث من مهمة الاستخراج...' : 'Waiting for the first extraction update…'}</p>
@@ -230,7 +230,7 @@ export default function ExtractionTerminalLog({
           <button
             type="button"
             onClick={jumpToLatest}
-            className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full border border-cyan-200/20 bg-slate-800/95 px-3 py-1.5 font-sans text-[10px] font-bold text-cyan-100 shadow-lg backdrop-blur-md transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+            className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full border border-cyan-200/20 bg-slate-800/95 px-3 py-1.5 font-sans text-xs font-bold text-cyan-100 shadow-lg backdrop-blur-md transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
             aria-label={isArabic ? `الانتقال إلى أحدث ${unseenUpdates} تحديثات` : `Jump to ${unseenUpdates} latest updates`}
           >
             {isArabic ? `↓ ${unseenUpdates} تحديثات جديدة` : `↓ ${unseenUpdates} new updates`}

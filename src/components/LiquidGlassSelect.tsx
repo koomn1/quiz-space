@@ -161,7 +161,7 @@ export function LiquidGlassSelect<T extends string | number = string | number>({
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           {selectedOption?.badge && (
-            <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <span className="shrink-0 text-xs font-black px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
               {selectedOption.badge}
             </span>
           )}
@@ -229,13 +229,13 @@ export function LiquidGlassSelect<T extends string | number = string | number>({
                           {option.label}
                         </span>
                         {option.badge && (
-                          <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-primary/10 text-primary">
+                          <span className="text-xs font-black px-1.5 py-0.2 rounded-md bg-primary/10 text-primary">
                             {option.badge}
                           </span>
                         )}
                       </div>
                       {option.description && (
-                        <p className="text-[10px] font-medium leading-4 text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                        <p className="text-xs font-medium leading-4 text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                           {option.description}
                         </p>
                       )}

@@ -94,7 +94,7 @@ export function MessageRow({
               >
                 <FileText className="w-4 h-4 shrink-0" />
                 <span className="truncate max-w-[200px]">{msg.attachmentName}</span>
-                <span className="ml-auto inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="ml-auto inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   <ShieldCheck className="w-3 h-3" />
                   {isAr ? 'مؤقت محلي ' : 'Local Temp '}
                 </span>
@@ -116,7 +116,7 @@ export function MessageRow({
                   <Pencil className="w-3 h-3" />
                 </button>
               )}
-              <p className="text-[10px] font-medium opacity-60" style={{ color: theme.MUTED }}>
+              <p className="text-xs font-medium opacity-60" style={{ color: theme.MUTED }}>
                 {msg.timestamp}
               </p>
             </div>
@@ -139,7 +139,7 @@ export function MessageRow({
                 {ASSISTANT_NAME_AR}
               </span>
               <span
-                className="flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold shadow-sm"
+                className="flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold shadow-sm"
                 style={{
                   background: theme.IS_DARK ? 'rgba(0,116,114,0.15)' : 'rgba(0,116,114,0.08)',
                   borderColor: theme.IS_DARK ? 'rgba(0,116,114,0.3)' : 'rgba(0,116,114,0.2)',

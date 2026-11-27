@@ -91,7 +91,7 @@ export default function StorePage({
           >
             <Gamepad2 className="h-4 w-4 text-[#EE8361]" />
             <span>{isAr ? '🎮 مركز المكافآت والألعاب المصغرة' : '🎮 Rewards & Arcade Games'}</span>
-            <span className="rounded-full bg-[#EE8361]/20 text-[#EE8361] px-2 py-0.5 text-[10px] font-black">
+            <span className="rounded-full bg-[#EE8361]/20 text-[#EE8361] px-2 py-0.5 text-xs font-black">
               {isAr ? 'جديد' : 'NEW'}
             </span>
           </button>

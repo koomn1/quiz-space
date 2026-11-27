@@ -132,7 +132,7 @@ export default function AppShell(props: AppShellProps) {
                         }
                         setShowPushBanner(false);
                       }}
-                      className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-[11px] font-black cursor-pointer shadow-sm shadow-primary/20 transition-all hover:scale-103"
+                      className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-black cursor-pointer shadow-sm shadow-primary/20 transition-all hover:scale-103"
                     >
                       {lang === 'ar' ? 'تفعيل الإشعارات الآن ' : 'Enable Notifications '}
                     </button>
@@ -141,7 +141,7 @@ export default function AppShell(props: AppShellProps) {
                         localStorage.setItem('quiz_push_banner_dismissed', 'true');
                         setShowPushBanner(false);
                       }}
-                      className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-400 dark:text-slate-500 hover:text-slate-600 cursor-pointer text-[11px]"
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-400 dark:text-slate-500 hover:text-slate-600 cursor-pointer text-xs"
                     >
                       {lang === 'ar' ? 'ليس الآن' : 'Later'}
                     </button>
@@ -170,7 +170,7 @@ export default function AppShell(props: AppShellProps) {
                   <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">
                     {activePush.body}
                   </p>
-                  <div className="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/80 dark:border-slate-700/80 mt-1.5">
+                  <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/80 dark:border-slate-700/80 mt-1.5">
                     <span>{lang === 'ar' ? 'اضغط لتحدي البطل من جديد ' : 'Click to reclaim your throne '}</span>
                     <span className="font-mono">Web Push API</span>
                   </div>

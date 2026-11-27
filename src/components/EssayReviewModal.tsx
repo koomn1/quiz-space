@@ -190,7 +190,7 @@ export function EssayReviewModal({
             <>
               {/* Left Column / Solvers List */}
               <div className="w-full md:w-72 border-b md:border-b-0 md:border-inline-end border-slate-200/80 dark:border-slate-800/80 overflow-y-auto max-h-48 md:max-h-none p-3 space-y-2 shrink-0 bg-slate-50/50 dark:bg-slate-950/20">
-                <div className="text-[11px] font-black uppercase text-slate-400 px-2 py-1">
+                <div className="text-xs font-black uppercase text-slate-400 px-2 py-1">
                   {isAr ? 'قائمة الطلاب المنتظرين:' : 'Waiting Students:'}
                 </div>
                 {reviews.map((rev) => {
@@ -208,11 +208,11 @@ export function EssayReviewModal({
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-black text-xs truncate max-w-[140px]">{rev.takerName}</span>
-                        <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        <span className="text-xs font-mono font-black px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                           {rev.score}/{rev.totalQuestions}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
                         <span className="truncate max-w-[120px]">{rev.quizTitle}</span>
                         <span>
                           {rev.createdAt
@@ -238,7 +238,7 @@ export function EssayReviewModal({
                         <User className="w-4 h-4 text-[#007472] dark:text-[#2AC3BB]" />
                         <span>{activeReview.takerName}</span>
                         {activeReview.isGuest && (
-                          <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-full font-normal">
+                          <span className="text-xs bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-full font-normal">
                             {isAr ? 'زائر' : 'Guest'}
                           </span>
                         )}
@@ -248,7 +248,7 @@ export function EssayReviewModal({
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-[11px] font-bold text-slate-400 block">{isAr ? 'الدرجة الحالية (موضوعي):' : 'Objective score:'}</span>
+                      <span className="text-xs font-bold text-slate-400 block">{isAr ? 'الدرجة الحالية (موضوعي):' : 'Objective score:'}</span>
                       <span className="text-base font-black font-mono text-primary">
                         {activeReview.score} / {activeReview.totalQuestions}
                       </span>
@@ -288,7 +288,7 @@ export function EssayReviewModal({
 
                             {/* Student Answer Box */}
                             <div className="p-3.5 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/15 space-y-1.5">
-                              <span className="text-[10px] font-black text-primary dark:text-primary-light bg-primary/10 dark:bg-primary/20 px-2 py-0.5 rounded inline-block">
+                              <span className="text-xs font-black text-primary dark:text-primary-light bg-primary/10 dark:bg-primary/20 px-2 py-0.5 rounded inline-block">
                                 {isAr ? 'إجابة الطالب المكتوبة:' : 'Student Written Answer:'}
                               </span>
                               <p className="text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-medium">

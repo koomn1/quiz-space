@@ -84,7 +84,7 @@ export const PointsBalanceCard: React.FC<PointsBalanceCardProps> = ({
           <div className="relative overflow-hidden rounded-2xl border border-[#007472]/40 bg-[#007472]/20 p-3.5 sm:p-4 text-center shadow-inner">
             <div className="flex items-center justify-center gap-1.5 text-[#2AC3BB]">
               <Sparkles className="h-4 w-4 text-[#2AC3BB] animate-spin-slow" />
-              <span className="text-[11px] font-bold tracking-wider">
+              <span className="text-xs font-bold tracking-wider">
                 {isAr ? 'نقاط الخبرة (XP)' : 'Experience XP'}
               </span>
             </div>
@@ -97,7 +97,7 @@ export const PointsBalanceCard: React.FC<PointsBalanceCardProps> = ({
           <div className="relative overflow-hidden rounded-2xl border border-[#EE8361]/40 bg-[#EE8361]/15 p-3.5 sm:p-4 text-center shadow-inner">
             <div className="flex items-center justify-center gap-1.5 text-[#EE8361]">
               <Coins className="h-4 w-4 text-[#EE8361] animate-bounce-subtle" />
-              <span className="text-[11px] font-bold tracking-wider">
+              <span className="text-xs font-bold tracking-wider">
                 {isAr ? 'عملات كويز (Coins)' : 'Quiz Coins'}
               </span>
             </div>
@@ -124,7 +124,7 @@ export const PointsBalanceCard: React.FC<PointsBalanceCardProps> = ({
             <span className="text-sm font-bold text-[#FCF6EE]">
               {isAr ? 'أركيد الألعاب والألغاز' : 'Arcade Hub & Games'}
             </span>
-            <span className="rounded-full bg-[#EE8361] px-2 py-0.5 text-[10px] font-black uppercase text-[#072424]">
+            <span className="rounded-full bg-[#EE8361] px-2 py-0.5 text-xs font-black uppercase text-[#072424]">
               {isAr ? 'جديد' : 'NEW'}
             </span>
           </div>

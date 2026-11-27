@@ -504,7 +504,7 @@ export const WordMatrixPuzzle: React.FC<WordMatrixPuzzleProps> = ({
               >
                 <span>{char}</span>
                 {isSelected && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#072424] text-[10px] text-[#2AC3BB] border border-[#2AC3BB] flex items-center justify-center font-mono">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#072424] text-xs text-[#2AC3BB] border border-[#2AC3BB] flex items-center justify-center font-mono">
                     {selectionOrder + 1}
                   </span>
                 )}

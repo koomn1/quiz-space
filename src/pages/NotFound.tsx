@@ -68,7 +68,7 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
       <section className="relative w-full max-w-6xl">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-20">
           <div className="order-2 text-center lg:order-1 lg:text-right">
-            <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-slate-300 bg-white/80 px-4 py-2 text-[10px] font-bold uppercase tracking-[.28em] text-[#007472] shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/[.035] dark:text-[#2AC3BB]">
+            <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-slate-300 bg-white/80 px-4 py-2 text-xs font-bold uppercase tracking-[.28em] text-[#007472] shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/[.035] dark:text-[#2AC3BB]">
               <Sparkles className="h-3.5 w-3.5 text-[#007472] dark:text-[#2AC3BB]" />
               404 · {isAr ? 'إحداثيات غير معروفة' : 'unknown coordinates'}
             </div>

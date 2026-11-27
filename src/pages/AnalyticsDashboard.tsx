@@ -227,7 +227,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               ].map((m) => (
                 <div key={m.label} className="uipro-glass-surface flex items-center justify-between rounded-3xl border border-slate-200 p-5 shadow-sm transition-colors hover:border-[#007472]/40 dark:border-slate-800 dark:hover:border-[#2AC3BB]/50">
                   <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                    <span className="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block">{m.label}</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block">{m.label}</span>
                     <span className="text-xl font-black text-slate-800 dark:text-white font-mono block">{m.val}</span>
                   </div>
                   <div className={`p-3 rounded-xl border flex items-center justify-center shrink-0 ${m.bg}`}>
@@ -287,7 +287,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                                 <div className="bg-slate-900 text-white p-3.5 rounded-xl shadow-xl border border-slate-800 text-right space-y-1 text-xs">
                                   <p className="font-black text-slate-100">{item.quizTitle}</p>
                                   <p className="font-bold text-[#007472] dark:text-[#2AC3BB]">{isAr ? `الدرجة: %${item.percentage}` : `Accuracy: ${item.percentage}%`}</p>
-                                  <p className="text-[10px] text-slate-400 font-mono">{isAr ? `النتيجة: ${item.scoreText}` : `Result: ${item.scoreText}`}</p>
+                                  <p className="text-xs text-slate-400 font-mono">{isAr ? `النتيجة: ${item.scoreText}` : `Result: ${item.scoreText}`}</p>
                                 </div>
                               );
                             }
@@ -338,13 +338,13 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'سجل المحاولات والأداء التفصيلي ' : 'Study Attempt History '}</h3>
-                  <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{totalQuizzesSolved} {isAr ? 'محاولات' : 'Attempts'}</span>
+                  <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{totalQuizzesSolved} {isAr ? 'محاولات' : 'Attempts'}</span>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <thead>
-                      <tr className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-400 font-black text-[10px] uppercase border-b border-slate-100 dark:border-slate-850">
+                      <tr className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-400 font-black text-xs uppercase border-b border-slate-100 dark:border-slate-850">
                         <th className="px-6 py-4">{isAr ? 'الاختبار' : 'Quiz Title'}</th>
                         <th className="px-6 py-4">{isAr ? 'الدرجة' : 'Score'}</th>
                         <th className="px-6 py-4">{isAr ? 'نسبة الدقة' : 'Accuracy'}</th>
@@ -378,13 +378,13 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                                 {completion.rating ? (
                                   <div className="flex items-center text-amber-500 font-bold gap-0.5">
                                     <Star className="w-3 h-3 fill-amber-500" />
-                                    <span className="text-[10px]">{completion.rating} </span>
+                                    <span className="text-xs">{completion.rating} </span>
                                   </div>
                                 ) : (
-                                  <span className="text-[10px] text-slate-400">-</span>
+                                  <span className="text-xs text-slate-400">-</span>
                                 )}
                                 {completion.feedback && (
-                                  <span className="text-[10px] text-slate-400 italic max-w-[120px] truncate" title={completion.feedback}>
+                                  <span className="text-xs text-slate-400 italic max-w-[120px] truncate" title={completion.feedback}>
                                     "{completion.feedback}"
                                   </span>
                                 )}
@@ -394,7 +394,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                               {onStartQuiz && (
                                 <button
                                   onClick={() => onStartQuiz(completion.quizId)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-[10px] font-black transition-all hover:scale-103 cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-black transition-all hover:scale-103 cursor-pointer"
                                 >
                                   <Play className="w-2.5 h-2.5 fill-white" />
                                   <span>{isAr ? 'ابدأ من جديد' : 'Replay'}</span>
@@ -448,7 +448,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               ].map((m) => (
                 <div key={m.label} className="uipro-glass-surface flex items-center justify-between rounded-3xl border border-slate-200 p-5 shadow-sm transition-colors hover:border-[#007472]/40 dark:border-slate-800 dark:hover:border-[#2AC3BB]/50">
                   <div className="space-y-1 text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                    <span className="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block">{m.label}</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block">{m.label}</span>
                     <span className="text-xl font-black text-slate-800 dark:text-white font-mono block">{m.val}</span>
                   </div>
                   <div className={`p-3 rounded-xl border flex items-center justify-center shrink-0 ${m.bg}`}>
@@ -521,7 +521,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                       </PieChart>
                     </ResponsiveContainer>
                     {/* Floating legend inside card */}
-                    <div className="absolute inset-y-0 right-0 flex flex-col justify-center space-y-1 text-[10px] font-extrabold pr-4 text-slate-500 dark:text-slate-400">
+                    <div className="absolute inset-y-0 right-0 flex flex-col justify-center space-y-1 text-xs font-extrabold pr-4 text-slate-500 dark:text-slate-400">
                       {categoryData.map((entry, idx) => (
                         <div  className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
@@ -539,7 +539,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               <section className="uipro-glass-surface space-y-5 rounded-[28px] border border-[#007472]/20 p-5 shadow-sm dark:border-[#2AC3BB]/20 sm:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]"><Target className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-[0.2em]">{isAr ? 'قراءة المدرّس' : 'Teacher intelligence'}</span></div>
+                    <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]"><Target className="h-4 w-4" /><span className="text-xs font-black uppercase tracking-[0.2em]">{isAr ? 'قراءة المدرّس' : 'Teacher intelligence'}</span></div>
                     <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-white">{isAr ? 'أين يحتاج طلابك إلى دعم؟' : 'Where do your students need support?'}</h3>
                   </div>
                   <span className="rounded-xl bg-white/80 px-3 py-2 text-xs font-black text-[#007472] shadow-sm dark:bg-slate-950/70 dark:text-[#2AC3BB]">{totalTeacherStudents} {isAr ? 'طلاب فريدون' : 'unique students'}</span>
@@ -549,11 +549,11 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                     { label: isAr ? 'متوسط دقة الطلاب' : 'Student accuracy', value: `${teacherAverageAccuracy}%`, icon: <ShieldCheck className="h-4 w-4 text-emerald-500" /> },
                     { label: isAr ? 'إجمالي المحاولات' : 'Total attempts', value: totalTeacherAttempts, icon: <Users className="h-4 w-4 text-[#EE8361]" /> },
                     { label: isAr ? 'يحتاج مراجعة' : 'Needs review', value: hardestTeacherQuiz?.quiz.title || (isAr ? 'لا توجد بيانات' : 'No data'), icon: <Target className="h-4 w-4 text-amber-500" /> },
-                  ].map((item) => <div key={item.label} className="uipro-glass-surface rounded-2xl border border-white/80 p-4 dark:border-slate-800/80"><div className="flex items-center gap-2 text-[10px] font-black text-slate-600 dark:text-slate-300">{item.icon}{item.label}</div><p className="mt-2 truncate text-base font-black text-slate-900 dark:text-white" title={String(item.value)}>{item.value}</p></div>)}
+                  ].map((item) => <div key={item.label} className="uipro-glass-surface rounded-2xl border border-white/80 p-4 dark:border-slate-800/80"><div className="flex items-center gap-2 text-xs font-black text-slate-600 dark:text-slate-300">{item.icon}{item.label}</div><p className="mt-2 truncate text-base font-black text-slate-900 dark:text-white" title={String(item.value)}>{item.value}</p></div>)}
                 </div>
                 <div className="uipro-glass-surface overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
                   <table className="w-full min-w-[640px] text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                    <thead><tr className="border-b border-slate-100 bg-slate-50/80 text-[10px] font-black text-slate-500 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400"><th className="px-4 py-3">{isAr ? 'الاختبار' : 'Quiz'}</th><th className="px-4 py-3">{isAr ? 'طلاب' : 'Students'}</th><th className="px-4 py-3">{isAr ? 'محاولات' : 'Attempts'}</th><th className="px-4 py-3">{isAr ? 'الدقة' : 'Accuracy'}</th><th className="px-4 py-3">{isAr ? 'الاجتياز' : 'Pass rate'}</th></tr></thead>
+                    <thead><tr className="border-b border-slate-100 bg-slate-50/80 text-xs font-black text-slate-500 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400"><th className="px-4 py-3">{isAr ? 'الاختبار' : 'Quiz'}</th><th className="px-4 py-3">{isAr ? 'طلاب' : 'Students'}</th><th className="px-4 py-3">{isAr ? 'محاولات' : 'Attempts'}</th><th className="px-4 py-3">{isAr ? 'الدقة' : 'Accuracy'}</th><th className="px-4 py-3">{isAr ? 'الاجتياز' : 'Pass rate'}</th></tr></thead>
                     <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700 dark:divide-slate-800 dark:text-slate-200">{teacherQuizPerformance.map((item) => <tr key={item.quiz.id} className="transition-colors hover:bg-[#007472]/5 dark:hover:bg-[#007472]/15"><td className="max-w-[230px] truncate px-4 py-3" title={item.quiz.title}>{item.quiz.title}</td><td className="px-4 py-3 font-mono">{item.studentCount}</td><td className="px-4 py-3 font-mono">{item.attempts.length}</td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 font-mono ${item.averageAccuracy < 50 ? 'bg-rose-500/10 text-rose-600' : item.averageAccuracy < 80 ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>{item.averageAccuracy}%</span></td><td className="px-4 py-3 font-mono">{item.passRate}%</td></tr>)}</tbody>
                   </table>
                 </div>
@@ -565,13 +565,13 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
               <div className="uipro-glass-surface border border-slate-200/80 dark:border-slate-850 rounded-[28px] overflow-hidden shadow-xs">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <h3 className="text-sm font-black text-slate-700 dark:text-slate-100">{isAr ? 'تحليلات الاختبارات المؤلّفة ' : 'Authoring Performance Index '}</h3>
-                  <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{myCreatedQuizzes.length} {isAr ? 'اختبار' : 'Quizzes'}</span>
+                  <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-slate-500 font-extrabold">{myCreatedQuizzes.length} {isAr ? 'اختبار' : 'Quizzes'}</span>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-right" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <thead>
-                      <tr className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-400 font-black text-[10px] uppercase border-b border-slate-100 dark:border-slate-850">
+                      <tr className="bg-slate-50/70 dark:bg-slate-900/40 text-slate-400 font-black text-xs uppercase border-b border-slate-100 dark:border-slate-850">
                         <th className="px-6 py-4">{isAr ? 'اسم الاختبار' : 'Quiz Title'}</th>
                         <th className="px-6 py-4">{isAr ? 'الأسئلة' : 'Questions'}</th>
                         <th className="px-6 py-4">{isAr ? 'مرات لعب الطلاب' : 'Total Plays'}</th>
@@ -600,7 +600,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                             </span>
                           </td>
                           <td className="px-6 py-4.5">
-                            <span className="text-[10px] text-slate-400 capitalize font-bold">
+                            <span className="text-xs text-slate-400 capitalize font-bold">
                               {q.distributionRouting || 'public'}
                             </span>
                           </td>

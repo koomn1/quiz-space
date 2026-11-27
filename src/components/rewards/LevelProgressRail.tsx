@@ -99,7 +99,7 @@ export const LevelProgressRail: React.FC<LevelProgressRailProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#2AC3BB]">
+              <span className="text-xs font-black uppercase tracking-wider text-[#2AC3BB]">
                 {isAr ? 'المستوى التعليمي' : 'Academic Rank'}
               </span>
             </div>
@@ -123,9 +123,9 @@ export const LevelProgressRail: React.FC<LevelProgressRailProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#FBDFC7]">VIP TIER</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#FBDFC7]">VIP TIER</span>
               {currentVip?.pointsMultiplier ? (
-                <span className="rounded-md bg-[#2AC3BB]/20 px-1.5 py-0.5 text-[10px] font-black text-[#2AC3BB]">
+                <span className="rounded-md bg-[#2AC3BB]/20 px-1.5 py-0.5 text-xs font-black text-[#2AC3BB]">
                   {currentVip.pointsMultiplier.toFixed(1)}x
                 </span>
               ) : null}
@@ -158,7 +158,7 @@ export const LevelProgressRail: React.FC<LevelProgressRailProps> = ({
 
       {/* VIP Perks Bar if next VIP exists */}
       {nextVip && (
-        <div className="mt-3 flex items-center justify-between text-[11px] font-bold text-[#8BAEAD] border-t border-[#2AC3BB]/10 pt-2.5">
+        <div className="mt-3 flex items-center justify-between text-xs font-bold text-[#8BAEAD] border-t border-[#2AC3BB]/10 pt-2.5">
           <span className="flex items-center gap-1.5 text-[#FBDFC7]">
             <Zap className="h-3.5 w-3.5 text-[#EE8361]" />
             {isAr

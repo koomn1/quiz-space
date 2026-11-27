@@ -262,10 +262,10 @@ export default function DailyQuizCard({ lang, userId, planName, isPremium, onSta
         <div className="flex items-center gap-3">
           <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20 ring-1 ring-white/25"><MainLogo size="sm" showText={false} className="!h-10 !w-10" /><Sparkles className="absolute -end-1 -top-1 h-4 w-4 animate-pulse text-amber-200" /></div>
           <div>
-            <div className="mb-1 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white/85"><Crown className="h-3 w-3 text-amber-200" />{label}</div>
+            <div className="mb-1 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-xs font-black uppercase tracking-wide text-white/85"><Crown className="h-3 w-3 text-amber-200" />{label}</div>
             <h3 className="font-display font-black text-lg leading-tight">{isAr ? 'التحدي الحصري المتجدد' : 'Exclusive rotating challenge'}</h3>
             <p className="text-sm text-white/80">{isAr ? `يتغير تلقائياً حسب باقة ${label}` : `Rotates automatically for the ${label} tier`}</p>
-            <p className="mt-1 text-[11px] font-bold text-white/70">{refreshPolicy}</p>
+            <p className="mt-1 text-xs font-bold text-white/70">{refreshPolicy}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">

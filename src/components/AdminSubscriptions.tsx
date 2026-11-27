@@ -861,7 +861,7 @@ export default function AdminSubscriptions({
         >
           <span>{isAr ? "طلبات وسجل المدفوعات" : "Payments & Ledger"}</span>
           {mockPayments.length > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[10px] animate-pulse">
+            <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-xs animate-pulse">
               {mockPayments.length}
             </span>
           )}
@@ -935,15 +935,15 @@ export default function AdminSubscriptions({
                           <div key={u.userId} className="bg-slate-900/90 border border-rose-500/40 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-md">
                             <div className="min-w-0">
                               <p className="font-bold text-xs truncate text-white">{u.name}</p>
-                              <p className="text-[10px] text-slate-400 truncate">{u.email || u.userId}</p>
-                              <p className="text-[10px] text-rose-400 font-extrabold mt-0.5">
+                              <p className="text-xs text-slate-400 truncate">{u.email || u.userId}</p>
+                              <p className="text-xs text-rose-400 font-extrabold mt-0.5">
                                 {isAr ? `متبقي ${daysLeft} أيام فقط` : `${daysLeft} days left`}
                               </p>
                             </div>
                             <button
                               type="button"
                               onClick={() => setSelectedUser(u)}
-                              className="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] transition-all shrink-0 cursor-pointer"
+                              className="px-2.5 py-1 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition-all shrink-0 cursor-pointer"
                             >
                               {isAr ? "إدارة" : "Manage"}
                             </button>
@@ -1044,7 +1044,7 @@ export default function AdminSubscriptions({
                     <p className="truncate text-sm font-black text-slate-900 dark:text-white">{user.name}</p>
                     <p className="mt-1 truncate text-xs text-slate-500">{user.email || user.userId}</p>
                   </button>
-                  <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold ${user.isSuspended || user.isMembershipExpired ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>{user.isSuspended ? (isAr ? 'موقوف' : 'Suspended') : user.isMembershipExpired ? (isAr ? 'منتهية' : 'Expired') : (isAr ? 'نشط' : 'Active')}</span>
+                  <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-bold ${user.isSuspended || user.isMembershipExpired ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>{user.isSuspended ? (isAr ? 'موقوف' : 'Suspended') : user.isMembershipExpired ? (isAr ? 'منتهية' : 'Expired') : (isAr ? 'نشط' : 'Active')}</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500"><span>{user.planName || 'Free'}</span><button type="button" onClick={() => { setSelectedUser(user); setSelectedPlanId(user.planId || ''); setSubscriptionRenewalDate(user.renewalDate ? user.renewalDate.slice(0, 10) : ''); }} className="min-h-11 rounded-xl bg-blue-500/10 px-4 font-bold text-blue-600">{isAr ? 'إدارة' : 'Manage'}</button></div>
               </article>
@@ -1083,7 +1083,7 @@ export default function AdminSubscriptions({
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`px-2 py-1 text-[10px] font-bold rounded-md ${user.isSuspended || user.isMembershipExpired ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"}`}
+                        className={`px-2 py-1 text-xs font-bold rounded-md ${user.isSuspended || user.isMembershipExpired ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"}`}
                       >
                         {user.isSuspended
                           ? isAr
@@ -1264,7 +1264,7 @@ export default function AdminSubscriptions({
                   <Clock className="w-4 h-4 text-amber-500" />
                   <span>{isAr ? "طابور الطلبات المعلقة" : "Pending Queue"}</span>
                   {mockPayments.length > 0 && (
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-xs font-black">
                       {mockPayments.length}
                     </span>
                   )}
@@ -1281,7 +1281,7 @@ export default function AdminSubscriptions({
                 >
                   <FileText className="w-4 h-4 text-purple-500" />
                   <span>{isAr ? "سجل طلبات الدفع والعمليات" : "Payment Ledger"}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-black">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-black">
                     {paymentLedger.length}
                   </span>
                 </button>
@@ -1346,7 +1346,7 @@ export default function AdminSubscriptions({
                         ? `يتم عرض ${mockPayments.length} طلب دفع معلق — مرّر لرؤية القائمة كاملة.`
                         : `${mockPayments.length} pending payment requests — scroll to review the full queue.`}
                     </span>
-                    <span className="text-[11px] text-primary underline cursor-pointer" onClick={() => setPaymentViewMode("ledger")}>
+                    <span className="text-xs text-primary underline cursor-pointer" onClick={() => setPaymentViewMode("ledger")}>
                       {isAr ? "فتح السجل الكامل" : "Open Full Ledger"}
                     </span>
                   </div>
@@ -1361,7 +1361,7 @@ export default function AdminSubscriptions({
                             <h4 className="truncate text-base font-black text-slate-900 dark:text-white sm:text-lg">
                               {pay.userName}
                             </h4>
-                            <p className="mt-1 truncate text-[11px] text-slate-500">
+                            <p className="mt-1 truncate text-xs text-slate-500">
                               {pay.userId || (isAr ? "مستخدم" : "User")}
                             </p>
                           </div>
@@ -1374,7 +1374,7 @@ export default function AdminSubscriptions({
                               className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-emerald-500 transition-colors hover:bg-emerald-500/10 cursor-pointer"
                             >
                               <CheckCircle className="w-5 h-5" />
-                              <span className="hidden text-[11px] font-black sm:inline">
+                              <span className="hidden text-xs font-black sm:inline">
                                 {isAr ? "اعتماد" : "Approve"}
                               </span>
                             </button>
@@ -1386,7 +1386,7 @@ export default function AdminSubscriptions({
                               className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-amber-500 transition-colors hover:bg-amber-500/10 cursor-pointer"
                             >
                               <Edit2 className="w-5 h-5" />
-                              <span className="hidden text-[11px] font-black sm:inline">
+                              <span className="hidden text-xs font-black sm:inline">
                                 {isAr ? "معلومات" : "Info"}
                               </span>
                             </button>
@@ -1398,7 +1398,7 @@ export default function AdminSubscriptions({
                               className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-red-500 transition-colors hover:bg-red-500/10 cursor-pointer"
                             >
                               <XCircle className="w-5 h-5" />
-                              <span className="hidden text-[11px] font-black sm:inline">
+                              <span className="hidden text-xs font-black sm:inline">
                                 {isAr ? "رفض" : "Reject"}
                               </span>
                             </button>
@@ -1407,18 +1407,18 @@ export default function AdminSubscriptions({
 
                         <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
                           <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
-                            <span className="block text-[10px] font-bold text-slate-500">{isAr ? "الخطة" : "Plan"}</span>
+                            <span className="block text-xs font-bold text-slate-500">{isAr ? "الخطة" : "Plan"}</span>
                             <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">
                               {pay.planName}
                             </span>
                             {pay.trialDurationDays && (
-                              <span className="mt-1 inline-flex rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-black text-violet-600 dark:text-violet-300">
+                              <span className="mt-1 inline-flex rounded-full bg-violet-500/10 px-2 py-0.5 text-xs font-black text-violet-600 dark:text-violet-300">
                                 {isAr ? `تجربة ${pay.trialDurationDays} يوم` : `${pay.trialDurationDays}-day trial`}
                               </span>
                             )}
                           </div>
                           <div className="rounded-xl bg-slate-100/70 p-3 dark:bg-slate-800/60">
-                            <span className="block text-[10px] font-bold text-slate-500">
+                            <span className="block text-xs font-bold text-slate-500">
                               {isAr ? "طريقة الدفع" : "Payment method"}
                             </span>
                             <span className="mt-1 block truncate font-black text-slate-800 dark:text-slate-100">
@@ -1436,7 +1436,7 @@ export default function AdminSubscriptions({
                             </span>
                           </div>
                           <div className="col-span-2 rounded-xl bg-emerald-500/10 p-3 sm:col-span-1">
-                            <span className="block text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                            <span className="block text-xs font-bold text-emerald-700 dark:text-emerald-300">
                               {isAr ? "المبلغ" : "Amount"}
                             </span>
                             <span className="mt-1 block text-xl font-black text-emerald-600">
@@ -1450,12 +1450,12 @@ export default function AdminSubscriptions({
 
                         <div className="rounded-2xl border border-slate-200/70 bg-slate-100/40 p-3 dark:border-slate-700/70 dark:bg-slate-900/40">
                           <div className="mb-2 flex items-center justify-between">
-                            <p className="text-[11px] font-black text-slate-500">{isAr ? "إيصال الدفع" : "Payment receipt"}</p>
+                            <p className="text-xs font-black text-slate-500">{isAr ? "إيصال الدفع" : "Payment receipt"}</p>
                             {pay.receiptUrl && (
                               <button
                                 type="button"
                                 onClick={() => setInspectingPayment(pay as any)}
-                                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                                className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
                               >
                                 <Eye className="w-3 h-3" />
                                 <span>{isAr ? "تكبير وفحص" : "Inspect"}</span>
@@ -1628,7 +1628,7 @@ export default function AdminSubscriptions({
                       }`}
                     >
                       <span>{chip.label}</span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                      <span className={`text-xs px-1.5 py-0.2 rounded-full ${
                         ledgerStatusFilter === chip.id ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
                       }`}>
                         {chip.count}
@@ -1683,7 +1683,7 @@ export default function AdminSubscriptions({
                                   <strong className="block truncate text-slate-900 dark:text-white font-black">
                                     {item.userName}
                                   </strong>
-                                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
                                     <span className="truncate max-w-[130px]">{item.email || item.userId}</span>
                                     {onViewProfile && item.userId && (
                                       <button
@@ -1702,7 +1702,7 @@ export default function AdminSubscriptions({
 
                             {/* Plan Name */}
                             <td className="py-3 px-4 whitespace-nowrap font-bold text-slate-800 dark:text-slate-200">
-                              <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-black border border-slate-200/50 dark:border-slate-700/50">
+                              <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-black border border-slate-200/50 dark:border-slate-700/50">
                                 {item.planName}
                               </span>
                             </td>
@@ -1712,25 +1712,25 @@ export default function AdminSubscriptions({
                               {typeof item.amount === "number"
                                 ? item.amount.toLocaleString(isAr ? "ar-EG" : "en-US")
                                 : item.amount || "—"}{" "}
-                              <span className="text-[10px] font-bold text-slate-400">{isAr ? "ج.م" : "EGP"}</span>
+                              <span className="text-xs font-bold text-slate-400">{isAr ? "ج.م" : "EGP"}</span>
                             </td>
 
                             {/* Payment Method */}
                             <td className="py-3 px-4 whitespace-nowrap">
                               {item.method === "instapay" ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">
                                   InstaPay
                                 </span>
                               ) : item.method === "vodafone" || item.method === "vodafone_cash" ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-500/20">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-500/10 text-rose-600 dark:text-rose-300 border border-rose-500/20">
                                   Vodafone Cash
                                 </span>
                               ) : item.method === "bank_transfer" ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20">
                                   {isAr ? "تحويل بنكي" : "Bank Transfer"}
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-500/10 text-slate-600 dark:text-slate-400">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-slate-500/10 text-slate-600 dark:text-slate-400">
                                   {item.paymentMethod || item.method || "—"}
                                 </span>
                               )}
@@ -1739,22 +1739,22 @@ export default function AdminSubscriptions({
                             {/* Status Pill */}
                             <td className="py-3 px-4 whitespace-nowrap">
                               {item.status === "approved" ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                                   <CheckCircle className="w-3 h-3" />
                                   <span>{isAr ? "معتمد ومفعل" : "Approved"}</span>
                                 </span>
                               ) : item.status === "pending" ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                                   <Clock className="w-3 h-3 animate-spin" style={{ animationDuration: "6s" }} />
                                   <span>{isAr ? "قيد الانتظار" : "Pending"}</span>
                                 </span>
                               ) : item.status === "rejected" ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
                                   <XCircle className="w-3 h-3" />
                                   <span>{isAr ? "مرفوض" : "Rejected"}</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
                                   <HelpCircle className="w-3 h-3" />
                                   <span>{isAr ? "يحتاج معلومات" : "Needs Info"}</span>
                                 </span>
@@ -1762,7 +1762,7 @@ export default function AdminSubscriptions({
                             </td>
 
                             {/* Date */}
-                            <td className="py-3 px-4 whitespace-nowrap text-[11px] text-slate-500">
+                            <td className="py-3 px-4 whitespace-nowrap text-xs text-slate-500">
                               {item.submittedAt ? (
                                 <div>
                                   <span className="block font-bold text-slate-700 dark:text-slate-300">
@@ -1772,7 +1772,7 @@ export default function AdminSubscriptions({
                                       year: "numeric",
                                     })}
                                   </span>
-                                  <span className="block text-[10px] text-slate-400">
+                                  <span className="block text-xs text-slate-400">
                                     {new Date(item.submittedAt).toLocaleTimeString(isAr ? "ar-EG" : "en-US", {
                                       hour: "2-digit",
                                       minute: "2-digit",
@@ -1804,7 +1804,7 @@ export default function AdminSubscriptions({
                                   )}
                                 </button>
                               ) : (
-                                <span className="text-[10px] text-slate-400 italic">
+                                <span className="text-xs text-slate-400 italic">
                                   {isAr ? "بدون إيصال" : "No receipt"}
                                 </span>
                               )}
@@ -1920,30 +1920,30 @@ export default function AdminSubscriptions({
                   {/* Metadata Grid */}
                   <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-3">
                     <div className="rounded-xl bg-slate-800/60 p-3">
-                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "المشترك" : "Subscriber"}</span>
+                      <span className="block text-xs font-bold text-slate-400">{isAr ? "المشترك" : "Subscriber"}</span>
                       <strong className="block truncate text-white mt-1">{inspectingPayment.userName}</strong>
-                      <span className="block truncate text-[10px] text-slate-400">{inspectingPayment.email || inspectingPayment.userId}</span>
+                      <span className="block truncate text-xs text-slate-400">{inspectingPayment.email || inspectingPayment.userId}</span>
                     </div>
 
                     <div className="rounded-xl bg-slate-800/60 p-3">
-                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "الباقة" : "Plan"}</span>
+                      <span className="block text-xs font-bold text-slate-400">{isAr ? "الباقة" : "Plan"}</span>
                       <strong className="block truncate text-amber-300 mt-1">{inspectingPayment.planName}</strong>
                       {inspectingPayment.trialDurationDays && (
-                        <span className="mt-1 block text-[10px] font-black text-violet-300">
+                        <span className="mt-1 block text-xs font-black text-violet-300">
                           {isAr ? `مدة التجربة: ${inspectingPayment.trialDurationDays} يوم` : `Trial duration: ${inspectingPayment.trialDurationDays} days`}
                         </span>
                       )}
                     </div>
 
                     <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 col-span-2 sm:col-span-1">
-                      <span className="block text-[10px] font-bold text-emerald-400">{isAr ? "المبلغ المطلوب" : "Amount"}</span>
+                      <span className="block text-xs font-bold text-emerald-400">{isAr ? "المبلغ المطلوب" : "Amount"}</span>
                       <strong className="block text-lg font-black text-emerald-400 mt-0.5">
                         {inspectingPayment.amount} {isAr ? "ج.م" : "EGP"}
                       </strong>
                     </div>
 
                     <div className="rounded-xl bg-slate-800/60 p-3">
-                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "طريقة التحويل" : "Payment Method"}</span>
+                      <span className="block text-xs font-bold text-slate-400">{isAr ? "طريقة التحويل" : "Payment Method"}</span>
                       <strong className="block truncate text-white mt-1">
                         {inspectingPayment.method === "instapay"
                           ? "InstaPay"
@@ -1956,7 +1956,7 @@ export default function AdminSubscriptions({
                     </div>
 
                     <div className="rounded-xl bg-slate-800/60 p-3">
-                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "الحالة الحالية" : "Current Status"}</span>
+                      <span className="block text-xs font-bold text-slate-400">{isAr ? "الحالة الحالية" : "Current Status"}</span>
                       <span className="mt-1 inline-block font-black text-xs">
                         {inspectingPayment.status === "approved" ? (
                           <span className="text-emerald-400">{isAr ? "معتمد ومفعل" : "Approved"}</span>
@@ -1971,8 +1971,8 @@ export default function AdminSubscriptions({
                     </div>
 
                     <div className="rounded-xl bg-slate-800/60 p-3">
-                      <span className="block text-[10px] font-bold text-slate-400">{isAr ? "تاريخ الطلب" : "Submitted At"}</span>
-                      <span className="block text-[11px] text-slate-300 mt-1">
+                      <span className="block text-xs font-bold text-slate-400">{isAr ? "تاريخ الطلب" : "Submitted At"}</span>
+                      <span className="block text-xs text-slate-300 mt-1">
                         {inspectingPayment.submittedAt ? new Date(inspectingPayment.submittedAt).toLocaleString(isAr ? "ar-EG" : "en-US") : "—"}
                       </span>
                     </div>
@@ -2239,7 +2239,7 @@ export default function AdminSubscriptions({
                 <Crown className="w-4 h-4 text-amber-400" />
                 {isAr ? "إدارة العروض التجريبية النشطة (7، 14، أو 30 يوماً)" : "Manage Active Trial Offers (7, 14, or 30 days)"}
               </p>
-              <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">
+              <p className="text-xs text-slate-400 mb-4 leading-relaxed">
                 {isAr
                   ? "عند تفعيل أحد العروض التجريبية أدناه، سيظهر للمستخدمين المسجلين حصراً في صفحة باقات الاشتراك لإرسال طلب تفعيل فوري يراجعه السوبر أدمن."
                   : "When active, trial offers appear exclusively for registered members on the subscription plans page to request super-admin activation."}
@@ -2514,7 +2514,7 @@ export default function AdminSubscriptions({
                           </td>
                           <td className="px-4 py-3 text-center font-mono">
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] ${isExpired ? "bg-red-950 text-red-400 border border-red-900" : "bg-emerald-950 text-emerald-400 border border-emerald-900"}`}
+                              className={`px-2 py-0.5 rounded-full text-xs ${isExpired ? "bg-red-950 text-red-400 border border-red-900" : "bg-emerald-950 text-emerald-400 border border-emerald-900"}`}
                             >
                               {c.expiryDate}{" "}
                               {isExpired && (isAr ? " (منتهي)" : " (Expired)")}

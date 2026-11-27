@@ -87,20 +87,20 @@ export default function QuizCountdownTimer({
 
       {/* Countdown details text */}
       <div className="space-y-0.5 text-right font-sans">
-        <span className="text-[11px] text-slate-700 dark:text-slate-300 block font-bold leading-none">
+        <span className="text-xs text-slate-700 dark:text-slate-300 block font-bold leading-none">
           {isAr ? 'الوقت المتبقي لإنهاء الاختبار:' : 'Time Left to Finish Quiz:'}
         </span>
         <div className="flex items-baseline gap-1">
           <span className={`font-mono text-xl font-black tracking-tight leading-none ${isUrgent ? 'text-rose-600 dark:text-rose-400 animate-pulse' : 'text-slate-950 dark:text-white'}`}>
             {formattedTime}
           </span>
-          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
             {isAr ? 'د:ث' : 'm:s'}
           </span>
         </div>
         
         {isUrgent && (
-          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-extrabold block animate-pulse">
+          <span className="text-xs text-rose-600 dark:text-rose-400 font-extrabold block animate-pulse">
             {isAr ? '⏳ أسرع! الوقت ينفد بسرعة!' : '⏳ Hurry up! Time is running out!'}
           </span>
         )}

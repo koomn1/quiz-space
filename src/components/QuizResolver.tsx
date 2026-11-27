@@ -1258,7 +1258,7 @@ export default function QuizResolver({
             </div>
           )}
 
-          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg">
+          <span className="text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg">
             {quiz.creatorName ? `${isAr ? 'الناشر:' : 'By:'} ${quiz.creatorName}` : (isAr ? 'اختبار مخصص' : 'Custom Quiz')}
           </span>
         </div>
@@ -1272,7 +1272,7 @@ export default function QuizResolver({
                   playChimeSound('click');
                   setIsFlashcardMode(false);
                 }}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   !isFlashcardMode
                     ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-slate-700/60'
                     : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
@@ -1287,7 +1287,7 @@ export default function QuizResolver({
                   setIsFlashcardMode(true);
                   setIsFlipped(false);
                 }}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   isFlashcardMode
                     ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-slate-700/60'
                     : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
@@ -1368,7 +1368,7 @@ export default function QuizResolver({
                 <div className="space-y-2">
                   <h3 className="text-lg font-black text-white flex items-center justify-center gap-2">
                     <span>{isAr ? 'ميزة بطاقات الاستذكار ' : 'Study Flashcards Feature '}</span>
-                    <span className="text-[10px] bg-gradient-to-r from-amber-400 to-pink-500 text-slate-950 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">PREMIUM</span>
+                    <span className="text-xs bg-gradient-to-r from-amber-400 to-pink-500 text-slate-950 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">PREMIUM</span>
                   </h3>
                   <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
                     {isAr
@@ -1379,14 +1379,14 @@ export default function QuizResolver({
 
                 {/* Simulated Glassmorphic preview of a study card */}
                 <div className="border border-white/5 bg-white/5 rounded-2xl p-5 text-right space-y-3 blur-[2px] pointer-events-none select-none my-2 relative">
-                  <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                  <div className="flex justify-between text-xs text-slate-500 font-mono">
                     <span># 1</span>
                     <span>{isAr ? 'كارت الاستذكار المعلق' : 'Preview Flashcard'}</span>
                   </div>
                   <div className="h-4 bg-slate-800/80 rounded w-3/4 animate-pulse" />
                   <div className="h-3 bg-slate-800/80 rounded w-1/2 animate-pulse" />
                   <div className="h-10 bg-purple-500/20 rounded-xl flex items-center justify-center border border-purple-500/10 mt-4">
-                    <span className="text-[10px] text-purple-400 font-extrabold">{isAr ? 'كشف الإجابة والتحليل الدقيق ' : 'Reveal Solution & Analytics '}</span>
+                    <span className="text-xs text-purple-400 font-extrabold">{isAr ? 'كشف الإجابة والتحليل الدقيق ' : 'Reveal Solution & Analytics '}</span>
                   </div>
                 </div>
 
@@ -1420,11 +1420,11 @@ export default function QuizResolver({
                     <BadgeCheck className="w-4 h-4 text-amber-500 animate-pulse" />
                     <span>{isAr ? 'كروت الاستذكار التفاعلية ثلاثية الأبعاد ' : 'Interactive 3D Study Flashcards'}</span>
                   </h4>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold leading-normal">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-normal">
                     {isAr ? 'انقر على كارت السؤال لقلبه ومعاينة الإجابة والتحليل وتدبر نظريته العلمية.' : 'Click any question card to flip and analyze the detailed scientific key solution.'}
                   </p>
                 </div>
-                <div className="text-[10px] bg-primary/10 text-primary dark:text-primary-light font-black px-3 py-1.5 rounded-xl border border-primary/20 tracking-wide font-sans">
+                <div className="text-xs bg-primary/10 text-primary dark:text-primary-light font-black px-3 py-1.5 rounded-xl border border-primary/20 tracking-wide font-sans">
                   {isAr ? 'الكارت' : 'Card'} {currentFlashcardIdx + 1} / {quiz.questions.length}
                 </div>
               </div>
@@ -1450,7 +1450,7 @@ export default function QuizResolver({
                   {/* FRONT SIDE (Question) */}
                   <div className="absolute inset-0 w-full h-full backface-hidden rounded-x3 rounded-3xl bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-805 p-8 flex flex-col justify-between shadow-xs transition-all hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-primary dark:text-primary-light bg-primary/10 px-3 py-1 rounded-full">
+                      <span className="text-xs font-black uppercase tracking-wider text-primary dark:text-primary-light bg-primary/10 px-3 py-1 rounded-full">
                         {quiz.questions[currentFlashcardIdx].type === 'mcq'
                           ? (isAr ? ' اختيار من متعدد' : ' Multiple Choice')
                           : quiz.questions[currentFlashcardIdx].type === 'tf'
@@ -1477,7 +1477,7 @@ export default function QuizResolver({
                       </h3>
                     </div>
 
-                    <div className="flex flex-col items-center gap-1 text-[11px] text-slate-400 font-bold border-t border-dashed border-slate-150 dark:border-slate-800 pt-4">
+                    <div className="flex flex-col items-center gap-1 text-xs text-slate-400 font-bold border-t border-dashed border-slate-150 dark:border-slate-800 pt-4">
                       <span className="flex items-center gap-1 text-purple-500 animate-pulse">
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '4s' }} />
                         <span>{isAr ? 'انقر لقلب الكارت وكشف السر الأكاديمي ' : 'Click to flip and reveal the academic secret '}</span>
@@ -1489,7 +1489,7 @@ export default function QuizResolver({
                   <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-x3 rounded-3xl bg-white dark:bg-slate-950 border border-purple-200 dark:border-purple-900/60 p-6 sm:p-8 flex flex-col justify-between shadow-md">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full">
+                        <span className="text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full">
                           {isAr ? ' الإجابة النموذجية المرصودة' : ' Correct Model Answer'}
                         </span>
                         <span className="text-xs font-mono font-bold text-slate-400"># {currentFlashcardIdx + 1}</span>
@@ -1513,7 +1513,7 @@ export default function QuizResolver({
 
                       {/* Academic explanation insights with AI integration option */}
                       <div className="space-y-1 text-right max-h-32 overflow-y-auto px-1" style={{ textAlign: isAr ? 'right' : 'left' }}>
-                        <span className="text-[10px] font-black text-slate-400 block">{isAr ? ' التفسير والشرح الأكاديمي:' : ' Explanatory Concept Notes:'}</span>
+                        <span className="text-xs font-black text-slate-400 block">{isAr ? ' التفسير والشرح الأكاديمي:' : ' Explanatory Concept Notes:'}</span>
                         <p className="text-xs text-slate-650 dark:text-slate-300 leading-relaxed font-semibold">
                           {quiz.questions[currentFlashcardIdx].explanation || (isAr
                             ? 'تم رصد الفكرة لقياس الاسترجاع والاستدلال المهاري للحدث.'
@@ -1524,7 +1524,7 @@ export default function QuizResolver({
                         {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id] && (
                           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
                             <span className="text-[9px] uppercase font-black text-primary dark:text-primary-light block">{isAr ? ' شرح كوزمو المعلم الرقمي:' : ' Lesson by AI Tutor AI:'}</span>
-                            <p className="text-[11px] text-slate-900 dark:text-slate-100 leading-relaxed bg-primary/5 dark:bg-primary/10 p-2.5 rounded-xl border border-primary/20 whitespace-pre-line font-medium text-right">
+                            <p className="text-xs text-slate-900 dark:text-slate-100 leading-relaxed bg-primary/5 dark:bg-primary/10 p-2.5 rounded-xl border border-primary/20 whitespace-pre-line font-medium text-right">
                               {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id]}
                             </p>
                           </div>
@@ -1541,7 +1541,7 @@ export default function QuizResolver({
                           playChimeSound('click');
                         }}
                         disabled={aiFlashcardLoading[quiz.questions[currentFlashcardIdx].id]}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black cursor-pointer transition-all border shrink-0 flex items-center gap-1 ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer transition-all border shrink-0 flex items-center gap-1 ${
                           aiFlashcardLoading[quiz.questions[currentFlashcardIdx].id]
                             ? 'bg-primary/20 text-primary border-primary/40 animate-pulse'
                             : aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id]
@@ -1559,7 +1559,7 @@ export default function QuizResolver({
                         </span>
                       </button>
 
-                      <span className="text-[10px] text-slate-400 font-bold block">
+                      <span className="text-xs text-slate-400 font-bold block">
                         {isAr ? 'انقر للطلب مجدداً' : 'Click to flip back'}
                       </span>
                     </div>
@@ -1628,7 +1628,7 @@ export default function QuizResolver({
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                   <span>{isAr ? `السؤال ${currentIdx + 1} من ${quiz.questions.length}` : `Question ${currentIdx + 1} of ${quiz.questions.length}`}</span>
                 </span>
-                <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">{progressPercent}% {isAr ? 'مكتمل' : 'completed'}</span>
+                <span className="font-mono text-xs text-slate-400 dark:text-slate-500">{progressPercent}% {isAr ? 'مكتمل' : 'completed'}</span>
               </div>
           <style>{`
             @keyframes shake-panel {
@@ -1755,17 +1755,17 @@ export default function QuizResolver({
                   <div className="space-y-5 animate-fade-in text-right">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 space-y-1.5">
-                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">إجابتك المكتوبة:</span>
+                        <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">إجابتك المكتوبة:</span>
                         <p className="text-xs text-slate-705 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">{essayAnswerText || 'لا توجد إجابة مكتوبة.'}</p>
                       </div>
                       {quiz?.essayGradingMode === 'ai' ? (
                         <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/10 border border-emerald-150 dark:border-emerald-900 space-y-1.5">
-                          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded">الجواب النموذجي المرصود بالذكاء الاصطناعي:</span>
+                          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded">الجواب النموذجي المرصود بالذكاء الاصطناعي:</span>
                           <p className="text-xs text-slate-800 dark:text-slate-205 whitespace-pre-wrap leading-relaxed font-semibold">{currentQuestion.correctAnswer || 'لم يرفق منشئ الاختبار إجابة نموذجية؛ سيقيّم كوزمو إجابتك اعتمادًا على نص السؤال.'}</p>
                         </div>
                       ) : (
                         <div className="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 space-y-1.5">
-                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded">
+                          <span className="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded">
                             {isAr ? 'حالة التصحيح: بانتظار مراجعة المنشئ ⏳' : 'Status: Pending Creator Review ⏳'}
                           </span>
                           <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold">
@@ -1977,7 +1977,7 @@ export default function QuizResolver({
                     <span className="font-display font-black text-2xl text-amber-500 block">
                       {isDisplayedScoreReady ? <CountUp to={displayedScore} duration={1.2} /> : '—'} / {quiz.questions.filter(q => q.type !== 'essay').length}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-medium block">
+                    <span className="text-xs text-slate-400 font-medium block">
                       {isAr ? 'درجة الموضوعي' : 'Objective Score'}
                     </span>
                   </div>
@@ -2002,7 +2002,7 @@ export default function QuizResolver({
                     <span className="font-display font-black text-3xl text-primary block">
                       {isDisplayedScoreReady ? <CountUp to={Math.round((displayedScore / quiz.questions.length) * 100)} suffix="%" duration={1.5} /> : '—'}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-medium">
+                    <span className="text-xs text-slate-400 font-medium">
                       {isDisplayedScoreReady ? (
                         <>
                           <CountUp to={displayedScore} duration={1} /> {isAr ? `من أصل ${quiz.questions.length} صحيح` : `of ${quiz.questions.length} correct`}
@@ -2195,7 +2195,7 @@ export default function QuizResolver({
 
             {/* Optional feedback comments for premium depth */}
             <div className="space-y-2 max-w-md mx-auto text-right">
-              <label className="text-[11px] font-black text-indigo-300 uppercase tracking-wider block" style={{ textAlign: isAr ? 'right' : 'left' }}>
+              <label className="text-xs font-black text-indigo-300 uppercase tracking-wider block" style={{ textAlign: isAr ? 'right' : 'left' }}>
                 {isAr ? 'ملاحظاتك الإضافية (اختياري):' : 'Additional Feedback (Optional):'}
               </label>
               <textarea
@@ -2388,7 +2388,7 @@ export default function QuizResolver({
                 <span className="inline-block px-3.5 py-1.5 bg-primary/10 text-primary rounded-xl font-bold text-xs border border-primary/20">
                   وثيقة تفصيلية معتمدة
                 </span>
-                <p className="text-[10px] text-slate-400 mt-1.5 font-mono">{new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <p className="text-xs text-slate-400 mt-1.5 font-mono">{new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
               </div>
             </div>
 
@@ -2396,13 +2396,13 @@ export default function QuizResolver({
             <div className="bg-slate-50 border border-slate-200/60 p-6 rounded-2xl mb-8 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-bold text-primary block mb-0.5">تقرير نتائج الطالب:</span>
+                  <span className="text-xs font-bold text-primary block mb-0.5">تقرير نتائج الطالب:</span>
                   <h2 className="text-xl font-bold text-slate-900 leading-tight">{quiz.title}</h2>
                 </div>
                 {/* Score box */}
                 <div className="text-center px-5 py-3 bg-primary text-white rounded-xl shadow-xs">
                   <span className="block text-2xl font-black leading-none">{Math.round((score / quiz.questions.length) * 100)}%</span>
-                  <span className="text-[10px] opacity-90 mt-1 block">النسبة المحققة</span>
+                  <span className="text-xs opacity-90 mt-1 block">النسبة المحققة</span>
                 </div>
               </div>
 
@@ -2412,19 +2412,19 @@ export default function QuizResolver({
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-200/50 text-xs">
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-bold">اسم الطالب الممتحن:</span>
+                  <span className="text-slate-400 block text-xs font-bold">اسم الطالب الممتحن:</span>
                   <span className="text-slate-800 font-bold">{takerName || userName || 'طالب مجهول'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-bold">أستاذ/ناشر الاختبار:</span>
+                  <span className="text-slate-400 block text-xs font-bold">أستاذ/ناشر الاختبار:</span>
                   <span className="text-slate-800 font-bold">{quiz.creatorName}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-bold">الدرجة المحصلة:</span>
+                  <span className="text-slate-400 block text-xs font-bold">الدرجة المحصلة:</span>
                   <span className="text-slate-800 font-bold font-mono">{score} من أصل {quiz.questions.length}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[10px] font-bold">تقدير التقييم الورقي:</span>
+                  <span className="text-slate-400 block text-xs font-bold">تقدير التقييم الورقي:</span>
                   <span className={`font-bold ${score === quiz.questions.length ? 'text-emerald-600' : score >= quiz.questions.length / 2 ? 'text-primary' : 'text-red-500'}`}>
                     {score === quiz.questions.length ? 'ممتاز مع مرتبة الشرف ' : score >= quiz.questions.length / 2 ? 'جيد جداً / مجتاز ' : 'غير كافٍ / يحتاج إعادة '}
                   </span>
@@ -2446,7 +2446,7 @@ export default function QuizResolver({
                       <h4 className="text-sm font-bold text-slate-900 leading-relaxed text-right flex-1">
                         س {qIdx + 1}: {q.text}
                       </h4>
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold shrink-0 ${
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shrink-0 ${
                         isCorrect
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-105'
                           : 'bg-red-50 text-red-700 border border-red-105'
@@ -2459,11 +2459,11 @@ export default function QuizResolver({
                     {q.type === 'essay' ? (
                       <div className="space-y-3 pl-0 text-xs text-right">
                         <div className="p-3 bg-slate-50 rounded-xl space-y-1 border border-slate-100">
-                          <span className="text-[10px] font-bold text-primary block">كتبت كإجابة ومحاولة:</span>
+                          <span className="text-xs font-bold text-primary block">كتبت كإجابة ومحاولة:</span>
                           <p className="text-slate-700 dark:text-slate-300 italic whitespace-pre-wrap">{essayAnswers[qIdx] || 'لم يتم تسجيل إجابة مكتوبة.'}</p>
                         </div>
                         <div className="p-3 bg-emerald-50/40 rounded-xl space-y-1 border border-emerald-100/50">
-                          <span className="text-[10px] font-bold text-emerald-800 block">الجواب النموذجي المرصود بالذكاء الاصطناعي:</span>
+                          <span className="text-xs font-bold text-emerald-800 block">الجواب النموذجي المرصود بالذكاء الاصطناعي:</span>
                           <p className="text-emerald-950 font-semibold whitespace-pre-wrap">{q.correctAnswer || 'لا يوجد إجابة نموذجية مسجلة مسبقاً.'}</p>
                         </div>
                       </div>
@@ -2539,11 +2539,11 @@ export default function QuizResolver({
 
                     {/* Rate Question segment */}
                     <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 mt-2">
-                      <span className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">قيم جودة وفائدة هذا السؤال:</span>
+                      <span className="text-xs sm:text-xs text-slate-400 dark:text-slate-500 font-medium">قيم جودة وفائدة هذا السؤال:</span>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleRateQuestion(q.id || `q-${qIdx}`, q.text, 'like')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-semibold cursor-pointer transition-all ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-xs font-semibold cursor-pointer transition-all ${
                             questionRatings[q.id || `q-${qIdx}`] === 'like'
                               ? 'bg-emerald-500 text-white font-bold border border-emerald-600 shadow-xs'
                               : 'bg-slate-50 dark:bg-slate-900 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/55 dark:border-slate-700/60'
@@ -2555,7 +2555,7 @@ export default function QuizResolver({
                         </button>
                         <button
                           onClick={() => handleRateQuestion(q.id || `q-${qIdx}`, q.text, 'dislike')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-semibold cursor-pointer transition-all ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-xs font-semibold cursor-pointer transition-all ${
                             questionRatings[q.id || `q-${qIdx}`] === 'dislike'
                               ? 'bg-red-500 text-white font-bold border border-red-600 shadow-xs'
                               : 'bg-slate-50 dark:bg-slate-900 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/55 dark:border-slate-705/60'
@@ -2568,7 +2568,7 @@ export default function QuizResolver({
                       </div>
                     </div>
                     {questionRatingErrors[q.id || `q-${qIdx}`] && (
-                      <p role="alert" className="mt-2 text-[11px] font-semibold text-rose-600 dark:text-rose-300">
+                      <p role="alert" className="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-300">
                         {questionRatingErrors[q.id || `q-${qIdx}`]}
                       </p>
                     )}
@@ -2578,7 +2578,7 @@ export default function QuizResolver({
             </div>
 
             {/* Closing Signature Area */}
-            <div className="mt-12 pt-8 border-t border-slate-200 flex items-center justify-between text-slate-400 text-[10px]">
+            <div className="mt-12 pt-8 border-t border-slate-200 flex items-center justify-between text-slate-400 text-xs">
               <span>رقم التحقق الحسي للرابط: {quiz.id}</span>
               <span>منصة Quiz Space - جميع الحقوق محفوظة لغايات التعليم المستمر</span>
             </div>
@@ -2649,7 +2649,7 @@ export default function QuizResolver({
                   >
                     <span>{i + 1}</span>
                     {isAnswered && !isCurrent && (
-                      <span className="text-[10px] leading-none mt-0.5">
+                      <span className="text-xs leading-none mt-0.5">
                         {isCorrect ? '' : ''}
                       </span>
                     )}
@@ -2659,7 +2659,7 @@ export default function QuizResolver({
             </div>
 
             {/* Legend & Summary */}
-            <div className="mt-4 flex shrink-0 items-center justify-around border-t border-slate-100 pt-3 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <div className="mt-4 flex shrink-0 items-center justify-around border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-primary" />
                 <span>{isAr ? 'السؤال الحالي' : 'Current'}</span>

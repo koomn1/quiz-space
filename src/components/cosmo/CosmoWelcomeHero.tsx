@@ -63,7 +63,7 @@ export function CosmoWelcomeHero({
             <img src={COSMO_AVATAR} alt="Cosmo AI" className="h-full w-full rounded-[17px] object-cover" />
             <span className="absolute bottom-1 right-1 h-3 w-3 rounded-full border-2 border-[#072424] bg-emerald-400" aria-label={isAr ? 'متصل' : 'Online'} />
           </div>
-          <p className="mb-3 text-[11px] font-bold tracking-[0.2em] text-[#2AC3BB]">QUIZSPACE · COSMO AI</p>
+          <p className="mb-3 text-xs font-bold tracking-[0.2em] text-[#2AC3BB]">QUIZSPACE · COSMO AI</p>
           <h1 className="text-3xl font-black tracking-tight sm:text-5xl" style={{ color: theme.FG }}>
             <SplitText text={greeting} splitType="words" stagger={0.045} duration={0.5} />
           </h1>
@@ -71,7 +71,7 @@ export function CosmoWelcomeHero({
             {description}
           </p>
 
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[11px] font-semibold" style={{ color: theme.SUBTLE_TEXT }}>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs font-semibold" style={{ color: theme.SUBTLE_TEXT }}>
             <span className="rounded-full border px-3 py-1.5" style={{ borderColor: theme.BORDER_SOFT, background: theme.HOVER_SOFT }}>
               {isAr ? 'شرح واضح' : 'Clear explanations'}
             </span>
@@ -107,7 +107,7 @@ export function CosmoWelcomeHero({
           ))}
         </div>
 
-        <p className="mt-7 text-center text-[11px]" style={{ color: theme.SUBTLE_TEXT }}>
+        <p className="mt-7 text-center text-xs" style={{ color: theme.SUBTLE_TEXT }}>
           {isAr ? 'أو اكتب طلبك مباشرة في مربع المحادثة بالأسفل' : 'Or write your request directly in the composer below'}
         </p>
       </div>

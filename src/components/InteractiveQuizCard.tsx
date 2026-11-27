@@ -178,7 +178,7 @@ export function InteractiveQuizCard({
     >
       <Users className="h-4 w-4 shrink-0" />
       <span className="whitespace-nowrap">{isAr ? 'مشاهدة من دخلوا الاختبار' : 'View who took this quiz'}</span>
-      <span className="min-w-7 rounded-full bg-[#007472]/10 px-2 py-0.5 text-center text-[11px] font-black text-[#007472] dark:text-[#2AC3BB] dark:bg-[#007472]/30 dark:text-cyan-100">
+      <span className="min-w-7 rounded-full bg-[#007472]/10 px-2 py-0.5 text-center text-xs font-black text-[#007472] dark:text-[#2AC3BB] dark:bg-[#007472]/30 dark:text-cyan-100">
         {quiz.totalPlays || 0}
       </span>
     </button>
@@ -285,15 +285,15 @@ export function InteractiveQuizCard({
               <button
                 type="button"
                 onClick={() => setEssayReviewOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/10 px-3 py-2 text-[11px] font-black text-amber-600 transition-all hover:bg-amber-500/20 dark:text-amber-400 cursor-pointer border border-amber-500/20"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-black text-amber-600 transition-all hover:bg-amber-500/20 dark:text-amber-400 cursor-pointer border border-amber-500/20"
                 title={isAr ? 'مراجعة وتصحيح المقالي' : 'Grade Essays'}
               >
                 <PenTool className="w-3.5 h-3.5 text-amber-500" />
                 <span>{isAr ? 'تصحيح المقالي' : 'Grade Essays'}</span>
               </button>
             )}
-            <button type="button" onClick={exportAttemptsCsv} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-2 text-[11px] font-black text-emerald-600 transition-all hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400" title="CSV"><Download className="h-3.5 w-3.5" />CSV</button>
-            <button type="button" onClick={exportAttemptsExcel} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 px-3 py-2 text-[11px] font-black text-blue-600 transition-all hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-blue-400" title="Excel"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
+            <button type="button" onClick={exportAttemptsCsv} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-black text-emerald-600 transition-all hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400" title="CSV"><Download className="h-3.5 w-3.5" />CSV</button>
+            <button type="button" onClick={exportAttemptsExcel} disabled={attemptsLoading || attempts.length === 0} className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 px-3 py-2 text-xs font-black text-blue-600 transition-all hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-blue-400" title="Excel"><FileSpreadsheet className="h-3.5 w-3.5" />Excel</button>
             <button type="button" onClick={() => setAttemptsOpen(false)} className="rounded-xl p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><X className="h-4 w-4" /></button>
           </div>
         </div>
@@ -330,7 +330,7 @@ export function InteractiveQuizCard({
                             </span>
                           )}
                         </div>
-                        <p className="text-[10px] font-bold text-slate-400 mt-0.5">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</p>
+                        <p className="text-xs font-bold text-slate-400 mt-0.5">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -386,11 +386,11 @@ export function InteractiveQuizCard({
           </div>
           <aside className="rounded-2xl border border-[#007472]/20/70 bg-violet-50/70 p-4 dark:border-[#2AC3BB]/20 dark:bg-violet-950/20">
             <h4 className="text-sm font-black text-slate-800 dark:text-slate-100">{isAr ? 'مساحة إجابة المقالي' : 'Essay answer space'}</h4>
-            <p className="mt-1 text-[11px] font-bold leading-5 text-slate-500 dark:text-slate-400">{isAr ? 'الاسم يظهر فوق الخط، والمساحة أسفل السؤال للكتابة.' : 'The name appears above its line; this space is below each essay question.'}</p>
-            <div className="mt-4 flex items-center gap-2"><input type="number" min={56} max={320} step={8} value={essayAnswerHeight} onChange={(event) => setEssayAnswerHeight(Math.min(320, Math.max(56, Number(event.target.value) || 56)))} className="w-20 rounded-xl border border-[#007472]/20 bg-white px-2 py-1.5 text-center text-sm font-black text-violet-700 outline-none dark:border-violet-700 dark:bg-slate-900 dark:text-violet-300" /><span className="text-[10px] font-bold text-slate-500">pt</span></div>
+            <p className="mt-1 text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">{isAr ? 'الاسم يظهر فوق الخط، والمساحة أسفل السؤال للكتابة.' : 'The name appears above its line; this space is below each essay question.'}</p>
+            <div className="mt-4 flex items-center gap-2"><input type="number" min={56} max={320} step={8} value={essayAnswerHeight} onChange={(event) => setEssayAnswerHeight(Math.min(320, Math.max(56, Number(event.target.value) || 56)))} className="w-20 rounded-xl border border-[#007472]/20 bg-white px-2 py-1.5 text-center text-sm font-black text-violet-700 outline-none dark:border-violet-700 dark:bg-slate-900 dark:text-violet-300" /><span className="text-xs font-bold text-slate-500">pt</span></div>
             <input aria-label={isAr ? 'ارتفاع مساحة إجابة المقال' : 'Essay answer height'} type="range" min={56} max={320} step={8} value={essayAnswerHeight} onChange={(event) => setEssayAnswerHeight(Number(event.target.value))} className="mt-4 w-full accent-violet-600" />
-            <div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400"><span>56</span><span>120</span><span>320</span></div>
-            <button type="button" onClick={() => setEssayAnswerHeight(120)} className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-[11px] font-black text-slate-600 hover:bg-white dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">{isAr ? 'إعادة الافتراضي' : 'Reset default'}</button>
+            <div className="mt-2 flex justify-between text-xs font-bold text-slate-400"><span>56</span><span>120</span><span>320</span></div>
+            <button type="button" onClick={() => setEssayAnswerHeight(120)} className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 hover:bg-white dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">{isAr ? 'إعادة الافتراضي' : 'Reset default'}</button>
           </aside>
         </div>
         <div className="flex flex-wrap gap-2 border-t border-slate-200/80 p-4 dark:border-slate-800/80">
@@ -405,13 +405,13 @@ export function InteractiveQuizCard({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onClick={() => setPreviewOpen(false)} role="dialog" aria-modal="true" aria-labelledby={`quiz-preview-title-${quiz.id}`}>
       <div className="uipro-glass-surface max-h-[min(760px,92vh)] w-full max-w-2xl overflow-hidden rounded-[28px] border border-[#007472]/20 dark:border-[#2AC3BB]/20 shadow-2xl" onClick={(event) => event.stopPropagation()} dir={isAr ? 'rtl' : 'ltr'}>
         <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-[#007472]/5 to-[#2AC3BB]/5 px-5 py-4 dark:border-slate-800 dark:from-[#007472]/20 dark:to-[#007472]/10">
-          <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'معاينة الاختبار' : 'Quiz preview'}</p><h3 id={`quiz-preview-title-${quiz.id}`} className="mt-1 text-lg font-black text-slate-900 dark:text-white">{quiz.title}</h3></div>
+          <div><p className="text-xs font-black uppercase tracking-[0.2em] text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'معاينة الاختبار' : 'Quiz preview'}</p><h3 id={`quiz-preview-title-${quiz.id}`} className="mt-1 text-lg font-black text-slate-900 dark:text-white">{quiz.title}</h3></div>
           <button type="button" onClick={() => setPreviewOpen(false)} className="rounded-xl p-2 text-slate-500 hover:bg-white/70 dark:hover:bg-slate-800" aria-label={isAr ? 'إغلاق المعاينة' : 'Close preview'}><X className="h-5 w-5" /></button>
         </div>
         <div className="max-h-[calc(min(760px,92vh)-80px)] overflow-y-auto p-5">
-          <div className="mb-5 grid grid-cols-3 gap-2 text-center"><div className="rounded-2xl bg-[#007472]/10 dark:bg-[#2AC3BB]/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'الأسئلة' : 'Questions'}</p><p className="mt-1 text-lg font-black text-[#007472] dark:text-[#2AC3BB]">{quiz.questions.length}</p></div><div className="rounded-2xl bg-amber-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'التقييم' : 'Rating'}</p><p className="mt-1 text-lg font-black text-amber-600">{quiz.ratingsCount ? `${quiz.avgRating} ` : '—'}</p></div><div className="rounded-2xl bg-emerald-500/10 p-3"><p className="text-[10px] font-bold text-slate-500">{isAr ? 'المحاولات' : 'Plays'}</p><p className="mt-1 text-lg font-black text-emerald-600">{quiz.totalPlays || 0}</p></div></div>
+          <div className="mb-5 grid grid-cols-3 gap-2 text-center"><div className="rounded-2xl bg-[#007472]/10 dark:bg-[#2AC3BB]/10 p-3"><p className="text-xs font-bold text-slate-500">{isAr ? 'الأسئلة' : 'Questions'}</p><p className="mt-1 text-lg font-black text-[#007472] dark:text-[#2AC3BB]">{quiz.questions.length}</p></div><div className="rounded-2xl bg-amber-500/10 p-3"><p className="text-xs font-bold text-slate-500">{isAr ? 'التقييم' : 'Rating'}</p><p className="mt-1 text-lg font-black text-amber-600">{quiz.ratingsCount ? `${quiz.avgRating} ` : '—'}</p></div><div className="rounded-2xl bg-emerald-500/10 p-3"><p className="text-xs font-bold text-slate-500">{isAr ? 'المحاولات' : 'Plays'}</p><p className="mt-1 text-lg font-black text-emerald-600">{quiz.totalPlays || 0}</p></div></div>
           {quiz.description && <p className="mb-5 rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-600 dark:bg-slate-900 dark:text-slate-300">{quiz.description}</p>}
-          <div className="space-y-3">{quiz.questions.slice(0, 3).map((question, index) => <div key={question.id || index} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800"><div className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#007472] text-xs font-black text-white">{index + 1}</span><div className="min-w-0 flex-1"><p className="font-bold leading-7 text-slate-800 dark:text-slate-100">{question.text}</p>{Array.isArray(question.options) && question.options.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2">{question.options.slice(0, 4).map((option, optionIndex) => <span key={`${option}-${optionIndex}`} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-300"><span className="font-black text-[#007472] dark:text-[#2AC3BB]">{String.fromCharCode(65 + optionIndex)}</span>{option}</span>)}</div>}{question.type === 'essay' && <span className="mt-3 inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-1 text-[10px] font-black text-amber-600"><CheckCircle2 className="h-3 w-3" />{isAr ? 'سؤال مقالي' : 'Essay question'}</span>}</div></div></div>)}</div>
+          <div className="space-y-3">{quiz.questions.slice(0, 3).map((question, index) => <div key={question.id || index} className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800"><div className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#007472] text-xs font-black text-white">{index + 1}</span><div className="min-w-0 flex-1"><p className="font-bold leading-7 text-slate-800 dark:text-slate-100">{question.text}</p>{Array.isArray(question.options) && question.options.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2">{question.options.slice(0, 4).map((option, optionIndex) => <span key={`${option}-${optionIndex}`} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-300"><span className="font-black text-[#007472] dark:text-[#2AC3BB]">{String.fromCharCode(65 + optionIndex)}</span>{option}</span>)}</div>}{question.type === 'essay' && <span className="mt-3 inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2 py-1 text-xs font-black text-amber-600"><CheckCircle2 className="h-3 w-3" />{isAr ? 'سؤال مقالي' : 'Essay question'}</span>}</div></div></div>)}</div>
           {quiz.questions.length > 3 && <p className="mt-4 text-center text-xs font-bold text-slate-500">{isAr ? `تظهر أول 3 أسئلة فقط في المعاينة — إجمالي ${quiz.questions.length} سؤالاً.` : `Showing the first 3 questions — ${quiz.questions.length} questions total.`}</p>}
           <button type="button" onClick={() => { setPreviewOpen(false); onStartQuiz(quiz.id); }} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#007472] to-[#2AC3BB] py-3.5 text-sm font-black text-white shadow-lg shadow-primary/20"><Play className="h-4 w-4 fill-white" />{isAr ? 'ابدأ الاختبار الآن' : 'Start quiz now'}</button>
         </div>
@@ -433,15 +433,15 @@ export function InteractiveQuizCard({
           {/* Left section: Rating & Category Badge */}
           <div className="flex md:flex-col items-center md:items-start gap-1.5 shrink-0 min-w-[120px]">
             {quiz.ratingsCount > 0 ? (
-              <div className="flex items-center gap-1 text-[11px] text-[#EE8361] bg-[#EE8361]/10 dark:bg-[#EE8361]/15 px-2 py-0.5 rounded-lg font-bold border border-[#EE8361]/25">
+              <div className="flex items-center gap-1 text-xs text-[#EE8361] bg-[#EE8361]/10 dark:bg-[#EE8361]/15 px-2 py-0.5 rounded-lg font-bold border border-[#EE8361]/25">
                 <Star className="w-3 h-3 fill-[#EE8361] text-[#EE8361]" />
                 <span>{quiz.avgRating} ({quiz.ratingsCount})</span>
               </div>
             ) : (
-              <span className="text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-800/40 px-2 py-0.5 rounded-md font-bold">{t?.unrated || (isAr ? 'لم يقيّم' : 'Unrated')}</span>
+              <span className="text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/40 px-2 py-0.5 rounded-md font-bold">{t?.unrated || (isAr ? 'لم يقيّم' : 'Unrated')}</span>
             )}
             {quiz.category && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-[#007472] dark:text-[#2AC3BB] dark:text-violet-400 bg-[#007472]/10 dark:bg-[#2AC3BB]/10 px-2 py-0.5 rounded-lg">
+              <span className="inline-flex items-center gap-1 text-xs font-extrabold text-[#007472] dark:text-[#2AC3BB] dark:text-violet-400 bg-[#007472]/10 dark:bg-[#2AC3BB]/10 px-2 py-0.5 rounded-lg">
                 <Tag className="w-2.5 h-2.5" />
                 {quiz.category}
               </span>
@@ -456,7 +456,7 @@ export function InteractiveQuizCard({
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal line-clamp-1">
               {quiz.description || (isAr ? 'لم يتم كتابة وصف.' : 'No description.')}
             </p>
-            <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 font-bold justify-end md:justify-start">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400 font-bold justify-end md:justify-start">
               <span>{t?.byCreator || (isAr ? 'بواسطة' : 'by')}</span>
               <span
                 onClick={(e) => { e.stopPropagation(); onViewProfile && quiz.creatorId && onViewProfile(quiz.creatorId); }}
@@ -608,7 +608,7 @@ export function InteractiveQuizCard({
           </p>
 
           {/* Elegant metadata line placed cleanly under description */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 text-[11px] text-slate-400 dark:text-slate-500 font-bold" dir={isAr ? 'rtl' : 'ltr'}>
+          <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-400 dark:text-slate-500 font-bold" dir={isAr ? 'rtl' : 'ltr'}>
             <span className="text-slate-400 font-medium">{t?.byCreator || (isAr ? 'بواسطة' : 'by')}</span>
             <span
               onClick={(e) => { e.stopPropagation(); onViewProfile && quiz.creatorId && onViewProfile(quiz.creatorId); }}

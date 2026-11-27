@@ -163,7 +163,7 @@ export function MyQuizzes({
             <h2 className="text-2xl font-black font-display text-slate-900 dark:text-[#FCF6EE] flex items-center gap-2">
               <span>{isAr ? 'اختباراتي الخاصة' : 'My Personal Quizzes'}</span>
             </h2>
-            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {myQuizzes.length}
             </span>
           </div>
@@ -190,7 +190,7 @@ export function MyQuizzes({
             <div>
               <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <span>{isAr ? 'يوجد إجابات مقالية بانتظار تصحيحك ومراجعتك' : 'Pending essay answers need your grading'}</span>
-                <span className="rounded-full bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 text-[11px] font-black text-amber-700 dark:text-amber-300">
+                <span className="rounded-full bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 text-xs font-black text-amber-700 dark:text-amber-300">
                   {pendingCount}
                 </span>
               </h3>
@@ -250,14 +250,14 @@ export function MyQuizzes({
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black border border-emerald-500/20">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-black border border-emerald-500/20">
                         <Users className="w-3 h-3" />
                         <span>{plays > 0 ? (isAr ? `${plays.toLocaleString()} حلاً` : `${plays} solved`) : (isAr ? 'جديد ' : 'New ')}</span>
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-bold">
                         <span>{questionsCount} {isAr ? 'سؤالاً' : 'Q’s'}</span>
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold">
                         <Star className="w-2.5 h-2.5 fill-current" />
                         <span>{rating}</span>
                       </span>
@@ -282,7 +282,7 @@ export function MyQuizzes({
                   <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed font-medium">
                     {quiz.description || (isAr ? 'اختبار تفاعلي شيق لقياس مستواك المعرفي.' : 'Interactive comprehension quiz.')}
                   </p>
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-3">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-semibold mt-3">
                     <Clock className="w-3 h-3 text-sky-400" />
                     <span>{isAr ? `الزمن المقدر: ~${estMinutes} دقائق` : `Est. time: ~${estMinutes} mins`}</span>
                   </div>
@@ -290,24 +290,24 @@ export function MyQuizzes({
 
                   <div className="pt-3.5 mt-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
                   <div className="flex flex-wrap items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
-                    <button type="button" onClick={() => exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[#007472]/20 bg-[#007472]/5 px-3 py-2 text-[11px] font-black text-[#007472] transition hover:bg-[#007472]/10 dark:border-[#2AC3BB]/30 dark:bg-[#007472]/20 dark:text-[#2AC3BB]" title={isAr ? 'تصدير الاختبار كملف PDF' : 'Export quiz as PDF'}>
+                    <button type="button" onClick={() => exportQuizPdf(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[#007472]/20 bg-[#007472]/5 px-3 py-2 text-xs font-black text-[#007472] transition hover:bg-[#007472]/10 dark:border-[#2AC3BB]/30 dark:bg-[#007472]/20 dark:text-[#2AC3BB]" title={isAr ? 'تصدير الاختبار كملف PDF' : 'Export quiz as PDF'}>
                       <Download className="h-3.5 w-3.5" />
                       <span>{isAr ? 'PDF' : 'PDF'}</span>
                     </button>
-                    <button type="button" onClick={() => printQuiz(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-black text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" title={isAr ? 'طباعة الاختبار' : 'Print quiz'}>
+                    <button type="button" onClick={() => printQuiz(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" title={isAr ? 'طباعة الاختبار' : 'Print quiz'}>
                       <Printer className="h-3.5 w-3.5" />
                       <span>{isAr ? 'طباعة' : 'Print'}</span>
                     </button>
-                    {isAdmin && <button type="button" onClick={() => openAttempts(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-[11px] font-black text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلوا الاختبار' : 'View who solved the quiz'}>
+                    {isAdmin && <button type="button" onClick={() => openAttempts(quiz)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-black text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200" title={isAr ? 'مشاهدة من حلوا الاختبار' : 'View who solved the quiz'}>
                       <Users className="h-3.5 w-3.5" />
                       <span>{isAr ? 'من حلّه' : 'Solvers'}</span>
-                      <span className="rounded-full bg-cyan-200/70 px-1.5 py-0.5 text-[10px] dark:bg-cyan-900/70">{plays}</span>
+                      <span className="rounded-full bg-cyan-200/70 px-1.5 py-0.5 text-xs dark:bg-cyan-900/70">{plays}</span>
                     </button>}
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-right max-w-[210px]">
-                    <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-[#007472] to-[#2AC3BB] text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-xs ring-2 ring-white/70 dark:ring-slate-800 overflow-hidden">
+                    <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-[#007472] to-[#2AC3BB] text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs ring-2 ring-white/70 dark:ring-slate-800 overflow-hidden">
                       {quiz.creatorPhotoURL ? <img src={quiz.creatorPhotoURL} alt="" className="h-full w-full object-cover" loading="lazy" /> : (quiz.creatorName ? quiz.creatorName.charAt(0).toUpperCase() : 'Q')}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -318,7 +318,7 @@ export function MyQuizzes({
                         nameColor={quiz.creatorNameColor as any}
                         badgeColor={quiz.creatorBadgeColor as any}
                         badgeSize="sm"
-                        className="max-w-[160px] text-[11px] font-black"
+                        className="max-w-[160px] text-xs font-black"
                       />
                       <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
                         {isAr ? 'صانع الاختبار' : 'Quiz Creator'}
@@ -385,7 +385,7 @@ export function MyQuizzes({
                     <div key={attempt.id || `${attempt.takerId || 'solver'}-${index}`} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-black text-slate-900 dark:text-white">{attempt.takerName || (isAr ? 'طالب' : 'Student')}</p>
-                        <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p>
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{attempt.createdAt ? new Date(attempt.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}</p>
                       </div>
                       <span className="shrink-0 rounded-xl bg-cyan-100 px-2.5 py-1 text-xs font-black text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-200">{attempt.score} / {attempt.totalQuestions}</span>
                     </div>

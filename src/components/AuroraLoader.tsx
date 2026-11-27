@@ -87,7 +87,7 @@ export default function AuroraLoader({ message = 'چاري تحليل البيا
             
             
             
-            className="text-[11px] text-emerald-300/60 uppercase tracking-widest font-mono animate-pulse"
+            className="text-xs text-emerald-300/60 uppercase tracking-widest font-mono animate-pulse"
           >
             Aurora System Analysis in Progress...
           </p>

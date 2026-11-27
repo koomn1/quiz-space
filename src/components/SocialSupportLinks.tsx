@@ -44,7 +44,7 @@ export function SocialSupportLinks({ github, instagram, linkedin, facebook, isAr
             style={{ animationDelay: `${index * 45}ms` }}
           >
             <Icon className="h-4.5 w-4.5 transition-transform duration-200 group-hover:rotate-6" strokeWidth={2.1} aria-hidden="true" />
-            <span className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-[10px] font-black text-white opacity-0 shadow-xl transition-all duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100">
+            <span className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs font-black text-white opacity-0 shadow-xl transition-all duration-200 group-hover:-translate-y-0.5 group-hover:opacity-100">
               {name}
             </span>
           </a>

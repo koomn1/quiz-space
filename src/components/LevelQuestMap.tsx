@@ -167,11 +167,11 @@ export default function LevelQuestMap({ userXp, lang = 'ar' }: LevelQuestMapProp
               <span className="font-black text-sm text-white">
                 {levelInfo.division.titleAr}
               </span>
-              <span className="text-[10px] font-bold text-[#EE8361] bg-[#EE8361]/15 px-2 py-0.5 rounded-full border border-[#EE8361]/30">
+              <span className="text-xs font-bold text-[#EE8361] bg-[#EE8361]/15 px-2 py-0.5 rounded-full border border-[#EE8361]/30">
                 {userLevel >= 100 ? (isAr ? 'الحد الأقصى 🏆' : 'MAX LEVEL') : `${levelInfo.progressPercent}%`}
               </span>
             </div>
-            <p className="text-[11px] text-slate-300">
+            <p className="text-xs text-slate-300">
               {userXp.toLocaleString()} XP • {isAr ? 'اضغط على المحطات لعرض مكافآتها' : 'Click nodes to inspect unlocks'}
             </p>
           </div>
@@ -304,11 +304,11 @@ export default function LevelQuestMap({ userXp, lang = 'ar' }: LevelQuestMapProp
                 <h4 className="text-sm font-black text-white">
                   {isAr ? selectedMilestone.titleAr : selectedMilestone.titleEn}
                 </h4>
-                <span className="text-[10px] font-bold px-2 py-0.2 rounded-md bg-[#2AC3BB]/20 text-[#2AC3BB] border border-[#2AC3BB]/30">
+                <span className="text-xs font-bold px-2 py-0.2 rounded-md bg-[#2AC3BB]/20 text-[#2AC3BB] border border-[#2AC3BB]/30">
                   {selectedMilestone.rewardType}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-300 mt-0.5 line-clamp-1 sm:line-clamp-none">
+              <p className="text-xs text-slate-300 mt-0.5 line-clamp-1 sm:line-clamp-none">
                 {isAr ? selectedMilestone.descAr : selectedMilestone.descEn}
               </p>
             </div>

@@ -102,10 +102,10 @@ export default function InstitutionLearningGapsPanel({ institutionId, lang }: In
         {gaps.map((gap) => {
           const style = gapStyle[gap.gapLevel];
           return <article key={`${gap.studentId}-${gap.category}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/70">
-            <div className="flex items-start justify-between gap-2"><h3 className="min-w-0 truncate text-sm font-black text-slate-900 dark:text-white">{gap.category}</h3><span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${style.badge}`}>{isAr ? style.labelAr : style.labelEn}</span></div>
-            <div className="mt-4 flex items-end justify-between"><p className="text-3xl font-black text-slate-950 dark:text-white">{gap.masteryPercent}<span className="text-base">%</span></p><p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{isAr ? `${gap.quizzesTaken} محاولات` : `${gap.quizzesTaken} attempts`}</p></div>
+            <div className="flex items-start justify-between gap-2"><h3 className="min-w-0 truncate text-sm font-black text-slate-900 dark:text-white">{gap.category}</h3><span className={`shrink-0 rounded-full px-2 py-1 text-xs font-black ${style.badge}`}>{isAr ? style.labelAr : style.labelEn}</span></div>
+            <div className="mt-4 flex items-end justify-between"><p className="text-3xl font-black text-slate-950 dark:text-white">{gap.masteryPercent}<span className="text-base">%</span></p><p className="text-xs font-bold text-slate-500 dark:text-slate-400">{isAr ? `${gap.quizzesTaken} محاولات` : `${gap.quizzesTaken} attempts`}</p></div>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"><div className={`h-full rounded-full ${style.bar}`} style={{ width: `${gap.masteryPercent}%` }} /></div>
-            <p className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">{isAr ? `متوسط الدرجات: ${gap.averageScore}%` : `Average score: ${gap.averageScore}%`}</p>
+            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">{isAr ? `متوسط الدرجات: ${gap.averageScore}%` : `Average score: ${gap.averageScore}%`}</p>
           </article>;
         })}
       </div>}

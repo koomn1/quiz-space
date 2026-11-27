@@ -163,7 +163,7 @@ export default function GuestLandingPage({ lang, onLogin, onExplore, onSupport }
                   {/* Icon & Label */}
                   <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB] mb-2">
                     <Icon className="h-4 w-4" />
-                    <span className="text-[11px] font-black">{isAr ? 'ميزة داخل المنصة' : 'In-product feature'}</span>
+                    <span className="text-xs font-black">{isAr ? 'ميزة داخل المنصة' : 'In-product feature'}</span>
                   </div>
 
                   {/* Title & Description */}

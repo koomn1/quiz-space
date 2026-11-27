@@ -69,7 +69,7 @@ export function QuizShowcaseCard({
             <Zap className="w-6 h-6" />
           </div>
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 mb-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 mb-1">
               <CheckCircle2 className="w-3 h-3" />
               <span>{isAr ? 'اختبار تفاعلي جاهز للبدء' : 'Quiz ready to play'}</span>
             </div>
@@ -92,7 +92,7 @@ export function QuizShowcaseCard({
         >
           <Layers className="w-4 h-4 text-[#2AC3BB]" />
           <div>
-            <span className="block text-[10px] text-slate-400">{isAr ? 'عدد الأسئلة' : 'Questions'}</span>
+            <span className="block text-xs text-slate-400">{isAr ? 'عدد الأسئلة' : 'Questions'}</span>
             <span className="font-bold text-xs" style={{ color: theme.FG }}>
               {quiz.questionCount} {isAr ? 'سؤال' : 'Q'}
             </span>
@@ -104,7 +104,7 @@ export function QuizShowcaseCard({
         >
           <Award className="w-4 h-4 text-amber-400" />
           <div>
-            <span className="block text-[10px] text-slate-400">{isAr ? 'الصعوبة' : 'Difficulty'}</span>
+            <span className="block text-xs text-slate-400">{isAr ? 'الصعوبة' : 'Difficulty'}</span>
             <span className="font-bold text-xs" style={{ color: theme.FG }}>
               {quiz.difficulty}
             </span>
@@ -116,7 +116,7 @@ export function QuizShowcaseCard({
         >
           <Clock className="w-4 h-4 text-cyan-400" />
           <div>
-            <span className="block text-[10px] text-slate-400">{isAr ? 'الوقت المقدر' : 'Time'}</span>
+            <span className="block text-xs text-slate-400">{isAr ? 'الوقت المقدر' : 'Time'}</span>
             <span className="font-bold text-xs" style={{ color: theme.FG }}>
               {quiz.questionCount} {isAr ? 'دقيقة' : 'min'}
             </span>
@@ -128,7 +128,7 @@ export function QuizShowcaseCard({
         >
           <Sparkles className="w-4 h-4 text-[#EE8361]" />
           <div>
-            <span className="block text-[10px] text-slate-400">{isAr ? 'مكافأة الإنجاز' : 'Reward'}</span>
+            <span className="block text-xs text-slate-400">{isAr ? 'مكافأة الإنجاز' : 'Reward'}</span>
             <span className="font-bold text-xs text-[#EE8361]">+{quiz.questionCount * 5} XP</span>
           </div>
         </div>
@@ -190,7 +190,7 @@ export function QuizShowcaseCard({
                 style={{ background: theme.INPUT_BG, borderColor: theme.BORDER }}
               >
                 <div className="flex items-start gap-2 mb-2 font-bold" style={{ color: theme.FG }}>
-                  <span className="w-5 h-5 rounded-full bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB] flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-[#007472]/15 text-[#007472] dark:bg-[#2AC3BB]/15 dark:text-[#2AC3BB] flex items-center justify-center text-xs shrink-0 mt-0.5">
                     {qIndex + 1}
                   </span>
                   <p className="flex-1 leading-relaxed">{q.text}</p>
@@ -203,7 +203,7 @@ export function QuizShowcaseCard({
                       return (
                         <div
                           key={optIndex}
-                          className="px-2.5 py-1.5 rounded-lg border flex items-center justify-between gap-1 text-[11px]"
+                          className="px-2.5 py-1.5 rounded-lg border flex items-center justify-between gap-1 text-xs"
                           style={{
                             background: isCorrect
                               ? 'rgba(16,185,129,0.12)'
@@ -224,7 +224,7 @@ export function QuizShowcaseCard({
                 )}
 
                 {q.explanation && (
-                  <div className="flex items-start gap-1.5 mt-2 mr-6 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px]">
+                  <div className="flex items-start gap-1.5 mt-2 mr-6 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
                     <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
                     <p className="leading-relaxed">
                       <strong>{isAr ? 'التفسير: ' : 'Explanation: '}</strong>

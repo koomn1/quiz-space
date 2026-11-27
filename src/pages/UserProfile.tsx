@@ -822,7 +822,7 @@ export default function UserProfile({
                 type="button"
                 onClick={() => setIsRoadmapOpen(true)}
                 title={isAr ? 'عرض خريطة المستويات ومكافآت الـ 100 ليفل' : 'View 100 Level Progression Roadmap'}
-                className="absolute -bottom-1 end-1 z-30 inline-flex items-center gap-1 rounded-full border-2 border-white dark:border-[#031717] bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-black text-[#FCF6EE] shadow-md transition hover:scale-105 active:scale-95 cursor-pointer"
+                className="absolute -bottom-1 end-1 z-30 inline-flex items-center gap-1 rounded-full border-2 border-white dark:border-[#031717] bg-gradient-to-r from-[#007472] via-[#2AC3BB] to-[#EE8361] px-2.5 py-0.5 text-xs sm:text-xs font-black text-[#FCF6EE] shadow-md transition hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <span>Lv.{level}</span>
                 {level >= 100 && <span>🏆</span>}
@@ -1063,7 +1063,7 @@ export default function UserProfile({
                   type="button"
                   onClick={handleToggleSocialVisibility}
                   disabled={isTogglingSocial}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-black transition cursor-pointer border ${
                     showSocialStats
                       ? 'border-[#2AC3BB]/30 bg-[#2AC3BB]/10 text-[#007472] dark:text-[#2AC3BB] hover:bg-[#2AC3BB]/20'
                       : 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20'
@@ -1099,7 +1099,7 @@ export default function UserProfile({
               >
                 <QuizSpaceCoinsToken className="h-4 w-4" />
                 <span className="font-mono">{effectiveCoins.toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-amber-600/80 dark:text-amber-300/80">{isAr ? 'عملة' : 'Coins'}</span>
+                <span className="text-xs font-bold text-amber-600/80 dark:text-amber-300/80">{isAr ? 'عملة' : 'Coins'}</span>
               </div>
 
               <div
@@ -1109,7 +1109,7 @@ export default function UserProfile({
               >
                 <QuizSpacePointsToken className="h-4 w-4" />
                 <span className="font-mono">{effectivePoints.toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-[#007472]/70 dark:text-[#2AC3BB]/70">{isAr ? 'نقطة' : 'Pts'}</span>
+                <span className="text-xs font-bold text-[#007472]/70 dark:text-[#2AC3BB]/70">{isAr ? 'نقطة' : 'Pts'}</span>
               </div>
             </div>
           </div>
@@ -1119,7 +1119,7 @@ export default function UserProfile({
             <div className="mt-5 rounded-2xl border border-[#2AC3BB]/30 bg-white/70 dark:bg-[#072424]/80 p-4 shadow-sm backdrop-blur-md relative overflow-hidden">
               <div className="flex items-center gap-2 mb-2 text-[#007472] dark:text-[#2AC3BB]">
                 <User className="h-4 w-4 text-[#EE8361]" />
-                <span className="text-[11px] font-black uppercase tracking-wider">{isAr ? 'النبذة الشخصية' : 'About Me'}</span>
+                <span className="text-xs font-black uppercase tracking-wider">{isAr ? 'النبذة الشخصية' : 'About Me'}</span>
               </div>
               <p className="text-xs sm:text-sm font-semibold leading-relaxed text-slate-800 dark:text-[#FCF6EE] whitespace-pre-wrap">
                 {profileData.bio}
@@ -1147,7 +1147,7 @@ export default function UserProfile({
         >
           <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]">
             <BookOpen className="h-4 w-4" />
-            <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'الاختبارات المنشورة' : 'Quizzes Created'}</span>
+            <span className="text-xs font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'الاختبارات المنشورة' : 'Quizzes Created'}</span>
           </div>
           <p className="mt-2 text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{createdQuizzes.length}</p>
         </SpotlightCard>
@@ -1158,7 +1158,7 @@ export default function UserProfile({
         >
           <div className="flex items-center gap-2 text-[#2AC3BB]">
             <CheckCircle2 className="h-4 w-4" />
-            <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'الاختبارات المحلولة' : 'Solved Quizzes'}</span>
+            <span className="text-xs font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'الاختبارات المحلولة' : 'Solved Quizzes'}</span>
           </div>
           <p className="mt-2 text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{completions.length}</p>
         </SpotlightCard>
@@ -1170,7 +1170,7 @@ export default function UserProfile({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-[#007472] dark:text-[#2AC3BB]">
               <Target className="h-4 w-4" />
-              <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'معدل الدقة' : 'Accuracy'}</span>
+              <span className="text-xs font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'معدل الدقة' : 'Accuracy'}</span>
             </div>
             <span className="rounded-md bg-[#2AC3BB]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#007472] dark:text-[#2AC3BB]">
               {accuracy >= 90 ? (isAr ? 'قناص 🎯' : 'Sniper') : accuracy >= 75 ? (isAr ? 'متفوق ⭐' : 'High') : (isAr ? 'نشط' : 'Active')}
@@ -1193,7 +1193,7 @@ export default function UserProfile({
           <div className="flex items-center justify-between text-[#EE8361]">
             <div className="flex items-center gap-2">
               <QuizSpaceXpToken className="h-4 w-4" />
-              <span className="text-[11px] font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'المستوى و نقاط الـ XP' : 'Level & XP'}</span>
+              <span className="text-xs font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'المستوى و نقاط الـ XP' : 'Level & XP'}</span>
             </div>
             <span className="rounded-md bg-[#EE8361]/15 px-1.5 py-0.5 text-[9px] font-black text-[#EE8361]">
               Lv.{level}/100 {level >= 100 && '🏆'}
@@ -1201,7 +1201,7 @@ export default function UserProfile({
           </div>
           <div className="mt-2 flex items-baseline justify-between">
             <p className="text-2xl font-black text-slate-900 dark:text-[#FCF6EE]">{userXp.toLocaleString()}</p>
-            <span className="text-[10px] font-bold text-[#EE8361]">
+            <span className="text-xs font-bold text-[#EE8361]">
               {levelInfo.isMaxLevel ? (isAr ? 'الحد الأقصى (MAX)' : 'MAX') : `${levelInfo.progressPercent}%`}
             </span>
           </div>
@@ -1294,7 +1294,7 @@ export default function UserProfile({
                     className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:border-cyan-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-950/80"
                   >
                     <div>
-                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-400">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-400">
                         <span className="rounded-lg bg-slate-100 px-2.5 py-1 dark:bg-slate-900">{quiz.category || (isAr ? 'عام' : 'General')}</span>
                         <span>{quiz.questions?.length || 0} {isAr ? 'أسئلة' : 'Q'}</span>
                       </div>
@@ -1346,7 +1346,7 @@ export default function UserProfile({
                     >
                       <div>
                         <h4 className="text-xs font-black text-slate-900 dark:text-white">{comp.quizTitle || (isAr ? 'اختبار تعليمي' : 'Educational Quiz')}</h4>
-                        <p className="mt-1 text-[10px] text-slate-400">
+                        <p className="mt-1 text-xs text-slate-400">
                           {comp.completedAt ? new Date(comp.completedAt).toLocaleString() : ''}
                         </p>
                       </div>
@@ -1562,7 +1562,7 @@ export default function UserProfile({
                         className="w-full bg-transparent px-1.5 py-1.5 outline-none dark:text-white font-mono"
                       />
                     </div>
-                    <p className="mt-1 text-[10px] text-slate-400">
+                    <p className="mt-1 text-xs text-slate-400">
                       {isAr ? 'حروف إنجليزية صغيرة وأرقام و _ فقط (لا تكتب رقم الهاتف هنا).' : 'Lowercase English letters, numbers, and _ only (do not enter phone number here).'}
                     </p>
                   </div>
@@ -1630,7 +1630,7 @@ export default function UserProfile({
                             </span>
                           )}
                         </div>
-                        <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-[#8BAEAD]">
+                        <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#8BAEAD]">
                           {isPremium
                             ? (isAr
                                 ? 'إظهار بطاقة الهوية المعلقة التفاعلية ثلاثية الأبعاد في أعلى ملفك الشخصي.'
@@ -1664,7 +1664,7 @@ export default function UserProfile({
                           if (onOpenBilling) onOpenBilling();
                           else setActiveTab('membership');
                         }}
-                        className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm hover:brightness-110 cursor-pointer"
+                        className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-3 py-1.5 text-xs font-black text-white shadow-sm hover:brightness-110 cursor-pointer"
                       >
                         <Crown className="h-3 w-3" />
                         <span>{isAr ? 'ترقية' : 'Upgrade'}</span>
@@ -1693,7 +1693,7 @@ export default function UserProfile({
                             {showSocialStats ? (isAr ? 'عام' : 'Public') : (isAr ? 'مخفي' : 'Hidden')}
                           </span>
                         </div>
-                        <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-[#8BAEAD]">
+                        <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-[#8BAEAD]">
                           {isAr
                             ? 'التحكم في عرض عدد وقوائم المتابعين والذين تتابعهم للزوار في ملفك الشخصي.'
                             : 'Allow or prevent profile visitors from seeing your followers and following counters and lists.'}
@@ -1983,10 +1983,10 @@ export default function UserProfile({
                         </div>
                         <div>
                           <p className="font-bold text-xs text-slate-900 dark:text-white">{u.name}</p>
-                          {u.customId && <p className="text-[10px] text-[#2AC3BB] font-mono">@{u.customId}</p>}
+                          {u.customId && <p className="text-xs text-[#2AC3BB] font-mono">@{u.customId}</p>}
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold text-[#007472] dark:text-[#2AC3BB] bg-[#007472]/10 dark:bg-[#2AC3BB]/10 px-2.5 py-1 rounded-lg">
+                      <span className="text-xs font-bold text-[#007472] dark:text-[#2AC3BB] bg-[#007472]/10 dark:bg-[#2AC3BB]/10 px-2.5 py-1 rounded-lg">
                         {isAr ? 'عرض' : 'View'}
                       </span>
                     </div>

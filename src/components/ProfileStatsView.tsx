@@ -643,7 +643,7 @@ export default function ProfileStatsView({
               </div>
 
               {/* Thick Polygon Badge computed dynamically from real XP */}
-              <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r ${customBg.iconBg} text-white border border-slate-850 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 transition-all duration-500`}>
+              <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r ${customBg.iconBg} text-white border border-slate-850 text-xs font-black px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 transition-all duration-500`}>
                 <span>LVL</span>
                 <span className="text-amber-300 font-mono text-xs">{calculatedLevel}</span>
               </div>
@@ -672,7 +672,7 @@ export default function ProfileStatsView({
                             <p className="text-xs font-black text-red-300">
                               {isAr ? `تنبيه هام: الفترة التجريبية ستنتهي خلال ${diffDays} أيام!` : `Urgent: Your trial expires in ${diffDays} days!`}
                             </p>
-                            <p className="text-[11px] text-slate-300 mt-0.5">
+                            <p className="text-xs text-slate-300 mt-0.5">
                               {isAr ? 'قم بترقية حسابك الآن لتجنب فقدان المزايا المتقدمة.' : 'Upgrade your account now to keep premium benefits.'}
                             </p>
                           </div>
@@ -685,7 +685,7 @@ export default function ProfileStatsView({
                               window.location.hash = '#billing';
                             }
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-[11px] transition-all shadow-md shrink-0 cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs transition-all shadow-md shrink-0 cursor-pointer"
                         >
                           {isAr ? 'ترقية الآن' : 'Upgrade'}
                         </button>
@@ -699,7 +699,7 @@ export default function ProfileStatsView({
                           <Sparkles className={`w-3.5 h-3.5 ${isUrgent ? 'text-red-500 animate-bounce' : 'text-amber-400 animate-pulse'}`} />
                           <span>{isAr ? (isUrgent ? ` تنبيه: ينتهي العرض قريباً (${totalDays} يوم)` : `فترة تجريبية نشطة (${totalDays} يوم)`) : `Active Trial (${totalDays} Days)`}</span>
                         </span>
-                        <span className={`${isUrgent ? 'text-red-400 bg-red-500/10 border-red-500/40 animate-pulse' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'} border px-2.5 py-0.5 rounded-full text-[11px]`}>
+                        <span className={`${isUrgent ? 'text-red-400 bg-red-500/10 border-red-500/40 animate-pulse' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'} border px-2.5 py-0.5 rounded-full text-xs`}>
                           {isAr ? `متبقي ${diffDays} يوم فقط` : `${diffDays} days remaining`}
                         </span>
                       </div>
@@ -709,7 +709,7 @@ export default function ProfileStatsView({
                           style={{ width: `${percent}%` }}
                         />
                       </div>
-                      <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1.5 font-medium">
+                      <div className="flex justify-between items-center text-xs text-slate-400 mt-1.5 font-medium">
                         <span>{isAr ? `منقضي: ${percent}%` : `Elapsed: ${percent}%`}</span>
                         <span className={isUrgent ? 'text-red-400 font-bold' : ''}>{isAr ? `ينتهي في: ${new Date(renewal).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}` : `Expires: ${new Date(renewal).toLocaleDateString()}`}</span>
                       </div>
@@ -722,17 +722,17 @@ export default function ProfileStatsView({
             <div className="space-y-2 text-center md:text-right flex-1">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                 {isOwnProfile && (
-                  <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-300">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300">
                     {isAr ? 'أنت' : 'You'}
                   </span>
                 )}
                 {isUserPremium ? (
-                  <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 text-[10px] font-black shadow-md shadow-amber-500/20 flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 text-xs font-black shadow-md shadow-amber-500/20 flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
                     <span>{profileData?.planName || (isAr ? 'عضو مدفوع' : 'Premium Member')}</span>
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold text-slate-400">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-slate-400">
                     {isAr ? 'الباقة المجانية' : 'Free Tier'}
                   </span>
                 )}
@@ -784,7 +784,7 @@ export default function ProfileStatsView({
                 {isOwnProfile && (
                   <button
                     onClick={handleOpenEditInfo}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-purple-400 hover:text-purple-300 font-extrabold cursor-pointer transition-all shrink-0 mt-1 sm:mt-0"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-purple-400 hover:text-purple-300 font-extrabold cursor-pointer transition-all shrink-0 mt-1 sm:mt-0"
                   >
                     <Pencil className="w-3 h-3" />
                     <span>{isAr ? 'تعديل معلوماتي' : 'Modify My Info'}</span>
@@ -799,7 +799,7 @@ export default function ProfileStatsView({
                 {/* Copyable Account ID to send to teacher */}
                 <div
                   onClick={() => handleCopyIdPopup(profileData?.userId || '')}
-                  className="inline-flex items-center gap-1 bg-slate-900/80 border border-slate-800/80 hover:bg-slate-850 hover:border-slate-700 hover:text-white transition-all text-[10px] font-bold text-slate-350 px-2 py-0.5 rounded-lg cursor-pointer pb-1 w-fit mx-auto md:mx-0"
+                  className="inline-flex items-center gap-1 bg-slate-900/80 border border-slate-800/80 hover:bg-slate-850 hover:border-slate-700 hover:text-white transition-all text-xs font-bold text-slate-350 px-2 py-0.5 rounded-lg cursor-pointer pb-1 w-fit mx-auto md:mx-0"
                   title={isAr ? "معرّف التفعيل السريع - اضغط للنسخ والإرسال للمعلم" : "Activation ID - Click to Copy"}
                 >
                   <Copy className="w-2.5 h-2.5 text-purple-400" />
@@ -816,7 +816,7 @@ export default function ProfileStatsView({
               </p>
 
               {/* Dynamic Location, Email and Joined Date block */}
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2 text-[11px] text-slate-400 font-bold">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2 text-xs text-slate-400 font-bold">
                 <span className="flex items-center gap-1.5 bg-slate-900/40 border border-slate-850 px-2 py-0.5 rounded-lg">
                   <MapPin className="w-3.5 h-3.5 text-purple-400" />
                   <span>{actualLocationDisplay || (isAr ? 'القاهرة، مصر' : 'Cairo, Egypt')}</span>
@@ -856,12 +856,12 @@ export default function ProfileStatsView({
             </div>
             <div className="space-y-0.5 text-right flex-1">
               <div className="flex items-center gap-1 justify-end">
-                <span className="text-[10px] text-purple-600 dark:text-purple-300 font-extrabold block">{isAr ? 'الترتيب الحالي في الفضاء' : 'Star Rank In Galaxies'}</span>
+                <span className="text-xs text-purple-600 dark:text-purple-300 font-extrabold block">{isAr ? 'الترتيب الحالي في الفضاء' : 'Star Rank In Galaxies'}</span>
               </div>
               <strong className="text-xl font-black text-slate-850 dark:text-white block font-display">
                 {completions.length > 0 ? (completions.length > 5 ? 'Top 1%' : 'Top 5%') : 'Top 100%'}
               </strong>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">{isAr ? 'من بين جميع رواد الفضاء على مستوى المنصة' : 'ranked across all active cosmic players'}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{isAr ? 'من بين جميع رواد الفضاء على مستوى المنصة' : 'ranked across all active cosmic players'}</p>
             </div>
           </div>
         </div>
@@ -1021,7 +1021,7 @@ export default function ProfileStatsView({
                 </div>
 
                 {badgesList.length === 0 ? (
-                  <p className="text-[11px] text-slate-500 text-center font-bold py-2">
+                  <p className="text-xs text-slate-500 text-center font-bold py-2">
                     {isAr ? 'لم تقم بتفعيل أي شارات للمظهر بعد.' : 'No profile badges selected yet.'}
                   </p>
                 ) : (
@@ -1041,7 +1041,7 @@ export default function ProfileStatsView({
                   </div>
                 )}
 
-                <div className="pt-2 border-t border-slate-850 flex justify-between items-center text-[10px] text-slate-400 flex-row-reverse">
+                <div className="pt-2 border-t border-slate-850 flex justify-between items-center text-xs text-slate-400 flex-row-reverse">
                   <span>{isAr ? 'مستواك الحالي:' : 'Your level rank:'} <strong className="text-white">LVL {calculatedLevel}</strong></span>
                   <span className="bg-sky-950/40 border border-sky-550/25 text-sky-400 px-2 py-0.5 rounded font-black text-[9px]">
                     {isUserPremium ? (isAr ? 'عضو بريميوم' : 'Premium Scholar') : (isAr ? 'شبل المعرفة' : 'Knowledge Apprentice')}
@@ -1061,7 +1061,7 @@ export default function ProfileStatsView({
                     <span className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'النشاط الفعلي والحلول' : 'Recent Activity'}</span>
                     <RefreshCw className="w-4 h-4 text-purple-400" />
                   </div>
-                  <span onClick={() => setActiveTab('activity')} className="text-[10px] text-purple-400 font-bold hover:underline cursor-pointer">{isAr ? 'عرض السجل الكامل' : 'View all'}</span>
+                  <span onClick={() => setActiveTab('activity')} className="text-xs text-purple-400 font-bold hover:underline cursor-pointer">{isAr ? 'عرض السجل الكامل' : 'View all'}</span>
                 </div>
 
                 <div className="space-y-4 text-right">
@@ -1074,9 +1074,9 @@ export default function ProfileStatsView({
                       <div className="flex-1 space-y-0.5 text-right">
                         <div className="flex justify-between items-center flex-row-reverse">
                           <p className="text-xs font-bold text-white leading-normal text-right">{act.title}</p>
-                          <span className="text-[10px] bg-purple-900/40 text-purple-300 font-black px-2 py-0.5 rounded-lg shrink-0 mr-2">{act.points} VIP</span>
+                          <span className="text-xs bg-purple-900/40 text-purple-300 font-black px-2 py-0.5 rounded-lg shrink-0 mr-2">{act.points} VIP</span>
                         </div>
-                        <p className="text-[10px] text-slate-400">{act.time} • {isAr ? 'الدرجة:' : 'Score:'} <strong className="text-white">{act.score}</strong></p>
+                        <p className="text-xs text-slate-400">{act.time} • {isAr ? 'الدرجة:' : 'Score:'} <strong className="text-white">{act.score}</strong></p>
                       </div>
                     </div>
                   ))}
@@ -1103,7 +1103,7 @@ export default function ProfileStatsView({
                       { category: isAr ? 'اللغات والآداب العالمية' : 'Languages & Literature', accuracy: Math.max(10, Math.min(100, Math.round(overallAccuracy * 0.85) || 76)), color: 'bg-orange-500' }
                     ].map((cat) => (
                       <div  className="space-y-1">
-                        <div className="flex justify-between items-center text-[10px] flex-row-reverse">
+                        <div className="flex justify-between items-center text-xs flex-row-reverse">
                           <span className="font-bold text-white">{cat.category}</span>
                           <span className="font-mono text-slate-350">{completions.length > 0 ? `${cat.accuracy}% Accuracy` : (isAr ? 'غير مجرب بعد' : 'No attempt yet')}</span>
                         </div>
@@ -1163,7 +1163,7 @@ export default function ProfileStatsView({
                         ? '«الشيء الجميل في التعلم هو أنه لا يمكن لأحد أن يأخذه منك.»'
                         : '"The beautiful thing about learning is that no one can take it away from you."'}
                     </p>
-                    <span className="text-[10px] text-purple-400 font-extrabold block">– B.B. King</span>
+                    <span className="text-xs text-purple-400 font-extrabold block">– B.B. King</span>
                   </div>
                 </div>
 
@@ -1192,7 +1192,7 @@ export default function ProfileStatsView({
               <div className="py-12 text-center bg-slate-50 dark:bg-slate-900/20 border border-slate-200/80 dark:border-[#1f2648]/40 rounded-2xl space-y-2">
                 <BookOpen className="w-8 h-8 text-slate-500 mx-auto" />
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{isAr ? 'لم تنشئ أي اختبارات خاصة بك بعد.' : 'No created quizzes yet.'}</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">{isAr ? 'أي جولة ستقوم بتصنيعها عبر الذكاء الاصطناعي ستعولم وتظهر للطلاب هنا.' : 'Any quiz you generate with AI from images will appear directly here.'}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{isAr ? 'أي جولة ستقوم بتصنيعها عبر الذكاء الاصطناعي ستعولم وتظهر للطلاب هنا.' : 'Any quiz you generate with AI from images will appear directly here.'}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1228,7 +1228,7 @@ export default function ProfileStatsView({
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 pt-3.5 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between text-xs text-slate-500 pt-3.5 border-t border-slate-100 dark:border-slate-800">
                       <div>
                         <span>{isAr ? 'الأسئلة:' : 'Questions:'} <strong>{quiz.questions?.length || 0}</strong></span>
                         <span className="mx-1">•</span>
@@ -1262,7 +1262,7 @@ export default function ProfileStatsView({
                 <div className="space-y-1 flex-1 text-right">
                   <h5 className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'رائد الفضاء الصاعد' : 'Rising Space Cadet'}</h5>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'أنهيت بنجاح ما يزيد عن 10 اختبارات بمستويات دقة فوق الـ 90%.' : 'Passed 10 or more quizzes with a score of 90% or higher.'}</p>
-                  <span className="inline-block text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ' : 'Verified Achievement '}</span>
+                  <span className="inline-block text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ' : 'Verified Achievement '}</span>
                 </div>
               </div>
 
@@ -1273,7 +1273,7 @@ export default function ProfileStatsView({
                 <div className="space-y-1 flex-1 text-right">
                   <h5 className="font-extrabold text-sm text-slate-850 dark:text-white">{isAr ? 'الأستاذ البارز' : 'Knowledge Maestro'}</h5>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'قمت بصناعة ونشر 5 اختبارات متميزة حصدت تفاعلاً يزيد عن 100 محاولة.' : 'Created 5 quizzes with above 100 plays cumulative.'}</p>
-                  <span className="inline-block text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ' : 'Verified Achievement '}</span>
+                  <span className="inline-block text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full font-bold">{isAr ? 'مكتمل وموثق بنجاح ' : 'Verified Achievement '}</span>
                 </div>
               </div>
             </div>
@@ -1293,7 +1293,7 @@ export default function ProfileStatsView({
               <div className="py-12 text-center bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-[#1f2648]/40 rounded-2xl space-y-2">
                 <Star className="w-8 h-8 text-slate-500 mx-auto" />
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{isAr ? 'لا توجد أسئلة في المفضلة حالياً.' : 'No bookmarked items.'}</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">{isAr ? 'تأشيرك بالإيجاب والتقييم للأسئلة أثناء مراجعة إجابتك يحفظها لك هنا بشكل فوري.' : 'Positive feedback during quiz review automatically bookmarks questions.'}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{isAr ? 'تأشيرك بالإيجاب والتقييم للأسئلة أثناء مراجعة إجابتك يحفظها لك هنا بشكل فوري.' : 'Positive feedback during quiz review automatically bookmarks questions.'}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1308,7 +1308,7 @@ export default function ProfileStatsView({
                         <p className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed flex-1">
                           {rating.questionText}
                         </p>
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
                           isLike
                             ? 'bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25'
                             : 'bg-red-500/5 text-red-600 dark:text-red-400 border border-red-500/25'
@@ -1318,7 +1318,7 @@ export default function ProfileStatsView({
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1.5 border-t border-slate-105 dark:border-slate-800">
+                      <div className="flex items-center justify-between text-xs text-slate-500 pt-1.5 border-t border-slate-105 dark:border-slate-800">
                         <span>{isAr ? 'من اختبار:' : 'From Quiz:'} <strong>{rating.quizTitle}</strong></span>
                         <span className="font-mono">{new Date(rating.createdAt).toLocaleDateString('ar-EG', { day: 'numeric', month: 'numeric' })}</span>
                       </div>
@@ -1343,7 +1343,7 @@ export default function ProfileStatsView({
               <div className="py-12 text-center bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-[#1f2648]/40 rounded-2xl space-y-2">
                 <Clock className="w-8 h-8 text-slate-500 mx-auto" />
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{isAr ? 'سجل الأنشطة فارغ.' : 'Activity log is empty.'}</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">{isAr ? 'أي تجربة أكاديمية تبدأ بحلها ستسجل مع درجاتك الإحصائية تلقائياً للتحليل.' : 'Complete your first interactive challenge to track metrics.'}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{isAr ? 'أي تجربة أكاديمية تبدأ بحلها ستسجل مع درجاتك الإحصائية تلقائياً للتحليل.' : 'Complete your first interactive challenge to track metrics.'}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1356,14 +1356,14 @@ export default function ProfileStatsView({
                     >
                       <div className="space-y-1 text-right">
                         <h5 className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-1">{comp.quizTitle}</h5>
-                        <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                        <span className="flex items-center gap-1.5 text-xs text-slate-500">
                           <Calendar className="w-3 h-3" />
                           <span>{new Date(comp.createdAt).toLocaleDateString('ar-EG')}</span>
                         </span>
                       </div>
 
                       <div className="flex items-center gap-4">
-                        <div className="px-2.5 py-1 text-[11px] font-black rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                        <div className="px-2.5 py-1 text-xs font-black rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
                           {percent}%
                         </div>
                         <div className="text-left font-display font-extrabold text-sm sm:text-base text-purple-600 dark:text-purple-400 shrink-0">
@@ -1450,9 +1450,9 @@ export default function ProfileStatsView({
                     />
                   </div>
                   {customIdError ? (
-                    <p className="text-[10px] text-red-400 font-bold">{customIdError}</p>
+                    <p className="text-xs text-red-400 font-bold">{customIdError}</p>
                   ) : (
-                    <p className="text-[10px] text-slate-500 font-semibold">
+                    <p className="text-xs text-slate-500 font-semibold">
                       {isAr
                         ? '٣-٢٠ حرفًا إنجليزيًا صغيرًا أو أرقام أو "_" فقط. اتركه فارغًا للاحتفاظ بالمعرف التلقائي.'
                         : '3-20 characters: lowercase letters, numbers, or "_" only. Leave empty to keep the auto-generated ID.'}
@@ -1503,17 +1503,17 @@ export default function ProfileStatsView({
                 {verificationBadges.length > 0 && (
                   <div className="space-y-2 border-t border-slate-850 pt-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-bold text-slate-500">{isAr ? 'اختر العلامة التي تظهر بجوار اسمك' : 'Choose the mark shown beside your name'}</span>
+                      <span className="text-xs font-bold text-slate-500">{isAr ? 'اختر العلامة التي تظهر بجوار اسمك' : 'Choose the mark shown beside your name'}</span>
                       <label className="text-xs font-black text-white">{isAr ? 'علامة التوثيق' : 'Verification Mark'}</label>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      <button type="button" onClick={() => { setSelectedVerificationBadgeId(null); setInfoBadgeTier('none'); }} className={`flex items-center gap-2 rounded-xl border p-2 text-[10px] font-bold transition ${selectedVerificationBadgeId === null ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
+                      <button type="button" onClick={() => { setSelectedVerificationBadgeId(null); setInfoBadgeTier('none'); }} className={`flex items-center gap-2 rounded-xl border p-2 text-xs font-bold transition ${selectedVerificationBadgeId === null ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
                         <X className="h-4 w-4" />{isAr ? 'بدون علامة' : 'No mark'}
                       </button>
                       {verificationBadges.map((badge) => (
                         <button type="button" key={badge.id} onClick={() => { setSelectedVerificationBadgeId(badge.id); setInfoBadgeTier('none'); }} className={`flex min-w-0 items-center gap-2 rounded-xl border p-2 text-start transition ${selectedVerificationBadgeId === badge.id ? 'border-sky-400 bg-sky-500/10 text-white' : 'border-slate-850 bg-slate-950/40 text-slate-400 hover:bg-slate-900'}`}>
                           <VerificationBadge badge={badge} size="sm" lang={lang} />
-                          <span className="truncate text-[10px] font-bold">{isAr ? badge.nameAr : badge.name}</span>
+                          <span className="truncate text-xs font-bold">{isAr ? badge.nameAr : badge.name}</span>
                         </button>
                       ))}
                     </div>
@@ -1525,11 +1525,11 @@ export default function ProfileStatsView({
                 <div className="pt-2 border-t border-slate-850 space-y-2">
                   <div className="flex items-center justify-between">
                     {isUserPremium ? (
-                      <span className="text-[10px] bg-amber-500/15 border border-amber-500/25 px-2 py-0.5 rounded-md text-amber-400 font-extrabold">
+                      <span className="text-xs bg-amber-500/15 border border-amber-500/25 px-2 py-0.5 rounded-md text-amber-400 font-extrabold">
                         {profileData?.planName || (isAr ? 'باقة بريميوم نشطة' : 'Premium Plan Active')}
                       </span>
                     ) : (
-                      <span className="text-[10px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-md text-slate-400 font-bold">
+                      <span className="text-xs bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-md text-slate-400 font-bold">
                         {isAr ? 'الباقة المجانية' : 'Free Tier'}
                       </span>
                     )}
@@ -1537,7 +1537,7 @@ export default function ProfileStatsView({
                   </div>
 
                   {!isUserPremium ? (
-                    <p className="text-[10px] text-slate-500 font-bold text-center py-2">
+                    <p className="text-xs text-slate-500 font-bold text-center py-2">
                       {isAr ? 'اشترك في باقة مدفوعة لفتح شارات التوثيق وألوان الاسم المخصصة.' : 'Subscribe to a paid plan to unlock verification badges and custom name colors.'}
                     </p>
                   ) : (
@@ -1572,7 +1572,7 @@ export default function ProfileStatsView({
                       {/* Badge color */}
                       {infoBadgeTier !== 'none' && (
                         <div className="space-y-1.5">
-                          <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'لون الشارة' : 'Badge color'}</p>
+                          <p className="text-xs text-slate-400 font-bold">{isAr ? 'لون الشارة' : 'Badge color'}</p>
                           <div className="flex flex-wrap gap-2">
                             {availableBadgeColors(planTier).map((c) => (
                               <button
@@ -1590,14 +1590,14 @@ export default function ProfileStatsView({
 
                       {/* Name color */}
                       <div className="space-y-1.5">
-                        <p className="text-[10px] text-slate-400 font-bold">{isAr ? 'لون الاسم' : 'Name color'}</p>
+                        <p className="text-xs text-slate-400 font-bold">{isAr ? 'لون الاسم' : 'Name color'}</p>
                         <div className="flex flex-wrap gap-1.5">
                           {availableNameColors(planTier).map((nc) => (
                             <button
                               key={nc}
                               type="button"
                               onClick={() => setInfoNameColor(nc)}
-                              className={`px-2 py-1 rounded-lg border text-[10px] font-bold transition-all ${
+                              className={`px-2 py-1 rounded-lg border text-xs font-bold transition-all ${
                                 infoNameColor === nc ? 'border-white bg-slate-800' : 'border-slate-800 bg-slate-950/40 hover:bg-slate-900'
                               }`}
                               style={NAME_COLOR_PRESETS[nc].style}
@@ -1609,7 +1609,7 @@ export default function ProfileStatsView({
                       </div>
 
                       {badgeSaveError && (
-                        <p className="text-[10px] text-red-400 font-bold">{badgeSaveError}</p>
+                        <p className="text-xs text-red-400 font-bold">{badgeSaveError}</p>
                       )}
                     </div>
                   )}
@@ -1620,7 +1620,7 @@ export default function ProfileStatsView({
                   <label className="text-xs font-black text-white block">
                     {isAr ? 'تصميم خلفية الغلاف الكوني (16 نموذج مميز)' : 'Cosmic Shield Wallpaper (16 Themes)'}
                   </label>
-                  <p className="text-[10px] text-slate-400 font-bold leading-relaxed">
+                  <p className="text-xs text-slate-400 font-bold leading-relaxed">
                     {isAr
                       ? 'اختر المظهر والخلفية المفضلة لجعل حسابك الشخصي فريداً من نوعه:'
                       : 'Choose your desired space theme/color wallpaper style to make your profile stand out:'}

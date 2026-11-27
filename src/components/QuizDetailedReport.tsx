@@ -196,12 +196,12 @@ export default function QuizDetailedReport({
                     {/* Check or Cross symbol badge */}
                     <div className="flex-shrink-0">
                       {answeredCorrectly ? (
-                        <div className="flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50">
+                        <div className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50">
                           <Check className="w-3.5 h-3.5" />
                           <span>{isAr ? 'إجابة صحيحة' : 'Correct'}</span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-905/50">
+                        <div className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-905/50">
                           <X className="w-3.5 h-3.5" />
                           <span>{isAr ? 'إجابة خاطئة' : 'Incorrect'}</span>
                         </div>
@@ -226,7 +226,7 @@ export default function QuizDetailedReport({
                     <div className="space-y-3.5 pt-1 text-xs">
                       {/* Written essay feedback */}
                       <div className="p-3.5 bg-slate-50 dark:bg-slate-900/40 rounded-xl space-y-1.5 border border-slate-100 dark:border-slate-800">
-                        <span className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded leading-none inline-block">
+                        <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded leading-none inline-block">
                           {isAr ? 'إجابتك المكتوبة المسجلة:' : 'Your submitted answer:'}
                         </span>
                         <p className="text-slate-750 dark:text-slate-300 leading-relaxed whitespace-pre-wrap italic">
@@ -236,7 +236,7 @@ export default function QuizDetailedReport({
 
                       {essayGradingMode !== 'ai' ? (
                         <div className="p-3.5 bg-amber-500/[0.05] dark:bg-amber-950/[0.1] rounded-xl space-y-1.5 border border-amber-200/60 dark:border-amber-900/30">
-                          <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/40 px-2 py-0.5 rounded leading-none inline-block">
+                          <span className="text-xs font-black text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/40 px-2 py-0.5 rounded leading-none inline-block">
                             {isAr ? 'حالة التقييم:' : 'Evaluation Status:'}
                           </span>
                           <p className="text-amber-800 dark:text-amber-200 font-bold leading-relaxed flex items-center gap-2">
@@ -247,7 +247,7 @@ export default function QuizDetailedReport({
                       ) : (
                         /* Correct answer standard for AI mode */
                         <div className="p-3.5 bg-emerald-500/[0.03] dark:bg-emerald-950/[0.05] rounded-xl space-y-1.5 border border-emerald-100/50 dark:border-emerald-900/20">
-                          <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded leading-none inline-block">
+                          <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded leading-none inline-block">
                             {isAr ? 'الجواب النموذجي المرصود:' : 'Model Answer Standard:'}
                           </span>
                           <p className="text-slate-800 dark:text-slate-200 font-bold leading-relaxed whitespace-pre-wrap">
@@ -327,7 +327,7 @@ export default function QuizDetailedReport({
                       {/* AI Explain Mechanism */}
                       <button
                         onClick={() => handleFetchAiExplanation(qId, q, originalIdx)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black cursor-pointer transition-all border shadow-xs ${
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer transition-all border shadow-xs ${
                           aiLoading[qId]
                             ? 'bg-purple-100 dark:bg-purple-950/45 text-purple-605 dark:text-purple-300 border-purple-200/50 animate-pulse'
                             : aiExplanations[qId]
@@ -369,7 +369,7 @@ export default function QuizDetailedReport({
 
                         className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1.5"
                       >
-                        <div className="text-[10px] uppercase font-black text-purple-600 dark:text-purple-400 tracking-wider">
+                        <div className="text-xs uppercase font-black text-purple-600 dark:text-purple-400 tracking-wider">
                           {isAr ? ' شرح المعلم الذكي (كوزمو):' : ' Lesson by AI Tutor (AI):'}
                         </div>
                         <p className="text-slate-705 dark:text-purple-100 text-xs leading-relaxed whitespace-pre-line bg-purple-500/[0.025] dark:bg-purple-950/15 p-3 rounded-xl border border-purple-500/10 font-medium">
@@ -381,13 +381,13 @@ export default function QuizDetailedReport({
 
                   {/* Live Feedback voting under each item */}
                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100/60 dark:border-slate-750/30">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                    <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">
                       {isAr ? 'هل ترى صياغة السؤال دقيقة وممتازة؟' : 'Did you find this question wording precise and helpful?'}
                     </span>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => onRateQuestion(qId, q.text, 'like')}
-                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all ${
                           questionRatings[qId] === 'like'
                             ? 'bg-emerald-500 text-white border border-emerald-600 shadow-xs'
                             : 'bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-700/65'
@@ -399,7 +399,7 @@ export default function QuizDetailedReport({
                       </button>
                       <button
                         onClick={() => onRateQuestion(qId, q.text, 'dislike')}
-                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all ${
                           questionRatings[qId] === 'dislike'
                             ? 'bg-red-500 text-white border border-red-600 shadow-xs'
                             : 'bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-700/65'
@@ -412,7 +412,7 @@ export default function QuizDetailedReport({
                     </div>
                   </div>
                   {questionRatingErrors[qId] && (
-                    <p role="alert" className="mt-2 text-[11px] font-semibold text-rose-600 dark:text-rose-300">
+                    <p role="alert" className="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-300">
                       {questionRatingErrors[qId]}
                     </p>
                   )}

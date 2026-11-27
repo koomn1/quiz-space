@@ -46,7 +46,7 @@ export function renderInlineMd(line: string, keyPrefix: string, theme: CosmoPale
             }}
           >
             <span>{label}</span>
-            <span className="text-[10px]">↗</span>
+            <span className="text-xs">↗</span>
           </a>
         );
       } else if (/^\*\*[^*]+\*\*$/.test(piece)) {
@@ -87,7 +87,7 @@ export function CodeBlock({ content, lang, theme }: { content: string; lang?: st
             <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
             <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
           </div>
-          <span className="text-[11px] font-mono px-2 py-0.5 rounded text-slate-400 bg-slate-800/80">{lang || 'code'}</span>
+          <span className="text-xs font-mono px-2 py-0.5 rounded text-slate-400 bg-slate-800/80">{lang || 'code'}</span>
         </div>
         <button
           type="button"

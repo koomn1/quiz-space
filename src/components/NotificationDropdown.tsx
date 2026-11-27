@@ -230,7 +230,7 @@ export function NotificationDropdown({ userId, lang = 'ar', onNavigate }: { user
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow-md animate-pulse">
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-xs font-black text-white shadow-md animate-pulse">
             {unreadCount}
           </span>
         )}
@@ -262,7 +262,7 @@ export function NotificationDropdown({ userId, lang = 'ar', onNavigate }: { user
               <div className="flex items-start gap-2.5">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/15"><Sparkles className="h-4 w-4" /></div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/80">{isAr ? 'تحديثات اليوم' : 'Today’s updates'}</p>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-white/80">{isAr ? 'تحديثات اليوم' : 'Today’s updates'}</p>
                   <p className="mt-1 text-xs font-bold leading-5 text-white/90">{isAr ? 'أنشطة جديدة جاهزة لك اليوم. اختر نشاطًا وابدأ مباشرة.' : 'Fresh activities are ready for you today. Pick one and start now.'}</p>
                 </div>
               </div>
@@ -274,7 +274,7 @@ export function NotificationDropdown({ userId, lang = 'ar', onNavigate }: { user
               ['rewards', isAr ? 'الجوائز' : 'Rewards', Award],
               ['learning', isAr ? 'التعلم' : 'Learning', BookOpenCheck],
               ['system', isAr ? 'النظام' : 'System', ShieldCheck],
-            ] as const).map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={filter === id} onClick={() => setFilter(id)} className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black transition-colors ${filter === id ? 'bg-primary text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}
+            ] as const).map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={filter === id} onClick={() => setFilter(id)} className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-xs font-black transition-colors ${filter === id ? 'bg-primary text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}
           </div>
 
           <div className="mt-3 max-h-[calc(100dvh-19rem)] min-h-0 overflow-y-auto overscroll-contain space-y-2.5 pr-1 [scrollbar-width:thin] sm:max-h-80">
@@ -304,14 +304,14 @@ export function NotificationDropdown({ userId, lang = 'ar', onNavigate }: { user
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-2 text-xs font-black text-slate-900 dark:text-white">{notif.id.startsWith('release-') ? <Zap className="h-4 w-4 shrink-0 text-fuchsia-500" /> : getGroupIcon(notif.type)}<span className="truncate">{notif.title}</span>{notif.id.startsWith('daily-') && <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-black text-white">{isAr ? 'اليوم' : 'TODAY'}</span>}</span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-xs text-slate-400">
                       {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                   <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
                     {notif.body || notif.message || (isAr ? 'لا توجد تفاصيل إضافية.' : 'No additional details.')}
                   </p>
-                  {notif.actionTab && <button type="button" onClick={(event) => { event.stopPropagation(); openNotification(notif); }} className="mt-2 inline-flex min-h-9 w-fit items-center gap-1 rounded-xl bg-primary px-3 text-[10px] font-black text-white shadow-sm hover:brightness-110">{notif.actionLabel || (isAr ? 'فتح الآن' : 'Open now')}<ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" /></button>}
+                  {notif.actionTab && <button type="button" onClick={(event) => { event.stopPropagation(); openNotification(notif); }} className="mt-2 inline-flex min-h-9 w-fit items-center gap-1 rounded-xl bg-primary px-3 text-xs font-black text-white shadow-sm hover:brightness-110">{notif.actionLabel || (isAr ? 'فتح الآن' : 'Open now')}<ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" /></button>}
                 </div>
               ))
             )}

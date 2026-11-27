@@ -64,10 +64,10 @@ export const DailyGiftMysteryBox: React.FC<DailyGiftMysteryBoxProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#2AC3BB]">
+              <span className="text-xs font-black uppercase tracking-wider text-[#2AC3BB]">
                 {isAr ? 'المكافأة اليومية' : 'Daily Login Gift'}
               </span>
-              <span className="flex items-center gap-1 rounded-full bg-[#EE8361]/20 px-2 py-0.5 text-[10px] font-black text-[#FBDFC7]">
+              <span className="flex items-center gap-1 rounded-full bg-[#EE8361]/20 px-2 py-0.5 text-xs font-black text-[#FBDFC7]">
                 <Flame className="h-3 w-3 text-[#EE8361]" />
                 {isAr ? `${dailyStreak} أيام متتالية` : `${dailyStreak}-day streak`}
               </span>
@@ -237,7 +237,7 @@ export const DailyGiftMysteryBox: React.FC<DailyGiftMysteryBoxProps> = ({
 
       {/* 7-Day Streak Timeline Tracker */}
       <div className="mt-4 border-t border-[#2AC3BB]/15 pt-3.5">
-        <div className="mb-2.5 flex items-center justify-between text-[11px] font-bold text-[#8BAEAD]">
+        <div className="mb-2.5 flex items-center justify-between text-xs font-bold text-[#8BAEAD]">
           <span>{isAr ? 'سلسلة الحضور الأسبوعية (7 أيام)' : '7-Day Attendance Loop'}</span>
           <span className="font-mono text-[#2AC3BB]">
             {isAr ? `اليوم ${currentDayInCycle} من 7` : `Day ${currentDayInCycle} of 7`}

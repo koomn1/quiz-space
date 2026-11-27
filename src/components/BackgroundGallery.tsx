@@ -341,7 +341,7 @@ export function BackgroundGallery({
                     LIVE
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-300 font-medium leading-relaxed line-clamp-2">
+                <p className="text-xs text-slate-300 font-medium leading-relaxed line-clamp-2">
                   {isAr ? bg.descriptionAr : bg.descriptionEn}
                 </p>
               </div>
@@ -525,7 +525,7 @@ export function BackgroundGallery({
                       setTheme(th.id as any);
                       onSelectBg(currentBg, { ...currentSettingsObj, theme: th.id as any });
                     }}
-                    className={`p-2.5 rounded-xl border text-[11px] font-bold flex flex-col items-center gap-1.5 transition-all select-none ${
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition-all select-none ${
                       theme === th.id
                         ? 'border-violet-500 bg-violet-500/10 text-violet-400 font-black'
                         : 'border-slate-850 hover:bg-slate-900 bg-slate-900/40 text-slate-400'

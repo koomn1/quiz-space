@@ -62,7 +62,7 @@ export default function IOS27FloatingTabBar({
             }`}
           >
             <Home className={`w-4 h-4 ${currentTab === 'landing' ? 'scale-110' : ''} transition-transform`} />
-            <span className="text-[10px] leading-none">{isAr ? 'الرئيسية' : 'Home'}</span>
+            <span className="text-xs leading-none">{isAr ? 'الرئيسية' : 'Home'}</span>
           </button>
 
           {/* 2. Cosmo AI Tab */}
@@ -76,7 +76,7 @@ export default function IOS27FloatingTabBar({
             }`}
           >
             <Sparkles className={`w-4 h-4 text-cyan-400 ${currentTab === 'aichat' ? 'scale-110 animate-spin' : ''} transition-transform`} />
-            <span className="text-[10px] leading-none">{isAr ? 'كوزمو AI' : 'Cosmo'}</span>
+            <span className="text-xs leading-none">{isAr ? 'كوزمو AI' : 'Cosmo'}</span>
           </button>
 
           {/* 3. CENTER ACTION: Iconic Floating Plus Button (FAB) — Never squished! */}
@@ -103,7 +103,7 @@ export default function IOS27FloatingTabBar({
             }`}
           >
             <BookOpen className={`w-4 h-4 ${currentTab === 'my-quizzes' ? 'scale-110' : ''} transition-transform`} />
-            <span className="text-[10px] leading-none">{isAr ? 'مكتبتي' : 'Library'}</span>
+            <span className="text-xs leading-none">{isAr ? 'مكتبتي' : 'Library'}</span>
           </button>
 
           {/* 5. More Sheet Trigger */}
@@ -114,7 +114,7 @@ export default function IOS27FloatingTabBar({
             title={isAr ? 'المزيد من الأدوات' : 'More Tools'}
           >
             <LayoutGrid className="w-4 h-4" />
-            <span className="text-[10px] leading-none">{isAr ? 'المزيد' : 'More'}</span>
+            <span className="text-xs leading-none">{isAr ? 'المزيد' : 'More'}</span>
           </button>
         </div>
       </nav>
@@ -164,7 +164,7 @@ export default function IOS27FloatingTabBar({
                     <p className="font-display font-bold text-sm text-slate-900 dark:text-white truncate">
                       {tool.label}
                     </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                       {tool.desc}
                     </p>
                   </div>

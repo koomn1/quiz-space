@@ -277,7 +277,7 @@ export function CategoriesSection({ quizzes, onStartQuiz, lang, onViewProfile }:
                   <h3 className={`font-display font-black text-sm leading-tight ${isSelected ? 'text-primary dark:text-white' : 'text-slate-900 dark:text-slate-100'}`}>
                     {isAr ? cat.titleAr : cat.titleEn}
                   </h3>
-                  <span className="uipro-pill-badge bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px]">
+                  <span className="uipro-pill-badge bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs">
                     {matchedCount} {isAr ? 'اختبار' : 'quizzes'}
                   </span>
                 </div>
@@ -468,14 +468,14 @@ function CommunityPostCard({
             className="w-full rounded-2xl border border-primary/40 bg-slate-50 dark:bg-slate-800 p-3 text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-primary/20 resize-none"
             dir={isAr ? 'rtl' : 'ltr'} aria-label={isAr ? 'نص المنشور' : 'Post text'} />
           <div className="flex items-center justify-end gap-2" dir={isAr ? 'rtl' : 'ltr'}>
-            <button type="button" onClick={() => setIsEditing(false)} className="min-h-10 rounded-xl px-3 text-[11px] font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+            <button type="button" onClick={() => setIsEditing(false)} className="min-h-10 rounded-xl px-3 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
               {isAr ? 'إلغاء' : 'Cancel'}
             </button>
             <button type="button" disabled={!draftText.trim() || isSaving} onClick={async () => {
               if (!draftText.trim() || isSaving) return;
               setIsSaving(true);
               try { await onEdit(post.id, draftText.trim()); setIsEditing(false); } finally { setIsSaving(false); }
-            }} className="min-h-10 inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 text-[11px] font-bold text-white hover:bg-primary-hover disabled:opacity-50 cursor-pointer">
+            }} className="min-h-10 inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-bold text-white hover:bg-primary-hover disabled:opacity-50 cursor-pointer">
               <CheckCircle className="w-3.5 h-3.5" />
               {isSaving ? (isAr ? 'جارٍ الحفظ...' : 'Saving...') : (isAr ? 'حفظ التعديل' : 'Save edit')}
             </button>
@@ -484,7 +484,7 @@ function CommunityPostCard({
       ) : (
         <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed text-right font-semibold" style={{ textAlign: isAr ? 'right' : 'left' }}>
           {post.text}
-          {post.updatedAt && <span className="block mt-1 text-[10px] font-medium text-slate-400">{isAr ? 'تم التعديل' : 'Edited'}</span>}
+          {post.updatedAt && <span className="block mt-1 text-xs font-medium text-slate-400">{isAr ? 'تم التعديل' : 'Edited'}</span>}
         </p>
       )}
 
@@ -608,7 +608,7 @@ function ReactionButton({ post, isAr, onReact }: {
               type="button"
               onClick={(e) => onReact(r, e)}
               title={isAr ? meta.labelAr : meta.labelEn}
-              className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
                 isActive
                   ? meta.activeClasses
                   : 'bg-slate-50/90 dark:bg-slate-900/70 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-white dark:hover:bg-slate-800'
@@ -877,7 +877,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                 <h3 className="text-sm font-black text-slate-800 dark:text-white">
                   {isAr ? 'لوحة المتفوقين وأحدث المحاولات المكتملة' : 'Live Solvers & Hall of Fame'}
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {isAr ? 'يتم تحديث هذه القائمة فوراً عند انتهاء أي طالب أو زائر من حل اختبار على المنصة.' : 'Real-time record of all participants who completed quizzes on Quiz Space.'}
                 </p>
               </div>
@@ -942,15 +942,15 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                             {solver.takerName || (isAr ? 'طالب متميز' : 'Student')}
                           </p>
                           {isPerfect && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-300 font-black">
+                            <span className="text-xs px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-300 font-black">
                               {isAr ? 'علامة كاملة ' : 'Perfect '}
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5" title={solver.quizTitle}>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5" title={solver.quizTitle}>
                           {isAr ? 'حل: ' : 'Solved: '}<span className="font-bold text-slate-700 dark:text-slate-300">{solver.quizTitle || (isAr ? 'اختبار' : 'Quiz')}</span>
                         </p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                           {solver.createdAt ? new Date(solver.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US') : ''}
                         </p>
                       </div>
@@ -969,7 +969,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                       {solver.quizId && (
                         <a
                           href={`#/quiz/${solver.quizId}`}
-                          className="text-[11px] font-bold text-primary hover:underline"
+                          className="text-xs font-bold text-primary hover:underline"
                         >
                           {isAr ? 'خوض الاختبار ' : 'Try Quiz '}
                         </a>
@@ -995,7 +995,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                 style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}
               />
               <div className="flex items-center justify-between">
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5">
                   <Globe className="w-3.5 h-3.5 text-[#2AC3BB]" />
                   <span>{isAr ? 'منشورك سيظهر لجميع أعضاء مجتمع الفضاء الأكاديمي.' : 'Your post will be visible to all academic community members.'}</span>
                 </p>
@@ -1119,7 +1119,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
 
               {/* Modal Content */}
               <div className="p-5 max-h-[350px] overflow-y-auto space-y-3.5" dir={isAr ? 'rtl' : 'ltr'}>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-extrabold tracking-wide uppercase">
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-extrabold tracking-wide uppercase">
                   {isAr ? `إجمالي المشاهدات الفريدة: ${selectedPostForInsights.viewsCount || 0}` : `Total Unique Viewers: ${selectedPostForInsights.viewsCount || 0}`}
                 </p>
 
@@ -1145,7 +1145,7 @@ export function CommunitySection({ lang, userId, userName, userEmail, userRole, 
                               {viewer.userName}
                             </span>
                           </div>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono font-semibold">
+                          <span className="text-xs text-slate-400 dark:text-slate-500 font-mono font-semibold">
                             {dateStr} - {timeStr}
                           </span>
                         </div>
@@ -1399,7 +1399,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
               className="uipro-clay-card p-4.5 rounded-2xl text-right relative overflow-hidden"
             >
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 block uppercase font-bold">{stat.label}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 block uppercase font-bold">{stat.label}</span>
                 <div className={`w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center ${stat.color}`}>
                   <StatIcon className="w-3.5 h-3.5" />
                 </div>
@@ -1434,11 +1434,11 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
                 <h4 className="font-display font-black text-sm text-slate-800 dark:text-white flex items-center gap-2">
                   <span>{isAr ? item.titleAr : item.titleEn}</span>
                   {item.unlocked ? (
-                    <span className="text-[10px] uipro-gold-shimmer bg-indigo-500 text-white font-bold px-2.5 py-0.5 rounded-full select-none shadow-xs">
+                    <span className="text-xs uipro-gold-shimmer bg-indigo-500 text-white font-bold px-2.5 py-0.5 rounded-full select-none shadow-xs">
                        {isAr ? 'تم الفتح' : 'Unlocked'}
                     </span>
                   ) : (
-                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold px-2.5 py-0.5 rounded-full select-none">
+                    <span className="text-xs bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold px-2.5 py-0.5 rounded-full select-none">
                        {isAr ? 'مقفل' : 'Locked'}
                     </span>
                   )}
@@ -1484,7 +1484,7 @@ export function AchievementsSection({ lang, completions, quizzes, userId, isPrem
               </div>
 
               <div className="space-y-1.5">
-                <span className="inline-block px-3 py-1 bg-amber-500/20 border border-amber-400/40 rounded-full text-[10px] text-amber-600 dark:text-amber-300 font-extrabold uppercase tracking-widest">
+                <span className="inline-block px-3 py-1 bg-amber-500/20 border border-amber-400/40 rounded-full text-xs text-amber-600 dark:text-amber-300 font-extrabold uppercase tracking-widest">
                    {isAr ? 'تم فتح شارة توثيق جديدة!' : 'New Badge Unlocked!'}
                 </span>
                 <h3 className="font-display font-black text-2xl text-slate-800 dark:text-white tracking-tight leading-snug">
@@ -1773,7 +1773,7 @@ export function SettingsSection({
         <div className="absolute -end-10 -top-16 h-40 w-40 rounded-full bg-sky-500/10 blur-3xl" />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-500">{isAr ? 'مساحة التحكم' : 'Control center'}</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-sky-500">{isAr ? 'مساحة التحكم' : 'Control center'}</p>
             <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">{isAr ? 'إعدادات الحساب' : 'Account settings'}</h2>
             <p className="mt-2 max-w-xl text-xs font-semibold leading-6 text-slate-500 dark:text-slate-400">{isAr ? 'حدّث بياناتك، أمّن حسابك، واضبط تجربة Quiz Space كما تحب.' : 'Update your details, secure your account, and shape your Quiz Space experience.'}</p>
           </div>
@@ -1793,7 +1793,7 @@ export function SettingsSection({
             <button
               key={tab.id}
               onClick={() => { playChimeSound('click'); setActiveTab(tab.id); }}
-              className={`relative min-h-11 flex-1 rounded-xl px-3 py-3 text-[11px] font-black transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 sm:flex-none sm:px-6 ${
+              className={`relative min-h-11 flex-1 rounded-xl px-3 py-3 text-xs font-black transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 sm:flex-none sm:px-6 ${
                 isActive ? 'text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -1994,7 +1994,7 @@ export function SettingsSection({
                         </div>
                       )}
                       <div className={`h-10 w-full rounded-xl bg-gradient-to-r ${t.color}`} />
-                      <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 text-center">{t.name}</span>
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-200 text-center">{t.name}</span>
                     </button>
                   ))}
                 </div>
@@ -2005,7 +2005,7 @@ export function SettingsSection({
                 <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800">
                   <div>
                     <h4 className="text-xs font-bold text-slate-900 dark:text-white">{isAr ? 'الوضع الداكن الفاخر' : 'Luxury Dark Mode'}</h4>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{isAr ? 'تبديل واجهات النظام الكاملة للوضع الداكن' : 'Toggle application-wide dark aesthetic'}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{isAr ? 'تبديل واجهات النظام الكاملة للوضع الداكن' : 'Toggle application-wide dark aesthetic'}</p>
                   </div>
                   <div className="shrink-0">
                     <NeumorphismToggle checked={darkMode} onChange={setDarkMode} size="sm" />
@@ -2013,10 +2013,10 @@ export function SettingsSection({
                 </div>
                 <div className="md:col-span-2 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-4">
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white">{isAr ? 'تفضيل الثيم' : 'Theme preference'}</h4>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 mb-3">{isAr ? 'اختَر الوضع الفاتح أو الداكن أو اتبع إعداد الجهاز تلقائيًا.' : 'Choose light, dark, or follow the device automatically.'}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-3">{isAr ? 'اختَر الوضع الفاتح أو الداكن أو اتبع إعداد الجهاز تلقائيًا.' : 'Choose light, dark, or follow the device automatically.'}</p>
                   <div className="grid grid-cols-3 gap-2">
                     {(['light', 'dark', 'system'] as const).map((preference) => (
-                      <button key={preference} type="button" onClick={() => setThemePreference(preference)} className={`min-h-10 rounded-xl border text-[11px] font-black transition ${themePreference === preference ? 'border-primary bg-primary/15 text-primary' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/40'}`}>
+                      <button key={preference} type="button" onClick={() => setThemePreference(preference)} className={`min-h-10 rounded-xl border text-xs font-black transition ${themePreference === preference ? 'border-primary bg-primary/15 text-primary' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/40'}`}>
                         {preference === 'light' ? (isAr ? 'فاتح' : 'Light') : preference === 'dark' ? (isAr ? 'داكن' : 'Dark') : (isAr ? 'حسب الجهاز' : 'System')}
                       </button>
                     ))}
@@ -2026,7 +2026,7 @@ export function SettingsSection({
                 <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800">
                   <div>
                     <h4 className="text-xs font-bold text-slate-900 dark:text-white">{isAr ? 'المؤثرات الصوتية التفاعلية' : 'Interactive UI Sound Effects'}</h4>
-                    <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">{isAr ? 'تشغيل المؤثرات والتعزيزات الصوتية الجذابة' : 'Enjoy interactive UI chime sounds'}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{isAr ? 'تشغيل المؤثرات والتعزيزات الصوتية الجذابة' : 'Enjoy interactive UI chime sounds'}</p>
                   </div>
                   <div className="shrink-0">
                     <LiquidGlassSwitch
@@ -2045,7 +2045,7 @@ export function SettingsSection({
                 <h4 className="text-xs font-black text-[#007472] dark:text-[#2AC3BB] uppercase tracking-wider bg-[#007472]/10 dark:bg-[#007472]/25 border border-[#007472]/20 dark:border-[#2AC3BB]/30 px-3 py-1.5 rounded-xl inline-block">
                   {isAr ? 'خصائص الشعار والوسام المخصص' : 'Specialized Branding Options'}
                 </h4>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   {isAr ? 'شارة توثيق واسم ملون - متاحة للمشتركين فقط. الأشكال المتاحة تعتمد على باقتك.' : 'Verified badge and colored name - premium subscribers only. Available options depend on your plan.'}
                 </p>
               </div>
@@ -2053,7 +2053,7 @@ export function SettingsSection({
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <label className="text-xs font-black text-slate-700 dark:text-slate-300">{isAr ? 'علامة التوثيق:' : 'Verification mark:'}</label>
-                  {!isPremium && <span className="text-[10px] font-black text-amber-600 dark:text-amber-300">{isAr ? 'للمشتركين فقط' : 'Paid plans only'}</span>}
+                  {!isPremium && <span className="text-xs font-black text-amber-600 dark:text-amber-300">{isAr ? 'للمشتركين فقط' : 'Paid plans only'}</span>}
                 </div>
                 <div className="grid grid-cols-5 gap-2 sm:gap-3">
                   {verificationBadges.map((badge) => {
@@ -2108,7 +2108,7 @@ export function SettingsSection({
                             key={color}
                             type="button"
                             onClick={() => setNameColor(color)}
-                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition ${nameColor === color ? 'border-[#007472] dark:border-[#2AC3BB] ring-1 ring-[#007472] dark:ring-[#2AC3BB]' : 'border-slate-200 dark:border-slate-700'} bg-white dark:bg-slate-950 text-slate-900 dark:text-white`}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${nameColor === color ? 'border-[#007472] dark:border-[#2AC3BB] ring-1 ring-[#007472] dark:ring-[#2AC3BB]' : 'border-slate-200 dark:border-slate-700'} bg-white dark:bg-slate-950 text-slate-900 dark:text-white`}
                             style={NAME_COLOR_PRESETS[color].style}
                           >
                             {isAr ? NAME_COLOR_PRESETS[color].labelAr : NAME_COLOR_PRESETS[color].labelEn}
@@ -2119,14 +2119,14 @@ export function SettingsSection({
                   </div>
 
                   {badgeSaveError && (
-                    <p className="text-[11px] text-red-500 font-bold">{badgeSaveError}</p>
+                    <p className="text-xs text-red-500 font-bold">{badgeSaveError}</p>
                   )}
 
                   <div className="flex justify-end pt-2">
                     <button
                       onClick={handleSaveSpecializedBranding}
                       disabled={isSavingBadge}
-                      className="px-5 py-2.5 bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 text-[11px] font-black rounded-xl cursor-pointer shadow transition-all disabled:opacity-50"
+                      className="px-5 py-2.5 bg-[#007472] hover:bg-[#005e5c] dark:bg-[#2AC3BB] dark:hover:bg-[#22aba3] text-white dark:text-slate-950 text-xs font-black rounded-xl cursor-pointer shadow transition-all disabled:opacity-50"
                     >
                       {isSavingBadge ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ خصائص الشعار' : 'Save Distinction Branding')}
                     </button>
@@ -2139,7 +2139,7 @@ export function SettingsSection({
             <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
               <div>
                 <h4 className="text-sm font-black text-slate-900 dark:text-white">{isAr ? 'الحسابات السحابية المرتبطة' : 'Linked Cloud Accounts'}</h4>
-                <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   {isAr ? 'اربط حساب Google Drive لرفع مخرجات الاختبارات وملفات المراجعة مباشرة لسحابتك' : 'Authorize Google Drive integration to sync materials and student notes instantly'}
                 </p>
               </div>
@@ -2155,7 +2155,7 @@ export function SettingsSection({
                   </div>
                   <div className="text-right sm:text-left" style={{ textAlign: isAr ? 'right' : 'left' }}>
                     <h5 className="font-bold text-slate-900 dark:text-white text-xs">Google Drive</h5>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       {gdriveAccount || (isAr ? 'لم يتم ربط حساب سحابي بعد' : 'Not authorized yet')}
                     </p>
                   </div>
@@ -2165,14 +2165,14 @@ export function SettingsSection({
                   <button
                     onClick={handleConnectDrive}
                     disabled={isDriveLoading}
-                    className="px-4 py-2 rounded-lg text-white font-bold text-[11px] bg-blue-600 hover:bg-blue-700 w-full sm:w-auto shadow"
+                    className="px-4 py-2 rounded-lg text-white font-bold text-xs bg-blue-600 hover:bg-blue-700 w-full sm:w-auto shadow"
                   >
                     {isDriveLoading ? (isAr ? 'جاري الاتصال...' : 'Connecting...') : (isAr ? 'ربط الحساب' : 'Link Google Account')}
                   </button>
                 ) : (
                   <button
                     onClick={handleDisconnectDrive}
-                    className="px-4 py-2 rounded-lg text-slate-300 bg-slate-900 border border-slate-800 font-bold text-[11px] hover:bg-slate-800 w-full sm:w-auto"
+                    className="px-4 py-2 rounded-lg text-slate-300 bg-slate-900 border border-slate-800 font-bold text-xs hover:bg-slate-800 w-full sm:w-auto"
                   >
                     {isAr ? 'إلغاء الربط' : 'Unlink Account'}
                   </button>
@@ -2358,7 +2358,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                     {/* Rank identifier crown/badge */}
                     <div className="absolute top-3 end-3 flex items-center gap-1">
                       {winner.rank === 1 && <span className="text-xl">👑</span>}
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-md ${style.badgeBg}`}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-black shadow-md ${style.badgeBg}`}>
                         #{winner.rank}
                       </span>
                     </div>
@@ -2384,7 +2384,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                           {winner.isPremium && <UserBadge tier={winner.badgeTier || 'premium'} showLabel={false} />}
                         </h4>
                         {winner.customId && (
-                          <p className="text-[10px] font-mono text-[#2AC3BB] font-bold">@{winner.customId}</p>
+                          <p className="text-xs font-mono text-[#2AC3BB] font-bold">@{winner.customId}</p>
                         )}
                       </div>
 
@@ -2463,7 +2463,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                       </div>
                       <div className="flex items-center gap-2">
                         {item.customId && (
-                          <span className="text-[10px] text-[#2AC3BB] font-mono font-bold">@{item.customId}</span>
+                          <span className="text-xs text-[#2AC3BB] font-mono font-bold">@{item.customId}</span>
                         )}
                         <TitleAvatarBadge level={item.level} size="xs" lang={lang} showLabel={false} />
                       </div>
@@ -2476,7 +2476,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                       <span className="text-xs font-black text-[#007472] dark:text-[#2AC3BB] font-mono block">
                         {activeCriteria === 'accuracy' ? `${item.accuracy}%` : `${item.xp.toLocaleString()} XP`}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1 justify-end">
+                      <span className="text-xs text-slate-400 font-bold flex items-center gap-1 justify-end">
                         {isAr ? `${item.accuracy}% دقة` : `${item.accuracy}% Acc`}
                       </span>
                     </div>

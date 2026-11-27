@@ -233,7 +233,7 @@ export const Cosmo3DGuide: React.FC<Cosmo3DGuideProps> = ({
       {/* Guide Speech & Action Message */}
       <div className="flex-1 text-center sm:text-start space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#2AC3BB]/20 px-2.5 py-0.5 text-[11px] font-black text-[#2AC3BB]">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#2AC3BB]/20 px-2.5 py-0.5 text-xs font-black text-[#2AC3BB]">
             <span className="h-2 w-2 rounded-full bg-[#2AC3BB] animate-ping" />
             <span>كوزمو مرشد الألعاب 3D</span>
           </div>

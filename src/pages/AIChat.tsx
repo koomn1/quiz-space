@@ -1182,7 +1182,7 @@ export default function AIChat({
                   <span className="text-sm font-bold tracking-tight" style={{ color: theme.FG }}>{isAr ? ASSISTANT_NAME_AR : ASSISTANT_NAME_EN}</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="متصل" aria-label="متصل" />
                 </div>
-                <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                <p className="text-xs text-slate-400 flex items-center gap-1">
                   <span>{isAr ? 'مساعدك الدراسي داخل QuizSpace' : 'Your study assistant in QuizSpace'}</span>
                 </p>
               </div>
@@ -1199,7 +1199,7 @@ export default function AIChat({
                 color: theme.FG
               }}
             >
-              <span className="text-[11px] font-sans text-slate-400 font-semibold">{isAr ? 'كود المحادثة:' : 'Code:'}</span>
+              <span className="text-xs font-sans text-slate-400 font-semibold">{isAr ? 'كود المحادثة:' : 'Code:'}</span>
               <span className="font-bold tracking-wider text-[#007472] dark:text-[#2AC3BB]">#{currentChatCode}</span>
               <button
                 onClick={() => copyChatCode(currentChatCode)}
@@ -1255,7 +1255,7 @@ export default function AIChat({
             </div>
             <button
               onClick={() => setIsIncognito(false)}
-              className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 transition-colors cursor-pointer"
+              className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 transition-colors cursor-pointer"
             >
               {isAr ? 'إلغاء المؤقتة' : 'Exit Incognito'}
             </button>
@@ -1382,7 +1382,7 @@ export default function AIChat({
         {quickSuggestions.length > 0 && !isAnalyzing && (
           <div className="min-w-0 shrink-0 px-3 pt-2 sm:px-4" dir={isAr ? 'rtl' : 'ltr'}>
             <div className="mx-auto flex min-w-0 max-w-3xl items-center gap-2 overflow-x-auto overscroll-x-contain pb-1 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
-              <span className="shrink-0 text-[11px] font-bold text-slate-400 whitespace-nowrap">{isAr ? 'اقتراحات سريعة:' : 'Quick ideas:'}</span>
+              <span className="shrink-0 text-xs font-bold text-slate-400 whitespace-nowrap">{isAr ? 'اقتراحات سريعة:' : 'Quick ideas:'}</span>
               {quickSuggestions.map(suggestion => (
                 <button
                   key={suggestion.label}
@@ -1415,7 +1415,7 @@ export default function AIChat({
                 )}
                 <div className="flex flex-col">
                   <span className="max-w-[200px] truncate text-xs font-bold" style={{ color: theme.FG }}>{selectedAttachment.name}</span>
-                  <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium">
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
                     <ShieldCheck className="w-3 h-3" />
                     <span>{isAr ? 'محفوظ مؤقتاً على جهازك فقط ' : 'Stored locally in device sandbox '}</span>
                   </div>
@@ -1442,19 +1442,19 @@ export default function AIChat({
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-[#007472] dark:text-[#2AC3BB]">
+                    <span className="text-xs font-semibold text-[#007472] dark:text-[#2AC3BB]">
                       {isAr ? 'ملف المحادثة' : 'Chat file'}
                     </span>
                     <span className="max-w-[200px] truncate text-xs font-bold" style={{ color: theme.FG }}>
                       {activeFileAttachment.name}
                     </span>
                     {activeFileAttachment.sizeBytes && (
-                      <span className="text-[10px] opacity-70">
+                      <span className="text-xs opacity-70">
                         ({formatBytes(activeFileAttachment.sizeBytes)})
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 text-[10px] text-emerald-500 font-medium">
+                  <div className="flex items-center gap-1 text-xs text-emerald-500 font-medium">
                     <ShieldCheck className="w-3 h-3" />
                     <span>{isAr ? 'جاهز للاستخراج الحرفي أو التوليد' : 'Ready for extraction or quiz generation'}</span>
                   </div>
@@ -1538,7 +1538,7 @@ export default function AIChat({
             </div>
 
             {/* Privacy & Security Guarantee Note */}
-            <div className="flex items-center justify-center gap-2 mt-2.5 text-[11px] text-slate-400 text-center">
+            <div className="flex items-center justify-center gap-2 mt-2.5 text-xs text-slate-400 text-center">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <span>
                 {isAr

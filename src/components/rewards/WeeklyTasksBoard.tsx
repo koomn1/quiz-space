@@ -35,7 +35,7 @@ export const WeeklyTasksBoard: React.FC<WeeklyTasksBoardProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#2AC3BB]">
+              <span className="text-xs font-black uppercase tracking-wider text-[#2AC3BB]">
                 {isAr ? 'المسار الأسبوعي' : 'Weekly Milestones'}
               </span>
             </div>
@@ -88,7 +88,7 @@ export const WeeklyTasksBoard: React.FC<WeeklyTasksBoardProps> = ({
                       <h4 className="truncate text-xs font-black text-[#FCF6EE]">
                         {isAr ? task.nameAr : task.name}
                       </h4>
-                      <p className="mt-1 line-clamp-2 min-h-7 text-[10px] text-[#8BAEAD]">
+                      <p className="mt-1 line-clamp-2 min-h-7 text-xs text-[#8BAEAD]">
                         {isAr ? task.descriptionAr : task.description}
                       </p>
                     </div>
@@ -101,7 +101,7 @@ export const WeeklyTasksBoard: React.FC<WeeklyTasksBoardProps> = ({
 
                   {/* Progress Bar */}
                   <div className="mt-3">
-                    <div className="flex items-center justify-between text-[10px] font-bold text-[#8BAEAD] mb-1">
+                    <div className="flex items-center justify-between text-xs font-bold text-[#8BAEAD] mb-1">
                       <span>{isAr ? 'الإنجاز الأسبوعي' : 'Weekly Progress'}</span>
                       <span className="font-mono text-[#FCF6EE]">
                         {task.progress}/{task.target}
@@ -118,7 +118,7 @@ export const WeeklyTasksBoard: React.FC<WeeklyTasksBoardProps> = ({
 
                 {/* Rewards and Claim Button */}
                 <div className="mt-4 border-t border-[#2AC3BB]/10 pt-3">
-                  <div className="mb-2.5 flex items-center justify-between text-[10px] font-black">
+                  <div className="mb-2.5 flex items-center justify-between text-xs font-black">
                     <span className="flex items-center gap-1 text-[#2AC3BB]">
                       <Sparkles className="h-3 w-3" />
                       +{task.pointsReward} XP

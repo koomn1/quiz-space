@@ -193,7 +193,7 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <span className="text-xs font-bold text-white mb-0.5">{lang === 'ar' ? 'مجاني' : 'Free'}</span>
-                <span className="text-[10px] text-slate-400">{lang === 'ar' ? 'أساسي' : 'Basic'}</span>
+                <span className="text-xs text-slate-400">{lang === 'ar' ? 'أساسي' : 'Basic'}</span>
               </div>
 
               {/* Pro Plan */}
@@ -212,7 +212,7 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
                   <Zap className="w-4 h-4" />
                 </div>
                 <span className="text-xs font-bold text-white mb-0.5">{lang === 'ar' ? 'بريميوم برو' : 'Pro Plan'}</span>
-                <span className="text-[10px] text-primary">{lang === 'ar' ? 'ذكاء اصطناعي بلا حدود' : 'Unlimited AI'}</span>
+                <span className="text-xs text-primary">{lang === 'ar' ? 'ذكاء اصطناعي بلا حدود' : 'Unlimited AI'}</span>
               </div>
 
               {/* VIP Plan */}
@@ -228,7 +228,7 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
                   <Crown className="w-4 h-4" />
                 </div>
                 <span className="text-xs font-bold text-white mb-0.5">{lang === 'ar' ? 'الخطة الذهبية' : 'VIP Gold'}</span>
-                <span className="text-[10px] text-amber-400">{lang === 'ar' ? 'شامل المميزات' : 'Full Features'}</span>
+                <span className="text-xs text-amber-400">{lang === 'ar' ? 'شامل المميزات' : 'Full Features'}</span>
               </div>
             </div>
           </div>
