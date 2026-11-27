@@ -13,15 +13,13 @@ import {
   User,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabaseClient';
 import { EmailVerificationStep } from '../components/EmailVerificationStep';
 import { MainLogo } from '../components/MainLogo';
 import { passwordRequirementMessage } from '../lib/passwordPolicy';
 import { validateSignUpFields } from '../lib/authFormValidation';
-import { getAuthRedirectUrl } from '../lib/authRedirect';
 
 export default function Login() {
-  const { signIn, signUp, verifyMfaCode, mfaRequired } = useAuth();
+  const { signIn, signInWithGoogle, signUp, verifyMfaCode, mfaRequired } = useAuth();
 
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
@@ -61,13 +59,13 @@ export default function Login() {
     setLoading(true);
     setError('');
     try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/'),
-        },
-      });
-      if (oauthError) throw oauthError;
+      // Shared with AuthModal: handles native (Capacitor) and web OAuth in one place.
+      const signedIn = await signInWithGoogle();
+      // Web OAuth redirects away; a false result means the native picker was cancelled.
+      if (!signedIn) {
+        setError(isAr ? 'تم إلغاء اختيار حساب Google. حاول مرة أخرى.' : 'Google account selection was cancelled. Try again.');
+        setLoading(false);
+      }
     } catch (err: any) {
       setError(err.message || (isAr ? 'فشلت عملية تسجيل الدخول بجوجل.' : 'Google sign-in failed.'));
       setLoading(false);
