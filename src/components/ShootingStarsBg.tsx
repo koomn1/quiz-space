@@ -197,6 +197,16 @@ export function ShootingStarsBg({ mode = 'cosmic' }: ShootingStarsBgProps) {
           0% { transform: translateX(-20px); opacity: 0.25; }
           100% { transform: translateX(30px); opacity: 0.45; }
         }
+
+        @media (prefers-reduced-motion: reduce) {
+          .spin-cw-slow, .spin-ccw-medium, .spin-cw-fast, .spin-ccw-slow,
+          .shooting-stars-night, .shooting-stars-night .shooting_star,
+          .shooting-stars-night .shooting_star::after,
+          .bird-group, .flying-bird, .flying-bird-1, .flying-bird-2, .flying-bird-3, .flying-bird-4,
+          .bird-wing-flap, .cloud-slow-float {
+            animation: none !important;
+          }
+        }
       `}</style>
 
       {/* Render selected preset background */}

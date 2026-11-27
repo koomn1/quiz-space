@@ -1,6 +1,7 @@
 import React, { useRef, useState, useMemo, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 
 export type CosmoAnimationState = 'idle' | 'wave' | 'celebrate' | 'guide';
 
@@ -450,6 +451,7 @@ export const CosmoGuideCanvas: React.FC<CosmoGuideCanvasProps> = ({
   className = '',
   interactive = true,
 }) => {
+  const reducedMotion = usePrefersReducedMotion();
   const [isSpinning, setIsSpinning] = useState(false);
   const [webglReady, setWebGLReady] = useState(false);
 
@@ -492,6 +494,7 @@ export const CosmoGuideCanvas: React.FC<CosmoGuideCanvasProps> = ({
         <div className="absolute inset-2 -z-10 rounded-full bg-[#2AC3BB]/15 blur-xl group-hover:bg-[#2AC3BB]/25 transition-all duration-500 pointer-events-none" />
 
         <Canvas
+          frameloop={reducedMotion ? 'demand' : 'always'}
           camera={{ position: [0, 0, 4.2], fov: 42 }}
           dpr={[1, 2]}
           gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}

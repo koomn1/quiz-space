@@ -2,6 +2,7 @@ import React, { useRef, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Environment, Sparkles, MeshDistortMaterial, ContactShadows, PresentationControls, Instances, Instance, Text, Edges } from '@react-three/drei';
 import * as THREE from 'three';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
 const Orb = () => {
   return (
@@ -80,9 +81,10 @@ const QuizCards = () => {
 };
 
 export const Hero3DScene = () => {
+  const reducedMotion = usePrefersReducedMotion();
   return (
     <div className="absolute inset-0 z-0 pointer-events-none opacity-60 mix-blend-screen">
-      <Canvas camera={{ position: [0, 0, 8], fov: 45 }} dpr={[1, 2]}>
+      <Canvas camera={{ position: [0, 0, 8], fov: 45 }} dpr={[1, 2]} frameloop={reducedMotion ? 'demand' : 'always'}>
         <ambientLight intensity={0.5} />
         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
         <pointLight position={[-10, -10, -10]} intensity={0.5} color="#A855F7" />

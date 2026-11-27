@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { Sparkles as ThreeSparkles } from '@react-three/drei';
 import { X, ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
 import gsap from 'gsap';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 
 // Procedural 3D Cosmo Robot Mesh in Three.js
 function CosmoProceduralMesh({
@@ -155,6 +156,7 @@ export const Cosmo3DGuide: React.FC<Cosmo3DGuideProps> = ({
   suggestedActionTitleEn = 'Open Daily Mystery Chest 🎁',
   isDailyClaimed = false,
 }) => {
+  const reducedMotion = usePrefersReducedMotion();
   const [isVisible, setIsVisible] = useState(true);
   const [isCelebrating, setIsCelebrating] = useState(false);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
@@ -214,6 +216,7 @@ export const Cosmo3DGuide: React.FC<Cosmo3DGuideProps> = ({
       {/* 3D Canvas Container */}
       <div className="relative h-28 w-28 sm:h-32 sm:w-32 shrink-0 overflow-visible cursor-grab active:cursor-grabbing">
         <Canvas
+          frameloop={reducedMotion ? 'demand' : 'always'}
           camera={{ position: [0, 0, 3.2], fov: 45 }}
           className="h-full w-full"
           gl={{ alpha: true, antialias: true }}
