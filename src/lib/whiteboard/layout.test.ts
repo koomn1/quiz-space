@@ -47,3 +47,24 @@ describe('whiteboard AI access', () => {
     expect(canGenerateWhiteboardLesson(undefined, undefined)).toBe(false);
   });
 });
+
+import { validateBranchStep } from './lessonDrafts';
+import { validateLesson } from './lessonSchema';
+
+describe('branch steps (learner questions)', () => {
+  const base = validateLesson(lesson([t('title', 640, 90, 'عنوان الدرس'), t('a', 640, 300, 'الفكرة الأساسية هنا', { fontSize: 44 })])).lesson!;
+  const branch = (nodes: object[]) => ({ id: 'q1', title: 'إجابتك', narration: 'شرح السؤال', nodes });
+
+  it('adds a continuing branch that keeps the board and avoids existing text', () => {
+    const r = validateBranchStep(branch([t('n1', 640, 305, 'نص جديد فوق القديم', { fontSize: 44 }), t('n2', 640, 520, 'مثال جديد')]), base, 0);
+    expect(r.ok).toBe(true);
+    expect(r.step).toMatchObject({ continues: true, branch: true });
+    expect(r.step!.id).toMatch(/^q-/);
+    const moved = r.step!.nodes[0];
+    expect(moved.y).toBeGreaterThan(330);
+  });
+  it('rejects unsafe or broken branch output with the same validator', () => {
+    expect(validateBranchStep({ id: 'x', narration: 'a', nodes: [{ id: 'n', type: 'iframe', x: 1, y: 1 }] }, base, 0).ok).toBe(false);
+    expect(validateBranchStep('nope', base, 0).ok).toBe(false);
+  });
+});

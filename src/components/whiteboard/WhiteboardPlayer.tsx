@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, Captions, Info } from 'lucide-react';
-import type { NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
+import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, Captions, Info, Send, Loader2 } from 'lucide-react';
+import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
 import {
   defaultNarrationEngine as engine, genderForStep, getNarrationSupport, loadVoicePreference, saveVoicePreference,
@@ -114,11 +114,20 @@ function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: nu
   }
 }
 
+export type AskResult = { ok: true; step: LessonStep } | { ok: false; error: string };
+
 export interface WhiteboardPlayerProps {
   lesson: WhiteboardLesson;
+  /** When set, the learner can ask a question mid-lesson; the answer comes back as a validated branch step. */
+  onAsk?: (question: string, ctx: { lesson: WhiteboardLesson; stepIndex: number }) => Promise<AskResult>;
 }
 
-export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
+export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPlayerProps) {
+  const [lesson, setLesson] = useState(initialLesson);
+  const [question, setQuestion] = useState('');
+  const [asking, setAsking] = useState(false);
+  const [askError, setAskError] = useState<string | null>(null);
+  const [offerResume, setOfferResume] = useState(false);
   const isAr = lesson.lang === 'ar';
   const [stepIndex, setStepIndex] = useState(0);
   const [tInStep, setTInStep] = useState(0);
@@ -177,6 +186,7 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
         if (next < duration) return next;
         if (!speechDoneRef.current && graceMs < 12_000) { graceMs += dt; return duration; }
         if (isLast) { setPlaying(false); stopSpeech(); return duration; }
+        if (step.branch) { setPlaying(false); stopSpeech(); setOfferResume(true); return duration; }
         setStepIndex(i => i + 1);
         return 0;
       });
@@ -184,7 +194,7 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [playing, duration, isLast, stopSpeech]);
+  }, [playing, duration, isLast, stopSpeech, step.branch]);
 
   // Speak whenever playback is active on a new step.
   const spokenStepRef = useRef<number | null>(null);
@@ -225,6 +235,44 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
     else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(stepIndex + (isAr ? 1 : -1)); }
   };
 
+  const pauseForQuestion = () => {
+    if (!playing) return;
+    resumeFromRef.current = sentenceAtProgress(splitSentences(step.narration), duration > 0 ? tInStep / duration : 0);
+    setPlaying(false); stopSpeech(); spokenStepRef.current = null;
+  };
+
+  const ask = async () => {
+    const q = question.trim();
+    if (!onAsk || q.length < 2 || asking) return;
+    pauseForQuestion();
+    setAsking(true); setAskError(null);
+    try {
+      const res = await onAsk(q, { lesson, stepIndex });
+      if ('error' in res) { setAskError(res.error); return; }
+      const at = stepIndex;
+      setLesson(l => ({ ...l, steps: [...l.steps.slice(0, at + 1), res.step, ...l.steps.slice(at + 1)] }));
+      setQuestion(''); setOfferResume(false);
+      resumeFromRef.current = 0; spokenStepRef.current = null;
+      setStepIndex(at + 1); setTInStep(0); setPlaying(true);
+    } catch (e: any) {
+      setAskError(e?.message || (isAr ? 'تعذر الحصول على إجابة.' : 'Could not get an answer.'));
+    } finally { setAsking(false); }
+  };
+
+  const resumeOriginal = () => {
+    setOfferResume(false);
+    if (isLast) return;
+    goTo(stepIndex + 1);
+    spokenStepRef.current = null; setTInStep(0); setPlaying(true);
+  };
+
+  // A step that continues keeps the earlier drawing on the board, fully drawn.
+  const carriedSteps = (): LessonStep[] => {
+    const out: LessonStep[] = [];
+    for (let i = stepIndex; i > 0 && lesson.steps[i].continues; i--) out.unshift(lesson.steps[i - 1]);
+    return out;
+  };
+
   const renderStep = (s: typeof step, idx: number) =>
     s.nodes.map((node, ni) => {
       const progress = idx < stepIndex || reduced
@@ -247,7 +295,7 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
 
   return (
     <div className="space-y-3" dir={isAr ? 'rtl' : 'ltr'} onKeyDown={onKeyDown} tabIndex={0} aria-label={lesson.title} data-testid="whiteboard-player">
-      {step.title && <div className="text-xs font-black text-teal-600" data-testid="whiteboard-step-title">{`${stepIndex + 1}. ${step.title}`}</div>}
+      {step.title && <div className="text-xs font-black text-teal-600" data-testid="whiteboard-step-title">{`${step.branch ? (isAr ? 'سؤالك: ' : 'Your question: ') : `${stepIndex + 1}. `}${step.title}`}</div>}
       <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-[#fdfcf8]">
         <svg viewBox={`0 0 ${lesson.canvas.width} ${lesson.canvas.height}`} className="w-full h-auto block" role="img" aria-label={step.title || lesson.title}>
           <defs>
@@ -256,7 +304,10 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
             </pattern>
           </defs>
           <rect width={lesson.canvas.width} height={lesson.canvas.height} fill="url(#wb-grid)" />
-          <g key={stepIndex}>{renderStep(step, stepIndex)}</g>
+          <g key={stepIndex}>
+            {carriedSteps().map(cs => <g key={`carry-${cs.id}`}>{cs.nodes.map(n => <BoardNode key={`${cs.id}-${n.id}`} node={n} progress={1} rtl={isAr} />)}</g>)}
+            {renderStep(step, stepIndex)}
+          </g>
         </svg>
       </div>
 
@@ -290,6 +341,26 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
           <Captions className="w-4 h-4" />
         </button>
       </div>
+
+      {offerResume && !isLast && (
+        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3 flex flex-wrap items-center gap-3 text-xs" data-testid="whiteboard-resume-offer">
+          <span className="font-black text-slate-700 dark:text-slate-200">{isAr ? 'هل وضحت الإجابة؟ نكمل الدرس الأصلي من الخطوة التالية؟' : 'Did that answer help? Shall we continue the original lesson from the next step?'}</span>
+          <button type="button" onClick={resumeOriginal} className="bg-primary text-white font-black px-3 py-2 rounded-xl">{isAr ? 'متابعة الدرس الأصلي' : 'Resume the lesson'}</button>
+        </div>
+      )}
+      {onAsk && (
+        <div className="space-y-1" data-testid="whiteboard-ask">
+          <div className="flex items-center gap-2">
+            <input value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); void ask(); } }} maxLength={500}
+              placeholder={isAr ? 'عندك سؤال؟ اكتبه وسأتوقف وأشرحه على نفس السبورة' : 'Have a question? Type it and I will pause and explain on this board'}
+              className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs" aria-label={isAr ? 'سؤال أثناء الدرس' : 'Question during the lesson'} />
+            <button type="button" onClick={() => void ask()} disabled={asking || question.trim().length < 2} className="inline-flex items-center gap-1.5 bg-primary text-white font-black text-xs px-3 py-2.5 rounded-xl disabled:opacity-50">
+              {asking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}{isAr ? 'اسأل' : 'Ask'}
+            </button>
+          </div>
+          {askError && <p role="alert" className="text-xs text-rose-500">{askError}</p>}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2 text-xs" data-testid="whiteboard-voice-controls">
         <label className="font-black text-slate-500">{isAr ? 'المعلّم' : 'Narrator'}</label>

@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { PenTool, Sparkles, Save, Loader2, AlertTriangle } from 'lucide-react';
 import { SAMPLE_LESSONS } from '../../lib/whiteboard/sampleLessons';
 import type { WhiteboardLesson } from '../../lib/whiteboard/lessonSchema';
-import { loadSavedLessons, saveReviewedLesson, validateAiLesson } from '../../lib/whiteboard/lessonDrafts';
-import { generateWhiteboardLesson } from '../../services/aiWorkerClient';
+import { loadSavedLessons, saveReviewedLesson, validateAiLesson, validateBranchStep } from '../../lib/whiteboard/lessonDrafts';
+import { askWhiteboardQuestion, generateWhiteboardLesson } from '../../services/aiWorkerClient';
 import { canGenerateWhiteboardLesson } from '../../lib/whiteboard/access';
-import WhiteboardPlayer from './WhiteboardPlayer';
+import WhiteboardPlayer, { type AskResult } from './WhiteboardPlayer';
 
 export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar' | 'en'; isPremium?: boolean; planName?: string }) {
   const isAr = lang === 'ar';
@@ -39,6 +39,19 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
     } catch (e: any) {
       setError(e?.message || (isAr ? 'تعذر توليد الدرس.' : 'Could not generate the lesson.'));
     } finally { setBusy(false); }
+  };
+
+  const onAsk = async (question: string, ctx: { lesson: WhiteboardLesson; stepIndex: number }): Promise<AskResult> => {
+    const cur = ctx.lesson.steps[ctx.stepIndex];
+    // One retry when the answer fails validation or layout.
+    let lastErrors: string[] = [];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await askWhiteboardQuestion({ question, lang: ctx.lesson.lang, lessonTitle: ctx.lesson.title, step: { title: cur.title, narration: cur.narration, nodes: cur.nodes } });
+      const checked = validateBranchStep(res.step, ctx.lesson, ctx.stepIndex);
+      if (checked.ok && checked.step) return { ok: true, step: checked.step };
+      lastErrors = checked.errors;
+    }
+    return { ok: false, error: (isAr ? 'تعذر تجهيز شرح مرتب لهذا السؤال، جرّب صياغة أخرى. ' : 'Could not build a clean explanation for that question, try rephrasing. ') + lastErrors.slice(0, 1).join(' ') };
   };
 
   const confirmAndSave = () => {
@@ -94,7 +107,7 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
             </div>
           )}
           <h3 className="font-display font-black text-sm text-slate-900 dark:text-white">{lesson.title}</h3>
-          <WhiteboardPlayer key={lesson.id + lesson.metadata.status} lesson={lesson} />
+          <WhiteboardPlayer key={lesson.id + lesson.metadata.status} lesson={lesson} onAsk={canGenerate ? onAsk : undefined} />
         </div>
       )}
     </section>

@@ -620,3 +620,7 @@ export async function generateQuizFromFileStreaming(
 export async function generateWhiteboardLesson(topic: string, lang: 'ar' | 'en' = 'ar', steps = 5): Promise<{ lesson: unknown; model?: string }> {
   return await workerRequest<{ lesson: unknown; model?: string }>('/api/ai/lesson-generate', { topic, lang, steps }, 120_000);
 }
+
+export async function askWhiteboardQuestion(input: { question: string; lang: 'ar' | 'en'; lessonTitle: string; step: { title?: string; narration: string; nodes: unknown[] } }): Promise<{ step: unknown; model?: string }> {
+  return await workerRequest<{ step: unknown; model?: string }>('/api/ai/lesson-followup', { ...input, step: { ...input.step, title: input.step.title ?? '' } }, 120_000);
+}

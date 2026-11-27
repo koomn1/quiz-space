@@ -71,7 +71,7 @@ export interface LayoutReport {
   problems: string[];
 }
 
-function layoutStep(step: LessonStep, si: number, rtl: boolean, fixes: string[], problems: string[]): LessonStep {
+function layoutStep(step: LessonStep, si: number, rtl: boolean, fixes: string[], problems: string[], fixed: Box[]): { step: LessonStep; boxes: Box[] } {
   const nodes: WhiteboardNode[] = step.nodes.map(n => ({ ...n }));
   const where = `step ${si + 1}`;
   // 1) Keep every text inside the board.
@@ -91,7 +91,8 @@ function layoutStep(step: LessonStep, si: number, rtl: boolean, fixes: string[],
     if (textWidth(n.text, size) > maxW) problems.push(`${where}, shape ${i + 1}: label does not fit its shape.`);
   });
   // 3) Resolve text-vs-text overlaps by nudging later text down, then check what is left.
-  const placed: Box[] = [];
+  // Drawing carried over from earlier steps is fixed: new text moves around it, never over it.
+  const placed: Box[] = [...fixed];
   nodes.forEach((n, i) => {
     const box = n.type === 'text' ? textBox(n, rtl) : shapeTextBox(n);
     if (!box) return;
@@ -119,13 +120,18 @@ function layoutStep(step: LessonStep, si: number, rtl: boolean, fixes: string[],
       if (intersects(tb, sb, 0) && !contains(sb, tb) && !centreInside) problems.push(`${where}, text ${i + 1} crosses shape ${j + 1}.`);
     });
   });
-  return { ...step, nodes };
+  return { step: { ...step, nodes }, boxes: placed };
 }
 
 export function layoutLesson(lesson: WhiteboardLesson): LayoutReport {
   const fixes: string[] = [];
   const problems: string[] = [];
   const rtl = lesson.lang === 'ar';
-  const steps = lesson.steps.map((s, i) => layoutStep(s, i, rtl, fixes, problems));
+  let carry: Box[] = [];
+  const steps = lesson.steps.map((s, i) => {
+    const r = layoutStep(s, i, rtl, fixes, problems, s.continues ? carry : []);
+    carry = r.boxes;
+    return r.step;
+  });
   return { lesson: { ...lesson, steps }, fixes, problems };
 }

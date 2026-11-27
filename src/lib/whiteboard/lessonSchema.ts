@@ -45,6 +45,10 @@ export interface LessonStep {
   title?: string;
   narration: string;
   nodes: WhiteboardNode[];
+  /** Keep the previous step's drawing on the board and draw this step's nodes in the free space. */
+  continues?: boolean;
+  /** Inserted in answer to a learner question; after it the player offers to resume the original lesson. */
+  branch?: boolean;
 }
 
 export interface WhiteboardLesson {
@@ -153,7 +157,11 @@ export function validateLesson(input: unknown): ValidationResult {
       }
       nodes.push(node);
     });
-    steps.push({ id, title: cleanText(rawStep.title, LIMITS.maxTitleLength) || undefined, narration, nodes });
+    steps.push({
+      id, title: cleanText(rawStep.title, LIMITS.maxTitleLength) || undefined, narration, nodes,
+      ...(rawStep.continues === true ? { continues: true } : {}),
+      ...(rawStep.branch === true ? { branch: true } : {}),
+    });
   });
 
   if (errors.length > 0 || !lang) return { ok: false, errors, warnings };
