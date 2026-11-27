@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { EmailVerificationStep } from './EmailVerificationStep';
 import { MainLogo } from './MainLogo';
 import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
+import { validateSignUpFields } from '../lib/authFormValidation';
 import OverlayPortal from './OverlayPortal';
 
 interface AuthModalProps {
@@ -69,13 +70,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
 
     try {
       if (mode === 'register') {
-        if (!cleanName) {
-          setError('أدخل اسم المستخدم للبدء.');
-          setLoading(false);
-          return;
-        }
-        if (!isStrongPassword(password)) {
-          setError(passwordRequirementMessage('ar'));
+        const validationError = validateSignUpFields(cleanName, password, 'ar');
+        if (validationError) {
+          setError(validationError);
           setLoading(false);
           return;
         }

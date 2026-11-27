@@ -16,7 +16,8 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { EmailVerificationStep } from '../components/EmailVerificationStep';
 import { MainLogo } from '../components/MainLogo';
-import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
+import { passwordRequirementMessage } from '../lib/passwordPolicy';
+import { validateSignUpFields } from '../lib/authFormValidation';
 import { getAuthRedirectUrl } from '../lib/authRedirect';
 
 export default function Login() {
@@ -82,14 +83,9 @@ export default function Login() {
 
     try {
       if (isRegister) {
-        if (!username.trim()) {
-          setError(isAr ? 'أدخل اسم المستخدم للبدء.' : 'Enter a username to continue.');
-          setLoading(false);
-          return;
-        }
-
-        if (!isStrongPassword(password)) {
-          setError(passwordRequirementMessage(lang));
+        const validationError = validateSignUpFields(username, password, lang);
+        if (validationError) {
+          setError(validationError);
           setLoading(false);
           return;
         }
