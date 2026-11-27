@@ -293,7 +293,7 @@ export async function gradeEssayWithFallback(
  */
 export async function lessonModelText(env: Env, prompt: string): Promise<{ text: string; model: string }> {
   const result = await generateWithProviderChain(env, [{ role: 'user', content: prompt }], {
-    max_tokens: 10_000,
+    max_tokens: 8_000,
     temperature: 0.4,
     timeoutMs: 100_000,
     reasoning_effort: 'low',

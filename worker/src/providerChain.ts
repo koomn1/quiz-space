@@ -101,6 +101,7 @@ export async function generateWithProviderChain(env: Env, messages: ProviderMess
       ? [[callXkiro, 'xkiro', XKIRO_VISION_MODEL], [callInception, 'inception', INCEPTION_MODEL]]
       : [[callInception, 'inception', INCEPTION_MODEL]];
   let lastError: unknown;
+  const failures: string[] = [];
   for (const [call, provider, model] of attempts) {
     try {
       const text = await call(env, messages, options);
@@ -108,8 +109,11 @@ export async function generateWithProviderChain(env: Env, messages: ProviderMess
       return { text, provider, model };
     } catch (error) {
       lastError = error;
+      failures.push(error instanceof Error ? error.message : String(error));
       console.warn(`${provider} failed`, error);
     }
   }
+  // With a fallback chain, say what every provider did so a failure is diagnosable.
+  if (attempts.length > 1 && failures.length > 1) throw new Error(failures.join(' | then | '));
   throw lastError instanceof Error ? lastError : new Error('Configured AI provider failed');
 }
