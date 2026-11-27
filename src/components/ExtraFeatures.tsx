@@ -15,6 +15,8 @@ import {
 import { Quiz, QuizCompletion, GlobalLeaderboardUser } from '../types';
 import TitleAvatarBadge from './TitleAvatarBadge';
 import MockExamPanel from './MockExamPanel';
+import { EMPTY_SIGNALS, ForYouSignals, buildSubjectAffinity, rankForYou } from '../lib/forYouFeed';
+import { quizSubject, UNCATEGORIZED } from '../lib/mockExam';
 import { translations } from '../lib/i18n';
 import { THEME_PRESETS } from '../lib/themePresets';
 import {
@@ -31,6 +33,7 @@ import {
   getUserProfileStats,
   saveUserProfile,
   getBookmarkedQuizIds,
+  getFollowingList,
   addBookmark,
   removeBookmark,
   updateBadgeAndNameColor,
@@ -92,6 +95,46 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const isAr = lang === 'ar';
+  const [feedMode, setFeedMode] = useState<'latest' | 'forYou'>('forYou');
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [signals, setSignals] = useState<ForYouSignals>(EMPTY_SIGNALS);
+  const [signedIn, setSignedIn] = useState(false);
+
+  // Read-only personalization signals (own completions, bookmarks, follows). Failures fall back to a neutral feed.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const uid = data.session?.user?.id;
+        if (!uid || cancelled) return;
+        setSignedIn(true);
+        const [completionsRes, bookmarkIds, following] = await Promise.all([
+          supabase.from('completions').select('quiz_id').eq('taker_id', uid).limit(300),
+          getBookmarkedQuizIds(uid).catch(() => [] as string[]),
+          getFollowingList(uid).catch(() => []),
+        ]);
+        if (cancelled) return;
+        const completed = new Set<string>((completionsRes.data || []).map((r: any) => String(r.quiz_id)));
+        const bookmarked = new Set<string>(bookmarkIds);
+        setSignals({
+          followedCreatorIds: new Set(following.map(f => f.id)),
+          completedQuizIds: completed,
+          bookmarkedQuizIds: bookmarked,
+          subjectAffinity: buildSubjectAffinity(quizzes, [...completed, ...bookmarked]),
+        });
+      } catch {
+        /* neutral feed */
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quizzes.length]);
+
+  const subjectChips = Array.from(new Set(quizzes
+    .filter(q => !q.distributionRouting || q.distributionRouting === 'public')
+    .map(quizSubject)
+    .filter(s => s !== UNCATEGORIZED)));
 
   const tags = isAr
     ? ['الذكاء الاصطناعي', 'تطوير الويب', 'الفيزياء', 'التاريخ', 'برمجة']
@@ -105,8 +148,10 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
     const matchesTag = !selectedTag ||
                        q.title.toLowerCase().includes(selectedTag.toLowerCase()) ||
                        (q.description || '').toLowerCase().includes(selectedTag.toLowerCase());
-    return matchesSearch && matchesTag;
+    const matchesSubject = !selectedSubject || quizSubject(q) === selectedSubject;
+    return matchesSearch && matchesTag && matchesSubject;
   });
+  const orderedQuizzes = feedMode === 'forYou' ? rankForYou(filtered, signals).map(r => r.quiz) : filtered;
 
   return (
     <div className="space-y-8 animate-fade-in" style={{ textAlign: isAr ? 'right' : 'left' }}>
@@ -142,6 +187,35 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
 
       <MockExamPanel quizzes={quizzes} lang={lang} />
 
+      {/* Feed mode + subject chips */}
+      <div className="space-y-3" data-testid="explore-feed-controls">
+        <div className="inline-flex rounded-2xl border border-slate-200 dark:border-slate-800 p-1 bg-white dark:bg-slate-900" role="tablist">
+          {(['forYou', 'latest'] as const).map(mode => (
+            <button key={mode} type="button" role="tab" aria-selected={feedMode === mode} onClick={() => setFeedMode(mode)}
+              className={`px-4 py-2 rounded-xl text-xs font-black ${feedMode === mode ? 'bg-primary text-white shadow-md shadow-primary/25' : 'text-slate-600 dark:text-slate-300'}`}>
+              {mode === 'forYou' ? (isAr ? 'لك' : 'For you') : (isAr ? 'الأحدث' : 'Latest')}
+            </button>
+          ))}
+        </div>
+        {feedMode === 'forYou' && !signedIn && (
+          <p className="text-[11px] text-slate-400">{isAr ? 'سجّل الدخول ليتعلم الترتيب من اهتماماتك ومن تتابعهم.' : 'Sign in so the feed can learn from your interests and who you follow.'}</p>
+        )}
+        {subjectChips.length > 0 && (
+          <div className="flex flex-wrap gap-2" role="group" aria-label={isAr ? 'المواد' : 'Subjects'}>
+            <button type="button" onClick={() => setSelectedSubject(null)}
+              className={`uipro-pill-badge py-1.5 px-3.5 text-xs font-black cursor-pointer ${!selectedSubject ? 'bg-primary text-white' : 'bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}>
+              {isAr ? 'كل المواد' : 'All subjects'}
+            </button>
+            {subjectChips.map(sub => (
+              <button key={sub} type="button" onClick={() => setSelectedSubject(selectedSubject === sub ? null : sub)}
+                className={`uipro-pill-badge py-1.5 px-3.5 text-xs font-black cursor-pointer ${selectedSubject === sub ? 'bg-primary text-white' : 'bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                {sub}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Suggested Tags Pills */}
       <div className="flex flex-wrap items-center gap-2">
         <button
@@ -171,7 +245,7 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
 
       {/* Quizzes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((quiz, idx) => (
+        {orderedQuizzes.map((quiz, idx) => (
           <InteractiveQuizCard
             key={quiz.id}
             quiz={quiz}
