@@ -50,6 +50,7 @@ import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import AppRoutes from './app/AppRoutes';
 import AppShell from './app/AppShell';
 import SEO from './components/SEO';
+import { decideTabAccess } from './lib/tabAccess';
 import { useDelayedUnmount } from './hooks/useDelayedUnmount';
 import { resolveAppBasePath, shouldShowSplash, resolveActiveTab, resolveActiveQuizId, resolveUrlProfileId } from './lib/appRoute';
 
@@ -481,26 +482,29 @@ export default function App() {
 
     const validOverrideId = overrideProfileId && overrideProfileId.trim() !== '';
 
-    // Strict Guest Auth Guard: Guests can ONLY view landing, explore, or support. Any other direct link or tab forces AuthModal.
-    const isGuest = (!userId || userId.startsWith('user-guest') || userId === '') && !authContext.isAuthenticated;
-    const allowedGuestTabs = ['landing', 'explore', 'support'];
-    const isLegalTab = tab.startsWith('legal-');
-    if (tab === 'admin' && !isAdminUser) {
+    // Navigation guard (guests, admin-only, paid Cosmo) lives in lib/tabAccess.ts.
+    const access = decideTabAccess({
+      tab,
+      bypassAuth,
+      userId,
+      isAuthenticated: authContext.isAuthenticated,
+      isAdminUser,
+      hasActiveMembership,
+    });
+    if (access === 'admin-denied') {
       const basePath = getAppBasePath();
       const landingParams = new URLSearchParams({ tab: 'landing' });
       window.history.replaceState(null, '', `${basePath}#/dashboard/landing?${landingParams.toString()}`);
       setSearchParams(landingParams);
       return;
     }
-    if (!bypassAuth && isGuest && !allowedGuestTabs.includes(tab) && !isLegalTab) {
+    if (access === 'login-required') {
       setLoginRedirectTab('landing');
       setAuthModalMode('login');
       setIsAuthModalOpen(true);
       return;
     }
-
-    // Cosmo is a paid feature. Do not allow free accounts or direct links to open it.
-    if (!bypassAuth && tab === 'aichat' && !hasActiveMembership) {
+    if (access === 'billing-required') {
       const basePath = getAppBasePath();
       const billingParams = new URLSearchParams({ tab: 'billing' });
       window.history.pushState(null, '', `${basePath}#/dashboard/billing?${billingParams.toString()}`);
