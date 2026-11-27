@@ -1,6 +1,6 @@
 import { cors, isAllowedOrigin as checkAllowedOrigin } from './security/cors';
 import {
-  checkRateLimit,
+  checkRateLimitWithBinding,
   rateLimitClass,
   rateLimitMap,
   requestBodyLimit as getRequestBodyLimit,
@@ -155,7 +155,7 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   const isAiPostRequest = request.method === 'POST' && path.startsWith('/api/ai/');
   if (isAiPostRequest) {
     const clientIp = request.headers.get('CF-Connecting-IP') || 'anonymous';
-    if (!checkRateLimit(`ip:${clientIp}`, 20)) {
+    if (!(await checkRateLimitWithBinding(env.RL_IP, `ip:${clientIp}`, 20))) {
       return json({ error: 'Rate limit exceeded. Please wait a moment before sending more requests.' }, 429, headers);
     }
     const contentLength = Number(request.headers.get('Content-Length') || 0);
@@ -193,8 +193,13 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
       userId === 'guest' || userId === 'placeholder-user'
         ? `guest:${request.headers.get('CF-Connecting-IP') || 'anonymous'}`
         : `user:${userId}`;
-    const limit = userId === 'guest' || userId === 'placeholder-user' ? policy.guest : policy.authenticated;
-    if (!checkRateLimit(identityKey, limit)) {
+    const isGuest = userId === 'guest' || userId === 'placeholder-user';
+    const limit = isGuest ? policy.guest : policy.authenticated;
+    const isExpensive = rateLimitClass(path) === 'expensive';
+    const binding = isExpensive
+      ? isGuest ? env.RL_EXPENSIVE_GUEST : env.RL_EXPENSIVE_AUTH
+      : isGuest ? env.RL_AI_GUEST : env.RL_AI_AUTH;
+    if (!(await checkRateLimitWithBinding(binding, `${isExpensive ? 'expensive' : 'ai'}:${identityKey}`, limit))) {
       return json({ error: 'Too many requests. Please wait before trying again.' }, 429, headers);
     }
   }

@@ -48,3 +48,24 @@ export function checkRateLimit(key: string, limit: number): boolean {
   current.count += 1;
   return true;
 }
+
+type RateLimitBindingLike = { limit(options: { key: string }): Promise<{ success: boolean }> };
+
+/**
+ * Uses a Cloudflare Rate Limiting binding (shared across isolates) when one is configured.
+ * Falls back to the in-memory limiter when the binding is missing (local dev, tests).
+ * If the binding call itself throws, fall back too, so a platform hiccup never blocks users.
+ */
+export async function checkRateLimitWithBinding(
+  binding: RateLimitBindingLike | undefined,
+  key: string,
+  fallbackLimit: number,
+): Promise<boolean> {
+  if (!binding) return checkRateLimit(key, fallbackLimit);
+  try {
+    const { success } = await binding.limit({ key });
+    return success;
+  } catch {
+    return checkRateLimit(key, fallbackLimit);
+  }
+}

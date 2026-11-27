@@ -1,5 +1,9 @@
 import type { ExtractionJobRow } from './types';
 
+export interface RateLimitBinding {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
+}
+
 export interface Env {
   /** Primary text-generation provider. */
   INCEPTION_API_KEY?: string;
@@ -12,6 +16,12 @@ export interface Env {
   /** Optional server-only key used only by queue consumers; never sent to clients. */
   SUPABASE_SERVICE_ROLE_KEY?: string;
   ALLOWED_ORIGIN: string;
+  /** Optional Cloudflare Rate Limiting bindings. When absent, the per-isolate in-memory limiter is used. */
+  RL_IP?: RateLimitBinding;
+  RL_AI_GUEST?: RateLimitBinding;
+  RL_AI_AUTH?: RateLimitBinding;
+  RL_EXPENSIVE_GUEST?: RateLimitBinding;
+  RL_EXPENSIVE_AUTH?: RateLimitBinding;
   EXTRACTION_JOBS: {
     send(message: ExtractionQueueMessage): Promise<void>;
   };
