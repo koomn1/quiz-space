@@ -58,13 +58,21 @@ describe('profile asset catalog', () => {
       'frame_royal_emerald',
       'frame_wolf_guardian',
       'frame_rose_thorn',
+      'frame_ice_frost',
+      'frame_ice_glacier',
+      'frame_stone_moon',
+      'frame_stone_royal',
+      'frame_sun_quizspace',
+      'frame_waves_quizspace',
     ]);
-    expect(uniqueProfileFrames(FREE_PROFILE_FRAMES)).toHaveLength(14);
+    expect(uniqueProfileFrames(FREE_PROFILE_FRAMES)).toHaveLength(20);
     expect(FREE_PROFILE_FRAMES.every((frame) => frame.image_url.includes('/clean-assets-replacement/'))).toBe(true);
   });
 
   it('ensures clean asset overrides without legacy animated GIF assets', () => {
-    expect(Object.keys(FRAME_ASSET_OVERRIDES)).toHaveLength(0);
+    const urls = Object.values(FRAME_ASSET_OVERRIDES);
+    expect(urls.length).toBeGreaterThan(0);
+    expect(urls.every((url) => url.includes('/clean-assets-replacement/') && !url.toLowerCase().endsWith('.gif'))).toBe(true);
   });
 
   it('drops duplicate frame IDs and duplicate resolved image assets without mutating the source', () => {

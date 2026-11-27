@@ -13,7 +13,8 @@ describe('QuizResolver authoritative score display contract', () => {
 
   it('does not show zero while a standard quiz result is still being verified', () => {
     expect(source).toContain("const isDisplayedScoreReady = isDailyQuiz ? isDailyResultVerified : authoritativeScore !== null;");
-    expect(source).toContain("isDisplayedScoreReady ? `${Math.round((displayedScore / quiz.questions.length) * 100)}%` : '—'");
-    expect(source).toContain('جارٍ اعتماد الدرجة النهائية');
+    expect(source).toContain("{isDisplayedScoreReady ? <CountUp to={Math.round((displayedScore / quiz.questions.length) * 100)}");
+    expect(source).toContain(": '—'}");
+    expect(source).toContain('جارٍ اعتماد الدرجة');
   });
 });
