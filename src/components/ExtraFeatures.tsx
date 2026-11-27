@@ -1208,12 +1208,12 @@ export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile, us
   return (
     <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0 max-w-full">
           <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white flex items-center gap-2">
             <Bookmark className="w-6 h-6 text-[#EE8361] fill-[#EE8361]/20" />
             <span>{isAr ? 'مسابقاتك المفضلة والمحفوظة' : 'My Pinned Bookmarks'}</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400 mt-1 break-words ps-1">
             {isAr ? 'سرعة الوصول للاختبارات التي تود تكرار حلها ومراجعة أسئلتها الصعبة.' : 'Fast-track your access to planetary examinations you wish to repeat or memorize.'}
           </p>
         </div>
