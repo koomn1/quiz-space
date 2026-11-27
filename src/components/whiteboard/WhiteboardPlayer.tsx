@@ -243,6 +243,10 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const [rate, setRate] = useState(1);
   const [muted, setMuted] = useState(false);
   const [captions, setCaptions] = useState(true);
+  const step = lesson.steps[stepIndex];
+  // Language is per step: a lesson can mix Arabic and English steps; the board direction, captions and voice follow the step.
+  const stepLang: 'ar' | 'en' = step?.lang ?? lesson.lang;
+  const isAr = stepLang === 'ar';
   const [voiceInfo, setVoiceInfo] = useState(() => getNarrationSupport(stepLang));
   const reduced = useMemo(prefersReducedMotion, []);
   const [voicePref, setVoicePref] = useState<VoicePreference>(() => { try { return loadVoicePreference(); } catch { return 'female'; } });
@@ -252,10 +256,6 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const speechDoneRef = useRef(true);
   const stopSpeechRef = useRef<() => void>(() => undefined);
 
-  const step = lesson.steps[stepIndex];
-  // Language is per step: a lesson can mix Arabic and English steps; the board direction, captions and voice follow the step.
-  const stepLang: 'ar' | 'en' = step?.lang ?? lesson.lang;
-  const isAr = stepLang === 'ar';
   const durations = useMemo(() => buildTimeline(lesson, rate), [lesson, rate]);
   const duration = durations.steps[stepIndex]?.durationMs ?? stepDurationMs(step, rate);
   const isLast = stepIndex === lesson.steps.length - 1;
