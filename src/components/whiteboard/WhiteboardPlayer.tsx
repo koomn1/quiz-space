@@ -520,6 +520,20 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
         <input type="range" min={0} max={lesson.steps.length - 1} value={stepIndex} onChange={e => goTo(Number(e.target.value))}
           className="flex-1 min-w-[120px] accent-[#007472]" aria-label={`${t.step} ${stepIndex + 1} / ${lesson.steps.length}`} />
         <span className="text-xs font-black text-slate-500 tabular-nums">{stepIndex + 1}/{lesson.steps.length}</span>
+        <button type="button" onClick={() => { setTryMode(m => !m); setTryPending(null); }} aria-label={t.tryMode} aria-pressed={tryMode} className={`p-2.5 rounded-xl border ${tryMode ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-slate-700'}`}>
+          <Target className="w-4 h-4" />
+        </button>
+        <button type="button" onClick={() => setDrawMode(d => !d)} aria-label={drawMode ? t.stopDrawing : t.draw} aria-pressed={drawMode} className={`p-2.5 rounded-xl border ${drawMode ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-slate-700'}`}>
+          <Pencil className="w-4 h-4" />
+        </button>
+        {drawMode && (['ink', 'primary', 'danger'] as NodeColor[]).map(c => (
+          <button key={c} type="button" onClick={() => setDrawColor(c)} aria-label={`${t.draw}: ${c}`} aria-pressed={drawColor === c} className={`w-6 h-6 rounded-full border-2 ${drawColor === c ? 'border-slate-900 dark:border-white' : 'border-transparent'}`} style={{ backgroundColor: COLORS[c] }} />
+        ))}
+        {strokes.length > 0 && (
+          <button type="button" onClick={() => setStrokes([])} aria-label={t.clearDrawing} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
         <select value={rate} onChange={e => setRate(Number(e.target.value))} aria-label={isAr ? 'السرعة' : 'Speed'} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent text-xs font-black px-2 py-2">
           {[0.75, 1, 1.25, 1.5].map(r => <option key={r} value={r}>{r}x</option>)}
         </select>
