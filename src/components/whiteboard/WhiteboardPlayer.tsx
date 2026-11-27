@@ -228,6 +228,7 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
 
   return (
     <div className="space-y-3" dir={isAr ? 'rtl' : 'ltr'} onKeyDown={onKeyDown} tabIndex={0} aria-label={lesson.title} data-testid="whiteboard-player">
+      {step.title && <div className="text-xs font-black text-teal-600" data-testid="whiteboard-step-title">{`${stepIndex + 1}. ${step.title}`}</div>}
       <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-[#fdfcf8]">
         <svg viewBox={`0 0 ${lesson.canvas.width} ${lesson.canvas.height}`} className="w-full h-auto block" role="img" aria-label={step.title || lesson.title}>
           <defs>
@@ -236,7 +237,6 @@ export function WhiteboardPlayer({ lesson }: WhiteboardPlayerProps) {
             </pattern>
           </defs>
           <rect width={lesson.canvas.width} height={lesson.canvas.height} fill="url(#wb-grid)" />
-          {step.title && <text x={isAr ? lesson.canvas.width - 40 : 40} y={44} fontSize={26} fill="#94a3b8" textAnchor="start" direction={isAr ? 'rtl' : 'ltr'} fontWeight={700}>{step.title}</text>}
           <g key={stepIndex}>{renderStep(step, stepIndex)}</g>
         </svg>
       </div>
