@@ -7,7 +7,7 @@ export const LESSON_SCHEMA_VERSION = 1 as const;
 export const CANVAS_WIDTH = 1280;
 export const CANVAS_HEIGHT = 720;
 
-export const NODE_TYPES = ['text', 'rectangle', 'ellipse', 'line', 'arrow', 'highlight'] as const;
+export const NODE_TYPES = ['text', 'rectangle', 'ellipse', 'line', 'arrow', 'highlight', 'path', 'curve', 'icon'] as const;
 export type NodeType = (typeof NODE_TYPES)[number];
 
 export const NODE_COLORS = ['ink', 'primary', 'accent', 'success', 'danger', 'muted'] as const;
@@ -31,9 +31,18 @@ export interface WhiteboardNode {
   /** Width/height for rectangle, ellipse, highlight. */
   w?: number;
   h?: number;
-  /** End point for line and arrow. */
+  /** End point for line, arrow and curve. */
   x2?: number;
   y2?: number;
+  /** Control point for curve (quadratic bezier). */
+  cx?: number;
+  cy?: number;
+  /** Raw SVG path data for path nodes, in board coordinates. */
+  d?: string;
+  /** Illustration name for icon nodes. */
+  name?: string;
+  /** Labels pinned to an icon's named anchors. */
+  labels?: { anchor: string; text: string; teaser?: boolean }[];
   text?: string;
   fontSize?: number;
   color: NodeColor;
@@ -74,6 +83,8 @@ export interface ValidationResult {
   errors: string[];
   warnings: string[];
 }
+
+import { ICON_NAMES, ICONS, isSafePathData, MAX_ICON_LABEL_LENGTH, MAX_ICON_LABELS, type IconName } from './icons';
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -147,6 +158,36 @@ export function validateLesson(input: unknown): ValidationResult {
         node.x2 = clamp(rawNode.x2, 0, CANVAS_WIDTH);
         node.y2 = clamp(rawNode.y2, 0, CANVAS_HEIGHT);
         if (node.x === node.x2 && node.y === node.y2) { errors.push(`${nw}: zero-length line.`); return; }
+      }
+      if (type === 'curve') {
+        if (!finite(rawNode.x2) || !finite(rawNode.y2) || !finite(rawNode.cx) || !finite(rawNode.cy)) { errors.push(`${nw}: a curve needs x2, y2 and a control point cx, cy.`); return; }
+        node.x2 = clamp(rawNode.x2, 0, CANVAS_WIDTH);
+        node.y2 = clamp(rawNode.y2, 0, CANVAS_HEIGHT);
+        node.cx = clamp(rawNode.cx, 0, CANVAS_WIDTH);
+        node.cy = clamp(rawNode.cy, 0, CANVAS_HEIGHT);
+      }
+      if (type === 'path') {
+        if (!isSafePathData(rawNode.d)) { errors.push(`${nw}: path data missing or uses unsupported commands.`); return; }
+        node.d = rawNode.d.trim();
+      }
+      if (type === 'icon') {
+        const name = rawNode.name as IconName;
+        if (!ICON_NAMES.includes(name)) { errors.push(`${nw}: unknown icon (allowed: ${ICON_NAMES.join(', ')}).`); return; }
+        node.name = name;
+        if (!finite(rawNode.w) || !finite(rawNode.h) || rawNode.w <= 0 || rawNode.h <= 0) { errors.push(`${nw}: w and h must be positive numbers.`); return; }
+        node.w = clamp(rawNode.w, 24, CANVAS_WIDTH - node.x);
+        node.h = clamp(rawNode.h, 24, CANVAS_HEIGHT - node.y);
+        const anchors = ICONS[name].anchors;
+        const labels = Array.isArray(rawNode.labels) ? rawNode.labels.slice(0, MAX_ICON_LABELS) : [];
+        node.labels = [];
+        labels.forEach((rawLabel, li) => {
+          if (!isRecord(rawLabel)) return;
+          const anchor = typeof rawLabel.anchor === 'string' ? rawLabel.anchor : '';
+          if (!anchors[anchor]) { errors.push(`${nw}, label ${li + 1}: unknown anchor "${anchor}" (has: ${Object.keys(anchors).join(', ')}).`); return; }
+          const text = cleanText(rawLabel.text, MAX_ICON_LABEL_LENGTH);
+          if (!text) { errors.push(`${nw}, label ${li + 1}: text is required.`); return; }
+          node.labels!.push({ anchor, text, ...(rawLabel.teaser === true ? { teaser: true } : {}) });
+        });
       }
       if (type === 'text' || type === 'rectangle' || type === 'ellipse') {
         const text = cleanText(rawNode.text, LIMITS.maxTextLength);

@@ -31,6 +31,13 @@ export function linePoint(x: number, y: number, x2: number, y2: number, progress
   return { x: x + (x2 - x) * p, y: y + (y2 - y) * p };
 }
 
+/** Quadratic bezier point at progress (curve nodes). */
+export function curvePoint(x: number, y: number, cx: number, cy: number, x2: number, y2: number, progress: number): Point {
+  const p = Math.min(1, Math.max(0, progress));
+  const u = 1 - p;
+  return { x: u * u * x + 2 * u * p * cx + p * p * x2, y: u * u * y + 2 * u * p * cy + p * p * y2 };
+}
+
 /** Pen tip for shape and connector nodes; null for types whose tip is computed elsewhere (text). */
 export function penTipForNode(node: WhiteboardNode, progress: number, rtl: boolean): Point | null {
   switch (node.type) {
@@ -44,6 +51,8 @@ export function penTipForNode(node: WhiteboardNode, progress: number, rtl: boole
     case 'line':
     case 'arrow':
       return linePoint(node.x, node.y, node.x2 ?? node.x, node.y2 ?? node.y, progress);
+    case 'curve':
+      return curvePoint(node.x, node.y, node.cx ?? node.x, node.cy ?? node.y, node.x2 ?? node.x, node.y2 ?? node.y, progress);
     case 'highlight': {
       const w = (node.w ?? 0) * Math.min(1, Math.max(0, progress));
       return { x: rtl ? node.x + (node.w ?? 0) - w : node.x + w, y: node.y + (node.h ?? 0) / 2 };

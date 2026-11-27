@@ -32,7 +32,7 @@ export function buildLessonPrompt({ topic, lang, steps }: LessonRequest): string
 - لا تخترع مراجع أو إحصاءات. اذكر معلومات صحيحة فقط، وإن لم تكن متأكدًا فبسّط.
 قواعد السبورة (صارمة، تُفحص آليًا وتُرفض المخالفات):
 - السبورة 1280 عرضًا × 720 ارتفاعًا. y في text هو خط الأساس للنص.
-- أنواع العناصر فقط: text, rectangle, ellipse, line, arrow, highlight. text يحتاج x,y,text,fontSize(24-64),color,align. rectangle/ellipse/highlight تحتاج x,y,w,h. line/arrow تحتاج x,y,x2,y2.
+- أنواع العناصر فقط: text, rectangle, ellipse, line, arrow, highlight, path, curve, icon. text يحتاج x,y,text,fontSize(24-64),color,align. rectangle/ellipse/highlight تحتاج x,y,w,h. line/arrow تحتاج x,y,x2,y2. curve تحتاج x,y,cx,cy,x2,y2 (منحنى تربيعي). path يحتاج d (بيانات مسار SVG بإحداثيات السبورة، أوامر M L C Q Z فقط). icon يحتاج x,y,w,h وname من المكتبة فقط: heart, cell, atom, plant, earth, brain، ويمكن إضافة labels مثل {"anchor":"nucleus","text":"النواة","teaser":true} حيث teaser=true يعرض «؟» أولاً ثم يكشف الاسم عند نهاية الرسم. الروابط المتاحة: heart(top,bottom,left,right)، cell(membrane,nucleus,cytoplasm)، atom(nucleus,electron,orbit)، plant(flower,leaf,stem,root)، earth(pole,equator,continent,ocean)، brain(left,right,fissure,top).
 - الألوان فقط: ink, primary, accent, success, danger, muted.
 - من 4 إلى 9 عناصر لكل خطوة، بترتيب الكتابة. ids فريدة داخل الخطوة.
 - عنوان الخطوة في الأعلى: y بين 70 و110، align="center"، fontSize 44-52.

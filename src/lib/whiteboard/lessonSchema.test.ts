@@ -14,6 +14,36 @@ const base = () => ({
 });
 
 describe('validateLesson', () => {
+  it('accepts path, curve and icon nodes and validates them strictly', () => {
+    const lesson = base() as any;
+    lesson.steps[0].nodes = [
+      { id: 'p', type: 'path', x: 100, y: 100, d: 'M100 100 C 150 40 200 160 250 100', color: 'accent' },
+      { id: 'c', type: 'curve', x: 100, y: 300, cx: 200, cy: 200, x2: 300, y2: 300, color: 'ink' },
+      { id: 'i', type: 'icon', x: 500, y: 200, w: 220, h: 220, name: 'heart', color: 'danger', labels: [{ anchor: 'top', text: 'القلب', teaser: true }] },
+    ];
+    const r = validateLesson(lesson);
+    expect(r.ok).toBe(true);
+    const icon = r.lesson!.steps[0].nodes[2];
+    expect(icon.name).toBe('heart');
+    expect(icon.labels![0]).toMatchObject({ anchor: 'top', teaser: true });
+  });
+
+  it('rejects unsafe path data, unknown icons and unknown anchors', () => {
+    const lesson = base() as any;
+    lesson.steps[0].nodes = [
+      { id: 'p', type: 'path', x: 1, y: 1, d: 'M0 0; alert(1)', color: 'ink' },
+      { id: 'i', type: 'icon', x: 1, y: 1, w: 100, h: 100, name: 'rocket', color: 'ink' },
+      { id: 'j', type: 'icon', x: 1, y: 1, w: 100, h: 100, name: 'cell', color: 'ink', labels: [{ anchor: 'nose', text: 'x' }] },
+      { id: 'c', type: 'curve', x: 1, y: 1, x2: 9, y2: 9, color: 'ink' },
+    ];
+    const r = validateLesson(lesson);
+    expect(r.ok).toBe(false);
+    expect(r.errors.join(' ')).toMatch(/unsupported commands/);
+    expect(r.errors.join(' ')).toMatch(/unknown icon/);
+    expect(r.errors.join(' ')).toMatch(/unknown anchor/);
+    expect(r.errors.join(' ')).toMatch(/control point/);
+  });
+
   it('keeps an explicit per-step language and drops invalid ones', () => {
     const mixed = base() as any;
     mixed.steps[0].lang = 'en';

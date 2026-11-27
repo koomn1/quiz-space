@@ -3,7 +3,8 @@ import { gsap } from 'gsap';
 import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, Captions, Info, Send, Loader2 } from 'lucide-react';
 import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
-import { penTipForNode } from '../../lib/whiteboard/penTip';
+import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
+import { ICONS, type IconName } from '../../lib/whiteboard/icons';
 import {
   defaultNarrationEngine as engine, genderForStep, getNarrationSupport, loadVoicePreference, saveVoicePreference,
   sentenceAtProgress, splitSentences, type VoiceOption, type VoicePreference,
@@ -90,6 +91,75 @@ function Arrowhead({ x1, y1, x2, y2, color, opacity }: { x1: number; y1: number;
   return <polygon points={`${x2},${y2} ${p(0.45)} ${p(-0.45)}`} fill={color} opacity={opacity} />;
 }
 
+/** Freehand SVG path, stroke-drawn with the pen riding the measured path length. */
+function PathNode({ node, progress, color }: { node: WhiteboardNode; progress: number; color: string }) {
+  const ref = useRef<SVGPathElement>(null);
+  let tip: { x: number; y: number } | null = null;
+  if (progress > 0 && progress < 1 && ref.current) {
+    try {
+      const len = ref.current.getTotalLength();
+      if (Number.isFinite(len) && len > 0) tip = ref.current.getPointAtLength(len * progress);
+    } catch { tip = null; }
+  }
+  return (
+    <g>
+      <path ref={ref} d={node.d} fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - progress} />
+      {tip && <PenTip x={tip.x} y={tip.y} color={color} />}
+    </g>
+  );
+}
+
+/** An illustration from the icon library, drawn part by part, with labels pinned to named anchors. */
+function IconNode({ node, progress, rtl }: { node: WhiteboardNode; progress: number; rtl: boolean }) {
+  const def = ICONS[node.name as IconName];
+  if (!def) return null;
+  const color = COLORS[node.color];
+  const w = node.w ?? 200; const h = node.h ?? 200;
+  const sx = w / def.viewBox; const sy = h / def.viewBox;
+  const n = def.parts.length;
+  const common = { fill: 'none', stroke: color, strokeWidth: 5 / Math.max(sx, sy), strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, pathLength: 1 };
+  return (
+    <g>
+      <g transform={`translate(${node.x} ${node.y}) scale(${sx} ${sy})`}>
+        {def.parts.map((part, i) => {
+          const pp = Math.min(1, Math.max(0, progress * n - i));
+          if (pp <= 0) return null;
+          const draw = { ...common, strokeDasharray: 1, strokeDashoffset: 1 - pp };
+          switch (part.kind) {
+            case 'path': return <path key={i} d={part.d} {...draw} />;
+            case 'circle': return <circle key={i} cx={part.cx} cy={part.cy} r={part.r} {...draw} />;
+            case 'ellipse': return <ellipse key={i} cx={part.cx} cy={part.cy} rx={part.rx} ry={part.ry} transform={part.rotate ? `rotate(${part.rotate} ${part.cx} ${part.cy})` : undefined} {...draw} />;
+            case 'line': return <line key={i} x1={part.x1} y1={part.y1} x2={part.x2} y2={part.y2} {...draw} />;
+            default: return null;
+          }
+        })}
+      </g>
+      {(node.labels ?? []).map((label, i) => {
+        const a = def.anchors[label.anchor];
+        if (!a) return null;
+        const ax = node.x + a.x * sx; const ay = node.y + a.y * sy;
+        const outX = Math.sign(a.x - def.viewBox / 2) || (rtl ? -1 : 1);
+        const outY = Math.sign(a.y - def.viewBox / 2) || -1;
+        const lx = ax + outX * 20; const ly = ay + outY * 20;
+        const revealed = !label.teaser || progress >= 0.95;
+        if (label.teaser && progress < 0.35) return null;
+        return (
+          <g key={`label-${i}`}>
+            {revealed ? (
+              <RevealText node={{ id: `${node.id}-l${i}`, type: 'text', x: lx, y: ly, text: label.text, fontSize: 28, color: node.color, align: 'center' }} progress={Math.min(1, Math.max(0, (progress - 0.6) / 0.35))} rtl={rtl} />
+            ) : (
+              <g>
+                <circle cx={lx} cy={ly - 10} r={17} fill={color} opacity={0.14} />
+                <text x={lx} y={ly} fontSize={30} fontWeight={900} fill={color} textAnchor="middle">?</text>
+              </g>
+            )}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: number; rtl: boolean }) {
   if (progress <= 0) return null;
   const color = COLORS[node.color];
@@ -135,6 +205,19 @@ function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: nu
         </g>
       );
     }
+    case 'curve': {
+      const tip = curvePoint(node.x, node.y, node.cx ?? node.x, node.cy ?? node.y, node.x2 ?? node.x, node.y2 ?? node.y, progress);
+      return (
+        <g>
+          <path d={`M ${node.x} ${node.y} Q ${node.cx ?? node.x} ${node.cy ?? node.y} ${node.x2 ?? node.x} ${node.y2 ?? node.y}`} fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - progress} />
+          {progress > 0 && progress < 1 && <PenTip x={tip.x} y={tip.y} color={color} />}
+        </g>
+      );
+    }
+    case 'path':
+      return <PathNode node={node} progress={progress} color={color} />;
+    case 'icon':
+      return <IconNode node={node} progress={progress} rtl={rtl} />;
     default:
       return null;
   }
