@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Quiz, QuizCompletion, GlobalLeaderboardUser } from '../types';
 import TitleAvatarBadge from './TitleAvatarBadge';
+import MockExamPanel from './MockExamPanel';
 import { translations } from '../lib/i18n';
 import { THEME_PRESETS } from '../lib/themePresets';
 import {
@@ -138,6 +139,8 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
           )}
         </div>
       </div>
+
+      <MockExamPanel quizzes={quizzes} lang={lang} />
 
       {/* Suggested Tags Pills */}
       <div className="flex flex-wrap items-center gap-2">
