@@ -1,3 +1,4 @@
+import { optionLabel } from '../lib/optionLabel';
 import { showAppMessage } from './Toast';
 /**
  * @license
@@ -1837,7 +1838,7 @@ export default function QuizResolver({
                           </>
                         ) : (
                           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-bold border border-slate-100 dark:border-slate-700/50 transition-colors group-hover:border-primary group-hover:text-primary">
-                            {String.fromCharCode(isAr ? (1575 + oIdx) /* أرابك */ : (65 + oIdx) )}
+                            {optionLabel(oIdx, isAr)}
                           </span>
                         )}
                       </div>
