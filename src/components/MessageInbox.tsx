@@ -532,6 +532,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                     style={{ direction: isAr ? 'rtl' : 'ltr' }}
                   />
                   <button
+                    aria-label={isAr ? 'إرسال الرسالة' : 'Send message'}
                     type="submit"
                     disabled={!inputText.trim()}
                     className="p-2.5 rounded-full bg-primary hover:bg-primary-hover disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-600 text-white shrink-0 transition-all cursor-pointer"

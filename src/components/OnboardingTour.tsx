@@ -158,6 +158,7 @@ export default function OnboardingTour({
           {/* Header */}
           <div className="flex items-start justify-between gap-3 flex-row-reverse">
             <button
+              aria-label="إغلاق الجولة التعريفية"
               onClick={finishTour}
               className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-800 transition-colors"
             >

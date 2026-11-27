@@ -96,6 +96,7 @@ export const FlashcardsModal: React.FC<FlashcardsModalProps> = ({
             </div>
           </div>
           <button
+            aria-label={isAr ? 'إغلاق' : 'Close'}
             type="button"
             onClick={onClose}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20"

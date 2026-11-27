@@ -412,6 +412,10 @@ export default function Security({ lang }: SecurityProps) {
           </div>
 
           <button
+            type="button"
+            role="switch"
+            aria-checked={is2FAEnabled}
+            aria-label={isAr ? 'التحقق بخطوتين' : 'Two-factor authentication'}
             onClick={handleToggle2FA}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${is2FAEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}
           >

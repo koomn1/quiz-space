@@ -34,6 +34,7 @@ export default function NetworkFailedModal({
 
         <div className={`flex ${isAr ? 'justify-start' : 'justify-end'}`}>
           <button
+            aria-label={isAr ? 'إغلاق' : 'Close'}
             onClick={onClose}
             className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:text-slate-350 dark:hover:text-white transition-colors cursor-pointer"
           >

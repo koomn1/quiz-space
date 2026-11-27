@@ -234,6 +234,7 @@ export default function DrivePicker({ isOpen, onClose, onFileSelected, lang }: D
               </div>
 
               <button
+                aria-label={isAr ? 'إغلاق' : 'Close'}
                 onClick={onClose}
                 disabled={isDownloading}
                 className="text-slate-500 hover:text-white transition-colors cursor-pointer disabled:opacity-30"

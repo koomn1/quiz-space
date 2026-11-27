@@ -1758,6 +1758,7 @@ export default function Classrooms({
                         className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-purple-500"
                       />
                       <button
+                        aria-label={isAr ? 'إرسال الرسالة' : 'Send message'}
                         onClick={handleSendChatMessage}
                         disabled={isSendingChat}
                         className="bg-purple-600 hover:bg-purple-500 text-white rounded-xl px-5 text-xs font-black cursor-pointer flex items-center justify-center transition-all active:scale-95"

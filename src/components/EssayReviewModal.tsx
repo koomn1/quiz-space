@@ -154,6 +154,7 @@ export function EssayReviewModal({
             </div>
           </div>
           <button
+            aria-label={isAr ? 'إغلاق' : 'Close'}
             type="button"
             onClick={onClose}
             className="rounded-xl p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
