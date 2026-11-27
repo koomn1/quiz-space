@@ -91,7 +91,7 @@ export default function NotFound({ lang = 'ar', onGoHome }: NotFoundProps) {
                   <span key={`${digit}-${index}`} className="nf-digit flex aspect-[.72] w-[clamp(4.5rem,18vw,8rem)] items-center justify-center rounded-[1.2rem] border border-slate-400/70 bg-gradient-to-b from-white/90 to-[#2AC3BB]/20 dark:border-white/15 dark:from-white/[.16] dark:to-white/[.035] font-mono text-[clamp(5.5rem,18vw,10rem)] font-black leading-none text-transparent bg-clip-text shadow-[inset_0_1px_0_rgba(255,255,255,.8),0_18px_60px_rgba(79,70,229,.24)] backdrop-blur-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,.16),0_18px_60px_rgba(139,92,246,.18)]" style={{ backgroundImage: index === 1 ? 'linear-gradient(180deg, #2AC3BB 0%, #007472 48%, #EE8361 100%)' : 'linear-gradient(180deg, #ffffff 0%, #FBDFC7 46%, #2AC3BB 100%)' }}>{digit}</span>
                 ))}
               </div>
-              <div className="nf-error-stage mt-7 flex min-h-10 items-center justify-center gap-3 text-[clamp(.85rem,2.2vw,1.1rem)] font-black uppercase tracking-[.5em] text-[#007472] dark:text-[#2AC3BB]" aria-label="ERROR">
+              <div dir="ltr" className="nf-error-stage mt-7 flex min-h-10 items-center justify-center gap-3 text-[clamp(.85rem,2.2vw,1.1rem)] font-black uppercase tracking-[.5em] text-[#007472] dark:text-[#2AC3BB]" aria-label="ERROR">
                 <span className="nf-error-line h-px w-8 origin-right bg-gradient-to-l from-[#007472]/80 to-transparent dark:from-[#2AC3BB]/80 sm:w-14" />
                 <span className="inline-flex gap-[.18em]">
                   {'ERROR'.split('').map((letter, index) => (
