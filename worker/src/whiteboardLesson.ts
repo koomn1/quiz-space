@@ -5,6 +5,8 @@ export interface LessonRequest {
   topic: string;
   lang: 'ar' | 'en';
   steps: number;
+  /** Validation problems from a rejected earlier attempt; the prompt tells the model not to repeat them. */
+  feedback?: string[];
 }
 
 export function parseLessonRequest(body: any): LessonRequest | null {
@@ -13,10 +15,13 @@ export function parseLessonRequest(body: any): LessonRequest | null {
   if (topic.length < 3 || topic.length > LESSON_TOPIC_MAX) return null;
   const lang = body.lang === 'en' ? 'en' : 'ar';
   const steps = Number.isInteger(body.steps) ? Math.min(8, Math.max(3, body.steps)) : 5;
-  return { topic, lang, steps };
+  const feedback = Array.isArray(body.feedback)
+    ? body.feedback.filter((f: any) => typeof f === 'string').map((f: string) => f.replace(/\s+/g, ' ').trim().slice(0, 200)).filter(Boolean).slice(0, 10)
+    : undefined;
+  return { topic, lang, steps, ...(feedback && feedback.length ? { feedback } : {}) };
 }
 
-export function buildLessonPrompt({ topic, lang, steps }: LessonRequest): string {
+export function buildLessonPrompt({ topic, lang, steps, feedback }: LessonRequest): string {
   const language = lang === 'ar' ? 'العربية الفصحى المبسطة' : 'clear simple English';
   const rtl = lang === 'ar'
     ? 'اللغة عربية (من اليمين لليسار): النص ذو align="start" ينتهي عند النقطة x ويمتد نحو اليسار، و align="end" يبدأ عند x ويمتد نحو اليمين، و align="center" يتمركز حول x. ضع الأشكال والأرقام على الجهة اليمنى والشروحات على يسارها.'
@@ -40,7 +45,11 @@ export function buildLessonPrompt({ topic, lang, steps }: LessonRequest): string
 - عرض النص التقريبي = عدد الحروف × fontSize × 0.5. يجب أن يبقى النص داخل 60..1220 أفقيًا. النص الواحد أقل من 32 حرفًا، وfontSize بين 28 و48 للنصوص العادية.
 - لا تضع نصين في نفس المنطقة: المسافة الرأسية بين سطرين أكبر من fontSize × 1.4 على الأقل، وإذا تجاورا أفقيًا فالفراغ بينهما 40 على الأقل.
 - النص داخل rectangle/ellipse يجب أن يكون أقصر من w / (fontSize × 0.55) حرفًا.
-- الأسهم والخطوط للربط بين الأشياء فقط، ولا تمر فوق نص.`;
+- الأسهم والخطوط للربط بين الأشياء فقط، ولا تمر فوق نص.${feedback && feedback.length ? `
+
+محاولة سابقة لك رُفضت في الفحص الآلي لهذه الأسباب:
+${feedback.map((f) => `- ${f}`).join('\n')}
+لا تكرر هذه الأخطاء. استخدم فقط أنواع العناصر وأسماء الأيقونات المذكورة أعلاه حرفيًا، وأبقِ كل نص داخل حدود السبورة وخارج الأشكال الأخرى.` : ''}`;
 }
 
 export const QUESTION_MAX = 500;

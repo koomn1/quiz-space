@@ -27,9 +27,9 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
     setBusy(true); setError(null);
     try {
       let lastProblems: string[] = [];
-      // The model sometimes produces overlapping layouts; the checker rejects those and we ask once more.
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await generateWhiteboardLesson(topic.trim(), lang);
+      // The model sometimes produces overlapping layouts or unknown node/icon names; the checker rejects those and we retry with the exact problems fed back.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const res = await generateWhiteboardLesson(topic.trim(), lang, 5, lastProblems.length ? lastProblems : undefined);
         const checked = validateAiLesson(res.lesson, res.model);
         if (checked.ok && checked.lesson) { setDraft(checked.lesson); setWarnings(checked.warnings); return; }
         lastProblems = checked.errors;

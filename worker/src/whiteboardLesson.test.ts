@@ -18,4 +18,12 @@ describe('whiteboard lesson request', () => {
     expect(p).toContain('schema_version');
     expect(p).toContain('5 بالضبط');
   });
+  it('passes validation feedback through to the prompt', () => {
+    const req = parseLessonRequest({ topic: 'الخلايا', feedback: ['step 2, text 4 runs over the edge of shape 3.', 42, '   '] });
+    expect(req?.feedback).toEqual(['step 2, text 4 runs over the edge of shape 3.']);
+    const p = buildLessonPrompt(req!);
+    expect(p).toContain('محاولة سابقة');
+    expect(p).toContain('runs over the edge');
+    expect(buildLessonPrompt({ topic: 'الخلايا', lang: 'ar', steps: 5 })).not.toContain('محاولة سابقة');
+  });
 });
