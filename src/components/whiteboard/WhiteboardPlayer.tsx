@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, Captions, Info, Send, Loader2 } from 'lucide-react';
+import { Pause, Play, Pencil, SkipBack, SkipForward, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2 } from 'lucide-react';
 import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
 import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
+import { appendPoint, boardPoint, pointsToPath, type FreehandPoint, type FreehandStroke } from '../../lib/whiteboard/freehand';
 import { ICONS, type IconName } from '../../lib/whiteboard/icons';
 import {
   defaultNarrationEngine as engine, genderForStep, getNarrationSupport, loadVoicePreference, saveVoicePreference,
@@ -252,6 +253,12 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const [voicePref, setVoicePref] = useState<VoicePreference>(() => { try { return loadVoicePreference(); } catch { return 'female'; } });
   const [voiceId, setVoiceId] = useState<string>('');
   const [voiceList, setVoiceList] = useState<VoiceOption[]>([]);
+  // Learner freehand layer: strokes live in board coordinates so they scale with the svg.
+  const [drawMode, setDrawMode] = useState(false);
+  const [drawColor, setDrawColor] = useState<NodeColor>('danger');
+  const [strokes, setStrokes] = useState<FreehandStroke[]>([]);
+  const activeStroke = useRef<FreehandStroke | null>(null);
+  const [, forceStrokePaint] = useState(0);
   const resumeFromRef = useRef(0);
   const speechDoneRef = useRef(true);
   const stopSpeechRef = useRef<() => void>(() => undefined);
@@ -398,6 +405,30 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
       return <BoardNode key={`${s.id}-${node.id}`} node={node} progress={progress} rtl={isAr} />;
     });
 
+  const svgRef = useRef<SVGSVGElement>(null);
+  const toBoard = (e: React.PointerEvent): FreehandPoint => {
+    const rect = svgRef.current?.getBoundingClientRect() ?? { left: 0, top: 0, width: 1, height: 1 };
+    return boardPoint(e.clientX, e.clientY, rect, lesson.canvas);
+  };
+  const onDrawStart = (e: React.PointerEvent) => {
+    if (!drawMode) return;
+    e.preventDefault();
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    activeStroke.current = { id: `free-${Date.now()}-${Math.round(Math.random() * 1e6)}`, color: COLORS[drawColor], width: 6, points: [toBoard(e)] };
+    forceStrokePaint(n => n + 1);
+  };
+  const onDrawMove = (e: React.PointerEvent) => {
+    const cur = activeStroke.current;
+    if (!drawMode || !cur) return;
+    cur.points = appendPoint(cur.points, toBoard(e));
+    forceStrokePaint(n => n + 1);
+  };
+  const onDrawEnd = () => {
+    const cur = activeStroke.current;
+    activeStroke.current = null;
+    if (cur) setStrokes(prev => [...prev, cur]);
+  };
+
   const caption = step.narration;
   const t = {
     play: isAr ? 'تشغيل' : 'Play',
@@ -408,13 +439,17 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     unmute: isAr ? 'تشغيل الصوت' : 'Unmute',
     captions: isAr ? 'النص المصاحب' : 'Captions',
     step: isAr ? 'الخطوة' : 'Step',
+    draw: isAr ? 'ارسم على السبورة' : 'Draw on the board',
+    stopDrawing: isAr ? 'إيقاف الرسم' : 'Stop drawing',
+    clearDrawing: isAr ? 'امسح رسمي' : 'Clear my drawing',
   };
 
   return (
     <div className="space-y-3" dir={isAr ? 'rtl' : 'ltr'} onKeyDown={onKeyDown} tabIndex={0} aria-label={lesson.title} data-testid="whiteboard-player">
       {step.title && <div className="text-xs font-black text-teal-600" data-testid="whiteboard-step-title">{`${step.branch ? (isAr ? 'سؤالك: ' : 'Your question: ') : `${stepIndex + 1}. `}${step.title}`}</div>}
       <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-[#fdfcf8]">
-        <svg viewBox={`0 0 ${lesson.canvas.width} ${lesson.canvas.height}`} className="w-full h-auto block" role="img" aria-label={step.title || lesson.title}>
+        <svg ref={svgRef} viewBox={`0 0 ${lesson.canvas.width} ${lesson.canvas.height}`} className={`w-full h-auto block${drawMode ? ' cursor-crosshair touch-none' : ''}`} role="img" aria-label={step.title || lesson.title}
+          onPointerDown={onDrawStart} onPointerMove={onDrawMove} onPointerUp={onDrawEnd} onPointerCancel={onDrawEnd}>
           <defs>
             <pattern id="wb-grid" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e7e5df" strokeWidth="1" />
@@ -424,6 +459,10 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
           <g key={stepIndex}>
             {carriedSteps().map(cs => <g key={`carry-${cs.id}`}>{cs.nodes.map(n => <BoardNode key={`${cs.id}-${n.id}`} node={n} progress={1} rtl={(cs.lang ?? lesson.lang) === 'ar'} />)}</g>)}
             {renderStep(step, stepIndex)}
+          </g>
+          <g data-testid="freehand-layer" pointerEvents="none">
+            {strokes.map(st => <path key={st.id} d={pointsToPath(st.points)} fill="none" stroke={st.color} strokeWidth={st.width} strokeLinecap="round" strokeLinejoin="round" />)}
+            {activeStroke.current && <path d={pointsToPath(activeStroke.current.points)} fill="none" stroke={activeStroke.current.color} strokeWidth={activeStroke.current.width} strokeLinecap="round" strokeLinejoin="round" />}
           </g>
         </svg>
       </div>
