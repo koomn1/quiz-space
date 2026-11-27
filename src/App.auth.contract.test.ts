@@ -37,11 +37,9 @@ describe('Quiz Space App authentication success contract', () => {
   });
 
   it('shows the splash on primary-root loads but not on inner routes or auth refreshes', () => {
-    expect(source).toContain("const [splashActive, setSplashActive] = React.useState(() => {");
-    expect(source).toContain("const isPrimaryHost = window.location.hostname.toLowerCase() === 'quiz-space-app.pages.dev';");
-    expect(source).toContain("const isRootPath = window.location.pathname === '/' || window.location.pathname === '';");
-    expect(source).toContain("const hasInnerRoute = Boolean(window.location.hash && window.location.hash !== '#/' && window.location.hash !== '#');");
-    expect(source).toContain('return isPrimaryHost && isRootPath && !hasInnerRoute;');
+    // Splash logic now lives in lib/appRoute.ts (behavior covered by appRoute.test.ts).
+    expect(source).toContain('shouldShowSplash(window.location)');
+    expect(source).toContain('const [splashActive, setSplashActive] = React.useState(');
     expect(source).not.toContain("quizspace:landing-splash-seen:v2");
   });
 });

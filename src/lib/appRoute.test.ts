@@ -47,3 +47,30 @@ describe('resolveUrlProfileId', () => {
     expect(resolveUrlProfileId(sp(), { pathname: '/', hash: '' })).toBeNull();
   });
 });
+
+import { resolveAppBasePath, shouldShowSplash } from './appRoute';
+
+describe('resolveAppBasePath', () => {
+  it('uses / on the primary pages.dev host', () => {
+    expect(resolveAppBasePath('/x', 'quiz-space-app.pages.dev', '/quiz-space/')).toBe('/');
+  });
+  it('uses /quiz-space/ under that path or on github.io', () => {
+    expect(resolveAppBasePath('/quiz-space/a', 'example.com', '/')).toBe('/quiz-space/');
+    expect(resolveAppBasePath('/', 'me.github.io', '/')).toBe('/quiz-space/');
+  });
+  it('falls back to the vite base with a trailing slash', () => {
+    expect(resolveAppBasePath('/', 'example.com', '/app')).toBe('/app/');
+    expect(resolveAppBasePath('/', 'example.com', '')).toBe('/');
+  });
+});
+
+describe('shouldShowSplash', () => {
+  const host = 'quiz-space-app.pages.dev';
+  it('shows only for a fresh root load on the primary host', () => {
+    expect(shouldShowSplash({ hostname: host, pathname: '/', hash: '' })).toBe(true);
+    expect(shouldShowSplash({ hostname: host, pathname: '/', hash: '#/' })).toBe(true);
+    expect(shouldShowSplash({ hostname: host, pathname: '/', hash: '#/dashboard/explore' })).toBe(false);
+    expect(shouldShowSplash({ hostname: 'example.com', pathname: '/', hash: '' })).toBe(false);
+    expect(shouldShowSplash({ hostname: host, pathname: '/profile', hash: '' })).toBe(false);
+  });
+});

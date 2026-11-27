@@ -119,3 +119,23 @@ export function resolveUrlProfileId(searchParams: SearchParamsLike, loc: RouteLo
 
   return null;
 }
+
+export function resolveAppBasePath(pathname: string, hostname: string, viteBase: string): string {
+  const host = hostname.toLowerCase();
+  if (host === 'quiz-space-app.pages.dev') {
+    return '/';
+  }
+  if (pathname.includes('/quiz-space') || host.includes('github.io')) {
+    return '/quiz-space/';
+  }
+  const base = viteBase || '/';
+  return base.endsWith('/') ? base : base + '/';
+}
+
+/** The intro belongs to a fresh load of the primary root URL only. */
+export function shouldShowSplash(loc: { hostname: string; pathname: string; hash: string }): boolean {
+  const isPrimaryHost = loc.hostname.toLowerCase() === 'quiz-space-app.pages.dev';
+  const isRootPath = loc.pathname === '/' || loc.pathname === '';
+  const hasInnerRoute = Boolean(loc.hash && loc.hash !== '#/' && loc.hash !== '#');
+  return isPrimaryHost && isRootPath && !hasInnerRoute;
+}

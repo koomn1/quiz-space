@@ -50,7 +50,8 @@ import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import AppRoutes from './app/AppRoutes';
 import AppShell from './app/AppShell';
 import SEO from './components/SEO';
-import { resolveActiveTab, resolveActiveQuizId, resolveUrlProfileId } from './lib/appRoute';
+import { useDelayedUnmount } from './hooks/useDelayedUnmount';
+import { resolveAppBasePath, shouldShowSplash, resolveActiveTab, resolveActiveQuizId, resolveUrlProfileId } from './lib/appRoute';
 
 function normalizeUserPhoto(value: unknown): string | null {
   const raw = String(value || '').trim();
@@ -65,13 +66,9 @@ export default function App() {
   const { lang, setLang } = useLocale();
   // The intro belongs to a fresh load of the primary root URL only.
   // Inner hash routes and auth refreshes use the normal application loader.
-  const [splashActive, setSplashActive] = React.useState(() => {
-    if (typeof window === 'undefined') return false;
-    const isPrimaryHost = window.location.hostname.toLowerCase() === 'quiz-space-app.pages.dev';
-    const isRootPath = window.location.pathname === '/' || window.location.pathname === '';
-    const hasInnerRoute = Boolean(window.location.hash && window.location.hash !== '#/' && window.location.hash !== '#');
-    return isPrimaryHost && isRootPath && !hasInnerRoute;
-  });
+  const [splashActive, setSplashActive] = React.useState(() =>
+    typeof window === 'undefined' ? false : shouldShowSplash(window.location),
+  );
   const [platformMaintenanceActive, setPlatformMaintenanceActive] = React.useState(false);
 
   const [isQuizLocked, setIsQuizLocked] = React.useState(false);
@@ -158,18 +155,10 @@ export default function App() {
   // Read showAssistant state from ?showAssistant= parameter, default to false
   const showAssistant = searchParams.get('showAssistant') === 'true';
 
-  const getAppBasePath = React.useCallback(() => {
-    const currentPath = window.location.pathname;
-    const hostname = window.location.hostname.toLowerCase();
-    if (hostname === 'quiz-space-app.pages.dev') {
-      return '/';
-    }
-    if (currentPath.includes('/quiz-space') || hostname.includes('github.io')) {
-      return '/quiz-space/';
-    }
-    const base = import.meta.env.BASE_URL || '/';
-    return base.endsWith('/') ? base : base + '/';
-  }, []);
+  const getAppBasePath = React.useCallback(
+    () => resolveAppBasePath(window.location.pathname, window.location.hostname, import.meta.env.BASE_URL || '/'),
+    [],
+  );
 
   const setActiveTab = React.useCallback((tab: string) => {
     const basePath = getAppBasePath();
@@ -260,15 +249,7 @@ export default function App() {
 
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   // Keep the sidebar mounted briefly while it plays its exit animation.
-  const [isSidebarMounted, setIsSidebarMounted] = React.useState(false);
-  React.useEffect(() => {
-    if (isSidebarOpen) {
-      setIsSidebarMounted(true);
-      return;
-    }
-    const timer = window.setTimeout(() => setIsSidebarMounted(false), 240);
-    return () => window.clearTimeout(timer);
-  }, [isSidebarOpen]);
+  const isSidebarMounted = useDelayedUnmount(isSidebarOpen, 240);
   const sidebarMenuButtonRef = React.useRef<HTMLButtonElement>(null);
   const sidebarPanelRef = React.useRef<HTMLDivElement>(null);
   const sidebarWasOpenRef = React.useRef(false);
