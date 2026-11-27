@@ -96,7 +96,7 @@ export default function WelcomeAuthOverlay({
           <h2 className="font-display font-black text-lg sm:text-xl tracking-tight text-slate-950 dark:text-slate-100 leading-snug">
             {modalHeading}
           </h2>
-          <p className="text-[10.5px] sm:text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs sm:text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
             {modalSubtitle}
           </p>
         </div>
@@ -120,7 +120,7 @@ export default function WelcomeAuthOverlay({
           <h4 className="text-xs font-black text-amber-600 dark:text-amber-400 border-b border-amber-100/40 dark:border-amber-905/30 pb-1" style={{ textAlign: isAr ? 'right' : 'left' }}>
             {isAr ? 'لماذا ينصح بتفعيل تسجيل الدخول؟ ' : 'Why connect your Google account? '}
           </h4>
-          <ul className="space-y-2 text-[10.5px] sm:text-xs text-slate-600 dark:text-slate-350">
+          <ul className="space-y-2 text-xs sm:text-xs text-slate-600 dark:text-slate-350">
             <li className="flex items-start gap-2.5">
               <span className="text-indigo-500 font-bold text-xs"></span>
               <span><strong>{isAr ? 'حفظ وحماية تقدمك الفردي:' : 'Preserve Progress:'}</strong> {isAr ? 'أرشفة شاملة وسجل أكاديمي كامل لجميع حلولك وتفاصيل محاولاتك.' : 'Keep a full academic transcript of all your interactive quiz attempts.'}</span>

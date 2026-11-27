@@ -182,7 +182,7 @@ export default function ProcessingCenterBanner({ lang, enabled, onOpenCreator }:
               <strong className="truncate text-sm font-black text-slate-900 dark:text-white">
                 {ar ? 'مهمتك محفوظة وتعمل بالخلفية' : 'Your task is saved and running'}
               </strong>
-              <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-black ${
+              <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-xs font-black ${
                 job.status === 'error'
                   ? 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200'
                   : 'bg-violet-100 text-violet-800 dark:bg-violet-500/15 dark:text-violet-200'

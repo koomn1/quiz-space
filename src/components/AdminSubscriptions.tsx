@@ -2536,7 +2536,7 @@ export default function AdminSubscriptions({
                                   planBadgeLabel = isAr ? "ماسية" : "Diamond";
                                 }
                                 return (
-                                  <span key={pid} className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold ${planBadgeColor}`}>
+                                  <span key={pid} className={`px-1.5 py-0.5 rounded text-xs font-extrabold ${planBadgeColor}`}>
                                     {planBadgeLabel}
                                   </span>
                                 );

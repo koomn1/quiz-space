@@ -437,7 +437,7 @@ function CommunityPostCard({
                 className="text-xs font-black text-slate-800 dark:text-white"
               />
             </div>
-            <p className="text-[9px] text-slate-500 font-bold mt-0.5">
+            <p className="text-xs text-slate-500 font-bold mt-0.5">
               {new Date(post.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
@@ -494,7 +494,7 @@ function CommunityPostCard({
         {isAdmin && (
           <button
             onClick={() => onOpenInsights && onOpenInsights(post)}
-            className="flex items-center gap-1.5 text-[10.5px] font-medium py-1 px-3.5 rounded-lg border bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary-hover hover:border-primary/20 cursor-pointer"
+            className="flex items-center gap-1.5 text-xs font-medium py-1 px-3.5 rounded-lg border bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary-hover hover:border-primary/20 cursor-pointer"
             title={isAr ? 'عرض المشاهدات' : 'View counts'}
           >
             <Eye className="w-3.5 h-3.5 text-primary" />
@@ -587,7 +587,7 @@ function ReactionButton({ post, isAr, onReact }: {
         <button
           type="button"
           onClick={(e) => onReact(myReaction || 'like', e)}
-          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-[10.5px] font-semibold transition-all cursor-pointer ${
+          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
             buttonMeta
               ? buttonMeta.activeClasses
               : 'bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-white hover:border-primary/40'
@@ -1990,7 +1990,7 @@ export function SettingsSection({
                     >
                       {!isPremium && t.id !== 'indigo' && (
                         <div className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/70 backdrop-blur-[1.5px] rounded-2xl z-10 flex items-center justify-center">
-                          <span className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-[9px] px-2 py-0.5 rounded shadow-sm font-black uppercase">Premium</span>
+                          <span className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-xs px-2 py-0.5 rounded shadow-sm font-black uppercase">Premium</span>
                         </div>
                       )}
                       <div className={`h-10 w-full rounded-xl bg-gradient-to-r ${t.color}`} />
@@ -2373,7 +2373,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                             winner.name.slice(0, 1).toUpperCase()
                           )}
                         </div>
-                        <span className="absolute -bottom-1 -end-1 px-2 py-0.2 rounded-full text-[9px] font-mono font-black bg-[#007472] text-white border border-white dark:border-slate-900 shadow-sm">
+                        <span className="absolute -bottom-1 -end-1 px-2 py-0.2 rounded-full text-xs font-mono font-black bg-[#007472] text-white border border-white dark:border-slate-900 shadow-sm">
                           Lv.{winner.level}
                         </span>
                       </div>
@@ -2398,14 +2398,14 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                         <span className={`text-xs font-black font-mono block ${style.textColor}`}>
                           {winner.xp.toLocaleString()} XP
                         </span>
-                        <span className="text-[9px] text-slate-400 font-bold block">{isAr ? 'نقاط خبرة' : 'XP Points'}</span>
+                        <span className="text-xs text-slate-400 font-bold block">{isAr ? 'نقاط خبرة' : 'XP Points'}</span>
                       </div>
                       <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
                       <div>
                         <span className="text-xs font-black font-mono block text-[#2AC3BB]">
                           {winner.accuracy}%
                         </span>
-                        <span className="text-[9px] text-slate-400 font-bold block">{isAr ? 'الدقة' : 'Accuracy'}</span>
+                        <span className="text-xs text-slate-400 font-bold block">{isAr ? 'الدقة' : 'Accuracy'}</span>
                       </div>
                     </div>
                   </div>
@@ -2449,7 +2449,7 @@ export function LeaderboardSection({ lang, quizzes }: { lang: 'ar' | 'en', quizz
                           item.name.slice(0, 1).toUpperCase()
                         )}
                       </div>
-                      <span className="absolute -bottom-1 -end-1 px-1.5 py-0.2 rounded-full text-[8px] font-mono font-black bg-[#007472] text-white border border-white dark:border-slate-900 shadow-xs">
+                      <span className="absolute -bottom-1 -end-1 px-1.5 py-0.2 rounded-full text-xs font-mono font-black bg-[#007472] text-white border border-white dark:border-slate-900 shadow-xs">
                         Lv.{item.level}
                       </span>
                     </div>

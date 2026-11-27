@@ -637,7 +637,7 @@ export default function ProfileStatsView({
                 {isOwnProfile && (
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex flex-col items-center justify-center">
                     <UploadCloud className="w-5 h-5 text-white" />
-                    <span className="text-[9px] font-bold text-white mt-1">{isAr ? 'تعديل' : 'Edit'}</span>
+                    <span className="text-xs font-bold text-white mt-1">{isAr ? 'تعديل' : 'Edit'}</span>
                   </div>
                 )}
               </div>
@@ -875,11 +875,11 @@ export default function ProfileStatsView({
           <div className="p-2 bg-purple-500/10 rounded-xl text-purple-400 mb-1">
             <Trophy className="w-5 h-5" />
           </div>
-          <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'الاختبارات المجتازة' : 'Quizzes Taken'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'الاختبارات المجتازة' : 'Quizzes Taken'}</span>
           <span className="text-xl sm:text-2xl font-black font-display text-slate-800 dark:text-white mt-1">
             {quizzesTaken}
           </span>
-          <span className="text-[9px] text-slate-500 dark:text-slate-400">{isAr ? 'محاولة منجزة رصينة' : 'verified attempts'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'محاولة منجزة رصينة' : 'verified attempts'}</span>
         </div>
 
         {/* Card 2: Correct Answers / Accuracy */}
@@ -887,11 +887,11 @@ export default function ProfileStatsView({
           <div className="p-2 bg-cyan-500/10 rounded-xl text-cyan-400 mb-1">
             <CheckCircle className="w-5 h-5" />
           </div>
-          <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'نسبة الدقة' : 'Correct Answers'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'نسبة الدقة' : 'Correct Answers'}</span>
           <span className="text-xl sm:text-2xl font-black font-display text-cyan-500 dark:text-cyan-400 mt-1">
             {overallAccuracy}%
           </span>
-          <span className="text-[9px] text-slate-500 dark:text-slate-400">{isAr ? 'متوسط دقة الإجابات' : 'average precision'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'متوسط دقة الإجابات' : 'average precision'}</span>
         </div>
 
         {/* Card 3: Streak of days */}
@@ -899,11 +899,11 @@ export default function ProfileStatsView({
           <div className="p-2 bg-orange-500/10 rounded-xl text-orange-400 mb-1">
             <Flame className="w-5 h-5 animate-bounce" />
           </div>
-          <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'سلسلة الانتصارات' : 'Active Streak'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'سلسلة الانتصارات' : 'Active Streak'}</span>
           <span className="text-xl sm:text-2xl font-black font-display text-orange-500 dark:text-orange-400 mt-1">
             {currentStreak} {isAr ? 'يوم' : 'Days'}
           </span>
-          <span className="text-[9px] text-slate-500 dark:text-slate-400">{isAr ? 'أيام متتالية ممتدة' : 'consecutive days'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'أيام متتالية ممتدة' : 'consecutive days'}</span>
         </div>
 
         {/* Card 4: Points */}
@@ -911,11 +911,11 @@ export default function ProfileStatsView({
           <div className="p-2 bg-amber-500/10 rounded-xl text-amber-400 mb-1">
             <Star className="w-5 h-5" />
           </div>
-          <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'النقاط التراكمية' : 'Points Earned'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'النقاط التراكمية' : 'Points Earned'}</span>
           <span className="text-xl sm:text-2xl font-black font-display text-slate-800 dark:text-white mt-1">
             {totalPoints.toLocaleString()}
           </span>
-          <span className="text-[9px] text-slate-500 dark:text-slate-400">{isAr ? 'نقاط المعرفة XP' : 'academic points'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'نقاط المعرفة XP' : 'academic points'}</span>
         </div>
 
         {/* Card 5: Ranking Position */}
@@ -923,11 +923,11 @@ export default function ProfileStatsView({
           <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400 mb-1">
             <BadgeCheck className="w-5 h-5" />
           </div>
-          <span className="text-[10.5px] text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'الترتيب الإجمالي' : 'Global Rank'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-extrabold block">{isAr ? 'الترتيب الإجمالي' : 'Global Rank'}</span>
           <span className="text-xl sm:text-2xl font-black font-display text-emerald-500 dark:text-emerald-400 mt-1">
             {currentRank}
           </span>
-          <span className="text-[9px] text-slate-500 dark:text-slate-400">{isAr ? 'على مستوى العالم' : 'worldwide'}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{isAr ? 'على مستوى العالم' : 'worldwide'}</span>
         </div>
       </div>
 
@@ -1033,7 +1033,7 @@ export default function ProfileStatsView({
                             {badge.icon}
                           </div>
                         </div>
-                        <span className="text-[9px] font-bold text-white block truncate w-full">
+                        <span className="text-xs font-bold text-white block truncate w-full">
                           {isAr ? badge.nameAr : badge.nameEn}
                         </span>
                       </div>
@@ -1043,7 +1043,7 @@ export default function ProfileStatsView({
 
                 <div className="pt-2 border-t border-slate-850 flex justify-between items-center text-xs text-slate-400 flex-row-reverse">
                   <span>{isAr ? 'مستواك الحالي:' : 'Your level rank:'} <strong className="text-white">LVL {calculatedLevel}</strong></span>
-                  <span className="bg-sky-950/40 border border-sky-550/25 text-sky-400 px-2 py-0.5 rounded font-black text-[9px]">
+                  <span className="bg-sky-950/40 border border-sky-550/25 text-sky-400 px-2 py-0.5 rounded font-black text-xs">
                     {isUserPremium ? (isAr ? 'عضو بريميوم' : 'Premium Scholar') : (isAr ? 'شبل المعرفة' : 'Knowledge Apprentice')}
                   </span>
                 </div>
@@ -1138,7 +1138,7 @@ export default function ProfileStatsView({
                       {/* Content inside accuracy circle */}
                       <div className="absolute flex flex-col items-center text-center">
                         <strong className="text-xl font-black text-white font-display leading-none">{overallAccuracy}%</strong>
-                        <span className="text-[8px] text-slate-400 font-bold tracking-widest uppercase mt-1">{isAr ? 'الدقة العامة' : 'Accuracy'}</span>
+                        <span className="text-xs text-slate-400 font-bold tracking-widest uppercase mt-1">{isAr ? 'الدقة العامة' : 'Accuracy'}</span>
                         {/* Gold Crown placed under value */}
                         <Crown className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                       </div>
@@ -1562,7 +1562,7 @@ export default function ProfileStatsView({
                                 <UserBadge tier={tier as any} size="sm" showTooltip={false} badgeColor={infoSelectedBadgeColor} />
                               )}
                             </div>
-                            <span className="text-[8px] font-bold truncate block w-full">
+                            <span className="text-xs font-bold truncate block w-full">
                               {isAr ? BADGE_LABELS[tier].labelAr : BADGE_LABELS[tier].labelEn}
                             </span>
                           </button>
@@ -1643,7 +1643,7 @@ export default function ProfileStatsView({
                           <div className={`absolute bottom-0 left-0 w-3 h-3 rounded-full ${bg.glowingSphere2} filter blur-[2px]`} />
                           <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${bg.iconBg}`} />
                         </div>
-                        <span className="text-[7.5px] font-bold block truncate w-full mt-1 text-slate-355 transition-all text-center">
+                        <span className="text-xs font-bold block truncate w-full mt-1 text-slate-355 transition-all text-center">
                           {isAr ? bg.nameAr.split(' ')[0] + ' ' + (bg.nameAr.split(' ')[1] || '') : bg.nameEn}
                         </span>
                         {infoSelectedBgCode === bg.id && (

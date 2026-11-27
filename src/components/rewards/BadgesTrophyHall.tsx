@@ -170,12 +170,12 @@ export const BadgesTrophyHall: React.FC<BadgesTrophyHallProps> = ({
                   <div className="flex flex-col items-end">
                     <span
                       style={{ color: rarityStyle.borderColor }}
-                      className="text-[9px] font-black uppercase tracking-wider"
+                      className="text-xs font-black uppercase tracking-wider"
                     >
                       {rarity}
                     </span>
                     {!isEarned && (
-                      <span className="mt-1 flex items-center gap-0.5 text-[9px] text-[#8BAEAD]">
+                      <span className="mt-1 flex items-center gap-0.5 text-xs text-[#8BAEAD]">
                         <Lock className="h-2.5 w-2.5" />
                         {isAr ? 'مغلقة' : 'Locked'}
                       </span>
@@ -193,7 +193,7 @@ export const BadgesTrophyHall: React.FC<BadgesTrophyHallProps> = ({
                 </div>
 
                 {isEarned && badge.earnedAt && (
-                  <div className="mt-3 border-t border-[#2AC3BB]/10 pt-2 text-[9px] font-bold text-[#8BAEAD]">
+                  <div className="mt-3 border-t border-[#2AC3BB]/10 pt-2 text-xs font-bold text-[#8BAEAD]">
                     {isAr ? 'أُنجزت في: ' : 'Earned: '}
                     {new Date(badge.earnedAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
                       month: 'short',

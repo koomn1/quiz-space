@@ -1524,7 +1524,7 @@ export default function QuizResolver({
                         {/* Custom lesson explanation block generated live on-demand */}
                         {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id] && (
                           <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-1">
-                            <span className="text-[9px] uppercase font-black text-primary dark:text-primary-light block">{isAr ? ' شرح كوزمو المعلم الرقمي:' : ' Lesson by AI Tutor AI:'}</span>
+                            <span className="text-xs uppercase font-black text-primary dark:text-primary-light block">{isAr ? ' شرح كوزمو المعلم الرقمي:' : ' Lesson by AI Tutor AI:'}</span>
                             <p className="text-xs text-slate-900 dark:text-slate-100 leading-relaxed bg-primary/5 dark:bg-primary/10 p-2.5 rounded-xl border border-primary/20 whitespace-pre-line font-medium text-right">
                               {aiFlashcardExplanations[quiz.questions[currentFlashcardIdx].id]}
                             </p>

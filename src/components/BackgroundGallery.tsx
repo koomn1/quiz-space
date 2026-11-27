@@ -336,7 +336,7 @@ export function BackgroundGallery({
                   <h3 className="text-sm font-black text-white">
                     {isAr ? bg.nameAr : bg.nameEn}
                   </h3>
-                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1 animate-pulse font-bold">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1 animate-pulse font-bold">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                     LIVE
                   </span>

@@ -289,7 +289,7 @@ export default function LevelRoadmapModal({
                               : 'border-slate-200 dark:border-slate-800 bg-slate-200/50 dark:bg-slate-800/50 text-slate-400'
                           }`}
                         >
-                          <span className="text-[9px] uppercase leading-none text-slate-400 dark:text-slate-400">LVL</span>
+                          <span className="text-xs uppercase leading-none text-slate-400 dark:text-slate-400">LVL</span>
                           <span className="text-sm font-black leading-tight">{lvl.level}</span>
                         </div>
 
@@ -298,7 +298,7 @@ export default function LevelRoadmapModal({
                             <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
                               {isAr ? lvl.titleAr : lvl.titleEn}
                             </h4>
-                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-200/60 dark:bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-slate-600 dark:text-slate-300">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-200/60 dark:bg-slate-800 px-1.5 py-0.5 text-xs font-bold text-slate-600 dark:text-slate-300">
                               {getCategoryIcon(lvl.category)}
                               <span className="capitalize">{lvl.category}</span>
                             </span>

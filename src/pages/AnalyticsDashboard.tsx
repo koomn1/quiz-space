@@ -368,7 +368,7 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                               {completion.score} / {completion.totalQuestions}
                             </td>
                             <td className="px-6 py-4.5">
-                              <span className={`px-2.5 py-1 rounded-full text-[10.5px] font-black ${badgeColor}`}>{accuracyStr}</span>
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-black ${badgeColor}`}>{accuracyStr}</span>
                             </td>
                             <td className="px-6 py-4.5 text-slate-400 font-bold font-mono">
                               {new Date(completion.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}
@@ -591,11 +591,11 @@ export function AnalyticsDashboard({ userId, quizzes, completions, lang, onStart
                           <td className="px-6 py-4.5">
                             <div className="flex items-center text-amber-500 font-bold gap-0.5">
                               <Star className="w-3 h-3 fill-amber-500" />
-                              <span className="font-mono text-[10.5px]">{q.avgRating || '5.0'}  ({q.ratingsCount || 0})</span>
+                              <span className="font-mono text-xs">{q.avgRating || '5.0'}  ({q.ratingsCount || 0})</span>
                             </div>
                           </td>
                           <td className="px-6 py-4.5">
-                            <span className="px-2.5 py-1 text-[10.5px] font-black rounded-lg bg-[#007472]/5 dark:bg-[#007472]/20 text-[#007472] dark:text-[#2AC3BB] border border-[#007472]/15 dark:border-[#2AC3BB]/15">
+                            <span className="px-2.5 py-1 text-xs font-black rounded-lg bg-[#007472]/5 dark:bg-[#007472]/20 text-[#007472] dark:text-[#2AC3BB] border border-[#007472]/15 dark:border-[#2AC3BB]/15">
                               {q.category || (isAr ? 'عام' : 'General')}
                             </span>
                           </td>

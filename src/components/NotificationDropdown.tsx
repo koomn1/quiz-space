@@ -303,7 +303,7 @@ export function NotificationDropdown({ userId, lang = 'ar', onNavigate }: { user
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-2 text-xs font-black text-slate-900 dark:text-white">{notif.id.startsWith('release-') ? <Zap className="h-4 w-4 shrink-0 text-fuchsia-500" /> : getGroupIcon(notif.type)}<span className="truncate">{notif.title}</span>{notif.id.startsWith('daily-') && <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-black text-white">{isAr ? 'اليوم' : 'TODAY'}</span>}</span>
+                    <span className="flex min-w-0 items-center gap-2 text-xs font-black text-slate-900 dark:text-white">{notif.id.startsWith('release-') ? <Zap className="h-4 w-4 shrink-0 text-fuchsia-500" /> : getGroupIcon(notif.type)}<span className="truncate">{notif.title}</span>{notif.id.startsWith('daily-') && <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-xs font-black text-white">{isAr ? 'اليوم' : 'TODAY'}</span>}</span>
                     <span className="text-xs text-slate-400">
                       {new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>

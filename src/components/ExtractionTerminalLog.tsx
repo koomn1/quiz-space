@@ -181,7 +181,7 @@ export default function ExtractionTerminalLog({
             cosmo / extraction.log
           </span>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-2 py-1 font-mono text-[9px] font-bold tracking-wider text-emerald-300">
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/15 bg-emerald-400/[0.07] px-2 py-1 font-mono text-xs font-bold tracking-wider text-emerald-300">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" /> LIVE
         </span>
       </header>
@@ -212,7 +212,7 @@ export default function ExtractionTerminalLog({
               {entry.progress && <span className="shrink-0 text-cyan-300">{entry.progress}</span>}
               {entry.updates > 1 && (
                 <span
-                  className="shrink-0 rounded bg-white/[0.06] px-1.5 text-[9px] text-slate-400"
+                  className="shrink-0 rounded bg-white/[0.06] px-1.5 text-xs text-slate-400"
                   title={isArabic ? 'عدد التحديثات المدمجة' : 'Number of grouped updates'}
                 >
                   ×{entry.updates}
@@ -238,7 +238,7 @@ export default function ExtractionTerminalLog({
         )}
       </div>
 
-      <footer className="border-t border-white/[0.06] bg-slate-900/50 px-3 py-2 text-[9px] leading-relaxed text-slate-500 sm:px-4">
+      <footer className="border-t border-white/[0.06] bg-slate-900/50 px-3 py-2 text-xs leading-relaxed text-slate-500 sm:px-4">
         {isArabic
           ? 'التحديثات المتشابهة تُدمج تلقائيًا؛ ويتوقف التمرير عند قراءة السجل للأعلى.'
           : 'Repeated updates are grouped; auto-follow pauses while you read earlier log entries.'}

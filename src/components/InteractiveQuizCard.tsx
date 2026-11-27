@@ -325,7 +325,7 @@ export function InteractiveQuizCard({
                         <div className="flex items-center gap-2">
                           <p className="font-bold text-xs text-slate-900 dark:text-slate-100">{attempt.takerName || (isAr ? 'زائر متميز' : 'Member')}</p>
                           {isPendingEssay && (
-                            <span className="rounded-md bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-black text-amber-600 dark:text-amber-400">
+                            <span className="rounded-md bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-xs font-black text-amber-600 dark:text-amber-400">
                               {isAr ? 'بانتظار التصحيح' : 'Pending Review'}
                             </span>
                           )}

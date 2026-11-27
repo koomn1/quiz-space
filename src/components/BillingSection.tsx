@@ -1037,7 +1037,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                       {p.badge}
                     </span>
                     {isCurrentPlan && (
-                      <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[9px] font-black text-emerald-600 dark:text-emerald-300">
+                      <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-xs font-black text-emerald-600 dark:text-emerald-300">
                         {isAr ? 'باقتك الحالية' : 'Current'}
                       </span>
                     )}
@@ -1149,7 +1149,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                         <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">{m.subtitle}</p>
                       </div>
                     </div>
-                    <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <span className="text-xs font-black px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                       {m.badge}
                     </span>
                   </div>

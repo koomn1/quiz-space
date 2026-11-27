@@ -835,7 +835,7 @@ export default function LandingPage({
                           badgeSize="sm"
                           className="max-w-[150px] text-xs font-black group-hover/creator:text-[#2AC3BB]"
                         />
-                        <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">
                           {isAr ? 'صانع الاختبار' : 'Quiz Creator'}
                         </p>
                       </div>

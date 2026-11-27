@@ -248,7 +248,7 @@ export const VipLeaderboardPodium: React.FC<VipLeaderboardPodiumProps> = ({
                       <p className="font-mono text-xs font-black text-[#FBDFC7]">
                         {entry.weeklyPoints.toLocaleString()}
                       </p>
-                      <p className="text-[9px] text-[#8BAEAD]">{isAr ? 'نقطة' : 'XP'}</p>
+                      <p className="text-xs text-[#8BAEAD]">{isAr ? 'نقطة' : 'XP'}</p>
                     </div>
                   </div>
                 );

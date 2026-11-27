@@ -271,7 +271,7 @@ export default function LevelQuestMap({ userXp, lang = 'ar' }: LevelQuestMapProp
 
                   {/* Level Pill Label Below Marker */}
                   <span
-                    className={`absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.2 rounded-full text-[9px] font-mono font-black shadow-md ${
+                    className={`absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.2 rounded-full text-xs font-mono font-black shadow-md ${
                       isSelected
                         ? 'bg-amber-400 text-slate-950 border border-white'
                         : isUnlocked

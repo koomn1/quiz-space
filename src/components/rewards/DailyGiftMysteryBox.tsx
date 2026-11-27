@@ -259,7 +259,7 @@ export const DailyGiftMysteryBox: React.FC<DailyGiftMysteryBoxProps> = ({
                     : 'border border-[#2AC3BB]/15 bg-[#031717]/60 text-slate-500'
                 }`}
               >
-                <span className="text-[9px] font-bold">
+                <span className="text-xs font-bold">
                   {isAr ? `ي ${dayNum}` : `D${dayNum}`}
                 </span>
                 <div className="my-0.5">
@@ -271,7 +271,7 @@ export const DailyGiftMysteryBox: React.FC<DailyGiftMysteryBoxProps> = ({
                     <Coins className="h-3.5 w-3.5 opacity-70" />
                   )}
                 </div>
-                <span className="text-[8px] font-mono font-bold">
+                <span className="text-xs font-mono font-bold">
                   {dayNum === 7 ? 'x3' : `+${dayNum * 10}`}
                 </span>
               </div>

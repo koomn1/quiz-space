@@ -320,7 +320,7 @@ export function MyQuizzes({
                         badgeSize="sm"
                         className="max-w-[160px] text-xs font-black"
                       />
-                      <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">
                         {isAr ? 'صانع الاختبار' : 'Quiz Creator'}
                       </p>
                     </div>

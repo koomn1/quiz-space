@@ -115,7 +115,7 @@ export default function AppShell(props: AppShellProps) {
                     </div>
                     <div>
                       <h4 className="font-black text-slate-900 dark:text-slate-100">{lang === 'ar' ? ' فعل إشعارات لوحة المتصدرين الحية!' : ' Enable Live Leaderboard Alerts!'}</h4>
-                      <p className="text-[10.5px] text-slate-500 dark:text-slate-400 font-semibold leading-normal mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-normal mt-0.5">
                         {lang === 'ar'
                           ? 'احصل على إشعار فوري من المتصفح عندما يقوم طالب آخر بكسر رقمك القياسي واحتلال الصدارة!'
                           : 'Get real-time browser notifications instantly if another player beats your high score on any quiz.'}

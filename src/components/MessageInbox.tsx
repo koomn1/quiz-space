@@ -355,17 +355,17 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                         showTooltip={false}
                       />
                     </div>
-                    <p className={`text-[9px] truncate mt-0.5 ${selectedRecipient?.uid === member.uid ? 'text-indigo-700 dark:text-indigo-200' : 'text-slate-500'} leading-snug`}>
+                    <p className={`text-xs truncate mt-0.5 ${selectedRecipient?.uid === member.uid ? 'text-indigo-700 dark:text-indigo-200' : 'text-slate-500'} leading-snug`}>
                       {member.bio || (isAr ? 'طالب متميز في أكاديمية كويز' : 'Enthusiastic Quiz Space member')}
                     </p>
                   </div>
                   {unreadCountsBySender[member.uid] > 0 && selectedRecipient?.uid !== member.uid && (
-                    <span className="bg-red-500 text-white font-bold text-[9px] px-1.5 py-0.5 rounded-full animate-pulse shrink-0">
+                    <span className="bg-red-500 text-white font-bold text-xs px-1.5 py-0.5 rounded-full animate-pulse shrink-0">
                       {unreadCountsBySender[member.uid]}
                     </span>
                   )}
                   {member.isPremium && (
-                    <span className="text-[8px] bg-amber-100 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-400/20 px-1 py-0.5 rounded-md font-bold self-start mt-0.5">VIP</span>
+                    <span className="text-xs bg-amber-100 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-400/20 px-1 py-0.5 rounded-md font-bold self-start mt-0.5">VIP</span>
                   )}
                 </button>
               ))
@@ -400,7 +400,7 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                         showTooltip={false}
                       />
                     </div>
-                    <p className="text-[9.5px] text-slate-400 mt-0.5">{selectedRecipient.bio || (isAr ? 'متصل ومستعد للمناقشة' : 'Available to chat')}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{selectedRecipient.bio || (isAr ? 'متصل ومستعد للمناقشة' : 'Available to chat')}</p>
                   </div>
                 </div>
 
@@ -466,14 +466,14 @@ export default function MessageInbox({ lang, userId, userName, userPhoto, defaul
                           )}
 
                           <div className={`flex items-center gap-2 px-1.5 ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 font-bold">
                               {new Date(msg.createdAt).toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                             </p>
                             {isOwn && (
                               <button
                                 type="button"
                                 onClick={() => handleDeleteMessage(msg.id)}
-                                className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-semibold text-rose-500 dark:text-rose-300/80 hover:text-rose-600 dark:hover:text-rose-200 hover:bg-rose-500/10 transition-colors"
+                                className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-semibold text-rose-500 dark:text-rose-300/80 hover:text-rose-600 dark:hover:text-rose-200 hover:bg-rose-500/10 transition-colors"
                                 title={isAr ? 'حذف الرسالة' : 'Delete message'}
                               >
                                 <Trash2 className="w-3 h-3" />

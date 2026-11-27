@@ -162,7 +162,7 @@ export function AgentPlanRow({ steps, isAr, theme }: { steps: AgentStep[]; isAr:
                   <p className="text-xs font-extrabold" style={{ color: theme.FG }}>
                     {title}
                   </p>
-                  <span className="text-[9px] font-black" style={{ color: step.color }}>
+                  <span className="text-xs font-black" style={{ color: step.color }}>
                     {statusLabel}
                   </span>
                 </div>

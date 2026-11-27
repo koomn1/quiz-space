@@ -205,7 +205,7 @@ export const PostRegisterOnboardingModal: React.FC<PostRegisterOnboardingModalPr
                     : 'bg-slate-800/40 border-slate-700/60 opacity-70 hover:opacity-100'
                 }`}
               >
-                <div className="absolute -top-2 bg-primary text-white text-[9px] px-2 py-0.5 rounded-full font-black">
+                <div className="absolute -top-2 bg-primary text-white text-xs px-2 py-0.5 rounded-full font-black">
                   {lang === 'ar' ? 'شائع' : 'POPULAR'}
                 </div>
                 <div className="p-2 rounded-xl bg-primary/30 text-primary mb-1 mt-1">

@@ -886,7 +886,7 @@ export default function UserProfile({
                       <>
                         <Crown className="h-4 w-4 text-amber-500" />
                         <span>{isAr ? 'قلادة الـ ID' : '3D Lanyard'}</span>
-                        <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-black text-amber-600 dark:text-amber-300 border border-amber-500/30">
+                        <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-xs font-black text-amber-600 dark:text-amber-300 border border-amber-500/30">
                           VIP
                         </span>
                       </>
@@ -1172,7 +1172,7 @@ export default function UserProfile({
               <Target className="h-4 w-4" />
               <span className="text-xs font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'معدل الدقة' : 'Accuracy'}</span>
             </div>
-            <span className="rounded-md bg-[#2AC3BB]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#007472] dark:text-[#2AC3BB]">
+            <span className="rounded-md bg-[#2AC3BB]/15 px-1.5 py-0.5 text-xs font-bold text-[#007472] dark:text-[#2AC3BB]">
               {accuracy >= 90 ? (isAr ? 'قناص 🎯' : 'Sniper') : accuracy >= 75 ? (isAr ? 'متفوق ⭐' : 'High') : (isAr ? 'نشط' : 'Active')}
             </span>
           </div>
@@ -1195,7 +1195,7 @@ export default function UserProfile({
               <QuizSpaceXpToken className="h-4 w-4" />
               <span className="text-xs font-black uppercase text-slate-400 dark:text-[#8BAEAD]">{isAr ? 'المستوى و نقاط الـ XP' : 'Level & XP'}</span>
             </div>
-            <span className="rounded-md bg-[#EE8361]/15 px-1.5 py-0.5 text-[9px] font-black text-[#EE8361]">
+            <span className="rounded-md bg-[#EE8361]/15 px-1.5 py-0.5 text-xs font-black text-[#EE8361]">
               Lv.{level}/100 {level >= 100 && '🏆'}
             </span>
           </div>
@@ -1625,7 +1625,7 @@ export default function UserProfile({
                             {isAr ? 'قلادة الهوية ثلاثية الأبعاد (3D Lanyard)' : '3D Lanyard ID Card'}
                           </h4>
                           {!isPremium && (
-                            <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-black text-amber-600 dark:text-amber-300 border border-amber-500/30">
+                            <span className="rounded-full bg-amber-500/20 px-1.5 py-0.5 text-xs font-black text-amber-600 dark:text-amber-300 border border-amber-500/30">
                               VIP
                             </span>
                           )}
@@ -1684,7 +1684,7 @@ export default function UserProfile({
                             {isAr ? 'إظهار المتابعين والذين أتابعهم للزوار' : 'Show Followers & Following to Visitors'}
                           </h4>
                           <span
-                            className={`rounded-full px-1.5 py-0.5 text-[9px] font-black border ${
+                            className={`rounded-full px-1.5 py-0.5 text-xs font-black border ${
                               showSocialStats
                                 ? 'bg-[#2AC3BB]/15 text-[#007472] dark:text-[#2AC3BB] border-[#2AC3BB]/30'
                                 : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'

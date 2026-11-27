@@ -214,7 +214,7 @@ export const RewardLedgerSheet: React.FC<RewardLedgerSheetProps> = ({
                     {detail && (
                       <p className="mt-0.5 truncate text-xs text-[#8BAEAD]">{detail}</p>
                     )}
-                    <p className="mt-1 font-mono text-[9px] text-[#8BAEAD]/70">
+                    <p className="mt-1 font-mono text-xs text-[#8BAEAD]/70">
                       {new Date(entry.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US', {
                         dateStyle: 'medium',
                         timeStyle: 'short',

@@ -76,7 +76,7 @@ export default function WeeklyVipLeaderboard({ lang }: WeeklyVipLeaderboardProps
                   <p className="truncate text-xs font-black text-slate-900 dark:text-white">{entry.displayName}{entry.isMe && <span className="mx-1 text-xs font-bold text-indigo-500">({isAr ? 'أنت' : 'You'})</span>}</p>
                   <p className="text-xs font-bold text-slate-500">VIP {isAr ? tier.ar : tier.en}</p>
                 </div>
-                <div className="text-end"><p className="text-sm font-black text-indigo-600 dark:text-indigo-300">{entry.weeklyPoints.toLocaleString()}</p><p className="text-[9px] font-bold text-slate-500">{isAr ? 'نقطة هذا الأسبوع' : 'weekly points'}</p></div>
+                <div className="text-end"><p className="text-sm font-black text-indigo-600 dark:text-indigo-300">{entry.weeklyPoints.toLocaleString()}</p><p className="text-xs font-bold text-slate-500">{isAr ? 'نقطة هذا الأسبوع' : 'weekly points'}</p></div>
               </div>
             );
           })}

@@ -2711,7 +2711,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                       >
                         <Icons8Icon name={typeOpt.icon as any} size={28} className="mb-1" />
                         <span className="text-xs font-extrabold">{typeOpt.label}</span>
-                        <span className="text-[9px] text-slate-600 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">{typeOpt.desc}</span>
+                        <span className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">{typeOpt.desc}</span>
                       </button>
                     );
                   })}
@@ -3115,7 +3115,7 @@ A computer is a digital electronic machine...
                         >
                           <Icons8Icon name={typeOpt.icon as any} size={28} className="mb-1" />
                           <span className="text-xs font-extrabold">{typeOpt.label}</span>
-                          <span className="text-[9px] text-slate-600 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">{typeOpt.desc}</span>
+                          <span className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5 line-clamp-1">{typeOpt.desc}</span>
                         </button>
                       );
                     })}
@@ -3152,7 +3152,7 @@ A computer is a digital electronic machine...
                     <div className="text-xs font-black text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'سجل الدردشة مع الملف' : 'File guidance chat'}</div>
                     {fileGuidanceMessages.map((message, index) => (
                       <div key={`${message.role}-${index}`} className={`rounded-xl px-3 py-2 text-xs leading-6 whitespace-pre-wrap ${message.role === 'user' ? 'bg-[#007472]/10 text-slate-800 dark:bg-[#007472]/20 dark:text-[#FCF6EE]' : 'bg-white/80 text-slate-700 dark:bg-slate-900/70 dark:text-slate-200'}`}>
-                        <span className="mb-0.5 block text-[9px] font-black opacity-60">{message.role === 'user' ? (isAr ? 'أنت' : 'You') : 'Cosmo'}</span>
+                        <span className="mb-0.5 block text-xs font-black opacity-60">{message.role === 'user' ? (isAr ? 'أنت' : 'You') : 'Cosmo'}</span>
                         {message.text}
                       </div>
                     ))}
@@ -3302,7 +3302,7 @@ A computer is a digital electronic machine...
                                 isActive
                                   ? 'bg-[#007472]/50 text-white border-[#007472] dark:border-[#2AC3BB] animate-pulse'
                                   : batch.status === 'success'
-                                  ? 'bg-emerald-500 text-white border-emerald-500 text-[8px]'
+                                  ? 'bg-emerald-500 text-white border-emerald-500 text-xs'
                                   : batch.status === 'error'
                                   ? 'bg-rose-500 text-white border-rose-500'
                                   : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'

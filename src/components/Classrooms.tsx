@@ -187,7 +187,7 @@ function DecryptedClassMessage({ msg, classId, isAr, onStartQuiz }: { msg: any; 
             <Sparkles className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <span className="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full font-bold uppercase block w-max mb-1">
+            <span className="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full font-bold uppercase block w-max mb-1">
               {isAr ? ' كويز مباشر متفاعل' : ' Live Interactive Quiz'}
             </span>
             <h5 className="font-bold text-white text-xs">{quizTitle}</h5>
@@ -1271,7 +1271,7 @@ export default function Classrooms({
               </div>
               <div className="truncate">
                 <span className="font-bold block truncate">{c.name}</span>
-                <span className="text-[9px] font-mono text-slate-500">{c.code} • {isAr ? 'المعلم' : 'Teacher'}</span>
+                <span className="text-xs font-mono text-slate-500">{c.code} • {isAr ? 'المعلم' : 'Teacher'}</span>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-slate-500 shrink-0 rtl:rotate-180" />
@@ -1295,7 +1295,7 @@ export default function Classrooms({
               </div>
               <div className="truncate">
                 <span className="font-bold block truncate">{c.name}</span>
-                <span className="text-[9px] font-mono text-slate-500">{c.code} • {c.creatorName}</span>
+                <span className="text-xs font-mono text-slate-500">{c.code} • {c.creatorName}</span>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-slate-500 shrink-0 rtl:rotate-180" />
@@ -1382,7 +1382,7 @@ export default function Classrooms({
             <div className="p-6 border-b border-slate-800 bg-slate-900/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider">
+                  <span className="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider">
                     {activeClassroomView.code}
                   </span>
                   <span className="text-xs text-slate-500">
@@ -1619,7 +1619,7 @@ export default function Classrooms({
                         {announcements.filter(a => a.classId === activeClassroomView.id).map(ann => (
                           <div  className="p-5 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className={`text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                              <span className={`text-xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                                 ann.priority === 'urgent'
                                   ? 'bg-red-500/10 border-red-500/20 text-red-400 animate-pulse'
                                   : ann.priority === 'important'
@@ -1849,7 +1849,7 @@ export default function Classrooms({
                         {classroomQuizzes.map((cq) => (
                           <div key={cq.id} className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl space-y-4">
                             <div className="flex items-center justify-between">
-                              <span className="text-[9px] font-bold font-mono px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                              <span className="text-xs font-bold font-mono px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
                                 {isAr ? 'كويز مدمج بالفصل' : 'Classroom embed'}
                               </span>
                               {typeof cq.avgRating === 'number' && cq.avgRating > 0 && (
@@ -2146,7 +2146,7 @@ export default function Classrooms({
                           </div>
                           <div className="truncate">
                             <h5 className="font-bold text-white text-xs truncate">{file.name}</h5>
-                            <span className="text-[9px] text-slate-500 block truncate">{file.size} • {file.sharedByName}</span>
+                            <span className="text-xs text-slate-500 block truncate">{file.size} • {file.sharedByName}</span>
                           </div>
                         </div>
                         <button
@@ -2416,7 +2416,7 @@ export default function Classrooms({
                     {announcements.filter(a => a.classId === activeClassroomView.id).map(ann => (
                       <div  className="p-5 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-3">
                         <div className="flex justify-between items-center">
-                          <span className={`text-[9px] font-mono font-bold uppercase px-2.5 py-0.5 border rounded-full ${
+                          <span className={`text-xs font-mono font-bold uppercase px-2.5 py-0.5 border rounded-full ${
                             ann.priority === 'urgent' ? 'bg-red-500/10 border-red-500/20 text-red-400 animate-pulse' : 'bg-slate-800 border-slate-700 text-slate-400'
                           }`}>{ann.priority}</span>
                           <span className="text-xs text-slate-500 font-mono">{new Date(ann.postedAt).toLocaleDateString()}</span>
@@ -2814,7 +2814,7 @@ export default function Classrooms({
                               loading="lazy"
                             />
                             {vid.isLive && (
-                              <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600 text-white text-[9px] font-black animate-pulse">
+                              <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-600 text-white text-xs font-black animate-pulse">
                                 <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
                                 LIVE
                               </div>
@@ -2830,7 +2830,7 @@ export default function Classrooms({
                             <h5 className="text-xs font-bold text-white truncate">{vid.title}</h5>
                             {vid.description && <p className="text-xs text-slate-500 truncate mt-0.5">{vid.description}</p>}
                             <div className="flex items-center justify-between mt-2">
-                              <span className="text-[9px] text-slate-600 flex items-center gap-1">
+                              <span className="text-xs text-slate-600 flex items-center gap-1">
                                 <Eye className="w-3 h-3" />{vid.viewCount}
                               </span>
                               {isTeacher && activeClassroomView.createdBy === currentUserId && (
@@ -2854,7 +2854,7 @@ export default function Classrooms({
                                     }
                                   }}
                                   disabled={deletingLessonId === vid.id}
-                                  className="text-[9px] text-red-500 hover:text-red-400 font-bold flex items-center gap-1 cursor-pointer disabled:cursor-wait disabled:opacity-60"
+                                  className="text-xs text-red-500 hover:text-red-400 font-bold flex items-center gap-1 cursor-pointer disabled:cursor-wait disabled:opacity-60"
                                 >
                                   <Trash className="w-3 h-3" />
                                   {deletingLessonId === vid.id ? (isAr ? 'جارٍ الحذف...' : 'Deleting...') : (isAr ? 'حذف' : 'Delete')}

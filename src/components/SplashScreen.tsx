@@ -155,7 +155,7 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="flex justify-between items-center text-[9px] font-mono text-slate-400 px-1">
+          <div className="flex justify-between items-center text-xs font-mono text-slate-400 px-1">
             <span>{isAr ? 'جارٍ التحميل...' : 'Loading...'}</span>
             <span>{progress}%</span>
           </div>
