@@ -74,3 +74,15 @@ describe('shouldShowSplash', () => {
     expect(shouldShowSplash({ hostname: host, pathname: '/profile', hash: '' })).toBe(false);
   });
 });
+
+describe('unknown dashboard routes', () => {
+  it('maps unknown dashboard sub-routes to not-found (hash and path)', () => {
+    expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/saved' })).toBe('not-found');
+    expect(resolveActiveTab(sp(), { pathname: '/dashboard/saved', hash: '' })).toBe('not-found');
+  });
+  it('keeps valid and internal dashboard sub-routes', () => {
+    expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/bookmarks' })).toBe('bookmarks');
+    expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/legal-privacy' })).toBe('legal-privacy');
+    expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/solving' })).toBe('solving');
+  });
+});

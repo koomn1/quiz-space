@@ -6,6 +6,16 @@ type SearchParamsLike = { get(name: string): string | null };
 
 // Pure route parsing extracted from App.tsx. Behavior is unchanged.
 
+const KNOWN_TABS = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'customization', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'store', 'rewards']);
+// Tabs that AppRoutes also renders but that are not top-level paths.
+const INTERNAL_TABS = new Set(['quiz', 'activity', 'creating', 'membership', 'overview', 'quizzes', 'solving', 'not-found']);
+
+/** Unknown dashboard sub-routes (for example #/dashboard/saved) must show the not-found page, not an empty one. */
+export function normalizeDashboardTab(tab: string): string {
+  if (KNOWN_TABS.has(tab) || INTERNAL_TABS.has(tab) || tab.startsWith('legal-')) return tab;
+  return 'not-found';
+}
+
 export function resolveActiveTab(searchParams: SearchParamsLike, loc: RouteLocation): string {
   // Check search params first
   const tabParam = searchParams.get('tab');
@@ -19,7 +29,7 @@ export function resolveActiveTab(searchParams: SearchParamsLike, loc: RouteLocat
     pathParts = pathParts.slice(1);
   }
   if (pathParts[0] === 'dashboard' && pathParts[1]) {
-    return pathParts[1];
+    return normalizeDashboardTab(pathParts[1]);
   }
   if (pathParts[0] === 'quiz' && pathParts[1]) {
     return 'quiz';
@@ -44,7 +54,7 @@ export function resolveActiveTab(searchParams: SearchParamsLike, loc: RouteLocat
     const hashClean = hash.replace(/^#\/?/, '').split('?')[0];
     const parts = hashClean.split('/');
     if (parts[0] === 'dashboard' && parts[1]) {
-      return parts[1];
+      return normalizeDashboardTab(parts[1]);
     }
     if (parts[0] === 'quiz' && parts[1]) {
       return 'quiz';
