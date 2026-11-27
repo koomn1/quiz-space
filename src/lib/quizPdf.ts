@@ -1,6 +1,6 @@
-import { jsPDF } from 'jspdf';
+import type { jsPDF } from 'jspdf';
 import type { Question, Quiz } from '../types';
-import { cairoArabicFonts } from './pdfFonts/cairoArabicFonts';
+import type { cairoArabicFonts as CairoArabicFonts } from './pdfFonts/cairoArabicFonts';
 import { normalizeArabicText } from './arabicText';
 
 const MARGIN = 36;
@@ -38,7 +38,7 @@ export interface QuizPdfBranding {
 
 const OPTION_PREFIXES_AR = ['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح'];
 
-function registerArabicFont(pdf: PdfDocument) {
+function registerArabicFont(pdf: PdfDocument, cairoArabicFonts: typeof CairoArabicFonts) {
   pdf.addFileToVFS('Cairo-Regular.ttf', cairoArabicFonts.regular);
   pdf.addFont('Cairo-Regular.ttf', 'Cairo', 'normal');
   pdf.addFileToVFS('Cairo-Bold.ttf', cairoArabicFonts.bold);
@@ -176,6 +176,11 @@ async function loadQuestionImages(questions: Question[]) {
 }
 
 export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBranding | null): Promise<PdfDocument> {
+  // Loaded on demand so jspdf and the 243KB Cairo font stay out of the main bundles.
+  const [{ jsPDF }, { cairoArabicFonts }] = await Promise.all([
+    import('jspdf'),
+    import('./pdfFonts/cairoArabicFonts'),
+  ]);
   const pdf = new jsPDF({
     orientation: branding?.orientation === 'landscape' ? 'l' : 'p',
     unit: 'pt',
@@ -183,7 +188,7 @@ export async function createQuizPdfDocument(quiz: Quiz, branding?: QuizPdfBrandi
     compress: true,
     putOnlyUsedFonts: true,
   });
-  registerArabicFont(pdf);
+  registerArabicFont(pdf, cairoArabicFonts);
 
   const imageMap = await loadQuestionImages(quiz.questions);
   let pageNumber = 1;
