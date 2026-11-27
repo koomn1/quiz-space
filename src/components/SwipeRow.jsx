@@ -2,8 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Delete02Icon } from '@hugeicons/core-free-icons';
+import { Trash2 } from 'lucide-react';
 
 import './SwipeRow.css';
 
@@ -391,7 +390,7 @@ export default function SwipeRow({
               >
                 <span className="swipe-row__glyph">
                   <span className="swipe-row__icon">
-                    {primary.icon ?? <HugeiconsIcon icon={Delete02Icon} size={20} strokeWidth={2} />}
+                    {primary.icon ?? <Trash2 size={20} strokeWidth={2} aria-hidden="true" />}
                   </span>
                   <span>{primary.label}</span>
                 </span>

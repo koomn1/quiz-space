@@ -23,7 +23,6 @@ import {
   CosmoSearchResult,
 } from '../lib/db';
 import PromptBar from '../components/PromptBar';
-import { Attachment01Icon, Globe02Icon } from '@hugeicons/core-free-icons';
 import { parseExplicitQuestionCount } from '../lib/cosmoQuizCount';
 import {
   FileText,
@@ -37,6 +36,8 @@ import {
   Sparkles,
   Check,
   Copy,
+  Paperclip,
+  Globe,
 } from 'lucide-react';
 import { type OrbState } from 'thinking-orbs';
 import {
@@ -1477,8 +1478,8 @@ export default function AIChat({
               <PromptBar
                 placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي سؤال دراسي، أو اطلب تلخيص ملف، أو إنشاء اختبار...` : `Ask ${ASSISTANT_NAME_EN} anything, request a summary, or create a quiz...`}
                 sources={[
-                  { key: 'files', name: isAr ? 'ملفات وصور' : 'Photos & files', description: isAr ? 'ارفع من جهازك' : 'Upload from this device', icon: Attachment01Icon, attach: true },
-                  { key: 'web', name: isAr ? 'بحث في الويب' : 'Web search', description: isAr ? 'نتائج مباشرة' : 'Live results', icon: Globe02Icon },
+                  { key: 'files', name: isAr ? 'ملفات وصور' : 'Photos & files', description: isAr ? 'ارفع من جهازك' : 'Upload from this device', icon: Paperclip, attach: true },
+                  { key: 'web', name: isAr ? 'بحث في الويب' : 'Web search', description: isAr ? 'نتائج مباشرة' : 'Live results', icon: Globe },
                 ]}
                 commands={[
                   { key: 'summarize', name: '/summarize', description: isAr ? 'لخّص المحادثة الحالية' : 'Digest the thread so far' },

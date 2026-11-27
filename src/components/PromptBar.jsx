@@ -1,23 +1,8 @@
 'use client';
 
-import { isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createElement, isValidElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { animate, useMotionValue, useMotionValueEvent, useReducedMotion } from 'motion/react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import {
-  ArrowDown01Icon,
-  Attachment01Icon,
-  Calendar03Icon,
-  Cancel01Icon,
-  ChartLineData01Icon,
-  File02Icon,
-  Globe02Icon,
-  HelpCircleIcon,
-  Mail01Icon,
-  Mic01Icon,
-  PlusSignIcon,
-  SparklesIcon,
-  Tick02Icon
-} from '@hugeicons/core-free-icons';
+import { Calendar, ChartLine, Check, ChevronDown, CircleHelp, FileText, Globe, Mail, Mic, Paperclip, Plus, Sparkles, X } from 'lucide-react';
 import './PromptBar.css';
 
 const ARROW_UP = [12, 4.5, 18.5, 11, 14.25, 11, 14.25, 19.5, 9.75, 19.5, 9.75, 11, 5.5, 11];
@@ -31,14 +16,14 @@ const DEFAULT_SOURCES = [
     key: 'files',
     name: 'Photos & files',
     description: 'Upload from this device',
-    icon: Attachment01Icon,
+    icon: Paperclip,
     attach: true
   },
-  { key: 'web', name: 'Web search', description: 'Live results', icon: Globe02Icon },
-  { key: 'sales', name: 'Sales data', description: 'Revenue and churn', icon: ChartLineData01Icon },
-  { key: 'docs', name: 'Documents', description: 'Specs, notes, briefs', icon: File02Icon },
-  { key: 'mail', name: 'Mail', description: 'Read and draft mail', icon: Mail01Icon },
-  { key: 'calendar', name: 'Calendar', description: 'Events and availability', icon: Calendar03Icon }
+  { key: 'web', name: 'Web search', description: 'Live results', icon: Globe },
+  { key: 'sales', name: 'Sales data', description: 'Revenue and churn', icon: ChartLine },
+  { key: 'docs', name: 'Documents', description: 'Specs, notes, briefs', icon: FileText },
+  { key: 'mail', name: 'Mail', description: 'Read and draft mail', icon: Mail },
+  { key: 'calendar', name: 'Calendar', description: 'Events and availability', icon: Calendar }
 ];
 const DEFAULT_COMMANDS = [
   { key: 'summarize', name: '/summarize', description: 'Digest the thread so far' },
@@ -70,7 +55,7 @@ const parseToken = draft => {
 };
 
 const renderIcon = (icon, size) =>
-  isValidElement(icon) ? icon : <HugeiconsIcon icon={icon} size={size} strokeWidth={1.8} />;
+  isValidElement(icon) ? icon : createElement(icon, { size, strokeWidth: 1.8, 'aria-hidden': true });
 
 function SendGlyph({ busy, morphDuration, squash, tilt }) {
   const reduce = useReducedMotion();
@@ -509,7 +494,7 @@ export default function PromptBar({
                 <span className="prompt-bar__effort-title">Effort</span>
                 <span className="prompt-bar__effort-level">{level}</span>
                 <span className="prompt-bar__effort-help" title="Higher effort thinks longer before answering">
-                  <HugeiconsIcon icon={HelpCircleIcon} size={14} strokeWidth={1.8} />
+                  <CircleHelp size={14} strokeWidth={1.8} aria-hidden="true" />
                 </span>
               </div>
               <div className="prompt-bar__effort-ends">
@@ -570,7 +555,7 @@ export default function PromptBar({
                     <>
                       <span className="prompt-bar__row-tag">{row.tag}</span>
                       <span className="prompt-bar__row-check" data-on={row.key === model?.key ? '' : undefined}>
-                        <HugeiconsIcon icon={Tick02Icon} size={13} strokeWidth={2.5} />
+                        <Check size={13} strokeWidth={2.5} aria-hidden="true" />
                       </span>
                     </>
                   ) : null}
@@ -596,7 +581,7 @@ export default function PromptBar({
           <div className="prompt-bar__chips">
             {attachments.map((file, i) => (
               <span key={`${file}-${i}`} className="prompt-bar__chip">
-                <HugeiconsIcon icon={File02Icon} size={12} strokeWidth={2} />
+                <FileText size={12} strokeWidth={2} aria-hidden="true" />
                 <span className="prompt-bar__chip-name">{file}</span>
                 <button
                   type="button"
@@ -604,7 +589,7 @@ export default function PromptBar({
                   aria-label={`Remove ${file}`}
                   onClick={() => setAttachments(a => a.filter((_, j) => j !== i))}
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={10} strokeWidth={2.5} />
+                  <X size={10} strokeWidth={2.5} aria-hidden="true" />
                 </button>
               </span>
             ))}
@@ -646,7 +631,7 @@ export default function PromptBar({
               focusInput();
             }}
           >
-            <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />
+            <Plus size={16} strokeWidth={2} aria-hidden="true" />
           </button>
           {models.length > 0 ? (
             <button
@@ -665,7 +650,7 @@ export default function PromptBar({
               }}
             >
               <span>{model.name}</span>
-              <HugeiconsIcon icon={ArrowDown01Icon} size={12} strokeWidth={2.4} />
+              <ChevronDown size={12} strokeWidth={2.4} aria-hidden="true" />
             </button>
           ) : null}
           {efforts.length > 0 && !effortLocked ? (
@@ -684,12 +669,12 @@ export default function PromptBar({
                 focusInput();
               }}
             >
-              <HugeiconsIcon icon={SparklesIcon} size={13} strokeWidth={2} />
+              <Sparkles size={13} strokeWidth={2} aria-hidden="true" />
               <span>{level}</span>
             </button>
           ) : effortLocked && level ? (
             <span className="prompt-bar__pick" aria-label={`Automatic reasoning: ${level}`} title="Reasoning is assigned by your active plan">
-              <HugeiconsIcon icon={SparklesIcon} size={13} strokeWidth={2} />
+              <Sparkles size={13} strokeWidth={2} aria-hidden="true" />
               <span>{level}</span>
             </span>
           ) : null}
@@ -711,7 +696,7 @@ export default function PromptBar({
                   <i />
                 </span>
               ) : (
-                <HugeiconsIcon icon={Mic01Icon} size={15} strokeWidth={2} />
+                <Mic size={15} strokeWidth={2} aria-hidden="true" />
               )}
             </button>
           ) : null}
