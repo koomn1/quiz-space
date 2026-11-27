@@ -260,6 +260,13 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
   const currentIsPremium = membership?.isPremium ?? isPremium;
   const currentPlanName = membership?.isPremium ? membership.planName : 'Free';
   const currentPlanId = membership?.isPremium ? membership.planId : 'free';
+
+  // Start on the user's own plan instead of always Gold.
+  useEffect(() => {
+    const id = String(currentPlanId || '').toLowerCase();
+    if (id && id !== 'free' && plans.some(p => p.id === id)) setSelectedPlan(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPlanId]);
   const currentPlanLabel = currentPlanName === 'Free'
     ? (isAr ? 'الباقة المجانية' : 'Free Plan')
     : currentPlanName;
@@ -817,7 +824,9 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                 </p>
               </div>
               <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 font-bold">
-                {currentIsPremium
+                {membership?.isLifetime || membership?.isFounder
+                  ? (isAr ? 'اشتراك دائم بدون تجديد' : 'Permanent, no renewal needed')
+                  : currentIsPremium
                   ? (isAr ? 'تجديد شهري عند الدفع' : 'Renews via receipt confirmation')
                   : (isAr ? 'حساب دائم بدون انتهاء' : 'Permanent free access')}
               </p>
@@ -1077,7 +1086,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
                   </ul>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-850">
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <button
                     type="button"
                     className={`w-full py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer ${
@@ -1229,7 +1238,7 @@ export function BillingSection({ userId, userEmail, lang, isPremium, userName = 
             })}
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-850/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 text-xs space-y-1.5 text-slate-600 dark:text-slate-350">
+          <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 text-xs space-y-1.5 text-slate-600 dark:text-slate-300">
             <p className="font-black text-slate-900 dark:text-white flex items-center gap-1.5">
               <Info className="w-4 h-4 text-primary shrink-0" />
               <span>{isAr ? 'سرعة التفعيل والدعم:' : 'Fast Activation Guarantee:'}</span>
