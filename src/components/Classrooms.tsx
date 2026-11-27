@@ -1554,8 +1554,8 @@ export default function Classrooms({
                       <div className="p-3 rounded-xl bg-sky-500/10 text-sky-400 shrink-0">
                         <FolderOpen className="w-5 h-5" />
                       </div>
-                      <div>
-                        <span className="text-xs text-slate-500 block leading-none mb-1">{isAr ? 'ملفات ومصادر مشتركة' : 'Shared Resource'}</span>
+                      <div className="min-w-0">
+                        <span className="text-xs text-slate-500 block leading-snug mb-1">{isAr ? 'ملفات مشتركة' : 'Shared Resources'}</span>
                         <span className="text-lg font-black font-mono text-white block">
                           {sharedFiles.filter(f => f.classId === activeClassroomView.id).length} {isAr ? 'ملفات' : 'Files'}
                         </span>
