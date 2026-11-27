@@ -173,7 +173,7 @@ export default function Login() {
 
       <div className="relative z-10 mx-auto grid min-h-[calc(100vh-5.5rem)] w-full max-w-6xl items-center gap-10 py-10 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-16 lg:py-16">
         <section className="order-2 flex flex-col justify-center lg:order-1">
-          <div className="mb-7 inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-2 text-[11px] font-black tracking-wide text-primary-light">
+          <div className="mb-7 inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-2 text-xs font-black tracking-wide text-primary-light">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_0_4px_rgba(103,232,249,0.12)]" aria-hidden="true" />
             {isAr ? 'منصة تعلم ذكية بالعربية' : 'A smarter learning space'}
           </div>
@@ -199,7 +199,7 @@ export default function Login() {
             ].map(({ icon: Icon, ar, en }) => (
               <div key={en} className="rounded-2xl border border-white/10 bg-white/[0.055] p-3.5 backdrop-blur-sm">
                 <Icon className="h-4 w-4 text-cyan-200" aria-hidden="true" />
-                <p className="mt-2 text-[11px] font-bold text-white/90">{isAr ? ar : en}</p>
+                <p className="mt-2 text-xs font-bold text-white/90">{isAr ? ar : en}</p>
               </div>
             ))}
           </div>
@@ -209,7 +209,7 @@ export default function Login() {
             <div className="absolute -left-5 -top-9 h-28 w-28 rounded-full border border-primary/20" />
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200/90">Cosmo signal</p>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200/90">Cosmo signal</p>
                 <p className="mt-2 text-sm font-black text-white">{isAr ? 'مساحتك الخاصة للتعلّم' : 'Your personal learning orbit'}</p>
               </div>
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-cyan-400 shadow-lg shadow-[#007472]/30">
@@ -254,7 +254,7 @@ export default function Login() {
                         : (isAr ? 'سجّل الدخول لمتابعة اختباراتك وتقدمك.' : 'Sign in to continue your quizzes and progress.')}
                     </p>
                   </div>
-                  <div className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[10px] font-black text-slate-600 dark:text-slate-300">
+                  <div className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-black text-slate-600 dark:text-slate-300">
                     {isRegister ? '01 / 02' : '01'}
                   </div>
                 </div>
@@ -324,7 +324,7 @@ export default function Login() {
                       />
                     </div>
                     {isRegister && (
-                      <p id="login-password-help" className="px-1 text-[11px] leading-5 text-slate-600 dark:text-slate-300">
+                      <p id="login-password-help" className="px-1 text-xs leading-5 text-slate-600 dark:text-slate-300">
                         {passwordRequirementMessage(lang)}
                       </p>
                     )}
@@ -349,7 +349,7 @@ export default function Login() {
 
                 <div className="my-5 flex items-center gap-3">
                   <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">{isAr ? 'أو' : 'or'}</span>
+                  <span className="text-xs font-black uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">{isAr ? 'أو' : 'or'}</span>
                   <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
                 </div>
 

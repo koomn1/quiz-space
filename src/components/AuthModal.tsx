@@ -229,7 +229,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
           <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-[#007472]/25 blur-[90px]" />
           <div className="relative z-10" dir="ltr">
             <MainLogo size="sm" showText />
-            <p className="mt-1 text-[10px] font-bold text-cyan-100/85" dir="rtl">تعلم أذكى، خطوة بخطوة</p>
+            <p className="mt-1 text-xs font-bold text-cyan-100/85" dir="rtl">تعلم أذكى، خطوة بخطوة</p>
           </div>
 
           <div className="relative z-10 py-10">
@@ -262,7 +262,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
         <section className="min-w-0 flex-1 bg-white/80 dark:bg-slate-950/70 backdrop-blur-xl p-5 sm:p-8">
           <div className="mb-7 flex items-start justify-between gap-4">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-[10px] font-black text-primary dark:border-primary/30 dark:bg-primary/20 dark:text-primary-light">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-black text-primary dark:border-primary/30 dark:bg-primary/20 dark:text-primary-light">
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                 {step === 'email' ? 'تأكيد البريد' : step === '2fa' ? 'حماية الحساب' : step === 'forgot' || step === 'forgot-sent' ? 'استعادة الوصول' : step === 'reset' || step === 'reset-success' ? 'تعيين كلمة المرور' : 'أهلاً بك في Quiz Space'}
               </div>
