@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, Captions, Info, Send, Loader2 } from 'lucide-react';
 import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
+import { penTipForNode } from '../../lib/whiteboard/penTip';
 import {
   defaultNarrationEngine as engine, genderForStep, getNarrationSupport, loadVoicePreference, saveVoicePreference,
   sentenceAtProgress, splitSentences, type VoiceOption, type VoicePreference,
@@ -16,6 +17,21 @@ const COLORS: Record<NodeColor, string> = {
   danger: '#e11d48',
   muted: '#64748b',
 };
+
+/** Pencil marker shown at the point where the board is currently being written or drawn. */
+function PenTip({ x, y, color }: { x: number; y: number; color: string }) {
+  return (
+    <g transform={`translate(${x} ${y})`} pointerEvents="none" opacity={0.95}>
+      <circle r={14} fill={color} opacity={0.12} />
+      <g transform="rotate(38)">
+        <rect x={-3} y={-30} width={6} height={20} rx={2} fill={color} />
+        <path d="M -3 -10 L 0 0.5 L 3 -10 Z" fill="#f3e2c7" />
+        <path d="M -1.3 -4 L 0 0.5 L 1.3 -4 Z" fill={color} />
+        <rect x={-3} y={-34} width={6} height={4.5} rx={1.6} fill="#94a3b8" />
+      </g>
+    </g>
+  );
+}
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -62,9 +78,7 @@ function RevealText({ node, progress, rtl }: { node: WhiteboardNode; progress: n
       >
         {node.text}
       </text>
-      {progress > 0 && progress < 1 && (
-        <circle cx={penX} cy={node.y - size * 0.3} r={Math.max(5, size * 0.12)} fill={COLORS[node.color]} opacity={0.85} />
-      )}
+      {progress > 0 && progress < 1 && <PenTip x={penX} y={node.y - size * 0.3} color={COLORS[node.color]} />}
     </g>
   );
 }
@@ -86,18 +100,28 @@ function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: nu
     case 'ellipse': {
       const common = { stroke: color, strokeWidth: 5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, pathLength: 1, strokeDasharray: 1, strokeDashoffset: 1 - progress, fill: color, fillOpacity: progress >= 1 ? 0.06 : 0 };
       const w = node.w ?? 0; const h = node.h ?? 0;
+      const tip = penTipForNode(node, progress, rtl);
+      // Once the label starts revealing, the pen belongs to the label (RevealText renders it there).
+      const showPen = progress > 0 && progress < 1 && !(node.text && progress > 0.4) && tip;
       return (
         <g>
           {node.type === 'rectangle'
             ? <rect x={node.x} y={node.y} width={w} height={h} rx={14} {...common} />
             : <ellipse cx={node.x + w / 2} cy={node.y + h / 2} rx={w / 2} ry={h / 2} {...common} />}
           {node.text && <RevealText node={{ ...node, x: node.x + w / 2, y: node.y + h / 2 + (node.fontSize ?? 32) / 3, align: 'center' }} progress={Math.max(0, (progress - 0.4) / 0.6)} rtl={rtl} />}
+          {showPen && <PenTip x={tip.x} y={tip.y} color={color} />}
         </g>
       );
     }
     case 'highlight': {
       const w = (node.w ?? 0) * progress;
-      return <rect x={rtl ? node.x + (node.w ?? 0) - w : node.x} y={node.y} width={w} height={node.h} rx={10} fill={color} opacity={0.28} />;
+      const tip = penTipForNode(node, progress, rtl);
+      return (
+        <g>
+          <rect x={rtl ? node.x + (node.w ?? 0) - w : node.x} y={node.y} width={w} height={node.h} rx={10} fill={color} opacity={0.28} />
+          {progress > 0 && progress < 1 && tip && <PenTip x={tip.x} y={tip.y} color={color} />}
+        </g>
+      );
     }
     case 'line':
     case 'arrow': {
@@ -107,6 +131,7 @@ function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: nu
         <g>
           <line x1={node.x} y1={node.y} x2={x2} y2={y2} stroke={color} strokeWidth={5} strokeLinecap="round" />
           {node.type === 'arrow' && progress > 0.2 && <Arrowhead x1={node.x} y1={node.y} x2={x2} y2={y2} color={color} opacity={1} />}
+          {progress > 0 && progress < 1 && <PenTip x={x2} y={y2} color={color} />}
         </g>
       );
     }
