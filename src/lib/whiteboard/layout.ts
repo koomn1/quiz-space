@@ -147,9 +147,9 @@ function layoutStep(step: LessonStep, si: number, rtl: boolean, fixes: string[],
 export function layoutLesson(lesson: WhiteboardLesson): LayoutReport {
   const fixes: string[] = [];
   const problems: string[] = [];
-  const rtl = lesson.lang === 'ar';
   let carry: Box[] = [];
   const steps = lesson.steps.map((s, i) => {
+    const rtl = (s.lang ?? lesson.lang) === 'ar';
     const r = layoutStep(s, i, rtl, fixes, problems, s.continues ? carry : []);
     carry = r.boxes;
     return r.step;

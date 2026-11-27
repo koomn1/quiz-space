@@ -14,6 +14,16 @@ const base = () => ({
 });
 
 describe('validateLesson', () => {
+  it('keeps an explicit per-step language and drops invalid ones', () => {
+    const mixed = base() as any;
+    mixed.steps[0].lang = 'en';
+    mixed.steps[1].lang = 'fr';
+    const r = validateLesson(mixed);
+    expect(r.ok).toBe(true);
+    expect(r.lesson!.steps[0].lang).toBe('en');
+    expect(r.lesson!.steps[1].lang).toBeUndefined();
+  });
+
   it('accepts a valid lesson, clamps geometry and keeps it a draft', () => {
     const r = validateLesson(base());
     expect(r.ok).toBe(true);

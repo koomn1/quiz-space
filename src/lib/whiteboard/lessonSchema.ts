@@ -45,6 +45,8 @@ export interface LessonStep {
   title?: string;
   narration: string;
   nodes: WhiteboardNode[];
+  /** Step language; omit to use the lesson language. Mixed lessons set it per step. */
+  lang?: 'ar' | 'en';
   /** Keep the previous step's drawing on the board and draw this step's nodes in the free space. */
   continues?: boolean;
   /** Inserted in answer to a learner question; after it the player offers to resume the original lesson. */
@@ -159,6 +161,7 @@ export function validateLesson(input: unknown): ValidationResult {
     });
     steps.push({
       id, title: cleanText(rawStep.title, LIMITS.maxTitleLength) || undefined, narration, nodes,
+      ...(rawStep.lang === 'ar' || rawStep.lang === 'en' ? { lang: rawStep.lang } : {}),
       ...(rawStep.continues === true ? { continues: true } : {}),
       ...(rawStep.branch === true ? { branch: true } : {}),
     });

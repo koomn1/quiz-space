@@ -154,14 +154,13 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const [asking, setAsking] = useState(false);
   const [askError, setAskError] = useState<string | null>(null);
   const [offerResume, setOfferResume] = useState(false);
-  const isAr = lesson.lang === 'ar';
   const [stepIndex, setStepIndex] = useState(0);
   const [tInStep, setTInStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(1);
   const [muted, setMuted] = useState(false);
   const [captions, setCaptions] = useState(true);
-  const [voiceInfo, setVoiceInfo] = useState(() => getNarrationSupport(lesson.lang));
+  const [voiceInfo, setVoiceInfo] = useState(() => getNarrationSupport(stepLang));
   const reduced = useMemo(prefersReducedMotion, []);
   const [voicePref, setVoicePref] = useState<VoicePreference>(() => { try { return loadVoicePreference(); } catch { return 'female'; } });
   const [voiceId, setVoiceId] = useState<string>('');
@@ -171,6 +170,9 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const stopSpeechRef = useRef<() => void>(() => undefined);
 
   const step = lesson.steps[stepIndex];
+  // Language is per step: a lesson can mix Arabic and English steps; the board direction, captions and voice follow the step.
+  const stepLang: 'ar' | 'en' = step?.lang ?? lesson.lang;
+  const isAr = stepLang === 'ar';
   const durations = useMemo(() => buildTimeline(lesson, rate), [lesson, rate]);
   const duration = durations.steps[stepIndex]?.durationMs ?? stepDurationMs(step, rate);
   const isLast = stepIndex === lesson.steps.length - 1;
@@ -179,11 +181,11 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   useEffect(() => {
     const s = typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
     if (!s) return;
-    const update = () => { setVoiceInfo(getNarrationSupport(lesson.lang)); setVoiceList(engine.voices(lesson.lang)); };
+    const update = () => { setVoiceInfo(getNarrationSupport(stepLang)); setVoiceList(engine.voices(stepLang)); };
     update();
     s.addEventListener?.('voiceschanged', update);
     return () => s.removeEventListener?.('voiceschanged', update);
-  }, [lesson.lang]);
+  }, [stepLang]);
 
   const stopSpeech = useCallback(() => { stopSpeechRef.current(); stopSpeechRef.current = () => undefined; engine.cancel(); }, []);
 
@@ -192,7 +194,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     if (muted || !voiceInfo.hasVoiceForLang) { speechDoneRef.current = true; return; }
     speechDoneRef.current = false;
     stopSpeechRef.current = engine.speak({
-      text: lesson.steps[index].narration, lang: lesson.lang, rate,
+      text: lesson.steps[index].narration, lang: lesson.steps[index].lang ?? lesson.lang, rate,
       gender: genderForStep(voicePref, index), voiceId: voiceId || null, fromSentence,
       onEnd: () => { speechDoneRef.current = true; },
     });
@@ -337,7 +339,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
           </defs>
           <rect width={lesson.canvas.width} height={lesson.canvas.height} fill="url(#wb-grid)" />
           <g key={stepIndex}>
-            {carriedSteps().map(cs => <g key={`carry-${cs.id}`}>{cs.nodes.map(n => <BoardNode key={`${cs.id}-${n.id}`} node={n} progress={1} rtl={isAr} />)}</g>)}
+            {carriedSteps().map(cs => <g key={`carry-${cs.id}`}>{cs.nodes.map(n => <BoardNode key={`${cs.id}-${n.id}`} node={n} progress={1} rtl={(cs.lang ?? lesson.lang) === 'ar'} />)}</g>)}
             {renderStep(step, stepIndex)}
           </g>
         </svg>
