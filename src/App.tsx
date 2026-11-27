@@ -1,3 +1,4 @@
+import { useCommandPaletteShortcut, useXpRefresh } from './hooks/useAppGlobalListeners';
 import { clearLocalSession, ownsCachedClassroom } from './lib/appSession';
 import CosmicLoader from "./components/CosmicLoader";
 /**
@@ -539,18 +540,7 @@ export default function App() {
     }
     };
 
-  React.useEffect(() => {
-    const handleCommandShortcut = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      const isTyping = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.isContentEditable;
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && !isTyping) {
-        event.preventDefault();
-        setIsCommandPaletteOpen(true);
-      }
-    };
-    window.addEventListener('keydown', handleCommandShortcut);
-    return () => window.removeEventListener('keydown', handleCommandShortcut);
-  }, []);
+  useCommandPaletteShortcut(React.useCallback(() => setIsCommandPaletteOpen(true), []));
 
   // Direct hash links must follow the same membership rule as sidebar clicks.
   React.useEffect(() => {
@@ -577,18 +567,7 @@ export default function App() {
     }
   };
 
-  React.useEffect(() => {
-    const refreshXpAfterQuiz = (event: Event) => {
-      const detail = (event as CustomEvent<{ userId?: string }>).detail;
-      if (!userId || (detail?.userId && detail.userId !== userId)) return;
-      getUserProfileStats(userId).then(stats => {
-        setUserStats(stats);
-        if (stats.completions) setCompletions(stats.completions);
-      }).catch(e => console.warn('Error refreshing XP after quiz:', e));
-    };
-    window.addEventListener('quizspace:xp-updated', refreshXpAfterQuiz);
-    return () => window.removeEventListener('quizspace:xp-updated', refreshXpAfterQuiz);
-  }, [userId]);
+  useXpRefresh(userId, setUserStats, setCompletions);
 
   const handleExitQuiz = () => {
     setActiveQuizId(null);
