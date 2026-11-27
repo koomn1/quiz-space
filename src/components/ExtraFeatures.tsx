@@ -1206,7 +1206,7 @@ export function BookmarksSection({ quizzes, onStartQuiz, lang, onViewProfile, us
   const savedQuizzes = quizzes.filter(q => bookmarkedIds.includes(q.id));
 
   return (
-    <div className="space-y-6" style={{ textAlign: isAr ? 'right' : 'left' }}>
+    <div className="space-y-6 px-4 sm:px-0" style={{ textAlign: isAr ? 'right' : 'left' }}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0 max-w-full">
           <h2 className="text-2xl font-black font-display text-slate-800 dark:text-white flex items-center gap-2">

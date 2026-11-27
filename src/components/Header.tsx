@@ -142,16 +142,16 @@ export default function Header({
         >
 
           {/* Logo & Headline */}
-          <div className="liquid-header__brand flex items-center gap-2">
+          <div className="liquid-header__brand flex min-w-0 items-center gap-2">
             {!isQuizLocked && (
-              <button ref={menuButtonRef} type="button" aria-label={isSidebarOpen ? (lang === 'ar' ? 'إغلاق القائمة' : 'Close navigation') : (lang === 'ar' ? 'فتح القائمة' : 'Open navigation')} aria-expanded={isSidebarOpen} aria-controls="quizspace-primary-sidebar" className="flex h-11 w-11 items-center justify-center p-0 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200" onClick={toggleSidebar}>
+              <button ref={menuButtonRef} type="button" aria-label={isSidebarOpen ? (lang === 'ar' ? 'إغلاق القائمة' : 'Close navigation') : (lang === 'ar' ? 'فتح القائمة' : 'Open navigation')} aria-expanded={isSidebarOpen} aria-controls="quizspace-primary-sidebar" className="flex h-11 w-11 shrink-0 items-center justify-center p-0 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200" onClick={toggleSidebar}>
                 <AnimatedMenuIcon className="w-5 h-5 sm:w-6 sm:h-6" isOpen={isSidebarOpen} />
               </button>
             )}
             <button
               type="button"
               aria-label={lang === 'ar' ? 'العودة إلى الرئيسية' : 'Go to home'}
-              className={`border-0 bg-transparent p-0 flex items-center gap-1.5 sm:gap-3 select-none transition-all duration-300 ${isQuizLocked ? 'cursor-default pointer-events-none' : 'cursor-pointer group'}`}
+              className={`border-0 bg-transparent p-0 flex min-w-0 overflow-hidden items-center gap-1.5 sm:gap-3 select-none transition-all duration-300 ${isQuizLocked ? 'cursor-default pointer-events-none' : 'cursor-pointer group'}`}
               onClick={() => {
                 if (!isQuizLocked) {
                   setTab('landing');
