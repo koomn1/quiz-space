@@ -18,6 +18,15 @@ describe('whiteboard layout checker', () => {
     expect(b.y).toBeGreaterThan(a.y + 30);
     expect(r.warnings.some(w => w.includes('overlap'))).toBe(true);
   });
+  it('removes an arrow that crosses text and rejects text running over a frame edge', () => {
+    const arrow = { id: 'ar', type: 'arrow', x: 300, y: 300, x2: 900, y2: 300, color: 'ink' };
+    const r = validateAiLesson(lesson([t('a', 640, 310, 'نص في الطريق'), arrow]));
+    expect(r.ok).toBe(true);
+    expect(r.lesson!.steps[0].nodes.some(n => n.type === 'arrow')).toBe(false);
+    const box = { id: 'b', type: 'rectangle', x: 700, y: 200, w: 200, h: 300, color: 'ink' };
+    const bad = validateAiLesson(lesson([box, t('c', 640, 350, 'نص طويل يعبر حافة الإطار تماما', { align: 'center' })]));
+    expect(bad.ok).toBe(false);
+  });
   it('shrinks text that would clip and keeps it inside the board', () => {
     const r = validateAiLesson(lesson([t('a', 1200, 300, 'نص طويل جدا جدا جدا جدا جدا يتجاوز عرض السبورة بكثير', { align: 'start', fontSize: 60 })]));
     expect(r.ok).toBe(true);

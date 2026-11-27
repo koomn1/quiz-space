@@ -71,6 +71,16 @@ export interface LayoutReport {
   problems: string[];
 }
 
+export function segmentHitsBox(n: WhiteboardNode, b: Box, pad = 0): boolean {
+  const x2 = n.x2 ?? n.x; const y2 = n.y2 ?? n.y;
+  const steps = 40;
+  for (let k = 0; k <= steps; k++) {
+    const x = n.x + ((x2 - n.x) * k) / steps; const y = n.y + ((y2 - n.y) * k) / steps;
+    if (x >= b.x0 - pad && x <= b.x1 + pad && y >= b.y0 - pad && y <= b.y1 + pad) return true;
+  }
+  return false;
+}
+
 function layoutStep(step: LessonStep, si: number, rtl: boolean, fixes: string[], problems: string[], fixed: Box[]): { step: LessonStep; boxes: Box[] } {
   const nodes: WhiteboardNode[] = step.nodes.map(n => ({ ...n }));
   const where = `step ${si + 1}`;
@@ -116,11 +126,22 @@ function layoutStep(step: LessonStep, si: number, rtl: boolean, fixes: string[],
       const sb = shapeBox(s);
       const cx = (tb.x0 + tb.x1) / 2; const cy = (tb.y0 + tb.y1) / 2;
       const centreInside = cx >= sb.x0 && cx <= sb.x1 && cy >= sb.y0 && cy <= sb.y1;
+      // A label may overflow its shape by a hair (circled answer); text running over the frame line is a collision.
+      const slack = 14;
+      if (centreInside && intersects(tb, sb, 0) && !contains({ x0: sb.x0 - slack, y0: sb.y0 - slack, x1: sb.x1 + slack, y1: sb.y1 + slack }, tb)) { problems.push(`${where}, text ${i + 1} runs over the edge of shape ${j + 1}.`); return; }
       // Text centred in a shape is a label or a circled answer; text whose centre is outside but overlaps the edge is a collision.
       if (intersects(tb, sb, 0) && !contains(sb, tb) && !centreInside) problems.push(`${where}, text ${i + 1} crosses shape ${j + 1}.`);
     });
   });
-  return { step: { ...step, nodes }, boxes: placed };
+  // 5) Lines and arrows never cross text: drop the ones that do (they only connect things, the narration still explains).
+  const textBoxes = nodes.map(n => (n.type === 'text' ? textBox(n, rtl) : shapeTextBox(n)));
+  const keep = nodes.filter((n, i) => {
+    if (n.type !== 'line' && n.type !== 'arrow') return true;
+    const hits = textBoxes.some(tb => tb && segmentHitsBox(n, tb, 4));
+    if (hits) fixes.push(`${where}, ${n.type} ${i + 1}: removed because it crossed text.`);
+    return !hits;
+  });
+  return { step: { ...step, nodes: keep }, boxes: placed };
 }
 
 export function layoutLesson(lesson: WhiteboardLesson): LayoutReport {
