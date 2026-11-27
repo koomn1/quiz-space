@@ -12,6 +12,7 @@ const INTERNAL_TABS = new Set(['quiz', 'activity', 'creating', 'membership', 'ov
 
 /** Unknown dashboard sub-routes (for example #/dashboard/saved) must show the not-found page, not an empty one. */
 export function normalizeDashboardTab(tab: string): string {
+  if (tab === 'saved') return 'bookmarks';
   if (KNOWN_TABS.has(tab) || INTERNAL_TABS.has(tab) || tab.startsWith('legal-')) return tab;
   return 'not-found';
 }

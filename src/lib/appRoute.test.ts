@@ -77,8 +77,8 @@ describe('shouldShowSplash', () => {
 
 describe('unknown dashboard routes', () => {
   it('maps unknown dashboard sub-routes to not-found (hash and path)', () => {
-    expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/saved' })).toBe('not-found');
-    expect(resolveActiveTab(sp(), { pathname: '/dashboard/saved', hash: '' })).toBe('not-found');
+    expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/nope' })).toBe('not-found');
+    expect(resolveActiveTab(sp(), { pathname: '/dashboard/nope', hash: '' })).toBe('not-found');
   });
   it('keeps valid and internal dashboard sub-routes', () => {
     expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/bookmarks' })).toBe('bookmarks');
@@ -97,5 +97,11 @@ describe('shared frame and location params', () => {
     expect(readLocationParams({ search: '?tab=x', hash: '#/a?tab=y' }).get('tab')).toBe('x');
     expect(readLocationParams({ search: '', hash: '#/dashboard/a?tab=y' }).get('tab')).toBe('y');
     expect(readLocationParams({ search: '', hash: '#/dashboard/a' }).get('tab')).toBeNull();
+  });
+});
+
+describe('saved alias', () => {
+  it('maps saved to bookmarks', () => {
+    expect(resolveActiveTab(sp(), { pathname: '/', hash: '#/dashboard/saved' })).toBe('bookmarks');
   });
 });
