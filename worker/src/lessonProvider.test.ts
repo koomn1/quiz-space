@@ -27,3 +27,17 @@ describe('text requests that prefer the xKiro vision model', () => {
     expect(r.provider).toBe('inception');
   });
 });
+
+describe('noReasoning', () => {
+  it('turns reasoning off for both providers', async () => {
+    const bodies: any[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (_u: string, init: any) => { bodies.push(JSON.parse(init.body)); return ok('{"a":1}'); }));
+    await generateWithProviderChain({ XKIRO_API_KEY: 'x', INCEPTION_API_KEY: 'i' } as any, [{ role: 'user', content: 'hi' }], { preferXkiro: true, noReasoning: true });
+    expect(bodies[0]).toMatchObject({ reasoning_effort: 'none', include_reasoning: false });
+    vi.unstubAllGlobals();
+    vi.stubGlobal('fetch', vi.fn(async (_u: string, init: any) => { bodies.push(JSON.parse(init.body)); return ok('{"a":1}'); }));
+    await generateWithProviderChain({ INCEPTION_API_KEY: 'i' } as any, [{ role: 'user', content: 'hi' }], { noReasoning: true });
+    expect(bodies[1]).toMatchObject({ reasoning_effort: 'instant' });
+    vi.unstubAllGlobals();
+  });
+});

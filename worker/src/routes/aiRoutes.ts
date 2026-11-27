@@ -298,6 +298,7 @@ export async function lessonModelText(env: Env, prompt: string): Promise<{ text:
     timeoutMs: 110_000,
     reasoning_effort: 'low',
     preferXkiro: true,
+    noReasoning: true,
     validateResponse: text => { extractJson(text); },
   });
   return { text: result.text, model: `${result.provider}/${result.model}` };

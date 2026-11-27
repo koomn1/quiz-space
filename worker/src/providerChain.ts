@@ -10,6 +10,8 @@ export type ProviderOptions = {
   validateResponse?: (text: string, provider: string, model: string) => void;
   /** Text-only request that should use the xKiro model (same one Cosmo uses for reading images) first, then Inception. */
   preferXkiro?: boolean;
+  /** Ask the provider not to spend the token budget on reasoning (needed for long structured JSON such as lessons). */
+  noReasoning?: boolean;
 };
 
 export const INCEPTION_MODEL = 'mercury-3';
@@ -77,7 +79,7 @@ async function callInception(env: Env, messages: ProviderMessage[], options: Pro
     body: JSON.stringify({
       model: INCEPTION_MODEL,
       messages,
-      reasoning_effort: options.reasoning_effort || THINKING_REASONING_EFFORT,
+      reasoning_effort: options.noReasoning ? 'instant' : options.reasoning_effort || THINKING_REASONING_EFFORT,
       max_completion_tokens: options.max_tokens || 12_000,
       temperature: options.temperature ?? 0.7,
       ...(options.response_format ? { response_format: options.response_format } : {}),
@@ -93,8 +95,8 @@ async function callXkiro(env: Env, messages: ProviderMessage[], options: Provide
     body: JSON.stringify({
       model: XKIRO_VISION_MODEL,
       messages,
-      reasoning_effort: options.reasoning_effort || THINKING_REASONING_EFFORT,
-      include_reasoning: true,
+      reasoning_effort: options.noReasoning ? 'none' : options.reasoning_effort || THINKING_REASONING_EFFORT,
+      include_reasoning: !options.noReasoning,
       max_tokens: options.max_tokens || 12_000,
       ...(options.temperature != null ? { temperature: options.temperature } : {}),
       ...(options.response_format ? { response_format: options.response_format } : {}),
