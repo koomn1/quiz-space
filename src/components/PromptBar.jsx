@@ -101,6 +101,25 @@ function SendGlyph({ busy, morphDuration, squash, tilt }) {
   );
 }
 
+const DEFAULT_LABELS = {
+  prompt: 'Prompt',
+  addSources: 'Add files and sources',
+  chooseModel: 'Choose model',
+  chooseEffort: 'Choose effort',
+  dictate: 'Dictate',
+  stopDictation: 'Stop dictation',
+  stop: 'Stop',
+  send: 'Send',
+  sources: 'Sources',
+  commands: 'Commands',
+  models: 'Models',
+  effort: 'Effort',
+  listening: 'Listening…',
+  removeFile: file => `Remove ${file}`,
+  autoReasoning: level => `Automatic reasoning: ${level}`,
+  reasoningTitle: 'Reasoning is assigned by your active plan'
+};
+
 export default function PromptBar({
   placeholder = 'Ask anything',
   sources = DEFAULT_SOURCES,
@@ -129,8 +148,10 @@ export default function PromptBar({
   squash = 0.12,
   tilt = 8,
   pressScale = 0.96,
-  className = ''
+  className = '',
+  labels: labelOverrides
 }) {
+  const labels = { ...DEFAULT_LABELS, ...labelOverrides };
   const reduce = useReducedMotion();
   const rootRef = useRef(null);
   const inputRef = useRef(null);
@@ -484,7 +505,7 @@ export default function PromptBar({
           className="prompt-bar__menu"
           role={open === 'effort' ? 'dialog' : 'listbox'}
           aria-label={
-            open === 'at' ? 'Sources' : open === 'slash' ? 'Commands' : open === 'model' ? 'Models' : 'Effort'
+            open === 'at' ? labels.sources : open === 'slash' ? labels.commands : open === 'model' ? labels.models : labels.effort
           }
           data-kind={open}
         >
@@ -505,7 +526,7 @@ export default function PromptBar({
                 className="prompt-bar__effort-track"
                 role="slider"
                 tabIndex={0}
-                aria-label="Effort"
+                aria-label={labels.effort}
                 aria-valuemin={0}
                 aria-valuemax={efforts.length - 1}
                 aria-valuenow={effortIndex}
@@ -586,7 +607,7 @@ export default function PromptBar({
                 <button
                   type="button"
                   className="prompt-bar__chip-x"
-                  aria-label={`Remove ${file}`}
+                  aria-label={labels.removeFile(file)}
                   onClick={() => setAttachments(a => a.filter((_, j) => j !== i))}
                 >
                   <X size={10} strokeWidth={2.5} aria-hidden="true" />
@@ -601,8 +622,8 @@ export default function PromptBar({
           className="prompt-bar__input"
           rows={1}
           value={draft}
-          placeholder={listening ? 'Listening…' : placeholder}
-          aria-label="Prompt"
+          placeholder={listening ? labels.listening : placeholder}
+          aria-label={labels.prompt}
           onChange={e => {
             setDraft(e.target.value);
             typing.current.energy = Math.min(1.6, typing.current.energy + 0.22);
@@ -619,7 +640,7 @@ export default function PromptBar({
           <button
             type="button"
             className="prompt-bar__tool"
-            aria-label="Add files and sources"
+            aria-label={labels.addSources}
             aria-expanded={plusOpen}
             data-on={plusOpen ? '' : undefined}
             onMouseDown={e => e.preventDefault()}
@@ -637,7 +658,7 @@ export default function PromptBar({
             <button
               type="button"
               className="prompt-bar__pick"
-              aria-label="Choose model"
+              aria-label={labels.chooseModel}
               aria-expanded={modelOpen}
               data-on={modelOpen ? '' : undefined}
               onMouseDown={e => e.preventDefault()}
@@ -657,7 +678,7 @@ export default function PromptBar({
             <button
               type="button"
               className="prompt-bar__pick"
-              aria-label="Choose effort"
+              aria-label={labels.chooseEffort}
               aria-expanded={effortOpen}
               data-on={effortOpen ? '' : undefined}
               data-max={maxed ? '' : undefined}
@@ -673,7 +694,7 @@ export default function PromptBar({
               <span>{level}</span>
             </button>
           ) : effortLocked && level ? (
-            <span className="prompt-bar__pick" aria-label={`Automatic reasoning: ${level}`} title="Reasoning is assigned by your active plan">
+            <span className="prompt-bar__pick" aria-label={labels.autoReasoning(level)} title={labels.reasoningTitle}>
               <Sparkles size={13} strokeWidth={2} aria-hidden="true" />
               <span>{level}</span>
             </span>
@@ -683,7 +704,7 @@ export default function PromptBar({
             <button
               type="button"
               className="prompt-bar__tool"
-              aria-label={listening ? 'Stop dictation' : 'Dictate'}
+              aria-label={listening ? labels.stopDictation : labels.dictate}
               aria-pressed={listening}
               data-on={listening ? '' : undefined}
               onMouseDown={e => e.preventDefault()}
@@ -704,7 +725,7 @@ export default function PromptBar({
             type="button"
             className="prompt-bar__send"
             disabled={!armed}
-            aria-label={busy ? 'Stop' : 'Send'}
+            aria-label={busy ? labels.stop : labels.send}
             data-armed={armed ? '' : undefined}
             data-pressed={pressed ? '' : undefined}
             onMouseDown={e => e.preventDefault()}

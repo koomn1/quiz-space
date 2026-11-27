@@ -1476,6 +1476,24 @@ export default function AIChat({
             {/* React Bits PromptBar */}
               <div className="relative z-20 mx-auto w-full max-w-3xl" dir={isAr ? 'rtl' : 'ltr'}>
               <PromptBar
+                labels={isAr ? {
+                  prompt: 'اكتب رسالتك',
+                  addSources: 'إضافة ملفات ومصادر',
+                  chooseModel: 'اختيار النموذج',
+                  chooseEffort: 'اختيار مستوى الجهد',
+                  dictate: 'إملاء صوتي',
+                  stopDictation: 'إيقاف الإملاء',
+                  stop: 'إيقاف',
+                  send: 'إرسال',
+                  sources: 'المصادر',
+                  commands: 'الأوامر',
+                  models: 'النماذج',
+                  effort: 'مستوى الجهد',
+                  listening: 'جارٍ الاستماع…',
+                  removeFile: (file) => `إزالة ${file}`,
+                  autoReasoning: (level) => `التفكير التلقائي: ${level}`,
+                  reasoningTitle: 'مستوى التفكير يحدده اشتراكك الحالي',
+                } : undefined}
                 placeholder={isAr ? `اسأل ${ASSISTANT_NAME_AR} أي سؤال دراسي، أو اطلب تلخيص ملف، أو إنشاء اختبار...` : `Ask ${ASSISTANT_NAME_EN} anything, request a summary, or create a quiz...`}
                 sources={[
                   { key: 'files', name: isAr ? 'ملفات وصور' : 'Photos & files', description: isAr ? 'ارفع من جهازك' : 'Upload from this device', icon: Paperclip, attach: true },
