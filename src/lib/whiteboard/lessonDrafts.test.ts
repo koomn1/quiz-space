@@ -15,6 +15,12 @@ describe('lesson drafts', () => {
     expect(validateAiLesson('nope').ok).toBe(false);
     expect(validateAiLesson(raw({ steps: [{ id: 's', narration: 'x', nodes: [{ id: 'n', type: 'iframe', x: 1, y: 1 }] }] })).ok).toBe(false);
   });
+  it('gives every AI draft a fresh id so the player never shows a stale board', () => {
+    const a = validateAiLesson(raw(), 'm').lesson!;
+    const b = validateAiLesson(raw(), 'm').lesson!;
+    expect(a.id).not.toBe('x1');
+    expect(a.id).not.toBe(b.id);
+  });
   it('saves reviewed lessons locally, de-duplicated, and ignores corrupt storage', () => {
     const st = memory();
     const lesson = validateAiLesson(raw()).lesson!;

@@ -7,8 +7,10 @@ const MAX_SAVED = 20;
 /** AI output is always forced to an unreviewed draft before validation, whatever the model claims. */
 export function validateAiLesson(raw: unknown, model?: string): ValidationResult {
   const obj = typeof raw === 'object' && raw !== null && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  // Every draft gets a fresh id: the player keys on it, and two drafts with the model's canned id would show a stale board.
   const checked = validateLesson({
     ...obj,
+    id: `ai-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     metadata: { source: 'ai', status: 'draft', createdAt: new Date().toISOString(), model },
   });
   if (!checked.ok || !checked.lesson) return checked;
