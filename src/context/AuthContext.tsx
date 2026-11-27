@@ -191,6 +191,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // like a failed login. App.tsx has its own guarded stats fallback.
           console.error('Profile bootstrap failed after authentication', error instanceof Error ? error.message : 'unknown');
           if (generation !== syncGeneration) return;
+          // A slow network must not leave a paying member on the Free fallback: retry once without the short timeout and replace the fallback when the real profile arrives.
+          fetchAppUser(nextUser).then((lateUser) => { if (generation === syncGeneration) setUser(lateUser); }).catch(() => {});
           const fallbackName = nextUser.user_metadata?.full_name || nextUser.user_metadata?.name || nextUser.email?.split('@')[0] || 'طالب متميز';
           setUser({
             uid: nextUser.id,
