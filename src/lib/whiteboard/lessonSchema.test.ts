@@ -77,3 +77,14 @@ describe('timeline', () => {
     expect(visibleChars(step.nodes[0], 1)).toBe(5);
   });
 });
+
+import { SAMPLE_LESSONS } from './sampleLessons';
+describe('sample lessons', () => {
+  it('are valid, reviewed and have narration for every step', () => {
+    for (const l of SAMPLE_LESSONS) {
+      expect(validateLesson(l).ok).toBe(true);
+      expect(l.metadata.status).toBe('reviewed');
+      l.steps.forEach(s => expect(s.narration.length).toBeGreaterThan(10));
+    }
+  });
+});

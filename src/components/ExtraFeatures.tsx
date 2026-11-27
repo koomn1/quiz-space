@@ -15,6 +15,7 @@ import {
 import { Quiz, QuizCompletion, GlobalLeaderboardUser } from '../types';
 import TitleAvatarBadge from './TitleAvatarBadge';
 import MockExamPanel from './MockExamPanel';
+import WhiteboardLessonCard from './whiteboard/WhiteboardLessonCard';
 import { EMPTY_SIGNALS, ForYouSignals, buildSubjectAffinity, rankForYou } from '../lib/forYouFeed';
 import { quizSubject, UNCATEGORIZED } from '../lib/mockExam';
 import { translations } from '../lib/i18n';
@@ -184,6 +185,8 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
           )}
         </div>
       </div>
+
+      <WhiteboardLessonCard lang={lang} />
 
       <MockExamPanel quizzes={quizzes} lang={lang} />
 
