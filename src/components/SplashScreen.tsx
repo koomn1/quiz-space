@@ -59,7 +59,7 @@ export default function SplashScreen({ onComplete, lang, userName, isGuest = fal
   useEffect(() => {
     const videoEl = videoRef.current;
 
-    const splashDuration = splashSource ? 8000 : 1100;
+    const splashDuration = splashSource ? 3500 : 1100;
     const startedAt = Date.now();
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - startedAt;
