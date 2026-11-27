@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, Captions, Info, Send, Loader2 } from 'lucide-react';
 import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
@@ -172,29 +173,35 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     });
   }, [lesson.steps, lesson.lang, muted, rate, stopSpeech, voiceInfo.hasVoiceForLang, voicePref, voiceId]);
 
-  // Animation clock. The step advances once both the drawing time and the narration are finished.
+  // Animation clock: one GSAP tween per step drives the step time (ease none), so pause, seek and the narration sync all work off one timeline.
+  const tRef = useRef(0);
+  tRef.current = tInStep;
   useEffect(() => {
     if (!playing) return;
-    let raf = 0;
-    let last = performance.now();
-    let graceMs = 0;
-    const tick = (now: number) => {
-      const dt = now - last;
-      last = now;
-      setTInStep(prev => {
-        const next = prev + dt;
-        if (next < duration) return next;
-        if (!speechDoneRef.current && graceMs < 12_000) { graceMs += dt; return duration; }
-        if (isLast) { setPlaying(false); stopSpeech(); return duration; }
-        if (step.branch) { setPlaying(false); stopSpeech(); setOfferResume(true); return duration; }
-        setStepIndex(i => i + 1);
-        return 0;
-      });
-      raf = requestAnimationFrame(tick);
+    const proxy = { t: Math.min(tRef.current, duration) };
+    let grace: gsap.core.Tween | null = null;
+    let waited = 0;
+    const finish = () => {
+      // The step advances once both the drawing time and the narration are finished.
+      if (!speechDoneRef.current && waited < 12_000) {
+        waited += 100;
+        grace = gsap.delayedCall(0.1, finish);
+        return;
+      }
+      if (isLast) { setPlaying(false); stopSpeech(); setTInStep(duration); return; }
+      if (step.branch) { setPlaying(false); stopSpeech(); setOfferResume(true); setTInStep(duration); return; }
+      setStepIndex(i => i + 1);
+      setTInStep(0);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [playing, duration, isLast, stopSpeech, step.branch]);
+    const tween = gsap.to(proxy, {
+      t: duration,
+      duration: Math.max(0, duration - proxy.t) / 1000,
+      ease: 'none',
+      onUpdate: () => setTInStep(proxy.t),
+      onComplete: finish,
+    });
+    return () => { tween.kill(); grace?.kill(); };
+  }, [playing, stepIndex, duration, isLast, stopSpeech, step.branch]);
 
   // Speak whenever playback is active on a new step.
   const spokenStepRef = useRef<number | null>(null);
