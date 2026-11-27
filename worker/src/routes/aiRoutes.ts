@@ -17,7 +17,7 @@ import {
   ANSWER_REVIEW_MODEL_TIMEOUT_MS,
   type AiRequestOptions,
 } from '../services/answerReviewService';
-import { buildLessonPrompt, parseLessonRequest } from '../whiteboardLesson';
+import { buildFollowUpPrompt, buildLessonPrompt, parseFollowUpRequest, parseLessonRequest } from '../whiteboardLesson';
 import { json, routePath, type RouteContext, type RouteResult } from '../routes';
 
 type Provider = 'inception';
@@ -293,9 +293,9 @@ export async function gradeEssayWithFallback(
  */
 export async function lessonModelText(env: Env, prompt: string): Promise<{ text: string; model: string }> {
   const result = await generateWithProviderChain(env, [{ role: 'user', content: prompt }], {
-    max_tokens: 8_000,
+    max_tokens: 16_000,
     temperature: 0.4,
-    timeoutMs: 100_000,
+    timeoutMs: 110_000,
     reasoning_effort: 'low',
     preferXkiro: true,
     validateResponse: text => { extractJson(text); },
@@ -455,6 +455,22 @@ export async function handleAiRoutes(
     const generated = await lessonModelText(env, buildLessonPrompt(lessonRequest));
     // The client validates the structure and layout strictly; the Worker only guarantees it is JSON.
     return json({ lesson: extractJson(generated.text), model: generated.model }, 200, headers);
+  }
+
+  if (path === '/api/ai/lesson-followup') {
+    meta.setAiOperation('lesson-followup');
+    if (userId === 'guest' || userId === 'placeholder-user') {
+      return json({ error: 'Authentication required' }, 401, headers);
+    }
+    const followUp = parseFollowUpRequest(body);
+    if (!followUp) {
+      return json({ error: 'Invalid follow-up request' }, 400, headers);
+    }
+    if (!(await hasGoldOrDiamondAccess(request, env, userId))) {
+      return json({ error: 'AI whiteboard lessons are available on the Gold and Diamond plans only.', code: 'plan_required' }, 403, headers);
+    }
+    const generated = await lessonModelText(env, buildFollowUpPrompt(followUp));
+    return json({ step: extractJson(generated.text), model: generated.model }, 200, headers);
   }
 
   if (path === '/api/ai/explain') {

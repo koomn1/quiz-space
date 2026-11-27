@@ -52,8 +52,13 @@ async function requestJson(url: string, init: RequestInit, provider: string, mod
   try {
     const response = await fetch(url, { ...init, signal: timeout.signal });
     if (!response.ok) throw new Error(`${provider} ${model} failed (${response.status})`);
-    const text = extractText(await response.json());
-    if (!text.trim()) throw new Error(`${provider} ${model} returned an empty response`);
+    const payload: any = await response.json();
+    const text = extractText(payload);
+    if (!text.trim()) {
+      const finish = payload?.choices?.[0]?.finish_reason;
+      const used = payload?.usage?.completion_tokens;
+      throw new Error(`${provider} ${model} returned an empty response${finish || used ? ` (finish: ${finish ?? 'n/a'}, completion tokens: ${used ?? 'n/a'})` : ''}`);
+    }
     return text.trim();
   } finally {
     timeout.dispose();
