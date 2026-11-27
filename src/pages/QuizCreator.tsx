@@ -372,14 +372,14 @@ export default function QuizCreator({
   const renderUsesIndicator = (usesCount: number) => {
     if (userPlan === 'Gold' || userPlan === 'Diamond') {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-black text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)] animate-pulse">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-black text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)] animate-pulse">
           <Sparkles className="w-3 h-3 text-emerald-400 animate-spin" style={{ animationDuration: '3s' }} />
           <span>{isAr ? 'توليد غير محدود' : 'Unlimited Generation'}</span>
         </span>
       );
     }
     return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black shadow-[0_0_15px_rgba(139,92,246,0.25)] ${
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black shadow-[0_0_15px_rgba(139,92,246,0.25)] ${
         usesCount > 0
           ? 'bg-[#007472]/10 dark:bg-[#2AC3BB]/10 border border-[#007472]/30 dark:border-[#2AC3BB]/30 text-[#2AC3BB]'
           : 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
@@ -2302,17 +2302,17 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
             <div className="my-auto flex max-h-[94dvh] w-full max-w-5xl flex-col overflow-hidden rounded-[32px] border border-[#2AC3BB]/35 bg-[#07171d] text-white shadow-[0_0_80px_rgba(0,116,114,0.35)]">
               <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-gradient-to-l from-[#007472]/30 via-[#007472]/15 to-transparent px-5 py-4 sm:px-7">
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#2AC3BB]">QuizSpace Preview</p>
+                  <p className="text-xs font-black uppercase tracking-[0.22em] text-[#2AC3BB]">QuizSpace Preview</p>
                   <h2 className="mt-1 text-xl font-black text-white sm:text-2xl drop-shadow-sm">معاينة الاختبار قبل الحفظ</h2>
                   <p className="mt-1 text-xs font-medium text-slate-300">راجع الأسئلة والإجابات، ثم اعتمد الاختبار أو ارجع للتعديل.</p>
                 </div>
                 <button type="button" onClick={() => setPreviewDraft(null)} className="rounded-2xl border border-white/20 bg-white/5 px-4 py-2 text-xs font-black text-white transition hover:bg-white/15">إغلاق</button>
               </div>
               <div className="grid shrink-0 grid-cols-2 gap-3 border-b border-white/10 bg-black/20 p-4 sm:grid-cols-4 sm:px-7">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-[11px] font-bold text-slate-300">العنوان</span><BidiText as="strong" className="mt-1 block truncate text-right text-sm font-extrabold text-white">{previewDraft.title}</BidiText></div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-[11px] font-bold text-slate-300">عدد الأسئلة</span><strong className="mt-1 block text-xl font-black text-[#2AC3BB]">{previewDraft.questions.length}</strong></div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-[11px] font-bold text-slate-300">اختيار من متعدد</span><strong className="mt-1 block text-xl font-black text-cyan-300">{previewDraft.questions.filter(q => q.type === 'mcq').length}</strong></div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-[11px] font-bold text-slate-300">مقالي / صح وخطأ</span><strong className="mt-1 block text-xl font-black text-amber-300">{previewDraft.questions.filter(q => q.type !== 'mcq').length}</strong></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-xs font-bold text-slate-300">العنوان</span><BidiText as="strong" className="mt-1 block truncate text-right text-sm font-extrabold text-white">{previewDraft.title}</BidiText></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-xs font-bold text-slate-300">عدد الأسئلة</span><strong className="mt-1 block text-xl font-black text-[#2AC3BB]">{previewDraft.questions.length}</strong></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-xs font-bold text-slate-300">اختيار من متعدد</span><strong className="mt-1 block text-xl font-black text-cyan-300">{previewDraft.questions.filter(q => q.type === 'mcq').length}</strong></div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3.5 backdrop-blur-md shadow-inner"><span className="block text-xs font-bold text-slate-300">مقالي / صح وخطأ</span><strong className="mt-1 block text-xl font-black text-amber-300">{previewDraft.questions.filter(q => q.type !== 'mcq').length}</strong></div>
               </div>
               <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto p-4 sm:p-7">
                 {previewDraft.questions.map((question, index) => {
@@ -2325,8 +2325,8 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[#2AC3BB]/40 bg-[#2AC3BB]/20 text-xs font-black text-[#2AC3BB] shadow-[0_0_12px_rgba(42,195,187,0.25)]">{index + 1}</span>
                         <div className="min-w-0 flex-1">
                           <div className="mb-2.5 flex flex-wrap items-center gap-2">
-                            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-extrabold text-slate-200">{question.type === 'mcq' ? 'اختيار من متعدد' : question.type === 'tf' ? 'صح / خطأ' : 'مقالي'}</span>
-                            <span className={`rounded-full border px-3 py-1 text-[11px] font-extrabold ${hasAnswer ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-300' : 'border-rose-400/40 bg-rose-500/20 text-rose-300'}`}>{hasAnswer ? 'إجابة مؤكدة' : 'يحتاج مراجعة'}</span>
+                            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-extrabold text-slate-200">{question.type === 'mcq' ? 'اختيار من متعدد' : question.type === 'tf' ? 'صح / خطأ' : 'مقالي'}</span>
+                            <span className={`rounded-full border px-3 py-1 text-xs font-extrabold ${hasAnswer ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-300' : 'border-rose-400/40 bg-rose-500/20 text-rose-300'}`}>{hasAnswer ? 'إجابة مؤكدة' : 'يحتاج مراجعة'}</span>
                           </div>
                           <BidiText as="p" className="whitespace-pre-wrap text-right text-base font-extrabold leading-8 text-white">{cleanQuizText(question.text)}</BidiText>
                           {question.type === 'mcq' && (
@@ -2486,7 +2486,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     percentage={ocrProgress.percentage}
                   />
                 )}
-                <div className="text-[10px] font-mono tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+                <div className="text-xs font-mono tracking-widest text-slate-400 dark:text-slate-500 uppercase">
                   {isAr ? 'التقدم محفوظ تلقائياً؛ يمكنك مغادرة الصفحة والعودة لاحقاً من مركز المعالجة' : 'Progress is saved automatically; you can leave and return later from the Processing Center'}
                 </div>
               </div>
@@ -2539,7 +2539,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 {activeMode === 'ai' && <MainLogo size="sm" showText={false} className="!h-5 !w-5" />}
               </span>
               <span>
-                <span className="block text-[10px] font-bold text-[#007472] dark:text-[#2AC3BB]">طريقة إنشاء الاختبار</span>
+                <span className="block text-xs font-bold text-[#007472] dark:text-[#2AC3BB]">طريقة إنشاء الاختبار</span>
                 <span className="mt-0.5 block text-sm font-black text-slate-800 dark:text-slate-100">
                   {activeMode === 'manual' && 'كتابة يدوية'}
                   {activeMode === 'ocr' && 'صورة أو PDF'}
@@ -2576,7 +2576,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selected ? 'bg-white/15 text-white' : 'bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-[#007472] dark:text-[#2AC3BB]'}`}>{mode.id === 'ai' ? <MainLogo size="sm" showText={false} className="!h-6 !w-6" /> : <ModeIcon className="h-4 w-4" />}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-xs font-black">{mode.label}</span>
-                      <span className={`mt-0.5 block text-[10px] ${selected ? 'text-[#FCF6EE]' : 'text-slate-500 dark:text-slate-400'}`}>{mode.hint}</span>
+                      <span className={`mt-0.5 block text-xs ${selected ? 'text-[#FCF6EE]' : 'text-slate-500 dark:text-slate-400'}`}>{mode.hint}</span>
                     </span>
                     {selected && <Check className="h-4 w-4 shrink-0" />}
                   </button>
@@ -2663,7 +2663,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                             <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-[#007472] dark:text-[#2AC3BB]' : 'text-slate-700 dark:text-slate-300'}`}>
                               {opt.label}
                             </div>
-                            <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
+                            <div className="text-xs text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
                               {opt.sub}
                             </div>
                           </div>
@@ -2689,7 +2689,7 @@ ${JSON.stringify(questionsForModel, null, 2)}${sourceContext ? `\n\nمقتطف �
                 <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block pb-1">
                   {isAr ? 'اختر نوعاً أو أكثر من الأسئلة:' : 'Choose one or more question types:'}
                 </label>
-                <p className="mb-2 text-[10px] text-slate-400">{isAr ? 'يمكنك تحديد نوعين معاً. اضغط على البطاقة لتفعيلها أو إلغاء تفعيلها.' : 'Select two types together if needed. Tap a card to toggle it.'}</p>
+                <p className="mb-2 text-xs text-slate-400">{isAr ? 'يمكنك تحديد نوعين معاً. اضغط على البطاقة لتفعيلها أو إلغاء تفعيلها.' : 'Select two types together if needed. Tap a card to toggle it.'}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {[
                     { id: 'mcq', label: isAr ? 'اختيار من متعدد' : 'Multiple Choice', icon: 'target', desc: isAr ? 'خيارات متعددة 4 إجابات' : '4-Option MCQs' },
@@ -2835,7 +2835,7 @@ A computer is a digital electronic machine...
                             <div className={`text-xs font-extrabold tracking-tight ${isSelected ? 'text-[#007472] dark:text-[#2AC3BB]' : 'text-slate-700 dark:text-slate-300'}`}>
                               {opt.label}
                             </div>
-                            <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
+                            <div className="text-xs text-slate-600 dark:text-slate-400 font-medium truncate mt-0.5">
                               {opt.sub}
                             </div>
                           </div>
@@ -2933,7 +2933,7 @@ A computer is a digital electronic machine...
 
             {uploadedFile && (
               <div className="relative z-10 rounded-2xl border border-[#007472]/20 bg-[#007472]/5 px-4 py-3 text-right dark:border-[#2AC3BB]/20 dark:bg-[#007472]/15" dir="rtl">
-                <p className="text-[10px] font-black uppercase tracking-wide text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'مصدر الاختبار' : 'Quiz source'}</p>
+                <p className="text-xs font-black uppercase tracking-wide text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'مصدر الاختبار' : 'Quiz source'}</p>
                 <p className="mt-1 truncate text-sm font-extrabold text-slate-800 dark:text-slate-100" title={uploadedFile.name}>{uploadedFile.name}</p>
                 {!isGenericExtractionTitle(title) && (
                   <p className="mt-1 text-xs font-bold text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'الموضوع المستخلص:' : 'Extracted topic:'} {title}</p>
@@ -2969,7 +2969,7 @@ A computer is a digital electronic machine...
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{isAr ? 'اختر ملفاً من جهازك' : 'Choose file from device'}</p>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium font-sans">{isAr ? 'اسحب وأسقط صورة أو ملف PDF/Word هنا' : 'Drag & drop an image, PDF, or Word file here'}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 font-medium font-sans">{isAr ? 'اسحب وأسقط صورة أو ملف PDF/Word هنا' : 'Drag & drop an image, PDF, or Word file here'}</p>
                     </div>
                   </label>
                 </div>
@@ -2993,7 +2993,7 @@ A computer is a digital electronic machine...
                     <p className="text-sm font-black text-slate-800 dark:text-slate-100 leading-tight">
                       {isAr ? 'استيراد من Google Drive' : 'Import from Google Drive'}
                     </p>
-                    <p className="text-[11px] text-slate-400 dark:text-[#2AC3BB] font-bold">
+                    <p className="text-xs text-slate-400 dark:text-[#2AC3BB] font-bold">
                       {isAr ? 'توليد فوري من مستندات السحابة' : 'Instant generation from cloud documents'}
                     </p>
                   </div>
@@ -3081,7 +3081,7 @@ A computer is a digital electronic machine...
                   <Icons8Icon name="sparkles" size={28} />
                   <div>
                     <p className="text-xs font-black text-[#007472] dark:text-[#2AC3BB]">استخراج شامل بدون حد لعدد الأسئلة</p>
-                    <p className="mt-1 text-[10px] leading-5 text-slate-600 dark:text-slate-400">سيقرأ النظام الملف بالكامل ويستخرج كل أسئلة MCQ وTrue/False المسموح بها حسب اختيارك، مع إزالة التكرار فقط.</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-400">سيقرأ النظام الملف بالكامل ويستخرج كل أسئلة MCQ وTrue/False المسموح بها حسب اختيارك، مع إزالة التكرار فقط.</p>
                   </div>
                 </div>
               </div>
@@ -3093,7 +3093,7 @@ A computer is a digital electronic machine...
                   <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block pb-1">
                     {isAr ? 'اختر نوعاً أو أكثر من أسئلة الملف:' : 'Choose one or more question types from the file:'}
                   </label>
-                  <p className="mb-2 text-[10px] text-slate-400">{isAr ? 'يمكنك تحديد نوعين معاً. سيحافظ التوليد على لغة الملف ويستخدم الأنواع المحددة فقط.' : 'Select two types together. Generation keeps the file language and uses only selected types.'}</p>
+                  <p className="mb-2 text-xs text-slate-400">{isAr ? 'يمكنك تحديد نوعين معاً. سيحافظ التوليد على لغة الملف ويستخدم الأنواع المحددة فقط.' : 'Select two types together. Generation keeps the file language and uses only selected types.'}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {[
                       { id: 'mcq', label: isAr ? 'اختيار من متعدد' : 'Multiple Choice', icon: 'target', desc: isAr ? 'خيارات متعددة 4 إجابات' : '4-Option MCQs' },
@@ -3133,7 +3133,7 @@ A computer is a digital electronic machine...
                   </div>
                 </div>
 
-                <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-normal">
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-normal">
                   أخبر الذكاء الاصطناعي عما تريد استخراجه أو التركيز عليه من هذا الملف تحديداً (مثلاً: رتبها، استبعد مقدمات الفصول، ركز على أسئلة الامتحان فقط، إلخ).
                 </p>
 
@@ -3149,42 +3149,42 @@ A computer is a digital electronic machine...
 
                 {fileGuidanceMessages.length > 0 && (
                   <div className="max-h-64 space-y-2 overflow-y-auto rounded-2xl border border-[#007472]/20 dark:border-[#2AC3BB]/20 bg-slate-950/[0.03] p-3 dark:border-[#2AC3BB]/20 dark:bg-black/10" dir="rtl">
-                    <div className="text-[10px] font-black text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'سجل الدردشة مع الملف' : 'File guidance chat'}</div>
+                    <div className="text-xs font-black text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'سجل الدردشة مع الملف' : 'File guidance chat'}</div>
                     {fileGuidanceMessages.map((message, index) => (
-                      <div key={`${message.role}-${index}`} className={`rounded-xl px-3 py-2 text-[11px] leading-6 whitespace-pre-wrap ${message.role === 'user' ? 'bg-[#007472]/10 text-slate-800 dark:bg-[#007472]/20 dark:text-[#FCF6EE]' : 'bg-white/80 text-slate-700 dark:bg-slate-900/70 dark:text-slate-200'}`}>
+                      <div key={`${message.role}-${index}`} className={`rounded-xl px-3 py-2 text-xs leading-6 whitespace-pre-wrap ${message.role === 'user' ? 'bg-[#007472]/10 text-slate-800 dark:bg-[#007472]/20 dark:text-[#FCF6EE]' : 'bg-white/80 text-slate-700 dark:bg-slate-900/70 dark:text-slate-200'}`}>
                         <span className="mb-0.5 block text-[9px] font-black opacity-60">{message.role === 'user' ? (isAr ? 'أنت' : 'You') : 'Cosmo'}</span>
                         {message.text}
                       </div>
                     ))}
-                    {fileGuidance && <div className="rounded-xl bg-white/80 px-3 py-2 text-[11px] leading-6 text-slate-700 dark:bg-slate-900/70 dark:text-slate-200 whitespace-pre-wrap">{fileGuidance}</div>}
+                    {fileGuidance && <div className="rounded-xl bg-white/80 px-3 py-2 text-xs leading-6 text-slate-700 dark:bg-slate-900/70 dark:text-slate-200 whitespace-pre-wrap">{fileGuidance}</div>}
                   </div>
                 )}
 
                 <div className="flex flex-col gap-2 rounded-2xl border border-[#007472]/20 dark:border-[#2AC3BB]/20 dark:border-[#2AC3BB]/20 bg-white/60 dark:bg-slate-950/30 p-3">
                   <div className="flex items-center justify-between gap-3" dir="rtl">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                       {isAr ? 'اجعل كوزمو يقرأ الملف أولًا ويشرح لك ما سيفعله قبل الاستخراج.' : 'Let Cosmo read the file first and explain what it will do before extraction.'}
                     </span>
                     <button
                       type="button"
                       onClick={handleGuideFile}
                       disabled={isGuidingFile || isProcessingOcr || fileType === 'document' || uploadedFile.size > 10 * 1024 * 1024}
-                      className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#007472] px-3 py-2 text-[10px] font-black text-white shadow-sm shadow-[#007472]/20 transition hover:bg-[#005e5c] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#007472] px-3 py-2 text-xs font-black text-white shadow-sm shadow-[#007472]/20 transition hover:bg-[#005e5c] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {isGuidingFile ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <Sparkles className="h-3.5 w-3.5" />}
                       {isGuidingFile ? (isAr ? 'جاري فهم الملف...' : 'Reading file...') : (isAr ? 'اسأل كوزمو عن الملف' : 'Ask Cosmo about file')}
                     </button>
                   </div>
                   {fileType === 'document' && (
-                    <p className="text-[10px] text-amber-600 dark:text-amber-400" dir="rtl">
+                    <p className="text-xs text-amber-600 dark:text-amber-400" dir="rtl">
                       {isAr ? 'الدردشة التوجيهية متاحة للصور وPDF حاليًا، أما Word وExcel وPowerPoint فستستمر عبر استخراج الملف المباشر.' : 'Guided chat currently supports images and PDF; Word, Excel, and PowerPoint continue through direct extraction.'}
                     </p>
                   )}
                   {fileGuidanceError && (
-                    <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400" dir="rtl">{fileGuidanceError}</p>
+                    <p className="text-xs font-bold text-rose-600 dark:text-rose-400" dir="rtl">{fileGuidanceError}</p>
                   )}
                   {fileGuidance && (
-                    <div className="rounded-xl bg-[#007472]/5 dark:bg-[#007472]/20 dark:bg-[#007472]/10 p-3 text-[11px] leading-6 text-slate-700 dark:text-slate-200 whitespace-pre-wrap" dir="rtl">
+                    <div className="rounded-xl bg-[#007472]/5 dark:bg-[#007472]/20 dark:bg-[#007472]/10 p-3 text-xs leading-6 text-slate-700 dark:text-slate-200 whitespace-pre-wrap" dir="rtl">
                       {fileGuidance}
                     </div>
                   )}
@@ -3202,7 +3202,7 @@ A computer is a digital electronic machine...
 
                       type="button"
                       onClick={() => setFileCustomPrompt(sug)}
-                      className="text-[10px] bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-[#007472] dark:hover:text-[#2AC3BB] border border-slate-200 dark:border-slate-700 hover:border-[#007472]/40 dark:hover:border-[#2AC3BB]/50 px-3 py-1.5 rounded-xl cursor-pointer transition-all active:scale-95" key={sug}
+                      className="text-xs bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-[#007472] dark:hover:text-[#2AC3BB] border border-slate-200 dark:border-slate-700 hover:border-[#007472]/40 dark:hover:border-[#2AC3BB]/50 px-3 py-1.5 rounded-xl cursor-pointer transition-all active:scale-95" key={sug}
                     >
                       {sug}
                     </button>
@@ -3216,7 +3216,7 @@ A computer is a digital electronic machine...
               <div className="p-5 rounded-2xl bg-amber-500/5 dark:bg-slate-900/30 border border-amber-500/15 dark:border-slate-800 space-y-5 shadow-xs">
                 {uploadedFile && (
                   <div className="rounded-2xl border border-[#007472]/20 bg-[#007472]/5 px-4 py-3 text-right dark:border-[#2AC3BB]/20 dark:bg-[#007472]/15" dir="rtl">
-                    <p className="text-[10px] font-black uppercase tracking-wide text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'مصدر الاختبار الجاري' : 'Current quiz source'}</p>
+                    <p className="text-xs font-black uppercase tracking-wide text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'مصدر الاختبار الجاري' : 'Current quiz source'}</p>
                     <p className="mt-1 truncate text-sm font-extrabold text-slate-800 dark:text-slate-100" title={uploadedFile.name}>{uploadedFile.name}</p>
                     {!isGenericExtractionTitle(title) && (
                       <p className="mt-1 text-xs font-bold text-[#007472] dark:text-[#2AC3BB]">{isAr ? 'الموضوع المستخلص:' : 'Extracted topic:'} {title}</p>
@@ -3235,7 +3235,7 @@ A computer is a digital electronic machine...
                       percentage={ocrProgress.percentage}
                     />
                     {postExtractionSolvePending && ocrProgress.stage === 'solving' && (
-                      <div className="rounded-xl border border-[#007472]/20 dark:border-[#2AC3BB]/20 bg-[#007472]/5 dark:bg-[#007472]/20 px-3 py-2 text-right text-[11px] font-extrabold text-[#007472] dark:border-[#2AC3BB]/20 dark:bg-[#007472]/10 dark:text-[#2AC3BB]" dir="rtl">
+                      <div className="rounded-xl border border-[#007472]/20 dark:border-[#2AC3BB]/20 bg-[#007472]/5 dark:bg-[#007472]/20 px-3 py-2 text-right text-xs font-extrabold text-[#007472] dark:border-[#2AC3BB]/20 dark:bg-[#007472]/10 dark:text-[#2AC3BB]" dir="rtl">
                         هذه مرحلة مستقلة بعد الاستخراج: لا يتم حفظ أي إجابة قبل مطابقتها مع الاختيارات ومحتوى الملف.
                       </div>
                     )}
@@ -3277,7 +3277,7 @@ A computer is a digital electronic machine...
                 {ocrBatches && ocrBatches.length > 0 && (
                   <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 space-y-2.5 text-right" dir="rtl">
                     <label className="text-xs font-black text-slate-600 dark:text-slate-400 flex items-center justify-between">
-                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-normal">مراقبة الاستخراج التتابعي الذكي</span>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 font-normal">مراقبة الاستخراج التتابعي الذكي</span>
                       <span>تتبع استمرار العمل بالأقسام الكلية</span>
                     </label>
 
@@ -3298,7 +3298,7 @@ A computer is a digital electronic machine...
                             }`} key={batch.id}
                           >
                             <div className="flex items-center gap-2.5">
-                              <div className={`w-5 h-5 rounded-full border flex items-center justify-center font-bold text-[10px] ${
+                              <div className={`w-5 h-5 rounded-full border flex items-center justify-center font-bold text-xs ${
                                 isActive
                                   ? 'bg-[#007472]/50 text-white border-[#007472] dark:border-[#2AC3BB] animate-pulse'
                                   : batch.status === 'success'
@@ -3318,17 +3318,17 @@ A computer is a digital electronic machine...
 
                             <div className="flex items-center gap-3">
                               {batch.status === 'success' && (
-                                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-[10px] font-black text-emerald-600 dark:text-emerald-400">
+                                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-xs font-black text-emerald-600 dark:text-emerald-400">
                                   تم استخراج {batch.questionsCount} سؤالاً
                                 </span>
                               )}
                               {batch.status === 'error' && (
-                                <span className="text-[10px] text-rose-500 font-semibold max-w-[120px] truncate">
+                                <span className="text-xs text-rose-500 font-semibold max-w-[120px] truncate">
                                   {batch.errorMsg || 'فشل الجزء'}
                                 </span>
                               )}
                               {batch.status === 'pending' && (
-                                <span className="text-[10px] text-slate-400">قيد الانتظار</span>
+                                <span className="text-xs text-slate-400">قيد الانتظار</span>
                               )}
 
                               {/* Pulsing/bouncy waiting dots (نقاط تطلع وتنزل بتاعت الانتظار) */}
@@ -3347,7 +3347,7 @@ A computer is a digital electronic machine...
                   </div>
                 )}
 
-                <div className="text-[10px] text-slate-600 dark:text-slate-400 text-right leading-relaxed pt-1.5 border-t border-slate-200/50 dark:border-slate-800/80">
+                <div className="text-xs text-slate-600 dark:text-slate-400 text-right leading-relaxed pt-1.5 border-t border-slate-200/50 dark:border-slate-800/80">
                   {isAr
                     ? ' بفضل نظام الاستخراج التتابعي الذكي المتوفر لـ Premium، نقسم الأسئلة لجرعات مريحة، مما يمنع انقطاع أو كسل الذكاء الاصطناعي ويأتي بالدروس كاملة.'
                     : ' Sequential processing splits assignments into micro-batches to bypass model limits and ensure full comprehensive coverage of long books.'}
@@ -3364,7 +3364,7 @@ A computer is a digital electronic machine...
                   <label htmlFor="file-question-count" className="block text-xs font-black text-cyan-800 dark:text-cyan-200">
                     {isAr ? 'عدد الأسئلة: تلقائي أو يدوي' : 'Question count: automatic or manual'}
                   </label>
-                  <p className="mt-1 text-[10px] font-bold leading-5 text-cyan-700/80 dark:text-cyan-300/80">
+                  <p className="mt-1 text-xs font-bold leading-5 text-cyan-700/80 dark:text-cyan-300/80">
                     {isAr
                       ? 'تلقائي = تغطية كل الأسئلة أو النقاط القابلة للسؤال في الملف أو الصورة. اليدوي يحدد العدد الأقصى المطلوب.'
                       : 'Automatic covers all extractable questions or testable points. Manual sets the maximum number.'}
@@ -3398,7 +3398,7 @@ A computer is a digital electronic machine...
                       <span className="p-1.5 rounded-lg bg-emerald-500/10 text-base leading-none"></span>
                       <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">استخراج الأسئلة الموجودة بالملف</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
+                    <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
                       استخراج حرفي أمين للأسئلة الموجودة بالفعل في مستندك دون زيادة أو توليد إضافي — مثالي لأوراق الامتحانات والواجبات.
                     </p>
                     <button
@@ -3435,7 +3435,7 @@ A computer is a digital electronic machine...
                       <span className="p-1.5 rounded-lg bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-base leading-none"></span>
                       <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">Generate — توليد بالذكاء الاصطناعي</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
+                    <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed mt-1.5 flex-1">
                       يحلل الـAI محتوى الملف أو الصورة ويفهم الشرح والعناوين والجداول والرسوم، ثم يصيغ أسئلة جديدة دقيقة منه — بدون الحاجة لوجود أسئلة جاهزة داخل الملف.
                     </p>
                     <button
@@ -3546,7 +3546,7 @@ A computer is a digital electronic machine...
                   <span className="p-3 bg-[#007472]/10 dark:bg-[#2AC3BB]/10 text-[#007472] rounded-2xl shadow-sm border border-[#007472]/15 dark:border-[#2AC3BB]/15 dark:border-[#2AC3BB]/20"></span>
                   <div className="text-right">
                     <h3 className="font-display font-black text-xl text-slate-800 dark:text-slate-100 tracking-tight">بيانات وتفاصيل مسودة الاختبار الحالية</h3>
-                    <p className="text-[10px] text-slate-450 mt-0.5 font-medium">تفاصيل الهوية والزمن الموصى لطلابك لحل هذا الاختبار</p>
+                    <p className="text-xs text-slate-450 mt-0.5 font-medium">تفاصيل الهوية والزمن الموصى لطلابك لحل هذا الاختبار</p>
                   </div>
                 </div>
 
@@ -3726,7 +3726,7 @@ A computer is a digital electronic machine...
                           <span>{isAr ? 'تصحيح يدوي من منشئ الاختبار (موصى به)' : 'Manual Review by Creator'}</span>
                         </span>
                         {essayGradingMode === 'manual' && (
-                          <span className="text-[10px] bg-primary text-white font-black px-2 py-0.5 rounded-full">
+                          <span className="text-xs bg-primary text-white font-black px-2 py-0.5 rounded-full">
                             {isAr ? 'مُفعّل' : 'Active'}
                           </span>
                         )}
@@ -3753,7 +3753,7 @@ A computer is a digital electronic machine...
                           <span>{isAr ? 'تصحيح فوري بالذكاء الاصطناعي (AI)' : 'Instant AI Grading'}</span>
                         </span>
                         {essayGradingMode === 'ai' && (
-                          <span className="text-[10px] bg-primary text-white font-black px-2 py-0.5 rounded-full">
+                          <span className="text-xs bg-primary text-white font-black px-2 py-0.5 rounded-full">
                             {isAr ? 'مُفعّل' : 'Active'}
                           </span>
                         )}
@@ -3777,7 +3777,7 @@ A computer is a digital electronic machine...
                   <label className="text-xs font-black text-slate-700 dark:text-slate-300 block uppercase tracking-wide px-1">
                     {isAr ? 'مسار توزيع وتوجيه نشر الاختبار :' : 'Quiz Publishing Distribution Router:'}
                   </label>
-                  <p className="text-[10px] text-slate-500 px-1">
+                  <p className="text-xs text-slate-500 px-1">
                     {isAr ? 'حدد النطاق والجمهور المستهدف لتوزيع هذا الاختبار وحصره تلقائياً' : 'Determine the visibility and target sync channel for this quiz deployment'}
                   </p>
 
@@ -3801,7 +3801,7 @@ A computer is a digital electronic machine...
                           <span className="text-emerald-500"></span>
                           <span>{isAr ? 'نشر عام للجميع' : 'Public Distribution'}</span>
                         </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           {isAr ? 'يكون الاختبار متاحاً للبحث والاستكشاف لجميع الطلاب في المنصة' : 'The quiz will be discoverable on the global public marketplace'}
                         </span>
                       </div>
@@ -3826,7 +3826,7 @@ A computer is a digital electronic machine...
                           <span className="text-primary"></span>
                           <span>{isAr ? 'فصل دراسي خاص' : 'Classroom Restricted'}</span>
                         </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           {isAr ? 'محصور وموجه فقط للفصول والقاعات الدراسية والطلاب المنضمين بكود' : 'Exclusive to students enrolled in your verified classrooms'}
                         </span>
                       </div>
@@ -3851,7 +3851,7 @@ A computer is a digital electronic machine...
                           <span className="text-pink-500"></span>
                           <span>{isAr ? 'مزامنة مجتمعية' : 'Community Group Sync'}</span>
                         </span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           {isAr ? 'يتم بث ومشاركة الاختبار مباشرة في ساحات نقاش مجموعات الاهتمام' : 'Broadcasting straight into public and private interest circle feeds'}
                         </span>
                       </div>
@@ -3866,7 +3866,7 @@ A computer is a digital electronic machine...
                           <span>{isAr ? 'اختر الفصل الدراسي المستهدف لنشر الاختبار:' : 'Select the target classroom to publish the quiz:'}</span>
                         </label>
                         {loadingClassrooms && (
-                          <span className="text-[10px] text-slate-400 animate-pulse">{isAr ? 'جاري جلب الفصول...' : 'Loading classrooms...'}</span>
+                          <span className="text-xs text-slate-400 animate-pulse">{isAr ? 'جاري جلب الفصول...' : 'Loading classrooms...'}</span>
                         )}
                       </div>
 
@@ -3893,7 +3893,7 @@ A computer is a digital electronic machine...
                                     <span>{c.name}</span>
                                     {isSelected && <span className="text-primary text-xs font-bold"> {isAr ? 'محدد' : 'Selected'}</span>}
                                   </div>
-                                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1.5 justify-end">
+                                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 flex items-center gap-1.5 justify-end">
                                     <span> {c.creatorName}</span>
                                     <span>•</span>
                                     <span> {isAr ? 'كود الفصل:' : 'Code:'} {c.code}</span>
@@ -3937,14 +3937,14 @@ A computer is a digital electronic machine...
                     </div>
                   </div>
                   {aiSavedQuizId && (
-                    <span className="shrink-0 rounded-full bg-white/80 px-3 py-2 text-[10px] font-black text-emerald-700 shadow-sm dark:bg-slate-900/50 dark:text-emerald-300">
+                    <span className="shrink-0 rounded-full bg-white/80 px-3 py-2 text-xs font-black text-emerald-700 shadow-sm dark:bg-slate-900/50 dark:text-emerald-300">
                       محفوظ · {aiSavedQuizId}
                     </span>
                   )}
                 </div>
                 {extractedSourcePreview && (
                   <div className="mt-4 border-t border-emerald-200/70 pt-4 dark:border-emerald-900/50">
-                    <p className="mb-2 text-[11px] font-black text-emerald-800 dark:text-emerald-300">صورة الملف المصدر</p>
+                    <p className="mb-2 text-xs font-black text-emerald-800 dark:text-emerald-300">صورة الملف المصدر</p>
                     <QuestionMedia
                       src={extractedSourcePreview.url}
                       alt={`معاينة الملف المصدر: ${extractedSourcePreview.name}`}
@@ -4027,7 +4027,7 @@ A computer is a digital electronic machine...
                         <span className="flex items-center justify-center font-display font-black text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 w-10 h-10 rounded-full border border-slate-200/60 dark:border-slate-700 shadow-sm shadow-black/5">
                           {qIdx + 1}
                         </span>
-                        <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-extrabold rounded-xl font-sans tracking-wide ${
+                        <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-extrabold rounded-xl font-sans tracking-wide ${
                           question.type === 'mcq' ? 'bg-[#007472]/5 dark:bg-[#2AC3BB]/10 text-[#007472] dark:text-[#2AC3BB] border border-[#007472]/15 dark:border-[#2AC3BB]/20' :
                           question.type === 'tf' ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-100 dark:border-pink-500/20' :
                           'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-500/20'
@@ -4037,7 +4037,7 @@ A computer is a digital electronic machine...
                           {question.type === 'essay' && <span> سؤال مقالي (Essay)</span>}
                         </span>
 
-                        <span className={`inline-flex items-center text-[10px] font-mono font-bold px-3.5 py-1.5 rounded-xl border ${
+                        <span className={`inline-flex items-center text-xs font-mono font-bold px-3.5 py-1.5 rounded-xl border ${
                           isComplete ? 'bg-emerald-50/50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/50' : 'bg-rose-50/50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50'
                         }`}>
                           {isComplete ? ' جاهز ومكتمل' : hasText ? ' يحتاج إجابة مؤكدة' : ' مسودة فارغة'}
@@ -4143,7 +4143,7 @@ A computer is a digital electronic machine...
                                       isCorrect ? 'text-emerald-900 dark:text-emerald-100 placeholder-emerald-700/40 dark:placeholder-emerald-300/40' : 'text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500'
                                     }`}
                                   />
-                                  <span className={`text-[10px] font-bold select-none tracking-tight shrink-0 ${
+                                  <span className={`text-xs font-bold select-none tracking-tight shrink-0 ${
                                     isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
                                   }`}>
                                     {isCorrect ? 'الجواب الصحيح' : `الخيار ${String.fromCharCode(65 + optIdx)}`}
