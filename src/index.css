@@ -2661,4 +2661,6 @@ html[dir="rtl"] .quizspace-sidebar-panel,
 @media (max-width: 430px) {
   .quizspace-header-logo { flex: 0 1 auto; min-width: 0; overflow: hidden; justify-content: flex-start; }
   .quizspace-header-logo img { display: none; }
+  .quizspace-header-logo .main-logo-wordmark { font-size: 1rem; max-width: none; }
+  .quizspace-header-logo .main-logo-wordmark [class*="rounded-full"] { display: none; }
 }
