@@ -5,6 +5,7 @@ import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '..
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
 import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
 import { appendPoint, boardPoint, pointsToPath, type FreehandPoint, type FreehandStroke } from '../../lib/whiteboard/freehand';
+import { captureBoardPng } from '../../lib/whiteboard/boardSnapshot';
 import { ICONS, type IconName } from '../../lib/whiteboard/icons';
 import {
   defaultNarrationEngine as engine, genderForStep, getNarrationSupport, loadVoicePreference, saveVoicePreference,
@@ -229,7 +230,7 @@ export type AskResult = { ok: true; step: LessonStep } | { ok: false; error: str
 export interface WhiteboardPlayerProps {
   lesson: WhiteboardLesson;
   /** When set, the learner can ask a question mid-lesson; the answer comes back as a validated branch step. */
-  onAsk?: (question: string, ctx: { lesson: WhiteboardLesson; stepIndex: number }) => Promise<AskResult>;
+  onAsk?: (question: string, ctx: { lesson: WhiteboardLesson; stepIndex: number; boardImage?: string }) => Promise<AskResult>;
 }
 
 export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPlayerProps) {
@@ -387,7 +388,9 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     pauseForQuestion();
     setAsking(true); setAskError(null);
     try {
-      const res = await onAsk(q, { lesson, stepIndex });
+      // The snapshot shows the model what the learner sees, including their own drawing.
+      const boardImage = svgRef.current ? await captureBoardPng(svgRef.current, lesson.canvas).catch(() => undefined) : undefined;
+      const res = await onAsk(q, { lesson, stepIndex, boardImage });
       if ('error' in res) { setAskError(res.error); return; }
       const at = stepIndex;
       setLesson(l => ({ ...l, steps: [...l.steps.slice(0, at + 1), res.step, ...l.steps.slice(at + 1)] }));

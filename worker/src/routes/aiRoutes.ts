@@ -470,8 +470,20 @@ export async function handleAiRoutes(
     if (!(await hasGoldOrDiamondAccess(request, env, userId))) {
       return json({ error: 'AI whiteboard lessons are available on the Gold and Diamond plans only.', code: 'plan_required' }, 403, headers);
     }
-    const generated = await lessonModelText(env, buildFollowUpPrompt(followUp));
-    return json({ step: extractJson(generated.text), model: generated.model }, 200, headers);
+    const followUpPrompt = buildFollowUpPrompt(followUp) + (followUp.boardImage ? '\nمرفقة صورة للسبورة كما يراها الطالب الآن، بما فيها ما رسمه بيده. خذها في الحسبان عند الإجابة، وأشر إلى رسمه إن كان مرتبطًا بالسؤال.' : '');
+    const followUpMessages = followUp.boardImage
+      ? [{ role: 'user', content: [{ type: 'text', text: followUpPrompt }, { type: 'image_url', image_url: { url: followUp.boardImage } }] }]
+      : [{ role: 'user', content: followUpPrompt }];
+    const followUpResult = await generateWithProviderChain(env, followUpMessages, {
+      max_tokens: 16_000,
+      temperature: 0.4,
+      timeoutMs: 110_000,
+      reasoning_effort: 'low',
+      preferXkiro: true,
+      noReasoning: true,
+      validateResponse: text => { extractJson(text); },
+    });
+    return json({ step: extractJson(followUpResult.text), model: `${followUpResult.provider}/${followUpResult.model}` }, 200, headers);
   }
 
   if (path === '/api/ai/explain') {

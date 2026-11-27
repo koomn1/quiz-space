@@ -41,12 +41,12 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
     } finally { setBusy(false); }
   };
 
-  const onAsk = async (question: string, ctx: { lesson: WhiteboardLesson; stepIndex: number }): Promise<AskResult> => {
+  const onAsk = async (question: string, ctx: { lesson: WhiteboardLesson; stepIndex: number; boardImage?: string }): Promise<AskResult> => {
     const cur = ctx.lesson.steps[ctx.stepIndex];
     // One retry when the answer fails validation or layout.
     let lastErrors: string[] = [];
     for (let attempt = 0; attempt < 2; attempt++) {
-      const res = await askWhiteboardQuestion({ question, lang: ctx.lesson.lang, lessonTitle: ctx.lesson.title, step: { title: cur.title, narration: cur.narration, nodes: cur.nodes } });
+      const res = await askWhiteboardQuestion({ question, lang: ctx.lesson.lang, lessonTitle: ctx.lesson.title, step: { title: cur.title, narration: cur.narration, nodes: cur.nodes }, ...(ctx.boardImage ? { boardImage: ctx.boardImage } : {}) });
       const checked = validateBranchStep(res.step, ctx.lesson, ctx.stepIndex);
       if (checked.ok && checked.step) return { ok: true, step: checked.step };
       lastErrors = checked.errors;

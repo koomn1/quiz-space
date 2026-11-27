@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildLessonPrompt, parseLessonRequest } from './whiteboardLesson';
+import { buildFollowUpPrompt, buildLessonPrompt, parseFollowUpRequest, parseLessonRequest } from './whiteboardLesson';
 
 describe('whiteboard lesson request', () => {
   it('accepts a normal topic and clamps the step count', () => {
@@ -17,6 +17,16 @@ describe('whiteboard lesson request', () => {
     expect(p).toContain('1280');
     expect(p).toContain('schema_version');
     expect(p).toContain('5 بالضبط');
+  });
+  it('accepts a png board snapshot on follow-ups and ignores other values', () => {
+    const base = { question: 'لماذا؟', lang: 'ar', lessonTitle: 't', step: { title: '', narration: 'n', nodes: [] } };
+    const png = `data:image/png;base64,${'A'.repeat(100)}`;
+    expect(parseFollowUpRequest({ ...base, boardImage: png })?.boardImage).toBe(png);
+    expect(parseFollowUpRequest({ ...base, boardImage: 'data:image/jpeg;base64,AAAA' })?.boardImage).toBeUndefined();
+    expect(parseFollowUpRequest({ ...base, boardImage: 42 })?.boardImage).toBeUndefined();
+    expect(parseFollowUpRequest({ ...base, boardImage: `data:image/png;base64,${'A'.repeat(4_000_001)}` })?.boardImage).toBeUndefined();
+    expect(parseFollowUpRequest(base)?.boardImage).toBeUndefined();
+    expect(buildFollowUpPrompt(parseFollowUpRequest(base)!)).toContain('أجب عن سؤاله');
   });
   it('passes validation feedback through to the prompt', () => {
     const req = parseLessonRequest({ topic: 'الخلايا', feedback: ['step 2, text 4 runs over the edge of shape 3.', 42, '   '] });

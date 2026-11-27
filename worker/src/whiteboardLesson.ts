@@ -60,7 +60,11 @@ export interface FollowUpRequest {
   lang: 'ar' | 'en';
   lessonTitle: string;
   step: { title: string; narration: string; nodes: unknown[] };
+  /** PNG data URL of the board as the learner sees it, including their freehand strokes. */
+  boardImage?: string;
 }
+
+const BOARD_IMAGE_MAX = 4_000_000;
 
 export function parseFollowUpRequest(body: any): FollowUpRequest | null {
   if (!body || typeof body.question !== 'string' || typeof body.step !== 'object' || body.step === null) return null;
@@ -68,11 +72,15 @@ export function parseFollowUpRequest(body: any): FollowUpRequest | null {
   if (question.length < 2 || question.length > QUESTION_MAX) return null;
   const nodes = Array.isArray(body.step.nodes) ? body.step.nodes.slice(0, 24).filter((n: unknown) => typeof n === 'object' && n !== null) : [];
   const clip = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '');
+  const boardImage = typeof body.boardImage === 'string' && body.boardImage.startsWith('data:image/png;base64,') && body.boardImage.length <= BOARD_IMAGE_MAX
+    ? body.boardImage
+    : undefined;
   return {
     question,
     lang: body.lang === 'en' ? 'en' : 'ar',
     lessonTitle: clip(body.lessonTitle, 120),
     step: { title: clip(body.step.title, 120), narration: clip(body.step.narration, 900), nodes },
+    ...(boardImage ? { boardImage } : {}),
   };
 }
 
