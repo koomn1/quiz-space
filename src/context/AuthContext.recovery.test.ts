@@ -17,7 +17,7 @@ describe('Quiz Space password recovery auth contract', () => {
   });
 
   it('bounds profile bootstrap and preserves a fallback user after profile failures', () => {
-    expect(source).toContain('PROFILE_BOOTSTRAP_TIMEOUT_MS = 12_000');
+    expect(source).toContain('PROFILE_BOOTSTRAP_TIMEOUT_MS = 4_000');
     expect(source).toContain('withTimeout(fetchAppUser(nextUser), PROFILE_BOOTSTRAP_TIMEOUT_MS)');
     expect(source).toContain('Profile bootstrap failed after authentication');
     expect(source).toContain('setUser({');

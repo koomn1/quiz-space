@@ -132,7 +132,7 @@ async function fetchAppUser(authUser: User): Promise<AppUser> {
   };
 }
 
-const PROFILE_BOOTSTRAP_TIMEOUT_MS = 12_000;
+const PROFILE_BOOTSTRAP_TIMEOUT_MS = 4_000;
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {

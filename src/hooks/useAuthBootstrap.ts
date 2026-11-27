@@ -10,6 +10,19 @@ import { registerPushNotifications } from '../lib/pushManager';
 import { supabase } from '../lib/supabaseClient';
 import type { UserStats } from '../types';
 
+const BOOTSTRAP_REQUEST_TIMEOUT_MS = 5_000;
+
+/** Stops one slow request from holding the loading screen; the request itself keeps running. */
+export function withBootstrapTimeout<T>(promise: PromiseLike<T>, ms = BOOTSTRAP_REQUEST_TIMEOUT_MS): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('BOOTSTRAP_REQUEST_TIMEOUT')), ms);
+    Promise.resolve(promise).then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}
+
 type Setter<T> = (value: T | ((current: T) => T)) => void;
 
 export interface AuthBootstrapOptions {
@@ -159,7 +172,7 @@ export function useAuthBootstrap(options: AuthBootstrapOptions) {
         let onboarded = localStorage.getItem(`quiz_profile_onboarded_${user.id}`);
         if (!onboarded) {
           try {
-            const { data: userRow } = await supabase.from('users').select('onboarded').eq('uid', user.id).maybeSingle();
+            const { data: userRow } = await withBootstrapTimeout(supabase.from('users').select('onboarded').eq('uid', user.id).maybeSingle());
             if (userRow?.onboarded) {
               localStorage.setItem(`quiz_profile_onboarded_${user.id}`, 'true');
               onboarded = 'true';
@@ -210,13 +223,13 @@ export function useAuthBootstrap(options: AuthBootstrapOptions) {
         try {
           // Only sync avatar_url from auth provider if user hasn't set a custom photo
           // This preserves the user's chosen avatar/cover after refresh or re-login
-          await saveUserProfile(user.id, finalName, undefined, user.email || undefined);
+          await withBootstrapTimeout(saveUserProfile(user.id, finalName, undefined, user.email || undefined));
         } catch (e) {
           console.error("Error setting user profile: ", e);
         }
 
         try {
-          const stats = await getUserProfileStats(user.id);
+          const stats = await withBootstrapTimeout(getUserProfileStats(user.id));
           if (stats) {
             setUserStats(stats);
             setIsUserPremium(!!stats.isPremium);
