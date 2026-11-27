@@ -35,6 +35,7 @@ export function buildLessonPrompt({ topic, lang, steps, feedback }: LessonReques
 - narration شرح مفصل يُقرأ صوتيًا: من 5 إلى 9 جمل (حتى 600 حرف)، فيه سبب لكل فكرة ومثال رقمي أو واقعي واحد على الأقل، ويصف ما يُكتب أو يُرسم في نفس اللحظة ("نكتب"، "نرسم سهمًا").
 - لا تكرر narration حرفيًا على السبورة. النص على السبورة مختصر.
 - لا تخترع مراجع أو إحصاءات. اذكر معلومات صحيحة فقط، وإن لم تكن متأكدًا فبسّط.
+- خطوة أو خطوتان على الأكثر تحملان "tryIt":"مهمة قصيرة من جملة واحدة" عندما تكون الخطوة تطبيقًا يفيد أن يحاوله الطالب بنفسه قبل كشف الحل (مثال ثانٍ أو خطأ شائع). المهمة شيء يرسمه أو يكتبه الطالب على السبورة، مثل «احسب مساحة المثلث بنفسك قبل أن أريك الحل». لا تضع tryIt في خطوة تمهيدية أو ختامية.
 قواعد السبورة (صارمة، تُفحص آليًا وتُرفض المخالفات):
 - السبورة 1280 عرضًا × 720 ارتفاعًا. y في text هو خط الأساس للنص.
 - أنواع العناصر فقط: text, rectangle, ellipse, line, arrow, highlight, path, curve, icon. text يحتاج x,y,text,fontSize(24-64),color,align. rectangle/ellipse/highlight تحتاج x,y,w,h. line/arrow تحتاج x,y,x2,y2. curve تحتاج x,y,cx,cy,x2,y2 (منحنى تربيعي). path يحتاج d (بيانات مسار SVG بإحداثيات السبورة، أوامر M L C Q Z فقط). icon يحتاج x,y,w,h وname من المكتبة فقط: heart, cell, atom, plant, earth, brain، ويمكن إضافة labels مثل {"anchor":"nucleus","text":"النواة","teaser":true} حيث teaser=true يعرض «؟» أولاً ثم يكشف الاسم عند نهاية الرسم. الروابط المتاحة: heart(top,bottom,left,right)، cell(membrane,nucleus,cytoplasm)، atom(nucleus,electron,orbit)، plant(flower,leaf,stem,root)، earth(pole,equator,continent,ocean)، brain(left,right,fissure,top).

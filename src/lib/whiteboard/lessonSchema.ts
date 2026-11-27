@@ -60,6 +60,8 @@ export interface LessonStep {
   continues?: boolean;
   /** Inserted in answer to a learner question; after it the player offers to resume the original lesson. */
   branch?: boolean;
+  /** Try-it-yourself prompt: in try mode the player pauses before revealing this step so the learner can attempt it on the draw layer. */
+  tryIt?: string;
 }
 
 export interface WhiteboardLesson {
@@ -205,6 +207,7 @@ export function validateLesson(input: unknown): ValidationResult {
       ...(rawStep.lang === 'ar' || rawStep.lang === 'en' ? { lang: rawStep.lang } : {}),
       ...(rawStep.continues === true ? { continues: true } : {}),
       ...(rawStep.branch === true ? { branch: true } : {}),
+      ...(typeof rawStep.tryIt === 'string' && rawStep.tryIt.trim() ? { tryIt: cleanText(rawStep.tryIt, 300) } : {}),
     });
   });
 

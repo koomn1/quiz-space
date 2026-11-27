@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { Pause, Play, Pencil, SkipBack, SkipForward, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2 } from 'lucide-react';
+import { Pause, Play, Pencil, SkipBack, SkipForward, Target, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2 } from 'lucide-react';
 import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
 import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
@@ -255,6 +255,9 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const [voiceList, setVoiceList] = useState<VoiceOption[]>([]);
   // Learner freehand layer: strokes live in board coordinates so they scale with the svg.
   const [drawMode, setDrawMode] = useState(false);
+  // Try-it mode: before a step marked tryIt is revealed, pause so the learner attempts it on the draw layer.
+  const [tryMode, setTryMode] = useState(false);
+  const [tryPending, setTryPending] = useState<number | null>(null);
   const [drawColor, setDrawColor] = useState<NodeColor>('danger');
   const [strokes, setStrokes] = useState<FreehandStroke[]>([]);
   const activeStroke = useRef<FreehandStroke | null>(null);
@@ -307,6 +310,11 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
       }
       if (isLast) { setPlaying(false); stopSpeech(); setTInStep(duration); return; }
       if (step.branch) { setPlaying(false); stopSpeech(); setOfferResume(true); setTInStep(duration); return; }
+      const next = stepIndex + 1;
+      if (tryMode && lesson.steps[next]?.tryIt) {
+        setStepIndex(next); setTInStep(0); setPlaying(false); stopSpeech(); setTryPending(next); setDrawMode(true);
+        return;
+      }
       setStepIndex(i => i + 1);
       setTInStep(0);
     };
@@ -336,6 +344,14 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     spokenStepRef.current = null;
     resumeFromRef.current = 0;
     setStepIndex(clamped);
+    if (tryMode && lesson.steps[clamped]?.tryIt) {
+      // Land hidden so the learner tries the step before the reveal.
+      setPlaying(false);
+      setTInStep(0);
+      setTryPending(clamped);
+      setDrawMode(true);
+      return;
+    }
     setTInStep(playing ? 0 : durations.steps[clamped]?.durationMs ?? 0);
   };
 
@@ -442,12 +458,14 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     draw: isAr ? 'ارسم على السبورة' : 'Draw on the board',
     stopDrawing: isAr ? 'إيقاف الرسم' : 'Stop drawing',
     clearDrawing: isAr ? 'امسح رسمي' : 'Clear my drawing',
+    tryMode: isAr ? 'وضع جرّب بنفسك' : 'Try-it mode',
+    reveal: isAr ? 'اعرض الخطوة' : 'Reveal the step',
   };
 
   return (
     <div className="space-y-3" dir={isAr ? 'rtl' : 'ltr'} onKeyDown={onKeyDown} tabIndex={0} aria-label={lesson.title} data-testid="whiteboard-player">
       {step.title && <div className="text-xs font-black text-teal-600" data-testid="whiteboard-step-title">{`${step.branch ? (isAr ? 'سؤالك: ' : 'Your question: ') : `${stepIndex + 1}. `}${step.title}`}</div>}
-      <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-[#fdfcf8]">
+      <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-[#fdfcf8]">
         <svg ref={svgRef} viewBox={`0 0 ${lesson.canvas.width} ${lesson.canvas.height}`} className={`w-full h-auto block${drawMode ? ' cursor-crosshair touch-none' : ''}`} role="img" aria-label={step.title || lesson.title}
           onPointerDown={onDrawStart} onPointerMove={onDrawMove} onPointerUp={onDrawEnd} onPointerCancel={onDrawEnd}>
           <defs>
@@ -460,6 +478,13 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
             {carriedSteps().map(cs => <g key={`carry-${cs.id}`}>{cs.nodes.map(n => <BoardNode key={`${cs.id}-${n.id}`} node={n} progress={1} rtl={(cs.lang ?? lesson.lang) === 'ar'} />)}</g>)}
             {renderStep(step, stepIndex)}
           </g>
+          {tryPending === stepIndex && (
+            <g data-testid="tryit-overlay">
+              <rect x={240} y={500} width={800} height={150} rx={18} fill="#0f172a" opacity={0.88} />
+              <text x={640} y={555} textAnchor="middle" fontSize={30} fontWeight={700} fill="#f8fafc" direction={isAr ? 'rtl' : 'ltr'} style={{ fontFamily: 'inherit' }}>{(step.tryIt ?? '').length > 60 ? `${(step.tryIt ?? '').slice(0, 57)}…` : step.tryIt}</text>
+              <text x={640} y={600} textAnchor="middle" fontSize={20} fill="#94a3b8" direction={isAr ? 'rtl' : 'ltr'} style={{ fontFamily: 'inherit' }}>{isAr ? 'ارسم أو اكتب محاولتك على السبورة، ثم اعرض الخطوة' : 'Draw or write your attempt on the board, then reveal the step'}</text>
+            </g>
+          )}
           <g data-testid="freehand-layer" pointerEvents="none">
             {strokes.map(st => <path key={st.id} d={pointsToPath(st.points)} fill="none" stroke={st.color} strokeWidth={st.width} strokeLinecap="round" strokeLinejoin="round" />)}
             {activeStroke.current && <path d={pointsToPath(activeStroke.current.points)} fill="none" stroke={activeStroke.current.color} strokeWidth={activeStroke.current.width} strokeLinecap="round" strokeLinejoin="round" />}
@@ -484,6 +509,11 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
         <button type="button" onClick={() => goTo(stepIndex + 1)} disabled={isLast} aria-label={t.next} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 disabled:opacity-40">
           {isAr ? <SkipBack className="w-4 h-4" /> : <SkipForward className="w-4 h-4" />}
         </button>
+        {tryPending === stepIndex && (
+          <button type="button" onClick={() => { setTryPending(null); setTInStep(0); spokenStepRef.current = null; resumeFromRef.current = 0; setPlaying(true); }} className="uipro-btn-tactile inline-flex items-center gap-2 text-white font-black text-sm px-4 py-2.5 rounded-xl" style={{ backgroundColor: COLORS.accent }}>
+            {t.reveal}
+          </button>
+        )}
         <input type="range" min={0} max={lesson.steps.length - 1} value={stepIndex} onChange={e => goTo(Number(e.target.value))}
           className="flex-1 min-w-[120px] accent-[#007472]" aria-label={`${t.step} ${stepIndex + 1} / ${lesson.steps.length}`} />
         <span className="text-xs font-black text-slate-500 tabular-nums">{stepIndex + 1}/{lesson.steps.length}</span>
