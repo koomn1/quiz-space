@@ -1,3 +1,4 @@
+import { clearLocalSession, ownsCachedClassroom } from './lib/appSession';
 import CosmicLoader from "./components/CosmicLoader";
 /**
  * @license
@@ -453,12 +454,7 @@ export default function App() {
     try {
       await supabase.auth.signOut();
       setIsGuestSandbox(false);
-      localStorage.removeItem('quiz_userId');
-      localStorage.removeItem('quiz_userName');
-      localStorage.removeItem('quiz_isLocalSandbox');
-      localStorage.removeItem('local_auth_token');
-      localStorage.removeItem('quiz_userEmail');
-      localStorage.removeItem('quiz_userPhoto');
+      clearLocalSession();
       setUserId('');
       setUserEmail(null);
       setUserName('طالب زائر');
@@ -646,16 +642,7 @@ export default function App() {
     const roleAndPlan = getUserRoleAndPlan(userStats);
     const isTeacher = roleAndPlan.role === 'teacher' || userPlanName === 'Gold' || userPlanName === 'Diamond';
     
-    let isGroupOwner = false;
-    try {
-      const storedClassrooms = localStorage.getItem('classroom_list');
-      if (storedClassrooms) {
-        const parsed = JSON.parse(storedClassrooms);
-        isGroupOwner = Array.isArray(parsed) && parsed.some((c: any) => c.createdBy === userId);
-      }
-    } catch (error) {
-      console.debug('Handled storage error:', error);
-    }
+    const isGroupOwner = ownsCachedClassroom(userId);
 
     if (isSuperAdmin || isTeacher || isGroupOwner || !!userId) {
       setSharingQuiz({ id, title, description: desc });
