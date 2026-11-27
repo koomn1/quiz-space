@@ -33,13 +33,15 @@ function RevealText({ node, progress, rtl }: { node: WhiteboardNode; progress: n
     : (align === 'start') === rtl ? node.x - width : node.x;
   const clipId = `clip-${node.id}-${Math.round(node.x)}-${Math.round(node.y)}`;
   const reveal = width * progress + (progress >= 1 ? size : 0);
-  const clipX = rtl ? left + width - width * progress : left;
-  const penX = rtl ? clipX : clipX + width * progress;
+  // Reveal in the direction the text is actually written: Arabic right-to-left, digits and Latin left-to-right.
+  const revealRtl = rtl && /[\u0600-\u06FF]/.test(node.text ?? '');
+  const clipX = revealRtl ? left + width - width * progress : left;
+  const penX = revealRtl ? clipX : clipX + width * progress;
   return (
     <g>
       <defs>
         <clipPath id={clipId}>
-          <rect x={rtl ? clipX - (progress >= 1 ? size : 0) : clipX} y={node.y - size * 1.2} width={Math.max(0, reveal)} height={size * 1.8} />
+          <rect x={revealRtl ? clipX - (progress >= 1 ? size : 0) : clipX} y={node.y - size * 1.2} width={Math.max(0, reveal)} height={size * 1.8} />
         </clipPath>
       </defs>
       <text

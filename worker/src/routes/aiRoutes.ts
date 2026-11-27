@@ -17,6 +17,7 @@ import {
   ANSWER_REVIEW_MODEL_TIMEOUT_MS,
   type AiRequestOptions,
 } from '../services/answerReviewService';
+import { buildLessonPrompt, parseLessonRequest } from '../whiteboardLesson';
 import { json, routePath, type RouteContext, type RouteResult } from '../routes';
 
 type Provider = 'inception';
@@ -420,6 +421,25 @@ export async function handleAiRoutes(
       await getAccountReasoningEffort(request, env, userId),
     );
     return json(result, 200, headers);
+  }
+
+  if (path === '/api/ai/lesson-generate') {
+    meta.setAiOperation('lesson-generate');
+    if (userId === 'guest' || userId === 'placeholder-user') {
+      return json({ error: 'Authentication required' }, 401, headers);
+    }
+    const lessonRequest = parseLessonRequest(body);
+    if (!lessonRequest) {
+      return json({ error: 'Invalid lesson request' }, 400, headers);
+    }
+    if (!(await hasPaidCosmoAccess(request, env, userId))) {
+      return json({ error: 'AI whiteboard lessons require an active paid plan.' }, 403, headers);
+    }
+    const text = await providerText('inception', buildLessonPrompt(lessonRequest), env, {
+      reasoning_effort: await getAccountReasoningEffort(request, env, userId),
+    });
+    // The client validates the structure strictly; the Worker only guarantees it is JSON.
+    return json({ lesson: extractJson(text), model: INCEPTION_TEXT_MODEL }, 200, headers);
   }
 
   if (path === '/api/ai/explain') {

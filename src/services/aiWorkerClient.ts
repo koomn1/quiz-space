@@ -616,3 +616,7 @@ export async function generateQuizFromFileStreaming(
     throw err;
   }
 }
+
+export async function generateWhiteboardLesson(topic: string, lang: 'ar' | 'en' = 'ar', steps = 5): Promise<{ lesson: unknown; model?: string }> {
+  return await workerRequest<{ lesson: unknown; model?: string }>('/api/ai/lesson-generate', { topic, lang, steps }, 120_000);
+}
