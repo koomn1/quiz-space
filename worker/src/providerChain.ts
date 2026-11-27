@@ -8,6 +8,8 @@ export type ProviderOptions = {
   reasoning_effort?: 'low' | 'medium' | 'high';
   response_format?: { type: 'json_object' };
   validateResponse?: (text: string, provider: string, model: string) => void;
+  /** Text-only request that should use the xKiro model (same one Cosmo uses for reading images) first, then Inception. */
+  preferXkiro?: boolean;
 };
 
 export const INCEPTION_MODEL = 'mercury-3';
@@ -75,7 +77,7 @@ async function callInception(env: Env, messages: ProviderMessage[], options: Pro
 }
 
 async function callXkiro(env: Env, messages: ProviderMessage[], options: ProviderOptions) {
-  if (!env.XKIRO_API_KEY || !isMultimodal(messages)) throw new Error('xKiro is unavailable for this request');
+  if (!env.XKIRO_API_KEY || (!isMultimodal(messages) && !options.preferXkiro)) throw new Error('xKiro is unavailable for this request');
   return requestJson(XKIRO_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.XKIRO_API_KEY}` },
@@ -95,7 +97,9 @@ export async function generateWithProviderChain(env: Env, messages: ProviderMess
   const multimodal = isMultimodal(messages);
   const attempts: Array<[ProviderCall, string, string]> = multimodal
     ? [[callXkiro, 'xkiro', XKIRO_VISION_MODEL]]
-    : [[callInception, 'inception', INCEPTION_MODEL]];
+    : options.preferXkiro
+      ? [[callXkiro, 'xkiro', XKIRO_VISION_MODEL], [callInception, 'inception', INCEPTION_MODEL]]
+      : [[callInception, 'inception', INCEPTION_MODEL]];
   let lastError: unknown;
   for (const [call, provider, model] of attempts) {
     try {

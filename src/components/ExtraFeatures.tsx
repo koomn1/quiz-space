@@ -92,7 +92,7 @@ interface CommunityPost {
 // ----------------------------------------------------
 // EXPLORE SECTION
 // ----------------------------------------------------
-export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { quizzes: Quiz[], onStartQuiz: (id: string) => void, lang: 'ar' | 'en', onViewProfile?: (creatorId: string) => void }) {
+export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile, isPremium, planName }: { quizzes: Quiz[], onStartQuiz: (id: string) => void, lang: 'ar' | 'en', onViewProfile?: (creatorId: string) => void, isPremium?: boolean, planName?: string }) {
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const isAr = lang === 'ar';
@@ -186,7 +186,7 @@ export function ExploreSection({ quizzes, onStartQuiz, lang, onViewProfile }: { 
         </div>
       </div>
 
-      <WhiteboardLessonCard lang={lang} />
+      <WhiteboardLessonCard lang={lang} isPremium={isPremium} planName={planName} />
 
       <MockExamPanel quizzes={quizzes} lang={lang} />
 

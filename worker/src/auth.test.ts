@@ -52,3 +52,16 @@ describe('effective paid membership for AI access', () => {
     expect(isEffectivePaidMembership({ is_premium: true, plan_name: 'Gold' }, now)).toBe(true);
   });
 });
+
+import { isGoldOrDiamondMembership } from './auth';
+describe('isGoldOrDiamondMembership', () => {
+  const now = Date.parse('2026-11-27T00:00:00Z');
+  it('allows active gold and diamond only', () => {
+    expect(isGoldOrDiamondMembership({ is_premium: true, plan_id: 'gold' }, now)).toBe(true);
+    expect(isGoldOrDiamondMembership({ is_premium: true, plan_name: 'Diamond Elite VIP' }, now)).toBe(true);
+    expect(isGoldOrDiamondMembership({ is_premium: true, plan_id: 'silver', plan_name: 'Silver' }, now)).toBe(false);
+    expect(isGoldOrDiamondMembership({ is_premium: false, plan_id: 'gold' }, now)).toBe(false);
+    expect(isGoldOrDiamondMembership({ is_premium: true, plan_id: 'gold', renewal_date: '2026-01-01' }, now)).toBe(false);
+    expect(isGoldOrDiamondMembership(null, now)).toBe(false);
+  });
+});

@@ -412,6 +412,8 @@ export default function AppRoutes(props: AppRoutesProps) {
                   onStartQuiz={handleStartQuiz}
                   lang={lang}
                   onViewProfile={(creatorId) => { handleSetTab('profile', false, creatorId); }}
+                  isPremium={isUserPremium}
+                  planName={userPlanName}
                 />
               )}
 

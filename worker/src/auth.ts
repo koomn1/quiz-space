@@ -75,6 +75,18 @@ export function isEffectivePaidMembership(profile: Record<string, unknown> | nul
   return Number.isFinite(expiry) && expiry > now;
 }
 
+/** Gold or Diamond only (Silver and unrecognised plans are excluded). Server-verified from the profile row. */
+export function isGoldOrDiamondMembership(profile: Record<string, unknown> | null, now = Date.now()): boolean {
+  if (!isEffectivePaidMembership(profile, now)) return false;
+  const planId = String(profile?.plan_id || '').trim().toLowerCase();
+  const planName = String(profile?.plan_name || '').trim().toLowerCase();
+  return planId === 'gold' || planId === 'diamond' || /gold|diamond|الذهبي|الماسي/.test(planName);
+}
+
+export async function hasGoldOrDiamondAccess(request: Request, env: Env, userId: string | null): Promise<boolean> {
+  return isGoldOrDiamondMembership(await getAccountProfile(request, env, userId));
+}
+
 export type AccountReasoningEffort = 'low' | 'medium' | 'high';
 
 /** Resolve the model budget from server-verified membership, never client input. */

@@ -2,7 +2,7 @@ import * as mammoth from 'mammoth';
 import { handleStreamingExtraction } from '../streaming';
 import { extractPdfTextContent, extractQuestionsFromText } from '../documentExtraction';
 import { extractExcelText } from '../extractionJobs';
-import { getAccountReasoningEffort, getCosmoAccountContext, hasPaidCosmoAccess } from '../auth';
+import { getAccountReasoningEffort, getCosmoAccountContext, hasGoldOrDiamondAccess, hasPaidCosmoAccess } from '../auth';
 import type { Env } from '../platform';
 import { extractAttachmentText, formatSourceForModel } from '../attachmentPipeline';
 import { generateWithProviderChain, INCEPTION_MODEL, XKIRO_VISION_MODEL } from '../providerChain';
@@ -286,6 +286,23 @@ export async function gradeEssayWithFallback(
   return { ...result, provider: 'inception' };
 }
 
+/**
+ * Long structured JSON for whiteboard lessons. Uses the same xKiro model Cosmo uses for reading images
+ * (cohere/command-a-plus, it also handles text) with Inception Mercury as the fallback. Mercury at high
+ * reasoning effort can return empty content for long JSON, so the fallback is pinned to low effort.
+ */
+export async function lessonModelText(env: Env, prompt: string): Promise<{ text: string; model: string }> {
+  const result = await generateWithProviderChain(env, [{ role: 'user', content: prompt }], {
+    max_tokens: 10_000,
+    temperature: 0.4,
+    timeoutMs: 100_000,
+    reasoning_effort: 'low',
+    preferXkiro: true,
+    validateResponse: text => { extractJson(text); },
+  });
+  return { text: result.text, model: `${result.provider}/${result.model}` };
+}
+
 export async function providerText(
   _provider: Provider,
   prompt: string,
@@ -432,14 +449,12 @@ export async function handleAiRoutes(
     if (!lessonRequest) {
       return json({ error: 'Invalid lesson request' }, 400, headers);
     }
-    if (!(await hasPaidCosmoAccess(request, env, userId))) {
-      return json({ error: 'AI whiteboard lessons require an active paid plan.' }, 403, headers);
+    if (!(await hasGoldOrDiamondAccess(request, env, userId))) {
+      return json({ error: 'AI whiteboard lessons are available on the Gold and Diamond plans only.', code: 'plan_required' }, 403, headers);
     }
-    const text = await providerText('inception', buildLessonPrompt(lessonRequest), env, {
-      reasoning_effort: await getAccountReasoningEffort(request, env, userId),
-    });
-    // The client validates the structure strictly; the Worker only guarantees it is JSON.
-    return json({ lesson: extractJson(text), model: INCEPTION_TEXT_MODEL }, 200, headers);
+    const generated = await lessonModelText(env, buildLessonPrompt(lessonRequest));
+    // The client validates the structure and layout strictly; the Worker only guarantees it is JSON.
+    return json({ lesson: extractJson(generated.text), model: generated.model }, 200, headers);
   }
 
   if (path === '/api/ai/explain') {

@@ -4,10 +4,12 @@ import { SAMPLE_LESSONS } from '../../lib/whiteboard/sampleLessons';
 import type { WhiteboardLesson } from '../../lib/whiteboard/lessonSchema';
 import { loadSavedLessons, saveReviewedLesson, validateAiLesson } from '../../lib/whiteboard/lessonDrafts';
 import { generateWhiteboardLesson } from '../../services/aiWorkerClient';
+import { canGenerateWhiteboardLesson } from '../../lib/whiteboard/access';
 import WhiteboardPlayer from './WhiteboardPlayer';
 
-export function WhiteboardLessonCard({ lang }: { lang: 'ar' | 'en' }) {
+export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar' | 'en'; isPremium?: boolean; planName?: string }) {
   const isAr = lang === 'ar';
+  const canGenerate = canGenerateWhiteboardLesson(isPremium, planName);
   const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState<WhiteboardLesson[]>(() => { try { return loadSavedLessons(); } catch { return []; } });
   const [selectedId, setSelectedId] = useState(SAMPLE_LESSONS[0].id);
@@ -21,16 +23,19 @@ export function WhiteboardLessonCard({ lang }: { lang: 'ar' | 'en' }) {
   const lesson = draft ?? all.find(l => l.id === selectedId) ?? SAMPLE_LESSONS[0];
 
   const generate = async () => {
+    if (!canGenerate) return;
     setBusy(true); setError(null);
     try {
-      const res = await generateWhiteboardLesson(topic.trim(), lang);
-      const checked = validateAiLesson(res.lesson, res.model);
-      if (!checked.ok || !checked.lesson) {
-        setError(isAr ? 'الدرس المُولَّد غير صالح ولم يُعرض. جرّب موضوعًا آخر أو أعد المحاولة.' : 'The generated lesson was invalid and was not shown. Try again or change the topic.');
-        setDraft(null);
-      } else {
-        setDraft(checked.lesson); setWarnings(checked.warnings);
+      let lastProblems: string[] = [];
+      // The model sometimes produces overlapping layouts; the checker rejects those and we ask once more.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const res = await generateWhiteboardLesson(topic.trim(), lang);
+        const checked = validateAiLesson(res.lesson, res.model);
+        if (checked.ok && checked.lesson) { setDraft(checked.lesson); setWarnings(checked.warnings); return; }
+        lastProblems = checked.errors;
       }
+      setDraft(null);
+      setError((isAr ? 'الدرس المُولَّد لم يجتز فحص التنسيق ولم يُعرض. جرّب موضوعًا آخر أو أعد المحاولة. ' : 'The generated lesson failed the layout check and was not shown. Try again or change the topic. ') + lastProblems.slice(0, 2).join(' '));
     } catch (e: any) {
       setError(e?.message || (isAr ? 'تعذر توليد الدرس.' : 'Could not generate the lesson.'));
     } finally { setBusy(false); }
@@ -58,13 +63,19 @@ export function WhiteboardLessonCard({ lang }: { lang: 'ar' | 'en' }) {
       </button>
       {open && (
         <div className="space-y-3 pt-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <input value={topic} onChange={e => setTopic(e.target.value)} maxLength={400} placeholder={isAr ? 'اكتب موضوع الدرس (مثال: دورة الماء)' : 'Lesson topic (e.g. the water cycle)'}
-              className="flex-1 min-w-[180px] rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs" aria-label={isAr ? 'موضوع الدرس' : 'Lesson topic'} />
-            <button type="button" onClick={generate} disabled={busy || topic.trim().length < 3} className="uipro-btn-tactile inline-flex items-center gap-2 bg-primary text-white font-black text-xs px-4 py-2.5 rounded-xl disabled:opacity-50">
-              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}{isAr ? 'ولّد درسًا بالذكاء الاصطناعي' : 'Generate with AI'}
-            </button>
-          </div>
+          {canGenerate ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <input value={topic} onChange={e => setTopic(e.target.value)} maxLength={400} placeholder={isAr ? 'اكتب موضوع الدرس (مثال: دورة الماء)' : 'Lesson topic (e.g. the water cycle)'}
+                className="flex-1 min-w-[180px] rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs" aria-label={isAr ? 'موضوع الدرس' : 'Lesson topic'} />
+              <button type="button" onClick={generate} disabled={busy || topic.trim().length < 3} className="uipro-btn-tactile inline-flex items-center gap-2 bg-primary text-white font-black text-xs px-4 py-2.5 rounded-xl disabled:opacity-50">
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}{isAr ? 'ولّد درسًا بالذكاء الاصطناعي' : 'Generate with AI'}
+              </button>
+            </div>
+          ) : (
+            <p data-testid="whiteboard-upgrade-note" className="flex items-center gap-2 text-xs rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 px-3 py-2 font-bold">
+              <Sparkles className="w-4 h-4 shrink-0" />{isAr ? 'توليد الدروس بالذكاء الاصطناعي متاح لمشتركي الباقة الذهبية والماسية فقط. الدرس التجريبي أدناه متاح للجميع.' : 'AI lesson generation is available on the Gold and Diamond plans only. The sample lesson below is open to everyone.'}
+            </p>
+          )}
           {error && <p role="alert" className="flex items-center gap-2 text-xs text-rose-500"><AlertTriangle className="w-4 h-4" />{error}</p>}
 
           {!draft && all.length > 1 && (
