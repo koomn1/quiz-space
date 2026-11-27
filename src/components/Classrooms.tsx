@@ -1362,7 +1362,7 @@ export default function Classrooms({
             <div className="flex flex-wrap justify-center gap-3">
               <div className="px-4 py-3 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-[11px] text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2 shadow-xs">
                 <span className="text-[#007472] dark:text-[#2AC3BB]">●</span>
-                <span>{isAr ? 'اتصالات مشفرة بالكامل E2EE' : 'End-to-End Cryptography'}</span>
+                <span>{isAr ? 'شات الفصل (محمي بصلاحيات الفصل)' : 'Classroom chat (access-controlled)'}</span>
               </div>
               <div className="px-4 py-3 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-[11px] text-slate-700 dark:text-slate-300 font-bold flex items-center gap-2 shadow-xs">
                 <span className="text-emerald-500">●</span>
@@ -1740,8 +1740,8 @@ export default function Classrooms({
                     {activeClassroomMessages.length === 0 && (
                       <div className="text-center py-20 text-slate-600 space-y-3">
                         <Lock className="w-12 h-12 text-slate-800 mx-auto animate-pulse" />
-                        <h4 className="font-bold text-white text-sm">{isAr ? 'شات الطلاب مشفر كلياً E2EE' : 'End-to-End Encrypted Discussion'}</h4>
-                        <p className="text-xs max-w-sm mx-auto leading-relaxed">{isAr ? 'ابدأ كتابة أول رسالة، تشفر المحتويات محلياً وتلقائياً لحماية سرية النقاشات.' : 'Start messaging! All texts are symmetrically encrypted on device before persistent database sync.'}</p>
+                        <h4 className="font-bold text-white text-sm">{isAr ? 'شات الفصل' : 'Classroom Discussion'}</h4>
+                        <p className="text-xs max-w-sm mx-auto leading-relaxed">{isAr ? 'ابدأ كتابة أول رسالة. الرسائل متاحة لأعضاء الفصل فقط.' : 'Start messaging! Messages are visible to classroom members only.'}</p>
                       </div>
                     )}
                   </div>
@@ -1754,7 +1754,7 @@ export default function Classrooms({
                         value={chatMessageText}
                         onChange={(e) => setChatMessageText(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleSendChatMessage(); }}
-                        placeholder={isAr ? 'اكتب رسالة مشفرة آمنة...' : 'Write an encrypted message...'}
+                        placeholder={isAr ? 'اكتب رسالة...' : 'Write a message...'}
                         className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-purple-500"
                       />
                       <button
@@ -2608,7 +2608,7 @@ export default function Classrooms({
                     <div className="p-4 flex items-center justify-between">
                       <div>
                         <span className="font-bold text-white block">{isAr ? 'السماح للطلاب بإرسال الرسائل' : 'Allow Student Messaging'}</span>
-                        <span className="text-[10px] text-slate-500 block">{isAr ? 'تمكين شات ومناقشات الطلاب التفاعلية داخل الشات المشفر.' : 'Toggle student posting rights in the secure chat feed.'}</span>
+                        <span className="text-[10px] text-slate-500 block">{isAr ? 'تمكين شات ومناقشات الطلاب التفاعلية داخل شات الفصل.' : 'Toggle student posting rights in the classroom chat.'}</span>
                       </div>
                       <input
                         type="checkbox"
@@ -2639,7 +2639,7 @@ export default function Classrooms({
                       <div className="p-4 flex items-center justify-between bg-red-950/5">
                         <div>
                           <span className="font-bold text-red-400 block">{isAr ? 'أرشفة وحذف الفصل الدراسي نهائياً' : 'Archive & Terminate Classroom'}</span>
-                          <span className="text-[10px] text-slate-500 block">{isAr ? 'سيتم مسح جميع سجلات الدردشات المشفرة والملفات والتكليفات بلا رجعة.' : 'Irreversibly delete E2EE messages history, homeworks, and member links.'}</span>
+                          <span className="text-[10px] text-slate-500 block">{isAr ? 'سيتم مسح جميع سجلات الدردشات والملفات والتكليفات بلا رجعة.' : 'Irreversibly delete chat history, homeworks, and member links.'}</span>
                         </div>
                         <button
                           onClick={() => handleDeleteClassroom(activeClassroomView.id)}

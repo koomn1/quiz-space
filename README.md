@@ -82,7 +82,7 @@ graph TD
 | :--- | :--- |
 | **الواجهة الأمامية** | React 19 • TypeScript • Vite 6 • Tailwind CSS v4 |
 | **التأثيرات والأنيميشن** | GSAP • Canvas Confetti • Lucide Icons |
-| **قاعدة البيانات والتشفير** | Supabase Postgres • Row Level Security (RLS) • E2EE Chat |
+| **قاعدة البيانات والتشفير** | Supabase Postgres • Row Level Security (RLS) • شات الفصول |
 | **الذكاء الاصطناعي** | OpenRouter (Gemma 4 / Nemotron / Llama 3.3) • Cloudflare Workers |
 | **الأداء والكاش** | Custom Service Worker PWA Engine • Vite Immutable Caching |
 
