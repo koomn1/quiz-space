@@ -1,0 +1,79 @@
+import { describe, expect, it } from 'vitest';
+import { validateLesson } from './lessonSchema';
+import { buildTimeline, estimateNarrationMs, nodeProgress, stepIndexAt, visibleChars } from './timeline';
+
+const base = () => ({
+  schema_version: 1, id: 'l1', title: 'درس', lang: 'ar',
+  steps: [
+    { id: 's1', narration: 'مرحبا بكم في الدرس', nodes: [
+      { id: 'n1', type: 'text', x: 100, y: 100, text: 'مرحبا', color: 'primary' },
+      { id: 'n2', type: 'arrow', x: 100, y: 200, x2: 400, y2: 200, color: 'accent' },
+    ] },
+    { id: 's2', narration: 'الخطوة الثانية', nodes: [{ id: 'n1', type: 'rectangle', x: 1200, y: 700, w: 500, h: 500, color: 'nope' }] },
+  ],
+});
+
+describe('validateLesson', () => {
+  it('accepts a valid lesson, clamps geometry and keeps it a draft', () => {
+    const r = validateLesson(base());
+    expect(r.ok).toBe(true);
+    const rect = r.lesson!.steps[1].nodes[0];
+    expect(rect.x + (rect.w ?? 0)).toBeLessThanOrEqual(1280);
+    expect(rect.y + (rect.h ?? 0)).toBeLessThanOrEqual(720);
+    expect(rect.color).toBe('ink');
+    expect(r.lesson!.metadata.status).toBe('draft');
+  });
+
+  it('rejects unknown types, non-finite numbers, duplicates and missing narration', () => {
+    const bad = base() as any;
+    bad.steps[0].nodes[0].type = 'script';
+    bad.steps[0].nodes[1].x = Number.POSITIVE_INFINITY;
+    bad.steps[1].id = 's1';
+    expect(validateLesson(bad).ok).toBe(false);
+    const dupNode = base() as any;
+    dupNode.steps[0].nodes[1].id = 'n1';
+    expect(validateLesson(dupNode).errors.join(' ')).toMatch(/duplicate node/);
+    const noNarr = base() as any;
+    noNarr.steps[0].narration = '  ';
+    expect(validateLesson(noNarr).ok).toBe(false);
+  });
+
+  it('rejects wrong versions, empty steps and non-objects, and never trusts a reviewed flag from outside as published', () => {
+    expect(validateLesson(null).ok).toBe(false);
+    expect(validateLesson({ ...base(), schema_version: 2 }).ok).toBe(false);
+    expect(validateLesson({ ...base(), steps: [] }).ok).toBe(false);
+    const r = validateLesson({ ...base(), metadata: { source: 'ai', status: 'published' } });
+    expect(r.lesson!.metadata).toMatchObject({ source: 'ai', status: 'draft' });
+  });
+
+  it('strips control characters and limits text length', () => {
+    const l = base() as any;
+    l.steps[0].nodes[0].text = 'a\u0000b' + 'x'.repeat(500);
+    const r = validateLesson(l);
+    expect(r.lesson!.steps[0].nodes[0].text!.length).toBe(200);
+    expect(r.lesson!.steps[0].nodes[0].text).not.toContain('\u0000');
+  });
+});
+
+describe('timeline', () => {
+  it('builds contiguous step timings and finds the step at a time', () => {
+    const lesson = validateLesson(base()).lesson!;
+    const tl = buildTimeline(lesson);
+    expect(tl.steps[1].startMs).toBe(tl.steps[0].durationMs);
+    expect(stepIndexAt(tl, 0)).toBe(0);
+    expect(stepIndexAt(tl, tl.totalMs - 1)).toBe(1);
+    expect(estimateNarrationMs('كلمة', 1)).toBeGreaterThanOrEqual(2500);
+    expect(estimateNarrationMs('a b c d e f g h i j k l m n o p', 2)).toBeLessThan(estimateNarrationMs('a b c d e f g h i j k l m n o p', 1));
+  });
+
+  it('draws nodes in order and reveals text gradually', () => {
+    const lesson = validateLesson(base()).lesson!;
+    const step = lesson.steps[0];
+    const d = buildTimeline(lesson).steps[0].durationMs;
+    expect(nodeProgress(step, 0, 0, d)).toBe(0);
+    expect(nodeProgress(step, 1, 10, d)).toBe(0);
+    expect(nodeProgress(step, 0, d, d)).toBe(1);
+    expect(visibleChars(step.nodes[0], 0.5)).toBe(3);
+    expect(visibleChars(step.nodes[0], 1)).toBe(5);
+  });
+});
