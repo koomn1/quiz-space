@@ -22,18 +22,27 @@ const COLORS: Record<NodeColor, string> = {
 };
 
 /** Pencil marker shown at the point where the board is currently being written or drawn. */
-function PenTip({ x, y, color }: { x: number; y: number; color: string }) {
+function PenTip({ x, y, color, wiggle = 0 }: { x: number; y: number; color: string; wiggle?: number }) {
+  // Gentle scribbling sway, a pure function of draw progress so pause/seek stays deterministic.
+  const sway = Math.sin(wiggle * Math.PI * 8) * 6;
   return (
-    <g transform={`translate(${x} ${y})`} pointerEvents="none" opacity={0.95}>
-      <circle r={14} fill={color} opacity={0.12} />
-      <g transform="rotate(38)">
-        <rect x={-3} y={-30} width={6} height={20} rx={2} fill={color} />
-        <path d="M -3 -10 L 0 0.5 L 3 -10 Z" fill="#f3e2c7" />
-        <path d="M -1.3 -4 L 0 0.5 L 1.3 -4 Z" fill={color} />
-        <rect x={-3} y={-34} width={6} height={4.5} rx={1.6} fill="#94a3b8" />
+    <g transform={`translate(${x} ${y})`} pointerEvents="none" opacity={0.98}>
+      <circle r={26} fill={color} opacity={0.14} />
+      <g transform={`rotate(${40 + sway})`}>
+        <rect x={-5.5} y={-52} width={11} height={34} rx={3} fill={color} stroke="#ffffff" strokeWidth={2.5} />
+        <path d="M -5.5 -18 L 0 1 L 5.5 -18 Z" fill="#f3e2c7" stroke="#ffffff" strokeWidth={1.5} />
+        <path d="M -2.2 -7 L 0 1 L 2.2 -7 Z" fill={color} />
+        <rect x={-5.5} y={-59} width={11} height={8} rx={2.5} fill="#94a3b8" stroke="#ffffff" strokeWidth={2} />
       </g>
     </g>
   );
+}
+
+/** Small celebratory pop as a node finishes drawing: scale 1 -> 1.06 -> 1 across the last 20%. */
+function popTransform(progress: number, cx: number, cy: number): string | undefined {
+  if (progress <= 0.8 || progress >= 1) return undefined;
+  const s = 1 + 0.06 * Math.sin(((progress - 0.8) / 0.2) * Math.PI);
+  return `translate(${cx} ${cy}) scale(${s}) translate(${-cx} ${-cy})`;
 }
 
 const prefersReducedMotion = () =>
@@ -81,14 +90,14 @@ function RevealText({ node, progress, rtl }: { node: WhiteboardNode; progress: n
       >
         {node.text}
       </text>
-      {progress > 0 && progress < 1 && <PenTip x={penX} y={node.y - size * 0.3} color={COLORS[node.color]} />}
+      {progress > 0 && progress < 1 && <PenTip x={penX} y={node.y - size * 0.3} color={COLORS[node.color]} wiggle={progress} />}
     </g>
   );
 }
 
-function Arrowhead({ x1, y1, x2, y2, color, opacity }: { x1: number; y1: number; x2: number; y2: number; color: string; opacity: number }) {
+function Arrowhead({ x1, y1, x2, y2, color, opacity, scale = 1 }: { x1: number; y1: number; x2: number; y2: number; color: string; opacity: number; scale?: number }) {
   const angle = Math.atan2(y2 - y1, x2 - x1);
-  const s = 18;
+  const s = 18 * Math.max(0.2, Math.min(1, scale));
   const p = (a: number) => `${x2 - s * Math.cos(angle + a)},${y2 - s * Math.sin(angle + a)}`;
   return <polygon points={`${x2},${y2} ${p(0.45)} ${p(-0.45)}`} fill={color} opacity={opacity} />;
 }
@@ -106,7 +115,7 @@ function PathNode({ node, progress, color }: { node: WhiteboardNode; progress: n
   return (
     <g>
       <path ref={ref} d={node.d} fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - progress} />
-      {tip && <PenTip x={tip.x} y={tip.y} color={color} />}
+      {tip && <PenTip x={tip.x} y={tip.y} color={color} wiggle={progress} />}
     </g>
   );
 }
@@ -121,7 +130,7 @@ function IconNode({ node, progress, rtl }: { node: WhiteboardNode; progress: num
   const n = def.parts.length;
   const common = { fill: 'none', stroke: color, strokeWidth: 5 / Math.max(sx, sy), strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, pathLength: 1 };
   return (
-    <g>
+    <g transform={popTransform(progress, node.x + w / 2, node.y + h / 2)}>
       <g transform={`translate(${node.x} ${node.y}) scale(${sx} ${sy})`}>
         {def.parts.map((part, i) => {
           const pp = Math.min(1, Math.max(0, progress * n - i));
@@ -176,12 +185,12 @@ function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: nu
       // Once the label starts revealing, the pen belongs to the label (RevealText renders it there).
       const showPen = progress > 0 && progress < 1 && !(node.text && progress > 0.4) && tip;
       return (
-        <g>
+        <g transform={popTransform(progress, node.x + w / 2, node.y + h / 2)}>
           {node.type === 'rectangle'
             ? <rect x={node.x} y={node.y} width={w} height={h} rx={14} {...common} />
             : <ellipse cx={node.x + w / 2} cy={node.y + h / 2} rx={w / 2} ry={h / 2} {...common} />}
           {node.text && <RevealText node={{ ...node, x: node.x + w / 2, y: node.y + h / 2 + (node.fontSize ?? 32) / 3, align: 'center' }} progress={Math.max(0, (progress - 0.4) / 0.6)} rtl={rtl} />}
-          {showPen && <PenTip x={tip.x} y={tip.y} color={color} />}
+          {showPen && <PenTip x={tip.x} y={tip.y} color={color} wiggle={progress} />}
         </g>
       );
     }
@@ -191,7 +200,7 @@ function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: nu
       return (
         <g>
           <rect x={rtl ? node.x + (node.w ?? 0) - w : node.x} y={node.y} width={w} height={node.h} rx={10} fill={color} opacity={0.28} />
-          {progress > 0 && progress < 1 && tip && <PenTip x={tip.x} y={tip.y} color={color} />}
+          {progress > 0 && progress < 1 && tip && <PenTip x={tip.x} y={tip.y} color={color} wiggle={progress} />}
         </g>
       );
     }
@@ -202,17 +211,17 @@ function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: nu
       return (
         <g>
           <line x1={node.x} y1={node.y} x2={x2} y2={y2} stroke={color} strokeWidth={5} strokeLinecap="round" />
-          {node.type === 'arrow' && progress > 0.2 && <Arrowhead x1={node.x} y1={node.y} x2={x2} y2={y2} color={color} opacity={1} />}
-          {progress > 0 && progress < 1 && <PenTip x={x2} y={y2} color={color} />}
+          {node.type === 'arrow' && progress > 0.2 && <Arrowhead x1={node.x} y1={node.y} x2={x2} y2={y2} color={color} opacity={1} scale={(progress - 0.2) / 0.3} />}
+          {progress > 0 && progress < 1 && <PenTip x={x2} y={y2} color={color} wiggle={progress} />}
         </g>
       );
     }
     case 'curve': {
       const tip = curvePoint(node.x, node.y, node.cx ?? node.x, node.cy ?? node.y, node.x2 ?? node.x, node.y2 ?? node.y, progress);
       return (
-        <g>
+        <g transform={popTransform(progress, (node.x + (node.x2 ?? node.x)) / 2, (node.y + (node.y2 ?? node.y)) / 2)}>
           <path d={`M ${node.x} ${node.y} Q ${node.cx ?? node.x} ${node.cy ?? node.y} ${node.x2 ?? node.x} ${node.y2 ?? node.y}`} fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - progress} />
-          {progress > 0 && progress < 1 && <PenTip x={tip.x} y={tip.y} color={color} />}
+          {progress > 0 && progress < 1 && <PenTip x={tip.x} y={tip.y} color={color} wiggle={progress} />}
         </g>
       );
     }
@@ -244,7 +253,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(1);
   const [muted, setMuted] = useState(false);
-  const [captions, setCaptions] = useState(true);
+  const [captions, setCaptions] = useState(false);
   const step = lesson.steps[stepIndex];
   // Language is per step: a lesson can mix Arabic and English steps; the board direction, captions and voice follow the step.
   const stepLang: 'ar' | 'en' = step?.lang ?? lesson.lang;
