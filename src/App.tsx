@@ -50,6 +50,7 @@ import { useVisibilityPolling } from './hooks/useVisibilityPolling';
 import AppRoutes from './app/AppRoutes';
 import AppShell from './app/AppShell';
 import SEO from './components/SEO';
+import { resolveActiveTab, resolveActiveQuizId, resolveUrlProfileId } from './lib/appRoute';
 
 function normalizeUserPhoto(value: unknown): string | null {
   const raw = String(value || '').trim();
@@ -145,119 +146,11 @@ export default function App() {
   // General tab navigation
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const activeTab = React.useMemo(() => {
-    // Check search params first
-    const tabParam = searchParams.get('tab');
-    if (tabParam) return tabParam;
+  const activeTab = React.useMemo(() => resolveActiveTab(searchParams, window.location), [searchParams]);
 
-    // Check pathname
-    const path = window.location.pathname;
-    const cleanPath = path.replace(/^\//, '').split('?')[0];
-    let pathParts = cleanPath.split('/');
-    if (pathParts[0] === 'quiz-space') {
-      pathParts = pathParts.slice(1);
-    }
-    if (pathParts[0] === 'dashboard' && pathParts[1]) {
-      return pathParts[1];
-    }
-    if (pathParts[0] === 'quiz' && pathParts[1]) {
-      return 'quiz';
-    }
-    if (pathParts[0] === 'profile' && pathParts[1]) {
-      return 'profile';
-    }
-    if (pathParts[0] === 'legal' && pathParts[1]) {
-      return `legal-${pathParts[1]}`;
-    }
-    if (pathParts[0] === 'quiz' || pathParts[0] === 'dashboard') {
-      return 'landing';
-    }
-    if (pathParts[0]) {
-      const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'customization', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'store', 'rewards']);
-      return knownTabs.has(pathParts[0]) ? pathParts[0] : 'not-found';
-    }
+  const activeQuizId = React.useMemo(() => resolveActiveQuizId(searchParams, window.location), [searchParams]);
 
-    // Check hash
-    const hash = window.location.hash;
-    if (hash) {
-      const hashClean = hash.replace(/^#\/?/, '').split('?')[0];
-      const parts = hashClean.split('/');
-      if (parts[0] === 'dashboard' && parts[1]) {
-        return parts[1];
-      }
-      if (parts[0] === 'quiz' && parts[1]) {
-        return 'quiz';
-      }
-      if (parts[0] === 'profile' && parts[1]) {
-        return 'profile';
-      }
-      if (parts[0] === 'legal' && parts[1]) {
-        return `legal-${parts[1]}`;
-      }
-      if (parts[0] === 'join' && parts[1]) {
-        return 'classrooms';
-      }
-      if (parts[0] === 'quiz' || parts[0] === 'dashboard' || parts[0] === 'main-content') {
-        return 'landing';
-      }
-      if (parts[0]) {
-        const knownTabs = new Set(['landing', 'explore', 'categories', 'community', 'classrooms', 'institution', 'bookmarks', 'achievements', 'leaderboard', 'analytics', 'billing', 'notifications', 'create', 'profile', 'customization', 'aichat', 'my-quizzes', 'settings', 'support', 'admin', 'store', 'rewards']);
-        return knownTabs.has(parts[0]) ? parts[0] : 'not-found';
-      }
-    }
-
-    return 'landing';
-  }, [searchParams]);
-
-  const activeQuizId = React.useMemo(() => {
-    const tabParam = searchParams.get('tab');
-    if (tabParam === 'quiz' && searchParams.get('quizId')) {
-      return searchParams.get('quizId');
-    }
-    if (searchParams.get('quizId')) {
-      return searchParams.get('quizId');
-    }
-
-    let path = window.location.pathname;
-    if (path.startsWith('/quiz-space')) {
-      path = path.slice(11);
-    }
-    const hash = window.location.hash;
-
-    if (hash) {
-      const hashClean = hash.replace(/^#\/?/, '').split('?')[0];
-      const match = hashClean.match(/^quiz\/([^\/]+)/);
-      if (match) return match[1];
-    }
-
-    const match = path.match(/^\/quiz\/([^\/]+)/) || path.match(/^\/apps\/([^\/]+)/);
-    if (match) return match[1];
-
-    return null;
-  }, [searchParams]);
-
-  const urlProfileId = React.useMemo(() => {
-    if (searchParams.get('profileId')) {
-      return searchParams.get('profileId');
-    }
-
-    let path = window.location.pathname;
-    if (path.startsWith('/quiz-space')) {
-      path = path.slice(11);
-    }
-    const hash = window.location.hash;
-
-    if (hash) {
-      const hashClean = hash.replace(/^#\/?/, '').split('?')[0];
-      const match = hashClean.match(/^profile\/([^\/]+)/);
-      if (match) return match[1];
-    }
-
-    const match = path.match(/^\/profile\/([^\/]+)/);
-    if (match) return match[1];
-
-    return null;
-  }, [searchParams]);
+  const urlProfileId = React.useMemo(() => resolveUrlProfileId(searchParams, window.location), [searchParams]);
 
   // Read view mode state from ?view= parameter, default to 'grid'
   const viewMode = (searchParams.get('view') as 'grid' | 'list') || 'grid';
