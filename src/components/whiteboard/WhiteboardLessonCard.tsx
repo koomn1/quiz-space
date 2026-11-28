@@ -58,6 +58,7 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
           }
           setDraft(checked.lesson);
           setWarnings(weakTashkeel ? [...checked.warnings, 'narration without full tashkeel'] : checked.warnings);
+          setFile(null); // the file was consumed into this draft; a next generate starts clean
           return;
         }
         lastProblems = checked.errors;

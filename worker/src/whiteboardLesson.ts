@@ -53,7 +53,12 @@ export function buildLessonPrompt({ topic, lang, steps, feedback, sourceText, so
   const sourceSection = sourceText
     ? `\nمصدر أرفقه المستخدم${sourceName ? ` (ملف: ${sourceName})` : ''} — صمم الدرس من محتواه: لخّصه ورتّبه ولا تنسخه حرفيًا، والتزم بمعلوماته.\n<source>${sourceText}</source>\n`
     : '';
-  return `أنت معلم خبير تصمم درسًا مفصلًا يُشرح على سبورة. ${topic ? `الموضوع: «${topic}».` : 'استخرج موضوع الدرس المناسب من المصدر المرفق وضعه في title.'} اكتب بـ${language} فقط. ${rtl}${sourceSection}
+  // With an uploaded file, the file's language rules: same language as the UI means a normal
+  // monolingual lesson; a different language means a bilingual lesson (every idea in both).
+  const fileLanguageSection = sourceText
+    ? `\nقاعدة لغة الدرس مع ملف مرفق: لغة الملف هي المرجع. إن كان الملف بلغة واجهة المستخدم (${lang === 'ar' ? 'العربية' : 'الإنجليزية'}) فاكتب الدرس كاملًا بها كالمعتاد. وإن كانت لغة الملف تخالفها (${lang === 'ar' ? 'ملف إنجليزي وواجهة عربية' : 'ملف عربي وواجهة إنجليزية'}) فاجعل الدرس ثنائي اللغة: كل فكرة أساسية على السبورة تظهر باللغتين معًا — اكتب كل جملة أو مصطلح بالعربية ثم مقابله الإنجليزي في السطر نفسه مفصولًا بـ «—» أو في سطرين متجاورين (مثل: «التبخر — Evaporation: تتحول المياه إلى بخار The water turns into vapor»)، واجعل narration يكمل باللغتين (العربية بالتشكيل الكامل كالمعتاد ثم الإنجليزية، حتى 300 حرف تقريبًا)، وأبقِ lang كما هي "${lang}". وإن تعذّر تحديد لغة الملف فالتزم بلغة الواجهة ${lang}.\n`
+    : '';
+  return `أنت معلم خبير تصمم درسًا مفصلًا يُشرح على سبورة. ${topic ? `الموضوع: «${topic}».` : 'استخرج موضوع الدرس المناسب من المصدر المرفق وضعه في title.'} اكتب بـ${language}${sourceText ? ' ما لم تأمرك قاعدة لغة الملف أدناه بغير ذلك' : ' فقط'}. ${rtl}${sourceSection}${fileLanguageSection}
 أعد JSON صالحًا فقط بهذا الشكل بالضبط (بدون أي نص أو علامات markdown خارجه):
 {"schema_version":1,"id":"ai-lesson","title":"عنوان قصير","lang":"${lang}","metadata":{"source":"ai","status":"draft"},"steps":[{"id":"s1","title":"عنوان الخطوة","narration":"جملة قصيرة تكمل المكتوب","nodes":[{"id":"n1","type":"text","x":640,"y":90,"text":"عنوان على السبورة","fontSize":48,"color":"primary","align":"center"}]}]}
 قواعد المحتوى:

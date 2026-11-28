@@ -60,4 +60,12 @@ describe('buildLessonPrompt with a source file', () => {
     expect(p).toContain('الفصل الأول: الخلية وحدة البناء');
     expect(p).toContain('استخرج موضوع الدرس');
   });
+  it('adds the file-language rule only when a source is attached', () => {
+    const withFile = buildLessonPrompt({ topic: 'دورة الماء', lang: 'ar', steps: 5, sourceText: 'Evaporation Condensation Precipitation' });
+    expect(withFile).toContain('قاعدة لغة الدرس مع ملف مرفق');
+    expect(withFile).toContain('ثنائي اللغة');
+    const noFile = buildLessonPrompt({ topic: 'دورة الماء', lang: 'ar', steps: 5 });
+    expect(noFile).not.toContain('قاعدة لغة الدرس مع ملف مرفق');
+    expect(noFile).toContain('فقط');
+  });
 });
