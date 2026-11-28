@@ -3,11 +3,14 @@
 // of the web whiteboard player (no webview).
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:vector_graphics/vector_graphics.dart';
 
 import '../whiteboard/whiteboard_models.dart';
+import '../whiteboard/whiteboard_stickers.dart';
 import '../whiteboard/whiteboard_painter.dart';
 import '../whiteboard/whiteboard_service.dart';
 
@@ -37,6 +40,31 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
   int _ttsCharsUsed = 0;
   static const _ttsCharBudget = 2000;
   int _ttsToken = 0;
+
+  // Sticker art preloaded for the current lesson (name -> picture, null = unavailable).
+  final Map<String, ui.Picture?> _stickerPics = {};
+  int _stickerVersion = 0;
+
+  /// Load the sticker SVGs the lesson uses, once each, then repaint.
+  Future<void> _preloadStickers(WhiteboardLesson lesson) async {
+    for (final s in lesson.steps) {
+      for (final n in s.nodes) {
+        if (n.type != 'sticker' || n.name == null || _stickerPics.containsKey(n.name)) continue;
+        final file = kStickerFiles[n.name];
+        if (file == null) {
+          _stickerPics[n.name!] = null;
+          continue;
+        }
+        try {
+          final info = await vg.loadPicture(SvgAssetLoader('assets/whiteboard/stickers/$file'), null);
+          _stickerPics[n.name!] = info.picture;
+        } catch (_) {
+          _stickerPics[n.name!] = null;
+        }
+      }
+    }
+    if (mounted) setState(() => _stickerVersion++);
+  }
 
   @override
   void dispose() {
@@ -102,7 +130,9 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
         _playing = false;
         _audioMs.clear();
         _ttsCharsUsed = 0;
+        _stickerPics.clear();
       });
+      _preloadStickers(lesson);
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('HttpException: ', ''));
@@ -220,6 +250,8 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                       tInStepMs: _tInStep,
                       durationMs: _duration,
                       showExplanation: _showNotes,
+                      stickerPictures: _stickerPics,
+                      stickerVersion: _stickerVersion,
                     ),
                   ),
                 ),

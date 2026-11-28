@@ -3,8 +3,12 @@
 // same colors, same progressive reveal, same explanation strip.
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 
+import 'package:flutter/material.dart';
+import 'package:vector_graphics/vector_graphics.dart';
+
+import 'whiteboard_icons.dart';
 import 'whiteboard_models.dart';
 
 const Map<String, Color> kNodeColors = {
@@ -63,6 +67,8 @@ class WhiteboardPainter extends CustomPainter {
     required this.tInStepMs,
     required this.durationMs,
     required this.showExplanation,
+    required this.stickerPictures,
+    required this.stickerVersion,
   });
 
   final WhiteboardLesson lesson;
@@ -71,6 +77,12 @@ class WhiteboardPainter extends CustomPainter {
   final double tInStepMs;
   final double durationMs;
   final bool showExplanation;
+
+  /// Preloaded sticker pictures by sticker name (null entry = unknown/failed, draw placeholder).
+  final Map<String, ui.Picture?> stickerPictures;
+
+  /// Bumped when [stickerPictures] gains entries so shouldRepaint notices.
+  final int stickerVersion;
 
   bool get _rtl => (step.lang ?? lesson.lang) == 'ar';
 
@@ -202,18 +214,142 @@ class WhiteboardPainter extends CustomPainter {
         if (n.d != null) canvas.drawPath(_partialPath(parseSvgPath(n.d!), progress), stroke);
         break;
       case 'icon':
+        _paintIcon(canvas, n, progress, rtl, stroke);
+        break;
       case 'sticker':
-        // v1: draw a labeled placeholder chip; full icon/sticker art is web-only for now.
-        final w = n.w ?? 120, h = n.h ?? 120;
-        final rect = Rect.fromLTWH(n.x, n.y, w, h);
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(16)),
-          Paint()..color = color.withValues(alpha: 0.12 * progress),
-        );
-        final tp = _textPainter(n.name ?? '', 22, color, 'center', rtl);
-        tp.paint(canvas, Offset(n.x + (w - tp.width) / 2, n.y + (h - tp.height) / 2));
+        _paintSticker(canvas, n, progress, color, rtl);
         break;
     }
+  }
+
+  /// Web popTransform: a small overshoot bump in the last 20% of the draw.
+  void _withPop(Canvas canvas, double progress, double cx, double cy, void Function() draw) {
+    canvas.save();
+    if (progress > 0.8 && progress < 1) {
+      final s = 1 + 0.06 * math.sin(((progress - 0.8) / 0.2) * math.pi);
+      canvas.translate(cx, cy);
+      canvas.scale(s);
+      canvas.translate(-cx, -cy);
+    }
+    draw();
+    canvas.restore();
+  }
+
+  /// Icon nodes: the hand-drawn 200x200 stroke art from the web icon library,
+  /// parts drawn one after another, labels pinned to named anchors.
+  void _paintIcon(Canvas canvas, WhiteboardNode n, double progress, bool rtl, Paint stroke) {
+    final def = kWhiteboardIcons[n.name];
+    if (def == null) {
+      _paintPlaceholderChip(canvas, n, progress, stroke.color, rtl);
+      return;
+    }
+    final w = n.w ?? 200, h = n.h ?? 200;
+    final sx = w / def.viewBox, sy = h / def.viewBox;
+    final partStroke = Paint()
+      ..color = stroke.color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5 / math.max(sx, sy)
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final count = def.parts.length;
+    _withPop(canvas, progress, n.x + w / 2, n.y + h / 2, () {
+      canvas.save();
+      canvas.translate(n.x, n.y);
+      canvas.scale(sx, sy);
+      for (var i = 0; i < count; i++) {
+        final pp = (progress * count - i).clamp(0.0, 1.0);
+        if (pp <= 0) continue;
+        final part = def.parts[i];
+        switch (part.kind) {
+          case 'path':
+            if (part.d != null) canvas.drawPath(_partialPath(parseSvgPath(part.d!), pp), partStroke);
+            break;
+          case 'circle':
+            final full = Path()..addOval(Rect.fromCircle(center: Offset(part.cx, part.cy), radius: part.r));
+            canvas.drawPath(_partialPath(full, pp), partStroke);
+            break;
+          case 'ellipse':
+            var full = Path()..addOval(Rect.fromCenter(center: Offset(part.cx, part.cy), width: part.rx * 2, height: part.ry * 2));
+            if (part.rotate != 0) {
+              final m = Matrix4.identity()
+                ..translate(part.cx, part.cy)
+                ..rotateZ(part.rotate * math.pi / 180)
+                ..translate(-part.cx, -part.cy);
+              full = full.transform(m.storage);
+            }
+            canvas.drawPath(_partialPath(full, pp), partStroke);
+            break;
+          case 'line':
+            canvas.drawLine(
+              Offset(part.x1, part.y1),
+              Offset(part.x1 + (part.x2 - part.x1) * pp, part.y1 + (part.y2 - part.y1) * pp),
+              partStroke,
+            );
+            break;
+        }
+      }
+      canvas.restore();
+    });
+    for (final label in n.labels ?? const <IconLabel>[]) {
+      final a = def.anchors[label.anchor];
+      if (a == null) continue;
+      final ax = n.x + a.dx * sx, ay = n.y + a.dy * sy;
+      var outX = a.dx == def.viewBox / 2 ? 0.0 : (a.dx > def.viewBox / 2 ? 1.0 : -1.0);
+      if (outX == 0) outX = rtl ? -1.0 : 1.0;
+      final outY = a.dy == def.viewBox / 2 ? -1.0 : (a.dy > def.viewBox / 2 ? 1.0 : -1.0);
+      final lx = ax + outX * 20, ly = ay + outY * 20;
+      final revealed = !label.teaser || progress >= 0.95;
+      if (label.teaser && progress < 0.35) continue;
+      if (revealed) {
+        final sub = WhiteboardNode(id: '${n.id}-label', type: 'text', x: lx, y: ly, color: n.color, text: label.text, fontSize: 28, align: 'center');
+        _paintText(canvas, sub, ((progress - 0.6) / 0.35).clamp(0.0, 1.0), rtl);
+      } else {
+        canvas.drawCircle(Offset(lx, ly - 10), 17, Paint()..color = stroke.color.withValues(alpha: 0.14));
+        final tp = _textPainter('?', 30, stroke.color, 'center', rtl);
+        tp.paint(canvas, Offset(lx - tp.width / 2, ly - tp.height * 0.8));
+      }
+    }
+  }
+
+  /// Sticker nodes: the same SVG sticker art as the web, popped in with easeOutBack.
+  void _paintSticker(Canvas canvas, WhiteboardNode n, double progress, Color color, bool rtl) {
+    final pic = stickerPictures[n.name];
+    if (pic == null) {
+      _paintPlaceholderChip(canvas, n, progress, color, rtl);
+      return;
+    }
+    final w = n.w ?? 160, h = n.h ?? 160;
+    final t = progress.clamp(0.0, 1.0);
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    final ease = 1 + c3 * math.pow(t - 1, 3) + c1 * math.pow(t - 1, 2); // easeOutBack, same as web
+    final s = math.max(0.001, ease);
+    final cx0 = n.x + w / 2, cy0 = n.y + h / 2;
+    canvas.save();
+    canvas.saveLayer(
+      Rect.fromLTWH(n.x - w, n.y - h, w * 3, h * 3),
+      Paint()..color = Colors.white.withValues(alpha: math.min(1, t * 2)),
+    );
+    canvas.translate(cx0, cy0);
+    canvas.scale(s);
+    canvas.translate(-cx0, -cy0);
+    canvas.translate(n.x, n.y);
+    final ps = pic.size;
+    canvas.scale(w / ps.width, h / ps.height);
+    canvas.drawPicture(pic.picture);
+    canvas.restore();
+    canvas.restore();
+  }
+
+  void _paintPlaceholderChip(Canvas canvas, WhiteboardNode n, double progress, Color color, bool rtl) {
+    final w = n.w ?? 120, h = n.h ?? 120;
+    final rect = Rect.fromLTWH(n.x, n.y, w, h);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(16)),
+      Paint()..color = color.withValues(alpha: 0.12 * progress),
+    );
+    final tp = _textPainter(n.name ?? '', 22, color, 'center', rtl);
+    tp.paint(canvas, Offset(n.x + (w - tp.width) / 2, n.y + (h - tp.height) / 2));
   }
 
   /// The explanation strip: same geometry as the web BoardExplanation (y 590, h 112).
@@ -264,5 +400,9 @@ class WhiteboardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WhiteboardPainter old) =>
-      old.step != step || old.tInStepMs != tInStepMs || old.showExplanation != showExplanation || old.carried.length != carried.length;
+      old.step != step ||
+      old.tInStepMs != tInStepMs ||
+      old.showExplanation != showExplanation ||
+      old.carried.length != carried.length ||
+      old.stickerVersion != stickerVersion;
 }

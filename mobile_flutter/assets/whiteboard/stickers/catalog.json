@@ -1,0 +1,10984 @@
+[
+ {
+  "name": "axe-1fa93",
+  "file": "1FA93.svg",
+  "en": "axe",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " chop",
+   " hatchet",
+   " split",
+   " wood",
+   "ax"
+  ]
+ },
+ {
+  "name": "bomb",
+  "file": "1F4A3.svg",
+  "en": "bomb",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " comic",
+   " dangerous",
+   " explosion",
+   " hot",
+   "boom",
+   "explosion"
+  ]
+ },
+ {
+  "name": "boomerang",
+  "file": "1FA83.svg",
+  "en": "boomerang",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " repercussion",
+   " weapon",
+   "rebound"
+  ]
+ },
+ {
+  "name": "bow-and-arrow",
+  "file": "1F3F9.svg",
+  "en": "bow and arrow",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " archery",
+   " arrow",
+   " bow",
+   " sagittarius",
+   " tool",
+   " weapon",
+   " zodiac",
+   "archer"
+  ]
+ },
+ {
+  "name": "carpentry-saw",
+  "file": "1FA9A.svg",
+  "en": "carpentry saw",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " carpentry",
+   " cut",
+   " lumber",
+   " saw",
+   " tool",
+   " trim",
+   "carpenter"
+  ]
+ },
+ {
+  "name": "crossed-swords",
+  "file": "2694.svg",
+  "en": "crossed swords",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " swords",
+   " weapon",
+   "crossed"
+  ]
+ },
+ {
+  "name": "dagger",
+  "file": "1F5E1.svg",
+  "en": "dagger",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " weapon",
+   "knife",
+   "metal"
+  ]
+ },
+ {
+  "name": "gear",
+  "file": "2699.svg",
+  "en": "gear",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " cogwheel",
+   " metal",
+   " silver",
+   " tool",
+   "cog",
+   "tool"
+  ]
+ },
+ {
+  "name": "hammer",
+  "file": "1F528.svg",
+  "en": "hammer",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " improvement",
+   " metal",
+   " repairs",
+   " tool",
+   " wood",
+   "home",
+   "toolbox"
+  ]
+ },
+ {
+  "name": "hammer-and-pick",
+  "file": "2692.svg",
+  "en": "hammer and pick",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " pick",
+   " tool",
+   "hammer"
+  ]
+ },
+ {
+  "name": "hammer-and-wrench",
+  "file": "1F6E0.svg",
+  "en": "hammer and wrench",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " logo",
+   " spanner",
+   " tool",
+   " wrench",
+   "craft mans",
+   "hammer"
+  ]
+ },
+ {
+  "name": "nut-and-bolt",
+  "file": "1F529.svg",
+  "en": "nut and bolt",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " home",
+   " improvement",
+   " nut",
+   " tool",
+   "bolt"
+  ]
+ },
+ {
+  "name": "pick",
+  "file": "26CF.svg",
+  "en": "pick",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " mining",
+   " tool",
+   "hammer",
+   "weapon"
+  ]
+ },
+ {
+  "name": "screwdriver",
+  "file": "1FA9B.svg",
+  "en": "screwdriver",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " handy",
+   " screw",
+   " tool",
+   "flathead"
+  ]
+ },
+ {
+  "name": "shield",
+  "file": "1F6E1.svg",
+  "en": "shield",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " fight",
+   " middle ages",
+   "protection",
+   "weapon"
+  ]
+ },
+ {
+  "name": "wrench",
+  "file": "1F527.svg",
+  "en": "wrench",
+  "topics": [
+   "أدوات"
+  ],
+  "tags": [
+   " improvement",
+   " silver",
+   " spanner",
+   " tool",
+   "home",
+   "toolbox"
+  ]
+ },
+ {
+  "name": "bullseye",
+  "file": "1F3AF.svg",
+  "en": "bullseye",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " archery",
+   " bullseye",
+   " dart",
+   " dart board",
+   " darts",
+   " direct",
+   " entertainment",
+   " game"
+  ]
+ },
+ {
+  "name": "crystal-ball",
+  "file": "1F52E.svg",
+  "en": "crystal ball",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " crystal",
+   " fairy",
+   " fairytale",
+   " fantasy",
+   " fortune",
+   " future",
+   " magic",
+   " tale"
+  ]
+ },
+ {
+  "name": "game-die",
+  "file": "1F3B2.svg",
+  "en": "game die",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " die",
+   " entertainment",
+   " game",
+   " isometric",
+   "board game",
+   "dice"
+  ]
+ },
+ {
+  "name": "joystick",
+  "file": "1F579.svg",
+  "en": "joystick",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " video",
+   " videogame",
+   "game"
+  ]
+ },
+ {
+  "name": "kite",
+  "file": "1FA81.svg",
+  "en": "kite",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " soar",
+   "fly"
+  ]
+ },
+ {
+  "name": "magic-wand",
+  "file": "1FA84.svg",
+  "en": "magic wand",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " magician",
+   " wand",
+   " witch",
+   " wizard",
+   "magic"
+  ]
+ },
+ {
+  "name": "mirror-ball",
+  "file": "1FAA9.svg",
+  "en": "mirror ball",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " dance",
+   " disco",
+   " glitter",
+   " mirror",
+   " party",
+   "ball"
+  ]
+ },
+ {
+  "name": "nesting-dolls",
+  "file": "1FA86.svg",
+  "en": "nesting dolls",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " baboushka",
+   " babushka",
+   " doll",
+   " dolls",
+   " matryoshka",
+   " nesting",
+   " russia",
+   "babooshka"
+  ]
+ },
+ {
+  "name": "pi-ata",
+  "file": "1FA85.svg",
+  "en": "piñata",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " celebrate",
+   " celebration",
+   " cinco",
+   " de",
+   " festive",
+   " mayo",
+   " party",
+   " pinada"
+  ]
+ },
+ {
+  "name": "pool-8-ball",
+  "file": "1F3B1.svg",
+  "en": "pool 8 ball",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " 8 ball",
+   " 8ball",
+   " ball",
+   " billiard",
+   " billiards",
+   " black ball",
+   " cue ball",
+   " eight"
+  ]
+ },
+ {
+  "name": "puzzle-piece",
+  "file": "1F9E9.svg",
+  "en": "puzzle piece",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " interlocking",
+   " jigsaw",
+   " piece",
+   " puzzle",
+   "clue"
+  ]
+ },
+ {
+  "name": "slot-machine",
+  "file": "1F3B0.svg",
+  "en": "slot machine",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " gamble",
+   " gambling",
+   " game",
+   " machine",
+   " slot",
+   " slots",
+   "casino"
+  ]
+ },
+ {
+  "name": "teddy-bear",
+  "file": "1F9F8.svg",
+  "en": "teddy bear",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " plaything",
+   " plush",
+   " stuffed",
+   " teddy",
+   " toy",
+   "bear"
+  ]
+ },
+ {
+  "name": "video-game",
+  "file": "1F3AE.svg",
+  "en": "video game",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " entertainment",
+   " game",
+   " video",
+   "controller",
+   "gamble"
+  ]
+ },
+ {
+  "name": "water-pistol",
+  "file": "1F52B.svg",
+  "en": "water pistol",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " handgun",
+   " pistol",
+   " revolver",
+   " tool",
+   " water",
+   " weapon",
+   "gun"
+  ]
+ },
+ {
+  "name": "yo-yo",
+  "file": "1FA80.svg",
+  "en": "yo-yo",
+  "topics": [
+   "ألعاب"
+  ],
+  "tags": [
+   " toy",
+   "fluctuate"
+  ]
+ },
+ {
+  "name": "exhaust-gases-car",
+  "file": "E2CF.svg",
+  "en": "exhaust gases car",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " CO2",
+   " carbon",
+   "pollution"
+  ]
+ },
+ {
+  "name": "exhaust-gases-factory",
+  "file": "E2CC.svg",
+  "en": "exhaust gases factory",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " CO2",
+   " carbon",
+   "pollution"
+  ]
+ },
+ {
+  "name": "floating-ice",
+  "file": "E2C1.svg",
+  "en": "floating ice",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " melt",
+   " polar",
+   " sea",
+   "glacier"
+  ]
+ },
+ {
+  "name": "floating-ice-broken",
+  "file": "E2C2.svg",
+  "en": "floating ice broken",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " melt",
+   " polar",
+   " sea",
+   "glacier"
+  ]
+ },
+ {
+  "name": "ice-core-sample",
+  "file": "E2C4.svg",
+  "en": "ice core sample",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " arctic",
+   " polar",
+   " research",
+   "science"
+  ]
+ },
+ {
+  "name": "ice-shelf",
+  "file": "E2C6.svg",
+  "en": "ice shelf",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " melt",
+   " polar",
+   " sea",
+   "glacier"
+  ]
+ },
+ {
+  "name": "ice-shelf-melting",
+  "file": "E2C7.svg",
+  "en": "ice shelf melting",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " climate",
+   " global",
+   " melt",
+   " sea",
+   " warming",
+   "glacier"
+  ]
+ },
+ {
+  "name": "iceberg",
+  "file": "E2C0.svg",
+  "en": "iceberg",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " cold",
+   " ice",
+   " sea",
+   " ship wreck",
+   "Titanic"
+  ]
+ },
+ {
+  "name": "meat-consumption",
+  "file": "E2CE.svg",
+  "en": "meat consumption",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   "carnivore"
+  ]
+ },
+ {
+  "name": "oil-spill",
+  "file": "E2CB.svg",
+  "en": "oil spill",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " fossil",
+   " fuel",
+   " petrol",
+   "pollution"
+  ]
+ },
+ {
+  "name": "polar-explorer",
+  "file": "E2C8.svg",
+  "en": "polar explorer",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " anorak with fur",
+   "inuit"
+  ]
+ },
+ {
+  "name": "polar-explorer-man",
+  "file": "E2C9.svg",
+  "en": "polar explorer man",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   "research"
+  ]
+ },
+ {
+  "name": "polar-explorer-woman",
+  "file": "E2CA.svg",
+  "en": "polar explorer woman",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   "research"
+  ]
+ },
+ {
+  "name": "polar-research-station",
+  "file": "E2C3.svg",
+  "en": "polar research station",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " arctic",
+   " science",
+   "Neumayer station"
+  ]
+ },
+ {
+  "name": "solar-energy",
+  "file": "E2CD.svg",
+  "en": "solar energy",
+  "topics": [
+   "بيئة"
+  ],
+  "tags": [
+   " clean",
+   " panel",
+   " power",
+   " renewable",
+   "sun"
+  ]
+ },
+ {
+  "name": "augmented-reality",
+  "file": "E1C6.svg",
+  "en": "augmented reality",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": []
+ },
+ {
+  "name": "autonomous-car",
+  "file": "E1C2.svg",
+  "en": "autonomous car",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": []
+ },
+ {
+  "name": "battery",
+  "file": "1F50B.svg",
+  "en": "battery",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " electric",
+   " energy",
+   "battery",
+   "electricity"
+  ]
+ },
+ {
+  "name": "cable",
+  "file": "E1CB.svg",
+  "en": "cable",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": []
+ },
+ {
+  "name": "camera",
+  "file": "1F4F7.svg",
+  "en": "camera",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " digital",
+   " selfie",
+   " snap",
+   " tbt",
+   " trip",
+   " video",
+   "camera",
+   "photo"
+  ]
+ },
+ {
+  "name": "camera-with-flash",
+  "file": "1F4F8.svg",
+  "en": "camera with flash",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " bright",
+   " flash",
+   " video",
+   "camera"
+  ]
+ },
+ {
+  "name": "clapper-board",
+  "file": "1F3AC.svg",
+  "en": "clapper board",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " board",
+   " clapper",
+   " movie",
+   " new recording",
+   "action",
+   "cut"
+  ]
+ },
+ {
+  "name": "code-editor",
+  "file": "E1C1.svg",
+  "en": "code editor",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": []
+ },
+ {
+  "name": "computer-disk",
+  "file": "1F4BD.svg",
+  "en": "computer disk",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " disk",
+   " minidisk",
+   " optical",
+   " retro",
+   "computer",
+   "old"
+  ]
+ },
+ {
+  "name": "computer-mouse",
+  "file": "1F5B1.svg",
+  "en": "computer mouse",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " computer",
+   " mouse",
+   "computer",
+   "electric"
+  ]
+ },
+ {
+  "name": "desktop-computer",
+  "file": "1F5A5.svg",
+  "en": "desktop computer",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " desktop",
+   " monitor",
+   " screen",
+   "computer",
+   "electric"
+  ]
+ },
+ {
+  "name": "electric-plug",
+  "file": "1F50C.svg",
+  "en": "electric plug",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " electricity",
+   " plug",
+   "electric"
+  ]
+ },
+ {
+  "name": "film-frames",
+  "file": "1F39E.svg",
+  "en": "film frames",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " film",
+   " frames",
+   " movie",
+   "cinema",
+   "clip"
+  ]
+ },
+ {
+  "name": "film-projector",
+  "file": "1F4FD.svg",
+  "en": "film projector",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " film",
+   " film clip",
+   " movie",
+   " projector",
+   " video",
+   "cinema",
+   "play"
+  ]
+ },
+ {
+  "name": "floppy-disk",
+  "file": "1F4BE.svg",
+  "en": "floppy disk",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " disk",
+   " floppy",
+   " retro",
+   "computer",
+   "old"
+  ]
+ },
+ {
+  "name": "gps",
+  "file": "E1CD.svg",
+  "en": "gps",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " crosshair",
+   " localization",
+   " location",
+   " reception",
+   " signal",
+   " where",
+   " wireless",
+   "navigation"
+  ]
+ },
+ {
+  "name": "hal-9000",
+  "file": "25C9-FE0F-200D-1F534-200D-25AE-FE0F.svg",
+  "en": "HAL 9000",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " 2001",
+   " I'm afraid I can't do that",
+   " I'm sorry Dave",
+   " Space Odyssey",
+   " Stanley Kubrick",
+   " artificial intelligence",
+   " film",
+   " movie"
+  ]
+ },
+ {
+  "name": "keyboard",
+  "file": "2328.svg",
+  "en": "keyboard",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " electric",
+   " write",
+   "computer",
+   "key"
+  ]
+ },
+ {
+  "name": "laptop",
+  "file": "1F4BB.svg",
+  "en": "laptop",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " office",
+   " pc",
+   " personal",
+   " retro",
+   "computer",
+   "old"
+  ]
+ },
+ {
+  "name": "led",
+  "file": "E1C7.svg",
+  "en": "led",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": []
+ },
+ {
+  "name": "low-battery",
+  "file": "1FAAB.svg",
+  "en": "low battery",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " drained",
+   " electronic",
+   " energy",
+   " low",
+   " power",
+   "battery"
+  ]
+ },
+ {
+  "name": "magnifying-glass-tilted-left",
+  "file": "1F50D.svg",
+  "en": "magnifying glass tilted left",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " big",
+   " detective",
+   " lab",
+   " left",
+   " left-pointing",
+   " magnifying",
+   " science",
+   " search"
+  ]
+ },
+ {
+  "name": "mobile-phone",
+  "file": "1F4F1.svg",
+  "en": "mobile phone",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " communication",
+   " message",
+   " mobile",
+   " phone",
+   " telephone",
+   " voice",
+   "cell",
+   "smartphone"
+  ]
+ },
+ {
+  "name": "mobile-phone-with-arrow",
+  "file": "1F4F2.svg",
+  "en": "mobile phone with arrow",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " build",
+   " call",
+   " cell",
+   " communication",
+   " message",
+   " mobile",
+   " phone",
+   " receive"
+  ]
+ },
+ {
+  "name": "motor",
+  "file": "E1C8.svg",
+  "en": "motor",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": []
+ },
+ {
+  "name": "movie-camera",
+  "file": "1F3A5.svg",
+  "en": "movie camera",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " camera",
+   " cinema",
+   " film",
+   " hollywood",
+   " movie",
+   " record",
+   "bollywood",
+   "film"
+  ]
+ },
+ {
+  "name": "optical-disk",
+  "file": "1F4BF.svg",
+  "en": "optical disk",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " cd",
+   " computer",
+   " disk",
+   " dvd",
+   " optical",
+   "analog",
+   "blu-ray"
+  ]
+ },
+ {
+  "name": "printer",
+  "file": "1F5A8.svg",
+  "en": "printer",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " electric",
+   "color",
+   "computer"
+  ]
+ },
+ {
+  "name": "raspberry-pi",
+  "file": "E1C9.svg",
+  "en": "raspberry pi",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": []
+ },
+ {
+  "name": "red-eye",
+  "file": "25C9-FE0F-200D-1F534.svg",
+  "en": "red eye",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " AI",
+   " Portal",
+   " rogue AI",
+   "turret"
+  ]
+ },
+ {
+  "name": "surveillance",
+  "file": "E1C4.svg",
+  "en": "surveillance",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " CCTV",
+   " camera",
+   "surveillance"
+  ]
+ },
+ {
+  "name": "switch",
+  "file": "E1C3.svg",
+  "en": "switch",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " changeover switch",
+   " exchange counter",
+   " left",
+   " right",
+   "toggling"
+  ]
+ },
+ {
+  "name": "tablet",
+  "file": "E1CC.svg",
+  "en": "tablet",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " device",
+   " ipad",
+   " phablet",
+   " portable",
+   " screen",
+   "technology"
+  ]
+ },
+ {
+  "name": "telephone",
+  "file": "260E.svg",
+  "en": "telephone",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " communication",
+   " voice",
+   "call",
+   "phone"
+  ]
+ },
+ {
+  "name": "telephone-receiver",
+  "file": "1F4DE.svg",
+  "en": "telephone receiver",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " communication",
+   " phone",
+   " receiver",
+   " telephone",
+   " voice",
+   " voip",
+   "call",
+   "communication"
+  ]
+ },
+ {
+  "name": "television",
+  "file": "1F4FA.svg",
+  "en": "television",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " modern",
+   " tv",
+   " video",
+   "flat screen",
+   "tv"
+  ]
+ },
+ {
+  "name": "trackball",
+  "file": "1F5B2.svg",
+  "en": "trackball",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   "computer"
+  ]
+ },
+ {
+  "name": "video-camera",
+  "file": "1F4F9.svg",
+  "en": "video camera",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " camera",
+   " film",
+   " movie",
+   " recording",
+   " tbt",
+   " video",
+   "camcorder",
+   "record"
+  ]
+ },
+ {
+  "name": "videocassette",
+  "file": "1F4FC.svg",
+  "en": "videocassette",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": [
+   " cassette",
+   " film",
+   " record",
+   " recording",
+   " school",
+   " tape",
+   " vcr",
+   " vhs"
+  ]
+ },
+ {
+  "name": "virtual-reality",
+  "file": "E1CA.svg",
+  "en": "virtual reality",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": []
+ },
+ {
+  "name": "wireframes",
+  "file": "E1C0.svg",
+  "en": "wireframes",
+  "topics": [
+   "تقنية"
+  ],
+  "tags": []
+ },
+ {
+  "name": "adhesive-bandage",
+  "file": "1FA79.svg",
+  "en": "adhesive bandage",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " bandage",
+   "adhesive"
+  ]
+ },
+ {
+  "name": "anatomical-heart",
+  "file": "1FAC0.svg",
+  "en": "anatomical heart",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " beat",
+   " blood",
+   " cardiology",
+   " heart",
+   " heartbeat",
+   " organ",
+   " pulse",
+   " real"
+  ]
+ },
+ {
+  "name": "biting-lip",
+  "file": "1FAE6.svg",
+  "en": "biting lip",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " bite",
+   " biting",
+   " fear",
+   " flirt",
+   " flirting",
+   " kiss",
+   " lip",
+   " lipstick"
+  ]
+ },
+ {
+  "name": "blood-transfusion",
+  "file": "E30D.svg",
+  "en": "blood transfusion",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " bleeding",
+   " loss",
+   "medical"
+  ]
+ },
+ {
+  "name": "bone",
+  "file": "1F9B4.svg",
+  "en": "bone",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " dog",
+   " skeleton",
+   " wishbone",
+   "bones"
+  ]
+ },
+ {
+  "name": "brain",
+  "file": "1F9E0.svg",
+  "en": "brain",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " clever",
+   " intelligent",
+   " smart",
+   "brain",
+   "intelligent"
+  ]
+ },
+ {
+  "name": "crutch",
+  "file": "1FA7C.svg",
+  "en": "crutch",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " cane",
+   " disability",
+   " help",
+   " hurt",
+   " injured",
+   " mobility",
+   " stick",
+   "aid"
+  ]
+ },
+ {
+  "name": "drop-of-blood",
+  "file": "1FA78.svg",
+  "en": "drop of blood",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " blood",
+   " donation",
+   " drop",
+   " injury",
+   " medicine",
+   " menstruation",
+   "bleed"
+  ]
+ },
+ {
+  "name": "ecg-waves",
+  "file": "E308.svg",
+  "en": "ecg waves",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " beat",
+   " electrocardiogram",
+   " hospital",
+   "heartbeats"
+  ]
+ },
+ {
+  "name": "eye",
+  "file": "1F441.svg",
+  "en": "eye",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " body",
+   " face",
+   " one",
+   "1",
+   "eye"
+  ]
+ },
+ {
+  "name": "eyes",
+  "file": "1F440.svg",
+  "en": "eyes",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " eye",
+   " eyes",
+   " face",
+   " googly",
+   " look",
+   " looking",
+   " omg",
+   " peep"
+  ]
+ },
+ {
+  "name": "female-doctor",
+  "file": "E300.svg",
+  "en": "female doctor",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " care",
+   " surgery",
+   "hospital"
+  ]
+ },
+ {
+  "name": "female-nurse",
+  "file": "E302.svg",
+  "en": "female nurse",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " care",
+   " surgery",
+   "hospital"
+  ]
+ },
+ {
+  "name": "first-aid-bag",
+  "file": "E309.svg",
+  "en": "first aid bag",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " kit",
+   " medicine",
+   "briefcase"
+  ]
+ },
+ {
+  "name": "hot-water-bottle",
+  "file": "E30F.svg",
+  "en": "hot-water bottle",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " comfort",
+   " period",
+   " warm",
+   "cramps"
+  ]
+ },
+ {
+  "name": "lungs",
+  "file": "1FAC1.svg",
+  "en": "lungs",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " air",
+   " breathe",
+   " breathing",
+   " exhalation",
+   " inhalation",
+   " lung",
+   " organ",
+   " respiration"
+  ]
+ },
+ {
+  "name": "male-doctor",
+  "file": "E301.svg",
+  "en": "male doctor",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " care",
+   " surgery",
+   "hospital"
+  ]
+ },
+ {
+  "name": "male-nurse",
+  "file": "E303.svg",
+  "en": "male nurse",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " care",
+   " surgery",
+   "hospital"
+  ]
+ },
+ {
+  "name": "mechanical-arm",
+  "file": "1F9BE.svg",
+  "en": "mechanical arm",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " arm",
+   " mechanical",
+   " prosthetic",
+   "accessibility"
+  ]
+ },
+ {
+  "name": "mechanical-leg",
+  "file": "1F9BF.svg",
+  "en": "mechanical leg",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " leg",
+   " mechanical",
+   " prosthetic",
+   "accessibility"
+  ]
+ },
+ {
+  "name": "medication",
+  "file": "E307.svg",
+  "en": "medication",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " medicine",
+   " pain killers",
+   " tablets",
+   "drug"
+  ]
+ },
+ {
+  "name": "mouth",
+  "file": "1F444.svg",
+  "en": "mouth",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " body",
+   " kiss",
+   " kissing",
+   " lips",
+   " lipstick",
+   " mouth",
+   "beauty",
+   "lips"
+  ]
+ },
+ {
+  "name": "patient-clipboard",
+  "file": "E30B.svg",
+  "en": "patient clipboard",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " notes",
+   " transcript",
+   "hospital"
+  ]
+ },
+ {
+  "name": "patient-file",
+  "file": "E30A.svg",
+  "en": "patient file",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " filing",
+   " record",
+   "hospital"
+  ]
+ },
+ {
+  "name": "pill",
+  "file": "1F48A.svg",
+  "en": "pill",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " drugs",
+   " medicated",
+   " medicine",
+   " pills",
+   " sick",
+   " vitamin",
+   "doctor",
+   "health"
+  ]
+ },
+ {
+  "name": "pills",
+  "file": "E305.svg",
+  "en": "pills",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " medicine",
+   " pain killers",
+   " tablets",
+   "drug"
+  ]
+ },
+ {
+  "name": "plaster",
+  "file": "E306.svg",
+  "en": "plaster",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " band aid",
+   " bandage",
+   " dressing",
+   " plaster",
+   " wound",
+   "patch"
+  ]
+ },
+ {
+  "name": "saline-drip",
+  "file": "E30C.svg",
+  "en": "saline drip",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " bag",
+   "hospital"
+  ]
+ },
+ {
+  "name": "stethoscope",
+  "file": "1FA7A.svg",
+  "en": "stethoscope",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " heart",
+   " medicine",
+   "doctor"
+  ]
+ },
+ {
+  "name": "swab-pliers",
+  "file": "E30E.svg",
+  "en": "swab pliers",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " scissors",
+   "surgery"
+  ]
+ },
+ {
+  "name": "syringe",
+  "file": "1F489.svg",
+  "en": "syringe",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " IV",
+   " drug",
+   " flu",
+   " injection",
+   " medicine",
+   " needle",
+   " shot",
+   " sick"
+  ]
+ },
+ {
+  "name": "tongue",
+  "file": "1F445.svg",
+  "en": "tongue",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " kiss",
+   " lick",
+   " licking",
+   " slurp",
+   "body",
+   "tongue"
+  ]
+ },
+ {
+  "name": "tooth",
+  "file": "1F9B7.svg",
+  "en": "tooth",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " pearly",
+   " teeth",
+   " white",
+   "dentist"
+  ]
+ },
+ {
+  "name": "x-ray",
+  "file": "1FA7B.svg",
+  "en": "x-ray",
+  "topics": [
+   "جسم وصحة"
+  ],
+  "tags": [
+   " doctor",
+   " medical",
+   " skeleton",
+   " skull",
+   " xray",
+   "bones"
+  ]
+ },
+ {
+  "name": "beach-with-umbrella",
+  "file": "1F3D6.svg",
+  "en": "beach with umbrella",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " holidays",
+   " sand",
+   " summer",
+   " sun",
+   " umbrella",
+   " water",
+   "beach",
+   "nature"
+  ]
+ },
+ {
+  "name": "camping",
+  "file": "1F3D5.svg",
+  "en": "camping",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " adventure",
+   " outdoor",
+   " sleeping",
+   " tent",
+   "camping",
+   "nature"
+  ]
+ },
+ {
+  "name": "compass",
+  "file": "1F9ED.svg",
+  "en": "compass",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " direction",
+   " magnetic",
+   " navigation",
+   " orienteering",
+   "direction",
+   "wayfinding"
+  ]
+ },
+ {
+  "name": "desert",
+  "file": "1F3DC.svg",
+  "en": "desert",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " dry",
+   " hot",
+   " sand",
+   " sun",
+   "desert",
+   "nature"
+  ]
+ },
+ {
+  "name": "desert-island",
+  "file": "1F3DD.svg",
+  "en": "desert island",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " island",
+   " lonely",
+   " nature",
+   " palm",
+   " sand",
+   " stranded",
+   " water",
+   "desert"
+  ]
+ },
+ {
+  "name": "globe-showing-americas",
+  "file": "1F30E.svg",
+  "en": "globe showing Americas",
+  "topics": [
+   "جغرافيا",
+   "فضاء"
+  ],
+  "tags": [
+   " continent",
+   " earth",
+   " global",
+   " globe",
+   " planet",
+   " showing",
+   " world",
+   "americas"
+  ]
+ },
+ {
+  "name": "globe-showing-asia-australia",
+  "file": "1F30F.svg",
+  "en": "globe showing Asia-Australia",
+  "topics": [
+   "جغرافيا",
+   "فضاء"
+  ],
+  "tags": [
+   " asia-australia",
+   " australia",
+   " continent",
+   " earth",
+   " global",
+   " globe",
+   " planet",
+   " showing"
+  ]
+ },
+ {
+  "name": "globe-showing-europe-africa",
+  "file": "1F30D.svg",
+  "en": "globe showing Europe-Africa",
+  "topics": [
+   "جغرافيا",
+   "فضاء"
+  ],
+  "tags": [
+   " continent",
+   " earth",
+   " europe",
+   " europe-africa",
+   " global",
+   " globe",
+   " planet",
+   " showing"
+  ]
+ },
+ {
+  "name": "globe-with-meridians",
+  "file": "1F310.svg",
+  "en": "globe with meridians",
+  "topics": [
+   "جغرافيا",
+   "فضاء"
+  ],
+  "tags": [
+   " continent",
+   " global",
+   " globe",
+   " grid",
+   " internet",
+   " meridians",
+   " planet",
+   " web"
+  ]
+ },
+ {
+  "name": "landslide",
+  "file": "1F6D8.svg",
+  "en": "landslide",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " danger",
+   " disaster",
+   " earthquake",
+   " mountain",
+   " mudslide",
+   " rocks",
+   "avalanche"
+  ]
+ },
+ {
+  "name": "map-of-japan",
+  "file": "1F5FE.svg",
+  "en": "map of Japan",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " map",
+   "japan"
+  ]
+ },
+ {
+  "name": "mount-fuji",
+  "file": "1F5FB.svg",
+  "en": "mount fuji",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " geographic",
+   " japanese",
+   " mount",
+   " mountain",
+   " nature",
+   "fuji",
+   "japan"
+  ]
+ },
+ {
+  "name": "mountain",
+  "file": "26F0.svg",
+  "en": "mountain",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " adventure",
+   " climbing",
+   " hiking",
+   " nature",
+   " outdoor",
+   "landscape",
+   "mountain"
+  ]
+ },
+ {
+  "name": "national-park",
+  "file": "1F3DE.svg",
+  "en": "national park",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " adventure",
+   " mountain",
+   " outdoor",
+   " park",
+   " woods",
+   "national",
+   "nature"
+  ]
+ },
+ {
+  "name": "snow-capped-mountain",
+  "file": "1F3D4.svg",
+  "en": "snow-capped mountain",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " adventure",
+   " climbing",
+   " hiking",
+   " mountain",
+   " nature",
+   " outdoor",
+   " snow",
+   " snow-capped"
+  ]
+ },
+ {
+  "name": "volcano",
+  "file": "1F30B.svg",
+  "en": "volcano",
+  "topics": [
+   "جغرافيا"
+  ],
+  "tags": [
+   " fire",
+   " hot",
+   " landscape",
+   " mountain",
+   " nature",
+   " smoke",
+   "eruption",
+   "vulcano"
+  ]
+ },
+ {
+  "name": "world-map",
+  "file": "1F5FA.svg",
+  "en": "world map",
+  "topics": [
+   "جغرافيا",
+   "فضاء"
+  ],
+  "tags": [
+   " continent",
+   " earth",
+   " global",
+   " planet",
+   " world",
+   "geographic",
+   "map"
+  ]
+ },
+ {
+  "name": "baby-chick",
+  "file": "1F424.svg",
+  "en": "baby chick",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " baby",
+   " bird",
+   " chick",
+   " egg",
+   " ornithology",
+   "animal",
+   "small"
+  ]
+ },
+ {
+  "name": "bird",
+  "file": "1F426.svg",
+  "en": "bird",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " colourful",
+   " ornithology",
+   "animal",
+   "fly"
+  ]
+ },
+ {
+  "name": "bison",
+  "file": "1F9AC.svg",
+  "en": "bison",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " buffalo",
+   " herd",
+   " wisent",
+   "animal"
+  ]
+ },
+ {
+  "name": "black-cat",
+  "file": "1F408-200D-2B1B.svg",
+  "en": "black cat",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " black",
+   " cat",
+   " feline",
+   " halloween",
+   " meow",
+   " unlucky",
+   "animal",
+   "bad luck"
+  ]
+ },
+ {
+  "name": "blowfish",
+  "file": "1F421.svg",
+  "en": "blowfish",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " fish",
+   " water",
+   "animal",
+   "swim"
+  ]
+ },
+ {
+  "name": "boar",
+  "file": "1F417.svg",
+  "en": "boar",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " angry",
+   " forest",
+   " pig",
+   " strong",
+   " teeth",
+   " tusk",
+   "animal",
+   "wild"
+  ]
+ },
+ {
+  "name": "camel",
+  "file": "1F42A.svg",
+  "en": "camel",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " desert",
+   " dromedary",
+   " hot",
+   " hump",
+   " oasis",
+   " one",
+   " sahara",
+   " sun"
+  ]
+ },
+ {
+  "name": "cat",
+  "file": "1F408.svg",
+  "en": "cat",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animals",
+   " cats",
+   " kitten",
+   " kitty",
+   " miau",
+   " pet",
+   "animal",
+   "pet"
+  ]
+ },
+ {
+  "name": "cat-face",
+  "file": "1F431.svg",
+  "en": "cat face",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " cat",
+   " face",
+   " kitten",
+   " kitty",
+   " miau",
+   " pet",
+   "animal",
+   "pet"
+  ]
+ },
+ {
+  "name": "chicken",
+  "file": "1F414.svg",
+  "en": "chicken",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bird",
+   " ornithology",
+   "animal",
+   "egg"
+  ]
+ },
+ {
+  "name": "coral",
+  "file": "1FAB8.svg",
+  "en": "coral",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " climate",
+   " ocean",
+   " reef",
+   " sea",
+   "change"
+  ]
+ },
+ {
+  "name": "cow",
+  "file": "1F404.svg",
+  "en": "cow",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animals",
+   " beef",
+   " cheese",
+   " dairy",
+   " farm",
+   " grass",
+   " horns",
+   " milk"
+  ]
+ },
+ {
+  "name": "cow-face",
+  "file": "1F42E.svg",
+  "en": "cow face",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " beef",
+   " cheese",
+   " cow",
+   " dairy",
+   " face",
+   " farm",
+   " grass",
+   " horns"
+  ]
+ },
+ {
+  "name": "crab",
+  "file": "1F980.svg",
+  "en": "crab",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " zodiac",
+   "cancer"
+  ]
+ },
+ {
+  "name": "crocodile",
+  "file": "1F40A.svg",
+  "en": "crocodile",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " zoo",
+   "animal",
+   "dinosaur"
+  ]
+ },
+ {
+  "name": "deer",
+  "file": "1F98C.svg",
+  "en": "deer",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " antler",
+   " hunt",
+   "animal",
+   "forest"
+  ]
+ },
+ {
+  "name": "dodo",
+  "file": "1F9A4.svg",
+  "en": "dodo",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bird",
+   " extinction",
+   " large",
+   " ornithology",
+   "animal"
+  ]
+ },
+ {
+  "name": "dog",
+  "file": "1F415.svg",
+  "en": "dog",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animals",
+   " doggy",
+   " dogs",
+   " pet",
+   "animal",
+   "puppy"
+  ]
+ },
+ {
+  "name": "dog-face",
+  "file": "1F436.svg",
+  "en": "dog face",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " dog",
+   " doggy",
+   " face",
+   " pet",
+   " puppies",
+   " puppy",
+   "adorbs"
+  ]
+ },
+ {
+  "name": "dolphin",
+  "file": "1F42C.svg",
+  "en": "dolphin",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " beach",
+   " flipper",
+   " ocean",
+   " swim",
+   " water",
+   "animal",
+   "cetacean"
+  ]
+ },
+ {
+  "name": "donkey",
+  "file": "1FACF.svg",
+  "en": "donkey",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " ass",
+   " burro",
+   " hinny",
+   " mammal",
+   " mule",
+   " stubborn",
+   "animal"
+  ]
+ },
+ {
+  "name": "dove",
+  "file": "1F54A.svg",
+  "en": "dove",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " fly",
+   " ornithology",
+   " peace",
+   "bird",
+   "fly"
+  ]
+ },
+ {
+  "name": "dragon",
+  "file": "1F409.svg",
+  "en": "dragon",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " fairy",
+   " fairytale",
+   " fly",
+   " knights",
+   " tale",
+   "animal",
+   "fire"
+  ]
+ },
+ {
+  "name": "dragon-face",
+  "file": "1F432.svg",
+  "en": "dragon face",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " dragon",
+   " face",
+   " fairy",
+   " fairytale",
+   " fly",
+   " tale",
+   "animal",
+   "fire"
+  ]
+ },
+ {
+  "name": "duck",
+  "file": "1F986.svg",
+  "en": "duck",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bird",
+   " fly",
+   " ornithology",
+   "animal",
+   "water"
+  ]
+ },
+ {
+  "name": "eagle",
+  "file": "1F985.svg",
+  "en": "eagle",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bird",
+   " ornithology",
+   "animal",
+   "fly"
+  ]
+ },
+ {
+  "name": "ewe",
+  "file": "1F411.svg",
+  "en": "ewe",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " baa",
+   " farm",
+   " female",
+   " fluffy",
+   " grass",
+   " hooves",
+   " lamb",
+   " sheep"
+  ]
+ },
+ {
+  "name": "fish",
+  "file": "1F41F.svg",
+  "en": "fish",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " dinner",
+   " fishes",
+   " fishing",
+   " pisces",
+   " water",
+   " zodiac",
+   "animal"
+  ]
+ },
+ {
+  "name": "fox",
+  "file": "1F98A.svg",
+  "en": "fox",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " face",
+   " intelligent",
+   " quick",
+   " red",
+   "animal",
+   "smart"
+  ]
+ },
+ {
+  "name": "frog",
+  "file": "1F438.svg",
+  "en": "frog",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " face",
+   " green",
+   "animal",
+   "jump"
+  ]
+ },
+ {
+  "name": "front-facing-baby-chick",
+  "file": "1F425.svg",
+  "en": "front-facing baby chick",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " baby",
+   " bird",
+   " chick",
+   " front-facing",
+   " newborn",
+   " ornithology",
+   "animal"
+  ]
+ },
+ {
+  "name": "goat",
+  "file": "1F410.svg",
+  "en": "goat",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " capricorn",
+   " cheese",
+   " farm",
+   " milk",
+   " zodiac",
+   "animal",
+   "horns"
+  ]
+ },
+ {
+  "name": "gorilla",
+  "file": "1F98D.svg",
+  "en": "gorilla",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " evolution",
+   " primate",
+   "animal",
+   "monkey"
+  ]
+ },
+ {
+  "name": "guide-dog",
+  "file": "1F9AE.svg",
+  "en": "guide dog",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " blind",
+   " dog",
+   " guide",
+   "accessibility"
+  ]
+ },
+ {
+  "name": "hatching-chick",
+  "file": "1F423.svg",
+  "en": "hatching chick",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " baby",
+   " bird",
+   " chick",
+   " egg",
+   " hatching",
+   "animal",
+   "baby"
+  ]
+ },
+ {
+  "name": "horse",
+  "file": "1F40E.svg",
+  "en": "horse",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " equestrian",
+   " farm",
+   " racehorse",
+   " racing",
+   " sport",
+   "animal",
+   "riding"
+  ]
+ },
+ {
+  "name": "horse-face",
+  "file": "1F434.svg",
+  "en": "horse face",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " dressage",
+   " equine",
+   " face",
+   " farm",
+   " horse",
+   " horses",
+   " sport",
+   "animal"
+  ]
+ },
+ {
+  "name": "jellyfish",
+  "file": "1FABC.svg",
+  "en": "jellyfish",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " aquarium",
+   " burn",
+   " invertebrate",
+   " jelly",
+   " life",
+   " marine",
+   " ocean",
+   " ouch"
+  ]
+ },
+ {
+  "name": "leopard",
+  "file": "1F406.svg",
+  "en": "leopard",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " big",
+   " cat",
+   " predator",
+   " spots",
+   " strong",
+   " wild",
+   " zoo",
+   "animal"
+  ]
+ },
+ {
+  "name": "lion",
+  "file": "1F981.svg",
+  "en": "lion",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " cat",
+   " face",
+   " leo",
+   " mane",
+   " order",
+   " rawr",
+   " roar"
+  ]
+ },
+ {
+  "name": "lizard",
+  "file": "1F98E.svg",
+  "en": "lizard",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " reptile",
+   " small",
+   "animal",
+   "fast"
+  ]
+ },
+ {
+  "name": "monkey",
+  "file": "1F412.svg",
+  "en": "monkey",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " ape",
+   " banana",
+   " evolution",
+   " primate",
+   "animal",
+   "jungle"
+  ]
+ },
+ {
+  "name": "monkey-face",
+  "file": "1F435.svg",
+  "en": "monkey face",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " africa",
+   " ape",
+   " banana",
+   " evolution",
+   " face",
+   " monkey",
+   " primate",
+   "animal"
+  ]
+ },
+ {
+  "name": "moose",
+  "file": "1FACE.svg",
+  "en": "moose",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " antlers",
+   " elk",
+   " mammal",
+   "alces"
+  ]
+ },
+ {
+  "name": "octopus",
+  "file": "1F419.svg",
+  "en": "octopus",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " creature",
+   " ocean",
+   " water",
+   "animal",
+   "swim"
+  ]
+ },
+ {
+  "name": "orangutan",
+  "file": "1F9A7.svg",
+  "en": "orangutan",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " ape",
+   " monkey",
+   "animal"
+  ]
+ },
+ {
+  "name": "orca",
+  "file": "1FACD.svg",
+  "en": "orca",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " blackfish",
+   " killer whale",
+   " ocean",
+   " orca",
+   " swim",
+   " water",
+   " whale"
+  ]
+ },
+ {
+  "name": "owl",
+  "file": "1F989.svg",
+  "en": "owl",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bird",
+   " ornithology",
+   " wise",
+   "animal"
+  ]
+ },
+ {
+  "name": "ox",
+  "file": "1F402.svg",
+  "en": "ox",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " acre",
+   " animals",
+   " beef",
+   " bull",
+   " farm",
+   " horns",
+   " taurus",
+   " zodiac"
+  ]
+ },
+ {
+  "name": "penguin",
+  "file": "1F427.svg",
+  "en": "penguin",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " antarctica",
+   " bird",
+   " ornithology",
+   "animal"
+  ]
+ },
+ {
+  "name": "pig",
+  "file": "1F416.svg",
+  "en": "pig",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bacon",
+   " farm",
+   " meat",
+   " oink",
+   " pink",
+   " pork",
+   " sow",
+   "animal"
+  ]
+ },
+ {
+  "name": "pig-face",
+  "file": "1F437.svg",
+  "en": "pig face",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bacon",
+   " face",
+   " farm",
+   " meat",
+   " oink",
+   " pig",
+   " pink",
+   " pork"
+  ]
+ },
+ {
+  "name": "pig-nose",
+  "file": "1F43D.svg",
+  "en": "pig nose",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " face",
+   " farm",
+   " nose",
+   " pig",
+   " smell",
+   " snout",
+   " socket",
+   "animal"
+  ]
+ },
+ {
+  "name": "poodle",
+  "file": "1F429.svg",
+  "en": "poodle",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " dog",
+   " fluffy",
+   "animal"
+  ]
+ },
+ {
+  "name": "raccoon",
+  "file": "1F99D.svg",
+  "en": "raccoon",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " curious",
+   " sly",
+   "animal"
+  ]
+ },
+ {
+  "name": "ram",
+  "file": "1F40F.svg",
+  "en": "ram",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " aries",
+   " grass",
+   " hooves",
+   " horns",
+   " male",
+   " sheep",
+   " wool",
+   " zodiac"
+  ]
+ },
+ {
+  "name": "rooster",
+  "file": "1F413.svg",
+  "en": "rooster",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bird",
+   " ornithology",
+   "animal",
+   "egg"
+  ]
+ },
+ {
+  "name": "seal",
+  "file": "1F9AD.svg",
+  "en": "seal",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " lion",
+   " ocean",
+   " sea",
+   "animal"
+  ]
+ },
+ {
+  "name": "service-dog",
+  "file": "1F415-200D-1F9BA.svg",
+  "en": "service dog",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " assistance",
+   " dog",
+   " service",
+   "accessibility"
+  ]
+ },
+ {
+  "name": "shark",
+  "file": "1F988.svg",
+  "en": "shark",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " fish",
+   " water",
+   "animal",
+   "swim"
+  ]
+ },
+ {
+  "name": "snake",
+  "file": "1F40D.svg",
+  "en": "snake",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bearer",
+   " fast",
+   " ophiuchus",
+   " serpent",
+   " zodiac",
+   "animal",
+   "wriggle"
+  ]
+ },
+ {
+  "name": "spiral-shell",
+  "file": "1F41A.svg",
+  "en": "spiral shell",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " beach",
+   " conch",
+   " sand",
+   " sea",
+   " shell",
+   " spiral",
+   " water",
+   "animal"
+  ]
+ },
+ {
+  "name": "spouting-whale",
+  "file": "1F433.svg",
+  "en": "spouting whale",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " beach",
+   " face",
+   " ocean",
+   " spouting",
+   " swim",
+   " water",
+   " whale"
+  ]
+ },
+ {
+  "name": "swan",
+  "file": "1F9A2.svg",
+  "en": "swan",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bird",
+   " cygnet",
+   " duckling",
+   " ornithology",
+   " ugly",
+   "animal"
+  ]
+ },
+ {
+  "name": "tiger",
+  "file": "1F405.svg",
+  "en": "tiger",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " big",
+   " cat",
+   " predator",
+   " strong",
+   " wild",
+   " zoo",
+   "animal",
+   "stripes"
+  ]
+ },
+ {
+  "name": "tiger-face",
+  "file": "1F42F.svg",
+  "en": "tiger face",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " big",
+   " cat",
+   " face",
+   " predator",
+   " strong",
+   " tiger",
+   " wild",
+   "animal"
+  ]
+ },
+ {
+  "name": "tropical-fish",
+  "file": "1F420.svg",
+  "en": "tropical fish",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " fish",
+   " fishes",
+   " tropical",
+   " water",
+   "animal",
+   "swim"
+  ]
+ },
+ {
+  "name": "turkey",
+  "file": "1F983.svg",
+  "en": "turkey",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " gobble",
+   " thanksgiving",
+   "bird"
+  ]
+ },
+ {
+  "name": "turtle",
+  "file": "1F422.svg",
+  "en": "turtle",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " sand",
+   " terrapin",
+   " tortoise",
+   " water",
+   "animal",
+   "slow"
+  ]
+ },
+ {
+  "name": "two-hump-camel",
+  "file": "1F42B.svg",
+  "en": "two-hump camel",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " bactrian",
+   " camel",
+   " desert",
+   " hot",
+   " hump",
+   " oasis",
+   " sahara",
+   " sun"
+  ]
+ },
+ {
+  "name": "unicorn",
+  "file": "1F984.svg",
+  "en": "unicorn",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " gmünd",
+   " magical",
+   " rainbow",
+   " schwäbisch",
+   "fabulous",
+   "face"
+  ]
+ },
+ {
+  "name": "water-buffalo",
+  "file": "1F403.svg",
+  "en": "water buffalo",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " beef",
+   " buffalo",
+   " horns",
+   " water",
+   " zoo",
+   "animal",
+   "black"
+  ]
+ },
+ {
+  "name": "whale",
+  "file": "1F40B.svg",
+  "en": "whale",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " animal",
+   " beach",
+   " ocean",
+   " swim",
+   " water",
+   "animal",
+   "cetacean"
+  ]
+ },
+ {
+  "name": "wolf",
+  "file": "1F43A.svg",
+  "en": "wolf",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " dog",
+   " face",
+   " forest",
+   " free",
+   " wild",
+   "animal",
+   "pack"
+  ]
+ },
+ {
+  "name": "zebra",
+  "file": "1F993.svg",
+  "en": "zebra",
+  "topics": [
+   "حيوانات"
+  ],
+  "tags": [
+   " black",
+   " stripe",
+   " white",
+   "animal",
+   "horse"
+  ]
+ },
+ {
+  "name": "black-circle",
+  "file": "26AB.svg",
+  "en": "black circle",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " circle",
+   " geometric",
+   "black"
+  ]
+ },
+ {
+  "name": "blue-circle",
+  "file": "1F535.svg",
+  "en": "blue circle",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " circle",
+   " geometric",
+   "blue"
+  ]
+ },
+ {
+  "name": "blue-square",
+  "file": "1F7E6.svg",
+  "en": "blue square",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " square",
+   "blue"
+  ]
+ },
+ {
+  "name": "brown-circle",
+  "file": "1F7E4.svg",
+  "en": "brown circle",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " circle",
+   "brown"
+  ]
+ },
+ {
+  "name": "brown-square",
+  "file": "1F7EB.svg",
+  "en": "brown square",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " square",
+   "brown"
+  ]
+ },
+ {
+  "name": "bust-in-silhouette",
+  "file": "1F464.svg",
+  "en": "bust in silhouette",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " mysterious",
+   " person",
+   " shadow",
+   " silhouette",
+   "bust",
+   "human"
+  ]
+ },
+ {
+  "name": "busts-in-silhouette",
+  "file": "1F465.svg",
+  "en": "busts in silhouette",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " bust",
+   " busts",
+   " everyone",
+   " friend",
+   " friends",
+   " people",
+   " person",
+   " silhouette"
+  ]
+ },
+ {
+  "name": "children-crossing",
+  "file": "1F6B8.svg",
+  "en": "children crossing",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " children",
+   " crossing",
+   " pedestrian",
+   " traffic",
+   "child"
+  ]
+ },
+ {
+  "name": "double-exclamation-mark",
+  "file": "203C.svg",
+  "en": "double exclamation mark",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " !!",
+   " bangbang",
+   " double",
+   " exclamation",
+   " mark",
+   " punctuation",
+   "!"
+  ]
+ },
+ {
+  "name": "down-arrow",
+  "file": "2B07.svg",
+  "en": "down arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " cardinal",
+   " direction",
+   " down",
+   " south",
+   " underneath",
+   "arrow",
+   "down"
+  ]
+ },
+ {
+  "name": "down-left-arrow",
+  "file": "2199.svg",
+  "en": "down-left arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " direction",
+   " down-left",
+   " intercardinal",
+   " left down",
+   " southwest",
+   "arrow",
+   "diagonal"
+  ]
+ },
+ {
+  "name": "down-right-arrow",
+  "file": "2198.svg",
+  "en": "down-right arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " direction",
+   " down-right",
+   " intercardinal",
+   " right down",
+   " southeast",
+   "arrow",
+   "diagonal"
+  ]
+ },
+ {
+  "name": "exclamation-question-mark",
+  "file": "2049.svg",
+  "en": "exclamation question mark",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " !?",
+   " ?",
+   " exclamation",
+   " interrobang",
+   " mark",
+   " punctuation",
+   " question",
+   "!"
+  ]
+ },
+ {
+  "name": "family",
+  "file": "1F46A.svg",
+  "en": "family",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " boy",
+   " child",
+   " woman",
+   "child",
+   "man"
+  ]
+ },
+ {
+  "name": "family-adult-adult-child",
+  "file": "1F9D1-200D-1F9D1-200D-1F9D2.svg",
+  "en": "family: adult, adult, child",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " child",
+   " family",
+   "adult"
+  ]
+ },
+ {
+  "name": "family-adult-adult-child-child",
+  "file": "1F9D1-200D-1F9D1-200D-1F9D2-200D-1F9D2.svg",
+  "en": "family: adult, adult, child, child",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " child",
+   " family",
+   "adult"
+  ]
+ },
+ {
+  "name": "family-adult-child",
+  "file": "1F9D1-200D-1F9D2.svg",
+  "en": "family: adult, child",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " child",
+   " family",
+   "adult"
+  ]
+ },
+ {
+  "name": "fast-forward-button",
+  "file": "23E9.svg",
+  "en": "fast-forward button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " double",
+   " fast",
+   " fast-forward",
+   " forward",
+   "arrow"
+  ]
+ },
+ {
+  "name": "fast-reverse-button",
+  "file": "23EA.svg",
+  "en": "fast reverse button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " double",
+   " fast",
+   " reverse",
+   " rewind",
+   "arrow"
+  ]
+ },
+ {
+  "name": "green-circle",
+  "file": "1F7E2.svg",
+  "en": "green circle",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " green",
+   "circle"
+  ]
+ },
+ {
+  "name": "green-square",
+  "file": "1F7E9.svg",
+  "en": "green square",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " square",
+   "green"
+  ]
+ },
+ {
+  "name": "last-track-button",
+  "file": "23EE.svg",
+  "en": "last track button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " last",
+   " previous",
+   " scene",
+   " track",
+   " triangle",
+   "arrow"
+  ]
+ },
+ {
+  "name": "left-arrow",
+  "file": "2B05.svg",
+  "en": "left arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " cardinal",
+   " direction",
+   " left",
+   " past",
+   " west",
+   "arrow",
+   "left"
+  ]
+ },
+ {
+  "name": "left-arrow-curving-right",
+  "file": "21AA.svg",
+  "en": "left arrow curving right",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " curving",
+   " left",
+   " right",
+   " turn around",
+   "arrow",
+   "directions"
+  ]
+ },
+ {
+  "name": "left-right-arrow",
+  "file": "2194.svg",
+  "en": "left-right arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " left and right",
+   " left-right",
+   " opposite",
+   "arrow",
+   "directions"
+  ]
+ },
+ {
+  "name": "next-track-button",
+  "file": "23ED.svg",
+  "en": "next track button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " next",
+   " scene",
+   " track",
+   " triangle",
+   "arrow"
+  ]
+ },
+ {
+  "name": "no-bicycles",
+  "file": "1F6B3.svg",
+  "en": "no bicycles",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " bicycles",
+   " bike",
+   " forbidden",
+   " no",
+   " not",
+   " prohibited",
+   "bicycle"
+  ]
+ },
+ {
+  "name": "no-entry",
+  "file": "26D4.svg",
+  "en": "no entry",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " entry",
+   " fail",
+   " forbidden",
+   " no",
+   " not",
+   " pass",
+   " prohibited",
+   " traffic"
+  ]
+ },
+ {
+  "name": "no-littering",
+  "file": "1F6AF.svg",
+  "en": "no littering",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " litter",
+   " littering",
+   " no",
+   " not",
+   " prohibited",
+   "forbidden"
+  ]
+ },
+ {
+  "name": "no-mobile-phones",
+  "file": "1F4F5.svg",
+  "en": "no mobile phones",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " forbidden",
+   " mobile",
+   " no",
+   " not",
+   " phone",
+   " phones",
+   " prohibited",
+   " telephone"
+  ]
+ },
+ {
+  "name": "no-pedestrians",
+  "file": "1F6B7.svg",
+  "en": "no pedestrians",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " no",
+   " not",
+   " pedestrian",
+   " pedestrians",
+   " prohibited",
+   "forbidden"
+  ]
+ },
+ {
+  "name": "no-smoking",
+  "file": "1F6AD.svg",
+  "en": "no smoking",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " no",
+   " not",
+   " prohibited",
+   " smoke",
+   " smoking",
+   "forbidden"
+  ]
+ },
+ {
+  "name": "non-potable-water",
+  "file": "1F6B1.svg",
+  "en": "non-potable water",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " non-drinking",
+   " non-potable",
+   " prohibited",
+   " water",
+   "dry"
+  ]
+ },
+ {
+  "name": "orange-circle",
+  "file": "1F7E0.svg",
+  "en": "orange circle",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " orange",
+   "circle"
+  ]
+ },
+ {
+  "name": "orange-square",
+  "file": "1F7E7.svg",
+  "en": "orange square",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " square",
+   "orange"
+  ]
+ },
+ {
+  "name": "people-hugging",
+  "file": "1FAC2.svg",
+  "en": "people hugging",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " arms",
+   " embrace",
+   " farewell",
+   " friendship",
+   " goodbye",
+   " harmony",
+   " hello",
+   " hug"
+  ]
+ },
+ {
+  "name": "play-button",
+  "file": "25B6.svg",
+  "en": "play button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " play",
+   " right",
+   " triangle",
+   "arrow"
+  ]
+ },
+ {
+  "name": "play-or-pause-button",
+  "file": "23EF.svg",
+  "en": "play or pause button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " pause",
+   " play",
+   " right",
+   " triangle",
+   "arrow"
+  ]
+ },
+ {
+  "name": "prohibited",
+  "file": "1F6AB.svg",
+  "en": "prohibited",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " forbidden",
+   " no",
+   " not",
+   " smoke",
+   "entry"
+  ]
+ },
+ {
+  "name": "purple-circle",
+  "file": "1F7E3.svg",
+  "en": "purple circle",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " purple",
+   "circle"
+  ]
+ },
+ {
+  "name": "purple-square",
+  "file": "1F7EA.svg",
+  "en": "purple square",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " square",
+   "purple"
+  ]
+ },
+ {
+  "name": "red-circle",
+  "file": "1F534.svg",
+  "en": "red circle",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " geometric",
+   " red",
+   "circle"
+  ]
+ },
+ {
+  "name": "red-question-mark",
+  "file": "2753.svg",
+  "en": "red question mark",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " mark",
+   " punctuation",
+   " question",
+   " red",
+   "?",
+   "question"
+  ]
+ },
+ {
+  "name": "red-square",
+  "file": "1F7E5.svg",
+  "en": "red square",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " penalty",
+   " red",
+   " square",
+   "card"
+  ]
+ },
+ {
+  "name": "repeat-button",
+  "file": "1F501.svg",
+  "en": "repeat button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " clockwise",
+   " repeat",
+   "arrow",
+   "cycle"
+  ]
+ },
+ {
+  "name": "repeat-single-button",
+  "file": "1F502.svg",
+  "en": "repeat single button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " clockwise",
+   " once",
+   " repeat",
+   " single",
+   "arrow"
+  ]
+ },
+ {
+  "name": "reverse-button",
+  "file": "25C0.svg",
+  "en": "reverse button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " left",
+   " reverse",
+   " triangle",
+   "arrow"
+  ]
+ },
+ {
+  "name": "right-arrow",
+  "file": "27A1.svg",
+  "en": "right arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " cardinal",
+   " direction",
+   " east",
+   " future",
+   " right",
+   " soon",
+   "arrow",
+   "right"
+  ]
+ },
+ {
+  "name": "right-arrow-curving-down",
+  "file": "2935.svg",
+  "en": "right arrow curving down",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " curve down",
+   " curving",
+   " down",
+   " right",
+   "arrow",
+   "direction"
+  ]
+ },
+ {
+  "name": "right-arrow-curving-left",
+  "file": "21A9.svg",
+  "en": "right arrow curving left",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " curving",
+   " left",
+   " right",
+   " turn around",
+   "arrow",
+   "directions"
+  ]
+ },
+ {
+  "name": "right-arrow-curving-up",
+  "file": "2934.svg",
+  "en": "right arrow curving up",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " curve up",
+   " curving",
+   " right",
+   " up",
+   "arrow",
+   "direction"
+  ]
+ },
+ {
+  "name": "shuffle-tracks-button",
+  "file": "1F500.svg",
+  "en": "shuffle tracks button",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " button",
+   " crossed",
+   " shuffle",
+   " tracks",
+   "arrow",
+   "random"
+  ]
+ },
+ {
+  "name": "speaking-head",
+  "file": "1F5E3.svg",
+  "en": "speaking head",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " head",
+   " person",
+   " silhouette",
+   " speak",
+   " speaking",
+   "face",
+   "human"
+  ]
+ },
+ {
+  "name": "up-arrow",
+  "file": "2B06.svg",
+  "en": "up arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " above",
+   " cardinal",
+   " direction",
+   " north",
+   " up",
+   "arrow",
+   "up"
+  ]
+ },
+ {
+  "name": "up-down-arrow",
+  "file": "2195.svg",
+  "en": "up-down arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " opposite",
+   " up and down",
+   " up-down",
+   "arrow",
+   "directions"
+  ]
+ },
+ {
+  "name": "up-left-arrow",
+  "file": "2196.svg",
+  "en": "up-left arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " direction",
+   " intercardinal",
+   " left up",
+   " northwest",
+   " up-left",
+   "arrow",
+   "diagonal"
+  ]
+ },
+ {
+  "name": "up-right-arrow",
+  "file": "2197.svg",
+  "en": "up-right arrow",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " direction",
+   " intercardinal",
+   " northeast",
+   " right up",
+   " up-right",
+   "arrow",
+   "diagonal"
+  ]
+ },
+ {
+  "name": "warning",
+  "file": "26A0.svg",
+  "en": "warning",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   "caution"
+  ]
+ },
+ {
+  "name": "white-circle",
+  "file": "26AA.svg",
+  "en": "white circle",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " geometric",
+   " white",
+   "circle"
+  ]
+ },
+ {
+  "name": "white-question-mark",
+  "file": "2754.svg",
+  "en": "white question mark",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " mark",
+   " outlined",
+   " punctuation",
+   " question",
+   " white",
+   "?",
+   "punctuation"
+  ]
+ },
+ {
+  "name": "yellow-circle",
+  "file": "1F7E1.svg",
+  "en": "yellow circle",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " yellow",
+   "circle"
+  ]
+ },
+ {
+  "name": "yellow-square",
+  "file": "1F7E8.svg",
+  "en": "yellow square",
+  "topics": [
+   "رموز"
+  ],
+  "tags": [
+   " penalty",
+   " square",
+   " yellow",
+   "card"
+  ]
+ },
+ {
+  "name": "1st-place-medal",
+  "file": "1F947.svg",
+  "en": "1st place medal",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " 1st place medal",
+   " first",
+   " first place medal",
+   " gold",
+   " medal",
+   " place",
+   "1st",
+   "gold medal"
+  ]
+ },
+ {
+  "name": "2nd-place-medal",
+  "file": "1F948.svg",
+  "en": "2nd place medal",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " 2nd place medal",
+   " medal",
+   " place",
+   " second",
+   " second place",
+   " second place medal",
+   " silver",
+   " silver medal"
+  ]
+ },
+ {
+  "name": "3rd-place-medal",
+  "file": "1F949.svg",
+  "en": "3rd place medal",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " 3rd place medal",
+   " bronze",
+   " bronze medal",
+   " medal",
+   " place",
+   " third",
+   " third place",
+   " third place medal"
+  ]
+ },
+ {
+  "name": "american-football",
+  "file": "1F3C8.svg",
+  "en": "american football",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " american game",
+   " ball",
+   " ball game",
+   " bowl",
+   " football",
+   " oval ball",
+   " sport",
+   " super"
+  ]
+ },
+ {
+  "name": "badminton",
+  "file": "1F3F8.svg",
+  "en": "badminton",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " game",
+   " racquet",
+   " shuttlecock",
+   "birdie"
+  ]
+ },
+ {
+  "name": "baseball",
+  "file": "26BE.svg",
+  "en": "baseball",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " american",
+   " ball",
+   " ball game",
+   " game",
+   " sport",
+   " team sports",
+   " white",
+   "ball"
+  ]
+ },
+ {
+  "name": "basketball",
+  "file": "1F3C0.svg",
+  "en": "basketball",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " canadian sport",
+   " game",
+   " hoop",
+   " orange ball",
+   " sport",
+   " team sport",
+   "ball",
+   "basketball"
+  ]
+ },
+ {
+  "name": "bowling",
+  "file": "1F3B3.svg",
+  "en": "bowling",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " game",
+   " sport",
+   " strike",
+   "ball"
+  ]
+ },
+ {
+  "name": "boxing-glove",
+  "file": "1F94A.svg",
+  "en": "boxing glove",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " beat",
+   " fist",
+   " glove",
+   " mitt",
+   " muhammad ali",
+   " red",
+   " slap",
+   " slap in your face"
+  ]
+ },
+ {
+  "name": "cricket-game",
+  "file": "1F3CF.svg",
+  "en": "cricket game",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " activity",
+   " bat",
+   " cricket",
+   " cricket bat and ball",
+   " game",
+   " hobby",
+   "ball",
+   "cricket"
+  ]
+ },
+ {
+  "name": "diving-mask",
+  "file": "1F93F.svg",
+  "en": "diving mask",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " mask",
+   " scuba",
+   " snorkeling",
+   "diving"
+  ]
+ },
+ {
+  "name": "field-hockey",
+  "file": "1F3D1.svg",
+  "en": "field hockey",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " field",
+   " field hockey stick and ball",
+   " game",
+   " hockey",
+   " hockey stick",
+   " ice hockey",
+   " puck",
+   " stick"
+  ]
+ },
+ {
+  "name": "fishing-pole",
+  "file": "1F3A3.svg",
+  "en": "fishing pole",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " caught",
+   " fish",
+   " fishing",
+   " fishing pole",
+   " hobby",
+   " line",
+   " pole",
+   " sport"
+  ]
+ },
+ {
+  "name": "flag-in-hole",
+  "file": "26F3.svg",
+  "en": "flag in hole",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " ball",
+   " goal",
+   " golf",
+   " golf flag",
+   " golf hole with flag",
+   " hole",
+   " sport",
+   "flag"
+  ]
+ },
+ {
+  "name": "flying-disc",
+  "file": "1F94F.svg",
+  "en": "flying disc",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " flying",
+   " ultimate",
+   "disc"
+  ]
+ },
+ {
+  "name": "goal-net",
+  "file": "1F945.svg",
+  "en": "goal net",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " net",
+   "goal"
+  ]
+ },
+ {
+  "name": "ice-hockey",
+  "file": "1F3D2.svg",
+  "en": "ice hockey",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " field hockey",
+   " game",
+   " hockey",
+   " hockey stick",
+   " ice",
+   " puck",
+   " stick",
+   " team sport"
+  ]
+ },
+ {
+  "name": "ice-skate",
+  "file": "26F8.svg",
+  "en": "ice skate",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " skate",
+   " skating",
+   "ice"
+  ]
+ },
+ {
+  "name": "lacrosse",
+  "file": "1F94D.svg",
+  "en": "lacrosse",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " goal",
+   " sports",
+   " stick",
+   "ball"
+  ]
+ },
+ {
+  "name": "martial-arts-uniform",
+  "file": "1F94B.svg",
+  "en": "martial arts uniform",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " judo",
+   " karate",
+   " keikogi",
+   " martial",
+   " sport",
+   " taekwondo",
+   " uniform",
+   "arts"
+  ]
+ },
+ {
+  "name": "military-medal",
+  "file": "1F396.svg",
+  "en": "military medal",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " celebration",
+   " medal",
+   " medallion",
+   " military",
+   " ribbon",
+   "award",
+   "medal"
+  ]
+ },
+ {
+  "name": "ping-pong",
+  "file": "1F3D3.svg",
+  "en": "ping pong",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " ball",
+   " ball game",
+   " bat",
+   " game",
+   " hobby",
+   " paddle",
+   " ping",
+   " pingpong"
+  ]
+ },
+ {
+  "name": "rugby-football",
+  "file": "1F3C9.svg",
+  "en": "rugby football",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " british sports",
+   " brown ball",
+   " football",
+   " league",
+   " rugby",
+   " sport",
+   " team sport",
+   " union"
+  ]
+ },
+ {
+  "name": "running-shirt",
+  "file": "1F3BD.svg",
+  "en": "running shirt",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " running",
+   " sash",
+   " shirt",
+   "athletics"
+  ]
+ },
+ {
+  "name": "soccer-ball",
+  "file": "26BD.svg",
+  "en": "soccer ball",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " ball",
+   " ball game",
+   " football",
+   " futbol",
+   " game",
+   " soccer",
+   " sport",
+   " team sports"
+  ]
+ },
+ {
+  "name": "softball",
+  "file": "1F94E.svg",
+  "en": "softball",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " glove",
+   " sports",
+   " underarm",
+   "ball"
+  ]
+ },
+ {
+  "name": "sports-medal",
+  "file": "1F3C5.svg",
+  "en": "sports medal",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " gold",
+   " medal",
+   " sporting",
+   " sports",
+   " winner",
+   "award",
+   "sports"
+  ]
+ },
+ {
+  "name": "tennis",
+  "file": "1F3BE.svg",
+  "en": "tennis",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " ball game",
+   " game",
+   " racket",
+   " racquet",
+   " sport",
+   " tennis ball",
+   "ball",
+   "tennis"
+  ]
+ },
+ {
+  "name": "trophy",
+  "file": "1F3C6.svg",
+  "en": "trophy",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " award",
+   " championship",
+   " champs",
+   " gold cup",
+   " prize",
+   " slay",
+   " sport",
+   " victory"
+  ]
+ },
+ {
+  "name": "volleyball",
+  "file": "1F3D0.svg",
+  "en": "volleyball",
+  "topics": [
+   "رياضة"
+  ],
+  "tags": [
+   " ball game",
+   " game",
+   " hobby",
+   " olympic games",
+   " sport",
+   " team sport",
+   "ball"
+  ]
+ },
+ {
+  "name": "divide",
+  "file": "2797.svg",
+  "en": "divide",
+  "topics": [
+   "رياضيات"
+  ],
+  "tags": [
+   " division",
+   " heavy",
+   " math",
+   " sign",
+   " ÷",
+   "division",
+   "math"
+  ]
+ },
+ {
+  "name": "heavy-equals-sign",
+  "file": "1F7F0.svg",
+  "en": "heavy equals sign",
+  "topics": [
+   "رياضيات"
+  ],
+  "tags": [
+   " equal",
+   " equality",
+   " equals",
+   " heavy",
+   " math",
+   " sign",
+   "answer"
+  ]
+ },
+ {
+  "name": "infinity",
+  "file": "267E.svg",
+  "en": "infinity",
+  "topics": [
+   "رياضيات"
+  ],
+  "tags": [
+   " unbounded",
+   " universal",
+   "forever"
+  ]
+ },
+ {
+  "name": "minus",
+  "file": "2796.svg",
+  "en": "minus",
+  "topics": [
+   "رياضيات"
+  ],
+  "tags": [
+   " heavy",
+   " math",
+   " minus",
+   " sign",
+   " −",
+   "-",
+   "math"
+  ]
+ },
+ {
+  "name": "multiply",
+  "file": "2716.svg",
+  "en": "multiply",
+  "topics": [
+   "رياضيات"
+  ],
+  "tags": [
+   " cancel",
+   " multiplication",
+   " sign",
+   " wrong",
+   " x",
+   " ×",
+   "cancel",
+   "multiplication"
+  ]
+ },
+ {
+  "name": "plus",
+  "file": "2795.svg",
+  "en": "plus",
+  "topics": [
+   "رياضيات"
+  ],
+  "tags": [
+   " plus",
+   " sign",
+   "+",
+   "math"
+  ]
+ },
+ {
+  "name": "ant",
+  "file": "1F41C.svg",
+  "en": "ant",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " garden",
+   " insect",
+   "animal"
+  ]
+ },
+ {
+  "name": "axe",
+  "file": "E347.svg",
+  "en": "axe",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " chop",
+   " stump",
+   "wood"
+  ]
+ },
+ {
+  "name": "beetle",
+  "file": "1FAB2.svg",
+  "en": "beetle",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " bug",
+   " insect",
+   "animal"
+  ]
+ },
+ {
+  "name": "blossom",
+  "file": "1F33C.svg",
+  "en": "blossom",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " dandelion",
+   " flower",
+   " nature",
+   " plant",
+   "buttercup",
+   "yellow"
+  ]
+ },
+ {
+  "name": "bouquet",
+  "file": "1F490.svg",
+  "en": "bouquet",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " birthday",
+   " bouquet",
+   " date",
+   " flower",
+   " love",
+   " plant",
+   " romance",
+   " tulip"
+  ]
+ },
+ {
+  "name": "bug",
+  "file": "1F41B.svg",
+  "en": "bug",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " garden",
+   " insect",
+   "animal"
+  ]
+ },
+ {
+  "name": "butterfly",
+  "file": "1F98B.svg",
+  "en": "butterfly",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " pretty",
+   "insect"
+  ]
+ },
+ {
+  "name": "cactus",
+  "file": "1F335.svg",
+  "en": "cactus",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " drought",
+   " hot",
+   " nature",
+   " plant",
+   " sun",
+   " texas",
+   " warm",
+   "desert"
+  ]
+ },
+ {
+  "name": "cherry-blossom",
+  "file": "1F338.svg",
+  "en": "cherry blossom",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " cherry",
+   " flower",
+   " plant",
+   " spring",
+   " springtime",
+   "blossom",
+   "pink"
+  ]
+ },
+ {
+  "name": "cockroach",
+  "file": "1FAB3.svg",
+  "en": "cockroach",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " insect",
+   " pest",
+   " roach",
+   "animal"
+  ]
+ },
+ {
+  "name": "cricket",
+  "file": "1F997.svg",
+  "en": "cricket",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " bug",
+   " grasshopper",
+   " insect",
+   " orthoptera",
+   "animal"
+  ]
+ },
+ {
+  "name": "deciduous-tree",
+  "file": "1F333.svg",
+  "en": "deciduous tree",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " forest",
+   " green",
+   " habitat",
+   " plant",
+   " shedding",
+   " tree",
+   "deciduous",
+   "green"
+  ]
+ },
+ {
+  "name": "empty-nest",
+  "file": "1FAB9.svg",
+  "en": "empty nest",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " empty",
+   " home",
+   " nest",
+   " nesting",
+   "branch"
+  ]
+ },
+ {
+  "name": "evergreen-tree",
+  "file": "1F332.svg",
+  "en": "evergreen tree",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " evergreen",
+   " fir",
+   " forest",
+   " pine",
+   " plant",
+   " tree",
+   "christmas",
+   "green"
+  ]
+ },
+ {
+  "name": "fallen-leaf",
+  "file": "1F342.svg",
+  "en": "fallen leaf",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " fall",
+   " fallen",
+   " falling",
+   " leaf",
+   "autumn"
+  ]
+ },
+ {
+  "name": "four-leaf-clover",
+  "file": "1F340.svg",
+  "en": "four leaf clover",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " clover",
+   " four",
+   " four-leaf",
+   " green",
+   " irish",
+   " leaf",
+   " leaves",
+   " lucky"
+  ]
+ },
+ {
+  "name": "gardener-man",
+  "file": "E340.svg",
+  "en": "gardener man",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": []
+ },
+ {
+  "name": "gardener-woman",
+  "file": "E341.svg",
+  "en": "gardener woman",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": []
+ },
+ {
+  "name": "gardening-gloves",
+  "file": "E342.svg",
+  "en": "gardening gloves",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": []
+ },
+ {
+  "name": "herb",
+  "file": "1F33F.svg",
+  "en": "herb",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " leaves",
+   " plant",
+   "green",
+   "leaf"
+  ]
+ },
+ {
+  "name": "hibiscus",
+  "file": "1F33A.svg",
+  "en": "hibiscus",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " plant",
+   "flower",
+   "pink"
+  ]
+ },
+ {
+  "name": "honeybee",
+  "file": "1F41D.svg",
+  "en": "honeybee",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " bee",
+   " bumblebee",
+   " honey",
+   " insect",
+   " nature",
+   " spring",
+   "animal"
+  ]
+ },
+ {
+  "name": "lady-beetle",
+  "file": "1F41E.svg",
+  "en": "lady beetle",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " beetle",
+   " garden",
+   " insect",
+   " lady",
+   " ladybird",
+   " ladybug",
+   " nature",
+   "animal"
+  ]
+ },
+ {
+  "name": "lawn-mower",
+  "file": "E343.svg",
+  "en": "lawn mower",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": []
+ },
+ {
+  "name": "leaf-fluttering-in-wind",
+  "file": "1F343.svg",
+  "en": "leaf fluttering in wind",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " flutter",
+   " fluttering",
+   " leaf",
+   " wind",
+   "blow"
+  ]
+ },
+ {
+  "name": "lotus",
+  "file": "1FAB7.svg",
+  "en": "lotus",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " buddhism",
+   " calm",
+   " flower",
+   " hinduism",
+   " peace",
+   " purity",
+   " serenity",
+   "beauty"
+  ]
+ },
+ {
+  "name": "maple-leaf",
+  "file": "1F341.svg",
+  "en": "maple leaf",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " fall",
+   " leaf",
+   " maple",
+   " orange",
+   "autumn",
+   "falling"
+  ]
+ },
+ {
+  "name": "palm-tree",
+  "file": "1F334.svg",
+  "en": "palm tree",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " beach",
+   " palm",
+   " plant",
+   " relax",
+   " tree",
+   " tropical",
+   " vacation",
+   "beach"
+  ]
+ },
+ {
+  "name": "potted-plant",
+  "file": "1FAB4.svg",
+  "en": "potted plant",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " grow",
+   " house",
+   " nurturing",
+   " plant",
+   " pot",
+   " potted",
+   "decor"
+  ]
+ },
+ {
+  "name": "rose",
+  "file": "1F339.svg",
+  "en": "rose",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " elegant",
+   " flower",
+   " love",
+   " nature",
+   " plant",
+   " present",
+   " red",
+   " valentine"
+  ]
+ },
+ {
+  "name": "rosette",
+  "file": "1F3F5.svg",
+  "en": "rosette",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   "plant"
+  ]
+ },
+ {
+  "name": "saw",
+  "file": "E348.svg",
+  "en": "saw",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " branch",
+   " carpentry",
+   " rip saw",
+   " wood",
+   "foxtail"
+  ]
+ },
+ {
+  "name": "seedling",
+  "file": "1F331.svg",
+  "en": "seedling",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " green",
+   " growing",
+   " leaf",
+   " leaves",
+   " plant",
+   " sapling",
+   " sprout",
+   " young"
+  ]
+ },
+ {
+  "name": "shamrock",
+  "file": "2618.svg",
+  "en": "shamrock",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " leaf",
+   " leaves",
+   " plant",
+   "green",
+   "irish"
+  ]
+ },
+ {
+  "name": "sheaf-of-rice",
+  "file": "1F33E.svg",
+  "en": "sheaf of rice",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " grain",
+   " grains",
+   " plant",
+   " rice",
+   " sheaf",
+   "ear"
+  ]
+ },
+ {
+  "name": "snail",
+  "file": "1F40C.svg",
+  "en": "snail",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " escargot",
+   " garden",
+   " nature",
+   " slug",
+   "animal"
+  ]
+ },
+ {
+  "name": "spade",
+  "file": "E345.svg",
+  "en": "spade",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   "shovel"
+  ]
+ },
+ {
+  "name": "spider",
+  "file": "1F577.svg",
+  "en": "spider",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " insect",
+   "animal"
+  ]
+ },
+ {
+  "name": "sunflower",
+  "file": "1F33B.svg",
+  "en": "sunflower",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " flower",
+   " outdoors",
+   " plant",
+   " summer",
+   " sun",
+   " yellow",
+   "flower",
+   "sun"
+  ]
+ },
+ {
+  "name": "trowel",
+  "file": "E346.svg",
+  "en": "trowel",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   "shovel"
+  ]
+ },
+ {
+  "name": "wheelbarrow",
+  "file": "E344.svg",
+  "en": "wheelbarrow",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   "pushcart"
+  ]
+ },
+ {
+  "name": "white-flower",
+  "file": "1F4AE.svg",
+  "en": "white flower",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " white",
+   "flower"
+  ]
+ },
+ {
+  "name": "wilted-flower",
+  "file": "1F940.svg",
+  "en": "wilted flower",
+  "topics": [
+   "طبيعة"
+  ],
+  "tags": [
+   " flower",
+   " plant",
+   " red",
+   " sad",
+   " wilted",
+   "dying",
+   "rose"
+  ]
+ },
+ {
+  "name": "avocado",
+  "file": "1F951.svg",
+  "en": "avocado",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " fruit",
+   "avocado",
+   "food"
+  ]
+ },
+ {
+  "name": "baby-bottle",
+  "file": "1F37C.svg",
+  "en": "baby bottle",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " baby",
+   " birth",
+   " born",
+   " bottle",
+   " drink",
+   " infant",
+   " milk",
+   " newborn"
+  ]
+ },
+ {
+  "name": "bacon",
+  "file": "1F953.svg",
+  "en": "bacon",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " food",
+   " meat",
+   "breakfast"
+  ]
+ },
+ {
+  "name": "bagel",
+  "file": "1F96F.svg",
+  "en": "bagel",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " bread",
+   " breakfast",
+   " schmear",
+   "bakery"
+  ]
+ },
+ {
+  "name": "baguette-bread",
+  "file": "1F956.svg",
+  "en": "baguette bread",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " bread",
+   " food",
+   " french",
+   "baguette"
+  ]
+ },
+ {
+  "name": "banana",
+  "file": "1F34C.svg",
+  "en": "banana",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " potassium",
+   "fruit",
+   "yellow"
+  ]
+ },
+ {
+  "name": "beans",
+  "file": "1FAD8.svg",
+  "en": "beans",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " kidney",
+   " legume",
+   " small",
+   "food"
+  ]
+ },
+ {
+  "name": "bell-pepper",
+  "file": "1FAD1.svg",
+  "en": "bell pepper",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " capsicum",
+   " food",
+   " pepper",
+   " vegetable",
+   "bell"
+  ]
+ },
+ {
+  "name": "bento-box",
+  "file": "1F371.svg",
+  "en": "bento box",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " box",
+   " food",
+   "bento"
+  ]
+ },
+ {
+  "name": "birthday-cake",
+  "file": "1F382.svg",
+  "en": "birthday cake",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " birthday",
+   " cake",
+   " celebration",
+   " dessert",
+   " happy",
+   " pastry",
+   " sweet",
+   "bday"
+  ]
+ },
+ {
+  "name": "blueberries",
+  "file": "1FAD0.svg",
+  "en": "blueberries",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " berry",
+   " bilberry",
+   " blue",
+   " blueberry",
+   " food",
+   " fruit",
+   "berries"
+  ]
+ },
+ {
+  "name": "bottle-with-popping-cork",
+  "file": "1F37E.svg",
+  "en": "bottle with popping cork",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " bottle",
+   " celebrate",
+   " cork",
+   " drink",
+   " event",
+   " popping",
+   "bar",
+   "party"
+  ]
+ },
+ {
+  "name": "bread",
+  "file": "1F35E.svg",
+  "en": "bread",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " food",
+   " grain",
+   " loaf",
+   " restaurant",
+   " toast",
+   " wheat",
+   "carbs"
+  ]
+ },
+ {
+  "name": "broccoli",
+  "file": "1F966.svg",
+  "en": "broccoli",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " wild",
+   "cabbage"
+  ]
+ },
+ {
+  "name": "carrot",
+  "file": "1F955.svg",
+  "en": "carrot",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " vegetable",
+   "food"
+  ]
+ },
+ {
+  "name": "cheese-wedge",
+  "file": "1F9C0.svg",
+  "en": "cheese wedge",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " wedge",
+   "cheese"
+  ]
+ },
+ {
+  "name": "cherries",
+  "file": "1F352.svg",
+  "en": "cherries",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " cherry",
+   " fruit",
+   " red",
+   "berries"
+  ]
+ },
+ {
+  "name": "chopsticks",
+  "file": "1F962.svg",
+  "en": "chopsticks",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " chopstick",
+   " eat",
+   " jeotgarak",
+   " kuaizi",
+   "hashi",
+   "sticks"
+  ]
+ },
+ {
+  "name": "cooked-rice",
+  "file": "1F35A.svg",
+  "en": "cooked rice",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " food",
+   " rice",
+   "cooked"
+  ]
+ },
+ {
+  "name": "cookie",
+  "file": "1F36A.svg",
+  "en": "cookie",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " chocolate",
+   " dessert",
+   " sweet",
+   "chip"
+  ]
+ },
+ {
+  "name": "croissant",
+  "file": "1F950.svg",
+  "en": "croissant",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " breakfast",
+   " crescent",
+   " food",
+   " french",
+   " roll",
+   "bread"
+  ]
+ },
+ {
+  "name": "cucumber",
+  "file": "1F952.svg",
+  "en": "cucumber",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " pickle",
+   " vegetable",
+   "food"
+  ]
+ },
+ {
+  "name": "cupcake",
+  "file": "1F9C1.svg",
+  "en": "cupcake",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " dessert",
+   " sprinkles",
+   " sugar",
+   " sweet",
+   " treat",
+   "bakery"
+  ]
+ },
+ {
+  "name": "curry-rice",
+  "file": "1F35B.svg",
+  "en": "curry rice",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " food",
+   " rice",
+   "curry"
+  ]
+ },
+ {
+  "name": "cut-of-meat",
+  "file": "1F969.svg",
+  "en": "cut of meat",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " cut",
+   " lambchop",
+   " meat",
+   " porkchop",
+   " red",
+   " steak",
+   "chop"
+  ]
+ },
+ {
+  "name": "doughnut",
+  "file": "1F369.svg",
+  "en": "doughnut",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " dessert",
+   " donut",
+   " food",
+   " sweet",
+   "breakfast"
+  ]
+ },
+ {
+  "name": "ear-of-corn",
+  "file": "1F33D.svg",
+  "en": "ear of corn",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " crops",
+   " ear",
+   " farm",
+   " maize",
+   " maze",
+   "corn",
+   "yellow"
+  ]
+ },
+ {
+  "name": "eggplant",
+  "file": "1F346.svg",
+  "en": "eggplant",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " vegetable",
+   "aubergine",
+   "purple"
+  ]
+ },
+ {
+  "name": "flatbread",
+  "file": "1FAD3.svg",
+  "en": "flatbread",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " bread",
+   " food",
+   " gordita",
+   " lavash",
+   " naan",
+   " pita",
+   "arepa"
+  ]
+ },
+ {
+  "name": "fork-and-knife",
+  "file": "1F374.svg",
+  "en": "fork and knife",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " breaky",
+   " cooking",
+   " cutlery",
+   " delicious",
+   " dinner",
+   " eat",
+   " feed",
+   " food"
+  ]
+ },
+ {
+  "name": "fork-and-knife-with-plate",
+  "file": "1F37D.svg",
+  "en": "fork and knife with plate",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " dinner",
+   " eat",
+   " fork",
+   " knife",
+   " plate",
+   "cooking",
+   "eat"
+  ]
+ },
+ {
+  "name": "garlic",
+  "file": "1F9C4.svg",
+  "en": "garlic",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   "flavoring"
+  ]
+ },
+ {
+  "name": "glass-of-milk",
+  "file": "1F95B.svg",
+  "en": "glass of milk",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " glass",
+   " milk",
+   "drink"
+  ]
+ },
+ {
+  "name": "grapes",
+  "file": "1F347.svg",
+  "en": "grapes",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " fruit",
+   " grape",
+   "dionysus"
+  ]
+ },
+ {
+  "name": "green-apple",
+  "file": "1F34F.svg",
+  "en": "green apple",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " fruit",
+   " green",
+   "apple"
+  ]
+ },
+ {
+  "name": "hamburger",
+  "file": "1F354.svg",
+  "en": "hamburger",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " eat",
+   " fast",
+   " food",
+   " hungry",
+   "burger"
+  ]
+ },
+ {
+  "name": "hot-beverage",
+  "file": "2615.svg",
+  "en": "hot beverage",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " cafe",
+   " caffeine",
+   " chai",
+   " coffee",
+   " drink",
+   " hot",
+   " morning",
+   " steaming"
+  ]
+ },
+ {
+  "name": "hot-pepper",
+  "file": "1F336.svg",
+  "en": "hot pepper",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " pepper",
+   "hot",
+   "red"
+  ]
+ },
+ {
+  "name": "ice-cream",
+  "file": "1F368.svg",
+  "en": "ice cream",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " dessert",
+   " food",
+   " ice",
+   " restaurant",
+   " sweet",
+   "cream"
+  ]
+ },
+ {
+  "name": "leafy-green",
+  "file": "1F96C.svg",
+  "en": "leafy green",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " burgers",
+   " cabbage",
+   " choy",
+   " green",
+   " kale",
+   " leafy",
+   " lettuce",
+   " salad"
+  ]
+ },
+ {
+  "name": "lemon",
+  "file": "1F34B.svg",
+  "en": "lemon",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " fruit",
+   " sour",
+   "citrus",
+   "yellow"
+  ]
+ },
+ {
+  "name": "lime",
+  "file": "1F34B-200D-1F7E9.svg",
+  "en": "lime",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " citrus",
+   " cocktail",
+   " fruit",
+   " garnish",
+   " key",
+   " margarita",
+   " mojito",
+   " refreshing"
+  ]
+ },
+ {
+  "name": "mango",
+  "file": "1F96D.svg",
+  "en": "mango",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " fruit",
+   " tropical",
+   "food"
+  ]
+ },
+ {
+  "name": "meat-on-bone",
+  "file": "1F356.svg",
+  "en": "meat on bone",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " meat",
+   "bone"
+  ]
+ },
+ {
+  "name": "melon",
+  "file": "1F348.svg",
+  "en": "melon",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " fruit",
+   "cantaloupe"
+  ]
+ },
+ {
+  "name": "onion",
+  "file": "1F9C5.svg",
+  "en": "onion",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   "flavoring"
+  ]
+ },
+ {
+  "name": "pancakes",
+  "file": "1F95E.svg",
+  "en": "pancakes",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " crêpe",
+   " food",
+   " hotcake",
+   " pancake",
+   "breakfast"
+  ]
+ },
+ {
+  "name": "peach",
+  "file": "1F351.svg",
+  "en": "peach",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " red",
+   "fruit",
+   "pink"
+  ]
+ },
+ {
+  "name": "peanuts",
+  "file": "1F95C.svg",
+  "en": "peanuts",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " nut",
+   " peanut",
+   " vegetable",
+   "food"
+  ]
+ },
+ {
+  "name": "pear",
+  "file": "1F350.svg",
+  "en": "pear",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   "fruit",
+   "green"
+  ]
+ },
+ {
+  "name": "pineapple",
+  "file": "1F34D.svg",
+  "en": "pineapple",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " fruit",
+   " pina",
+   " tropical",
+   "colada",
+   "tropical"
+  ]
+ },
+ {
+  "name": "potato",
+  "file": "1F954.svg",
+  "en": "potato",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " vegetable",
+   "food"
+  ]
+ },
+ {
+  "name": "poultry-leg",
+  "file": "1F357.svg",
+  "en": "poultry leg",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " chicken",
+   " drumstick",
+   " hungry",
+   " leg",
+   " poultry",
+   " turkey",
+   "bone"
+  ]
+ },
+ {
+  "name": "pretzel",
+  "file": "1F968.svg",
+  "en": "pretzel",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " twisted",
+   "convoluted"
+  ]
+ },
+ {
+  "name": "red-apple",
+  "file": "1F34E.svg",
+  "en": "red apple",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " diet",
+   " food",
+   " fruit",
+   " health",
+   " red",
+   " ripe",
+   "apple"
+  ]
+ },
+ {
+  "name": "rice-ball",
+  "file": "1F359.svg",
+  "en": "rice ball",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " food",
+   " japanese",
+   " rice",
+   "ball"
+  ]
+ },
+ {
+  "name": "rice-cracker",
+  "file": "1F358.svg",
+  "en": "rice cracker",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " food",
+   " rice",
+   "cracker"
+  ]
+ },
+ {
+  "name": "sake",
+  "file": "1F376.svg",
+  "en": "sake",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " beverage",
+   " bottle",
+   " cup",
+   " drink",
+   " restaurant",
+   "bar"
+  ]
+ },
+ {
+  "name": "shaved-ice",
+  "file": "1F367.svg",
+  "en": "shaved ice",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " ice",
+   " restaurant",
+   " shaved",
+   " sweet",
+   "dessert"
+  ]
+ },
+ {
+  "name": "shortcake",
+  "file": "1F370.svg",
+  "en": "shortcake",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " dessert",
+   " pastry",
+   " slice",
+   " sweet",
+   "cake"
+  ]
+ },
+ {
+  "name": "soft-ice-cream",
+  "file": "1F366.svg",
+  "en": "soft ice cream",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " dessert",
+   " food",
+   " ice",
+   " icecream",
+   " restaurant",
+   " serve",
+   " soft",
+   " sweet"
+  ]
+ },
+ {
+  "name": "spoon",
+  "file": "1F944.svg",
+  "en": "spoon",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " eat",
+   " spoon",
+   " tableware",
+   "eat",
+   "metal"
+  ]
+ },
+ {
+  "name": "steaming-bowl",
+  "file": "1F35C.svg",
+  "en": "steaming bowl",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " chopsticks",
+   " food",
+   " noodle",
+   " pho",
+   " ramen",
+   " soup",
+   " steaming",
+   "bowl"
+  ]
+ },
+ {
+  "name": "strawberry",
+  "file": "1F353.svg",
+  "en": "strawberry",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " fruit",
+   "berry"
+  ]
+ },
+ {
+  "name": "tangerine",
+  "file": "1F34A.svg",
+  "en": "tangerine",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " citrus",
+   " fruit",
+   " nectarine",
+   " orange",
+   " vitamin",
+   "c"
+  ]
+ },
+ {
+  "name": "teacup-without-handle",
+  "file": "1F375.svg",
+  "en": "teacup without handle",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " cup",
+   " drink",
+   " handle",
+   " hot",
+   " oolong",
+   " tea",
+   " teacup",
+   "beverage"
+  ]
+ },
+ {
+  "name": "teapot",
+  "file": "1FAD6.svg",
+  "en": "teapot",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " drink",
+   " food",
+   " pot",
+   " tea",
+   "brew"
+  ]
+ },
+ {
+  "name": "waffle",
+  "file": "1F9C7.svg",
+  "en": "waffle",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " indecisive",
+   " iron",
+   "breakfast"
+  ]
+ },
+ {
+  "name": "watermelon",
+  "file": "1F349.svg",
+  "en": "watermelon",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " red",
+   "fruit",
+   "melon"
+  ]
+ },
+ {
+  "name": "wine-glass",
+  "file": "1F377.svg",
+  "en": "wine glass",
+  "topics": [
+   "طعام"
+  ],
+  "tags": [
+   " alcohol",
+   " bar",
+   " beverage",
+   " booze",
+   " club",
+   " drink",
+   " drinking",
+   " drinks"
+  ]
+ },
+ {
+  "name": "closed-umbrella",
+  "file": "1F302.svg",
+  "en": "closed umbrella",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " clothing",
+   " rain",
+   " umbrella",
+   "closed"
+  ]
+ },
+ {
+  "name": "cloud",
+  "file": "2601.svg",
+  "en": "cloud",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " cloudy",
+   " diffuse",
+   " dream",
+   " fleecy clouds",
+   " gray",
+   " misty",
+   " rain",
+   " sky"
+  ]
+ },
+ {
+  "name": "cloud-with-lightning",
+  "file": "1F329.svg",
+  "en": "cloud with lightning",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " cloudy",
+   " cold",
+   " current",
+   " glaring",
+   " gray",
+   " light",
+   " light up",
+   " lightning"
+  ]
+ },
+ {
+  "name": "cloud-with-lightning-and-rain",
+  "file": "26C8.svg",
+  "en": "cloud with lightning and rain",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " lightning",
+   " rain",
+   " storm",
+   " thunder",
+   " thunderstorm",
+   " weather",
+   "cloud"
+  ]
+ },
+ {
+  "name": "cloud-with-rain",
+  "file": "1F327.svg",
+  "en": "cloud with rain",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " cloudy",
+   " cool",
+   " down",
+   " falling",
+   " rain",
+   " raindrops",
+   " stormy",
+   " weather"
+  ]
+ },
+ {
+  "name": "cloud-with-snow",
+  "file": "1F328.svg",
+  "en": "cloud with snow",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " cloudy",
+   " cold",
+   " falling",
+   " ice",
+   " snow",
+   " stormy",
+   " weather",
+   " wet"
+  ]
+ },
+ {
+  "name": "cyclone",
+  "file": "1F300.svg",
+  "en": "cyclone",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " air",
+   " funnel",
+   " hurricane",
+   " rotate",
+   " rotation",
+   " spiral",
+   " swirl",
+   " turbulent"
+  ]
+ },
+ {
+  "name": "droplet",
+  "file": "1F4A7.svg",
+  "en": "droplet",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " cold",
+   " comic",
+   " drop",
+   " droplets",
+   " fluid",
+   " liquid",
+   " nature",
+   " pearl"
+  ]
+ },
+ {
+  "name": "fire",
+  "file": "1F525.svg",
+  "en": "fire",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " burn",
+   " flame",
+   " glow",
+   " high temperature",
+   " hot",
+   " lit",
+   " litaf",
+   " tool"
+  ]
+ },
+ {
+  "name": "fog",
+  "file": "1F32B.svg",
+  "en": "fog",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " weather",
+   "cloud"
+  ]
+ },
+ {
+  "name": "high-voltage",
+  "file": "26A1.svg",
+  "en": "high voltage",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " current",
+   " electric",
+   " electricity",
+   " high",
+   " high voltage",
+   " light",
+   " lightning",
+   " lights"
+  ]
+ },
+ {
+  "name": "meteor",
+  "file": "1FA8B.svg",
+  "en": "meteor",
+  "topics": [
+   "طقس"
+  ],
+  "tags": []
+ },
+ {
+  "name": "rainbow",
+  "file": "1F308.svg",
+  "en": "rainbow",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " color",
+   " colorful",
+   " colors formed in the sky",
+   " facet",
+   " genderqueer",
+   " glbt",
+   " glbtq",
+   " lesbian"
+  ]
+ },
+ {
+  "name": "snowflake",
+  "file": "2744.svg",
+  "en": "snowflake",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " cold",
+   " frosty",
+   " ice",
+   " icy",
+   " melting",
+   " season",
+   " snow",
+   " snow storm"
+  ]
+ },
+ {
+  "name": "snowman",
+  "file": "2603.svg",
+  "en": "snowman",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " man",
+   " snow",
+   "cold"
+  ]
+ },
+ {
+  "name": "snowman-without-snow",
+  "file": "26C4.svg",
+  "en": "snowman without snow",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " frosty",
+   " frosty the snowman",
+   " man",
+   " not snowing",
+   " olaf",
+   " snow",
+   " snowman",
+   " winter"
+  ]
+ },
+ {
+  "name": "sun",
+  "file": "2600.svg",
+  "en": "sun",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " beach",
+   " feel good",
+   " fire",
+   " fireball",
+   " heavenly body",
+   " hot",
+   " rays",
+   " space"
+  ]
+ },
+ {
+  "name": "sun-behind-cloud",
+  "file": "26C5.svg",
+  "en": "sun behind cloud",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " appear",
+   " behind",
+   " cloud",
+   " cloudy",
+   " cool",
+   " sun",
+   " sunny",
+   " weather"
+  ]
+ },
+ {
+  "name": "sun-behind-large-cloud",
+  "file": "1F325.svg",
+  "en": "sun behind large cloud",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " behind",
+   " cloud",
+   " cloudy",
+   " diffuse",
+   " gray",
+   " large",
+   " rain",
+   " sky"
+  ]
+ },
+ {
+  "name": "sun-behind-rain-cloud",
+  "file": "1F326.svg",
+  "en": "sun behind rain cloud",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " behind",
+   " cloud",
+   " cloudy",
+   " cool",
+   " rain",
+   " rainy",
+   " sun",
+   " weather"
+  ]
+ },
+ {
+  "name": "sun-behind-small-cloud",
+  "file": "1F324.svg",
+  "en": "sun behind small cloud",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " behind",
+   " cloud",
+   " cloudy",
+   " cool",
+   " rain",
+   " sky",
+   " small",
+   " sun"
+  ]
+ },
+ {
+  "name": "thermometer",
+  "file": "1F321.svg",
+  "en": "thermometer",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " celsius",
+   " cold",
+   " degrees",
+   " fever",
+   " heat",
+   " measure",
+   " room temperatures",
+   " sick"
+  ]
+ },
+ {
+  "name": "tornado",
+  "file": "1F32A.svg",
+  "en": "tornado",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " blow",
+   " cyclone",
+   " dangerous",
+   " hurricane",
+   " severe weather",
+   " sky",
+   " storm",
+   " typhoon"
+  ]
+ },
+ {
+  "name": "umbrella",
+  "file": "2602.svg",
+  "en": "umbrella",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " drop",
+   " rain",
+   " raindrops",
+   " umbrella",
+   " wet",
+   "clothing",
+   "purple"
+  ]
+ },
+ {
+  "name": "umbrella-on-ground",
+  "file": "26F1.svg",
+  "en": "umbrella on ground",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " rain",
+   " sun",
+   " umbrella",
+   "ground"
+  ]
+ },
+ {
+  "name": "umbrella-with-rain-drops",
+  "file": "2614.svg",
+  "en": "umbrella with rain drops",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " drop",
+   " drops",
+   " rain",
+   " rain falling",
+   " raindrops",
+   " umbrella",
+   " weather",
+   " wet"
+  ]
+ },
+ {
+  "name": "water-wave",
+  "file": "1F30A.svg",
+  "en": "water wave",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " air",
+   " beach",
+   " cold",
+   " listen",
+   " ocean",
+   " salty",
+   " sea",
+   " sough"
+  ]
+ },
+ {
+  "name": "wind-face",
+  "file": "1F32C.svg",
+  "en": "wind face",
+  "topics": [
+   "طقس"
+  ],
+  "tags": [
+   " air",
+   " blowing",
+   " cloud",
+   " face",
+   " mother nature",
+   " mouth",
+   " sky",
+   " wind"
+  ]
+ },
+ {
+  "name": "alembic",
+  "file": "2697.svg",
+  "en": "alembic",
+  "topics": [
+   "علوم"
+  ],
+  "tags": [
+   " tool",
+   "chemistry"
+  ]
+ },
+ {
+  "name": "dna",
+  "file": "1F9EC.svg",
+  "en": "dna",
+  "topics": [
+   "علوم"
+  ],
+  "tags": [
+   " evolution",
+   " gene",
+   " genetics",
+   " life",
+   "biologist"
+  ]
+ },
+ {
+  "name": "microscope",
+  "file": "1F52C.svg",
+  "en": "microscope",
+  "topics": [
+   "علوم"
+  ],
+  "tags": [
+   " lab",
+   " science",
+   " tool",
+   "experiment"
+  ]
+ },
+ {
+  "name": "petri-dish",
+  "file": "1F9EB.svg",
+  "en": "petri dish",
+  "topics": [
+   "علوم"
+  ],
+  "tags": [
+   " biologist",
+   " biology",
+   " culture",
+   " dish",
+   " lab",
+   " petri",
+   "bacteria"
+  ]
+ },
+ {
+  "name": "satellite-antenna",
+  "file": "1F4E1.svg",
+  "en": "satellite antenna",
+  "topics": [
+   "علوم",
+   "فضاء"
+  ],
+  "tags": [
+   " antenna",
+   " contact",
+   " dish",
+   " radiation",
+   " receive",
+   " satellite",
+   " science",
+   "aliens"
+  ]
+ },
+ {
+  "name": "telescope",
+  "file": "1F52D.svg",
+  "en": "telescope",
+  "topics": [
+   "علوم",
+   "فضاء"
+  ],
+  "tags": [
+   " extraterrestrial",
+   " science",
+   " sky",
+   " space",
+   " tool",
+   "contact",
+   "stars"
+  ]
+ },
+ {
+  "name": "test-tube",
+  "file": "1F9EA.svg",
+  "en": "test tube",
+  "topics": [
+   "علوم"
+  ],
+  "tags": [
+   " chemistry",
+   " experiment",
+   " lab",
+   " science",
+   " test",
+   " tube",
+   "chemist"
+  ]
+ },
+ {
+  "name": "comet",
+  "file": "2604.svg",
+  "en": "comet",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   "space"
+  ]
+ },
+ {
+  "name": "crescent-moon",
+  "file": "1F319.svg",
+  "en": "crescent moon",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " celestial body",
+   " crescent",
+   " far away",
+   " full moon",
+   " moon",
+   " night",
+   " night sky",
+   " planet"
+  ]
+ },
+ {
+  "name": "dizzy",
+  "file": "1F4AB.svg",
+  "en": "dizzy",
+  "topics": [
+   "فضاء",
+   "مشاعر"
+  ],
+  "tags": [
+   " shining",
+   " shooting",
+   " star",
+   " stars",
+   "comic",
+   "shootingstar"
+  ]
+ },
+ {
+  "name": "first-quarter-moon",
+  "file": "1F313.svg",
+  "en": "first quarter moon",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " moon",
+   " quarter",
+   " space",
+   "first"
+  ]
+ },
+ {
+  "name": "first-quarter-moon-face",
+  "file": "1F31B.svg",
+  "en": "first quarter moon face",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " celestial bodies",
+   " first",
+   " first quarter",
+   " full moon",
+   " half moon",
+   " light",
+   " moon",
+   " moonlight"
+  ]
+ },
+ {
+  "name": "full-moon",
+  "file": "1F315.svg",
+  "en": "full moon",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " moon",
+   " space",
+   "full"
+  ]
+ },
+ {
+  "name": "full-moon-face",
+  "file": "1F31D.svg",
+  "en": "full moon face",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " disc",
+   " face",
+   " full",
+   " full moon",
+   " moon",
+   " moonlight",
+   " night",
+   " no clouds"
+  ]
+ },
+ {
+  "name": "glowing-star",
+  "file": "1F31F.svg",
+  "en": "glowing star",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " bright",
+   " constellation",
+   " far away",
+   " glow",
+   " glowing",
+   " milky way",
+   " night",
+   " shine"
+  ]
+ },
+ {
+  "name": "last-quarter-moon",
+  "file": "1F317.svg",
+  "en": "last quarter moon",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " moon",
+   " quarter",
+   " space",
+   "last"
+  ]
+ },
+ {
+  "name": "last-quarter-moon-face",
+  "file": "1F31C.svg",
+  "en": "last quarter moon face",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " celestial bodies",
+   " face",
+   " full moon",
+   " half moon",
+   " last",
+   " last quarter",
+   " light",
+   " moon"
+  ]
+ },
+ {
+  "name": "milky-way",
+  "file": "1F30C.svg",
+  "en": "milky way",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " space",
+   " way",
+   "milky"
+  ]
+ },
+ {
+  "name": "new-moon",
+  "file": "1F311.svg",
+  "en": "new moon",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " moon",
+   " new",
+   " space",
+   "dark"
+  ]
+ },
+ {
+  "name": "new-moon-face",
+  "file": "1F31A.svg",
+  "en": "new moon face",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " moon",
+   " new",
+   " space",
+   "face"
+  ]
+ },
+ {
+  "name": "night-with-stars",
+  "file": "1F303.svg",
+  "en": "night with stars",
+  "topics": [
+   "فضاء",
+   "مبانٍ"
+  ],
+  "tags": [
+   " star",
+   " stars",
+   "night"
+  ]
+ },
+ {
+  "name": "ringed-planet",
+  "file": "1FA90.svg",
+  "en": "ringed planet",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " ringed",
+   " saturn",
+   " saturnine",
+   "planet",
+   "saturn"
+  ]
+ },
+ {
+  "name": "shooting-star",
+  "file": "1F320.svg",
+  "en": "shooting star",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " bright",
+   " far away",
+   " lightning",
+   " night",
+   " shine",
+   " shooting",
+   " sky",
+   " space"
+  ]
+ },
+ {
+  "name": "sparkles",
+  "file": "2728.svg",
+  "en": "sparkles",
+  "topics": [
+   "فضاء",
+   "مناسبات"
+  ],
+  "tags": [
+   " beautiful",
+   " magic",
+   " sparkle",
+   " star",
+   "*",
+   "magic"
+  ]
+ },
+ {
+  "name": "star",
+  "file": "2B50.svg",
+  "en": "star",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " far away",
+   " medium",
+   " shine",
+   " sky",
+   " small planet",
+   " sparkle",
+   " stars",
+   " white"
+  ]
+ },
+ {
+  "name": "star-struck",
+  "file": "1F929.svg",
+  "en": "star-struck",
+  "topics": [
+   "فضاء",
+   "مشاعر"
+  ],
+  "tags": [
+   " eyes",
+   " face",
+   " grinning",
+   " smile",
+   " star",
+   " starry-eyed",
+   " wow",
+   "excited"
+  ]
+ },
+ {
+  "name": "sun-with-face",
+  "file": "1F31E.svg",
+  "en": "sun with face",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " beach",
+   " bright",
+   " celestial bodies",
+   " day",
+   " face",
+   " fire",
+   " fireball",
+   " heat"
+  ]
+ },
+ {
+  "name": "waning-crescent-moon",
+  "file": "1F318.svg",
+  "en": "waning crescent moon",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " moon",
+   " space",
+   " waning",
+   "crescent"
+  ]
+ },
+ {
+  "name": "waning-gibbous-moon",
+  "file": "1F316.svg",
+  "en": "waning gibbous moon",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " moon",
+   " space",
+   " waning",
+   "gibbous"
+  ]
+ },
+ {
+  "name": "waxing-crescent-moon",
+  "file": "1F312.svg",
+  "en": "waxing crescent moon",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " dreams",
+   " moon",
+   " space",
+   " waxing",
+   "crescent"
+  ]
+ },
+ {
+  "name": "waxing-gibbous-moon",
+  "file": "1F314.svg",
+  "en": "waxing gibbous moon",
+  "topics": [
+   "فضاء"
+  ],
+  "tags": [
+   " moon",
+   " space",
+   " waxing",
+   "gibbous"
+  ]
+ },
+ {
+  "name": "artist-palette",
+  "file": "1F3A8.svg",
+  "en": "artist palette",
+  "topics": [
+   "فنون"
+  ],
+  "tags": [
+   " artist",
+   " artsy",
+   " arty",
+   " colorful",
+   " creative",
+   " entertainment",
+   " leisure",
+   " museum"
+  ]
+ },
+ {
+  "name": "framed-picture",
+  "file": "1F5BC.svg",
+  "en": "framed picture",
+  "topics": [
+   "فنون"
+  ],
+  "tags": [
+   " artist",
+   " entertainment",
+   " frame",
+   " framed",
+   " museum",
+   " painting",
+   " picture",
+   "art"
+  ]
+ },
+ {
+  "name": "knot",
+  "file": "1FAA2.svg",
+  "en": "knot",
+  "topics": [
+   "فنون"
+  ],
+  "tags": [
+   " rope",
+   " tangled",
+   " tie",
+   " twine",
+   " twist",
+   "cord"
+  ]
+ },
+ {
+  "name": "performing-arts",
+  "file": "1F3AD.svg",
+  "en": "performing arts",
+  "topics": [
+   "فنون"
+  ],
+  "tags": [
+   " actress",
+   " art",
+   " arts",
+   " education",
+   " entertainment",
+   " mask",
+   " performing",
+   " theater"
+  ]
+ },
+ {
+  "name": "sewing-needle",
+  "file": "1FAA1.svg",
+  "en": "sewing needle",
+  "topics": [
+   "فنون"
+  ],
+  "tags": [
+   " needle",
+   " sew",
+   " sewing",
+   " stitches",
+   " sutures",
+   " tailoring",
+   " thread",
+   "embroidery"
+  ]
+ },
+ {
+  "name": "thread",
+  "file": "1F9F5.svg",
+  "en": "thread",
+  "topics": [
+   "فنون"
+  ],
+  "tags": [
+   " sewing",
+   " spool",
+   " string",
+   "needle"
+  ]
+ },
+ {
+  "name": "yarn",
+  "file": "1F9F6.svg",
+  "en": "yarn",
+  "topics": [
+   "فنون"
+  ],
+  "tags": [
+   " crochet",
+   " knit",
+   "ball"
+  ]
+ },
+ {
+  "name": "coin",
+  "file": "1FA99.svg",
+  "en": "coin",
+  "topics": [
+   "مال"
+  ],
+  "tags": [
+   " euro",
+   " gold",
+   " metal",
+   " money",
+   " rich",
+   " silver",
+   " treasure",
+   "dollar"
+  ]
+ },
+ {
+  "name": "dollar-banknote",
+  "file": "1F4B5.svg",
+  "en": "dollar banknote",
+  "topics": [
+   "مال"
+  ],
+  "tags": [
+   " banknote",
+   " bill",
+   " currency",
+   " dollar",
+   " money",
+   " note",
+   "bank"
+  ]
+ },
+ {
+  "name": "euro-banknote",
+  "file": "1F4B6.svg",
+  "en": "euro banknote",
+  "topics": [
+   "مال"
+  ],
+  "tags": [
+   " bank",
+   " banknote",
+   " bill",
+   " currency",
+   " euro",
+   " money",
+   " note",
+   " rich"
+  ]
+ },
+ {
+  "name": "money-bag",
+  "file": "1F4B0.svg",
+  "en": "money bag",
+  "topics": [
+   "مال"
+  ],
+  "tags": [
+   " bank",
+   " bet",
+   " billion",
+   " cash",
+   " cost",
+   " dollar",
+   " gold",
+   " million"
+  ]
+ },
+ {
+  "name": "treasure-chest",
+  "file": "1FA8E.svg",
+  "en": "treasure chest",
+  "topics": [
+   "مال"
+  ],
+  "tags": [
+   " gold",
+   " jewels",
+   " loot",
+   " money",
+   " prize",
+   " silver",
+   " valuables",
+   " wealth"
+  ]
+ },
+ {
+  "name": "yen-banknote",
+  "file": "1F4B4.svg",
+  "en": "yen banknote",
+  "topics": [
+   "مال"
+  ],
+  "tags": [
+   " banknote",
+   " bill",
+   " currency",
+   " money",
+   " note",
+   " yen",
+   "bank"
+  ]
+ },
+ {
+  "name": "bank",
+  "file": "1F3E6.svg",
+  "en": "bank",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " business",
+   " finance",
+   " venture",
+   "building",
+   "money"
+  ]
+ },
+ {
+  "name": "brick",
+  "file": "1F9F1.svg",
+  "en": "brick",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " clay",
+   " mortar",
+   " wall",
+   "bricks"
+  ]
+ },
+ {
+  "name": "building-construction",
+  "file": "1F3D7.svg",
+  "en": "building construction",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " building lot",
+   " construction",
+   " crane",
+   "building",
+   "work"
+  ]
+ },
+ {
+  "name": "cityscape",
+  "file": "1F3D9.svg",
+  "en": "cityscape",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " metropolis",
+   "buildings",
+   "city"
+  ]
+ },
+ {
+  "name": "cityscape-at-dusk",
+  "file": "1F306.svg",
+  "en": "cityscape at dusk",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " building",
+   " city",
+   " cityscape",
+   " dusk",
+   " evening",
+   " landscape",
+   " sun",
+   " sunset"
+  ]
+ },
+ {
+  "name": "classical-building",
+  "file": "1F3DB.svg",
+  "en": "classical building",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " antique",
+   " classical",
+   " historical",
+   " old",
+   "building"
+  ]
+ },
+ {
+  "name": "convenience-store",
+  "file": "1F3EA.svg",
+  "en": "convenience store",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " 24",
+   " building",
+   " buying",
+   " convenience",
+   " hours",
+   " shopping",
+   " store",
+   "24"
+  ]
+ },
+ {
+  "name": "derelict-house",
+  "file": "1F3DA.svg",
+  "en": "derelict house",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " dangerous",
+   " home",
+   " house",
+   " old",
+   " rotten",
+   "building",
+   "derelict"
+  ]
+ },
+ {
+  "name": "foggy",
+  "file": "1F301.svg",
+  "en": "foggy",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   "fog"
+  ]
+ },
+ {
+  "name": "fountain",
+  "file": "26F2.svg",
+  "en": "fountain",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   "fountain"
+  ]
+ },
+ {
+  "name": "hospital",
+  "file": "1F3E5.svg",
+  "en": "hospital",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " cross",
+   " doctor",
+   " help",
+   " medicine",
+   " public",
+   " social",
+   "building"
+  ]
+ },
+ {
+  "name": "hotel",
+  "file": "1F3E8.svg",
+  "en": "hotel",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " business",
+   " holiday",
+   " travel",
+   " vacation",
+   "building",
+   "sleep"
+  ]
+ },
+ {
+  "name": "house",
+  "file": "1F3E0.svg",
+  "en": "house",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " country",
+   " heart",
+   " home",
+   " ranch",
+   " settle",
+   " simple",
+   " suburban",
+   " suburbia"
+  ]
+ },
+ {
+  "name": "house-with-garden",
+  "file": "1F3E1.svg",
+  "en": "house with garden",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " country",
+   " garden",
+   " grass",
+   " green",
+   " heart",
+   " home",
+   " house",
+   " ranch"
+  ]
+ },
+ {
+  "name": "houses",
+  "file": "1F3D8.svg",
+  "en": "houses",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " neighbourhood",
+   "buildings",
+   "house"
+  ]
+ },
+ {
+  "name": "hut",
+  "file": "1F6D6.svg",
+  "en": "hut",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " house",
+   " roundhouse",
+   " shelter",
+   " yurt",
+   "home"
+  ]
+ },
+ {
+  "name": "japanese-post-office",
+  "file": "1F3E3.svg",
+  "en": "Japanese post office",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " communication",
+   " japanese",
+   " mailing",
+   " office",
+   " post",
+   "building",
+   "delivery"
+  ]
+ },
+ {
+  "name": "love-hotel",
+  "file": "1F3E9.svg",
+  "en": "love hotel",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " affair",
+   " hotel",
+   " love",
+   " sex",
+   "building"
+  ]
+ },
+ {
+  "name": "office-building",
+  "file": "1F3E2.svg",
+  "en": "office building",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " business",
+   " city",
+   " company",
+   " cubical",
+   " firm",
+   " job",
+   " office",
+   "building"
+  ]
+ },
+ {
+  "name": "post-office",
+  "file": "1F3E4.svg",
+  "en": "post office",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " communication",
+   " european",
+   " mailing",
+   " office",
+   " post",
+   " yellow",
+   "building",
+   "delivery"
+  ]
+ },
+ {
+  "name": "rock",
+  "file": "1FAA8.svg",
+  "en": "rock",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " heavy",
+   " solid",
+   " stone",
+   " tough",
+   "boulder"
+  ]
+ },
+ {
+  "name": "school",
+  "file": "1F3EB.svg",
+  "en": "school",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " education",
+   " public",
+   " teaching",
+   "building",
+   "learning"
+  ]
+ },
+ {
+  "name": "stadium",
+  "file": "1F3DF.svg",
+  "en": "stadium",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " football",
+   " olympic",
+   " sports",
+   "building",
+   "stadium"
+  ]
+ },
+ {
+  "name": "sunrise",
+  "file": "1F305.svg",
+  "en": "sunrise",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " nature",
+   " sun",
+   "morning"
+  ]
+ },
+ {
+  "name": "sunrise-over-mountains",
+  "file": "1F304.svg",
+  "en": "sunrise over mountains",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " mountains",
+   " over",
+   " sun",
+   " sunrise",
+   "morning"
+  ]
+ },
+ {
+  "name": "tent",
+  "file": "26FA.svg",
+  "en": "tent",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " adventure",
+   " outdoor",
+   "camping",
+   "nature"
+  ]
+ },
+ {
+  "name": "wood",
+  "file": "1FAB5.svg",
+  "en": "wood",
+  "topics": [
+   "مبانٍ"
+  ],
+  "tags": [
+   " lumber",
+   " timber",
+   "log"
+  ]
+ },
+ {
+  "name": "bar-chart",
+  "file": "1F4CA.svg",
+  "en": "bar chart",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " chart",
+   " data",
+   " graph",
+   " sheet",
+   "bar",
+   "data"
+  ]
+ },
+ {
+  "name": "black-nib",
+  "file": "2712.svg",
+  "en": "black nib",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " nib",
+   " pen",
+   "black"
+  ]
+ },
+ {
+  "name": "blue-book",
+  "file": "1F4D8.svg",
+  "en": "blue book",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " book",
+   " education",
+   " fantasy",
+   " library",
+   " reading",
+   "blue"
+  ]
+ },
+ {
+  "name": "books",
+  "file": "1F4DA.svg",
+  "en": "books",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " education",
+   " fantasy",
+   " isometric",
+   " knowledge",
+   " library",
+   " novels",
+   " read",
+   " reading"
+  ]
+ },
+ {
+  "name": "briefcase",
+  "file": "1F4BC.svg",
+  "en": "briefcase",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " briefcase",
+   " leather bag",
+   " office bag",
+   "bag",
+   "office"
+  ]
+ },
+ {
+  "name": "calendar",
+  "file": "1F4C5.svg",
+  "en": "calendar",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " analog",
+   " day view",
+   " pages",
+   "calendar",
+   "date"
+  ]
+ },
+ {
+  "name": "card-index",
+  "file": "1F4C7.svg",
+  "en": "card index",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " index",
+   " old",
+   " rolodex",
+   " school",
+   "card"
+  ]
+ },
+ {
+  "name": "card-index-dividers",
+  "file": "1F5C2.svg",
+  "en": "card index dividers",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " dividers",
+   " index",
+   "card"
+  ]
+ },
+ {
+  "name": "chart-decreasing",
+  "file": "1F4C9.svg",
+  "en": "chart decreasing",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " data",
+   " decreasing",
+   " down",
+   " downtrend",
+   " downward",
+   " graph",
+   " negative",
+   " trend"
+  ]
+ },
+ {
+  "name": "chart-increasing",
+  "file": "1F4C8.svg",
+  "en": "chart increasing",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " data",
+   " graph",
+   " growth",
+   " increasing",
+   " right",
+   " trend",
+   " up",
+   " upward"
+  ]
+ },
+ {
+  "name": "clipboard",
+  "file": "1F4CB.svg",
+  "en": "clipboard",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " clip",
+   " handwriting",
+   " list",
+   " metal",
+   " notes",
+   " wood",
+   "board",
+   "do"
+  ]
+ },
+ {
+  "name": "closed-book",
+  "file": "1F4D5.svg",
+  "en": "closed book",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " closed",
+   " education",
+   " read",
+   " write",
+   "book"
+  ]
+ },
+ {
+  "name": "crayon",
+  "file": "1F58D.svg",
+  "en": "crayon",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " colors",
+   "crayon",
+   "painting"
+  ]
+ },
+ {
+  "name": "eraser",
+  "file": "1FA8C.svg",
+  "en": "eraser",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": []
+ },
+ {
+  "name": "file-folder",
+  "file": "1F4C1.svg",
+  "en": "file folder",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " box",
+   " folder",
+   " office",
+   " organise",
+   " paper",
+   " structure",
+   "file"
+  ]
+ },
+ {
+  "name": "fountain-pen",
+  "file": "1F58B.svg",
+  "en": "fountain pen",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " pen",
+   "fountain"
+  ]
+ },
+ {
+  "name": "green-book",
+  "file": "1F4D7.svg",
+  "en": "green book",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " education",
+   " fantasy",
+   " green",
+   " library",
+   " reading",
+   "book"
+  ]
+ },
+ {
+  "name": "ledger",
+  "file": "1F4D2.svg",
+  "en": "ledger",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " read",
+   " write",
+   "book",
+   "notebook"
+  ]
+ },
+ {
+  "name": "memo",
+  "file": "1F4DD.svg",
+  "en": "memo",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " media",
+   " notes",
+   " notice",
+   " paper",
+   " pencil",
+   "communication",
+   "pencil"
+  ]
+ },
+ {
+  "name": "newspaper",
+  "file": "1F4F0.svg",
+  "en": "newspaper",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " news",
+   " paper",
+   " text",
+   "communication",
+   "read"
+  ]
+ },
+ {
+  "name": "notebook",
+  "file": "1F4D3.svg",
+  "en": "notebook",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " read",
+   " write",
+   "book",
+   "notebook"
+  ]
+ },
+ {
+  "name": "notebook-with-decorative-cover",
+  "file": "1F4D4.svg",
+  "en": "notebook with decorative cover",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " cover",
+   " decorated",
+   " decorative",
+   " education",
+   " notebook",
+   " school",
+   " writing",
+   "book"
+  ]
+ },
+ {
+  "name": "open-book",
+  "file": "1F4D6.svg",
+  "en": "open book",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " education",
+   " fantasy",
+   " knowledge",
+   " library",
+   " novels",
+   " open",
+   " read",
+   " reading"
+  ]
+ },
+ {
+  "name": "open-file-folder",
+  "file": "1F4C2.svg",
+  "en": "open file folder",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " box",
+   " folder",
+   " office",
+   " open",
+   " organise",
+   " structure",
+   "file",
+   "open file"
+  ]
+ },
+ {
+  "name": "orange-book",
+  "file": "1F4D9.svg",
+  "en": "orange book",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " education",
+   " fantasy",
+   " library",
+   " orange",
+   " reading",
+   "book"
+  ]
+ },
+ {
+  "name": "page-facing-up",
+  "file": "1F4C4.svg",
+  "en": "page facing up",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " facing",
+   " notes",
+   " page",
+   " paper",
+   " text",
+   " up",
+   "document",
+   "write"
+  ]
+ },
+ {
+  "name": "page-with-curl",
+  "file": "1F4C3.svg",
+  "en": "page with curl",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " document",
+   " page",
+   " paper",
+   " text",
+   "curl",
+   "rolled"
+  ]
+ },
+ {
+  "name": "paintbrush",
+  "file": "1F58C.svg",
+  "en": "paintbrush",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " brush",
+   " pain",
+   "colors",
+   "painting"
+  ]
+ },
+ {
+  "name": "pen",
+  "file": "1F58A.svg",
+  "en": "pen",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   "ballpoint"
+  ]
+ },
+ {
+  "name": "pencil",
+  "file": "270F.svg",
+  "en": "pencil",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   "notes",
+   "pencil"
+  ]
+ },
+ {
+  "name": "pushpin",
+  "file": "1F4CC.svg",
+  "en": "pushpin",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " paper",
+   " pin",
+   " push",
+   " wall",
+   "collage",
+   "pin"
+  ]
+ },
+ {
+  "name": "rolled-up-newspaper",
+  "file": "1F5DE.svg",
+  "en": "rolled-up newspaper",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " newspaper",
+   " paper",
+   " rolled",
+   " rolled-up",
+   "news"
+  ]
+ },
+ {
+  "name": "scroll",
+  "file": "1F4DC.svg",
+  "en": "scroll",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " papyrus",
+   " text",
+   "old",
+   "paper"
+  ]
+ },
+ {
+  "name": "spiral-calendar",
+  "file": "1F5D3.svg",
+  "en": "spiral calendar",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " month view",
+   " pad",
+   " spiral",
+   " year",
+   "calendar"
+  ]
+ },
+ {
+  "name": "spiral-notepad",
+  "file": "1F5D2.svg",
+  "en": "spiral notepad",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " college",
+   " handwrite",
+   " notepad",
+   " pad",
+   " paper",
+   " pen",
+   " spiral",
+   " spiral block"
+  ]
+ },
+ {
+  "name": "tear-off-calendar",
+  "file": "1F4C6.svg",
+  "en": "tear-off calendar",
+  "topics": [
+   "مدرسة"
+  ],
+  "tags": [
+   " tear off",
+   " tear-off",
+   "calendar"
+  ]
+ },
+ {
+  "name": "anger-symbol",
+  "file": "1F4A2.svg",
+  "en": "anger symbol",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " angry",
+   " comic",
+   " mad",
+   " symbol",
+   " upset",
+   "anger"
+  ]
+ },
+ {
+  "name": "angry-face",
+  "file": "1F620.svg",
+  "en": "angry face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " angry",
+   " blame",
+   " face",
+   " feels",
+   " frustrated",
+   " mad",
+   " maddening",
+   " rage"
+  ]
+ },
+ {
+  "name": "astonished-face",
+  "file": "1F632.svg",
+  "en": "astonished face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " cost",
+   " face",
+   " no",
+   " omg",
+   " shocked",
+   " totally",
+   " way",
+   "astonished"
+  ]
+ },
+ {
+  "name": "beaming-face-with-smiling-eyes",
+  "file": "1F601.svg",
+  "en": "beaming face with smiling eyes",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " eye",
+   " eyes",
+   " face",
+   " grin",
+   " grinning",
+   " happy",
+   " mouth",
+   " nice"
+  ]
+ },
+ {
+  "name": "beating-heart",
+  "file": "1F493.svg",
+  "en": "beating heart",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " beating",
+   " cardio",
+   " emotion",
+   " heart",
+   " heartbeat",
+   " ily",
+   " love",
+   " pulsating"
+  ]
+ },
+ {
+  "name": "collision",
+  "file": "1F4A5.svg",
+  "en": "collision",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " boom",
+   " collide",
+   " comic",
+   " explode",
+   "bomb",
+   "explosion"
+  ]
+ },
+ {
+  "name": "confused-face",
+  "file": "1F615.svg",
+  "en": "confused face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " confused",
+   " confusing",
+   " dunno",
+   " face",
+   " frown",
+   " hm",
+   " meh",
+   " not"
+  ]
+ },
+ {
+  "name": "dashing-away",
+  "file": "1F4A8.svg",
+  "en": "dashing away",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " cloud",
+   " comic",
+   " dash",
+   " dashing",
+   " fart",
+   " fast",
+   " go",
+   " gone"
+  ]
+ },
+ {
+  "name": "dotted-line-face",
+  "file": "1FAE5.svg",
+  "en": "dotted line face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " disappear",
+   " dotted",
+   " face",
+   " hidden",
+   " hide",
+   " introvert",
+   " invisible",
+   " line"
+  ]
+ },
+ {
+  "name": "enraged-face",
+  "file": "1F621.svg",
+  "en": "enraged face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " angry",
+   " enraged",
+   " face",
+   " feels",
+   " mad",
+   " maddening",
+   " pouting",
+   " rage"
+  ]
+ },
+ {
+  "name": "expressionless-face",
+  "file": "1F611.svg",
+  "en": "expressionless face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " annoyed",
+   " dead",
+   " expressionless",
+   " face",
+   " fine",
+   " inexpressive",
+   " jealous",
+   " meh"
+  ]
+ },
+ {
+  "name": "face-blowing-a-kiss",
+  "file": "1F618.svg",
+  "en": "face blowing a kiss",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " bae",
+   " blowing",
+   " face",
+   " flirt",
+   " happy",
+   " heart",
+   " ily",
+   " kiss"
+  ]
+ },
+ {
+  "name": "face-with-diagonal-mouth",
+  "file": "1FAE4.svg",
+  "en": "face with diagonal mouth",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " confusion",
+   " diagonal",
+   " disappointed",
+   " doubt",
+   " doubtful",
+   " face",
+   " frustrated",
+   " frustration"
+  ]
+ },
+ {
+  "name": "face-with-head-bandage",
+  "file": "1F915.svg",
+  "en": "face with head-bandage",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " face",
+   " head-bandage",
+   " hurt",
+   " injury",
+   " ouch",
+   "bandage",
+   "head"
+  ]
+ },
+ {
+  "name": "face-with-medical-mask",
+  "file": "1F637.svg",
+  "en": "face with medical mask",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " dentist",
+   " dermatologist",
+   " doctor",
+   " dr",
+   " face",
+   " germs",
+   " mask",
+   " medical"
+  ]
+ },
+ {
+  "name": "face-with-open-mouth",
+  "file": "1F62E.svg",
+  "en": "face with open mouth",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " face",
+   " forgot",
+   " mouth",
+   " omg",
+   " open",
+   " shocked",
+   " surprised",
+   " sympathy"
+  ]
+ },
+ {
+  "name": "face-with-raised-eyebrow",
+  "file": "1F928.svg",
+  "en": "face with raised eyebrow",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " disbelief",
+   " distrust",
+   " emoji",
+   " eyebrow",
+   " face",
+   " hmm",
+   " mild",
+   " raised"
+  ]
+ },
+ {
+  "name": "face-with-steam-from-nose",
+  "file": "1F624.svg",
+  "en": "face with steam from nose",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " angry",
+   " face",
+   " feels",
+   " fume",
+   " fuming",
+   " furious",
+   " fury",
+   " mad"
+  ]
+ },
+ {
+  "name": "face-with-symbols-on-mouth",
+  "file": "1F92C.svg",
+  "en": "face with symbols on mouth",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " cursing",
+   " cussing",
+   " face",
+   " mad",
+   " mouth",
+   " pissed",
+   " swearing",
+   " symbols"
+  ]
+ },
+ {
+  "name": "face-with-tears-of-joy",
+  "file": "1F602.svg",
+  "en": "face with tears of joy",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " face",
+   " feels",
+   " funny",
+   " haha",
+   " happy",
+   " hehe",
+   " hilarious",
+   " joy"
+  ]
+ },
+ {
+  "name": "face-with-thermometer",
+  "file": "1F912.svg",
+  "en": "face with thermometer",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " ill",
+   " sick",
+   " thermometer",
+   "face",
+   "fever"
+  ]
+ },
+ {
+  "name": "face-without-mouth",
+  "file": "1F636.svg",
+  "en": "face without mouth",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " blank",
+   " expressionless",
+   " face",
+   " mouth",
+   " mouthless",
+   " mute",
+   " quiet",
+   " secret"
+  ]
+ },
+ {
+  "name": "fight-cloud",
+  "file": "1FAEF.svg",
+  "en": "fight cloud",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " boom",
+   " brawl",
+   " debate",
+   " disagreement",
+   " explosion",
+   " fight",
+   " ruckus",
+   " wrestle"
+  ]
+ },
+ {
+  "name": "frowning-face",
+  "file": "2639.svg",
+  "en": "frowning face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " frown",
+   " frowning",
+   " sad",
+   "face",
+   "negative"
+  ]
+ },
+ {
+  "name": "grinning-face",
+  "file": "1F600.svg",
+  "en": "grinning face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " cheery",
+   " face",
+   " grin",
+   " grinning",
+   " happy",
+   " laugh",
+   " nice",
+   " smile"
+  ]
+ },
+ {
+  "name": "grinning-face-with-big-eyes",
+  "file": "1F603.svg",
+  "en": "grinning face with big eyes",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " big",
+   " eyes",
+   " face",
+   " grin",
+   " grinning",
+   " happy",
+   " mouth",
+   " open"
+  ]
+ },
+ {
+  "name": "grinning-face-with-smiling-eyes",
+  "file": "1F604.svg",
+  "en": "grinning face with smiling eyes",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " eyes",
+   " face",
+   " grin",
+   " grinning",
+   " happy",
+   " laugh",
+   " lol",
+   " mouth"
+  ]
+ },
+ {
+  "name": "grinning-face-with-sweat",
+  "file": "1F605.svg",
+  "en": "grinning face with sweat",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " dejected",
+   " excited",
+   " face",
+   " grinning",
+   " mouth",
+   " nervous",
+   " open",
+   " smile"
+  ]
+ },
+ {
+  "name": "grinning-squinting-face",
+  "file": "1F606.svg",
+  "en": "grinning squinting face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " eyes",
+   " face",
+   " grinning",
+   " haha",
+   " hahaha",
+   " happy",
+   " laugh",
+   " lol"
+  ]
+ },
+ {
+  "name": "growing-heart",
+  "file": "1F497.svg",
+  "en": "growing heart",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " emotion",
+   " excited",
+   " growing",
+   " heart",
+   " heartpulse",
+   " ily",
+   " inlove",
+   " kisses"
+  ]
+ },
+ {
+  "name": "heart-with-arrow",
+  "file": "1F498.svg",
+  "en": "heart with arrow",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " adorbs",
+   " arrow",
+   " cupid",
+   " date",
+   " emotion",
+   " heart",
+   " ily",
+   " inlove"
+  ]
+ },
+ {
+  "name": "heart-with-ribbon",
+  "file": "1F49D.svg",
+  "en": "heart with ribbon",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " anniversary",
+   " emotion",
+   " heart",
+   " ily",
+   " kisses",
+   " love",
+   " ribbon",
+   " valentine"
+  ]
+ },
+ {
+  "name": "hundred-points",
+  "file": "1F4AF.svg",
+  "en": "hundred points",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " a+",
+   " agree",
+   " clearly",
+   " definitely",
+   " excellent",
+   " faithful",
+   " fleek",
+   " full"
+  ]
+ },
+ {
+  "name": "hushed-face",
+  "file": "1F62F.svg",
+  "en": "hushed face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " face",
+   " hushed",
+   " omg",
+   " stunned",
+   " surprised",
+   " whoa",
+   " woah",
+   "epic"
+  ]
+ },
+ {
+  "name": "kiss-mark",
+  "file": "1F48B.svg",
+  "en": "kiss mark",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " emotion",
+   " heart",
+   " kiss",
+   " kissing",
+   " lips",
+   " mark",
+   " romance",
+   " sexy"
+  ]
+ },
+ {
+  "name": "kissing-face",
+  "file": "1F617.svg",
+  "en": "kissing face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " date",
+   " dating",
+   " face",
+   " flirt",
+   " ily",
+   " kiss",
+   " love",
+   " smooch"
+  ]
+ },
+ {
+  "name": "love-letter",
+  "file": "1F48C.svg",
+  "en": "love letter",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " letter",
+   " love",
+   " mail",
+   " romance",
+   " valentine",
+   "heart"
+  ]
+ },
+ {
+  "name": "nauseated-face",
+  "file": "1F922.svg",
+  "en": "nauseated face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " gross",
+   " nasty",
+   " nauseated",
+   " sick",
+   " vomit",
+   "face",
+   "green"
+  ]
+ },
+ {
+  "name": "neutral-face",
+  "file": "1F610.svg",
+  "en": "neutral face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " blank",
+   " deadpan",
+   " expressionless",
+   " face",
+   " fine",
+   " jealous",
+   " meh",
+   " neutral"
+  ]
+ },
+ {
+  "name": "revolving-hearts",
+  "file": "1F49E.svg",
+  "en": "revolving hearts",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " adorbs",
+   " anniversary",
+   " emotion",
+   " heart",
+   " hearts",
+   " revolving",
+   "143"
+  ]
+ },
+ {
+  "name": "rolling-on-the-floor-laughing",
+  "file": "1F923.svg",
+  "en": "rolling on the floor laughing",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " face",
+   " floor",
+   " funny",
+   " haha",
+   " happy",
+   " hehe",
+   " hilarious",
+   " joy"
+  ]
+ },
+ {
+  "name": "slightly-frowning-face",
+  "file": "1F641.svg",
+  "en": "slightly frowning face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " frown",
+   " frowning",
+   " sad",
+   " slightly",
+   "face"
+  ]
+ },
+ {
+  "name": "slightly-smiling-face",
+  "file": "1F642.svg",
+  "en": "slightly smiling face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " happy",
+   " slightly",
+   " smile",
+   " smiling",
+   "face",
+   "satisfied"
+  ]
+ },
+ {
+  "name": "smiling-face-with-heart-eyes",
+  "file": "1F60D.svg",
+  "en": "smiling face with heart-eyes",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " bae",
+   " eye",
+   " face",
+   " feels",
+   " happy",
+   " heart-eyes",
+   " hearts",
+   " ily"
+  ]
+ },
+ {
+  "name": "smiling-face-with-hearts",
+  "file": "1F970.svg",
+  "en": "smiling face with hearts",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " adore",
+   " crush",
+   " face",
+   " heart",
+   " hearts",
+   " ily",
+   " love",
+   " romance"
+  ]
+ },
+ {
+  "name": "smiling-face-with-horns",
+  "file": "1F608.svg",
+  "en": "smiling face with horns",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " devil",
+   " evil",
+   " face",
+   " fairy",
+   " fairytale",
+   " fantasy",
+   " horns",
+   " purple"
+  ]
+ },
+ {
+  "name": "sparkling-heart",
+  "file": "1F496.svg",
+  "en": "sparkling heart",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " emotion",
+   " excited",
+   " good",
+   " heart",
+   " ily",
+   " inlove",
+   " kisses",
+   " morning"
+  ]
+ },
+ {
+  "name": "sweat-droplets",
+  "file": "1F4A6.svg",
+  "en": "sweat droplets",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " drip",
+   " droplet",
+   " droplets",
+   " drops",
+   " splashing",
+   " squirt",
+   " sweat",
+   " water"
+  ]
+ },
+ {
+  "name": "two-hearts",
+  "file": "1F495.svg",
+  "en": "two hearts",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " anniversary",
+   " date",
+   " dating",
+   " emotion",
+   " heart",
+   " hearts",
+   " ily",
+   " kisses"
+  ]
+ },
+ {
+  "name": "upside-down-face",
+  "file": "1F643.svg",
+  "en": "upside-down face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " hehe",
+   " smile",
+   " upside-down",
+   "face",
+   "turn"
+  ]
+ },
+ {
+  "name": "worried-face",
+  "file": "1F61F.svg",
+  "en": "worried face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " butterflies",
+   " face",
+   " nerves",
+   " nervous",
+   " sad",
+   " stress",
+   " stressed",
+   " surprised"
+  ]
+ },
+ {
+  "name": "zipper-mouth-face",
+  "file": "1F910.svg",
+  "en": "zipper-mouth face",
+  "topics": [
+   "مشاعر"
+  ],
+  "tags": [
+   " keep",
+   " mouth",
+   " quiet",
+   " secret",
+   " shut",
+   " zip",
+   " zipper",
+   " zipper-mouth"
+  ]
+ },
+ {
+  "name": "balloon",
+  "file": "1F388.svg",
+  "en": "balloon",
+  "topics": [
+   "مناسبات"
+  ],
+  "tags": [
+   " birthday",
+   " celebrate",
+   " celebration",
+   " decoration",
+   " party",
+   "balloon",
+   "birthday"
+  ]
+ },
+ {
+  "name": "christmas-tree",
+  "file": "1F384.svg",
+  "en": "Christmas tree",
+  "topics": [
+   "مناسبات"
+  ],
+  "tags": [
+   " christmas",
+   " tree",
+   " xmas",
+   "celebration"
+  ]
+ },
+ {
+  "name": "confetti-ball",
+  "file": "1F38A.svg",
+  "en": "confetti ball",
+  "topics": [
+   "مناسبات"
+  ],
+  "tags": [
+   " celebrate",
+   " celebration",
+   " confetti",
+   " happy",
+   " party",
+   " woohoo",
+   "ball",
+   "decoration"
+  ]
+ },
+ {
+  "name": "firecracker",
+  "file": "1F9E8.svg",
+  "en": "firecracker",
+  "topics": [
+   "مناسبات"
+  ],
+  "tags": [
+   " explosive",
+   " fire",
+   " fireworks",
+   " light",
+   " pop",
+   " popping",
+   " spark",
+   "dynamite"
+  ]
+ },
+ {
+  "name": "fireworks",
+  "file": "1F386.svg",
+  "en": "fireworks",
+  "topics": [
+   "مناسبات"
+  ],
+  "tags": [
+   " celebration",
+   " entertainment",
+   " yolo",
+   "boom"
+  ]
+ },
+ {
+  "name": "jack-o-lantern",
+  "file": "1F383.svg",
+  "en": "jack-o-lantern",
+  "topics": [
+   "مناسبات"
+  ],
+  "tags": [
+   " halloween",
+   " jack",
+   " lantern",
+   " pumpkin",
+   "celebration",
+   "pumpkin"
+  ]
+ },
+ {
+  "name": "party-popper",
+  "file": "1F389.svg",
+  "en": "party popper",
+  "topics": [
+   "مناسبات"
+  ],
+  "tags": [
+   " birthday",
+   " celebrate",
+   " celebration",
+   " excited",
+   " happy",
+   " hooray",
+   " party",
+   " popper"
+  ]
+ },
+ {
+  "name": "sparkler",
+  "file": "1F387.svg",
+  "en": "sparkler",
+  "topics": [
+   "مناسبات"
+  ],
+  "tags": [
+   " celebration",
+   " fireworks",
+   " sparkle",
+   "boom"
+  ]
+ },
+ {
+  "name": "tanabata-tree",
+  "file": "1F38B.svg",
+  "en": "tanabata tree",
+  "topics": [
+   "مناسبات"
+  ],
+  "tags": [
+   " celebration",
+   " japanese",
+   " tanabata",
+   " tree",
+   "banner"
+  ]
+ },
+ {
+  "name": "bed",
+  "file": "1F6CF.svg",
+  "en": "bed",
+  "topics": [
+   "منزل"
+  ],
+  "tags": [
+   " sleep",
+   "furniture",
+   "hotel"
+  ]
+ },
+ {
+  "name": "chair",
+  "file": "1FA91.svg",
+  "en": "chair",
+  "topics": [
+   "منزل"
+  ],
+  "tags": [
+   " sit",
+   "seat"
+  ]
+ },
+ {
+  "name": "couch-and-lamp",
+  "file": "1F6CB.svg",
+  "en": "couch and lamp",
+  "topics": [
+   "منزل"
+  ],
+  "tags": [
+   " hotel",
+   " lamp",
+   "couch",
+   "furniture"
+  ]
+ },
+ {
+  "name": "door",
+  "file": "1F6AA.svg",
+  "en": "door",
+  "topics": [
+   "منزل"
+  ],
+  "tags": [
+   " closet",
+   " front",
+   "back"
+  ]
+ },
+ {
+  "name": "elevator",
+  "file": "1F6D7.svg",
+  "en": "elevator",
+  "topics": [
+   "منزل"
+  ],
+  "tags": [
+   " hoist",
+   " lift",
+   "accessibility"
+  ]
+ },
+ {
+  "name": "mirror",
+  "file": "1FA9E.svg",
+  "en": "mirror",
+  "topics": [
+   "منزل"
+  ],
+  "tags": [
+   " reflection",
+   " reflector",
+   " speculum",
+   "makeup"
+  ]
+ },
+ {
+  "name": "toilet",
+  "file": "1F6BD.svg",
+  "en": "toilet",
+  "topics": [
+   "منزل"
+  ],
+  "tags": [
+   "bathroom"
+  ]
+ },
+ {
+  "name": "window",
+  "file": "1FA9F.svg",
+  "en": "window",
+  "topics": [
+   "منزل"
+  ],
+  "tags": [
+   " frame",
+   " fresh",
+   " opening",
+   " transparent",
+   " view",
+   "air"
+  ]
+ },
+ {
+  "name": "aerial-tramway",
+  "file": "1F6A1.svg",
+  "en": "aerial tramway",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " cable",
+   " car",
+   " gondola",
+   " ropeway",
+   " tramway",
+   "aerial"
+  ]
+ },
+ {
+  "name": "airplane",
+  "file": "2708.svg",
+  "en": "airplane",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " aeroplane",
+   " air",
+   " airplane",
+   " arrive",
+   " departure",
+   " fly",
+   " flying",
+   " jet"
+  ]
+ },
+ {
+  "name": "airplane-arrival",
+  "file": "1F6EC.svg",
+  "en": "airplane arrival",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " aeroplane",
+   " air",
+   " airplane",
+   " arrival",
+   " arrivals",
+   " arrive",
+   " arriving",
+   " landing"
+  ]
+ },
+ {
+  "name": "airplane-departure",
+  "file": "1F6EB.svg",
+  "en": "airplane departure",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " aeroplane",
+   " air",
+   " airplane",
+   " check-in",
+   " departure",
+   " departures",
+   " plane",
+   " sky"
+  ]
+ },
+ {
+  "name": "ambulance",
+  "file": "1F691.svg",
+  "en": "ambulance",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " alarm",
+   " ambulance",
+   " doctor",
+   " help",
+   " hospital",
+   " vehicle",
+   "emergency",
+   "travel"
+  ]
+ },
+ {
+  "name": "anchor",
+  "file": "2693.svg",
+  "en": "anchor",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " anchor",
+   " atlantic",
+   " metal",
+   " ocean",
+   " sea",
+   " ship",
+   " tool",
+   " travel"
+  ]
+ },
+ {
+  "name": "bullet-train",
+  "file": "1F685.svg",
+  "en": "bullet train",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " high-speed",
+   " locomotive",
+   " nose",
+   " railway",
+   " railway car",
+   " shinkansen",
+   " speed",
+   " train"
+  ]
+ },
+ {
+  "name": "bus",
+  "file": "1F68C.svg",
+  "en": "bus",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " transportation",
+   " travel",
+   " vehicle",
+   "bus",
+   "school"
+  ]
+ },
+ {
+  "name": "canoe",
+  "file": "1F6F6.svg",
+  "en": "canoe",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   "boat"
+  ]
+ },
+ {
+  "name": "ferry",
+  "file": "26F4.svg",
+  "en": "ferry",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " passenger",
+   "boat"
+  ]
+ },
+ {
+  "name": "fire-engine",
+  "file": "1F692.svg",
+  "en": "fire engine",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " alarm",
+   " fire",
+   " fire engine",
+   " red",
+   " truck",
+   "engine",
+   "travel"
+  ]
+ },
+ {
+  "name": "helicopter",
+  "file": "1F681.svg",
+  "en": "helicopter",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " air",
+   " fly",
+   " flying",
+   " roflcopter",
+   " sky",
+   " transportation",
+   " travel",
+   " vehicle"
+  ]
+ },
+ {
+  "name": "high-speed-train",
+  "file": "1F684.svg",
+  "en": "high-speed train",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " railway",
+   " shinkansen",
+   " speed",
+   " train",
+   "high-speed"
+  ]
+ },
+ {
+  "name": "light-rail",
+  "file": "1F688.svg",
+  "en": "light rail",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " light",
+   " monorail",
+   " rail",
+   " railway",
+   "arrived"
+  ]
+ },
+ {
+  "name": "locomotive",
+  "file": "1F682.svg",
+  "en": "locomotive",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " drive",
+   " engine",
+   " locomotive",
+   " railway",
+   " steam",
+   " train",
+   " trains",
+   " travel"
+  ]
+ },
+ {
+  "name": "metro",
+  "file": "1F687.svg",
+  "en": "metro",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " travel",
+   "subway"
+  ]
+ },
+ {
+  "name": "minibus",
+  "file": "1F690.svg",
+  "en": "minibus",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " car",
+   " drive",
+   " transportation",
+   " travel",
+   " van",
+   " vehicle",
+   "bus"
+  ]
+ },
+ {
+  "name": "monorail",
+  "file": "1F69D.svg",
+  "en": "monorail",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " locomotive",
+   " monorail",
+   " transportation",
+   " travel",
+   "train",
+   "vehicle"
+  ]
+ },
+ {
+  "name": "motor-boat",
+  "file": "1F6E5.svg",
+  "en": "motor boat",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " atlantic",
+   " motor",
+   " motorboat",
+   " ocean",
+   " passengers",
+   " sea",
+   " ship",
+   " travel"
+  ]
+ },
+ {
+  "name": "mountain-cableway",
+  "file": "1F6A0.svg",
+  "en": "mountain cableway",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " cableway",
+   " gondola",
+   " high",
+   " lift",
+   " mountain",
+   " ski",
+   "cable",
+   "travel"
+  ]
+ },
+ {
+  "name": "mountain-railway",
+  "file": "1F69E.svg",
+  "en": "mountain railway",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " mountain",
+   " railway",
+   " trip",
+   "car"
+  ]
+ },
+ {
+  "name": "oncoming-bus",
+  "file": "1F68D.svg",
+  "en": "oncoming bus",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " cars",
+   " oncoming",
+   "bus"
+  ]
+ },
+ {
+  "name": "oncoming-police-car",
+  "file": "1F694.svg",
+  "en": "oncoming police car",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " oncoming",
+   " police",
+   "car"
+  ]
+ },
+ {
+  "name": "oncoming-taxi",
+  "file": "1F696.svg",
+  "en": "oncoming taxi",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " cabbie",
+   " cars",
+   " drove",
+   " hail",
+   " oncoming",
+   " taxi",
+   " yellow",
+   "cab"
+  ]
+ },
+ {
+  "name": "parachute",
+  "file": "1FA82.svg",
+  "en": "parachute",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " parasail",
+   " skydive",
+   "hang-glide"
+  ]
+ },
+ {
+  "name": "passenger-ship",
+  "file": "1F6F3.svg",
+  "en": "passenger ship",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " atlantic",
+   " ocean",
+   " passengers",
+   " sea",
+   " ship",
+   " travel",
+   " water",
+   "boat"
+  ]
+ },
+ {
+  "name": "police-car",
+  "file": "1F693.svg",
+  "en": "police car",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " car",
+   " cops",
+   " patrol",
+   " police",
+   "5–0",
+   "travel"
+  ]
+ },
+ {
+  "name": "railway-car",
+  "file": "1F683.svg",
+  "en": "railway car",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " electric",
+   " locomotive",
+   " railway",
+   " railway car",
+   " train",
+   " tram",
+   " travel",
+   " trolleybus"
+  ]
+ },
+ {
+  "name": "ring-buoy",
+  "file": "1F6DF.svg",
+  "en": "ring buoy",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " float",
+   " life",
+   " lifesaver",
+   " preserver",
+   " rescue",
+   " ring",
+   " safety",
+   " save"
+  ]
+ },
+ {
+  "name": "sailboat",
+  "file": "26F5.svg",
+  "en": "sailboat",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " atlantic",
+   " ocean",
+   " passengers",
+   " resort",
+   " sail",
+   " sailboat",
+   " sailing",
+   " sea"
+  ]
+ },
+ {
+  "name": "seat",
+  "file": "1F4BA.svg",
+  "en": "seat",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " airplane",
+   " chair",
+   " comfort",
+   " lounge",
+   " sitting",
+   "chair",
+   "seat"
+  ]
+ },
+ {
+  "name": "small-airplane",
+  "file": "1F6E9.svg",
+  "en": "small airplane",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " aeroplane",
+   " air",
+   " airplane",
+   " plane",
+   " sky",
+   " small",
+   " travel",
+   "aeroplane"
+  ]
+ },
+ {
+  "name": "speedboat",
+  "file": "1F6A4.svg",
+  "en": "speedboat",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " atlantic",
+   " boat",
+   " lake",
+   " luxury",
+   " millionaire",
+   " ocean",
+   " passengers",
+   " sea"
+  ]
+ },
+ {
+  "name": "station",
+  "file": "1F689.svg",
+  "en": "station",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " arrives",
+   " departure",
+   " railway",
+   " station",
+   " stop",
+   " train",
+   " travel",
+   "railway"
+  ]
+ },
+ {
+  "name": "suspension-railway",
+  "file": "1F69F.svg",
+  "en": "suspension railway",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " suspension",
+   "railway"
+  ]
+ },
+ {
+  "name": "taxi",
+  "file": "1F695.svg",
+  "en": "taxi",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " cab",
+   " cabbie",
+   " car",
+   " drive",
+   " taxi",
+   " transportation",
+   " vehicle",
+   " yellow"
+  ]
+ },
+ {
+  "name": "train",
+  "file": "1F686.svg",
+  "en": "train",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " choo",
+   " railway",
+   "arrived"
+  ]
+ },
+ {
+  "name": "tram",
+  "file": "1F68A.svg",
+  "en": "tram",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   "trolleybus"
+  ]
+ },
+ {
+  "name": "tram-car",
+  "file": "1F68B.svg",
+  "en": "tram car",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " car",
+   " tram",
+   " trolley",
+   " trolleybus",
+   "bus"
+  ]
+ },
+ {
+  "name": "trolleybus",
+  "file": "1F68E.svg",
+  "en": "trolleybus",
+  "topics": [
+   "مواصلات"
+  ],
+  "tags": [
+   " tram",
+   " trolley",
+   "bus"
+  ]
+ },
+ {
+  "name": "accordion",
+  "file": "1FA97.svg",
+  "en": "accordion",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " concertina",
+   " instrument",
+   " music",
+   " squeeze",
+   " squeezebox",
+   "box"
+  ]
+ },
+ {
+  "name": "banjo",
+  "file": "1FA95.svg",
+  "en": "banjo",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " stringed",
+   "music"
+  ]
+ },
+ {
+  "name": "control-knobs",
+  "file": "1F39B.svg",
+  "en": "control knobs",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " knobs",
+   " mix",
+   " music",
+   " recording",
+   " tool",
+   "control",
+   "music"
+  ]
+ },
+ {
+  "name": "drum",
+  "file": "1F941.svg",
+  "en": "drum",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " beat",
+   " drumsticks",
+   " music",
+   "drum",
+   "drumsticks"
+  ]
+ },
+ {
+  "name": "guitar",
+  "file": "1F3B8.svg",
+  "en": "guitar",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " acoustic",
+   " chords",
+   " e-guitar",
+   " instrumental",
+   " music",
+   " strat",
+   "guitar",
+   "instrument"
+  ]
+ },
+ {
+  "name": "headphone",
+  "file": "1F3A7.svg",
+  "en": "headphone",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " headphones",
+   " sound",
+   "earbud",
+   "music"
+  ]
+ },
+ {
+  "name": "level-slider",
+  "file": "1F39A.svg",
+  "en": "level slider",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " music",
+   " music slider",
+   " slider",
+   "level",
+   "studio"
+  ]
+ },
+ {
+  "name": "long-drum",
+  "file": "1FA98.svg",
+  "en": "long drum",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " conga",
+   " drum",
+   " instrument",
+   " long",
+   " rhythm",
+   "beat"
+  ]
+ },
+ {
+  "name": "loudspeaker",
+  "file": "1F4E2.svg",
+  "en": "loudspeaker",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " communication",
+   " loud",
+   " public",
+   " sound",
+   "address",
+   "sound"
+  ]
+ },
+ {
+  "name": "microphone",
+  "file": "1F3A4.svg",
+  "en": "microphone",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " karaoke",
+   " loud",
+   " mic",
+   " microphone",
+   " music",
+   " sing",
+   " singing",
+   " sound"
+  ]
+ },
+ {
+  "name": "musical-keyboard",
+  "file": "1F3B9.svg",
+  "en": "musical keyboard",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " chords",
+   " keyboard",
+   " music",
+   " musical",
+   " piano",
+   " piano keys",
+   "instrument",
+   "keyboard"
+  ]
+ },
+ {
+  "name": "musical-note",
+  "file": "1F3B5.svg",
+  "en": "musical note",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " melody",
+   " musical",
+   " note",
+   " sound",
+   " sounds",
+   " tone",
+   "music",
+   "song"
+  ]
+ },
+ {
+  "name": "musical-notes",
+  "file": "1F3B6.svg",
+  "en": "musical notes",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " harmony",
+   " musical",
+   " note",
+   " notes",
+   " rhythm",
+   " sound",
+   " sounds",
+   "melody"
+  ]
+ },
+ {
+  "name": "musical-score",
+  "file": "1F3BC.svg",
+  "en": "musical score",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " musical",
+   " note",
+   " rhythm",
+   " score",
+   "music",
+   "violin key"
+  ]
+ },
+ {
+  "name": "muted-speaker",
+  "file": "1F507.svg",
+  "en": "muted speaker",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " muted",
+   " quiet",
+   " silent",
+   " sound",
+   " speaker",
+   "mute"
+  ]
+ },
+ {
+  "name": "saxophone",
+  "file": "1F3B7.svg",
+  "en": "saxophone",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " instrument",
+   " jazz",
+   " music",
+   " sax",
+   "instrument",
+   "saxophone"
+  ]
+ },
+ {
+  "name": "speaker-high-volume",
+  "file": "1F50A.svg",
+  "en": "speaker high volume",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " loud",
+   " music",
+   " sound",
+   " speaker",
+   " volume",
+   "high",
+   "sound"
+  ]
+ },
+ {
+  "name": "speaker-low-volume",
+  "file": "1F508.svg",
+  "en": "speaker low volume",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " soft",
+   " sound",
+   " speaker",
+   " volume",
+   "low",
+   "sound"
+  ]
+ },
+ {
+  "name": "speaker-medium-volume",
+  "file": "1F509.svg",
+  "en": "speaker medium volume",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " sound",
+   " speaker",
+   " volume",
+   "medium"
+  ]
+ },
+ {
+  "name": "studio-microphone",
+  "file": "1F399.svg",
+  "en": "studio microphone",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " microphone",
+   " music",
+   " recording",
+   " stereo",
+   " studio",
+   "mic",
+   "studio"
+  ]
+ },
+ {
+  "name": "trombone",
+  "file": "1FA8A.svg",
+  "en": "trombone",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " instrument",
+   " jazz",
+   " music",
+   " sad",
+   " slide",
+   "brass"
+  ]
+ },
+ {
+  "name": "trumpet",
+  "file": "1F3BA.svg",
+  "en": "trumpet",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " horns",
+   " music",
+   " woodwind instrument",
+   "instrument",
+   "trumpet"
+  ]
+ },
+ {
+  "name": "violin",
+  "file": "1F3BB.svg",
+  "en": "violin",
+  "topics": [
+   "موسيقى"
+  ],
+  "tags": [
+   " bow",
+   " fiddle",
+   " music",
+   " violin",
+   "instrument",
+   "string"
+  ]
+ },
+ {
+  "name": "alarm-clock",
+  "file": "23F0.svg",
+  "en": "alarm clock",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " clock",
+   " hours",
+   " hrs",
+   " late",
+   " time",
+   " waiting",
+   "alarm",
+   "watch"
+  ]
+ },
+ {
+  "name": "hourglass-done",
+  "file": "231B.svg",
+  "en": "hourglass done",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " hourglass",
+   " sand",
+   " time",
+   " timer",
+   "countdown",
+   "done"
+  ]
+ },
+ {
+  "name": "hourglass-not-done",
+  "file": "23F3.svg",
+  "en": "hourglass not done",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " flowing",
+   " hourglass",
+   " hours",
+   " not",
+   " sand",
+   " timer",
+   " waiting",
+   " yolo"
+  ]
+ },
+ {
+  "name": "mantelpiece-clock",
+  "file": "1F570.svg",
+  "en": "mantelpiece clock",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " mantelpiece",
+   " time",
+   "clock"
+  ]
+ },
+ {
+  "name": "one-o-clock",
+  "file": "1F550.svg",
+  "en": "one o’clock",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " 1:00",
+   " clock",
+   " one",
+   " o’clock",
+   " time",
+   "1",
+   "time"
+  ]
+ },
+ {
+  "name": "one-thirty",
+  "file": "1F55C.svg",
+  "en": "one-thirty",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " 1:30",
+   " 30",
+   " clock",
+   " one",
+   " thirty",
+   " time",
+   "1",
+   "time"
+  ]
+ },
+ {
+  "name": "stopwatch",
+  "file": "23F1.svg",
+  "en": "stopwatch",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " time",
+   "clock"
+  ]
+ },
+ {
+  "name": "timer-clock",
+  "file": "23F2.svg",
+  "en": "timer clock",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " timer",
+   "clock",
+   "time"
+  ]
+ },
+ {
+  "name": "twelve-o-clock",
+  "file": "1F55B.svg",
+  "en": "twelve o’clock",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " 12:00",
+   " clock",
+   " o’clock",
+   " time",
+   " twelve",
+   "12",
+   "time"
+  ]
+ },
+ {
+  "name": "twelve-thirty",
+  "file": "1F567.svg",
+  "en": "twelve-thirty",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " 12:30",
+   " 30",
+   " clock",
+   " thirty",
+   " time",
+   " twelve",
+   "12",
+   "time"
+  ]
+ },
+ {
+  "name": "two-o-clock",
+  "file": "1F551.svg",
+  "en": "two o’clock",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " 2:00",
+   " clock",
+   " o’clock",
+   " time",
+   " two",
+   "2",
+   "time"
+  ]
+ },
+ {
+  "name": "watch",
+  "file": "231A.svg",
+  "en": "watch",
+  "topics": [
+   "وقت"
+  ],
+  "tags": [
+   " time",
+   "clock",
+   "watch"
+  ]
+ }
+]

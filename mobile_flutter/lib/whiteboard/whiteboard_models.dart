@@ -1,6 +1,13 @@
 /// Whiteboard lesson models — native port of the web lesson schema
 /// (src/lib/whiteboard/lessonSchema.ts). Keep field names identical to the
 /// worker's JSON so the same lessons render on web and native.
+class IconLabel {
+  const IconLabel({required this.anchor, required this.text, this.teaser = false});
+  final String anchor;
+  final String text;
+  final bool teaser;
+}
+
 class WhiteboardNode {
   WhiteboardNode({
     required this.id,
@@ -19,6 +26,7 @@ class WhiteboardNode {
     this.text,
     this.fontSize,
     this.align,
+    this.labels,
   });
 
   final String id;
@@ -37,6 +45,7 @@ class WhiteboardNode {
   final String? text;
   final double? fontSize;
   final String? align;
+  final List<IconLabel>? labels;
 
   static double _num(dynamic v, [double fallback = 0]) =>
       v is num ? v.toDouble() : double.tryParse('$v') ?? fallback;
@@ -58,6 +67,10 @@ class WhiteboardNode {
         text: j['text'] as String?,
         fontSize: j['fontSize'] == null ? null : _num(j['fontSize']),
         align: j['align'] as String?,
+        labels: ((j['labels'] as List?) ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map((l) => IconLabel(anchor: '${l['anchor'] ?? ''}', text: '${l['text'] ?? ''}', teaser: l['teaser'] == true))
+            .toList(),
       );
 }
 
