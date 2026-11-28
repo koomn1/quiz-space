@@ -433,6 +433,8 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     if (e.key === ' ' || e.key === 'k') { e.preventDefault(); togglePlay(); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); goTo(stepIndex + (isAr ? -1 : 1)); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(stepIndex + (isAr ? 1 : -1)); }
+    else if (e.key === 'm') { e.preventDefault(); setMuted(mv => !mv); }
+    else if (e.key === 'c') { e.preventDefault(); setCaptions(cv => !cv); }
     else if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomCenter(1.25); }
     else if (e.key === '-') { e.preventDefault(); zoomCenter(0.8); }
     else if (e.key === '0') { e.preventDefault(); resetView(); }
@@ -444,8 +446,8 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     setPlaying(false); stopSpeech(); spokenStepRef.current = null;
   };
 
-  const ask = async () => {
-    const q = question.trim();
+  const ask = async (preset?: string) => {
+    const q = (preset ?? question).trim();
     if (!onAsk || q.length < 2 || asking) return;
     pauseForQuestion();
     setAsking(true); setAskError(null);
@@ -718,12 +720,23 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
         </div>
       )}
       {onAsk && (
-        <div className="space-y-1" data-testid="whiteboard-ask">
+        <div className="space-y-1.5" data-testid="whiteboard-ask">
+          <div className="flex flex-wrap gap-1.5" data-testid="quick-questions">
+            {(isAr
+              ? [['أعد الشرح ببساطة', 'أعد شرح هذه الخطوة بطريقة أبسط'], ['مثال آخر', 'أعطني مثالًا آخر على هذه الخطوة'], ['لخّصها', 'لخص هذه الخطوة في نقاط سريعة']]
+              : [['Explain simpler', 'Explain this step more simply'], ['Another example', 'Give me another example for this step'], ['Summarize', 'Summarize this step in quick points']]
+            ).map(([label, q]) => (
+              <button key={label} type="button" onClick={() => void ask(q)} disabled={asking}
+                className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-[11px] font-black text-slate-600 dark:text-slate-300 hover:border-primary hover:text-primary disabled:opacity-40">
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-2">
             <input value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); void ask(); } }} maxLength={500}
               placeholder={isAr ? 'عندك سؤال؟ اكتبه وسأتوقف وأشرحه على نفس السبورة' : 'Have a question? Type it and I will pause and explain on this board'}
               className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs" aria-label={isAr ? 'سؤال أثناء الدرس' : 'Question during the lesson'} />
-            <button type="button" onClick={() => void ask()} disabled={asking || question.trim().length < 2} className="inline-flex items-center gap-1.5 bg-primary text-white font-black text-xs px-3 py-2.5 rounded-xl disabled:opacity-50">
+            <button type="button" onClick={() => void ask()} disabled={asking || question.trim().length < 2} aria-label={isAr ? 'أرسل السؤال' : 'Send question'} className="inline-flex items-center gap-1.5 bg-primary text-white font-black text-xs px-3 py-2.5 rounded-xl disabled:opacity-50">
               {asking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}{isAr ? 'اسأل' : 'Ask'}
             </button>
           </div>
