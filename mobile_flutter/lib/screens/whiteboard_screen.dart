@@ -2,7 +2,9 @@
 /// drawn step by step with the explanation typed on the board. The Flutter port
 /// of the web whiteboard player (no webview).
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../whiteboard/whiteboard_models.dart';
@@ -29,15 +31,51 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
   Timer? _ticker;
   DateTime _tickStarted = DateTime.now();
 
+  // Teacher voice (Munsit via the worker); silent reading when unavailable.
+  final AudioPlayer _player = AudioPlayer();
+  final Map<int, double> _audioMs = {};
+  int _ttsCharsUsed = 0;
+  static const _ttsCharBudget = 2000;
+  int _ttsToken = 0;
+
   @override
   void dispose() {
     _ticker?.cancel();
+    _player.dispose();
     _topicCtrl.dispose();
     super.dispose();
   }
 
   LessonStep get _step => _lesson!.steps[_stepIndex];
-  double get _duration => stepDurationMs(_step, 1);
+  double get _duration {
+    final estimate = stepDurationMs(_step, 1);
+    final audio = _audioMs[_stepIndex];
+    return audio != null && audio > estimate ? audio : estimate;
+  }
+
+  /// Fetch and play the teacher clip for the step; extends the step so speech is never cut.
+  Future<void> _speakStep(int index) async {
+    final lesson = _lesson;
+    if (lesson == null) return;
+    final step = lesson.steps[index];
+    final lang = step.lang ?? lesson.lang;
+    if (lang != 'ar') return; // native v1 speaks Arabic narration only
+    final text = step.narration;
+    if (_ttsCharsUsed + text.length > _ttsCharBudget) return;
+    _ttsCharsUsed += text.length;
+    final token = ++_ttsToken;
+    final bytes = await WhiteboardService.fetchTts(text, voice: index.isEven ? 'boy' : 'girl');
+    if (!mounted || bytes == null || token != _ttsToken) return;
+    try {
+      await _player.stop();
+      await _player.setSource(BytesSource(Uint8List.fromList(bytes)));
+      final d = await _player.getDuration();
+      if (d != null && mounted) setState(() => _audioMs[index] = d.inMilliseconds.toDouble());
+      if (mounted && _playing && token == _ttsToken) await _player.resume();
+    } catch (_) {
+      // Silent board reading remains the fallback.
+    }
+  }
 
   List<LessonStep> get _carried {
     final out = <LessonStep>[];
@@ -62,6 +100,8 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
         _stepIndex = 0;
         _tInStep = 0;
         _playing = false;
+        _audioMs.clear();
+        _ttsCharsUsed = 0;
       });
     } catch (e) {
       if (!mounted) return;
@@ -73,7 +113,12 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
 
   void _setPlaying(bool play) {
     _ticker?.cancel();
+    if (!play) {
+      _ttsToken++;
+      _player.pause();
+    }
     if (play) {
+      _speakStep(_stepIndex);
       _tickStarted = DateTime.now();
       _ticker = Timer.periodic(const Duration(milliseconds: 50), (_) {
         final elapsed = DateTime.now().difference(_tickStarted).inMilliseconds.toDouble();
@@ -84,6 +129,7 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
             if (_stepIndex < _lesson!.steps.length - 1) {
               _stepIndex += 1;
               _tInStep = 0;
+              _speakStep(_stepIndex);
             } else {
               _tInStep = _duration;
               _setPlaying(false);
@@ -98,6 +144,8 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
   void _goTo(int index) {
     if (_lesson == null) return;
     _ticker?.cancel();
+    _ttsToken++;
+    _player.stop();
     setState(() {
       _stepIndex = index.clamp(0, _lesson!.steps.length - 1);
       _tInStep = _duration; // paused steps render fully drawn, like the web player
@@ -212,7 +260,7 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                 onChanged: (v) => _goTo(v.round()),
               ),
               Text(
-                'الخطوة ${_stepIndex + 1} / ${lesson.steps.length} — الصوت (Munsit) والأسئلة الذكية على السبورة تأتي في النسخة الأصلية التالية؛ حاليًا القراءة من الشريط.',
+                'الخطوة ${_stepIndex + 1} / ${lesson.steps.length} — الصوت بمعلّم Munsit عند توفر الرصيد؛ الأسئلة الذكية على السبورة تصل في النسخة التالية.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 11, color: Colors.grey),
               ),

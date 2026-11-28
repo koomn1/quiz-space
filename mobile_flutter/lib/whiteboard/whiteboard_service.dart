@@ -51,4 +51,29 @@ class WhiteboardService {
       client.close();
     }
   }
+
+  /// Teacher narration clip (Munsit WAV) for one step. Null on any failure —
+  /// the lesson then plays silent with the on-board explanation, same as web.
+  static Future<List<int>?> fetchTts(String text, {String voice = 'boy', double speed = 1, String provider = 'munsit'}) async {
+    if (_workerUrl.isEmpty || text.trim().length < 2) return null;
+    try {
+      final token = await _bearerToken();
+      final client = HttpClient();
+      try {
+        final request = await client.postUrl(Uri.parse('$_workerUrl/api/ai/lesson-tts'));
+        request.headers
+          ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
+          ..set(HttpHeaders.contentTypeHeader, 'application/json');
+        request.write(jsonEncode({'text': text, 'voice': voice, 'speed': speed, 'provider': provider}));
+        final response = await request.close().timeout(const Duration(seconds: 45));
+        if (response.statusCode != 200) return null;
+        final bytes = await response.fold<List<int>>(<int>[], (acc, chunk) => acc..addAll(chunk));
+        return bytes.isEmpty ? null : bytes;
+      } finally {
+        client.close();
+      }
+    } catch (_) {
+      return null;
+    }
+  }
 }
