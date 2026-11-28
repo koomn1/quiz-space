@@ -65,7 +65,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             else if (_quizzes.isEmpty)
               const _EmptyDiscover()
             else
-              ..._quizzes.map((quiz) => _DiscoverCard(quiz: quiz, onOpen: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuizSolveScreen(repository: widget.repository, quizId: quiz.id))))),
+              ..._quizzes.toList().asMap().entries.map((entry) => NativeEntrance(index: entry.key.clamp(0, 6), child: _DiscoverCard(quiz: entry.value, onOpen: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuizSolveScreen(repository: widget.repository, quizId: entry.value.id)))))),
           ],
         ),
       ),
@@ -80,7 +80,8 @@ class _DiscoverCard extends StatelessWidget {
   final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context) => NativePressable(
+        child: Card(
         color: const Color(0xFF151B31),
         margin: const EdgeInsets.only(bottom: 12),
         child: InkWell(
@@ -97,6 +98,7 @@ class _DiscoverCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
         ),
       );
 }
