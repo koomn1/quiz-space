@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { Pause, Play, Pencil, SkipBack, SkipForward, Target, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2, ZoomIn, ZoomOut, Maximize, FileDown } from 'lucide-react';
+import { Pause, Play, Pencil, SkipBack, SkipForward, Target, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2, ZoomIn, ZoomOut, Maximize, FileDown, PenLine } from 'lucide-react';
 import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
 import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
@@ -197,6 +197,38 @@ function StickerNode({ node, progress }: { node: WhiteboardNode; progress: numbe
   );
 }
 
+/** The spoken explanation, written on the board line by line as the teacher says it (diacritic-free).
+ *  Shows the last few wrapped lines of the typed prefix, with the pen at the writing position. */
+function BoardExplanation({ text, progress, rtl }: { text: string; progress: number; rtl: boolean }) {
+  const X0 = 78, W = 1124, FS = 26, LINE_H = 37, MAX_LINES = 3, TOP = 596;
+  const charW = FS * 0.52;
+  const perLine = Math.max(20, Math.floor(W / charW));
+  const chars = Math.floor(text.length * Math.min(1, Math.max(0, progress)));
+  const visible = text.slice(0, chars);
+  const words = visible.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = '';
+  for (const w of words) {
+    const t = cur ? `${cur} ${w}` : w;
+    if (t.length > perLine && cur) { lines.push(cur); cur = w; } else cur = t;
+  }
+  if (cur) lines.push(cur);
+  const shown = lines.slice(-MAX_LINES);
+  const lastLen = shown.length ? shown[shown.length - 1].length : 0;
+  const penX = rtl ? X0 + W - lastLen * charW : X0 + lastLen * charW;
+  const penY = TOP + 18 + shown.length * LINE_H;
+  return (
+    <g data-testid="board-explanation" pointerEvents="none">
+      <rect x={64} y={TOP} width={1152} height={106} rx={14} fill="#fdfcf8" opacity={0.94} stroke="#e7e5df" />
+      {shown.map((ln, i) => (
+        <text key={`${i}-${ln.length}`} x={rtl ? X0 + W : X0} y={TOP + 34 + i * LINE_H} fontSize={FS} fill="#3f3f46"
+          textAnchor={rtl ? 'end' : 'start'} direction={rtl ? 'rtl' : 'ltr'} style={{ fontFamily: 'inherit' }}>{ln}</text>
+      ))}
+      {progress > 0 && progress < 1 && shown.length > 0 && <PenTip x={penX} y={penY} color="#3f3f46" wiggle={progress} />}
+    </g>
+  );
+}
+
 export function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: number; rtl: boolean }) {
   if (progress <= 0) return null;
   const color = COLORS[node.color];
@@ -282,6 +314,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const [rate, setRate] = useState(1);
   const [muted, setMuted] = useState(false);
   const [captions, setCaptions] = useState(false);
+  const [boardNotes, setBoardNotes] = useState(true);
   const [exportingPdf, setExportingPdf] = useState(false);
   const step = lesson.steps[stepIndex];
   // Language is per step: a lesson can mix Arabic and English steps; the board direction, captions and voice follow the step.
@@ -605,6 +638,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     mute: isAr ? 'كتم الصوت' : 'Mute',
     unmute: isAr ? 'تشغيل الصوت' : 'Unmute',
     captions: isAr ? 'النص المصاحب' : 'Captions',
+    boardNotes: isAr ? 'اكتب الشرح على السبورة' : 'Write the explanation on the board',
     step: isAr ? 'الخطوة' : 'Step',
     draw: isAr ? 'ارسم على السبورة' : 'Draw on the board',
     zoomIn: isAr ? 'تكبير السبورة' : 'Zoom in',
@@ -644,6 +678,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
           <g data-testid="freehand-layer" pointerEvents="none">
             {strokes.map(st => <path key={st.id} d={pointsToPath(st.points)} fill="none" stroke={st.color} strokeWidth={st.width} strokeLinecap="round" strokeLinejoin="round" />)}
             {activeStroke.current && <path d={pointsToPath(activeStroke.current.points)} fill="none" stroke={activeStroke.current.color} strokeWidth={activeStroke.current.width} strokeLinecap="round" strokeLinejoin="round" />}
+            {boardNotes && <BoardExplanation text={stripDiacritics(step.narration)} progress={duration > 0 ? tInStep / duration : 1} rtl={isAr} />}
           </g>
           </g>
         </svg>
@@ -707,6 +742,9 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
         )}
         <button type="button" onClick={() => { setExportingPdf(true); void exportLessonPdf(lesson).finally(() => setExportingPdf(false)); }} disabled={exportingPdf} aria-label={t.exportPdf} data-testid="export-pdf" className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 disabled:opacity-40">
           {exportingPdf ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileDown className="w-4 h-4" aria-hidden="true" />}
+        </button>
+        <button type="button" onClick={() => setBoardNotes(b => !b)} aria-pressed={boardNotes} aria-label={t.boardNotes} data-testid="board-notes-toggle" className={`p-2.5 rounded-xl border ${boardNotes ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-slate-700'}`}>
+          <PenLine className="w-4 h-4" aria-hidden="true" />
         </button>
         <button type="button" onClick={() => setCaptions(c => !c)} aria-pressed={captions} aria-label={t.captions} className={`p-2.5 rounded-xl border ${captions ? 'border-primary text-primary' : 'border-slate-200 dark:border-slate-700'}`}>
           <Captions className="w-4 h-4" />
