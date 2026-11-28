@@ -7,7 +7,8 @@ String? quizIdFromLink(String rawLink) {
   if (uri == null) return null;
   final host = uri.host.toLowerCase();
   if (uri.scheme != 'https' && uri.scheme != 'quizspace') return null;
-  if (uri.scheme == 'https' && host != 'quiz-space-app.pages.dev' && host != 'quiz-space-share.pages.dev') return null;
+  const trustedHosts = {'quiz-space.live', 'www.quiz-space.live', 'quiz-space-app.pages.dev', 'quiz-space-share.pages.dev'};
+  if (uri.scheme == 'https' && !trustedHosts.contains(host)) return null;
 
   String? validQuizId(String? value) {
     final id = value?.trim() ?? '';

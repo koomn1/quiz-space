@@ -17,7 +17,7 @@ import './index.css';
 async function completeNativeAuthCallback(rawUrl: string) {
   try {
     const callbackUrl = new URL(rawUrl);
-    const trustedHosts = new Set(['quiz-space-app.pages.dev', 'quiz-space-share.pages.dev']);
+    const trustedHosts = new Set(['quiz-space.live', 'www.quiz-space.live', 'quiz-space-app.pages.dev', 'quiz-space-share.pages.dev']);
     if (trustedHosts.has(callbackUrl.hostname.toLowerCase())) {
       const hashQuiz = callbackUrl.hash.match(/^#\/?quiz\/([A-Za-z0-9_-]{1,256})/i)?.[1];
       const sharedQuiz = callbackUrl.hostname.toLowerCase() === 'quiz-space-share.pages.dev'

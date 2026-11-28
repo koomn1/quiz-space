@@ -13,7 +13,7 @@ type SeoCopy = {
   keywords: string;
 };
 
-const siteUrl = 'https://quiz-space-app.pages.dev/';
+const siteUrl = 'https://quiz-space.live/';
 const imageUrl = `${siteUrl}share-card.jpg`;
 
 const copy: Record<SeoLanguage, Record<string, SeoCopy>> = {

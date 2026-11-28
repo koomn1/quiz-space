@@ -244,13 +244,15 @@ ${customInstruction ? `Additional instructions: ${customInstruction.slice(0, 100
     },
   });
 
-  const primaryOrigin = 'https://quiz-space-app.pages.dev';
+  const primaryOrigin = 'https://quiz-space.live';
   const allowedOrigins = [
     ...env.ALLOWED_ORIGIN
       .split(',')
       .map(value => value.trim())
       .filter(value => value && !/(^|\.)github\.io(?:\/|$)/i.test(value)),
     primaryOrigin,
+    'https://www.quiz-space.live',
+    'https://quiz-space-app.pages.dev',
   ];
   const responseHeaders: HeadersInit = {
     'Content-Type': 'text/event-stream',

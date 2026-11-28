@@ -1,3 +1,5 @@
+import { isPrimaryAppHost } from './siteUrl';
+
 export interface RouteLocation {
   pathname: string;
   hash: string;
@@ -133,7 +135,7 @@ export function resolveUrlProfileId(searchParams: SearchParamsLike, loc: RouteLo
 
 export function resolveAppBasePath(pathname: string, hostname: string, viteBase: string): string {
   const host = hostname.toLowerCase();
-  if (host === 'quiz-space-app.pages.dev') {
+  if (isPrimaryAppHost(host)) {
     return '/';
   }
   if (pathname.includes('/quiz-space') || host.includes('github.io')) {

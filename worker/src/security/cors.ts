@@ -5,7 +5,7 @@ export function allowedOrigins(env: Env): string[] {
     .split(',')
     .map(value => value.trim().replace(/\/$/, ''))
     .filter(value => value && !/(^|\.)github\.io(?:\/|$)/i.test(value));
-  return [...new Set([...configured, 'https://quiz-space-app.pages.dev'])];
+  return [...new Set([...configured, 'https://quiz-space.live', 'https://www.quiz-space.live', 'https://quiz-space-app.pages.dev'])];
 }
 
 export function isAllowedOrigin(request: Request, env: Env): boolean {

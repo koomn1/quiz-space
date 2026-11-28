@@ -175,7 +175,7 @@ class _InternetRequiredGateState extends State<_InternetRequiredGate> {
     var online = false;
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
     try {
-      final request = await client.getUrl(Uri.parse('https://quiz-space-app.pages.dev/')).timeout(const Duration(seconds: 7));
+      final request = await client.getUrl(Uri.parse('https://quiz-space.live/')).timeout(const Duration(seconds: 7));
       final response = await request.close().timeout(const Duration(seconds: 7));
       await response.drain<void>();
       online = true;

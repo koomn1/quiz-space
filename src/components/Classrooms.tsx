@@ -777,7 +777,7 @@ export default function Classrooms({
       void sendPushEvent({
         title: `💬 رسالة جديدة في ${activeClassroomView.name}`,
         body: `${currentUserName}: ${text.slice(0, 140)}`,
-        url: 'https://quiz-space-app.pages.dev/#/classrooms',
+        url: 'https://quiz-space.live/#/classrooms',
         category: 'classroom',
         classId: activeClassroomView.id,
         senderId: currentUserId,
@@ -841,7 +841,7 @@ export default function Classrooms({
       void sendPushEvent({
         title: `📁 ملف جديد في ${activeClassroomView.name}`,
         body: `${currentUserName} أضاف الملف: ${file.name}`,
-        url: 'https://quiz-space-app.pages.dev/#/classrooms',
+        url: 'https://quiz-space.live/#/classrooms',
         category: 'classroom',
         classId: activeClassroomView.id,
         senderId: currentUserId,
@@ -889,7 +889,7 @@ export default function Classrooms({
       void sendPushEvent({
         title: `📝 تكليف جديد في ${activeClassroomView.name}`,
         body: `${currentUserName}: ${newAssignTitle.slice(0, 140)}`,
-        url: 'https://quiz-space-app.pages.dev/#/classrooms',
+        url: 'https://quiz-space.live/#/classrooms',
         category: 'classroom',
         classId: activeClassroomView.id,
         senderId: currentUserId,
@@ -1012,7 +1012,7 @@ export default function Classrooms({
       void sendPushEvent({
         title: `📢 إعلان جديد في ${activeClassroomView.name}`,
         body: annContent.slice(0, 160),
-        url: 'https://quiz-space-app.pages.dev/#/classrooms',
+        url: 'https://quiz-space.live/#/classrooms',
         category: 'classroom',
         classId: activeClassroomView.id,
         senderId: currentUserId,

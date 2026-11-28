@@ -11,22 +11,22 @@ const playwrightConfig = read('playwright.config.ts');
 const qaConfig = read('qa/playwright.qa.config.ts');
 
 const legacyAppUrl = 'https://koomn1.github.io/quiz-space/';
-const primaryAppUrl = 'https://quiz-space-app.pages.dev/';
+const primaryAppUrl = 'https://quiz-space.live/';
 
 describe('primary deployment redirect contract', () => {
   it('redirects legacy GitHub Pages app traffic to the primary app while preserving route data', () => {
     expect(indexHtml).toContain("if (!/(^|\\.)github\\.io$/i.test(hostname)) return;");
-    expect(indexHtml).toContain("var target = 'https://quiz-space-app.pages.dev'");
+    expect(indexHtml).toContain("var target = 'https://quiz-space.live'");
     expect(indexHtml).toContain('window.location.search + window.location.hash');
     expect(notFoundHtml).toContain("if (!/(^|\\.)github\\.io$/i.test(location.hostname)) return;");
-    expect(notFoundHtml).toContain("var target = 'https://quiz-space-app.pages.dev'");
+    expect(notFoundHtml).toContain("var target = 'https://quiz-space.live'");
   });
 
   it('does not allow the share worker to preserve the legacy app base', () => {
-    expect(shareWorker).toContain("return /^https:\\/\\/quiz-space-app\\.pages\\.dev(?:\\/)?$/i.test(value);");
+    expect(shareWorker).toContain("quiz-space\\.live");
     expect(shareWorker).not.toContain(legacyAppUrl);
     expect(shareWorker).toContain('for (const key of [\'quiz\', \'title\', \'challenge\'])');
-    expect(shareWorker).toContain("const APP_FALLBACK = 'https://quiz-space-app.pages.dev';");
+    expect(shareWorker).toContain("const APP_FALLBACK = 'https://quiz-space.live';");
   });
 
   it('points routine E2E verification at pages.dev', () => {

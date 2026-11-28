@@ -71,7 +71,7 @@ export default function IOS27Header({
           <button type="button" onClick={toggleSidebar} aria-expanded={isSidebarOpen} aria-controls="quizspace-primary-sidebar" aria-label={label(isSidebarOpen ? 'إغلاق القائمة' : 'فتح القائمة', isSidebarOpen ? 'Close navigation' : 'Open navigation')} className="quizspace-header-icon shrink-0">
             {isSidebarOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
           </button>
-          <button type="button" onClick={() => setTab('landing')} aria-label={label('العودة للرئيسية', 'Go to home')} className="quizspace-header-logo min-w-0 flex-1 justify-center sm:justify-start">
+          <button type="button" onClick={() => setTab('landing')} aria-label={label('العودة للرئيسية', 'Go to home')} className="quizspace-header-logo min-w-0 flex-1 justify-start">
             <MainLogo size="sm" showText />
           </button>
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">

@@ -1,4 +1,4 @@
-const APP_FALLBACK = 'https://quiz-space-app.pages.dev';
+const APP_FALLBACK = 'https://quiz-space.live';
 const SHARE_ORIGIN = 'https://quiz-space-share.pages.dev';
 const SHARE_PATHS = new Set(['/share/quiz', '/share/quiz/']);
 
@@ -12,7 +12,7 @@ function escapeHtml(value) {
 }
 
 function isAllowedAppBase(value) {
-  return /^https:\/\/quiz-space-app\.pages\.dev(?:\/)?$/i.test(value);
+  return /^https:\/\/(?:www\.)?quiz-space\.live(?:\/)?$|^https:\/\/quiz-space-app\.pages\.dev(?:\/)?$/i.test(value);
 }
 
 function getAppBase(url) {
