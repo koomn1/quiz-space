@@ -92,6 +92,15 @@ import { stickerSet } from './stickers';
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+/**
+ * Arabic diacritics (tashkeel) + tatweel. The worker writes narration fully diacritized so the
+ * Munsit teacher voice pronounces it well, but every piece of text drawn on the board,
+ * shown in a caption, or read by the browser voice must be free of diacritics.
+ */
+const DIACRITICS_RE = /[\u0640\u064B-\u0652\u0670]/g;
+export const stripDiacritics = (text: string) => text.replace(DIACRITICS_RE, '');
+const cleanBoardText = (v: unknown, max: number) => stripDiacritics(cleanText(v, max));
+
 const cleanText = (v: unknown, max: number) =>
   typeof v === 'string' ? v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, max) : '';
 
@@ -107,7 +116,7 @@ export function validateLesson(input: unknown): ValidationResult {
   if (!isRecord(input)) return { ok: false, errors: ['Lesson must be an object.'], warnings };
 
   if (input.schema_version !== LESSON_SCHEMA_VERSION) errors.push(`Unsupported schema_version (expected ${LESSON_SCHEMA_VERSION}).`);
-  const title = cleanText(input.title, LIMITS.maxTitleLength);
+  const title = cleanBoardText(input.title, LIMITS.maxTitleLength);
   if (!title) errors.push('Lesson title is required.');
   const lang = input.lang === 'en' ? 'en' : input.lang === 'ar' ? 'ar' : null;
   if (!lang) errors.push('lang must be "ar" or "en".');
@@ -187,7 +196,7 @@ export function validateLesson(input: unknown): ValidationResult {
           if (!isRecord(rawLabel)) return;
           const anchor = typeof rawLabel.anchor === 'string' ? rawLabel.anchor : '';
           if (!anchors[anchor]) { errors.push(`${nw}, label ${li + 1}: unknown anchor "${anchor}" (has: ${Object.keys(anchors).join(', ')}).`); return; }
-          const text = cleanText(rawLabel.text, MAX_ICON_LABEL_LENGTH);
+          const text = cleanBoardText(rawLabel.text, MAX_ICON_LABEL_LENGTH);
           if (!text) { errors.push(`${nw}, label ${li + 1}: text is required.`); return; }
           node.labels!.push({ anchor, text, ...(rawLabel.teaser === true ? { teaser: true } : {}) });
         });
@@ -201,7 +210,7 @@ export function validateLesson(input: unknown): ValidationResult {
         node.h = clamp(rawNode.h, 24, Math.min(400, CANVAS_HEIGHT - node.y));
       }
       if (type === 'text' || type === 'rectangle' || type === 'ellipse') {
-        const text = cleanText(rawNode.text, LIMITS.maxTextLength);
+        const text = cleanBoardText(rawNode.text, LIMITS.maxTextLength);
         if (type === 'text' && !text) { errors.push(`${nw}: text node needs text.`); return; }
         if (text) node.text = text;
         if (type === 'text' || text) {
@@ -212,11 +221,11 @@ export function validateLesson(input: unknown): ValidationResult {
       nodes.push(node);
     });
     steps.push({
-      id, title: cleanText(rawStep.title, LIMITS.maxTitleLength) || undefined, narration, nodes,
+      id, title: cleanBoardText(rawStep.title, LIMITS.maxTitleLength) || undefined, narration, nodes,
       ...(rawStep.lang === 'ar' || rawStep.lang === 'en' ? { lang: rawStep.lang } : {}),
       ...(rawStep.continues === true ? { continues: true } : {}),
       ...(rawStep.branch === true ? { branch: true } : {}),
-      ...(typeof rawStep.tryIt === 'string' && rawStep.tryIt.trim() ? { tryIt: cleanText(rawStep.tryIt, 300) } : {}),
+      ...(typeof rawStep.tryIt === 'string' && rawStep.tryIt.trim() ? { tryIt: cleanBoardText(rawStep.tryIt, 300) } : {}),
     });
   });
 

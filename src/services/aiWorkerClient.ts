@@ -51,6 +51,25 @@ async function workerRequest<T>(path: string, body: unknown, timeoutMs = AI_REQU
   }
 }
 
+export type LessonTtsResult =
+  | { ok: true; audio: ArrayBuffer }
+  | { ok: false; status: number };
+
+/** Fetch a Munsit teacher clip (WAV) from the Worker; non-200 means the player should use the browser voice. */
+export async function requestLessonTts(text: string, voice: 'boy' | 'girl', speed: number): Promise<LessonTtsResult> {
+  try {
+    const response = await fetchWithAuth(getApiUrl('/api/ai/lesson-tts'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, voice, speed }),
+    });
+    if (response.ok) return { ok: true, audio: await response.arrayBuffer() };
+    return { ok: false, status: response.status };
+  } catch {
+    return { ok: false, status: 0 };
+  }
+}
+
 async function workerGet<T>(path: string): Promise<T> {
   try {
     const response = await fetchWithAuth(getApiUrl(path), { method: 'GET' });

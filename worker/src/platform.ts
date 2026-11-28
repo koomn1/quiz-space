@@ -9,6 +9,8 @@ export interface Env {
   INCEPTION_API_KEY?: string;
   /** Optional multimodal page/image reviewer. */
   XKIRO_API_KEY?: string;
+  /** Munsit Arabic TTS key (owner-funded credits); lessons fall back to the browser voice without it. */
+  MUNSIT_API_KEY?: string;
   /** Server-only web search key; never expose this to the React bundle. */
   TAVILY_API_KEY?: string;
   SUPABASE_URL: string;

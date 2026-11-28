@@ -7,6 +7,8 @@ import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
 import { appendPoint, boardPoint, pointsToPath, type FreehandPoint, type FreehandStroke } from '../../lib/whiteboard/freehand';
 import { captureBoardPng } from '../../lib/whiteboard/boardSnapshot';
 import { loadStickerInner } from '../../lib/whiteboard/stickers';
+import { speakWithMunsit } from '../../lib/whiteboard/munsitVoice';
+import { stripDiacritics } from '../../lib/whiteboard/lessonSchema';
 import { ICONS, type IconName } from '../../lib/whiteboard/icons';
 import {
   defaultNarrationEngine as engine, genderForStep, getNarrationSupport, loadVoicePreference, saveVoicePreference,
@@ -302,7 +304,10 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const stopSpeechRef = useRef<() => void>(() => undefined);
 
   const durations = useMemo(() => buildTimeline(lesson, rate), [lesson, rate]);
-  const duration = durations.steps[stepIndex]?.durationMs ?? stepDurationMs(step, rate);
+  const munsitTokenRef = useRef(0);
+  const [munsitMs, setMunsitMs] = useState<number | null>(null);
+  const baseDuration = durations.steps[stepIndex]?.durationMs ?? stepDurationMs(step, rate);
+  const duration = munsitMs ? Math.max(baseDuration, munsitMs + 800) : baseDuration;
   const isLast = stepIndex === lesson.steps.length - 1;
 
   // Voices load asynchronously in most browsers.
@@ -315,18 +320,36 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     return () => s.removeEventListener?.('voiceschanged', update);
   }, [stepLang]);
 
-  const stopSpeech = useCallback(() => { stopSpeechRef.current(); stopSpeechRef.current = () => undefined; engine.cancel(); }, []);
+  const stopSpeech = useCallback(() => { munsitTokenRef.current += 1; stopSpeechRef.current(); stopSpeechRef.current = () => undefined; engine.cancel(); }, []);
 
   const startSpeech = useCallback((index: number, fromSentence = 0) => {
     stopSpeech();
-    if (muted || !voiceInfo.hasVoiceForLang) { speechDoneRef.current = true; return; }
+    setMunsitMs(null);
+    if (muted) { speechDoneRef.current = true; return; }
+    const speakBrowser = () => {
+      if (!voiceInfo.hasVoiceForLang) { speechDoneRef.current = true; return; }
+      speechDoneRef.current = false;
+      stopSpeechRef.current = engine.speak({
+        text: lesson.steps[index].narration, lang: lesson.steps[index].lang ?? lesson.lang, rate,
+        gender: genderForStep(voicePref, index), voiceId: voiceId || null, fromSentence,
+        onEnd: () => { speechDoneRef.current = true; },
+      });
+    };
+    const stepLangNow = lesson.steps[index].lang ?? lesson.lang;
+    if (stepLangNow !== 'ar') { speakBrowser(); return; }
+    // The Munsit teacher voice first (it also rescues devices with no Arabic voice); any failure falls back.
+    const token = ++munsitTokenRef.current;
     speechDoneRef.current = false;
-    stopSpeechRef.current = engine.speak({
-      text: lesson.steps[index].narration, lang: lesson.steps[index].lang ?? lesson.lang, rate,
-      gender: genderForStep(voicePref, index), voiceId: voiceId || null, fromSentence,
-      onEnd: () => { speechDoneRef.current = true; },
-    });
-  }, [lesson.steps, lesson.lang, muted, rate, stopSpeech, voiceInfo.hasVoiceForLang, voicePref, voiceId]);
+    const narration = lesson.steps[index].narration;
+    const text = fromSentence > 0 ? splitSentences(narration).slice(fromSentence).join(' ') : narration;
+    const gender = genderForStep(voicePref, index) === 'female' ? 'girl' : 'boy';
+    void speakWithMunsit(lesson.id, text, gender, rate, () => { speechDoneRef.current = true; }, ms => setMunsitMs(ms))
+      .then(pb => {
+        if (munsitTokenRef.current !== token) { pb?.stop(); return; }
+        if (!pb) { speechDoneRef.current = true; speakBrowser(); return; }
+        stopSpeechRef.current = () => pb.stop();
+      });
+  }, [lesson.steps, lesson.id, lesson.lang, muted, rate, stopSpeech, voiceInfo.hasVoiceForLang, voicePref, voiceId]);
 
   // Animation clock: one GSAP tween per step drives the step time (ease none), so pause, seek and the narration sync all work off one timeline.
   const tRef = useRef(0);
@@ -482,7 +505,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     if (cur) setStrokes(prev => [...prev, cur]);
   };
 
-  const caption = step.narration;
+  const caption = stripDiacritics(step.narration);
   const t = {
     play: isAr ? 'تشغيل' : 'Play',
     pause: isAr ? 'إيقاف مؤقت' : 'Pause',

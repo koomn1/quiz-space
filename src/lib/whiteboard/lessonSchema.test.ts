@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateLesson } from './lessonSchema';
+import { validateLesson, stripDiacritics } from './lessonSchema';
 import { buildTimeline, estimateNarrationMs, nodeProgress, stepIndexAt, visibleChars } from './timeline';
 
 const base = () => ({
@@ -126,5 +126,28 @@ describe('sample lessons', () => {
       expect(l.metadata.status).toBe('reviewed');
       l.steps.forEach(s => expect(s.narration.length).toBeGreaterThan(10));
     }
+  });
+});
+
+describe('stripDiacritics', () => {
+  it('removes tashkeel and tatweel but keeps the letters', () => {
+    expect(stripDiacritics('الشَّمْسُ مِـرْكَزُ النِّظَامِ')).toBe('الشمس مركز النظام');
+    expect(stripDiacritics('مُرِّكَبٌ عُضْوِيٌّ')).toBe('مركب عضوي');
+  });
+
+  it('strips diacritics from board texts but keeps them in narration', () => {
+    const lesson = base() as any;
+    lesson.title = 'النِّظَامُ الشَّمْسِيُّ';
+    lesson.steps[0].title = 'تَعْرِيفٌ';
+    lesson.steps[0].narration = 'الشَّمْسُ نَجْمٌ فِي مَرْكَزِ النِّظَامِ.';
+    lesson.steps[0].tryIt = 'ارْسِمِ الشَّمْسَ بِنَفْسِكَ';
+    lesson.steps[0].nodes = [{ id: 'n1', type: 'text', x: 100, y: 100, text: 'الشَّمْسُ نَجْمٌ', color: 'primary' }];
+    const r = validateLesson(lesson);
+    expect(r.ok).toBe(true);
+    expect(r.lesson!.title).toBe('النظام الشمسي');
+    expect(r.lesson!.steps[0].title).toBe('تعريف');
+    expect(r.lesson!.steps[0].tryIt).toBe('ارسم الشمس بنفسك');
+    expect(r.lesson!.steps[0].nodes[0].text).toBe('الشمس نجم');
+    expect(r.lesson!.steps[0].narration).toBe('الشَّمْسُ نَجْمٌ فِي مَرْكَزِ النِّظَامِ.');
   });
 });

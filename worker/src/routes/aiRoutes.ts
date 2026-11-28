@@ -18,6 +18,7 @@ import {
   type AiRequestOptions,
 } from '../services/answerReviewService';
 import { buildFollowUpPrompt, buildLessonPrompt, parseFollowUpRequest, parseLessonRequest } from '../whiteboardLesson';
+import { parseTtsRequest, synthesizeMunsit } from '../munsitTts';
 import { json, routePath, type RouteContext, type RouteResult } from '../routes';
 
 type Provider = 'inception';
@@ -484,6 +485,28 @@ export async function handleAiRoutes(
       validateResponse: text => { extractJson(text); },
     });
     return json({ step: extractJson(followUpResult.text), model: `${followUpResult.provider}/${followUpResult.model}` }, 200, headers);
+  }
+
+  if (path === '/api/ai/lesson-tts') {
+    meta.setAiOperation('lesson-tts');
+    if (userId === 'guest' || userId === 'placeholder-user') {
+      return json({ error: 'Authentication required' }, 401, headers);
+    }
+    const ttsRequest = parseTtsRequest(body);
+    if (!ttsRequest) {
+      return json({ error: 'Invalid tts request' }, 400, headers);
+    }
+    if (!(await hasGoldOrDiamondAccess(request, env, userId))) {
+      return json({ error: 'AI whiteboard lessons are available on the Gold and Diamond plans only.', code: 'plan_required' }, 403, headers);
+    }
+    const tts = await synthesizeMunsit(env, ttsRequest);
+    if (!tts.ok || !tts.body) {
+      return json({ error: tts.error ?? 'tts_unavailable', code: tts.status === 402 ? 'tts_credits_exhausted' : 'tts_unavailable' }, tts.status, headers);
+    }
+    return new Response(tts.body, {
+      status: 200,
+      headers: { ...headers, 'Content-Type': 'audio/wav', 'Cache-Control': 'private, max-age=86400', 'X-TTS-Cache': tts.cached ? 'hit' : 'miss' },
+    });
   }
 
   if (path === '/api/ai/explain') {
