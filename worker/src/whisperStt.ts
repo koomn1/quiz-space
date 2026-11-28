@@ -78,6 +78,9 @@ async function transcribeWhisperApi(env: Env, audio: { bytes: ArrayBuffer; filen
     const text = typeof data.result === 'string' ? data.result.trim() : '';
     if (text) return { ok: true, status: 200, text: text.slice(0, 500) };
     const status = String(data.status ?? '').toLowerCase();
+    if (status === 'completed' || status === 'complete' || status === 'done' || status === 'success') {
+      return { ok: false, status: 502, error: 'stt_empty' };
+    }
     if (status === 'failed' || status === 'error' || data.error) {
       return { ok: false, status: 502, error: `stt_failed: ${String(data.error ?? status).slice(0, 120)}` };
     }
