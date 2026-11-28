@@ -115,9 +115,9 @@ String stripDiacritics(String text) =>
 double stepDurationMs(LessonStep step, double rate) {
   final words = step.narration.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
   final narrationMs = words * 420 / (rate < 0.5 ? 0.5 : rate);
-  final drawMs = 600 + step.nodes.length * 650;
+  final drawMs = 600.0 + step.nodes.length * 650;
   final d = narrationMs > drawMs ? narrationMs : drawMs;
-  return d < 2500 ? 2500 : d;
+  return d < 2500 ? 2500.0 : d;
 }
 
 /// Nodes draw one after another across the first ~80% of the step.
