@@ -126,9 +126,32 @@ const STICKER_ALIASES: Record<string, string> = {
 export const resolveStickerName = (name: string): string | null =>
   stickerSet.has(name) ? name : (STICKER_ALIASES[name] && stickerSet.has(STICKER_ALIASES[name]) ? STICKER_ALIASES[name] : null);
 
+/** Model-friendly aliases mapped to the 6 hand-drawn icons (safety net for generated lessons). */
+const ICON_ALIASES: Record<string, IconName> = {
+  blood: 'heart', artery: 'heart', vein: 'heart', aorta: 'heart', capillary: 'heart', pulse: 'heart',
+  lung: 'heart', lungs: 'heart', stomach: 'heart', kidney: 'heart', liver: 'heart', muscle: 'heart',
+  bone: 'heart', skeleton: 'heart', skull: 'heart', organ: 'heart', body: 'heart',
+  molecule: 'atom', electron: 'atom', proton: 'atom', neutron: 'atom', nucleus: 'atom', dna: 'atom',
+  particle: 'atom', element: 'atom', compound: 'atom', ion: 'atom',
+  bacteria: 'cell', virus: 'cell', tissue: 'cell', organism: 'cell', bloodcell: 'cell', mitochondria: 'cell',
+  tree: 'plant', leaf: 'plant', flower: 'plant', seed: 'plant', root: 'plant', stem: 'plant', photosynthesis: 'plant',
+  globe: 'earth', world: 'earth', planet: 'earth', sun: 'earth', moon: 'earth', star: 'earth',
+  map: 'earth', continent: 'earth', ocean: 'earth', volcano: 'earth',
+  neuron: 'brain', mind: 'brain', head: 'brain', idea: 'brain', thinking: 'brain', nerve: 'brain',
+};
+/** Resolve a model-emitted icon name to one of the 6 real icons; null when nothing fits. */
+export const resolveIconName = (name: unknown): IconName | null => {
+  if (typeof name !== 'string') return null;
+  const normalized = name.trim().toLowerCase();
+  if ((ICON_NAMES as readonly string[]).includes(normalized)) return normalized as IconName;
+  return ICON_ALIASES[normalized] ?? null;
+};
+
 /**
  * Validates untrusted JSON (for example model output) and returns a sanitized lesson.
- * Structural problems are errors (the lesson is rejected); out-of-range numbers are clamped with a warning.
+ * Structural problems are errors (the lesson is rejected); out-of-range numbers are clamped,
+ * and naming mistakes (unknown icon/sticker/anchor, duplicate ids) are repaired or dropped
+ * with a warning so one bad node never fails the whole generated lesson.
  */
 export function validateLesson(input: unknown): ValidationResult {
   const errors: string[] = [];
@@ -151,8 +174,13 @@ export function validateLesson(input: unknown): ValidationResult {
   input.steps.slice(0, LIMITS.maxSteps).forEach((rawStep, si) => {
     const where = `step ${si + 1}`;
     if (!isRecord(rawStep)) { errors.push(`${where}: must be an object.`); return; }
-    const id = cleanText(rawStep.id, 64) || `s${si + 1}`;
-    if (stepIds.has(id)) { errors.push(`${where}: duplicate step id "${id}".`); return; }
+    let id = cleanText(rawStep.id, 64) || `s${si + 1}`;
+    if (stepIds.has(id)) {
+      let n = 2;
+      while (stepIds.has(`${id}-${n}`)) n += 1;
+      warnings.push(`${where}: duplicate step id "${id}" renamed.`);
+      id = `${id}-${n}`;
+    }
     stepIds.add(id);
     const narration = cleanText(rawStep.narration, LIMITS.maxNarrationLength);
     if (!narration) errors.push(`${where}: narration is required.`);
@@ -167,8 +195,13 @@ export function validateLesson(input: unknown): ValidationResult {
       if (!isRecord(rawNode)) { errors.push(`${nw}: must be an object.`); return; }
       const type = rawNode.type as NodeType;
       if (!NODE_TYPES.includes(type)) { errors.push(`${nw}: unknown node type.`); return; }
-      const nid = cleanText(rawNode.id, 64) || `${id}-n${ni + 1}`;
-      if (nodeIds.has(nid)) { errors.push(`${nw}: duplicate node id "${nid}".`); return; }
+      let nid = cleanText(rawNode.id, 64) || `${id}-n${ni + 1}`;
+      if (nodeIds.has(nid)) {
+        let n = 2;
+        while (nodeIds.has(`${nid}-${n}`)) n += 1;
+        warnings.push(`${nw}: duplicate node id "${nid}" renamed.`);
+        nid = `${nid}-${n}`;
+      }
       nodeIds.add(nid);
       if (!finite(rawNode.x) || !finite(rawNode.y)) { errors.push(`${nw}: x and y must be finite numbers.`); return; }
       const node: WhiteboardNode = {
@@ -203,8 +236,10 @@ export function validateLesson(input: unknown): ValidationResult {
         node.d = rawNode.d.trim();
       }
       if (type === 'icon') {
-        const name = rawNode.name as IconName;
-        if (!ICON_NAMES.includes(name)) { errors.push(`${nw}: unknown icon (allowed: ${ICON_NAMES.join(', ')}).`); return; }
+        const rawIconName = typeof rawNode.name === 'string' ? rawNode.name : '';
+        const name = resolveIconName(rawIconName);
+        if (!name) { warnings.push(`${nw}: unknown icon "${rawIconName.slice(0, 60)}" dropped (allowed: ${ICON_NAMES.join(', ')}).`); return; }
+        if (name !== rawIconName.trim().toLowerCase()) warnings.push(`${nw}: icon "${rawIconName.slice(0, 60)}" mapped to "${name}".`);
         node.name = name;
         if (!finite(rawNode.w) || !finite(rawNode.h) || rawNode.w <= 0 || rawNode.h <= 0) { errors.push(`${nw}: w and h must be positive numbers.`); return; }
         node.w = clamp(rawNode.w, 24, CANVAS_WIDTH - node.x);
@@ -215,7 +250,7 @@ export function validateLesson(input: unknown): ValidationResult {
         labels.forEach((rawLabel, li) => {
           if (!isRecord(rawLabel)) return;
           const anchor = typeof rawLabel.anchor === 'string' ? rawLabel.anchor : '';
-          if (!anchors[anchor]) { errors.push(`${nw}, label ${li + 1}: unknown anchor "${anchor}" (has: ${Object.keys(anchors).join(', ')}).`); return; }
+          if (!anchors[anchor]) { warnings.push(`${nw}, label ${li + 1}: unknown anchor "${anchor}" skipped (has: ${Object.keys(anchors).join(', ')}).`); return; }
           const text = cleanBoardText(rawLabel.text, MAX_ICON_LABEL_LENGTH);
           if (!text) { errors.push(`${nw}, label ${li + 1}: text is required.`); return; }
           node.labels!.push({ anchor, text, ...(rawLabel.teaser === true ? { teaser: true } : {}) });
@@ -224,7 +259,7 @@ export function validateLesson(input: unknown): ValidationResult {
       if (type === 'sticker') {
         const rawName = typeof rawNode.name === 'string' ? rawNode.name : '';
         const name = resolveStickerName(rawName);
-        if (!name) { errors.push(`${nw}: unknown sticker "${rawName.slice(0, 60)}".`); return; }
+        if (!name) { warnings.push(`${nw}: unknown sticker "${rawName.slice(0, 60)}" dropped.`); return; }
         node.name = name;
         if (!finite(rawNode.w) || !finite(rawNode.h) || rawNode.w <= 0 || rawNode.h <= 0) { errors.push(`${nw}: w and h must be positive numbers.`); return; }
         node.w = clamp(rawNode.w, 24, Math.min(400, CANVAS_WIDTH - node.x));

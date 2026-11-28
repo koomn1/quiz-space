@@ -28,7 +28,7 @@ describe('validateLesson', () => {
     expect(icon.labels![0]).toMatchObject({ anchor: 'top', teaser: true });
   });
 
-  it('rejects unsafe path data, unknown icons and unknown anchors', () => {
+  it('rejects unsafe path data, while unknown icons and anchors are repaired with warnings', () => {
     const lesson = base() as any;
     lesson.steps[0].nodes = [
       { id: 'p', type: 'path', x: 1, y: 1, d: 'M0 0; alert(1)', color: 'ink' },
@@ -39,9 +39,28 @@ describe('validateLesson', () => {
     const r = validateLesson(lesson);
     expect(r.ok).toBe(false);
     expect(r.errors.join(' ')).toMatch(/unsupported commands/);
-    expect(r.errors.join(' ')).toMatch(/unknown icon/);
-    expect(r.errors.join(' ')).toMatch(/unknown anchor/);
+    expect(r.errors.join(' ')).not.toMatch(/unknown icon/);
+    expect(r.errors.join(' ')).not.toMatch(/unknown anchor/);
     expect(r.errors.join(' ')).toMatch(/control point/);
+    expect(r.warnings.join(' ')).toMatch(/unknown icon "rocket" dropped/);
+    expect(r.warnings.join(' ')).toMatch(/unknown anchor "nose" skipped/);
+  });
+
+  it('repairs model naming mistakes instead of failing the lesson', () => {
+    const lesson = base() as any;
+    lesson.steps[0].nodes = [
+      { id: 'a', type: 'icon', x: 1, y: 1, w: 100, h: 100, name: 'lung', color: 'ink' },
+      { id: 'b', type: 'icon', x: 200, y: 1, w: 100, h: 100, name: 'rocket', color: 'ink' },
+      { id: 'c', type: 'sticker', x: 400, y: 1, w: 100, h: 100, name: 'not-a-real-sticker', color: 'ink' },
+    ];
+    const r = validateLesson(lesson);
+    expect(r.ok).toBe(true);
+    const nodes = r.lesson!.steps[0].nodes;
+    expect(nodes.map(n => n.id)).toEqual(['a']);
+    expect(nodes[0].name).toBe('heart');
+    expect(r.warnings.join(' ')).toMatch(/icon "lung" mapped to "heart"/);
+    expect(r.warnings.join(' ')).toMatch(/unknown icon "rocket" dropped/);
+    expect(r.warnings.join(' ')).toMatch(/unknown sticker "not-a-real-sticker" dropped/);
   });
 
   it('keeps an explicit per-step language and drops invalid ones', () => {
@@ -64,15 +83,23 @@ describe('validateLesson', () => {
     expect(r.lesson!.metadata.status).toBe('draft');
   });
 
-  it('rejects unknown types, non-finite numbers, duplicates and missing narration', () => {
+  it('rejects unknown types, non-finite numbers and missing narration; duplicates are renamed', () => {
     const bad = base() as any;
     bad.steps[0].nodes[0].type = 'script';
     bad.steps[0].nodes[1].x = Number.POSITIVE_INFINITY;
-    bad.steps[1].id = 's1';
     expect(validateLesson(bad).ok).toBe(false);
     const dupNode = base() as any;
     dupNode.steps[0].nodes[1].id = 'n1';
-    expect(validateLesson(dupNode).errors.join(' ')).toMatch(/duplicate node/);
+    const dupResult = validateLesson(dupNode);
+    expect(dupResult.ok).toBe(true);
+    expect(dupResult.warnings.join(' ')).toMatch(/duplicate node/);
+    const ids = dupResult.lesson!.steps[0].nodes.map(n => n.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    const dupStep = base() as any;
+    dupStep.steps[1].id = 's1';
+    const dupStepResult = validateLesson(dupStep);
+    expect(dupStepResult.ok).toBe(true);
+    expect(dupStepResult.warnings.join(' ')).toMatch(/duplicate step id/);
     const noNarr = base() as any;
     noNarr.steps[0].narration = '  ';
     expect(validateLesson(noNarr).ok).toBe(false);
@@ -153,7 +180,7 @@ describe('stripDiacritics', () => {
 });
 
 describe('sticker aliases', () => {
-  it('maps model shorthand to real catalog names and still rejects unknowns', () => {
+  it('maps model shorthand to real catalog names and drops unknowns with a warning', () => {
     expect(stripDiacritics('أ')).toBe('أ');
     const lesson = base() as any;
     lesson.steps[0].nodes = [
@@ -166,6 +193,9 @@ describe('sticker aliases', () => {
     expect(r.lesson!.steps[0].nodes[1].name).toBe('ringed-planet');
     const bad = base() as any;
     bad.steps[0].nodes = [{ id: 's3', type: 'sticker', x: 1, y: 1, w: 50, h: 50, name: 'toaster-oven' }];
-    expect(validateLesson(bad).ok).toBe(false);
+    const badResult = validateLesson(bad);
+    expect(badResult.ok).toBe(true);
+    expect(badResult.lesson!.steps[0].nodes).toHaveLength(0);
+    expect(badResult.warnings.join(' ')).toMatch(/unknown sticker "toaster-oven" dropped/);
   });
 });
