@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { Pause, Play, Pencil, SkipBack, SkipForward, Target, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { Pause, Play, Pencil, SkipBack, SkipForward, Target, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2, ZoomIn, ZoomOut, Maximize, FileDown } from 'lucide-react';
 import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
 import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
@@ -9,6 +9,7 @@ import { captureBoardPng } from '../../lib/whiteboard/boardSnapshot';
 import { loadStickerInner } from '../../lib/whiteboard/stickers';
 import { speakWithMunsit } from '../../lib/whiteboard/munsitVoice';
 import { stripDiacritics } from '../../lib/whiteboard/lessonSchema';
+import { exportLessonPdf } from '../../lib/whiteboard/lessonPdf';
 import { ICONS, type IconName } from '../../lib/whiteboard/icons';
 import {
   defaultNarrationEngine as engine, genderForStep, getNarrationSupport, loadVoicePreference, saveVoicePreference,
@@ -196,7 +197,7 @@ function StickerNode({ node, progress }: { node: WhiteboardNode; progress: numbe
   );
 }
 
-function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: number; rtl: boolean }) {
+export function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: number; rtl: boolean }) {
   if (progress <= 0) return null;
   const color = COLORS[node.color];
   switch (node.type) {
@@ -281,6 +282,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const [rate, setRate] = useState(1);
   const [muted, setMuted] = useState(false);
   const [captions, setCaptions] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const step = lesson.steps[stepIndex];
   // Language is per step: a lesson can mix Arabic and English steps; the board direction, captions and voice follow the step.
   const stepLang: 'ar' | 'en' = step?.lang ?? lesson.lang;
@@ -606,6 +608,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     zoomIn: isAr ? 'تكبير السبورة' : 'Zoom in',
     zoomOut: isAr ? 'تصغير السبورة' : 'Zoom out',
     resetView: isAr ? 'إعادة ضبط العرض' : 'Reset view',
+    exportPdf: isAr ? 'تصدير الدرس PDF' : 'Export lesson PDF',
     stopDrawing: isAr ? 'إيقاف الرسم' : 'Stop drawing',
     clearDrawing: isAr ? 'امسح رسمي' : 'Clear my drawing',
     tryMode: isAr ? 'وضع جرّب بنفسك' : 'Try-it mode',
@@ -700,6 +703,9 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
             <Maximize className="w-4 h-4" aria-hidden="true" />{Math.round(view.s * 100)}%
           </button>
         )}
+        <button type="button" onClick={() => { setExportingPdf(true); void exportLessonPdf(lesson).finally(() => setExportingPdf(false)); }} disabled={exportingPdf} aria-label={t.exportPdf} data-testid="export-pdf" className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 disabled:opacity-40">
+          {exportingPdf ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <FileDown className="w-4 h-4" aria-hidden="true" />}
+        </button>
         <button type="button" onClick={() => setCaptions(c => !c)} aria-pressed={captions} aria-label={t.captions} className={`p-2.5 rounded-xl border ${captions ? 'border-primary text-primary' : 'border-slate-200 dark:border-slate-700'}`}>
           <Captions className="w-4 h-4" />
         </button>
