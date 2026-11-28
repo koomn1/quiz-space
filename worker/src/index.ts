@@ -241,11 +241,15 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
       return json(publicExtractionJob(job), 200, headers);
     }
 
-    let body: any;
-    try {
-      body = await request.json();
-    } catch {
-      return json({ error: 'Invalid JSON request.' }, 400, headers);
+    let body: any = null;
+    // Voice-question STT uploads arrive as multipart/form-data; leave the body unread for the route.
+    const isMultipartUpload = (request.headers.get('content-type') ?? '').includes('multipart/form-data');
+    if (!isMultipartUpload) {
+      try {
+        body = await request.json();
+      } catch {
+        return json({ error: 'Invalid JSON request.' }, 400, headers);
+      }
     }
 
     if (path === '/api/ai/extraction-jobs') {
