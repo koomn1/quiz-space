@@ -1,4 +1,4 @@
-const APP_FALLBACK = 'https://quiz-space.live';
+const APP_FALLBACK = 'https://www.quiz-space.live';
 const SHARE_ORIGIN = 'https://quiz-space-share.pages.dev';
 const SHARE_PATHS = new Set(['/share/quiz', '/share/quiz/']);
 

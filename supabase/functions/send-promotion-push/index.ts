@@ -10,7 +10,7 @@ const corsHeaders = {
 
 type Category = 'classroom' | 'community' | 'quiz' | 'promotion' | 'system';
 
-const APP_ORIGIN = 'https://quiz-space-app.pages.dev';
+const APP_ORIGIN = 'https://www.quiz-space.live';
 const MAX_TITLE_LENGTH = 120;
 const MAX_BODY_LENGTH = 500;
 

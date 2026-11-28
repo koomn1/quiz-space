@@ -854,7 +854,7 @@ export async function createQuiz(quiz: Omit<Quiz, 'id' | 'createdAt' | 'totalPla
     void sendPushEvent({
       title: ' كويز جديد في فصلك',
       body: `${creatorName} نشر كويزاً جديداً: ${quiz.title}`.slice(0, 180),
-      url: `https://quiz-space.live/#/classrooms`,
+      url: `https://www.quiz-space.live/#/classrooms`,
       category: 'quiz',
       classId: quiz.classroomId,
     });

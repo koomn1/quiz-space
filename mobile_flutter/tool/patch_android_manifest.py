@@ -42,7 +42,7 @@ text = re.sub(
     text,
 )
 
-if 'android:host="quiz-space-app.pages.dev"' not in text:
+if 'android:host="quiz-space.live"' not in text:
     activity_marker = '<activity'
     activity_index = text.find(activity_marker)
     if activity_index == -1:
@@ -60,6 +60,14 @@ if 'android:host="quiz-space-app.pages.dev"' not in text:
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="quiz-space.live"
+                    android:pathPrefix="/share/quiz" />
+                <data
+                    android:scheme="https"
+                    android:host="www.quiz-space.live"
+                    android:pathPrefix="/share/quiz" />
                 <data
                     android:scheme="https"
                     android:host="quiz-space-app.pages.dev"

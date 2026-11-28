@@ -1,0 +1,3 @@
+# Domain migration: send the legacy Pages host (and the apex, once attached) to the canonical www host.
+https://quiz-space-app.pages.dev/* https://www.quiz-space.live/:splat 301!
+https://quiz-space.live/* https://www.quiz-space.live/:splat 301!

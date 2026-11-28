@@ -2,7 +2,7 @@
  * Canonical site origin. The app now lives on the custom domain
  * quiz-space.live; quiz-space-app.pages.dev stays as the legacy alias.
  */
-export const SITE_URL = 'https://quiz-space.live';
+export const SITE_URL = 'https://www.quiz-space.live';
 export const SITE_HOST = 'quiz-space.live';
 
 const PRIMARY_HOSTS = new Set([

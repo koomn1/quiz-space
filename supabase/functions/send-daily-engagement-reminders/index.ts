@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const REMINDER_TITLE = 'نقاطك اليومية في انتظارك';
 const REMINDER_BODY = 'ادخل QuizSpace اليوم، حافظ على سلسلتك واستفد من عجلة الحظ والسؤال اليومي.';
-const REMINDER_URL = 'https://quiz-space-app.pages.dev/#/dashboard/motivation';
+const REMINDER_URL = 'https://www.quiz-space.live/#/dashboard/motivation';
 const REMINDER_CATEGORY = 'system';
 const REMINDER_EVENT_TITLE = 'daily_engagement_reminder';
 

@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://quiz-space.live/sitemap.xml
+Sitemap: https://www.quiz-space.live/sitemap.xml
