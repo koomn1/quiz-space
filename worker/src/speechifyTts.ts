@@ -74,7 +74,7 @@ export async function synthesizeSpeechify(env: Env, req: TtsRequest): Promise<Tt
         input: req.text,
         voice_id: voiceId,
         audio_format: 'wav',
-        model: 'simba-multilingual',
+        model: 'simba-3.0',
         options: { speech_rate: req.speed },
       }),
     });
