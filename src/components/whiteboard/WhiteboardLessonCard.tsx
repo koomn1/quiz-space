@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { PenTool, Sparkles, Save, Loader2, AlertTriangle } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { PenTool, Sparkles, Save, Loader2, AlertTriangle, Paperclip, X } from 'lucide-react';
 import { SAMPLE_LESSONS } from '../../lib/whiteboard/sampleLessons';
 import type { WhiteboardLesson } from '../../lib/whiteboard/lessonSchema';
 import { loadSavedLessons, saveReviewedLesson, validateAiLesson, validateBranchStep } from '../../lib/whiteboard/lessonDrafts';
-import { askWhiteboardQuestion, generateWhiteboardLesson } from '../../services/aiWorkerClient';
+import { askWhiteboardQuestion, generateWhiteboardLesson, type LessonAttachment } from '../../services/aiWorkerClient';
 import { canGenerateWhiteboardLesson } from '../../lib/whiteboard/access';
 import WhiteboardPlayer, { type AskResult } from './WhiteboardPlayer';
 
@@ -18,6 +18,22 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<WhiteboardLesson | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [file, setFile] = useState<{ name: string; attachment: LessonAttachment } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const FILE_MAX = 10 * 1024 * 1024;
+  const FILE_ACCEPT = '.pdf,.png,.jpg,.jpeg,.webp,.docx,.txt';
+  const pickFile = async (f: File) => {
+    setError(null);
+    if (f.size > FILE_MAX) { setError(isAr ? 'الملف أكبر من 10 ميجابايت.' : 'The file is larger than 10 MB.'); return; }
+    const data = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1] ?? '');
+      r.onerror = () => reject(new Error('read failed'));
+      r.readAsDataURL(f);
+    });
+    const mimeType = f.type || (f.name.toLowerCase().endsWith('.txt') ? 'text/plain' : 'application/octet-stream');
+    setFile({ name: f.name, attachment: { data, mimeType, name: f.name } });
+  };
 
   const all = [...saved, ...SAMPLE_LESSONS.filter(s => !saved.some(l => l.id === s.id))];
   const lesson = draft ?? all.find(l => l.id === selectedId) ?? SAMPLE_LESSONS[0];
@@ -29,7 +45,7 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
       let lastProblems: string[] = [];
       // The model sometimes produces overlapping layouts or unknown node/icon names; the checker rejects those and we retry with the exact problems fed back.
       for (let attempt = 0; attempt < 3; attempt++) {
-        const res = await generateWhiteboardLesson(topic.trim(), lang, 5, lastProblems.length ? lastProblems : undefined);
+        const res = await generateWhiteboardLesson(topic.trim(), lang, 5, lastProblems.length ? lastProblems : undefined, file?.attachment);
         const checked = validateAiLesson(res.lesson, res.model);
         if (checked.ok && checked.lesson) { setDraft(checked.lesson); setWarnings(checked.warnings); return; }
         lastProblems = checked.errors;
@@ -80,9 +96,21 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
             <div className="flex flex-wrap items-center gap-2">
               <input value={topic} onChange={e => setTopic(e.target.value)} maxLength={400} placeholder={isAr ? 'اكتب موضوع الدرس (مثال: دورة الماء)' : 'Lesson topic (e.g. the water cycle)'}
                 className="flex-1 min-w-[180px] rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs" aria-label={isAr ? 'موضوع الدرس' : 'Lesson topic'} />
-              <button type="button" onClick={generate} disabled={busy || topic.trim().length < 3} className="uipro-btn-tactile inline-flex items-center gap-2 bg-primary text-white font-black text-xs px-4 py-2.5 rounded-xl disabled:opacity-50">
+              <button type="button" onClick={generate} disabled={busy || (topic.trim().length < 3 && !file)} className="uipro-btn-tactile inline-flex items-center gap-2 bg-primary text-white font-black text-xs px-4 py-2.5 rounded-xl disabled:opacity-50">
                 {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}{isAr ? 'ولّد درسًا بالذكاء الاصطناعي' : 'Generate with AI'}
               </button>
+              <input ref={fileInputRef} type="file" accept={FILE_ACCEPT} className="hidden" aria-hidden="true"
+                onChange={e => { const f = e.target.files?.[0]; if (f) void pickFile(f); e.target.value = ''; }} />
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={busy} aria-label={isAr ? 'أرفق ملفًا للدرس' : 'Attach a lesson file'} data-testid="lesson-attach"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-xs font-black disabled:opacity-50">
+                <Paperclip className="w-4 h-4" />{isAr ? 'من ملف' : 'From file'}
+              </button>
+              {file && (
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 text-primary px-2.5 py-1.5 text-[11px] font-black" data-testid="lesson-file-chip">
+                  {file.name}
+                  <button type="button" onClick={() => setFile(null)} aria-label={isAr ? 'أزل الملف' : 'Remove file'} className="hover:text-rose-500"><X className="w-3.5 h-3.5" /></button>
+                </span>
+              )}
             </div>
           ) : (
             <p data-testid="whiteboard-upgrade-note" className="flex items-center gap-2 text-xs rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 px-3 py-2 font-bold">

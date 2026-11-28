@@ -13,12 +13,30 @@ export interface LessonRequest {
   steps: number;
   /** Validation problems from a rejected earlier attempt; the prompt tells the model not to repeat them. */
   feedback?: string[];
+  /** Text extracted from an uploaded source file (PDF, image, Word, plain text); the lesson is built from it. */
+  sourceText?: string;
+  sourceName?: string;
+}
+
+export const LESSON_ATTACHMENT_MAX = 14_000_000; // base64 chars ≈ 10 MB of file
+export const LESSON_SOURCE_MAX = 20_000; // characters of extracted source fed to the model
+const LESSON_ATTACHMENT_MIME = /^(application\/pdf|image\/(png|jpeg|webp)|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|application\/msword|text\/plain)$/;
+
+/** The file itself, validated here; the route extracts its text before building the prompt. */
+export function parseLessonAttachment(body: any): { data: string; mimeType: string; name: string } | null {
+  const a = body?.attachment;
+  if (!a || typeof a.data !== 'string' || typeof a.mimeType !== 'string') return null;
+  if (!a.data || a.data.length > LESSON_ATTACHMENT_MAX) return null;
+  if (!LESSON_ATTACHMENT_MIME.test(a.mimeType)) return null;
+  const name = typeof a.name === 'string' ? a.name.replace(/\s+/g, ' ').trim().slice(0, 120) || 'file' : 'file';
+  return { data: a.data, mimeType: a.mimeType, name };
 }
 
 export function parseLessonRequest(body: any): LessonRequest | null {
   if (!body || typeof body.topic !== 'string') return null;
   const topic = body.topic.replace(/\s+/g, ' ').trim();
-  if (topic.length < 3 || topic.length > LESSON_TOPIC_MAX) return null;
+  // An uploaded source file can stand in for the topic; the model derives the topic from it.
+  if (topic.length > LESSON_TOPIC_MAX || (topic.length < 3 && !parseLessonAttachment(body))) return null;
   const lang = body.lang === 'en' ? 'en' : 'ar';
   const steps = Number.isInteger(body.steps) ? Math.min(8, Math.max(3, body.steps)) : 5;
   const feedback = Array.isArray(body.feedback)
@@ -27,12 +45,15 @@ export function parseLessonRequest(body: any): LessonRequest | null {
   return { topic, lang, steps, ...(feedback && feedback.length ? { feedback } : {}) };
 }
 
-export function buildLessonPrompt({ topic, lang, steps, feedback }: LessonRequest): string {
+export function buildLessonPrompt({ topic, lang, steps, feedback, sourceText, sourceName }: LessonRequest): string {
   const language = lang === 'ar' ? 'العربية الفصحى المبسطة' : 'clear simple English';
   const rtl = lang === 'ar'
     ? 'اللغة عربية (من اليمين لليسار): النص ذو align="start" ينتهي عند النقطة x ويمتد نحو اليسار، و align="end" يبدأ عند x ويمتد نحو اليمين، و align="center" يتمركز حول x. ضع الأشكال والأرقام على الجهة اليمنى والشروحات على يسارها.'
     : 'The language is English (left to right): align="start" begins at x and extends to the right, align="end" ends at x and extends to the left, align="center" is centred on x.';
-  return `أنت معلم خبير تصمم درسًا مفصلًا يُشرح على سبورة. الموضوع: «${topic}». اكتب بـ${language} فقط. ${rtl}
+  const sourceSection = sourceText
+    ? `\nمصدر أرفقه المستخدم${sourceName ? ` (ملف: ${sourceName})` : ''} — صمم الدرس من محتواه: لخّصه ورتّبه ولا تنسخه حرفيًا، والتزم بمعلوماته.\n<source>${sourceText}</source>\n`
+    : '';
+  return `أنت معلم خبير تصمم درسًا مفصلًا يُشرح على سبورة. ${topic ? `الموضوع: «${topic}».` : 'استخرج موضوع الدرس المناسب من المصدر المرفق وضعه في title.'} اكتب بـ${language} فقط. ${rtl}${sourceSection}
 أعد JSON صالحًا فقط بهذا الشكل بالضبط (بدون أي نص أو علامات markdown خارجه):
 {"schema_version":1,"id":"ai-lesson","title":"عنوان قصير","lang":"${lang}","metadata":{"source":"ai","status":"draft"},"steps":[{"id":"s1","title":"عنوان الخطوة","narration":"شرح مفصل","nodes":[{"id":"n1","type":"text","x":640,"y":90,"text":"عنوان على السبورة","fontSize":48,"color":"primary","align":"center"}]}]}
 قواعد المحتوى:

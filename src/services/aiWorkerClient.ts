@@ -636,8 +636,10 @@ export async function generateQuizFromFileStreaming(
   }
 }
 
-export async function generateWhiteboardLesson(topic: string, lang: 'ar' | 'en' = 'ar', steps = 5, feedback?: string[]): Promise<{ lesson: unknown; model?: string }> {
-  return await workerRequest<{ lesson: unknown; model?: string }>('/api/ai/lesson-generate', { topic, lang, steps, ...(feedback && feedback.length ? { feedback } : {}) }, 120_000);
+export interface LessonAttachment { data: string; mimeType: string; name: string }
+
+export async function generateWhiteboardLesson(topic: string, lang: 'ar' | 'en' = 'ar', steps = 5, feedback?: string[], attachment?: LessonAttachment): Promise<{ lesson: unknown; model?: string }> {
+  return await workerRequest<{ lesson: unknown; model?: string }>('/api/ai/lesson-generate', { topic, lang, steps, ...(feedback && feedback.length ? { feedback } : {}), ...(attachment ? { attachment } : {}) }, 180_000);
 }
 
 export async function askWhiteboardQuestion(input: { question: string; lang: 'ar' | 'en'; lessonTitle: string; step: { title?: string; narration: string; nodes: unknown[] }; boardImage?: string }): Promise<{ step: unknown; model?: string }> {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildFollowUpPrompt, buildLessonPrompt, parseFollowUpRequest, parseLessonRequest } from './whiteboardLesson';
+import { buildFollowUpPrompt, buildLessonPrompt, parseFollowUpRequest, parseLessonAttachment, parseLessonRequest } from './whiteboardLesson';
 
 describe('whiteboard lesson request', () => {
   it('accepts a normal topic and clamps the step count', () => {
@@ -35,5 +35,29 @@ describe('whiteboard lesson request', () => {
     expect(p).toContain('محاولة سابقة');
     expect(p).toContain('runs over the edge');
     expect(buildLessonPrompt({ topic: 'الخلايا', lang: 'ar', steps: 5 })).not.toContain('محاولة سابقة');
+  });
+});
+
+describe('parseLessonAttachment', () => {
+  it('accepts supported files and rejects oversize or unsupported ones', () => {
+    const a = parseLessonAttachment({ attachment: { data: 'QUJD', mimeType: 'application/pdf', name: 'درس.pdf' } });
+    expect(a).toEqual({ data: 'QUJD', mimeType: 'application/pdf', name: 'درس.pdf' });
+    expect(parseLessonAttachment({ attachment: { data: 'x'.repeat(14_000_001), mimeType: 'application/pdf' } })).toBeNull();
+    expect(parseLessonAttachment({ attachment: { data: 'QUJD', mimeType: 'application/zip' } })).toBeNull();
+    expect(parseLessonAttachment({})).toBeNull();
+  });
+
+  it('lets an attachment stand in for the topic', () => {
+    expect(parseLessonRequest({ topic: '', attachment: { data: 'QUJD', mimeType: 'text/plain' } })).toMatchObject({ topic: '', lang: 'ar' });
+    expect(parseLessonRequest({ topic: '' })).toBeNull();
+  });
+});
+
+describe('buildLessonPrompt with a source file', () => {
+  it('embeds the source text and asks the model to derive the topic', () => {
+    const p = buildLessonPrompt({ topic: '', lang: 'ar', steps: 5, sourceText: 'الفصل الأول: الخلية وحدة البناء', sourceName: 'bio.pdf' });
+    expect(p).toContain('bio.pdf');
+    expect(p).toContain('الفصل الأول: الخلية وحدة البناء');
+    expect(p).toContain('استخرج موضوع الدرس');
   });
 });

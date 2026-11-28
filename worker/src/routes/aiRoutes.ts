@@ -17,7 +17,7 @@ import {
   ANSWER_REVIEW_MODEL_TIMEOUT_MS,
   type AiRequestOptions,
 } from '../services/answerReviewService';
-import { buildFollowUpPrompt, buildLessonPrompt, parseFollowUpRequest, parseLessonRequest } from '../whiteboardLesson';
+import { buildFollowUpPrompt, buildLessonPrompt, parseFollowUpRequest, parseLessonAttachment, parseLessonRequest, LESSON_SOURCE_MAX } from '../whiteboardLesson';
 import { parseTtsRequest, synthesizeMunsit } from '../munsitTts';
 import { json, routePath, type RouteContext, type RouteResult } from '../routes';
 
@@ -156,6 +156,35 @@ export async function analyzeVisualAttachment(
     { timeoutMs: 90_000, max_tokens: 16_000 },
   );
   return result.text;
+}
+
+/** Turn an uploaded lesson source file (PDF, image, Word, plain text) into text for the lesson prompt. */
+export async function lessonAttachmentSource(env: Env, attachment: { data: string; mimeType: string; name: string }): Promise<string | null> {
+  const { data, mimeType, name } = attachment;
+  const cap = (t: string) => t.replace(/\s+\n/g, '\n').trim().slice(0, LESSON_SOURCE_MAX);
+  try {
+    if (mimeType === 'text/plain') {
+      const text = new TextDecoder('utf-8').decode(Uint8Array.from(atob(data), c => c.charCodeAt(0)));
+      return cap(text) || null;
+    }
+    if (mimeType.includes('wordprocessingml') || mimeType === 'application/msword') {
+      const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+      const extracted = await mammoth.extractRawText({ arrayBuffer: bytes.buffer });
+      return cap(extracted.value) || null;
+    }
+    // PDF and images: local extraction first (free), vision analysis as the fallback.
+    try {
+      const source = await extractAttachmentText(data, mimeType, name);
+      if (source.text.trim()) return cap(source.text);
+    } catch (error) {
+      console.warn('Lesson attachment local extraction failed:', error);
+    }
+    const analysis = await analyzeVisualAttachment(env, data, mimeType, name, 'استخرج من هذا الملف كل ما يصلح مصدرًا لدرس تعليمي: النصوص، العناوين، والمعلومات المرئية في الرسوم والمخططات.');
+    return cap(analysis) || null;
+  } catch (error) {
+    console.warn('Lesson attachment processing failed:', error);
+    return null;
+  }
 }
 
 export async function buildCosmoUserContent(body: any, env: Env): Promise<any> {
@@ -453,6 +482,15 @@ export async function handleAiRoutes(
     }
     if (!(await hasGoldOrDiamondAccess(request, env, userId))) {
       return json({ error: 'AI whiteboard lessons are available on the Gold and Diamond plans only.', code: 'plan_required' }, 403, headers);
+    }
+    const lessonAttachment = parseLessonAttachment(body);
+    if (lessonAttachment) {
+      const sourceText = await lessonAttachmentSource(env, lessonAttachment);
+      if (!sourceText) {
+        return json({ error: 'Could not read the uploaded file', code: 'attachment_unreadable' }, 422, headers);
+      }
+      lessonRequest.sourceText = sourceText;
+      lessonRequest.sourceName = lessonAttachment.name;
     }
     const generated = await lessonModelText(env, buildLessonPrompt(lessonRequest));
     // The client validates the structure and layout strictly; the Worker only guarantees it is JSON.
