@@ -2684,3 +2684,92 @@ html[dir="rtl"] .quizspace-sidebar-panel,
   .quizspace-header-logo [class*="text-lg"] { font-size: 1rem; }
   .quizspace-header-logo .main-logo-wordmark [class*="rounded-full"] { display: none; }
 }
+
+/* ===== Guest landing v2: orbit hero, marquee, spotlight cards ===== */
+.gl2-display-ar { font-family: "Alexandria", "Cairo", "IBM Plex Sans Arabic", sans-serif; }
+.gl2-display-en { font-family: "Space Grotesk", "Inter", sans-serif; }
+
+.gl2-stars {
+  position: absolute; inset: 0; pointer-events: none; z-index: -1;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 22%, rgba(42,195,187,.9), transparent 60%),
+    radial-gradient(1px 1px at 28% 68%, rgba(252,246,238,.7), transparent 60%),
+    radial-gradient(1.5px 1.5px at 44% 12%, rgba(238,131,97,.8), transparent 60%),
+    radial-gradient(1px 1px at 61% 42%, rgba(42,195,187,.7), transparent 60%),
+    radial-gradient(1.5px 1.5px at 76% 18%, rgba(252,246,238,.8), transparent 60%),
+    radial-gradient(1px 1px at 88% 62%, rgba(238,131,97,.7), transparent 60%),
+    radial-gradient(1px 1px at 8% 84%, rgba(42,195,187,.6), transparent 60%),
+    radial-gradient(1.5px 1.5px at 68% 88%, rgba(252,246,238,.6), transparent 60%);
+  animation: gl2-twinkle 5s ease-in-out infinite alternate;
+}
+@keyframes gl2-twinkle { from { opacity: .55; } to { opacity: 1; } }
+
+.gl2-gradient-text {
+  background: linear-gradient(100deg, #2AC3BB 10%, #FCF6EE 38%, #EE8361 62%, #2AC3BB 90%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  animation: gl2-shimmer 7s ease-in-out infinite;
+}
+@keyframes gl2-shimmer { 0%, 100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
+
+/* Orbit system */
+.gl2-orbit__core {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 5.5rem; height: 5.5rem; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 32% 28%, rgba(42,195,187,.45), rgba(0,116,114,.85) 68%);
+  box-shadow: 0 0 44px rgba(42,195,187,.45), 0 0 110px rgba(0,116,114,.3), inset 0 2px 10px rgba(255,255,255,.25);
+  animation: gl2-core-pulse 4.5s ease-in-out infinite;
+}
+@keyframes gl2-core-pulse { 0%, 100% { box-shadow: 0 0 44px rgba(42,195,187,.45), 0 0 110px rgba(0,116,114,.3), inset 0 2px 10px rgba(255,255,255,.25); } 50% { box-shadow: 0 0 60px rgba(42,195,187,.6), 0 0 140px rgba(238,131,97,.28), inset 0 2px 10px rgba(255,255,255,.3); } }
+.gl2-orbit__core img { width: 3.2rem; height: 3.2rem; object-fit: contain; }
+
+.gl2-orbit__ring { position: absolute; inset: 0; border-radius: 999px; animation: gl2-spin 26s linear infinite; }
+.gl2-orbit__ring::before { content: ""; position: absolute; inset: 0; border-radius: 999px; border: 1px dashed rgba(42,195,187,.35); }
+.gl2-orbit__ring--inner { inset: 17%; animation: gl2-spin-rev 16s linear infinite; }
+.gl2-orbit__ring--inner::before { border-style: solid; border-color: rgba(238,131,97,.3); }
+.gl2-orbit__sat { position: absolute; inset: 0; transform: rotate(calc(360deg / var(--sat-n) * var(--sat-i))); }
+.gl2-orbit__sat-icon {
+  position: absolute; top: -0.8rem; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; justify-content: center;
+  width: 1.9rem; height: 1.9rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--app-surface-strong, #0f172a) 88%, transparent);
+  border: 1px solid rgba(42,195,187,.45); color: #2AC3BB;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  animation: gl2-spin-rev 26s linear infinite;
+}
+.gl2-orbit__sat-icon--coral { border-color: rgba(238,131,97,.5); color: #EE8361; width: 1.6rem; height: 1.6rem; animation-duration: 16s; animation-name: gl2-spin; }
+@keyframes gl2-spin { to { transform: rotate(360deg); } }
+@keyframes gl2-spin-rev { to { transform: rotate(-360deg); } }
+.gl2-orbit__sat-icon svg { animation: none; }
+.gl2-orbit__sat-icon, .gl2-orbit__sat-icon--coral { will-change: transform; }
+
+/* Marquee */
+.gl2-marquee-band { overflow: hidden; border-block: 1px solid color-mix(in srgb, var(--app-border, rgba(255,255,255,.1)) 70%, transparent); padding-block: .85rem; margin-top: 1rem; }
+.gl2-marquee { display: flex; width: max-content; animation: gl2-marquee 32s linear infinite; }
+.gl2-marquee__track { display: flex; align-items: center; gap: 2.5rem; padding-inline-end: 2.5rem; }
+.gl2-marquee__word { display: inline-flex; align-items: center; gap: .55rem; white-space: nowrap; font-size: .8rem; font-weight: 800; color: color-mix(in srgb, var(--app-text, #0f172a) 62%, transparent); letter-spacing: .01em; }
+@keyframes gl2-marquee { to { transform: translateX(-50%); } }
+
+/* Spotlight cards */
+.gl2-card { position: relative; display: flex; flex-direction: column; padding: .9rem; border-radius: 1.4rem; transition: transform .3s ease; }
+.gl2-card:hover { transform: translateY(-5px); }
+.gl2-card__glow {
+  position: absolute; inset: -1px; border-radius: 1.5rem; z-index: -1; opacity: 0;
+  background: conic-gradient(from 120deg, rgba(0,116,114,.4), rgba(42,195,187,.35), rgba(238,131,97,.4), rgba(0,116,114,.4));
+  filter: blur(14px); transition: opacity .35s ease;
+}
+.gl2-card:hover .gl2-card__glow { opacity: 1; }
+.gl2-card__icon { display: inline-flex; align-items: center; justify-content: center; width: 1.7rem; height: 1.7rem; border-radius: .6rem; background: color-mix(in srgb, var(--theme-primary, #007472) 12%, transparent); border: 1px solid color-mix(in srgb, var(--theme-primary, #007472) 25%, transparent); }
+
+/* Gamification band */
+.gl2-band { background: linear-gradient(120deg, color-mix(in srgb, var(--theme-primary, #007472) 10%, transparent), color-mix(in srgb, #EE8361 8%, transparent)); border: 1px solid color-mix(in srgb, var(--theme-primary, #007472) 22%, transparent); }
+.gl2-band__badge { position: relative; width: 6.5rem; height: 6.5rem; flex: none; }
+.gl2-band__badge-text { animation: gl2-spin 18s linear infinite; }
+.gl2-band__badge-svg { font-size: 10.5px; font-weight: 800; letter-spacing: .18em; fill: color-mix(in srgb, var(--app-text, #0f172a) 70%, transparent); font-family: "Space Grotesk", "Inter", sans-serif; }
+.gl2-band__badge-core { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; width: 2.9rem; height: 2.9rem; border-radius: 999px; background: linear-gradient(135deg, #007472, #2AC3BB); color: #fff; box-shadow: 0 6px 18px rgba(0,116,114,.4); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gl2-stars, .gl2-gradient-text, .gl2-orbit__core, .gl2-orbit__ring, .gl2-orbit__sat-icon, .gl2-marquee, .gl2-band__badge-text { animation: none !important; }
+}
