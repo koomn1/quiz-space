@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../data/quizspace_repository.dart';
 import '../services/deep_link_service.dart';
+import '../widgets/native_fx.dart';
 import '../widgets/native_ui.dart';
 import 'cosmo_screen.dart';
 import 'whiteboard_screen.dart';
@@ -72,31 +73,29 @@ class _NativeAppShellState extends State<NativeAppShell> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: NativeColors.background,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              _NativeTopBar(title: _titles[_selectedIndex]),
-              Expanded(child: IndexedStack(index: _selectedIndex, children: _pages)),
-            ],
+        body: NativeAuroraBackground(
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                _NativeTopBar(title: _titles[_selectedIndex]),
+                Expanded(child: IndexedStack(index: _selectedIndex, children: _pages)),
+              ],
+            ),
           ),
         ),
         bottomNavigationBar: SafeArea(
           top: false,
-          child: NavigationBar(
+          child: NativeTabBar(
             selectedIndex: _selectedIndex,
-            onDestinationSelected: _select,
-            height: 74,
-            backgroundColor: NativeColors.surface,
-            indicatorColor: NativeColors.primary.withValues(alpha: .2),
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'الرئيسية'),
-              NavigationDestination(icon: Icon(Icons.library_books_outlined), selectedIcon: Icon(Icons.library_books_rounded), label: 'اختباراتي'),
-              NavigationDestination(icon: Icon(Icons.add_box_outlined), selectedIcon: Icon(Icons.add_box_rounded), label: 'إنشاء'),
-              NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), selectedIcon: Icon(Icons.auto_awesome_rounded), label: 'Cosmo'),
-              NavigationDestination(icon: Icon(Icons.draw_outlined), selectedIcon: Icon(Icons.draw_rounded), label: 'السبورة'),
-              NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'حسابي'),
+            onSelect: _select,
+            tabs: const [
+              NativeTabSpec(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: 'الرئيسية'),
+              NativeTabSpec(icon: Icons.library_books_outlined, selectedIcon: Icons.library_books_rounded, label: 'اختباراتي'),
+              NativeTabSpec(icon: Icons.add_box_outlined, selectedIcon: Icons.add_box_rounded, label: 'إنشاء'),
+              NativeTabSpec(icon: Icons.auto_awesome_outlined, selectedIcon: Icons.auto_awesome_rounded, label: 'Cosmo'),
+              NativeTabSpec(icon: Icons.draw_outlined, selectedIcon: Icons.draw_rounded, label: 'السبورة'),
+              NativeTabSpec(icon: Icons.person_outline_rounded, selectedIcon: Icons.person_rounded, label: 'حسابي'),
             ],
           ),
         ),
@@ -114,9 +113,9 @@ class _NativeTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 11),
-      decoration: const BoxDecoration(
-        color: NativeColors.background,
-        border: Border(bottom: BorderSide(color: NativeColors.border)),
+      decoration: BoxDecoration(
+        color: NativeColors.background.withValues(alpha: .82),
+        border: const Border(bottom: BorderSide(color: NativeColors.border)),
       ),
       child: Row(
         children: [
