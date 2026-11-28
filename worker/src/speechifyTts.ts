@@ -86,19 +86,19 @@ export async function synthesizeSpeechify(env: Env, req: TtsRequest): Promise<Tt
     return { ok: false, status: res.status === 402 ? 402 : 502, error: `tts_failed_${res.status}: ${detail}` };
   }
   // Speechify answers JSON with base64 audio_data by default; decode to real WAV bytes.
-  const rawText = await res.text();
+  const raw = await res.arrayBuffer();
   let body: ArrayBuffer;
-  if (rawText.startsWith('{')) {
+  if (raw.byteLength > 0 && new Uint8Array(raw)[0] === 0x7b) { // '{'
     try {
-      const data: any = JSON.parse(rawText);
+      const data: any = JSON.parse(new TextDecoder().decode(raw));
       const b64 = typeof data?.audio_data === 'string' ? data.audio_data : '';
-      if (!b64) return { ok: false, status: 502, error: `tts_bad_response: ${rawText.slice(0, 120)}` };
+      if (!b64) return { ok: false, status: 502, error: 'tts_bad_response: no audio_data' };
       body = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer as ArrayBuffer;
     } catch {
       return { ok: false, status: 502, error: 'tts_bad_response' };
     }
   } else {
-    body = rawText ? new TextEncoder().encode(rawText).buffer as ArrayBuffer : new ArrayBuffer(0);
+    body = raw;
   }
   if (store && body.byteLength > 0 && body.byteLength < 8_000_000) {
     await store.put(key, new Response(body.slice(0), { headers: { 'Content-Type': 'audio/wav', 'Cache-Control': 'max-age=604800' } })).catch(() => undefined);
