@@ -76,4 +76,24 @@ describe('branch steps (learner questions)', () => {
     expect(validateBranchStep({ id: 'x', narration: 'a', nodes: [{ id: 'n', type: 'iframe', x: 1, y: 1 }] }, base, 0).ok).toBe(false);
     expect(validateBranchStep('nope', base, 0).ok).toBe(false);
   });
+  it('answers on a fresh board when the carried board has no room left', () => {
+    // A nearly full board: stacked big texts from top to bottom.
+    const full = validateLesson(lesson([
+      t('h', 640, 30, 'عنوان الدرس المكتوب بالكامل هنا', { fontSize: 44 }),
+      t('a', 640, 115, 'السطر الأول من الشرح الطويل نسبيًا', { fontSize: 44 }),
+      t('b', 640, 200, 'السطر الثاني من الشرح الطويل نسبيًا', { fontSize: 44 }),
+      t('c', 640, 285, 'السطر الثالث من الشرح الطويل نسبيًا', { fontSize: 44 }),
+      t('d', 640, 370, 'السطر الرابع من الشرح الطويل نسبيًا', { fontSize: 44 }),
+      t('e', 640, 455, 'السطر الخامس من الشرح الطويل نسبيًا', { fontSize: 44 }),
+      t('f', 640, 540, 'السطر السادس من الشرح الطويل نسبيًا', { fontSize: 44 }),
+      t('g', 640, 625, 'السطر السابع من الشرح الطويل نسبيًا', { fontSize: 44 }),
+    ])).lesson!;
+    const r = validateBranchStep(branch([
+      t('n1', 640, 100, 'إجابة السؤال سطر أول', { fontSize: 36 }),
+      t('n2', 640, 300, 'إجابة السؤال سطر ثان', { fontSize: 36 }),
+    ]), full, 0);
+    expect(r.ok).toBe(true);
+    expect(r.step!.continues).toBeFalsy();
+    expect(r.warnings.some(w => w.includes('fresh board'))).toBe(true);
+  });
 });

@@ -55,15 +55,30 @@ export function validateBranchStep(raw: unknown, lesson: WhiteboardLesson, after
   // Check the new step on top of the board it continues from: the previous step chain is carried in front of it.
   const chain: LessonStep[] = [];
   for (let i = afterIndex; i >= 0; i--) { chain.unshift(lesson.steps[i]); if (!lesson.steps[i].continues) break; }
-  const probe = validateLesson({
-    schema_version: 1, id: 'probe', title: lesson.title, lang: lesson.lang,
-    steps: [...chain, candidate], metadata: { source: 'ai', status: 'draft' },
-  });
-  if (!probe.ok || !probe.lesson) return { ok: false, errors: probe.errors, warnings: probe.warnings };
-  const laid = layoutLesson(probe.lesson);
-  // Only problems in the new step matter; the earlier steps were already accepted.
-  const last = laid.lesson.steps.length;
-  const mine = laid.problems.filter(p => p.startsWith(`step ${last},`));
-  if (mine.length > 0) return { ok: false, errors: mine, warnings: laid.fixes };
-  return { ok: true, step: laid.lesson.steps[last - 1], errors: [], warnings: laid.fixes.filter(f => f.startsWith(`step ${last},`)) };
+  const probeWith = (cand: Record<string, unknown>) => {
+    const probe = validateLesson({
+      schema_version: 1, id: 'probe', title: lesson.title, lang: lesson.lang,
+      steps: [...chain, cand], metadata: { source: 'ai', status: 'draft' },
+    });
+    if (!probe.ok || !probe.lesson) return { errors: probe.errors, warnings: probe.warnings, laid: null };
+    return { errors: [] as string[], warnings: probe.warnings, laid: layoutLesson(probe.lesson) };
+  };
+  const accepted = (laid: ReturnType<typeof layoutLesson>) => {
+    // Only problems in the new step matter; the earlier steps were already accepted.
+    const last = laid.lesson.steps.length;
+    const mine = laid.problems.filter(p => p.startsWith(`step ${last},`));
+    if (mine.length > 0) return { ok: false as const, errors: mine, warnings: laid.fixes };
+    return { ok: true as const, step: laid.lesson.steps[last - 1], errors: [] as string[], warnings: laid.fixes.filter(f => f.startsWith(`step ${last},`)) };
+  };
+  const first = probeWith(candidate);
+  if (!first.laid) return { ok: false, errors: first.errors, warnings: first.warnings };
+  const continued = accepted(first.laid);
+  if (continued.ok) return continued;
+  // A full board leaves no room for the answer: retry it as a fresh board instead of failing the question.
+  const fresh = probeWith({ ...candidate, continues: false });
+  if (fresh.laid) {
+    const cleared = accepted(fresh.laid);
+    if (cleared.ok) return { ...cleared, warnings: [...cleared.warnings, 'answer starts on a fresh board'] };
+  }
+  return { ok: false, errors: continued.errors, warnings: continued.warnings };
 }
