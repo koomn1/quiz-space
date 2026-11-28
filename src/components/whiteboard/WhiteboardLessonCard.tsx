@@ -3,6 +3,7 @@ import { PenTool, Sparkles, Save, Loader2, AlertTriangle, Paperclip, X } from 'l
 import { SAMPLE_LESSONS } from '../../lib/whiteboard/sampleLessons';
 import type { WhiteboardLesson } from '../../lib/whiteboard/lessonSchema';
 import { loadSavedLessons, saveReviewedLesson, validateAiLesson, validateBranchStep } from '../../lib/whiteboard/lessonDrafts';
+import { tashkeelDensity } from '../../lib/whiteboard/lessonSchema';
 import { askWhiteboardQuestion, generateWhiteboardLesson, type LessonAttachment } from '../../services/aiWorkerClient';
 import { canGenerateWhiteboardLesson } from '../../lib/whiteboard/access';
 import WhiteboardPlayer, { type AskResult } from './WhiteboardPlayer';
@@ -47,7 +48,18 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
       for (let attempt = 0; attempt < 3; attempt++) {
         const res = await generateWhiteboardLesson(topic.trim(), lang, 5, lastProblems.length ? lastProblems : undefined, file?.attachment);
         const checked = validateAiLesson(res.lesson, res.model);
-        if (checked.ok && checked.lesson) { setDraft(checked.lesson); setWarnings(checked.warnings); return; }
+        if (checked.ok && checked.lesson) {
+          // The teacher voice needs diacritized narration; regenerate when the model skipped the tashkeel, but never fail the lesson on the last attempt.
+          const weakTashkeel = checked.lesson.lang === 'ar'
+            && checked.lesson.steps.some(st => tashkeelDensity(st.narration) < 0.15);
+          if (weakTashkeel && attempt < 2) {
+            lastProblems = ['اكتب narration بالتشكيل الكامل: ضع الحركات (فتحة، ضمة، كسرة، سكون، شدة، تنوين) على حروف كل جملة تقريبًا، مثل: «الشَّمْسُ نَجْمٌ يَدُورُ حَوْلَهُ كُلُّ شَيْءٍ». النصوص على السبورة تبقى بدون تشكيل.'];
+            continue;
+          }
+          setDraft(checked.lesson);
+          setWarnings(weakTashkeel ? [...checked.warnings, 'narration without full tashkeel'] : checked.warnings);
+          return;
+        }
         lastProblems = checked.errors;
       }
       setDraft(null);

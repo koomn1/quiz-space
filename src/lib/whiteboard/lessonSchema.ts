@@ -99,6 +99,14 @@ const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(mi
  */
 const DIACRITICS_RE = /[\u0640\u064B-\u0652\u0670]/g;
 export const stripDiacritics = (text: string) => text.replace(DIACRITICS_RE, '');
+
+/** Share of Arabic letters carrying a diacritic mark; full tashkeel sits around 0.4-0.7. */
+export const tashkeelDensity = (text: string): number => {
+  const letters = (text.match(/[\u0621-\u064A]/g) ?? []).length;
+  if (!letters) return 1; // nothing to diacritize
+  const marked = (text.match(/[\u0621-\u064A][\u064B-\u0652\u0670]/g) ?? []).length;
+  return marked / letters;
+};
 const cleanBoardText = (v: unknown, max: number) => stripDiacritics(cleanText(v, max));
 
 const cleanText = (v: unknown, max: number) =>
