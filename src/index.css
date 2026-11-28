@@ -2678,7 +2678,7 @@ html[dir="rtl"] .quizspace-sidebar-panel,
 /* Narrow phones: the header has five controls, so the logo button keeps its own width,
    never overlaps the menu button, and drops the mark image (the wordmark stays). */
 @media (max-width: 430px) {
-  .quizspace-header-logo { flex: 0 1 auto; min-width: 0; overflow: hidden; justify-content: flex-start; }
+  .quizspace-header-logo { flex: 1 1 auto; min-width: 0; overflow: hidden; justify-content: flex-start; }
   .quizspace-header-logo img { display: none; }
   .quizspace-header-logo .main-logo-wordmark { max-width: none; }
   .quizspace-header-logo [class*="text-lg"] { font-size: 1rem; }
