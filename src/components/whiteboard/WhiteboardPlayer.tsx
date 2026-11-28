@@ -52,7 +52,7 @@ function popTransform(progress: number, cx: number, cy: number): string | undefi
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function RevealText({ node, progress, rtl }: { node: WhiteboardNode; progress: number; rtl: boolean }) {
+function RevealText({ node, progress, rtl, vcenter }: { node: WhiteboardNode; progress: number; rtl: boolean; vcenter?: boolean }) {
   const ref = useRef<SVGTextElement>(null);
   const [width, setWidth] = useState(() => (node.text?.length ?? 1) * (node.fontSize ?? 32) * 0.55);
   useLayoutEffect(() => {
@@ -77,13 +77,14 @@ function RevealText({ node, progress, rtl }: { node: WhiteboardNode; progress: n
     <g>
       <defs>
         <clipPath id={clipId}>
-          <rect x={revealRtl ? clipX - (progress >= 1 ? size : 0) : clipX} y={node.y - size * 1.2} width={Math.max(0, reveal)} height={size * 1.8} />
+          <rect x={revealRtl ? clipX - (progress >= 1 ? size : 0) : clipX} y={vcenter ? node.y - size : node.y - size * 1.2} width={Math.max(0, reveal)} height={size * 2} />
         </clipPath>
       </defs>
       <text
         ref={ref}
         x={node.x}
         y={node.y}
+        dominantBaseline={vcenter ? 'central' : undefined}
         fontSize={size}
         fontWeight={700}
         fill={COLORS[node.color]}
@@ -94,7 +95,7 @@ function RevealText({ node, progress, rtl }: { node: WhiteboardNode; progress: n
       >
         {node.text}
       </text>
-      {progress > 0 && progress < 1 && <PenTip x={penX} y={node.y - size * 0.3} color={COLORS[node.color]} wiggle={progress} />}
+      {progress > 0 && progress < 1 && <PenTip x={penX} y={vcenter ? node.y + size * 0.35 : node.y - size * 0.3} color={COLORS[node.color]} wiggle={progress} />}
     </g>
   );
 }
@@ -200,7 +201,7 @@ function StickerNode({ node, progress }: { node: WhiteboardNode; progress: numbe
 /** The spoken explanation, written on the board line by line as the teacher says it (diacritic-free).
  *  Shows the last few wrapped lines of the typed prefix, with the pen at the writing position. */
 function BoardExplanation({ text, progress, rtl }: { text: string; progress: number; rtl: boolean }) {
-  const X0 = 78, W = 1124, FS = 26, LINE_H = 37, MAX_LINES = 3, TOP = 596;
+  const X0 = 78, W = 1124, FS = 25, LINE_H = 34, MAX_LINES = 3, TOP = 590;
   const charW = FS * 0.55;
   const perLine = Math.max(20, Math.floor(W / charW));
   const chars = Math.floor(text.length * Math.min(1, Math.max(0, progress)));
@@ -215,13 +216,13 @@ function BoardExplanation({ text, progress, rtl }: { text: string; progress: num
   if (cur) lines.push(cur);
   const shown = lines.slice(-MAX_LINES);
   const lastLen = shown.length ? shown[shown.length - 1].length : 0;
-  const penX = rtl ? X0 + W - lastLen * charW : X0 + lastLen * charW;
-  const penY = TOP + 18 + shown.length * LINE_H;
+  const penX = rtl ? X0 + W - lastLen * charW - 20 : X0 + lastLen * charW + 20;
+  const penY = TOP + 32 + (shown.length - 1) * LINE_H + 8;
   return (
     <g data-testid="board-explanation" pointerEvents="none">
-      <rect x={64} y={TOP} width={1152} height={106} rx={14} fill="#fdfcf8" opacity={0.94} stroke="#e7e5df" />
+      <rect x={64} y={TOP} width={1152} height={112} rx={14} fill="#fdfcf8" opacity={0.94} stroke="#e7e5df" />
       {shown.map((ln, i) => (
-        <text key={`${i}-${ln.length}`} x={rtl ? X0 + W : X0} y={TOP + 34 + i * LINE_H} fontSize={FS} fill="#3f3f46"
+        <text key={`${i}-${ln.length}`} x={rtl ? X0 + W : X0} y={TOP + 32 + i * LINE_H} fontSize={FS} fill="#3f3f46"
           textAnchor="start" direction={rtl ? 'rtl' : 'ltr'} style={{ fontFamily: 'inherit' }}>{ln}</text>
       ))}
       {progress > 0 && progress < 1 && shown.length > 0 && <PenTip x={penX} y={penY} color="#3f3f46" wiggle={progress} />}
@@ -247,7 +248,7 @@ export function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progr
           {node.type === 'rectangle'
             ? <rect x={node.x} y={node.y} width={w} height={h} rx={14} {...common} />
             : <ellipse cx={node.x + w / 2} cy={node.y + h / 2} rx={w / 2} ry={h / 2} {...common} />}
-          {node.text && <RevealText node={{ ...node, x: node.x + w / 2, y: node.y + h / 2 + (node.fontSize ?? 32) / 3, align: 'center' }} progress={Math.max(0, (progress - 0.4) / 0.6)} rtl={rtl} />}
+          {node.text && <RevealText node={{ ...node, x: node.x + w / 2, y: node.y + h / 2, align: 'center' }} progress={Math.max(0, (progress - 0.4) / 0.6)} rtl={rtl} vcenter />}
           {showPen && <PenTip x={tip.x} y={tip.y} color={color} wiggle={progress} />}
         </g>
       );
