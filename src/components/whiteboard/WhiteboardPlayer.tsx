@@ -236,8 +236,8 @@ function BoardExplanation({ text, progress, rtl }: { text: string; progress: num
  * so a label whose baseline looks fine can ink above the box border. This pass
  * nudges such labels (and shrinks them if needed) so their ink fits the box.
  */
-const INK_ASCENT = 1.32;  // em above baseline for tall Arabic fonts (Aref Ruqaa/Molhim)
-const INK_DESCENT = 0.38; // em below baseline
+const INK_ASCENT = 1.65;  // em above baseline; Aref Ruqaa measures ~1.54em live
+const INK_DESCENT = 0.45; // em below baseline
 export function fitLabelsIntoBoxes(nodes: WhiteboardNode[]): WhiteboardNode[] {
   const boxes = nodes.filter(n => (n.type === 'rectangle' || n.type === 'ellipse') && !n.text && (n.w ?? 0) > 0 && (n.h ?? 0) > 0);
   if (!boxes.length) return nodes;
