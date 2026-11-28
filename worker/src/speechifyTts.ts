@@ -48,7 +48,7 @@ async function arabicVoiceId(env: Env, gender: 'boy' | 'girl'): Promise<string |
 }
 
 async function cacheKey(req: TtsRequest): Promise<string> {
-  const raw = `speechify|${req.voice}|${req.speed}|${req.text}`;
+  const raw = `speechify2|${req.voice}|${req.speed}|${req.text}`;
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
   const hex = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
   return `https://tts-cache.internal/speechify/${hex}`;
@@ -85,7 +85,21 @@ export async function synthesizeSpeechify(env: Env, req: TtsRequest): Promise<Tt
     const detail = (await res.text().catch(() => '')).slice(0, 160);
     return { ok: false, status: res.status === 402 ? 402 : 502, error: `tts_failed_${res.status}: ${detail}` };
   }
-  const body = await res.arrayBuffer();
+  // Speechify answers JSON with base64 audio_data by default; decode to real WAV bytes.
+  const rawText = await res.text();
+  let body: ArrayBuffer;
+  if (rawText.startsWith('{')) {
+    try {
+      const data: any = JSON.parse(rawText);
+      const b64 = typeof data?.audio_data === 'string' ? data.audio_data : '';
+      if (!b64) return { ok: false, status: 502, error: `tts_bad_response: ${rawText.slice(0, 120)}` };
+      body = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer as ArrayBuffer;
+    } catch {
+      return { ok: false, status: 502, error: 'tts_bad_response' };
+    }
+  } else {
+    body = rawText ? new TextEncoder().encode(rawText).buffer as ArrayBuffer : new ArrayBuffer(0);
+  }
   if (store && body.byteLength > 0 && body.byteLength < 8_000_000) {
     await store.put(key, new Response(body.slice(0), { headers: { 'Content-Type': 'audio/wav', 'Cache-Control': 'max-age=604800' } })).catch(() => undefined);
   }
