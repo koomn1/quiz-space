@@ -4,6 +4,7 @@ import { getDefaultAvatar } from '../constants/profileAssets';
 import type { Session, User } from '@supabase/supabase-js';
 import { isStrongPassword, passwordRequirementMessage } from '../lib/passwordPolicy';
 import { getAuthRedirectUrl } from '../lib/authRedirect';
+import { SITE_URL } from '../lib/siteUrl';
 import { Capacitor } from '@capacitor/core';
 import { ErrorCode, GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 
@@ -264,7 +265,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error(passwordRequirementMessage('ar'));
     }
 
-    const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
+    const redirectTo = getAuthRedirectUrl(SITE_URL, '/');
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -302,7 +303,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resendEmailVerification = async (email: string) => {
-    const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
+    const redirectTo = getAuthRedirectUrl(SITE_URL, '/');
 
     const { error } = await supabase.auth.resend({
       type: 'signup',
@@ -320,7 +321,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail) throw new Error('أدخل بريدك الإلكتروني أولاً.');
 
-    const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
+    const redirectTo = getAuthRedirectUrl(SITE_URL, '/');
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo });
     if (error) {
       throw new Error('تعذر إرسال رابط الاستعادة حالياً. حاول مرة أخرى بعد قليل.');
@@ -426,7 +427,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    const redirectTo = getAuthRedirectUrl(window.location.origin, import.meta.env.BASE_URL || '/');
+    const redirectTo = getAuthRedirectUrl(SITE_URL, '/');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
