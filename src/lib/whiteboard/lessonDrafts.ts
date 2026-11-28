@@ -1,8 +1,53 @@
 import { layoutLesson } from './layout';
 import { validateLesson, type LessonStep, type ValidationResult, type WhiteboardLesson } from './lessonSchema';
 
-const KEY = 'quizspace.whiteboard.lessons.v1';
-const MAX_SAVED = 20;
+const BASE_KEY = 'quizspace.whiteboard.lessons.v1';
+const MAX_SAVED = 50;
+const MAX_TOMBSTONES = 100;
+
+// Lessons are cached per account so two accounts sharing a device never see each other's
+// library. Guests (signed out) keep using the legacy base key.
+let activeAccountId: string | null = null;
+
+function lessonsKey(): string {
+  return activeAccountId ? `${BASE_KEY}.u-${activeAccountId}` : BASE_KEY;
+}
+
+function tombstonesKey(): string {
+  return `${lessonsKey()}.deleted`;
+}
+
+/** Point the local cache at an account (null = guest/device). Migrates legacy device lessons once. */
+export function setLessonLibraryAccount(accountId: string | null, storage: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> = localStorage): void {
+  const trimmed = accountId && accountId.trim() ? accountId.trim() : null;
+  if (trimmed === activeAccountId) return;
+  activeAccountId = trimmed;
+  if (!trimmed) return;
+  try {
+    const legacy = storage.getItem(BASE_KEY);
+    const accountKey = lessonsKey();
+    if (legacy && !storage.getItem(accountKey)) {
+      // Device-saved lessons predate accounts on this device: hand them to the first account that
+      // claims this device, then clear the shared key so no second account inherits them.
+      storage.setItem(accountKey, legacy);
+      storage.removeItem(BASE_KEY);
+    }
+  } catch { /* storage unavailable */ }
+}
+
+export function loadTombstones(storage: Pick<Storage, 'getItem'> = localStorage): string[] {
+  try {
+    const parsed = JSON.parse(storage.getItem(tombstonesKey()) || '[]');
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function recordTombstone(id: string, storage: Pick<Storage, 'getItem' | 'setItem'>): void {
+  const next = [id, ...loadTombstones(storage).filter(x => x !== id)].slice(0, MAX_TOMBSTONES);
+  try { storage.setItem(tombstonesKey(), JSON.stringify(next)); } catch { /* ignore */ }
+}
 
 /** AI output is always forced to an unreviewed draft before validation, whatever the model claims. */
 export function validateAiLesson(raw: unknown, model?: string): ValidationResult {
@@ -24,7 +69,7 @@ export function validateAiLesson(raw: unknown, model?: string): ValidationResult
 
 export function loadSavedLessons(storage: Pick<Storage, 'getItem'> = localStorage): WhiteboardLesson[] {
   try {
-    const parsed = JSON.parse(storage.getItem(KEY) || '[]');
+    const parsed = JSON.parse(storage.getItem(lessonsKey()) || '[]');
     if (!Array.isArray(parsed)) return [];
     return parsed.map(validateLesson).filter(r => r.ok && r.lesson).map(r => r.lesson!);
   } catch {
@@ -32,12 +77,41 @@ export function loadSavedLessons(storage: Pick<Storage, 'getItem'> = localStorag
   }
 }
 
-/** Saves a lesson on this device only, marked as reviewed by the person who confirmed it. */
+/** Saves a lesson to the active account's cache, marked as reviewed by the person who confirmed it. */
 export function saveReviewedLesson(lesson: WhiteboardLesson, storage: Pick<Storage, 'getItem' | 'setItem'> = localStorage): WhiteboardLesson[] {
   const reviewed: WhiteboardLesson = { ...lesson, metadata: { ...lesson.metadata, status: 'reviewed' } };
   const next = [reviewed, ...loadSavedLessons(storage).filter(l => l.id !== lesson.id)].slice(0, MAX_SAVED);
-  storage.setItem(KEY, JSON.stringify(next));
+  storage.setItem(lessonsKey(), JSON.stringify(next));
   return next;
+}
+
+/** Removes a lesson from the cache and leaves a tombstone so server sync never resurrects it. */
+export function removeSavedLesson(id: string, storage: Pick<Storage, 'getItem' | 'setItem'> = localStorage): WhiteboardLesson[] {
+  recordTombstone(id, storage);
+  const next = loadSavedLessons(storage).filter(l => l.id !== id);
+  storage.setItem(lessonsKey(), JSON.stringify(next));
+  return next;
+}
+
+/** Merges server-downloaded lessons into the cache (newest first) and returns the merged list. */
+export function mergeDownloadedLessons(downloaded: WhiteboardLesson[], storage: Pick<Storage, 'getItem' | 'setItem'> = localStorage): WhiteboardLesson[] {
+  if (downloaded.length === 0) return loadSavedLessons(storage);
+  const tombstones = new Set(loadTombstones(storage));
+  const byId = new Map<string, WhiteboardLesson>();
+  for (const l of [...downloaded, ...loadSavedLessons(storage)]) {
+    if (!byId.has(l.id) && !tombstones.has(l.id)) byId.set(l.id, l);
+  }
+  const next = [...byId.values()]
+    .sort((a, b) => (b.metadata.createdAt || '').localeCompare(a.metadata.createdAt || ''))
+    .slice(0, MAX_SAVED);
+  storage.setItem(lessonsKey(), JSON.stringify(next));
+  return next;
+}
+
+/** Local lessons the server does not have yet (candidates to upload), tombstones excluded. */
+export function localOnlyLessons(serverIds: Set<string>, storage: Pick<Storage, 'getItem'> = localStorage): WhiteboardLesson[] {
+  const tombstones = new Set(loadTombstones(storage));
+  return loadSavedLessons(storage).filter(l => !serverIds.has(l.id) && !tombstones.has(l.id));
 }
 
 /**

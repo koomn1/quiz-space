@@ -38,6 +38,16 @@ import {
   getAccountReasoningEffort,
   hasPaidCosmoAccess,
 } from './auth';
+import {
+  deleteLibraryLesson,
+  getLibraryLesson,
+  isLibraryPath,
+  LESSON_BODY_MAX_BYTES,
+  LibraryStorageNotReady,
+  libraryLessonId,
+  listLibraryLessons,
+  saveLibraryLesson,
+} from './whiteboardLibrary';
 import { generateWithProviderChain } from './providerChain';
 import {
   createOrGetExtractionJob,
@@ -174,7 +184,10 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
   const isExtractionJobRead =
     request.method === 'GET' &&
     (path === '/api/ai/extraction-jobs' || /^\/api\/ai\/extraction-jobs\/[0-9a-f-]{36}$/i.test(path));
-  if (request.method !== 'POST' && !isExtractionJobRead) return json({ error: 'Method not allowed' }, 405, headers);
+  // The whiteboard lesson library is the one CRUD surface: GET lists/reads, PUT saves, DELETE removes.
+  const isWhiteboardLibraryRequest =
+    isLibraryPath(path) && (request.method === 'GET' || request.method === 'PUT' || request.method === 'DELETE');
+  if (request.method !== 'POST' && !isExtractionJobRead && !isWhiteboardLibraryRequest) return json({ error: 'Method not allowed' }, 405, headers);
 
   let userId: string | null;
   try {
@@ -239,6 +252,50 @@ async function handler(request: Request, env: Env, _ctx: WorkerExecutionContext)
       job = await restartExpiredJob(env, authHeader, job);
       if (job.status === 'pending') await scheduleExtractionJob(env, authHeader, job.id);
       return json(publicExtractionJob(job), 200, headers);
+    }
+
+    if (isWhiteboardLibraryRequest) {
+      if (userId === 'guest' || userId === 'placeholder-user') {
+        return json({ error: 'Authentication required' }, 401, headers);
+      }
+      const notReady = () => json({ error: 'Whiteboard lesson storage is not set up yet.', code: 'storage_not_ready' }, 503, headers);
+      try {
+        if (request.method === 'GET' && path === '/api/ai/whiteboard-lessons') {
+          const lessons = await listLibraryLessons(env, authHeader, userId);
+          return json({ lessons }, 200, headers);
+        }
+        const lessonId = libraryLessonId(path);
+        if (!lessonId) return json({ error: 'Invalid lesson id' }, 400, headers);
+        if (request.method === 'GET') {
+          const found = await getLibraryLesson(env, authHeader, userId, lessonId);
+          if (!found) return json({ error: 'Lesson not found' }, 404, headers);
+          return json({ lesson: found.lesson, meta: found.meta }, 200, headers);
+        }
+        if (request.method === 'DELETE') {
+          await deleteLibraryLesson(env, authHeader, userId, lessonId);
+          return json({ ok: true }, 200, headers);
+        }
+        // PUT: save (upsert) one validated lesson document.
+        const contentLength = Number(request.headers.get('Content-Length') || 0);
+        if (contentLength > LESSON_BODY_MAX_BYTES) return json({ error: 'Lesson is too large to store.' }, 413, headers);
+        let payload: any = null;
+        try {
+          payload = await request.json();
+        } catch {
+          return json({ error: 'Invalid JSON request.' }, 400, headers);
+        }
+        await saveLibraryLesson(env, authHeader, userId, lessonId, payload?.lesson, {
+          sourceName: typeof payload?.sourceName === 'string' ? payload.sourceName : undefined,
+          model: typeof payload?.model === 'string' ? payload.model : undefined,
+        });
+        return json({ ok: true }, 200, headers);
+      } catch (error) {
+        if (error instanceof LibraryStorageNotReady) return notReady();
+        if (error instanceof Error && error.message === 'invalid lesson payload') {
+          return json({ error: 'Invalid lesson payload' }, 400, headers);
+        }
+        throw error;
+      }
     }
 
     let body: any = null;

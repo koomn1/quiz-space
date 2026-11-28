@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
-import { PenTool, Sparkles, Save, Loader2, AlertTriangle, Paperclip, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { PenTool, Sparkles, Save, Loader2, AlertTriangle, Paperclip, X, Trash2 } from 'lucide-react';
 import { SAMPLE_LESSONS } from '../../lib/whiteboard/sampleLessons';
 import type { WhiteboardLesson } from '../../lib/whiteboard/lessonSchema';
-import { loadSavedLessons, saveReviewedLesson, validateAiLesson, validateBranchStep } from '../../lib/whiteboard/lessonDrafts';
+import { loadSavedLessons, removeSavedLesson, saveReviewedLesson, setLessonLibraryAccount, validateAiLesson, validateBranchStep } from '../../lib/whiteboard/lessonDrafts';
 import { tashkeelDensity } from '../../lib/whiteboard/lessonSchema';
 import { askWhiteboardQuestion, generateWhiteboardLesson, type LessonAttachment } from '../../services/aiWorkerClient';
+import { currentAccountId, deleteServerLesson, syncLessonToServer, syncLibraryFromServer } from '../../services/whiteboardLibrary';
 import { canGenerateWhiteboardLesson } from '../../lib/whiteboard/access';
 import WhiteboardPlayer, { type AskResult } from './WhiteboardPlayer';
 
@@ -21,6 +22,21 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
   const [warnings, setWarnings] = useState<string[]>([]);
   const [file, setFile] = useState<{ name: string; attachment: LessonAttachment } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Point the cache at the signed-in account, then reconcile with the server library.
+  // Until the migration lands (or while offline) the server calls no-op and the local list stays.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const uid = await currentAccountId();
+      if (cancelled) return;
+      setLessonLibraryAccount(uid);
+      setSaved(loadSavedLessons());
+      const merged = await syncLibraryFromServer();
+      if (!cancelled && merged) setSaved(merged);
+    })();
+    return () => { cancelled = true; };
+  }, []);
   const FILE_MAX = 10 * 1024 * 1024;
   const FILE_ACCEPT = '.pdf,.png,.jpg,.jpeg,.webp,.docx,.txt';
   const pickFile = async (f: File) => {
@@ -87,6 +103,14 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
     if (!draft) return;
     const next = saveReviewedLesson(draft);
     setSaved(next); setSelectedId(draft.id); setDraft(null); setWarnings([]);
+    void syncLessonToServer(draft);
+  };
+
+  const removeLesson = (id: string) => {
+    const next = removeSavedLesson(id);
+    setSaved(next);
+    if (selectedId === id) setSelectedId(next[0]?.id ?? SAMPLE_LESSONS[0].id);
+    void deleteServerLesson(id);
   };
 
   return (
@@ -133,16 +157,24 @@ export function WhiteboardLessonCard({ lang, isPremium, planName }: { lang: 'ar'
           {error && <p role="alert" className="flex items-center gap-2 text-xs text-rose-500"><AlertTriangle className="w-4 h-4" />{error}</p>}
 
           {!draft && all.length > 1 && (
-            <select value={selectedId} onChange={e => setSelectedId(e.target.value)} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent text-xs font-black px-3 py-2">
-              {all.map(l => <option key={l.id} value={l.id}>{l.title}{l.metadata.source === 'ai' ? ' (AI)' : ''}</option>)}
-            </select>
+            <div className="flex items-center gap-2">
+              <select value={selectedId} onChange={e => setSelectedId(e.target.value)} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent text-xs font-black px-3 py-2" aria-label={isAr ? 'دروسي المحفوظة' : 'My saved lessons'}>
+                {all.map(l => <option key={l.id} value={l.id}>{l.title}{l.metadata.source === 'ai' ? ' (AI)' : ''}</option>)}
+              </select>
+              {lesson.metadata.source === 'ai' && (
+                <button type="button" onClick={() => removeLesson(lesson.id)} aria-label={isAr ? 'احذف هذا الدرس' : 'Delete this lesson'} data-testid="lesson-delete"
+                  className="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 px-2.5 py-2 text-xs font-black text-rose-500">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           )}
           {draft && (
             <div className="rounded-2xl border border-amber-300/60 bg-amber-50 dark:bg-amber-500/10 p-3 text-xs space-y-2" data-testid="whiteboard-draft-banner">
               <p className="font-black text-amber-700 dark:text-amber-300">{isAr ? 'مسودة مولّدة بالذكاء الاصطناعي: راجع الشرح والرسوم قبل الاعتماد. قد تحتوي أخطاء في المعلومة أو التنسيق.' : 'AI-generated draft: review the explanation and drawings before approving. It may contain factual or layout mistakes.'}</p>
               {warnings.length > 0 && <ul className="list-disc ps-5 text-amber-700/80 dark:text-amber-200/80">{warnings.slice(0, 5).map((w, i) => <li key={i}>{w}</li>)}</ul>}
               <div className="flex gap-2">
-                <button type="button" onClick={confirmAndSave} className="inline-flex items-center gap-1.5 bg-primary text-white font-black px-3 py-2 rounded-xl"><Save className="w-4 h-4" />{isAr ? 'راجعته، احفظه على جهازي' : 'Reviewed, save on this device'}</button>
+                <button type="button" onClick={confirmAndSave} className="inline-flex items-center gap-1.5 bg-primary text-white font-black px-3 py-2 rounded-xl"><Save className="w-4 h-4" />{isAr ? 'راجعته، احفظه في حسابي' : 'Reviewed, save to my account'}</button>
                 <button type="button" onClick={() => { setDraft(null); setWarnings([]); }} className="border border-slate-300 dark:border-slate-600 font-black px-3 py-2 rounded-xl">{isAr ? 'تجاهل' : 'Discard'}</button>
               </div>
             </div>

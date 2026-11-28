@@ -143,14 +143,6 @@ export function resolveAppBasePath(pathname: string, hostname: string, viteBase:
   return base.endsWith('/') ? base : base + '/';
 }
 
-/** The intro belongs to a fresh load of the primary root URL only. */
-export function shouldShowSplash(loc: { hostname: string; pathname: string; hash: string }): boolean {
-  const isPrimaryHost = loc.hostname.toLowerCase() === 'quiz-space-app.pages.dev';
-  const isRootPath = loc.pathname === '/' || loc.pathname === '';
-  const hasInnerRoute = Boolean(loc.hash && loc.hash !== '#/' && loc.hash !== '#');
-  return isPrimaryHost && isRootPath && !hasInnerRoute;
-}
-
 const SHARED_FRAME_TABS = new Set(['landing', 'profile', 'create', 'community', 'settings', 'my-quizzes', 'billing', 'institution']);
 
 /** Tabs that render inside the shared content frame (other screens use their own surface). */

@@ -36,10 +36,12 @@ describe('Quiz Space App authentication success contract', () => {
     expect(source).not.toContain('redirectTo: window.location.origin + (import.meta.env.BASE_URL || \'/\')');
   });
 
-  it('shows the splash on primary-root loads but not on inner routes or auth refreshes', () => {
-    // Splash logic now lives in lib/appRoute.ts (behavior covered by appRoute.test.ts).
-    expect(source).toContain('shouldShowSplash(window.location)');
-    expect(source).toContain('const [splashActive, setSplashActive] = React.useState(');
+  it('opens straight into the app with the normal bootstrap loader and no welcome splash', () => {
+    // The owner asked for the splash to go away (Nov 28): the main link opens the app directly.
+    expect(source).not.toContain('SplashScreen');
+    expect(source).not.toContain('splashActive');
+    expect(source).not.toContain('shouldShowSplash');
+    expect(source).toContain('isBootstrapLoading');
     expect(source).not.toContain("quizspace:landing-splash-seen:v2");
   });
 });

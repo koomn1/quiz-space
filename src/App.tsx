@@ -24,7 +24,6 @@ import { PremiumCursor } from './components/PremiumCursor';
 import { PostRegisterOnboardingModal } from './components/PostRegisterOnboardingModal';
 import OverlayPortal from './components/OverlayPortal';
 import DailyQuizCard from './components/DailyQuizCard';
-import SplashScreen from './components/SplashScreen';
 import {ToastHost, showAppMessage} from './components/Toast';
 import ProcessingCenterBanner from './components/ProcessingCenterBanner';
 import CommandPalette from './components/CommandPalette';
@@ -54,7 +53,7 @@ import AppShell from './app/AppShell';
 import SEO from './components/SEO';
 import { decideTabAccess } from './lib/tabAccess';
 import { useDelayedUnmount } from './hooks/useDelayedUnmount';
-import { resolveAppBasePath, shouldShowSplash, resolveActiveTab, resolveActiveQuizId, resolveUrlProfileId, usesSharedFrameTab, readLocationParams } from './lib/appRoute';
+import { resolveAppBasePath, resolveActiveTab, resolveActiveQuizId, resolveUrlProfileId, usesSharedFrameTab, readLocationParams } from './lib/appRoute';
 
 function normalizeUserPhoto(value: unknown): string | null {
   const raw = String(value || '').trim();
@@ -67,11 +66,6 @@ export default function App() {
   const authContext = useAuth();
   const { darkMode, setDarkMode, colorTheme, setColorTheme } = useTheme();
   const { lang, setLang } = useLocale();
-  // The intro belongs to a fresh load of the primary root URL only.
-  // Inner hash routes and auth refreshes use the normal application loader.
-  const [splashActive, setSplashActive] = React.useState(() =>
-    typeof window === 'undefined' ? false : shouldShowSplash(window.location),
-  );
   const [platformMaintenanceActive, setPlatformMaintenanceActive] = React.useState(false);
 
   const [isQuizLocked, setIsQuizLocked] = React.useState(false);
@@ -632,16 +626,7 @@ export default function App() {
         <>
           <ToastHost />
           <SEO activeTab={activeTab} lang={lang} />
-          {splashActive ? (
-        <SplashScreen
-          lang={lang}
-          userName={userName}
-          isGuest={!userId || userId.startsWith('user-')}
-          onComplete={() => {
-            setSplashActive(false);
-          }}
-        />
-      ) : isBootstrapLoading ? (
+          {isBootstrapLoading ? (
         <div className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center bg-slate-50/95 dark:bg-[#031717]/95 px-6 text-center backdrop-blur-xl" dir={lang === 'ar' ? 'rtl' : 'ltr'} role="status" aria-live="polite">
           <CosmicLoader size="lg" message={bootstrapMessage} />
         </div>
