@@ -345,6 +345,8 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const durations = useMemo(() => buildTimeline(lesson, rate), [lesson, rate]);
   const munsitTokenRef = useRef(0);
   const [munsitMs, setMunsitMs] = useState<number | null>(null);
+  // True once the provider teacher voice (Munsit/Speechify) actually failed, so the no-voice warning does not cry wolf while provider audio plays.
+  const [providerVoiceFailed, setProviderVoiceFailed] = useState(false);
   const baseDuration = durations.steps[stepIndex]?.durationMs ?? stepDurationMs(step, rate);
   const duration = munsitMs ? Math.max(baseDuration, munsitMs + 800) : baseDuration;
   const isLast = stepIndex === lesson.steps.length - 1;
@@ -385,7 +387,8 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     void speakWithMunsit(lesson.id, text, gender, rate, () => { speechDoneRef.current = true; }, ms => setMunsitMs(ms), ttsProvider)
       .then(pb => {
         if (munsitTokenRef.current !== token) { pb?.stop(); return; }
-        if (!pb) { speechDoneRef.current = true; speakBrowser(); return; }
+        if (!pb) { setProviderVoiceFailed(true); speechDoneRef.current = true; speakBrowser(); return; }
+        setProviderVoiceFailed(false);
         stopSpeechRef.current = () => pb.stop();
       });
   }, [lesson.steps, lesson.id, lesson.lang, muted, rate, stopSpeech, voiceInfo.hasVoiceForLang, voicePref, voiceId, ttsProvider]);
@@ -864,8 +867,8 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
       {!voiceInfo.supported && (
         <p className="flex items-center gap-2 text-[11px] text-slate-400"><Info className="w-3.5 h-3.5" />{isAr ? 'متصفحك لا يدعم النطق، سيُعرض الدرس بالنص المصاحب.' : 'Your browser has no speech support; the lesson plays with captions.'}</p>
       )}
-      {voiceInfo.supported && !voiceInfo.hasVoiceForLang && (
-        <p className="flex items-center gap-2 text-[11px] text-amber-600 dark:text-amber-400"><Info className="w-3.5 h-3.5" />{isAr ? 'لا يوجد صوت عربي على هذا الجهاز، سيُعرض الدرس بالنص المصاحب دون صوت.' : 'No voice for this language on this device; playing with captions only.'}</p>
+      {voiceInfo.supported && !voiceInfo.hasVoiceForLang && (stepLang !== 'ar' || providerVoiceFailed) && (
+        <p className="flex items-center gap-2 text-[11px] text-amber-600 dark:text-amber-400"><Info className="w-3.5 h-3.5" />{isAr ? 'تعذّر تشغيل الصوت على هذا الجهاز؛ سيُعرض الدرس مكتوبًا على السبورة دون صوت.' : 'No voice for this language on this device; the lesson plays silently on the board.'}</p>
       )}
     </div>
   );
