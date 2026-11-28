@@ -7,7 +7,6 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:vector_graphics/vector_graphics.dart';
 
 import '../whiteboard/whiteboard_models.dart';
 import '../whiteboard/whiteboard_stickers.dart';
