@@ -1,6 +1,6 @@
-/// CustomPainter that renders a whiteboard step natively — the Flutter port of
-/// the web player's SVG board (WhiteboardPlayer.tsx). Same coordinates (1280x720),
-/// same colors, same progressive reveal, same explanation strip.
+// CustomPainter that renders a whiteboard step natively — the Flutter port of
+// the web player's SVG board (WhiteboardPlayer.tsx). Same coordinates (1280x720),
+// same colors, same progressive reveal, same explanation strip.
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

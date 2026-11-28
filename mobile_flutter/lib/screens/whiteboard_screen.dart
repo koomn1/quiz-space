@@ -1,6 +1,6 @@
-/// Native whiteboard lesson screen: generate a lesson from a topic and watch it
-/// drawn step by step with the explanation typed on the board. The Flutter port
-/// of the web whiteboard player (no webview).
+// Native whiteboard lesson screen: generate a lesson from a topic and watch it
+// drawn step by step with the explanation typed on the board. The Flutter port
+// of the web whiteboard player (no webview).
 import 'dart:async';
 import 'dart:typed_data';
 

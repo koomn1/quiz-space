@@ -1,5 +1,5 @@
-/// Worker access for whiteboard lessons: same endpoints the web app uses.
-/// Auth mirrors mobile_ai_service: Firebase ID token first, Supabase session as fallback.
+// Worker access for whiteboard lessons: same endpoints the web app uses.
+// Auth mirrors mobile_ai_service: Firebase ID token first, Supabase session as fallback.
 import 'dart:convert';
 import 'dart:io';
 
