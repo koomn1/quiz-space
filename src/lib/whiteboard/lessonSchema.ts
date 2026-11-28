@@ -106,6 +106,18 @@ const cleanText = (v: unknown, max: number) =>
 
 const SHAPES_WITH_BOX: NodeType[] = ['rectangle', 'ellipse', 'highlight'];
 
+/** Model-friendly shorthand mapped to real OpenMoji catalog names (safety net for generated lessons). */
+const STICKER_ALIASES: Record<string, string> = {
+  earth: 'globe-showing-europe-africa',
+  globe: 'globe-showing-europe-africa',
+  world: 'globe-showing-europe-africa',
+  planet: 'ringed-planet',
+  saturn: 'ringed-planet',
+  moon: 'crescent-moon',
+};
+export const resolveStickerName = (name: string): string | null =>
+  stickerSet.has(name) ? name : (STICKER_ALIASES[name] && stickerSet.has(STICKER_ALIASES[name]) ? STICKER_ALIASES[name] : null);
+
 /**
  * Validates untrusted JSON (for example model output) and returns a sanitized lesson.
  * Structural problems are errors (the lesson is rejected); out-of-range numbers are clamped with a warning.
@@ -202,8 +214,9 @@ export function validateLesson(input: unknown): ValidationResult {
         });
       }
       if (type === 'sticker') {
-        const name = typeof rawNode.name === 'string' ? rawNode.name : '';
-        if (!stickerSet.has(name)) { errors.push(`${nw}: unknown sticker "${name.slice(0, 60)}".`); return; }
+        const rawName = typeof rawNode.name === 'string' ? rawNode.name : '';
+        const name = resolveStickerName(rawName);
+        if (!name) { errors.push(`${nw}: unknown sticker "${rawName.slice(0, 60)}".`); return; }
         node.name = name;
         if (!finite(rawNode.w) || !finite(rawNode.h) || rawNode.w <= 0 || rawNode.h <= 0) { errors.push(`${nw}: w and h must be positive numbers.`); return; }
         node.w = clamp(rawNode.w, 24, Math.min(400, CANVAS_WIDTH - node.x));

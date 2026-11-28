@@ -151,3 +151,21 @@ describe('stripDiacritics', () => {
     expect(r.lesson!.steps[0].narration).toBe('الشَّمْسُ نَجْمٌ فِي مَرْكَزِ النِّظَامِ.');
   });
 });
+
+describe('sticker aliases', () => {
+  it('maps model shorthand to real catalog names and still rejects unknowns', () => {
+    expect(stripDiacritics('أ')).toBe('أ');
+    const lesson = base() as any;
+    lesson.steps[0].nodes = [
+      { id: 's1', type: 'sticker', x: 100, y: 100, w: 120, h: 120, name: 'earth' },
+      { id: 's2', type: 'sticker', x: 300, y: 100, w: 120, h: 120, name: 'saturn' },
+    ];
+    const r = validateLesson(lesson);
+    expect(r.ok).toBe(true);
+    expect(r.lesson!.steps[0].nodes[0].name).toBe('globe-showing-europe-africa');
+    expect(r.lesson!.steps[0].nodes[1].name).toBe('ringed-planet');
+    const bad = base() as any;
+    bad.steps[0].nodes = [{ id: 's3', type: 'sticker', x: 1, y: 1, w: 50, h: 50, name: 'toaster-oven' }];
+    expect(validateLesson(bad).ok).toBe(false);
+  });
+});
