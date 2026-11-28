@@ -7,7 +7,7 @@ import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
 import { appendPoint, boardPoint, pointsToPath, type FreehandPoint, type FreehandStroke } from '../../lib/whiteboard/freehand';
 import { captureBoardPng } from '../../lib/whiteboard/boardSnapshot';
 import { loadStickerInner } from '../../lib/whiteboard/stickers';
-import { speakWithMunsit } from '../../lib/whiteboard/munsitVoice';
+import { speakWithMunsit, prefetchMunsitClip } from '../../lib/whiteboard/munsitVoice';
 import { requestLessonStt } from '../../services/aiWorkerClient';
 import { stripDiacritics } from '../../lib/whiteboard/lessonSchema';
 import { exportLessonPdf } from '../../lib/whiteboard/lessonPdf';
@@ -454,6 +454,20 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     });
     return () => { tween.kill(); grace?.kill(); };
   }, [playing, stepIndex, duration, isLast, stopSpeech, step.branch]);
+
+  // Warm the teacher-voice clip for the current and next step so the voice starts
+  // with the step (the fetch would otherwise land seconds into the drawing).
+  useEffect(() => {
+    if (muted) return;
+    const warm = (i: number) => {
+      const st = lesson.steps[i];
+      if (!st || (st.lang ?? lesson.lang) !== 'ar') return;
+      const gender = genderForStep(voicePref, i) === 'female' ? 'girl' : 'boy';
+      prefetchMunsitClip(lesson.id, st.narration, gender, rate, ttsProvider);
+    };
+    warm(stepIndex);
+    warm(stepIndex + 1);
+  }, [lesson, stepIndex, muted, rate, voicePref, ttsProvider]);
 
   // Speak whenever playback is active on a new step.
   const spokenStepRef = useRef<number | null>(null);

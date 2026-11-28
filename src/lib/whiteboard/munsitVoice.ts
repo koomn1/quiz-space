@@ -25,6 +25,30 @@ async function loadClip(text: string, gender: MunsitGender, speed: number, provi
   return URL.createObjectURL(new Blob([res.audio], { type: 'audio/wav' }));
 }
 
+/** Create (or reuse) the cached clip fetch, charging the lesson budget once per unique clip. */
+function ensureClip(lessonId: string, text: string, gender: MunsitGender, speed: number, provider: 'munsit' | 'speechify'): Promise<string | null> | null {
+  const key = `${provider}|${gender}|${speed}|${text}`;
+  let urlPromise = audioCache.get(key);
+  if (!urlPromise) {
+    if (munsitBudgetLeft(lessonId) < text.length) return null;
+    budgets.set(lessonId, (budgets.get(lessonId) ?? 0) + text.length);
+    urlPromise = loadClip(text, gender, speed, provider);
+    audioCache.set(key, urlPromise);
+    // A failed fetch is not retried forever, but one retry on next play is fair.
+    urlPromise.then(u => { if (!u) audioCache.delete(key); });
+  }
+  return urlPromise;
+}
+
+/**
+ * Warm the clip cache for an upcoming step so the voice can start with the step
+ * instead of seconds later. No-ops on short text or a spent budget.
+ */
+export function prefetchMunsitClip(lessonId: string, text: string, gender: MunsitGender, speed: number, provider: 'munsit' | 'speechify' = 'munsit'): void {
+  if (text.trim().length < 2) return;
+  void ensureClip(lessonId, text, gender, speed, provider);
+}
+
 export interface MunsitPlayback {
   /** Real clip duration once metadata is loaded; null until then. */
   durationMs: number | null;
@@ -45,16 +69,8 @@ export async function speakWithMunsit(
   provider: 'munsit' | 'speechify' = 'munsit',
 ): Promise<MunsitPlayback | null> {
   if (text.trim().length < 2) return null;
-  if (munsitBudgetLeft(lessonId) < text.length) return null;
-  const key = `${provider}|${gender}|${speed}|${text}`;
-  let urlPromise = audioCache.get(key);
-  if (!urlPromise) {
-    budgets.set(lessonId, (budgets.get(lessonId) ?? 0) + text.length);
-    urlPromise = loadClip(text, gender, speed, provider);
-    audioCache.set(key, urlPromise);
-    // A failed fetch is not retried forever, but one retry on next play is fair.
-    urlPromise.then(u => { if (!u) audioCache.delete(key); });
-  }
+  const urlPromise = ensureClip(lessonId, text, gender, speed, provider);
+  if (!urlPromise) return null;
   const url = await urlPromise;
   if (!url) return null;
   try {

@@ -88,18 +88,33 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
     return audio != null && audio > estimate ? audio : estimate;
   }
 
-  /// Fetch and play the teacher clip for the step; extends the step so speech is never cut.
-  Future<void> _speakStep(int index) async {
+  /// Per-step clip cache: the next step's audio is fetched while the current one
+  /// plays, so the voice starts with the step instead of seconds into it.
+  final Map<int, Future<List<int>?>> _ttsCache = {};
+
+  Future<List<int>?> _stepClip(int index) {
     final lesson = _lesson;
-    if (lesson == null) return;
+    if (lesson == null || index < 0 || index >= lesson.steps.length) return Future.value(null);
+    final cached = _ttsCache[index];
+    if (cached != null) return cached;
     final step = lesson.steps[index];
     final lang = step.lang ?? lesson.lang;
-    if (lang != 'ar') return; // native v1 speaks Arabic narration only
+    if (lang != 'ar') return Future.value(null); // native v1 speaks Arabic narration only
     final text = step.narration;
-    if (_ttsCharsUsed + text.length > _ttsCharBudget) return;
+    if (_ttsCharsUsed + text.length > _ttsCharBudget) return Future.value(null);
     _ttsCharsUsed += text.length;
+    final future = WhiteboardService.fetchTts(text, voice: index.isEven ? 'boy' : 'girl');
+    _ttsCache[index] = future;
+    return future;
+  }
+
+  /// Fetch and play the teacher clip for the step; extends the step so speech is never cut.
+  Future<void> _speakStep(int index) async {
+    if (_lesson == null) return;
     final token = ++_ttsToken;
-    final bytes = await WhiteboardService.fetchTts(text, voice: index.isEven ? 'boy' : 'girl');
+    final bytes = await _stepClip(index);
+    // Warm the next step's clip while this one plays.
+    unawaited(_stepClip(index + 1));
     if (!mounted || bytes == null || token != _ttsToken) return;
     try {
       await _player.stop();
@@ -137,9 +152,12 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
         _playing = false;
         _audioMs.clear();
         _ttsCharsUsed = 0;
+        _ttsCache.clear();
         _stickerPics.clear();
       });
       _preloadStickers(lesson);
+      unawaited(_stepClip(0));
+      unawaited(_stepClip(1));
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('HttpException: ', ''));
@@ -207,6 +225,9 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
         _playing = false;
       });
       _preloadStickers(lesson);
+      // Warm the inserted branch step (now current) and the one after it.
+      unawaited(_stepClip(_stepIndex));
+      unawaited(_stepClip(_stepIndex + 1));
     } catch (e) {
       if (!mounted) return;
       setState(() => _askError = e.toString().replaceFirst('HttpException: ', ''));
