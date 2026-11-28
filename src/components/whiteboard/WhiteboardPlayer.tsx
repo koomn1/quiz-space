@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { Pause, Play, Pencil, SkipBack, SkipForward, Target, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2, ZoomIn, ZoomOut, Maximize, FileDown, PenLine } from 'lucide-react';
+import { Pause, Play, Pencil, SkipBack, SkipForward, Target, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2, ZoomIn, ZoomOut, Maximize, FileDown, PenLine, Mic, Square } from 'lucide-react';
 import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
 import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
@@ -8,6 +8,7 @@ import { appendPoint, boardPoint, pointsToPath, type FreehandPoint, type Freehan
 import { captureBoardPng } from '../../lib/whiteboard/boardSnapshot';
 import { loadStickerInner } from '../../lib/whiteboard/stickers';
 import { speakWithMunsit } from '../../lib/whiteboard/munsitVoice';
+import { requestLessonStt } from '../../services/aiWorkerClient';
 import { stripDiacritics } from '../../lib/whiteboard/lessonSchema';
 import { exportLessonPdf } from '../../lib/whiteboard/lessonPdf';
 import { ICONS, type IconName } from '../../lib/whiteboard/icons';
@@ -354,6 +355,8 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   const [voiceInfo, setVoiceInfo] = useState(() => getNarrationSupport(stepLang));
   const reduced = useMemo(prefersReducedMotion, []);
   const [voicePref, setVoicePref] = useState<VoicePreference>(() => { try { return loadVoicePreference(); } catch { return 'female'; } });
+  const [ttsProvider, setTtsProvider] = useState<'munsit' | 'speechify'>(() => { try { return localStorage.getItem('wb-tts-provider') === 'speechify' ? 'speechify' : 'munsit'; } catch { return 'munsit'; } });
+  const pickTtsProvider = (p: 'munsit' | 'speechify') => { setTtsProvider(p); try { localStorage.setItem('wb-tts-provider', p); } catch { /* private mode */ } };
   const [voiceId, setVoiceId] = useState<string>('');
   const [voiceList, setVoiceList] = useState<VoiceOption[]>([]);
   // Learner freehand layer: strokes live in board coordinates so they scale with the svg.
@@ -409,13 +412,13 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     const narration = lesson.steps[index].narration;
     const text = fromSentence > 0 ? splitSentences(narration).slice(fromSentence).join(' ') : narration;
     const gender = genderForStep(voicePref, index) === 'female' ? 'girl' : 'boy';
-    void speakWithMunsit(lesson.id, text, gender, rate, () => { speechDoneRef.current = true; }, ms => setMunsitMs(ms))
+    void speakWithMunsit(lesson.id, text, gender, rate, () => { speechDoneRef.current = true; }, ms => setMunsitMs(ms), ttsProvider)
       .then(pb => {
         if (munsitTokenRef.current !== token) { pb?.stop(); return; }
         if (!pb) { speechDoneRef.current = true; speakBrowser(); return; }
         stopSpeechRef.current = () => pb.stop();
       });
-  }, [lesson.steps, lesson.id, lesson.lang, muted, rate, stopSpeech, voiceInfo.hasVoiceForLang, voicePref, voiceId]);
+  }, [lesson.steps, lesson.id, lesson.lang, muted, rate, stopSpeech, voiceInfo.hasVoiceForLang, voicePref, voiceId, ttsProvider]);
 
   // Animation clock: one GSAP tween per step drives the step time (ease none), so pause, seek and the narration sync all work off one timeline.
   const tRef = useRef(0);
@@ -529,6 +532,45 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
       setAskError(e?.message || (isAr ? 'تعذر الحصول على إجابة.' : 'Could not get an answer.'));
     } finally { setAsking(false); }
   };
+
+  // Voice questions: record a short clip, transcribe it worker-side (Whisper), then ask as usual.
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const stopVoiceQuestion = useCallback(() => { recorderRef.current?.stop(); }, []);
+  const startVoiceQuestion = useCallback(async () => {
+    if (recording || transcribing || asking) return;
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      setAskError(isAr ? 'الميكروفون غير متاح' : 'Microphone unavailable');
+      return;
+    }
+    const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    const chunks: BlobPart[] = [];
+    rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    rec.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      recorderRef.current = null;
+      setRecording(false);
+      const blob = new Blob(chunks, { type: rec.mimeType || 'audio/webm' });
+      if (blob.size < 400) return;
+      setTranscribing(true);
+      void requestLessonStt(blob)
+        .then(res => {
+          if (res.ok) { setQuestion(res.text); void ask(res.text); }
+          else setAskError(isAr ? 'تعذّر فهم التسجيل، جرّب الكتابة' : 'Could not transcribe the recording, try typing');
+        })
+        .finally(() => setTranscribing(false));
+    };
+    recorderRef.current = rec;
+    setRecording(true);
+    rec.start();
+    // Cap a question at 30 seconds.
+    setTimeout(() => { if (recorderRef.current === rec) rec.stop(); }, 30_000);
+  }, [recording, transcribing, asking, isAr, ask]);
 
   const resumeOriginal = () => {
     setOfferResume(false);
@@ -805,6 +847,11 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
             <input value={question} onChange={e => setQuestion(e.target.value)} onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); void ask(); } }} maxLength={500}
               placeholder={isAr ? 'عندك سؤال؟ اكتبه وسأتوقف وأشرحه على نفس السبورة' : 'Have a question? Type it and I will pause and explain on this board'}
               className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 py-2 text-xs" aria-label={isAr ? 'سؤال أثناء الدرس' : 'Question during the lesson'} />
+            <button type="button" onClick={() => { if (recording) stopVoiceQuestion(); else void startVoiceQuestion(); }} disabled={asking || transcribing} aria-pressed={recording} data-testid="voice-question-mic"
+              aria-label={isAr ? (recording ? 'إيقاف التسجيل' : 'اسأل بصوتك') : (recording ? 'Stop recording' : 'Ask by voice')}
+              className={`p-2.5 rounded-xl border ${recording ? 'border-rose-500 bg-rose-500/10 text-rose-500 animate-pulse' : 'border-slate-200 dark:border-slate-700'} disabled:opacity-50`}>
+              {transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
             <button type="button" onClick={() => void ask()} disabled={asking || question.trim().length < 2} aria-label={isAr ? 'أرسل السؤال' : 'Send question'} className="inline-flex items-center gap-1.5 bg-primary text-white font-black text-xs px-3 py-2.5 rounded-xl disabled:opacity-50">
               {asking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}{isAr ? 'اسأل' : 'Ask'}
             </button>
@@ -819,6 +866,11 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
           className="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent font-black px-2 py-2">
           <option value="female">{isAr ? 'معلّمة (صوت أنثوي)' : 'Teacher (female voice)'}</option>
           <option value="male">{isAr ? 'معلّم (صوت ذكوري)' : 'Teacher (male voice)'}</option>
+        </select>
+        <select value={ttsProvider} onChange={e => pickTtsProvider(e.target.value as 'munsit' | 'speechify')} aria-label={isAr ? 'محرك الصوت' : 'Voice engine'} data-testid="tts-provider-select"
+          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent text-xs font-black px-2 py-2">
+          <option value="munsit">Munsit</option>
+          <option value="speechify">Speechify</option>
           <option value="alternate">{isAr ? 'تبادل بين الاثنين' : 'Alternate both'}</option>
         </select>
         {voiceList.length > 1 && voicePref !== 'alternate' && (

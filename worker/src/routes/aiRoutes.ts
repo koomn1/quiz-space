@@ -19,6 +19,8 @@ import {
 } from '../services/answerReviewService';
 import { buildFollowUpPrompt, buildLessonPrompt, parseFollowUpRequest, parseLessonAttachment, parseLessonRequest, LESSON_SOURCE_MAX } from '../whiteboardLesson';
 import { parseTtsRequest, synthesizeMunsit } from '../munsitTts';
+import { synthesizeSpeechify } from '../speechifyTts';
+import { parseAudioUpload, transcribeWhisper } from '../whisperStt';
 import { json, routePath, type RouteContext, type RouteResult } from '../routes';
 
 type Provider = 'inception';
@@ -537,7 +539,7 @@ export async function handleAiRoutes(
     if (!(await hasGoldOrDiamondAccess(request, env, userId))) {
       return json({ error: 'AI whiteboard lessons are available on the Gold and Diamond plans only.', code: 'plan_required' }, 403, headers);
     }
-    const tts = await synthesizeMunsit(env, ttsRequest);
+    const tts = ttsRequest.provider === 'speechify' ? await synthesizeSpeechify(env, ttsRequest) : await synthesizeMunsit(env, ttsRequest);
     if (!tts.ok || !tts.body) {
       return json({ error: tts.error ?? 'tts_unavailable', code: tts.status === 402 ? 'tts_credits_exhausted' : 'tts_unavailable' }, tts.status, headers);
     }
@@ -545,6 +547,25 @@ export async function handleAiRoutes(
       status: 200,
       headers: { ...headers, 'Content-Type': 'audio/wav', 'Cache-Control': 'private, max-age=86400', 'X-TTS-Cache': tts.cached ? 'hit' : 'miss' },
     });
+  }
+
+  if (path === '/api/ai/lesson-stt') {
+    meta.setAiOperation('lesson-stt');
+    if (userId === 'guest' || userId === 'placeholder-user') {
+      return json({ error: 'Authentication required' }, 401, headers);
+    }
+    if (!(await hasGoldOrDiamondAccess(request, env, userId))) {
+      return json({ error: 'AI whiteboard lessons are available on the Gold and Diamond plans only.', code: 'plan_required' }, 403, headers);
+    }
+    const audio = await parseAudioUpload(request);
+    if (!audio) {
+      return json({ error: 'Invalid audio upload' }, 400, headers);
+    }
+    const stt = await transcribeWhisper(env, audio, 'ar');
+    if (!stt.ok || !stt.text) {
+      return json({ error: stt.error ?? 'stt_unavailable', code: 'stt_unavailable' }, stt.status, headers);
+    }
+    return json({ text: stt.text }, 200, headers);
   }
 
   if (path === '/api/ai/explain') {

@@ -286,6 +286,8 @@ jobs:
           }
           sync_secret INCEPTION_API_KEY
           sync_secret MUNSIT_API_KEY
+          sync_secret SPEECHIFY_API_KEY
+          sync_secret WHISPER_API_KEY
           sync_secret XKIRO_API_KEY
           sync_secret TAVILY_API_KEY
           sync_secret SUPABASE_SERVICE_ROLE_KEY

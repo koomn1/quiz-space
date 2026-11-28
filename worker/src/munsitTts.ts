@@ -9,10 +9,13 @@ const VOICES = {
   girl: '08XOzRjaaumxbHhcGOrWkJ7z', // Hala
 } as const;
 
+export type TtsProvider = 'munsit' | 'speechify';
+
 export interface TtsRequest {
   voice: keyof typeof VOICES;
   text: string;
   speed: number;
+  provider: TtsProvider;
 }
 
 export const TTS_TEXT_MAX = 1200; // characters per call; the client also budgets per lesson
@@ -26,7 +29,8 @@ export function parseTtsRequest(body: any): TtsRequest | null {
   const speed = typeof body.speed === 'number' && Number.isFinite(body.speed)
     ? Math.min(1.2, Math.max(0.7, body.speed))
     : 1;
-  return { voice, text, speed };
+  const provider: TtsProvider = body.provider === 'speechify' ? 'speechify' : 'munsit';
+  return { voice, text, speed, provider };
 }
 
 async function cacheKey(req: TtsRequest): Promise<string> {

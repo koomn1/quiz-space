@@ -19,8 +19,8 @@ export function resetMunsitBudgets() { budgets.clear(); }
 
 const audioCache = new Map<string, Promise<string | null>>();
 
-async function loadClip(text: string, gender: MunsitGender, speed: number): Promise<string | null> {
-  const res = await requestLessonTts(text, gender === 'girl' ? 'girl' : 'boy', speed);
+async function loadClip(text: string, gender: MunsitGender, speed: number, provider: 'munsit' | 'speechify'): Promise<string | null> {
+  const res = await requestLessonTts(text, gender === 'girl' ? 'girl' : 'boy', speed, provider);
   if (!res.ok) return null;
   return URL.createObjectURL(new Blob([res.audio], { type: 'audio/wav' }));
 }
@@ -42,14 +42,15 @@ export async function speakWithMunsit(
   speed: number,
   onEnd: () => void,
   onDuration?: (ms: number) => void,
+  provider: 'munsit' | 'speechify' = 'munsit',
 ): Promise<MunsitPlayback | null> {
   if (text.trim().length < 2) return null;
   if (munsitBudgetLeft(lessonId) < text.length) return null;
-  const key = `${gender}|${speed}|${text}`;
+  const key = `${provider}|${gender}|${speed}|${text}`;
   let urlPromise = audioCache.get(key);
   if (!urlPromise) {
     budgets.set(lessonId, (budgets.get(lessonId) ?? 0) + text.length);
-    urlPromise = loadClip(text, gender, speed);
+    urlPromise = loadClip(text, gender, speed, provider);
     audioCache.set(key, urlPromise);
     // A failed fetch is not retried forever, but one retry on next play is fair.
     urlPromise.then(u => { if (!u) audioCache.delete(key); });

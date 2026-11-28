@@ -55,13 +55,13 @@ export type LessonTtsResult =
   | { ok: true; audio: ArrayBuffer }
   | { ok: false; status: number };
 
-/** Fetch a Munsit teacher clip (WAV) from the Worker; non-200 means the player should use the browser voice. */
-export async function requestLessonTts(text: string, voice: 'boy' | 'girl', speed: number): Promise<LessonTtsResult> {
+/** Fetch a teacher clip (WAV) from the Worker; non-200 means the player should use the browser voice. */
+export async function requestLessonTts(text: string, voice: 'boy' | 'girl', speed: number, provider: 'munsit' | 'speechify' = 'munsit'): Promise<LessonTtsResult> {
   try {
     const response = await fetchWithAuth(getApiUrl('/api/ai/lesson-tts'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, voice, speed }),
+      body: JSON.stringify({ text, voice, speed, provider }),
     });
     if (response.ok) return { ok: true, audio: await response.arrayBuffer() };
     return { ok: false, status: response.status };
@@ -644,4 +644,25 @@ export async function generateWhiteboardLesson(topic: string, lang: 'ar' | 'en' 
 
 export async function askWhiteboardQuestion(input: { question: string; lang: 'ar' | 'en'; lessonTitle: string; step: { title?: string; narration: string; nodes: unknown[] }; boardImage?: string }): Promise<{ step: unknown; model?: string }> {
   return await workerRequest<{ step: unknown; model?: string }>('/api/ai/lesson-followup', { ...input, step: { ...input.step, title: input.step.title ?? '' } }, 120_000);
+}
+
+export type LessonSttResult =
+  | { ok: true; text: string }
+  | { ok: false; status: number };
+
+/** Transcribe a short voice question (Whisper, worker-side key). Non-200 means voice questions are unavailable. */
+export async function requestLessonStt(audio: Blob): Promise<LessonSttResult> {
+  try {
+    const form = new FormData();
+    form.append('audio', audio, audio.type.includes('mp4') ? 'question.mp4' : 'question.webm');
+    const response = await fetchWithAuth(getApiUrl('/api/ai/lesson-stt'), { method: 'POST', body: form });
+    if (response.ok) {
+      const data = await response.json() as { text?: string };
+      if (typeof data.text === 'string' && data.text.trim()) return { ok: true, text: data.text.trim() };
+      return { ok: false, status: 502 };
+    }
+    return { ok: false, status: response.status };
+  } catch {
+    return { ok: false, status: 0 };
+  }
 }
