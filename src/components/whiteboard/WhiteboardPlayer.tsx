@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { Pause, Play, Pencil, SkipBack, SkipForward, Target, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2 } from 'lucide-react';
+import { Pause, Play, Pencil, SkipBack, SkipForward, Target, Trash2, Volume2, VolumeX, Captions, Info, Send, Loader2, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import type { LessonStep, NodeColor, WhiteboardLesson, WhiteboardNode } from '../../lib/whiteboard/lessonSchema';
 import { buildTimeline, nodeProgress, stepDurationMs } from '../../lib/whiteboard/timeline';
 import { penTipForNode, curvePoint } from '../../lib/whiteboard/penTip';
@@ -431,6 +431,9 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     if (e.key === ' ' || e.key === 'k') { e.preventDefault(); togglePlay(); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); goTo(stepIndex + (isAr ? -1 : 1)); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(stepIndex + (isAr ? 1 : -1)); }
+    else if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomCenter(1.25); }
+    else if (e.key === '-') { e.preventDefault(); zoomCenter(0.8); }
+    else if (e.key === '0') { e.preventDefault(); resetView(); }
   };
 
   const pauseForQuestion = () => {
@@ -482,9 +485,93 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     });
 
   const svgRef = useRef<SVGSVGElement>(null);
+  // Pan/zoom viewport: translate(x,y) scale(s) applied to one <g> around all board content.
+  const [view, setView] = useState({ s: 1, x: 0, y: 0 });
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const panRef = useRef<Map<number, { x: number; y: number }> | null>(null);
+  const MAX_ZOOM = 4;
+  const clampView = useCallback((v: { s: number; x: number; y: number }) => {
+    const s = Math.min(MAX_ZOOM, Math.max(1, v.s));
+    const M = 160; // a little margin so the board edge can peek past the frame
+    return {
+      s,
+      x: Math.min(M, Math.max(lesson.canvas.width - s * lesson.canvas.width - M, v.x)),
+      y: Math.min(M, Math.max(lesson.canvas.height - s * lesson.canvas.height - M, v.y)),
+    };
+  }, [lesson.canvas.width, lesson.canvas.height]);
+  const resetView = useCallback(() => setView({ s: 1, x: 0, y: 0 }), []);
+  const zoomAt = useCallback((factor: number, px: number, py: number) => {
+    setView(v0 => {
+      const s2 = Math.min(MAX_ZOOM, Math.max(1, v0.s * factor));
+      return clampView({ s: s2, x: px - (px - v0.x) * (s2 / v0.s), y: py - (py - v0.y) * (s2 / v0.s) });
+    });
+  }, [clampView]);
+  const zoomCenter = useCallback((factor: number) => zoomAt(factor, lesson.canvas.width / 2, lesson.canvas.height / 2), [zoomAt, lesson.canvas]);
+  // Wheel zoom needs a non-passive listener so the page does not scroll while zooming the board.
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (ev: WheelEvent) => {
+      ev.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * lesson.canvas.width;
+      const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * lesson.canvas.height;
+      zoomAt(Math.exp(-ev.deltaY * 0.0015), px, py);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [zoomAt, lesson.canvas.width, lesson.canvas.height]);
   const toBoard = (e: React.PointerEvent): FreehandPoint => {
     const rect = svgRef.current?.getBoundingClientRect() ?? { left: 0, top: 0, width: 1, height: 1 };
-    return boardPoint(e.clientX, e.clientY, rect, lesson.canvas);
+    const raw = boardPoint(e.clientX, e.clientY, rect, lesson.canvas);
+    const v = viewRef.current; // freehand points live in board space, so undo the viewport transform
+    return { ...raw, x: (raw.x - v.x) / v.s, y: (raw.y - v.y) / v.s };
+  };
+  // Drag pans (one pointer) or pinch-zooms (two pointers) when draw mode is off.
+  const onPanStart = (e: React.PointerEvent) => {
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    const pts = panRef.current ?? new Map<number, { x: number; y: number }>();
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    panRef.current = pts;
+  };
+  const onPanMove = (e: React.PointerEvent) => {
+    const pts = panRef.current;
+    if (!pts || !pts.has(e.pointerId)) return;
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const kx = lesson.canvas.width / Math.max(1, rect.width);
+    const ky = lesson.canvas.height / Math.max(1, rect.height);
+    const prevPt = pts.get(e.pointerId)!;
+    const before = [...pts.values()];
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    setView(v0 => {
+      let { s, x, y } = v0;
+      if (before.length === 2) {
+        const other = before[0] === prevPt ? before[1] : before[0];
+        const curPt = pts.get(e.pointerId)!;
+        const prevDist = Math.hypot(prevPt.x - other.x, prevPt.y - other.y);
+        const curDist = Math.hypot(curPt.x - other.x, curPt.y - other.y);
+        if (prevDist > 1 && curDist > 1) {
+          const s2 = Math.min(MAX_ZOOM, Math.max(1, (s * curDist) / prevDist));
+          const mx = (((curPt.x + other.x) / 2 - rect.left) * kx);
+          const my = (((curPt.y + other.y) / 2 - rect.top) * ky);
+          x = mx - (mx - x) * (s2 / s);
+          y = my - (my - y) * (s2 / s);
+          s = s2;
+        }
+      } else {
+        x += (e.clientX - prevPt.x) * kx;
+        y += (e.clientY - prevPt.y) * ky;
+      }
+      return clampView({ s, x, y });
+    });
+  };
+  const onPanEnd = (e: React.PointerEvent) => {
+    const pts = panRef.current;
+    if (!pts) return;
+    pts.delete(e.pointerId);
+    if (pts.size === 0) panRef.current = null;
   };
   const onDrawStart = (e: React.PointerEvent) => {
     if (!drawMode) return;
@@ -516,6 +603,9 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     captions: isAr ? 'النص المصاحب' : 'Captions',
     step: isAr ? 'الخطوة' : 'Step',
     draw: isAr ? 'ارسم على السبورة' : 'Draw on the board',
+    zoomIn: isAr ? 'تكبير السبورة' : 'Zoom in',
+    zoomOut: isAr ? 'تصغير السبورة' : 'Zoom out',
+    resetView: isAr ? 'إعادة ضبط العرض' : 'Reset view',
     stopDrawing: isAr ? 'إيقاف الرسم' : 'Stop drawing',
     clearDrawing: isAr ? 'امسح رسمي' : 'Clear my drawing',
     tryMode: isAr ? 'وضع جرّب بنفسك' : 'Try-it mode',
@@ -526,13 +616,14 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
     <div className="space-y-3" dir={isAr ? 'rtl' : 'ltr'} onKeyDown={onKeyDown} tabIndex={0} aria-label={lesson.title} data-testid="whiteboard-player">
       {step.title && <div className="text-xs font-black text-teal-600" data-testid="whiteboard-step-title">{`${step.branch ? (isAr ? 'سؤالك: ' : 'Your question: ') : `${stepIndex + 1}. `}${step.title}`}</div>}
       <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-[#fdfcf8]">
-        <svg ref={svgRef} viewBox={`0 0 ${lesson.canvas.width} ${lesson.canvas.height}`} className={`w-full h-auto block${drawMode ? ' cursor-crosshair touch-none' : ''}`} role="img" aria-label={step.title || lesson.title} style={{ fontFamily: "'Molhim', 'Aref Ruqaa', 'Cairo', serif" }}
-          onPointerDown={onDrawStart} onPointerMove={onDrawMove} onPointerUp={onDrawEnd} onPointerCancel={onDrawEnd}>
+        <svg ref={svgRef} viewBox={`0 0 ${lesson.canvas.width} ${lesson.canvas.height}`} className={`w-full h-auto block touch-none${drawMode ? ' cursor-crosshair' : ' cursor-grab active:cursor-grabbing'}`} role="img" aria-label={step.title || lesson.title} style={{ fontFamily: "'Molhim', 'Aref Ruqaa', 'Cairo', serif" }}
+          onPointerDown={drawMode ? onDrawStart : onPanStart} onPointerMove={drawMode ? onDrawMove : onPanMove} onPointerUp={drawMode ? onDrawEnd : onPanEnd} onPointerCancel={drawMode ? onDrawEnd : onPanEnd} onDoubleClick={resetView}>
           <defs>
             <pattern id="wb-grid" width="40" height="40" patternUnits="userSpaceOnUse">
               <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e7e5df" strokeWidth="1" />
             </pattern>
           </defs>
+          <g data-testid="board-viewport" transform={`translate(${view.x} ${view.y}) scale(${view.s})`}>
           <rect width={lesson.canvas.width} height={lesson.canvas.height} fill="url(#wb-grid)" />
           <g key={stepIndex}>
             {carriedSteps().map(cs => <g key={`carry-${cs.id}`}>{cs.nodes.map(n => <BoardNode key={`${cs.id}-${n.id}`} node={n} progress={1} rtl={(cs.lang ?? lesson.lang) === 'ar'} />)}</g>)}
@@ -548,6 +639,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
           <g data-testid="freehand-layer" pointerEvents="none">
             {strokes.map(st => <path key={st.id} d={pointsToPath(st.points)} fill="none" stroke={st.color} strokeWidth={st.width} strokeLinecap="round" strokeLinejoin="round" />)}
             {activeStroke.current && <path d={pointsToPath(activeStroke.current.points)} fill="none" stroke={activeStroke.current.color} strokeWidth={activeStroke.current.width} strokeLinecap="round" strokeLinejoin="round" />}
+          </g>
           </g>
         </svg>
       </div>
@@ -597,6 +689,17 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
         <button type="button" onClick={() => setMuted(m => !m)} aria-pressed={muted} aria-label={muted ? t.unmute : t.mute} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
           {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
+        <button type="button" onClick={() => zoomCenter(1.25)} aria-label={t.zoomIn} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+          <ZoomIn className="w-4 h-4" aria-hidden="true" />
+        </button>
+        <button type="button" onClick={() => zoomCenter(0.8)} aria-label={t.zoomOut} className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+          <ZoomOut className="w-4 h-4" aria-hidden="true" />
+        </button>
+        {(view.s !== 1 || view.x !== 0 || view.y !== 0) && (
+          <button type="button" onClick={resetView} aria-label={t.resetView} className="p-2.5 rounded-xl border border-primary text-primary text-[10px] font-black inline-flex items-center gap-1" data-testid="reset-view">
+            <Maximize className="w-4 h-4" aria-hidden="true" />{Math.round(view.s * 100)}%
+          </button>
+        )}
         <button type="button" onClick={() => setCaptions(c => !c)} aria-pressed={captions} aria-label={t.captions} className={`p-2.5 rounded-xl border ${captions ? 'border-primary text-primary' : 'border-slate-200 dark:border-slate-700'}`}>
           <Captions className="w-4 h-4" />
         </button>
