@@ -103,19 +103,22 @@ class _NativePressableState extends State<NativePressable> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.onTap,
-      onTapDown: widget.onTap == null ? null : (_) => _setPressed(true),
-      onTapUp: widget.onTap == null ? null : (_) => _setPressed(false),
-      onTapCancel: widget.onTap == null ? null : () => _setPressed(false),
-      child: AnimatedScale(
-        scale: _pressed ? widget.scale : 1,
-        duration: const Duration(milliseconds: 130),
-        curve: Curves.easeOutCubic,
-        child: widget.child,
-      ),
+    Widget child = AnimatedScale(
+      scale: _pressed ? widget.scale : 1,
+      duration: const Duration(milliseconds: 130),
+      curve: Curves.easeOutCubic,
+      child: widget.child,
     );
+    child = Listener(
+      onPointerDown: (_) => _setPressed(true),
+      onPointerUp: (_) => _setPressed(false),
+      onPointerCancel: (_) => _setPressed(false),
+      child: child,
+    );
+    if (widget.onTap != null) {
+      child = GestureDetector(behavior: HitTestBehavior.opaque, onTap: widget.onTap, child: child);
+    }
+    return child;
   }
 }
 

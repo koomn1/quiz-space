@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/quizspace_repository.dart';
+import '../widgets/native_fx.dart';
 import '../models/profile_models.dart';
 import '../widgets/permissions_sheet.dart';
 import '../widgets/profile_badge_rail.dart';
@@ -103,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
             if (_loading)
-              const Padding(padding: EdgeInsets.symmetric(vertical: 90), child: Center(child: CircularProgressIndicator()))
+              const NativeSkeleton(cards: 4)
             else if (_error != null)
               _ErrorCard(onRetry: _load)
             else if (_profile != null)

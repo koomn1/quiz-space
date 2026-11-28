@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/quizspace_repository.dart';
+import '../widgets/native_fx.dart';
 
 class AdminOverviewScreen extends StatefulWidget {
   const AdminOverviewScreen({super.key, required this.repository});
@@ -39,7 +40,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('لوحة السوبر أدمن'), leading: IconButton(onPressed: () => Navigator.of(context).pop(), tooltip: 'رجوع', icon: const Icon(Icons.arrow_forward_rounded)), actions: [IconButton(onPressed: _load, tooltip: 'تحديث', icon: const Icon(Icons.refresh_rounded))]),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SingleChildScrollView(padding: EdgeInsets.all(20), child: NativeSkeleton(cards: 4))
           : _error != null
               ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.lock_outline_rounded, size: 54, color: Colors.white38), const SizedBox(height: 12), Text(_error!, textAlign: TextAlign.center), const SizedBox(height: 16), FilledButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('إعادة المحاولة'))])))
               : _overview == null

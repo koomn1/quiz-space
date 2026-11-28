@@ -6,6 +6,7 @@ import '../services/permissions_service.dart';
 import '../widgets/permissions_sheet.dart';
 import '../widgets/profile_badge_rail.dart';
 import '../widgets/quiz_card.dart';
+import '../widgets/native_fx.dart';
 import '../widgets/native_ui.dart';
 import 'analytics_screen.dart';
 import 'discover_screen.dart';
@@ -82,14 +83,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     : _HomeTab(profile: _profile!, repository: widget.repository, onShowTakers: _showTakers, onRefresh: _loadProfile),
       ),
       bottomNavigationBar: widget.showBottomNavigation
-          ? NavigationBar(
+          ? NativeTabBar(
               selectedIndex: _selectedIndex,
-              onDestinationSelected: (value) => setState(() => _selectedIndex = value),
-              backgroundColor: const Color(0xFF10162A),
-              indicatorColor: const Color(0xFF7C3AED).withValues(alpha: 0.28),
-              destinations: const [
-                NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'الرئيسية'),
-                NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'البروفايل'),
+              onSelect: (value) => setState(() => _selectedIndex = value),
+              tabs: const [
+                NativeTabSpec(icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, label: 'الرئيسية'),
+                NativeTabSpec(icon: Icons.person_outline_rounded, selectedIcon: Icons.person_rounded, label: 'البروفايل'),
               ],
             )
           : null,
@@ -114,7 +113,8 @@ class _HomeTab extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
         children: [
-          NativeCard(
+          NativeEntrance(
+            child: NativeCard(
             padding: const EdgeInsets.all(16),
             gradient: const LinearGradient(colors: [Color(0xFF1D2750), Color(0xFF111A31)], begin: Alignment.topRight, end: Alignment.bottomLeft),
             child: Row(
@@ -132,25 +132,29 @@ class _HomeTab extends StatelessWidget {
               ],
             ),
           ),
+          ),
           const SizedBox(height: 14),
-          Align(alignment: AlignmentDirectional.centerStart, child: NativeStatusPill(label: profile.isFounder ? 'حساب مؤسس' : profile.isPremium ? 'خطة Premium' : 'الخطة المجانية', icon: profile.isPremium || profile.isFounder ? Icons.workspace_premium_rounded : Icons.school_outlined, color: profile.isPremium || profile.isFounder ? NativeColors.gold : NativeColors.cyan)),
+          NativeEntrance(index: 1, child: Align(alignment: AlignmentDirectional.centerStart, child: NativeStatusPill(label: profile.isFounder ? 'حساب مؤسس' : profile.isPremium ? 'خطة Premium' : 'الخطة المجانية', icon: profile.isPremium || profile.isFounder ? Icons.workspace_premium_rounded : Icons.school_outlined, color: profile.isPremium || profile.isFounder ? NativeColors.gold : NativeColors.cyan))),
           const SizedBox(height: 18),
-          _HeroCard(profile: profile),
+          NativeEntrance(index: 2, child: _HeroCard(profile: profile)),
           const SizedBox(height: 24),
-          const NativeSectionHeading(title: 'ابدأ بسرعة', icon: Icons.bolt_rounded),
+          const NativeEntrance(index: 3, child: NativeSectionHeading(title: 'ابدأ بسرعة', icon: Icons.bolt_rounded)),
           const SizedBox(height: 12),
-          Row(children: [
-            Expanded(child: NativeQuickAction(icon: Icons.explore_outlined, label: 'اكتشف اختبارات', color: NativeColors.cyan, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => DiscoverScreen(repository: repository))))),
-            const SizedBox(width: 10),
-            Expanded(child: NativeQuickAction(icon: Icons.insights_outlined, label: 'تحليلاتي', color: NativeColors.primary, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AnalyticsScreen(repository: repository))))),
-          ]),
+          NativeEntrance(
+            index: 4,
+            child: Row(children: [
+              Expanded(child: NativeQuickAction(icon: Icons.explore_outlined, label: 'اكتشف اختبارات', color: NativeColors.cyan, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => DiscoverScreen(repository: repository))))),
+              const SizedBox(width: 10),
+              Expanded(child: NativeQuickAction(icon: Icons.insights_outlined, label: 'تحليلاتي', color: NativeColors.primary, onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AnalyticsScreen(repository: repository))))),
+            ]),
+          ),
           const SizedBox(height: 24),
           const NativeSectionHeading(title: 'اختباراتك المنشورة', icon: Icons.library_books_outlined),
           const SizedBox(height: 10),
           if (profile.createdQuizzes.isEmpty)
             const _EmptyCard(text: 'لا توجد اختبارات منشورة في هذا الحساب بعد.')
           else
-            ...profile.createdQuizzes.map((quiz) => Padding(padding: const EdgeInsets.only(bottom: 12), child: QuizCard(quiz: quiz, onShowTakers: () => onShowTakers(quiz)))),
+            ...profile.createdQuizzes.toList().asMap().entries.map((entry) => NativeEntrance(index: 6 + entry.key.clamp(0, 6), child: Padding(padding: const EdgeInsets.only(bottom: 12), child: QuizCard(quiz: entry.value, onShowTakers: () => onShowTakers(entry.value))))),
         ],
       ),
     );
@@ -306,7 +310,7 @@ class QuizTakersSheet extends StatelessWidget {
             child: FutureBuilder<List<TakerModel>>(
               future: repository.loadQuizTakers(quiz.id),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting) return const NativeSkeleton(cards: 4);
                 if (snapshot.hasError) return const _EmptyState(icon: Icons.cloud_off_rounded, text: 'تعذر تحميل القائمة الآن. حاول مرة أخرى.');
                 final takers = snapshot.data ?? const <TakerModel>[];
                 if (takers.isEmpty) return const _EmptyState(icon: Icons.groups_outlined, text: 'لم يحل أحد هذا الاختبار حتى الآن.');
@@ -359,7 +363,7 @@ class _EmptyState extends StatelessWidget {
 class _LoadingView extends StatelessWidget {
   const _LoadingView();
   @override
-  Widget build(BuildContext context) => const Center(child: CircularProgressIndicator());
+  Widget build(BuildContext context) => ListView(padding: const EdgeInsets.fromLTRB(20, 20, 20, 30), children: const [NativeSkeleton(cards: 4)]);
 }
 
 class _ErrorView extends StatelessWidget {

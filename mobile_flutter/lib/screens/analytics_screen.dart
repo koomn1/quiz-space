@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/quizspace_repository.dart';
+import '../widgets/native_fx.dart';
 import '../models/profile_models.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -40,7 +41,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('تحليلاتي'), leading: IconButton(onPressed: () => Navigator.of(context).pop(), tooltip: 'رجوع', icon: const Icon(Icons.arrow_forward_rounded)), actions: [IconButton(onPressed: _load, tooltip: 'تحديث', icon: const Icon(Icons.refresh_rounded))]),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SingleChildScrollView(padding: EdgeInsets.all(20), child: NativeSkeleton(cards: 4))
           : _error != null
               ? Center(child: FilledButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('إعادة المحاولة')))
               : _profile == null

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/quizspace_repository.dart';
+import '../widgets/native_fx.dart';
 import '../models/quiz_models.dart';
 
 class QuizSolveScreen extends StatefulWidget {
@@ -129,7 +130,7 @@ class _QuizSolveScreenState extends State<QuizSolveScreen> {
                 children: [
                   OutlinedButton.icon(onPressed: _page == 0 || _submitting ? null : _previous, icon: const Icon(Icons.arrow_back_rounded), label: const Text('السابق'), style: OutlinedButton.styleFrom(minimumSize: const Size(112, 48))),
                   const Spacer(),
-                  FilledButton.icon(onPressed: _submitting ? null : _next, icon: _submitting ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(_page == quiz.questions.length - 1 ? Icons.check_rounded : Icons.arrow_forward_rounded), label: Text(_submitting ? 'بيتحفظ...' : _page == quiz.questions.length - 1 ? 'إنهاء وحفظ' : 'التالي'), style: FilledButton.styleFrom(minimumSize: const Size(138, 48))),
+                  FilledButton.icon(onPressed: _submitting ? null : _next, icon: _submitting ? const NativeLoadingDots(size: 4) : Icon(_page == quiz.questions.length - 1 ? Icons.check_rounded : Icons.arrow_forward_rounded), label: Text(_submitting ? 'بيتحفظ...' : _page == quiz.questions.length - 1 ? 'إنهاء وحفظ' : 'التالي'), style: FilledButton.styleFrom(minimumSize: const Size(138, 48))),
                 ],
               ),
             ),
@@ -208,7 +209,7 @@ class _SolveLoading extends StatelessWidget {
   const _SolveLoading();
 
   @override
-  Widget build(BuildContext context) => const Scaffold(body: Center(child: CircularProgressIndicator()));
+  Widget build(BuildContext context) => const Scaffold(body: Padding(padding: EdgeInsets.all(20), child: NativeSkeleton(cards: 3)));
 }
 
 class _SolveError extends StatelessWidget {

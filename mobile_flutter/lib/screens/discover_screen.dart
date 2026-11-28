@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/quizspace_repository.dart';
+import '../widgets/native_fx.dart';
 import '../models/profile_models.dart';
 import 'quiz_solve_screen.dart';
 
@@ -58,7 +59,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             Wrap(spacing: 8, runSpacing: 8, children: [for (final item in const ['', 'عام', 'علوم', 'لغات', 'تاريخ']) ChoiceChip(label: Text(item.isEmpty ? 'الكل' : item), selected: _category == item, onSelected: (_) { setState(() => _category = item); _load(); })]),
             const SizedBox(height: 22),
             if (_loading)
-              const Padding(padding: EdgeInsets.symmetric(vertical: 80), child: Center(child: CircularProgressIndicator()))
+              const NativeSkeleton(cards: 4)
             else if (_error != null)
               _DiscoverError(onRetry: _load)
             else if (_quizzes.isEmpty)

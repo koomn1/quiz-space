@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/mobile_ai_service.dart';
+import '../widgets/native_fx.dart';
 
 class _ChatMessage {
   const _ChatMessage({required this.text, required this.fromUser});
@@ -81,7 +82,7 @@ class _CosmoScreenState extends State<CosmoScreen> {
               itemBuilder: (context, index) {
                 if (_sending && index == _messages.length) return const _TypingBubble();
                 final message = _messages[index];
-                return _MessageBubble(message: message);
+                return NativeEntrance(child: _MessageBubble(message: message));
               },
             ),
           ),
@@ -128,5 +129,11 @@ class _TypingBubble extends StatelessWidget {
   const _TypingBubble();
 
   @override
-  Widget build(BuildContext context) => const Align(alignment: AlignmentDirectional.centerEnd, child: Padding(padding: EdgeInsets.only(bottom: 12), child: SizedBox(width: 52, child: Card(child: Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))))));
+  Widget build(BuildContext context) => const Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: Card(child: Padding(padding: EdgeInsets.symmetric(horizontal: 16, vertical: 13), child: NativeLoadingDots(size: 6))),
+        ),
+      );
 }

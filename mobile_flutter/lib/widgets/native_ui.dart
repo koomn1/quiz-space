@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'native_fx.dart';
+
 abstract final class NativeColors {
   static const background = Color(0xFF080D1C);
   static const surface = Color(0xFF121A31);
@@ -35,7 +37,9 @@ class NativeCard extends StatelessWidget {
       child: child,
     );
     if (onTap == null) return content;
-    return Material(color: Colors.transparent, child: InkWell(borderRadius: BorderRadius.circular(22), onTap: onTap, child: content));
+    return NativePressable(
+      child: Material(color: Colors.transparent, child: InkWell(borderRadius: BorderRadius.circular(22), onTap: onTap, child: content)),
+    );
   }
 }
 
@@ -76,11 +80,12 @@ class NativeQuickAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+    return NativePressable(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
         child: Container(
           constraints: const BoxConstraints(minHeight: 92),
           padding: const EdgeInsets.all(14),
@@ -91,7 +96,8 @@ class NativeQuickAction extends StatelessWidget {
             Text(label, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
           ]),
         ),
-      ),
+          ),
+        ),
     );
   }
 }

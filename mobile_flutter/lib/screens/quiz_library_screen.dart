@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/quizspace_repository.dart';
 import '../models/profile_models.dart';
 import '../widgets/quiz_card.dart';
+import '../widgets/native_fx.dart';
 import 'home_screen.dart';
 import 'quiz_solve_screen.dart';
 
@@ -73,12 +74,15 @@ class _QuizLibraryScreenState extends State<QuizLibraryScreen> {
             else if ((_profile?.createdQuizzes ?? const <QuizModel>[]).isEmpty)
               const _LibraryEmpty()
             else
-              ..._profile!.createdQuizzes.map((quiz) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: QuizCard(
-                      quiz: quiz,
-                      onShowTakers: () => _showTakers(quiz),
-                      onOpen: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuizSolveScreen(repository: widget.repository, quizId: quiz.id))),
+              ..._profile!.createdQuizzes.toList().asMap().entries.map((entry) => NativeEntrance(
+                    index: entry.key.clamp(0, 6),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: QuizCard(
+                        quiz: entry.value,
+                        onShowTakers: () => _showTakers(entry.value),
+                        onOpen: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuizSolveScreen(repository: widget.repository, quizId: entry.value.id))),
+                      ),
                     ),
                   )),
           ],
@@ -92,10 +96,7 @@ class _LibraryLoading extends StatelessWidget {
   const _LibraryLoading();
 
   @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 90),
-        child: Center(child: CircularProgressIndicator()),
-      );
+  Widget build(BuildContext context) => const NativeSkeleton(cards: 4);
 }
 
 class _LibraryEmpty extends StatelessWidget {

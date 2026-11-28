@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+import '../widgets/native_fx.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../data/quizspace_repository.dart';
@@ -236,7 +238,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                       const SizedBox(height: 22),
                                       SizedBox(
                                         height: 56,
-                                        child: FilledButton(
+                                        child: NativePressable(
+                                          child: FilledButton(
                                           onPressed: busy ? null : _submit,
                                           style: FilledButton.styleFrom(
                                             backgroundColor: _authLavender,
@@ -247,8 +250,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                           child: AnimatedSwitcher(
                                             duration: const Duration(milliseconds: 180),
                                             child: _loading
-                                                ? const SizedBox(key: ValueKey('loading'), width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF211338)))
+                                                ? const SizedBox(key: ValueKey('loading'), height: 22, child: NativeLoadingDots(size: 6, color: Color(0xFF211338)))
                                                 : Row(key: const ValueKey('label'), mainAxisAlignment: MainAxisAlignment.center, children: [Text(_isRegister ? 'إنشاء حساب' : 'تسجيل الدخول', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)), const SizedBox(width: 10), const Icon(Icons.arrow_back_rounded)]),
+                                          ),
                                           ),
                                         ),
                                       ),
@@ -269,7 +273,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                                   ),
                                   child: _googleLoading
-                                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.2, color: Colors.white))
+                                      ? const SizedBox(height: 22, child: NativeLoadingDots(size: 6, color: Colors.white))
                                       : Row(mainAxisAlignment: MainAxisAlignment.center, children: [const _GoogleMark(), const SizedBox(width: 10), Text('المتابعة باستخدام Google', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700))]),
                                 ),
                               ),

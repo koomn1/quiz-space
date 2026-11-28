@@ -13,6 +13,7 @@ import '../whiteboard/whiteboard_stickers.dart';
 import '../whiteboard/whiteboard_painter.dart';
 import '../whiteboard/whiteboard_service.dart';
 import '../whiteboard/whiteboard_library.dart';
+import '../widgets/native_fx.dart';
 
 class WhiteboardScreen extends StatefulWidget {
   const WhiteboardScreen({super.key});
@@ -317,12 +318,12 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                FilledButton.icon(
+                NativeGradientButton(
+                  expand: false,
                   onPressed: _generating ? null : _generate,
-                  icon: _generating
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.auto_awesome),
-                  label: Text(_generating ? 'يولّد…' : 'ولّد'),
+                  enabled: !_generating,
+                  icon: _generating ? null : Icons.auto_awesome,
+                  label: _generating ? 'يولّد…' : 'ولّد',
                 ),
               ],
             ),
@@ -453,7 +454,7 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                   FilledButton.icon(
                     onPressed: _asking ? null : () => _ask(),
                     icon: _asking
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        ? const NativeLoadingDots(size: 4, color: Colors.white)
                         : const Icon(Icons.send_rounded),
                     label: Text(_asking ? 'يفكر…' : 'اسأل'),
                   ),
