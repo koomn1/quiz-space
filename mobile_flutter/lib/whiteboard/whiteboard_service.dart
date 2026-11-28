@@ -32,7 +32,9 @@ class WhiteboardService {
       request.headers
         ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
         ..set(HttpHeaders.contentTypeHeader, 'application/json');
-      request.write(jsonEncode({'topic': topic}));
+      // Write raw UTF-8 bytes: request.write() would encode via the request's
+      // string encoding, which throws ArgumentError on Arabic text.
+      request.add(utf8.encode(jsonEncode({'topic': topic})));
       final response = await request.close().timeout(const Duration(minutes: 4));
       final body = await utf8.decodeStream(response);
       if (response.statusCode == 403) {
@@ -68,12 +70,13 @@ class WhiteboardService {
       request.headers
         ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
         ..set(HttpHeaders.contentTypeHeader, 'application/json');
-      request.write(jsonEncode({
+      // UTF-8 bytes for the same reason as generateLesson (Arabic questions).
+      request.add(utf8.encode(jsonEncode({
         'question': question,
         'lang': lang,
         'lessonTitle': lessonTitle,
         'step': {'title': step.title ?? '', 'narration': step.narration, 'nodes': step.nodes.map((n) => n.toJson()).toList()},
-      }));
+      })));
       final response = await request.close().timeout(const Duration(minutes: 2));
       final body = await utf8.decodeStream(response);
       if (response.statusCode != 200) {
@@ -100,7 +103,8 @@ class WhiteboardService {
         request.headers
           ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
           ..set(HttpHeaders.contentTypeHeader, 'application/json');
-        request.write(jsonEncode({'text': text, 'voice': voice, 'speed': speed, 'provider': provider}));
+        // UTF-8 bytes: Arabic narration throws on request.write (see above).
+        request.add(utf8.encode(jsonEncode({'text': text, 'voice': voice, 'speed': speed, 'provider': provider})));
         final response = await request.close().timeout(const Duration(seconds: 45));
         if (response.statusCode != 200) return null;
         final bytes = await response.fold<List<int>>(<int>[], (acc, chunk) => acc..addAll(chunk));
