@@ -29,7 +29,6 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
   int _stepIndex = 0;
   bool _playing = false;
   double _tInStep = 0; // ms into the current step
-  bool _showNotes = true;
   Timer? _ticker;
   DateTime _tickStarted = DateTime.now();
 
@@ -320,7 +319,6 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                       carried: _carried,
                       tInStepMs: _tInStep,
                       durationMs: _duration,
-                      showExplanation: _showNotes,
                           stickerPictures: _stickerPics,
                           stickerVersion: _stickerVersion,
                         ),
@@ -349,13 +347,6 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                     onPressed: _stepIndex < lesson.steps.length - 1 ? () => _goTo(_stepIndex + 1) : null,
                     icon: const Icon(Icons.skip_previous_rounded),
                     tooltip: 'التالية',
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: () => setState(() => _showNotes = !_showNotes),
-                    icon: Icon(_showNotes ? Icons.edit_note : Icons.edit_off_outlined),
-                    tooltip: 'اكتب الشرح على السبورة',
-                    color: _showNotes ? const Color(0xFF007472) : null,
                   ),
                 ],
               ),

@@ -64,7 +64,6 @@ class WhiteboardPainter extends CustomPainter {
     required this.carried,
     required this.tInStepMs,
     required this.durationMs,
-    required this.showExplanation,
     required this.stickerPictures,
     required this.stickerVersion,
   });
@@ -74,7 +73,6 @@ class WhiteboardPainter extends CustomPainter {
   final List<LessonStep> carried;
   final double tInStepMs;
   final double durationMs;
-  final bool showExplanation;
 
   /// Preloaded sticker pictures by sticker name (null entry = unknown/failed, draw placeholder).
   final Map<String, PictureInfo?> stickerPictures;
@@ -101,7 +99,6 @@ class WhiteboardPainter extends CustomPainter {
     for (var i = 0; i < step.nodes.length; i++) {
       _paintNode(canvas, step.nodes[i], nodeProgress(step, i, tInStepMs, durationMs), _rtl);
     }
-    if (showExplanation) _paintExplanation(canvas);
     canvas.restore();
   }
 
@@ -352,57 +349,11 @@ class WhiteboardPainter extends CustomPainter {
     tp.paint(canvas, Offset(n.x + (w - tp.width) / 2, n.y + (h - tp.height) / 2));
   }
 
-  /// The explanation strip: same geometry as the web BoardExplanation (y 590, h 112).
-  void _paintExplanation(Canvas canvas) {
-    const x0 = 78.0, w = 1124.0, fs = 25.0, top = 590.0, lineH = 34.0;
-    final narration = stripDiacritics(step.narration);
-    final chars = (narration.length * (durationMs > 0 ? (tInStepMs / durationMs).clamp(0, 1) : 1)).floor();
-    final visible = narration.substring(0, chars.clamp(0, narration.length));
-    // Wrap by measuring, keep the last 3 lines.
-    final words = visible.split(RegExp(r'\s+')).where((x) => x.isNotEmpty).toList();
-    final lines = <String>[];
-    var cur = '';
-    double widthOf(String s) => _textPainter(s, fs, const Color(0xFF3F3F46), null, _rtl).width;
-    for (final word in words) {
-      final t = cur.isEmpty ? word : '$cur $word';
-      if (cur.isNotEmpty && widthOf(t) > w) {
-        lines.add(cur);
-        cur = word;
-      } else {
-        cur = t;
-      }
-    }
-    if (cur.isNotEmpty) lines.add(cur);
-    final shown = lines.length > 3 ? lines.sublist(lines.length - 3) : lines;
-
-    final bg = Paint()..color = const Color(0xFFFDFCF8).withValues(alpha: 0.94);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(64, top, 1152, 112), const Radius.circular(14)), bg);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(64, top, 1152, 112), const Radius.circular(14)),
-      Paint()
-        ..color = const Color(0xFFE7E5DF)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
-    );
-    double penX = _rtl ? x0 + w : x0;
-    for (var i = 0; i < shown.length; i++) {
-      final tp = _textPainter(shown[i], fs, const Color(0xFF3F3F46), null, _rtl);
-      final tx = _rtl ? x0 + w - tp.width : x0;
-      tp.paint(canvas, Offset(tx, top + 32 + i * lineH - tp.height / 2));
-      penX = _rtl ? tx - 20 : tx + tp.width + 20;
-    }
-    final progress = durationMs > 0 ? tInStepMs / durationMs : 1;
-    if (progress > 0 && progress < 1 && shown.isNotEmpty) {
-      final penY = top + 32 + (shown.length - 1) * lineH + 8;
-      canvas.drawCircle(Offset(penX, penY), 7, Paint()..color = const Color(0xFF3F3F46));
-    }
-  }
 
   @override
   bool shouldRepaint(WhiteboardPainter old) =>
       old.step != step ||
       old.tInStepMs != tInStepMs ||
-      old.showExplanation != showExplanation ||
       old.carried.length != carried.length ||
       old.stickerVersion != stickerVersion;
 }
