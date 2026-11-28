@@ -135,7 +135,7 @@ extension WhiteboardLibraryApi on WhiteboardService {
   /// CRUD against the per-user server library. All errors map to LibraryResult so the
   /// caller can degrade to the local cache quietly (e.g. before the migration is applied).
   static Future<(LibraryResult, List<WhiteboardLessonMeta>)> listLessonMetas() async {
-    if (WhiteboardService._workerUrl.isEmpty) return (LibraryResult.failed, const []);
+    if (WhiteboardService._workerUrl.isEmpty) return (LibraryResult.failed, const <WhiteboardLessonMeta>[]);
     try {
       final token = await WhiteboardService._bearerToken();
       final client = HttpClient();
@@ -144,11 +144,11 @@ extension WhiteboardLibraryApi on WhiteboardService {
         request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
         final response = await request.close().timeout(const Duration(seconds: 30));
         final body = await utf8.decodeStream(response);
-        if (response.statusCode == 503) return (LibraryResult.storageNotReady, const []);
-        if (response.statusCode != 200) return (LibraryResult.failed, const []);
+        if (response.statusCode == 503) return (LibraryResult.storageNotReady, const <WhiteboardLessonMeta>[]);
+        if (response.statusCode != 200) return (LibraryResult.failed, const <WhiteboardLessonMeta>[]);
         final data = jsonDecode(body);
         final rows = data is Map<String, dynamic> ? data['lessons'] : null;
-        if (rows is! List) return (LibraryResult.failed, const []);
+        if (rows is! List) return (LibraryResult.failed, const <WhiteboardLessonMeta>[]);
         return (
           LibraryResult.ok,
           rows.whereType<Map<String, dynamic>>().map((m) => WhiteboardLessonMeta(
@@ -163,7 +163,7 @@ extension WhiteboardLibraryApi on WhiteboardService {
         client.close();
       }
     } catch (_) {
-      return (LibraryResult.failed, const []);
+      return (LibraryResult.failed, const <WhiteboardLessonMeta>[]);
     }
   }
 
