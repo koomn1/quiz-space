@@ -47,6 +47,27 @@ class WhiteboardNode {
   final String? align;
   final List<IconLabel>? labels;
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'x': x,
+        'y': y,
+        'color': color,
+        if (w != null) 'w': w,
+        if (h != null) 'h': h,
+        if (x2 != null) 'x2': x2,
+        if (y2 != null) 'y2': y2,
+        if (cx != null) 'cx': cx,
+        if (cy != null) 'cy': cy,
+        if (d != null) 'd': d,
+        if (name != null) 'name': name,
+        if (text != null) 'text': text,
+        if (fontSize != null) 'fontSize': fontSize,
+        if (align != null) 'align': align,
+        if (labels != null && labels!.isNotEmpty)
+          'labels': labels!.map((l) => {'anchor': l.anchor, 'text': l.text, if (l.teaser) 'teaser': true}).toList(),
+      };
+
   static double _num(dynamic v, [double fallback = 0]) =>
       v is num ? v.toDouble() : double.tryParse('$v') ?? fallback;
 
@@ -82,6 +103,15 @@ class LessonStep {
   final String? title;
   final String? lang;
   final bool? continues;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'narration': narration,
+        'nodes': nodes.map((n) => n.toJson()).toList(),
+        if (title != null) 'title': title,
+        if (lang != null) 'lang': lang,
+        if (continues != null) 'continues': continues,
+      };
 
   factory LessonStep.fromJson(Map<String, dynamic> j) => LessonStep(
         id: '${j['id'] ?? ''}',

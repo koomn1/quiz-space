@@ -52,6 +52,42 @@ class WhiteboardService {
     }
   }
 
+  /// Ask a question mid-lesson; the worker answers with one validated branch step
+  /// (same /api/ai/lesson-followup the web player uses). Throws with an Arabic message on failure.
+  static Future<LessonStep> askFollowup({
+    required String question,
+    required String lang,
+    required String lessonTitle,
+    required LessonStep step,
+  }) async {
+    if (_workerUrl.isEmpty) throw const HttpException('خدمة الذكاء الاصطناعي غير مهيأة.');
+    final token = await _bearerToken();
+    final client = HttpClient();
+    try {
+      final request = await client.postUrl(Uri.parse('$_workerUrl/api/ai/lesson-followup'));
+      request.headers
+        ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
+        ..set(HttpHeaders.contentTypeHeader, 'application/json');
+      request.write(jsonEncode({
+        'question': question,
+        'lang': lang,
+        'lessonTitle': lessonTitle,
+        'step': {'title': step.title ?? '', 'narration': step.narration, 'nodes': step.nodes.map((n) => n.toJson()).toList()},
+      }));
+      final response = await request.close().timeout(const Duration(minutes: 2));
+      final body = await utf8.decodeStream(response);
+      if (response.statusCode != 200) {
+        throw HttpException('تعذر الرد على السؤال (${response.statusCode}). حاول مرة أخرى.');
+      }
+      final data = jsonDecode(body);
+      final stepJson = data is Map<String, dynamic> ? data['step'] : null;
+      if (stepJson is! Map<String, dynamic>) throw const HttpException('رد غير صالح من الخادم.');
+      return LessonStep.fromJson(stepJson);
+    } finally {
+      client.close();
+    }
+  }
+
   /// Teacher narration clip (Munsit WAV) for one step. Null on any failure —
   /// the lesson then plays silent with the on-board explanation, same as web.
   static Future<List<int>?> fetchTts(String text, {String voice = 'boy', double speed = 1, String provider = 'munsit'}) async {

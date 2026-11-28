@@ -45,6 +45,12 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
   final Map<String, ui.Picture?> _stickerPics = {};
   int _stickerVersion = 0;
 
+  // Pan/zoom on the board + mid-lesson questions.
+  final TransformationController _boardZoom = TransformationController();
+  final TextEditingController _askCtrl = TextEditingController();
+  bool _asking = false;
+  String? _askError;
+
   /// Load the sticker SVGs the lesson uses, once each, then repaint.
   Future<void> _preloadStickers(WhiteboardLesson lesson) async {
     for (final s in lesson.steps) {
@@ -71,6 +77,8 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
     _ticker?.cancel();
     _player.dispose();
     _topicCtrl.dispose();
+    _askCtrl.dispose();
+    _boardZoom.dispose();
     super.dispose();
   }
 
@@ -171,6 +179,43 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
     setState(() => _playing = play);
   }
 
+  /// Send the learner's question to the worker; insert the returned branch step
+  /// right after the current one and show it, like the web player.
+  Future<void> _ask([String? preset]) async {
+    final lesson = _lesson;
+    final question = (preset ?? _askCtrl.text).trim();
+    if (lesson == null || question.length < 2 || _asking) return;
+    setState(() {
+      _asking = true;
+      _askError = null;
+    });
+    try {
+      final branch = await WhiteboardService.askFollowup(
+        question: question,
+        lang: _step.lang ?? lesson.lang,
+        lessonTitle: lesson.title,
+        step: _step,
+      );
+      if (!mounted) return;
+      _ticker?.cancel();
+      _ttsToken++;
+      _player.stop();
+      setState(() {
+        lesson.steps.insert(_stepIndex + 1, branch);
+        _askCtrl.clear();
+        _stepIndex += 1;
+        _tInStep = 0;
+        _playing = false;
+      });
+      _preloadStickers(lesson);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _askError = e.toString().replaceFirst('HttpException: ', ''));
+    } finally {
+      if (mounted) setState(() => _asking = false);
+    }
+  }
+
   void _goTo(int index) {
     if (_lesson == null) return;
     _ticker?.cancel();
@@ -242,21 +287,31 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: CustomPaint(
-                    painter: WhiteboardPainter(
+                  child: GestureDetector(
+                    onDoubleTap: () => setState(() => _boardZoom.value = Matrix4.identity()),
+                    child: InteractiveViewer(
+                      transformationController: _boardZoom,
+                      minScale: 1,
+                      maxScale: 4,
+                      child: CustomPaint(
+                        painter: WhiteboardPainter(
                       lesson: lesson,
                       step: _step,
                       carried: _carried,
                       tInStepMs: _tInStep,
                       durationMs: _duration,
                       showExplanation: _showNotes,
-                      stickerPictures: _stickerPics,
-                      stickerVersion: _stickerVersion,
+                          stickerPictures: _stickerPics,
+                          stickerVersion: _stickerVersion,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 4),
+              const Text('اسحب بإصبعين للتكبير، وانقر مرتين للعودة.', textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Colors.grey)),
+              const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -291,8 +346,47 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                 divisions: lesson.steps.length > 1 ? lesson.steps.length - 1 : 1,
                 onChanged: (v) => _goTo(v.round()),
               ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _askCtrl,
+                      decoration: const InputDecoration(
+                        hintText: 'عندك سؤال؟ اكتبه والمعلّم يجاوب على نفس السبورة',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      onSubmitted: (_) => _ask(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    onPressed: _asking ? null : () => _ask(),
+                    icon: _asking
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.send_rounded),
+                    label: Text(_asking ? 'يفكر…' : 'اسأل'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  for (final chip in const ['أعد الشرح ببساطة', 'مثال آخر', 'لخصها'])
+                    ActionChip(label: Text(chip, style: const TextStyle(fontSize: 12)), onPressed: _asking ? null : () => _ask(chip)),
+                ],
+              ),
+              if (_askError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(_askError!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+                ),
+              const SizedBox(height: 4),
               Text(
-                'الخطوة ${_stepIndex + 1} / ${lesson.steps.length} — الصوت بمعلّم Munsit عند توفر الرصيد؛ الأسئلة الذكية على السبورة تصل في النسخة التالية.',
+                'الخطوة ${_stepIndex + 1} / ${lesson.steps.length} — الصوت بمعلّم Munsit عند توفر الرصيد.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 11, color: Colors.grey),
               ),
