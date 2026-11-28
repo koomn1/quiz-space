@@ -31,8 +31,8 @@ class AppUpdateInfo {
   /// compare channels without any wrapper version ever matching.
   final int buildNumber;
 
-  /// The native app updates ONLY from native releases: tags `native-uat-<run>`
-  /// carrying quizspace-native-uat-<run>.apk + its .sha256. Wrapper releases
+  /// The native app updates ONLY from native releases: tags native-uat-RUN
+  /// carrying quizspace-native-uat-RUN.apk + its .sha256. Wrapper releases
   /// (mobile-vX.Y.Z on /releases/latest) are a different channel and are
   /// never considered here.
   factory AppUpdateInfo.fromNativeRelease(Map<String, dynamic> json) {
@@ -79,6 +79,8 @@ class AppUpdateService {
   // and /releases/latest never serves native builds because they are
   // pre-releases, so the two channels stay independent in both directions.
   static const releasesListUrl = 'https://api.github.com/repos/koomn1/quiz-space/releases?per_page=30';
+
+  final _background = BackgroundUpdateDownloadService();
 
   /// Run number baked into the installed APK's Android versionCode
   /// (3000000 + CI run number; see mobile-native-ci.yml). 0 for dev builds.
