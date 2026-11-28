@@ -6,7 +6,7 @@ const DEFAULT_STT_URL = 'https://api.whisper-api.com/transcribe';
 const OPENAI_STT_URL = 'https://api.openai.com/v1/audio/transcriptions';
 const DEFAULT_STT_MODEL = 'base';
 const STT_POLL_MS = 1500;
-const STT_POLL_MAX = 10;
+const STT_POLL_MAX = 26;
 const AUDIO_MAX_BYTES = 8_000_000;
 
 export interface SttResult { ok: boolean; status: number; text?: string; error?: string }
