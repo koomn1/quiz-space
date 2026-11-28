@@ -45,6 +45,19 @@ export function parseLessonRequest(body: any): LessonRequest | null {
   return { topic, lang, steps, ...(feedback && feedback.length ? { feedback } : {}) };
 }
 
+/**
+ * Majority-letter language detection for an uploaded source: Arabic Unicode blocks vs Latin
+ * letters. Returns null when there is too little text to tell (numbers, formulas), in which case
+ * the lesson follows the UI language.
+ */
+export function detectSourceLanguage(text: string): 'ar' | 'en' | null {
+  const arabic = (text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g) || []).length;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  const total = arabic + latin;
+  if (total < 20) return null;
+  return arabic / total >= 0.3 ? 'ar' : 'en';
+}
+
 export function buildLessonPrompt({ topic, lang, steps, feedback, sourceText, sourceName }: LessonRequest): string {
   const language = lang === 'ar' ? 'العربية الفصحى المبسطة' : 'clear simple English';
   const rtl = lang === 'ar'
@@ -53,12 +66,16 @@ export function buildLessonPrompt({ topic, lang, steps, feedback, sourceText, so
   const sourceSection = sourceText
     ? `\nمصدر أرفقه المستخدم${sourceName ? ` (ملف: ${sourceName})` : ''} — صمم الدرس من محتواه: لخّصه ورتّبه ولا تنسخه حرفيًا، والتزم بمعلوماته.\n<source>${sourceText}</source>\n`
     : '';
-  // With an uploaded file, the file's language rules: same language as the UI means a normal
-  // monolingual lesson; a different language means a bilingual lesson (every idea in both).
-  const fileLanguageSection = sourceText
-    ? `\nقاعدة لغة الدرس مع ملف مرفق: لغة الملف هي المرجع. إن كان الملف بلغة واجهة المستخدم (${lang === 'ar' ? 'العربية' : 'الإنجليزية'}) فاكتب الدرس كاملًا بها كالمعتاد. وإن كانت لغة الملف تخالفها (${lang === 'ar' ? 'ملف إنجليزي وواجهة عربية' : 'ملف عربي وواجهة إنجليزية'}) فاجعل الدرس ثنائي اللغة: كل فكرة أساسية على السبورة تظهر باللغتين معًا — اكتب كل جملة أو مصطلح بالعربية ثم مقابله الإنجليزي في السطر نفسه مفصولًا بـ «—» أو في سطرين متجاورين (مثل: «التبخر — Evaporation: تتحول المياه إلى بخار The water turns into vapor»)، واجعل narration يكمل باللغتين (العربية بالتشكيل الكامل كالمعتاد ثم الإنجليزية، حتى 300 حرف تقريبًا)، وأبقِ lang كما هي "${lang}". وإن تعذّر تحديد لغة الملف فالتزم بلغة الواجهة ${lang}.\n`
+  // With an uploaded file, the file's language rules the lesson: same language as the UI means a
+  // normal monolingual lesson; a different language means a bilingual lesson (every idea in both).
+  // Detect the file language here instead of asking the model to self-detect, so the bilingual
+  // requirement becomes the prompt's main directive rather than one conditional clause among many.
+  const sourceLang = sourceText ? detectSourceLanguage(sourceText) : null;
+  const bilingual = sourceLang !== null && sourceLang !== lang;
+  const bilingualSection = bilingual
+    ? `\nقاعدة لغة الدرس (صارمة، تتقدم أي قاعدة لغة أخرى): الملف المرفق مكتوب بـ${sourceLang === 'ar' ? 'العربية' : 'الإنجليزية'} ولغة واجهة المستخدم ${lang === 'ar' ? 'العربية' : 'الإنجليزية'}، لذلك الدرس ثنائي اللغة بالكامل — كل خطوة تحمل اللغتين معًا، ولا تكتفِ بجعل بعض الخطوات بلغة والباقي بلغة أخرى:\n- كل فكرة على السبورة تظهر باللغتين: اكتب كل جملة أو مصطلح بالعربية ثم مقابله الإنجليزي في text node واحدة مفصولين بـ «—» (مثل «التبخر — Evaporation»)، أو في نصين متجاورين (العربية ثم الإنجليزية تحتها مباشرة)، وأبقِ كل text node ضمن حدود الطول المعتادة.\n- عنوان الدرس وعناوين الخطوات وtryIt ثنائية أيضًا (العربية ثم الإنجليزية).\n- narration في كل خطوة باللغتين: الجزء العربي أولًا بالتشكيل الكامل كالمعتاد ثم مقابله الإنجليزي مباشرة، حتى 300 حرف تقريبًا للجزأين معًا.\n- أبقِ الحقل "lang":"${lang}" كما هو.\n`
     : '';
-  return `أنت معلم خبير تصمم درسًا مفصلًا يُشرح على سبورة. ${topic ? `الموضوع: «${topic}».` : 'استخرج موضوع الدرس المناسب من المصدر المرفق وضعه في title.'} اكتب بـ${language}${sourceText ? ' ما لم تأمرك قاعدة لغة الملف أدناه بغير ذلك' : ' فقط'}. ${rtl}${sourceSection}${fileLanguageSection}
+  return `أنت معلم خبير تصمم درسًا مفصلًا يُشرح على سبورة. ${topic ? `الموضوع: «${topic}».` : 'استخرج موضوع الدرس المناسب من المصدر المرفق وضعه في title.'} ${bilingual ? 'اكتب الدرس ثنائي اللغة (العربية والإنجليزية معًا) كما في قسم قاعدة لغة الدرس أدناه.' : `اكتب بـ${language} فقط.`} ${rtl}${sourceSection}${bilingualSection}
 أعد JSON صالحًا فقط بهذا الشكل بالضبط (بدون أي نص أو علامات markdown خارجه):
 {"schema_version":1,"id":"ai-lesson","title":"عنوان قصير","lang":"${lang}","metadata":{"source":"ai","status":"draft"},"steps":[{"id":"s1","title":"عنوان الخطوة","narration":"جملة قصيرة تكمل المكتوب","nodes":[{"id":"n1","type":"text","x":640,"y":90,"text":"عنوان على السبورة","fontSize":48,"color":"primary","align":"center"}]}]}
 قواعد المحتوى:

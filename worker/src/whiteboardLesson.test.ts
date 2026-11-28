@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildFollowUpPrompt, buildLessonPrompt, parseFollowUpRequest, parseLessonAttachment, parseLessonRequest } from './whiteboardLesson';
+import { buildFollowUpPrompt, buildLessonPrompt, detectSourceLanguage, parseFollowUpRequest, parseLessonAttachment, parseLessonRequest } from './whiteboardLesson';
 
 describe('whiteboard lesson request', () => {
   it('accepts a normal topic and clamps the step count', () => {
@@ -60,12 +60,30 @@ describe('buildLessonPrompt with a source file', () => {
     expect(p).toContain('الفصل الأول: الخلية وحدة البناء');
     expect(p).toContain('استخرج موضوع الدرس');
   });
-  it('adds the file-language rule only when a source is attached', () => {
-    const withFile = buildLessonPrompt({ topic: 'دورة الماء', lang: 'ar', steps: 5, sourceText: 'Evaporation Condensation Precipitation' });
-    expect(withFile).toContain('قاعدة لغة الدرس مع ملف مرفق');
-    expect(withFile).toContain('ثنائي اللغة');
+  it('makes the lesson bilingual when the file language differs from the UI language', () => {
+    const ar = buildLessonPrompt({ topic: 'دورة الماء', lang: 'ar', steps: 5, sourceText: 'Evaporation Condensation Precipitation Collection' });
+    expect(ar).toContain('قاعدة لغة الدرس (صارمة');
+    expect(ar).toContain('ثنائي اللغة بالكامل');
+    expect(ar).toContain('اكتب الدرس ثنائي اللغة');
+    const en = buildLessonPrompt({ topic: 'الخلية', lang: 'en', steps: 5, sourceText: 'الخلية وحدة البناء الأساسية في الكائنات الحية وتتكون من غشاء وسيتوبلازم ونواة' });
+    expect(en).toContain('قاعدة لغة الدرس (صارمة');
+    expect(en).toContain('ثنائي اللغة بالكامل');
+  });
+
+  it('stays monolingual when the file language matches the UI language or no file is attached', () => {
+    const ar = buildLessonPrompt({ topic: 'دورة الماء', lang: 'ar', steps: 5, sourceText: 'الخلية وحدة البناء الأساسية في الكائنات الحية وتتكون من غشاء وسيتوبلازم ونواة' });
+    expect(ar).not.toContain('قاعدة لغة الدرس (صارمة');
+    expect(ar).toContain('فقط');
+    const en = buildLessonPrompt({ topic: 'الخلية', lang: 'en', steps: 5, sourceText: 'Evaporation Condensation Precipitation Collection' });
+    expect(en).not.toContain('قاعدة لغة الدرس (صارمة');
     const noFile = buildLessonPrompt({ topic: 'دورة الماء', lang: 'ar', steps: 5 });
-    expect(noFile).not.toContain('قاعدة لغة الدرس مع ملف مرفق');
+    expect(noFile).not.toContain('قاعدة لغة الدرس');
     expect(noFile).toContain('فقط');
+  });
+
+  it('detects the source language from its letters', () => {
+    expect(detectSourceLanguage('Evaporation Condensation Precipitation Collection')).toBe('en');
+    expect(detectSourceLanguage('الخلية وحدة البناء الأساسية في الكائنات الحية وتتكون من غشاء وسيتوبلازم ونواة')).toBe('ar');
+    expect(detectSourceLanguage('H2O + CO2 = H2CO3, 3 + 4 = 7')).toBeNull();
   });
 });
