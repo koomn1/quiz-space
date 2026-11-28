@@ -117,3 +117,119 @@ class WhiteboardService {
     }
   }
 }
+
+/// Server library entry for the history list (no full lesson payload).
+class WhiteboardLessonMeta {
+  WhiteboardLessonMeta({required this.id, required this.title, required this.lang, required this.stepCount, this.createdAt});
+  final String id;
+  final String title;
+  final String lang;
+  final int stepCount;
+  final String? createdAt;
+}
+
+/// Result of a library call: ok, storageNotReady (migration pending), or failed.
+enum LibraryResult { ok, storageNotReady, failed }
+
+extension WhiteboardLibraryApi on WhiteboardService {
+  /// CRUD against the per-user server library. All errors map to LibraryResult so the
+  /// caller can degrade to the local cache quietly (e.g. before the migration is applied).
+  static Future<(LibraryResult, List<WhiteboardLessonMeta>)> listLessonMetas() async {
+    if (WhiteboardService._workerUrl.isEmpty) return (LibraryResult.failed, const []);
+    try {
+      final token = await WhiteboardService._bearerToken();
+      final client = HttpClient();
+      try {
+        final request = await client.getUrl(Uri.parse('${WhiteboardService._workerUrl}/api/ai/whiteboard-lessons'));
+        request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
+        final response = await request.close().timeout(const Duration(seconds: 30));
+        final body = await utf8.decodeStream(response);
+        if (response.statusCode == 503) return (LibraryResult.storageNotReady, const []);
+        if (response.statusCode != 200) return (LibraryResult.failed, const []);
+        final data = jsonDecode(body);
+        final rows = data is Map<String, dynamic> ? data['lessons'] : null;
+        if (rows is! List) return (LibraryResult.failed, const []);
+        return (
+          LibraryResult.ok,
+          rows.whereType<Map<String, dynamic>>().map((m) => WhiteboardLessonMeta(
+                id: '${m['id'] ?? ''}',
+                title: '${m['title'] ?? ''}',
+                lang: '${m['lang'] ?? 'ar'}',
+                stepCount: (m['step_count'] as num?)?.toInt() ?? 0,
+                createdAt: m['created_at'] as String?,
+              )).toList(),
+        );
+      } finally {
+        client.close();
+      }
+    } catch (_) {
+      return (LibraryResult.failed, const []);
+    }
+  }
+
+  static Future<WhiteboardLesson?> fetchLesson(String id) async {
+    if (WhiteboardService._workerUrl.isEmpty) return null;
+    try {
+      final token = await WhiteboardService._bearerToken();
+      final client = HttpClient();
+      try {
+        final request = await client.getUrl(Uri.parse('${WhiteboardService._workerUrl}/api/ai/whiteboard-lessons/${Uri.encodeComponent(id)}'));
+        request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
+        final response = await request.close().timeout(const Duration(seconds: 30));
+        if (response.statusCode != 200) return null;
+        final data = jsonDecode(await utf8.decodeStream(response));
+        final lessonJson = data is Map<String, dynamic> ? data['lesson'] : null;
+        if (lessonJson is! Map<String, dynamic>) return null;
+        return WhiteboardLesson.fromJson(lessonJson);
+      } finally {
+        client.close();
+      }
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<LibraryResult> saveLesson(WhiteboardLesson lesson) async {
+    if (WhiteboardService._workerUrl.isEmpty) return LibraryResult.failed;
+    try {
+      final token = await WhiteboardService._bearerToken();
+      final client = HttpClient();
+      try {
+        final request = await client.putUrl(Uri.parse('${WhiteboardService._workerUrl}/api/ai/whiteboard-lessons/${Uri.encodeComponent(lesson.id)}'));
+        request.headers
+          ..set(HttpHeaders.authorizationHeader, 'Bearer $token')
+          ..set(HttpHeaders.contentTypeHeader, 'application/json');
+        // UTF-8 bytes: Arabic lesson titles/narration throw on request.write.
+        request.add(utf8.encode(jsonEncode({'lesson': lesson.toJson()})));
+        final response = await request.close().timeout(const Duration(seconds: 30));
+        await utf8.decodeStream(response);
+        if (response.statusCode == 503) return LibraryResult.storageNotReady;
+        return response.statusCode == 200 ? LibraryResult.ok : LibraryResult.failed;
+      } finally {
+        client.close();
+      }
+    } catch (_) {
+      return LibraryResult.failed;
+    }
+  }
+
+  static Future<LibraryResult> deleteLesson(String id) async {
+    if (WhiteboardService._workerUrl.isEmpty) return LibraryResult.failed;
+    try {
+      final token = await WhiteboardService._bearerToken();
+      final client = HttpClient();
+      try {
+        final request = await client.deleteUrl(Uri.parse('${WhiteboardService._workerUrl}/api/ai/whiteboard-lessons/${Uri.encodeComponent(id)}'));
+        request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
+        final response = await request.close().timeout(const Duration(seconds: 30));
+        await utf8.decodeStream(response);
+        if (response.statusCode == 503) return LibraryResult.storageNotReady;
+        return response.statusCode == 200 ? LibraryResult.ok : LibraryResult.failed;
+      } finally {
+        client.close();
+      }
+    } catch (_) {
+      return LibraryResult.failed;
+    }
+  }
+}

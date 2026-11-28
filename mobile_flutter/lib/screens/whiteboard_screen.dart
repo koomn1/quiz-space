@@ -12,6 +12,7 @@ import '../whiteboard/whiteboard_models.dart';
 import '../whiteboard/whiteboard_stickers.dart';
 import '../whiteboard/whiteboard_painter.dart';
 import '../whiteboard/whiteboard_service.dart';
+import '../whiteboard/whiteboard_library.dart';
 
 class WhiteboardScreen extends StatefulWidget {
   const WhiteboardScreen({super.key});
@@ -48,6 +49,47 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
   final TextEditingController _askCtrl = TextEditingController();
   bool _asking = false;
   String? _askError;
+
+  // Per-account lesson history: fast local cache, reconciled with the server library.
+  List<WhiteboardLesson> _saved = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final local = await WhiteboardLibrary.loadSaved();
+    if (mounted) setState(() => _saved = local);
+    // Reconcile with the server in the background; null = offline or migration pending.
+    final merged = await WhiteboardLibrary.syncFromServer();
+    if (mounted && merged != null) setState(() => _saved = merged);
+  }
+
+  /// Load a saved lesson into the player (same state reset as a fresh generation).
+  void _openLesson(WhiteboardLesson lesson) {
+    _ticker?.cancel();
+    _ttsToken++;
+    _player.stop();
+    setState(() {
+      _lesson = lesson;
+      _stepIndex = 0;
+      _tInStep = _duration;
+      _playing = false;
+      _audioMs.clear();
+      _ttsCharsUsed = 0;
+      _ttsCache.clear();
+      _stickerPics.clear();
+    });
+    _preloadStickers(lesson);
+  }
+
+  Future<void> _deleteSaved(String id) async {
+    final next = await WhiteboardLibrary.removeLocal(id);
+    if (mounted) setState(() => _saved = next);
+    unawaited(WhiteboardLibraryApi.deleteLesson(id));
+  }
 
   /// Load the sticker SVGs the lesson uses, once each, then repaint.
   Future<void> _preloadStickers(WhiteboardLesson lesson) async {
@@ -157,6 +199,10 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
       _preloadStickers(lesson);
       unawaited(_stepClip(0));
       unawaited(_stepClip(1));
+      // History: every generated lesson lands in the account's library (cache + server).
+      final saved = await WhiteboardLibrary.saveLocal(lesson);
+      if (mounted) setState(() => _saved = saved);
+      unawaited(WhiteboardLibraryApi.saveLesson(lesson));
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('HttpException: ', ''));
@@ -280,6 +326,38 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
                 ),
               ],
             ),
+            if (_saved.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0D9488).withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFF0D9488).withValues(alpha: 0.25)),
+                  ),
+                  child: ExpansionTile(
+                    dense: true,
+                    leading: const Icon(Icons.history_edu_rounded, color: Color(0xFF0D9488)),
+                    title: Text('دروسي (${_saved.length})', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                    subtitle: const Text('ولّدتها قبل كده — افتحها في أي وقت', style: TextStyle(fontSize: 11)),
+                    children: [
+                      for (final saved in _saved)
+                        ListTile(
+                          dense: true,
+                          leading: const Icon(Icons.play_circle_outline_rounded, color: Color(0xFF0D9488)),
+                          title: Text(saved.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                          subtitle: Text('${saved.steps.length} خطوات', style: const TextStyle(fontSize: 11)),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.redAccent),
+                            tooltip: 'احذف الدرس',
+                            onPressed: () => _deleteSaved(saved.id),
+                          ),
+                          onTap: () => _openLesson(saved),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             if (_generating)
               const Padding(
                 padding: EdgeInsets.only(top: 8),

@@ -127,18 +127,30 @@ class LessonStep {
 }
 
 class WhiteboardLesson {
-  WhiteboardLesson({required this.id, required this.title, required this.lang, required this.canvasW, required this.canvasH, required this.steps});
+  WhiteboardLesson({required this.id, required this.title, required this.lang, required this.canvasW, required this.canvasH, required this.steps, this.createdAt});
   final String id;
   final String title;
   final String lang;
   final double canvasW;
   final double canvasH;
   final List<LessonStep> steps;
+  final String? createdAt;
 
   bool get isArabic => lang == 'ar';
 
+  Map<String, dynamic> toJson() => {
+        'schema_version': 1,
+        'id': id,
+        'title': title,
+        'lang': lang,
+        'canvas': {'width': canvasW, 'height': canvasH},
+        'steps': steps.map((s) => s.toJson()).toList(),
+        'metadata': {'source': 'ai', 'status': 'reviewed', if (createdAt != null) 'createdAt': createdAt},
+      };
+
   factory WhiteboardLesson.fromJson(Map<String, dynamic> j) {
     final canvas = (j['canvas'] as Map<String, dynamic>?) ?? const {};
+    final metadata = (j['metadata'] as Map<String, dynamic>?) ?? const {};
     return WhiteboardLesson(
       id: '${j['id'] ?? ''}',
       title: '${j['title'] ?? ''}',
@@ -146,6 +158,7 @@ class WhiteboardLesson {
       canvasW: WhiteboardNode._num(canvas['width'], 1280),
       canvasH: WhiteboardNode._num(canvas['height'], 720),
       steps: ((j['steps'] as List?) ?? const []).whereType<Map<String, dynamic>>().map(LessonStep.fromJson).toList(),
+      createdAt: metadata['createdAt'] as String?,
     );
   }
 }
