@@ -230,6 +230,36 @@ function BoardExplanation({ text, progress, rtl }: { text: string; progress: num
   );
 }
 
+/**
+ * Generated lessons sometimes place a standalone label inside a hand-drawn box
+ * (rect/ellipse with no text of its own). Arabic fonts carry a ~1.35em ascent,
+ * so a label whose baseline looks fine can ink above the box border. This pass
+ * nudges such labels (and shrinks them if needed) so their ink fits the box.
+ */
+const INK_ASCENT = 1.32;  // em above baseline for tall Arabic fonts (Aref Ruqaa/Molhim)
+const INK_DESCENT = 0.38; // em below baseline
+export function fitLabelsIntoBoxes(nodes: WhiteboardNode[]): WhiteboardNode[] {
+  const boxes = nodes.filter(n => (n.type === 'rectangle' || n.type === 'ellipse') && !n.text && (n.w ?? 0) > 0 && (n.h ?? 0) > 0);
+  if (!boxes.length) return nodes;
+  return nodes.map(n => {
+    if (n.type !== 'text' || !n.text) return n;
+    const size = n.fontSize ?? 32;
+    const cx = n.x; // anchor point; good enough for containment (labels are center-aligned in practice)
+    const box = boxes
+      .filter(b => cx >= (b.x) && cx <= (b.x + (b.w ?? 0)) && n.y > (b.y) - size * 0.5 && n.y < (b.y + (b.h ?? 0)) + size * 0.5)
+      .sort((a, b2) => (a.w ?? 0) * (a.h ?? 0) - (b2.w ?? 0) * (b2.h ?? 0))[0];
+    if (!box) return n;
+    const bh = box.h ?? 0;
+    let fs = size;
+    if ((INK_ASCENT + INK_DESCENT) * fs > bh - 8) fs = Math.max(18, Math.floor((bh - 8) / (INK_ASCENT + INK_DESCENT)));
+    const minY = box.y + 4 + INK_ASCENT * fs;
+    const maxY = box.y + bh - 4 - INK_DESCENT * fs;
+    const y = minY > maxY ? box.y + bh / 2 + ((INK_ASCENT - INK_DESCENT) * fs) / 2 : Math.min(maxY, Math.max(minY, n.y));
+    if (fs === size && y === n.y) return n;
+    return { ...n, y: Math.round(y), fontSize: fs };
+  });
+}
+
 export function BoardNode({ node, progress, rtl }: { node: WhiteboardNode; progress: number; rtl: boolean }) {
   if (progress <= 0) return null;
   const color = COLORS[node.color];
@@ -515,7 +545,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
   };
 
   const renderStep = (s: typeof step, idx: number) =>
-    s.nodes.map((node, ni) => {
+    fitLabelsIntoBoxes(s.nodes).map((node, ni) => {
       const progress = idx < stepIndex || reduced
         ? 1
         : nodeProgress(s, ni, tInStep, duration);
@@ -666,7 +696,7 @@ export function WhiteboardPlayer({ lesson: initialLesson, onAsk }: WhiteboardPla
           <g data-testid="board-viewport" transform={`translate(${view.x} ${view.y}) scale(${view.s})`}>
           <rect width={lesson.canvas.width} height={lesson.canvas.height} fill="url(#wb-grid)" />
           <g key={stepIndex}>
-            {carriedSteps().map(cs => <g key={`carry-${cs.id}`}>{cs.nodes.map(n => <BoardNode key={`${cs.id}-${n.id}`} node={n} progress={1} rtl={(cs.lang ?? lesson.lang) === 'ar'} />)}</g>)}
+            {carriedSteps().map(cs => <g key={`carry-${cs.id}`}>{fitLabelsIntoBoxes(cs.nodes).map(n => <BoardNode key={`${cs.id}-${n.id}`} node={n} progress={1} rtl={(cs.lang ?? lesson.lang) === 'ar'} />)}</g>)}
             {renderStep(step, stepIndex)}
           </g>
           {tryPending === stepIndex && (
