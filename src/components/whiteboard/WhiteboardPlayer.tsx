@@ -201,7 +201,7 @@ function StickerNode({ node, progress }: { node: WhiteboardNode; progress: numbe
  *  Shows the last few wrapped lines of the typed prefix, with the pen at the writing position. */
 function BoardExplanation({ text, progress, rtl }: { text: string; progress: number; rtl: boolean }) {
   const X0 = 78, W = 1124, FS = 26, LINE_H = 37, MAX_LINES = 3, TOP = 596;
-  const charW = FS * 0.52;
+  const charW = FS * 0.55;
   const perLine = Math.max(20, Math.floor(W / charW));
   const chars = Math.floor(text.length * Math.min(1, Math.max(0, progress)));
   const visible = text.slice(0, chars);
@@ -222,7 +222,7 @@ function BoardExplanation({ text, progress, rtl }: { text: string; progress: num
       <rect x={64} y={TOP} width={1152} height={106} rx={14} fill="#fdfcf8" opacity={0.94} stroke="#e7e5df" />
       {shown.map((ln, i) => (
         <text key={`${i}-${ln.length}`} x={rtl ? X0 + W : X0} y={TOP + 34 + i * LINE_H} fontSize={FS} fill="#3f3f46"
-          textAnchor={rtl ? 'end' : 'start'} direction={rtl ? 'rtl' : 'ltr'} style={{ fontFamily: 'inherit' }}>{ln}</text>
+          textAnchor="start" direction={rtl ? 'rtl' : 'ltr'} style={{ fontFamily: 'inherit' }}>{ln}</text>
       ))}
       {progress > 0 && progress < 1 && shown.length > 0 && <PenTip x={penX} y={penY} color="#3f3f46" wiggle={progress} />}
     </g>
