@@ -17,7 +17,7 @@ export function cors(request: Request, env: Env): HeadersInit {
   const origin = request.headers.get('Origin') || '';
   const headers: Record<string, string> = {
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Vary': 'Origin',
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
