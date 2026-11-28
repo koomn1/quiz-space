@@ -4,42 +4,49 @@ import 'package:quizspace_mobile/services/app_update_service.dart';
 import 'package:quizspace_mobile/services/background_download_service.dart';
 
 void main() {
-  group('AppUpdateInfo', () {
-    test('accepts a complete stable GitHub release', () {
-      final update = AppUpdateInfo.fromGithubRelease({
-        'tag_name': 'mobile-v1.2.3',
-        'html_url': 'https://github.com/koomn1/quiz-space/releases/tag/mobile-v1.2.3',
-        'body': 'تحسينات وصلاحيات.',
+  group('AppUpdateInfo (native channel)', () {
+    test('accepts a complete native-uat release', () {
+      final update = AppUpdateInfo.fromNativeRelease({
+        'tag_name': 'native-uat-146',
+        'html_url': 'https://github.com/koomn1/quiz-space/releases/tag/native-uat-146',
+        'body': 'سبورة نيتف.',
         'assets': [
-          {'name': 'quizspace-mobile.apk', 'browser_download_url': 'https://example.com/app.apk'},
-          {'name': 'quizspace-mobile.apk.sha256', 'browser_download_url': 'https://example.com/app.sha256'},
+          {'name': 'quizspace-native-uat-146.apk', 'browser_download_url': 'https://example.com/native.apk'},
+          {'name': 'quizspace-native-uat-146.apk.sha256', 'browser_download_url': 'https://example.com/native.sha256'},
         ],
       });
 
-      expect(update.version, '1.2.3');
-      expect(update.apkUrl, 'https://example.com/app.apk');
-      expect(update.checksumUrl, 'https://example.com/app.sha256');
+      expect(update.version, '146');
+      expect(update.buildNumber, 146);
+      expect(update.apkUrl, 'https://example.com/native.apk');
+      expect(update.checksumUrl, 'https://example.com/native.sha256');
     });
 
-    test('rejects a release with missing APK or checksum', () {
+    test('rejects wrapper releases so the wrapper channel is never offered to the native app', () {
       expect(
-        () => AppUpdateInfo.fromGithubRelease({'tag_name': 'mobile-v1.2.3', 'assets': []}),
+        () => AppUpdateInfo.fromNativeRelease({
+          'tag_name': 'mobile-v3.1.535',
+          'assets': [
+            {'name': 'quizspace-mobile.apk', 'browser_download_url': 'https://example.com/wrapper.apk'},
+            {'name': 'quizspace-mobile.apk.sha256', 'browser_download_url': 'https://example.com/wrapper.sha256'},
+          ],
+        }),
         throwsFormatException,
       );
     });
 
-    test('only accepts the mobile semantic version tag format', () {
-      expect(AppUpdateInfo.parseVersionFromTag('mobile-v2.0.0'), '2.0.0');
-      expect(AppUpdateInfo.parseVersionFromTag('v2.0.0'), isNull);
-      expect(AppUpdateInfo.parseVersionFromTag('mobile-v2.0'), isNull);
+    test('rejects a native release with missing APK or checksum', () {
+      expect(
+        () => AppUpdateInfo.fromNativeRelease({'tag_name': 'native-uat-146', 'assets': []}),
+        throwsFormatException,
+      );
     });
-  });
 
-  group('Native release gate', () {
-    test('does not treat the rejected v2 WebView release as Native', () {
-      expect(compareVersions('2.0.3', AppUpdateService.minimumNativeVersion), lessThan(0));
-      expect(compareVersions('3.0.0', AppUpdateService.minimumNativeVersion), 0);
-      expect(compareVersions('3.0.1', AppUpdateService.minimumNativeVersion), greaterThan(0));
+    test('parses run numbers only from native-uat tags', () {
+      expect(AppUpdateInfo.parseRunFromTag('native-uat-146'), 146);
+      expect(AppUpdateInfo.parseRunFromTag('mobile-v3.1.535'), isNull);
+      expect(AppUpdateInfo.parseRunFromTag('native-uat-x'), isNull);
+      expect(AppUpdateInfo.parseRunFromTag('native-uat-146-extra'), isNull);
     });
   });
 

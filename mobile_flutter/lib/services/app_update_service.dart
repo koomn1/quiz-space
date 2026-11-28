@@ -16,6 +16,7 @@ class AppUpdateInfo {
     required this.checksumUrl,
     required this.releaseUrl,
     required this.notes,
+    required this.buildNumber,
   });
 
   final String version;
@@ -25,7 +26,16 @@ class AppUpdateInfo {
   final String releaseUrl;
   final String notes;
 
-  factory AppUpdateInfo.fromGithubRelease(Map<String, dynamic> json) {
+  /// Native CI run number this release was built from; the APK's Android
+  /// versionCode is 3000000 + run (see mobile-native-ci.yml), so installs
+  /// compare channels without any wrapper version ever matching.
+  final int buildNumber;
+
+  /// The native app updates ONLY from native releases: tags `native-uat-<run>`
+  /// carrying quizspace-native-uat-<run>.apk + its .sha256. Wrapper releases
+  /// (mobile-vX.Y.Z on /releases/latest) are a different channel and are
+  /// never considered here.
+  factory AppUpdateInfo.fromNativeRelease(Map<String, dynamic> json) {
     final assets = (json['assets'] as List<dynamic>? ?? const [])
         .whereType<Map<String, dynamic>>()
         .toList(growable: false);
@@ -39,56 +49,69 @@ class AppUpdateInfo {
     }
 
     final tagName = json['tag_name'] as String? ?? '';
-    final version = parseVersionFromTag(tagName);
-    final apkUrl = assetUrl('quizspace-mobile.apk');
-    final checksumUrl = assetUrl('quizspace-mobile.apk.sha256');
-    if (version == null || apkUrl == null || checksumUrl == null) {
-      throw const FormatException('Invalid QuizSpace release metadata');
+    final run = parseRunFromTag(tagName);
+    final apkUrl = run == null ? null : assetUrl('quizspace-native-uat-$run.apk');
+    final checksumUrl = run == null ? null : assetUrl('quizspace-native-uat-$run.apk.sha256');
+    if (run == null || apkUrl == null || checksumUrl == null) {
+      throw const FormatException('Invalid native release metadata');
     }
 
     return AppUpdateInfo(
-      version: version,
+      version: '$run',
       tagName: tagName,
       apkUrl: apkUrl,
       checksumUrl: checksumUrl,
       releaseUrl: json['html_url'] as String? ?? '',
       notes: json['body'] as String? ?? '',
+      buildNumber: run,
     );
   }
 
-  static String? parseVersionFromTag(String tag) {
-    final match = RegExp(r'^mobile-v(\d+\.\d+\.\d+)$').firstMatch(tag.trim());
-    return match?.group(1);
+  static int? parseRunFromTag(String tag) {
+    final match = RegExp(r'^native-uat-(\d+)$').firstMatch(tag.trim());
+    return match == null ? null : int.tryParse(match.group(1)!);
   }
 }
 
 class AppUpdateService {
-  static const latestReleaseUrl = 'https://api.github.com/repos/koomn1/quiz-space/releases/latest';
-  // v2.0.3 was a rejected WebView wrapper. Only v3+ Native Flutter releases
-  // are eligible for the forced-update gate.
-  static const minimumNativeVersion = '3.0.0';
+  // Native channel: list releases and pick the newest native-uat-<run> one.
+  // The wrapper channel (/releases/latest, mobile-vX.Y.Z) is never consulted,
+  // and /releases/latest never serves native builds because they are
+  // pre-releases, so the two channels stay independent in both directions.
+  static const releasesListUrl = 'https://api.github.com/repos/koomn1/quiz-space/releases?per_page=30';
 
-  final _background = BackgroundUpdateDownloadService();
-
-  Future<String> currentVersion() async {
+  /// Run number baked into the installed APK's Android versionCode
+  /// (3000000 + CI run number; see mobile-native-ci.yml). 0 for dev builds.
+  Future<int> currentNativeRun() async {
     final packageInfo = await PackageInfo.fromPlatform();
-    return packageInfo.version;
+    final code = int.tryParse(packageInfo.buildNumber) ?? 0;
+    final run = code - 3000000;
+    return run > 0 ? run : 0;
   }
 
   Future<AppUpdateInfo?> checkForUpdate() async {
     if (!Platform.isAndroid) return null;
-    final current = await currentVersion();
-    final json = await _getJson(latestReleaseUrl);
-    if (json == null || json['draft'] == true || json['prerelease'] == true) return null;
+    final current = await currentNativeRun();
+    final releases = await _getJsonList(releasesListUrl);
+    if (releases == null) return null;
 
-    try {
-      final release = AppUpdateInfo.fromGithubRelease(json);
-      if (compareVersions(release.version, minimumNativeVersion) < 0) return null;
-      if (compareVersions(release.version, current) <= 0) return null;
-      return release;
-    } on FormatException {
-      return null;
+    AppUpdateInfo? best;
+    for (final entry in releases) {
+      if (entry is! Map<String, dynamic>) continue;
+      if (entry['draft'] == true) continue;
+      final AppUpdateInfo? candidate = () {
+        try {
+          return AppUpdateInfo.fromNativeRelease(entry);
+        } on FormatException {
+          return null;
+        }
+      }();
+      if (candidate == null) continue;
+      if (best == null || candidate.buildNumber > best.buildNumber) best = candidate;
     }
+    if (best == null) return null;
+    if (current > 0 && best.buildNumber <= current) return null;
+    return best;
   }
 
   Future<CachedUpdateDownload?> cachedDownload(AppUpdateInfo update) {
@@ -173,7 +196,7 @@ class AppUpdateService {
     }
   }
 
-  Future<Map<String, dynamic>?> _getJson(String url) async {
+  Future<List<dynamic>?> _getJsonList(String url) async {
     final httpClient = HttpClient()..userAgent = 'QuizSpace-Mobile-Updater';
     try {
       final request = await httpClient.getUrl(Uri.parse(url));
@@ -183,7 +206,7 @@ class AppUpdateService {
       if (response.statusCode != HttpStatus.ok) return null;
       final body = await response.transform(utf8.decoder).join();
       final decoded = jsonDecode(body);
-      return decoded is Map<String, dynamic> ? decoded : null;
+      return decoded is List<dynamic> ? decoded : null;
     } finally {
       httpClient.close(force: true);
     }
