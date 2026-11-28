@@ -6,6 +6,7 @@ import '../data/quizspace_repository.dart';
 import '../services/deep_link_service.dart';
 import '../widgets/native_ui.dart';
 import 'cosmo_screen.dart';
+import 'whiteboard_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
 import 'quiz_creator_screen.dart';
@@ -49,13 +50,14 @@ class _NativeAppShellState extends State<NativeAppShell> {
     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuizSolveScreen(repository: widget.repository, quizId: quizId)));
   }
 
-  static const _titles = ['الرئيسية', 'اختباراتي', 'إنشاء اختبار', 'Cosmo', 'حسابي'];
+  static const _titles = ['الرئيسية', 'اختباراتي', 'إنشاء اختبار', 'Cosmo', 'السبورة', 'حسابي'];
 
   List<Widget> get _pages => [
         HomeScreen(repository: widget.repository, showBottomNavigation: false),
         QuizLibraryScreen(repository: widget.repository),
         QuizCreatorScreen(repository: widget.repository),
         const CosmoScreen(),
+        const WhiteboardScreen(),
         ProfileScreen(repository: widget.repository),
       ];
 
@@ -93,6 +95,7 @@ class _NativeAppShellState extends State<NativeAppShell> {
               NavigationDestination(icon: Icon(Icons.library_books_outlined), selectedIcon: Icon(Icons.library_books_rounded), label: 'اختباراتي'),
               NavigationDestination(icon: Icon(Icons.add_box_outlined), selectedIcon: Icon(Icons.add_box_rounded), label: 'إنشاء'),
               NavigationDestination(icon: Icon(Icons.auto_awesome_outlined), selectedIcon: Icon(Icons.auto_awesome_rounded), label: 'Cosmo'),
+              NavigationDestination(icon: Icon(Icons.draw_outlined), selectedIcon: Icon(Icons.draw_rounded), label: 'السبورة'),
               NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'حسابي'),
             ],
           ),
