@@ -3,10 +3,10 @@
 // of the web whiteboard player (no webview).
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
 import '../whiteboard/whiteboard_models.dart';
@@ -42,7 +42,7 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
   int _ttsToken = 0;
 
   // Sticker art preloaded for the current lesson (name -> picture, null = unavailable).
-  final Map<String, ui.Picture?> _stickerPics = {};
+  final Map<String, PictureInfo?> _stickerPics = {};
   int _stickerVersion = 0;
 
   // Pan/zoom on the board + mid-lesson questions.
@@ -63,7 +63,7 @@ class _WhiteboardScreenState extends State<WhiteboardScreen> {
         }
         try {
           final info = await vg.loadPicture(SvgAssetLoader('assets/whiteboard/stickers/$file'), null);
-          _stickerPics[n.name!] = info.picture;
+          _stickerPics[n.name!] = info;
         } catch (_) {
           _stickerPics[n.name!] = null;
         }

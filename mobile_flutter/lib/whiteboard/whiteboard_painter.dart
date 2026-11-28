@@ -3,8 +3,6 @@
 // same colors, same progressive reveal, same explanation strip.
 import 'dart:math' as math;
 
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:vector_graphics/vector_graphics.dart';
 
@@ -79,7 +77,7 @@ class WhiteboardPainter extends CustomPainter {
   final bool showExplanation;
 
   /// Preloaded sticker pictures by sticker name (null entry = unknown/failed, draw placeholder).
-  final Map<String, ui.Picture?> stickerPictures;
+  final Map<String, PictureInfo?> stickerPictures;
 
   /// Bumped when [stickerPictures] gains entries so shouldRepaint notices.
   final int stickerVersion;
@@ -269,15 +267,17 @@ class WhiteboardPainter extends CustomPainter {
             canvas.drawPath(_partialPath(full, pp), partStroke);
             break;
           case 'ellipse':
-            var full = Path()..addOval(Rect.fromCenter(center: Offset(part.cx, part.cy), width: part.rx * 2, height: part.ry * 2));
+            final full = Path()..addOval(Rect.fromCenter(center: Offset(part.cx, part.cy), width: part.rx * 2, height: part.ry * 2));
             if (part.rotate != 0) {
-              final m = Matrix4.identity()
-                ..translate(part.cx, part.cy)
-                ..rotateZ(part.rotate * math.pi / 180)
-                ..translate(-part.cx, -part.cy);
-              full = full.transform(m.storage);
+              canvas.save();
+              canvas.translate(part.cx, part.cy);
+              canvas.rotate(part.rotate * math.pi / 180);
+              canvas.translate(-part.cx, -part.cy);
+              canvas.drawPath(_partialPath(full, pp), partStroke);
+              canvas.restore();
+            } else {
+              canvas.drawPath(_partialPath(full, pp), partStroke);
             }
-            canvas.drawPath(_partialPath(full, pp), partStroke);
             break;
           case 'line':
             canvas.drawLine(
