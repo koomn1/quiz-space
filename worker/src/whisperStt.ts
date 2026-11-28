@@ -79,6 +79,16 @@ async function transcribeWhisperApi(env: Env, audio: { bytes: ArrayBuffer; filen
     if (text) return { ok: true, status: 200, text: text.slice(0, 500) };
     const status = String(data.status ?? '').toLowerCase();
     if (status === 'completed' || status === 'complete' || status === 'done' || status === 'success') {
+      // /status never carries the text; the finished transcript lives on /transcript/{task_id}.
+      const transcriptUrl = url.replace(/\/transcribe\/?$/, '') + `/transcript/${taskId}`;
+      try {
+        const tr = await fetch(transcriptUrl, { headers: { 'X-API-Key': key } });
+        const td: any = tr.ok ? await tr.json() : null;
+        const finalText = String(td?.result ?? td?.text ?? '').trim();
+        if (finalText) return { ok: true, status: 200, text: finalText.slice(0, 500) };
+      } catch {
+        // fall through to stt_empty
+      }
       return { ok: false, status: 502, error: 'stt_empty' };
     }
     if (status === 'failed' || status === 'error' || data.error) {
